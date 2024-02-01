@@ -1,0 +1,18 @@
+[package]
+name = "prima"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+members = [".", "migration"]
+
+[dependencies]
+axum = "0.7"
+hyper = { version = "1.0.1", features = ["full"] }
+tokio = { version = "1.17", features = ["full"] }
+utoipa = { features = ["axum_extras"] }
+utoipa-rapidoc = { features = ["axum"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sea-orm = "0.12.12"
+cf-turnstile = { default-features = false, features = ["rustls-native-roots"], version = "0.1" }
