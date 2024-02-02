@@ -5,7 +5,10 @@ pub struct Migration;
 
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
-    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+    async fn up(
+        &self,
+        manager: &SchemaManager,
+    ) -> Result<(), DbErr> {
         manager
             .create_table(
                 Table::create()
@@ -109,10 +112,23 @@ impl MigrationTrait for Migration {
         Ok(())
     }
 
-    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+    async fn down(
+        &self,
+        manager: &SchemaManager,
+    ) -> Result<(), DbErr> {
+        manager
+            .drop_table(Table::drop().table(Event::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(Vehicle::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(Zone::Table).to_owned())
+            .await?;
         manager
             .drop_table(Table::drop().table(User::Table).to_owned())
-            .await
+            .await?;
+        Ok(())
     }
 }
 
