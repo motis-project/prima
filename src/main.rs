@@ -47,19 +47,22 @@ impl AppState {
     }
 }
 
+async fn calendar(
+    _uri: Uri,
+    State(s): State<AppState>,
+) -> Result<Html<String>, StatusCode> {
+    s.render("calendar.html", &Context::new())
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+        .map(|x| Html(x))
+}
+
 async fn register(
     _uri: Uri,
-    State(r): State<AppState>,
-) -> (StatusCode, Html<String>) {
-    match r
-        .tera
-        .lock()
-        .unwrap()
-        .render("register.html", &Context::new())
-    {
-        Ok(x) => (StatusCode::OK, Html(x)),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Html(format!("{e:?}"))),
-    }
+    State(s): State<AppState>,
+) -> Result<Html<String>, StatusCode> {
+    s.render("register.html", &Context::new())
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+        .map(|x| Html(x))
 }
 
 async fn users(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
@@ -123,7 +126,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Reload!");
     })?;
     watcher.watch(Path::new("./html"), notify::RecursiveMode::Recursive)?;
-    watcher.watch(Path::new("./output.css"), notify::RecursiveMode::Recursive)?;
+    watcher.watch(
+        Path::new("./output.css"),
+        notify::RecursiveMode::NonRecursive,
+    )?;
+    watcher.watch(
+        Path::new("./input.css"),
+        notify::RecursiveMode::NonRecursive,
+    )?;
 
     let r = AppState {
         tera: tera,
@@ -131,6 +141,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let app = Router::new();
+    let app = app.route("/calendar", get(calendar).with_state(r.clone()));
     let app = app.route("/register", get(register).with_state(r.clone()));
     let app = app.route("/users", get(users).with_state(r.clone()));
     let app = app.route_service("/output.css", ServeFile::new("output.css"));

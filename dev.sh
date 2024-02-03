@@ -1,1 +1,1 @@
-cargo watch -- cargo run & ./tailwind.sh
+cargo watch -- cargo run
