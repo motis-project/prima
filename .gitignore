@@ -2,3 +2,4 @@
 /volumes
 output.css
 .env
+node_modules
