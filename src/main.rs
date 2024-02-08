@@ -14,7 +14,6 @@ use notify::Watcher;
 use sea_orm::{Database, DbConn, EntityTrait};
 use serde_json::json;
 use std::{
-    collections::HashMap,
     env,
     path::Path,
     sync::{Arc, Mutex},
@@ -125,25 +124,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         reloader.reload();
         println!("Reload!");
     })?;
-    watcher.watch(Path::new("./html"), notify::RecursiveMode::Recursive)?;
     watcher.watch(
         Path::new("./output.css"),
         notify::RecursiveMode::NonRecursive,
     )?;
-    watcher.watch(
-        Path::new("./input.css"),
-        notify::RecursiveMode::NonRecursive,
-    )?;
 
-    let r = AppState {
+    let s = AppState {
         tera: tera,
         db: Arc::new(conn),
     };
 
     let app = Router::new();
-    let app = app.route("/calendar", get(calendar).with_state(r.clone()));
-    let app = app.route("/register", get(register).with_state(r.clone()));
-    let app = app.route("/users", get(users).with_state(r.clone()));
+    let app = app.route("/calendar", get(calendar).with_state(s.clone()));
+    let app = app.route("/register", get(register).with_state(s.clone()));
+    let app = app.route("/users", get(users).with_state(s.clone()));
     let app = app.route_service("/output.css", ServeFile::new("output.css"));
     let app = app.layer(livereload);
     let app = app.layer(CompressionLayer::new());
