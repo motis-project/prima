@@ -10,6 +10,11 @@ pub struct Model {
     pub name: String,
     pub is_driver: bool,
     pub is_admin: bool,
+    pub email: String,
+    pub password: Option<String>,
+    pub salt: String,
+    pub o_auth_id: Option<String>,
+    pub o_auth_provider: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
