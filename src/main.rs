@@ -1,9 +1,9 @@
 use crate::entities::prelude::User;
 use axum::{
-    extract::State,
+    extract::{State, Json},
     http::{StatusCode, Uri},
     response::Html,
-    routing::get,
+    routing::{get, post},
     Router,
 };
 use dotenv::dotenv;
@@ -57,18 +57,24 @@ async fn calendar(
         .map(|x| Html(x))
 }
 
-async fn register(
-    _uri: Uri,
-    State(s): State<AppState>,
-) -> Result<Html<String>, StatusCode> {
-    s.render("register.html", &Context::new())
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
-        .map(|x| Html(x))
+// TEST
+use serde::Deserialize;
+use axum::Form;
+
+#[derive(Deserialize)]
+struct TestEntity {
+    //id: i32,
+    username: String,
 }
 
-async fn users(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
+async fn post_json_test(Json(payload): Json<TestEntity>) {
+    println!("name: {}", payload.username);
+}
+
+async fn create_user(State(s): State<AppState>, Form(sign_up): Form<TestEntity>) -> Result<Html<String>, StatusCode> {
+    println!("name: {}", sign_up.username);
     let result = User::insert(user::ActiveModel {
-        name: ActiveValue::Set("Test".to_string()),
+        name: ActiveValue::Set(sign_up.username.to_string()),
         id: ActiveValue::NotSet,
         is_driver: ActiveValue::Set(true),
         is_admin: ActiveValue::Set(true),
@@ -86,6 +92,36 @@ async fn users(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
         Err(e) => error!("Error adding user: {e:?}"),
     }
 
+    s.render("register.html", &Context::new())
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+        .map(|x| Html(x))
+}
+
+async fn get_json_test() {
+    
+}
+
+async fn login_GET(
+    _uri: Uri,
+    State(s): State<AppState>,
+) -> Result<Html<String>, StatusCode> {
+
+    s.render("login.html", &Context::new())
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+        .map(|x| Html(x))
+}
+
+async fn register_GET(
+    _uri: Uri,
+    State(s): State<AppState>,
+) -> Result<Html<String>, StatusCode> {
+
+    s.render("register.html", &Context::new())
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+        .map(|x| Html(x))
+}
+
+async fn users(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
     let username = User::find_by_id(1)
         .one(s.db())
         .await
@@ -157,9 +193,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app = Router::new();
     let app = app.route("/calendar", get(calendar).with_state(s.clone()));
-    let app = app.route("/register", get(register).with_state(s.clone()));
+    let app = app.route("/register", get(register_GET).with_state(s.clone()));
+    let app = app.route("/login", get(login_GET).with_state(s.clone()));
     let app = app.route("/users", get(users).with_state(s.clone()));
     let app = app.route_service("/output.css", ServeFile::new("output.css"));
+    let app = app.route_service("/static/js/main.js", ServeFile::new("static/js/main.js"));
+
+    // test json GET / POST
+    let app = app.route("/test", post(post_json_test));
+    let app = app.route("/register", post(create_user).with_state(s.clone()));
+
     let app = app.layer(livereload);
     let app = app.layer(CompressionLayer::new());
 

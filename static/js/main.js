@@ -24,9 +24,8 @@ async function postData(url = "", data = {}) {
 }
   
 async function test_POST() {
-  let username = document.getElementById(':r87:-form-item').value;
-  console.log(username);
-    postData("http://localhost:3030/test-post", { id: 0, field: "42" }).then((data) => {
+  let username = document.getElementById('username').value;
+    postData("http://localhost:3030/test", { id: 0, name: username }).then((data) => {
         console.log(data);
     });
 }
