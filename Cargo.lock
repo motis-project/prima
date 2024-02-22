@@ -2406,6 +2406,7 @@ dependencies = [
  "notify",
  "reqwest",
  "sea-orm",
+ "sea-orm-cli",
  "serde",
  "serde_json",
  "tera",
@@ -2868,19 +2869,36 @@ dependencies = [
 
 [[package]]
 name = "sea-orm-cli"
-version = "0.12.12"
+version = "0.12.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f17eb697616be2f3e4ea3b468a44cfb6848750dec522fdef4caa44bf5a02beb"
+checksum = "465ea2308d4716837e9af4a2cff8e14c28135867a580bb93e9e03d408a3a6afb"
 dependencies = [
+ "async-std",
  "chrono",
  "clap",
  "dotenvy",
  "glob",
  "regex",
+ "sea-orm-codegen",
  "sea-schema",
+ "sqlx",
  "tracing",
  "tracing-subscriber",
  "url",
+]
+
+[[package]]
+name = "sea-orm-codegen"
+version = "0.12.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "515fb555cbbe586cd2c251a39fbc6d0e52a84b353dd63c4320205553b865ac81"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "sea-query",
+ "syn 2.0.48",
+ "tracing",
 ]
 
 [[package]]
@@ -2969,7 +2987,9 @@ checksum = "30d148608012d25222442d1ebbfafd1228dbc5221baf4ec35596494e27a2394e"
 dependencies = [
  "futures",
  "sea-query",
+ "sea-query-binder",
  "sea-schema-derive",
+ "sqlx",
 ]
 
 [[package]]
@@ -3229,6 +3249,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d84b0a3c3739e220d94b3239fd69fb1f74bc36e16643423bd99de3b43c21bfbd"
 dependencies = [
  "ahash 0.8.7",
+ "async-io 1.13.0",
+ "async-std",
  "atoi",
  "bigdecimal",
  "byteorder",
@@ -3249,6 +3271,7 @@ dependencies = [
  "indexmap",
  "log",
  "memchr",
+ "native-tls",
  "once_cell",
  "paste",
  "percent-encoding",
@@ -3289,6 +3312,7 @@ version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0bd4519486723648186a08785143599760f7cc81c52334a55d6a83ea1e20841"
 dependencies = [
+ "async-std",
  "atomic-write-file",
  "dotenvy",
  "either",
