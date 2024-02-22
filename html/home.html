@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="bg-white p-8 rounded shadow-md max-w-md">
+    <h2 class="text-2xl mb-4 text-center font-bold">Home</h2>
+    {% if user_logged_in %}
+    <button
+        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2"
+        onclick="logout_user()">Logout
+    </button>
+    {% else %}
+    <div>
+        <p>Not logged in.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}

@@ -1,18 +1,23 @@
 use crate::entities::prelude::User;
 use axum::{
-    extract::{State, Json},
+    extract::{Json, State},
     http::{StatusCode, Uri},
-    response::Html,
+    response::{Html, Redirect},
     routing::{get, post},
-    Router,
+    Form, Router,
 };
 use dotenv::dotenv;
-use entities::user;
+use entities::{event::Model, user};
 use itertools::Itertools;
 use log::setup_logging;
 use migration::{Migrator, MigratorTrait};
 use notify::Watcher;
-use sea_orm::{ActiveValue, Database, DbConn, EntityTrait};
+use reqwest::redirect;
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, Database, DbConn, DbErr, EntityTrait, QueryFilter,
+    Set, Update,
+};
+use serde::Deserialize;
 use serde_json::json;
 use std::{
     env,
@@ -48,79 +53,234 @@ impl AppState {
     }
 }
 
-async fn calendar(
-    _uri: Uri,
-    State(s): State<AppState>,
-) -> Result<Html<String>, StatusCode> {
-    s.render("calendar.html", &Context::new())
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
-        .map(|x| Html(x))
-}
-
-// TEST
-use serde::Deserialize;
-use axum::Form;
-
 #[derive(Deserialize)]
-struct TestEntity {
+struct SignUpForm {
     //id: i32,
     username: String,
+    email: String,
+    password: String,
 }
 
-async fn post_json_test(Json(payload): Json<TestEntity>) {
-    println!("name: {}", payload.username);
+#[derive(Deserialize)]
+struct LoginForm {
+    //id: i32,
+    username: String,
+    password: String,
 }
 
-async fn create_user(State(s): State<AppState>, Form(sign_up): Form<TestEntity>) -> Result<Html<String>, StatusCode> {
-    println!("name: {}", sign_up.username);
-    let result = User::insert(user::ActiveModel {
-        name: ActiveValue::Set(sign_up.username.to_string()),
-        id: ActiveValue::NotSet,
-        is_driver: ActiveValue::Set(true),
-        is_admin: ActiveValue::Set(true),
-        email: ActiveValue::Set("".to_string()),
-        password: ActiveValue::Set(Some("".to_string())),
-        salt: ActiveValue::Set("".to_string()),
-        o_auth_id: ActiveValue::Set(Some("".to_string())),
-        o_auth_provider: ActiveValue::Set(Some("".to_string())),
-    })
-    .exec(s.db())
-    .await;
+async fn create_user(
+    State(s): State<AppState>,
+    Form(sign_up): Form<SignUpForm>,
+) -> Redirect {
+    let user = User::find()
+        .filter(user::Column::Name.eq(&sign_up.username))
+        .filter(user::Column::Email.eq(&sign_up.email))
+        .one(s.db())
+        .await
+        .unwrap_or(None);
 
-    match result {
-        Ok(_) => info!("User added"),
-        Err(e) => error!("Error adding user: {e:?}"),
+    let mut redirect_url = "/register";
+    match user {
+        Some(user) => {
+            println!("User: {} already exists.", user.name);
+        }
+        None => {
+            let result = User::insert(user::ActiveModel {
+                id: ActiveValue::NotSet,
+                name: ActiveValue::Set(sign_up.username.to_string()),
+                email: ActiveValue::Set(sign_up.email.to_string()),
+
+                is_driver: ActiveValue::Set(true),
+                is_admin: ActiveValue::Set(false),
+
+                password: ActiveValue::Set(Some(sign_up.password.to_string())),
+                salt: ActiveValue::Set("".to_string()),
+                o_auth_id: ActiveValue::Set(Some("".to_string())),
+                o_auth_provider: ActiveValue::Set(Some("".to_string())),
+            })
+            .exec(s.db())
+            .await;
+
+            match result {
+                Ok(_) => {
+                    info!("User created.");
+                    redirect_url = "/login";
+                }
+                Err(e) => error!("Error adding user: {e:?}"),
+            }
+        }
     }
 
-    s.render("register.html", &Context::new())
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
-        .map(|x| Html(x))
+    Redirect::to(redirect_url)
 }
 
-async fn get_json_test() {
-    
+async fn login_user(
+    State(s): State<AppState>,
+    Form(login): Form<LoginForm>,
+) -> Redirect {
+    let user = User::find()
+        .filter(user::Column::Name.eq(login.username))
+        .filter(user::Column::Password.eq(login.password))
+        .one(s.db())
+        .await
+        .unwrap_or(None);
+
+    let mut redirect_url = "/login";
+    match user {
+        Some(user) => {
+            println!("User: {} just logged in.", user.name);
+            redirect_url = "/users";
+        }
+        None => println!("User not found"),
+    }
+
+    Redirect::to(redirect_url)
 }
 
-async fn login_GET(
+async fn logout_user(
+    State(s): State<AppState>,
+    Json(payload): Json<LoginForm>,
+) -> Redirect {
+    let user = User::find()
+        .filter(user::Column::Name.eq(payload.username))
+        .one(s.db())
+        .await
+        .unwrap_or(None);
+
+    let mut redirect_url = "/login";
+    match user {
+        Some(user) => {
+            println!("User: {} just logged out.", user.name);
+        }
+        None => {
+            println!("Logout failed. User not found");
+            redirect_url = "/";
+        }
+    }
+
+    Redirect::to(redirect_url)
+}
+
+// async fn deactivate_user(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
+//     let user = User::find_by_id(1)
+//         .one(s.db())
+//         .await
+//         .map_err(|e| {
+//             error!("Database error: {e:?}");
+//             StatusCode::INTERNAL_SERVER_ERROR
+//         })?
+//         .ok_or(StatusCode::NOT_FOUND)?;
+
+//     let mut user: user::ActiveModel = user.into();
+
+//     user.active = Set(false);
+
+//     let _ = user.update(s.db()).await;
+
+//     let username = "";
+//     let response = s
+//         .render(
+//             "user.html",
+//             &Context::from_serialize(json!({"user": username})).map_err(|e| {
+//                 error!("Serialize error: {e:?}");
+//                 StatusCode::INTERNAL_SERVER_ERROR
+//             })?,
+//         )
+//         .map_err(|e| {
+//             error!("Render error: {e:?}");
+//             StatusCode::INTERNAL_SERVER_ERROR
+//         })?;
+//     Ok(Html(response))
+// }
+
+fn delete_user() {}
+
+async fn update_user(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
+    let user = User::find_by_id(1)
+        .one(s.db())
+        .await
+        .map_err(|e| {
+            error!("Database error: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    let mut user: user::ActiveModel = user.into();
+
+    user.password = Set(Some("newpwd".to_string()));
+
+    let _ = user.update(s.db()).await;
+
+    let username = "";
+    let response = s
+        .render(
+            "user.html",
+            &Context::from_serialize(json!({"user": username})).map_err(|e| {
+                error!("Serialize error: {e:?}");
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?,
+        )
+        .map_err(|e| {
+            error!("Render error: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+    Ok(Html(response))
+}
+
+async fn is_user_logged_in(
+    db: &DbConn,
+    username: &str,
+) -> bool {
+    let user = User::find()
+        .filter(user::Column::Name.eq(username))
+        .one(db)
+        .await
+        .unwrap_or(None);
+    match user {
+        Some(user) => true,
+        None => false,
+    }
+}
+
+async fn render_login(
     _uri: Uri,
     State(s): State<AppState>,
 ) -> Result<Html<String>, StatusCode> {
-
     s.render("login.html", &Context::new())
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
         .map(|x| Html(x))
 }
 
-async fn register_GET(
+async fn render_register(
     _uri: Uri,
     State(s): State<AppState>,
 ) -> Result<Html<String>, StatusCode> {
-
     s.render("register.html", &Context::new())
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
         .map(|x| Html(x))
 }
 
+async fn render_home(
+    _uri: Uri,
+    State(s): State<AppState>,
+) -> Result<Html<String>, StatusCode> {
+    let user_logged_in = is_user_logged_in(s.db(), "steffen").await;
+    let response = s
+        .render(
+            "home.html",
+            &Context::from_serialize(json!({"user_logged_in": user_logged_in})).map_err(|e| {
+                error!("Serialize error: {e:?}");
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?,
+        )
+        .map_err(|e| {
+            error!("Render error: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+    Ok(Html(response))
+}
+
+// TEST
 async fn users(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
     let username = User::find_by_id(1)
         .one(s.db())
@@ -145,6 +305,13 @@ async fn users(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
     Ok(Html(response))
+}
+
+// TEST
+async fn post_json_test(Json(payload): Json<SignUpForm>) {
+    println!("name: {}", payload.username);
+    println!("email: {}", payload.email);
+    println!("password: {}", payload.password);
 }
 
 #[tokio::main]
@@ -192,19 +359,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let app = Router::new();
-    let app = app.route("/calendar", get(calendar).with_state(s.clone()));
-    let app = app.route("/register", get(register_GET).with_state(s.clone()));
-    let app = app.route("/login", get(login_GET).with_state(s.clone()));
+    let app = app.layer(livereload);
+    let app = app.layer(CompressionLayer::new());
+
+    // GET render and deliver views
+    let app = app.route("/register", get(render_register).with_state(s.clone()));
+    let app = app.route("/login", get(render_login).with_state(s.clone()));
     let app = app.route("/users", get(users).with_state(s.clone()));
+    let app = app.route("/", get(render_home).with_state(s.clone()));
+
+    // GET static files
     let app = app.route_service("/output.css", ServeFile::new("output.css"));
     let app = app.route_service("/static/js/main.js", ServeFile::new("static/js/main.js"));
 
-    // test json GET / POST
+    // POST json / form data
     let app = app.route("/test", post(post_json_test));
     let app = app.route("/register", post(create_user).with_state(s.clone()));
-
-    let app = app.layer(livereload);
-    let app = app.layer(CompressionLayer::new());
+    let app = app.route("/login", post(login_user).with_state(s.clone()));
+    let app = app.route("/logout", post(logout_user).with_state(s.clone()));
+    let app = app.route("/update", post(update_user).with_state(s.clone()));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3030").await?;
     axum::serve(listener, app).await?;
