@@ -15,6 +15,7 @@ pub struct Model {
     pub salt: String,
     pub o_auth_id: Option<String>,
     pub o_auth_provider: Option<String>,
+    pub is_active: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

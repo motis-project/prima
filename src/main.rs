@@ -97,6 +97,7 @@ async fn create_user(
                 salt: ActiveValue::Set("".to_string()),
                 o_auth_id: ActiveValue::Set(Some("".to_string())),
                 o_auth_provider: ActiveValue::Set(Some("".to_string())),
+                is_active: ActiveValue::Set(true),
             })
             .exec(s.db())
             .await;
@@ -121,6 +122,7 @@ async fn login_user(
     let user = User::find()
         .filter(user::Column::Name.eq(login.username))
         .filter(user::Column::Password.eq(login.password))
+        .filter(user::Column::IsActive.eq(true))
         .one(s.db())
         .await
         .unwrap_or(None);
