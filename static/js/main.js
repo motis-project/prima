@@ -26,7 +26,7 @@ async function postData(url = "", data = {}) {
 async function logout_user() {
   console.log('logout');
   let username = "julia";
-  postData("http://localhost:3030/update", { id: 0, username: username, password: "" }).then((data) => {
+  postData("http://localhost:3030/delete", { id: 2, username: username, password: "" }).then((data) => {
     console.log(data);
   });
 }

@@ -63,7 +63,7 @@ struct SignUpForm {
 
 #[derive(Deserialize)]
 struct LoginForm {
-    //id: i32,
+    id: i32,
     username: String,
     password: String,
 }
@@ -163,41 +163,10 @@ async fn logout_user(
     Redirect::to(redirect_url)
 }
 
-// async fn deactivate_user(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
-//     let user = User::find_by_id(1)
-//         .one(s.db())
-//         .await
-//         .map_err(|e| {
-//             error!("Database error: {e:?}");
-//             StatusCode::INTERNAL_SERVER_ERROR
-//         })?
-//         .ok_or(StatusCode::NOT_FOUND)?;
-
-//     let mut user: user::ActiveModel = user.into();
-
-//     user.active = Set(false);
-
-//     let _ = user.update(s.db()).await;
-
-//     let username = "";
-//     let response = s
-//         .render(
-//             "user.html",
-//             &Context::from_serialize(json!({"user": username})).map_err(|e| {
-//                 error!("Serialize error: {e:?}");
-//                 StatusCode::INTERNAL_SERVER_ERROR
-//             })?,
-//         )
-//         .map_err(|e| {
-//             error!("Render error: {e:?}");
-//             StatusCode::INTERNAL_SERVER_ERROR
-//         })?;
-//     Ok(Html(response))
-// }
-
-fn delete_user() {}
-
-async fn update_user(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
+async fn deactivate_user(
+    State(s): State<AppState>,
+    Json(payload): Json<LoginForm>,
+) -> Result<Html<String>, StatusCode> {
     let user = User::find_by_id(1)
         .one(s.db())
         .await
@@ -209,7 +178,7 @@ async fn update_user(State(s): State<AppState>) -> Result<Html<String>, StatusCo
 
     let mut user: user::ActiveModel = user.into();
 
-    user.password = Set(Some("newpwd".to_string()));
+    user.is_active = Set(false);
 
     let _ = user.update(s.db()).await;
 
@@ -229,17 +198,76 @@ async fn update_user(State(s): State<AppState>) -> Result<Html<String>, StatusCo
     Ok(Html(response))
 }
 
+async fn delete_user(
+    State(s): State<AppState>,
+    Json(payload): Json<LoginForm>,
+) -> Result<Html<String>, StatusCode> {
+    let user = User::find_by_id(payload.id)
+        .one(s.db())
+        .await
+        .map_err(|e| {
+            error!("Database error: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    let user: user::ActiveModel = user.into();
+    let _ = user.delete(s.db()).await;
+
+    let username = "";
+    let response = s
+        .render(
+            "home.html",
+            &Context::from_serialize(json!({"user": username})).map_err(|e| {
+                error!("Serialize error: {e:?}");
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?,
+        )
+        .map_err(|e| {
+            error!("Render error: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+    Ok(Html(response))
+}
+
+async fn update_user(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
+    let user = User::find_by_id(1)
+        .one(s.db())
+        .await
+        .map_err(|e| {
+            error!("Database error: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    let username = user.name.to_owned();
+
+    let mut user: user::ActiveModel = user.into();
+    user.password = Set(Some("newpwd".to_string()));
+    let _ = user.update(s.db()).await;
+
+    let response = s
+        .render(
+            "user.html",
+            &Context::from_serialize(json!({"user": username})).map_err(|e| {
+                error!("Serialize error: {e:?}");
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?,
+        )
+        .map_err(|e| {
+            error!("Render error: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+    Ok(Html(response))
+}
+
 async fn is_user_logged_in(
     db: &DbConn,
-    username: &str,
+    user_id: i32,
 ) -> bool {
-    let user = User::find()
-        .filter(user::Column::Name.eq(username))
-        .one(db)
-        .await
-        .unwrap_or(None);
-    match user {
-        Some(user) => true,
+    let _user = User::find_by_id(user_id).one(db).await.unwrap_or(None);
+    match _user {
+        Some(_user) => true,
         None => false,
     }
 }
@@ -266,7 +294,7 @@ async fn render_home(
     _uri: Uri,
     State(s): State<AppState>,
 ) -> Result<Html<String>, StatusCode> {
-    let user_logged_in = is_user_logged_in(s.db(), "steffen").await;
+    let user_logged_in = is_user_logged_in(s.db(), 1).await;
     let response = s
         .render(
             "home.html",
@@ -380,6 +408,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = app.route("/login", post(login_user).with_state(s.clone()));
     let app = app.route("/logout", post(logout_user).with_state(s.clone()));
     let app = app.route("/update", post(update_user).with_state(s.clone()));
+    let app = app.route("/delete", post(delete_user).with_state(s.clone()));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3030").await?;
     axum::serve(listener, app).await?;
