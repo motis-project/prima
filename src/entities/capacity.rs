@@ -3,14 +3,15 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "vehicle")]
+#[sea_orm(table_name = "capacity")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    #[sea_orm(unique)]
-    pub license_plate: String,
     pub company: i32,
-    pub specifics: i32,
+    pub start_time: DateTime,
+    pub end_time: DateTime,
+    pub amount: i32,
+    pub vehicle_specifics: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -23,11 +24,9 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     Company,
-    #[sea_orm(has_many = "super::event::Entity")]
-    Event,
     #[sea_orm(
         belongs_to = "super::vehicle_specifics::Entity",
-        from = "Column::Specifics",
+        from = "Column::VehicleSpecifics",
         to = "super::vehicle_specifics::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
@@ -38,12 +37,6 @@ pub enum Relation {
 impl Related<super::company::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Company.def()
-    }
-}
-
-impl Related<super::event::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Event.def()
     }
 }
 
