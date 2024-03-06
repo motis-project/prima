@@ -1,4 +1,4 @@
-pub static BAUTZEN2: &str = 
+pub static BAUTZEN_WEST: &str = 
 r#"{
 "type": "MultiPolygon",
 "coordinates": [

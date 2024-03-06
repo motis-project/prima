@@ -1,6 +1,6 @@
 use crate::entities::prelude::User;
-use crate::be::backend::CreateVehicle;
-use crate::district_geojson::{bautzen_split_1::BAUTZEN1,bautzen_split_2::BAUTZEN2, gorlitz::GORLITZ};
+use crate::be::backend::{CreateZone, CreateVehicle, CreateCompany};
+use crate::district_geojson::{bautzen_split_ost::BAUTZEN_OST,bautzen_split_west::BAUTZEN_WEST, gorlitz::GORLITZ};
 use crate::be::backend::Data;
 
 use chrono::NaiveDate;
@@ -168,18 +168,18 @@ async fn init(State(s): State<AppState>){
 
     insert_user().await;
 
-    data.insert_zone(State(s.clone()), BAUTZEN1, "Bautzen Ost").await;
-    data.insert_zone(State(s.clone()), BAUTZEN2, "Bautzen West").await;
-    data.insert_zone(State(s.clone()), GORLITZ, "Görlitz").await;
+    data.insert_zone(State(s.clone()), axum::Json(CreateZone{name: "Bautzen Ost".to_string(), area: BAUTZEN_OST.to_string()})).await;
+    data.insert_zone(State(s.clone()), axum::Json(CreateZone{name: "Bautzen West".to_string(), area: BAUTZEN_WEST.to_string()})).await;
+    data.insert_zone(State(s.clone()), axum::Json(CreateZone{name: "Görlitz".to_string(), area: GORLITZ.to_string()})).await;
 
-    data.insert_company(State(s.clone()), 13.895983751721786,51.220826461859644,"Taxi-Unternehmen Bautzen-1",2).await;
-    data.insert_company(State(s.clone()), 14.034681384488607,51.31633774366952,"Taxi-Unternehmen Bautzen-2",2).await;
-    data.insert_company(State(s.clone()), 14.179674338162073,51.46704814415014,"Taxi-Unternehmen Bautzen-3",2).await;
-    data.insert_company(State(s.clone()), 14.244972698642613,51.27251252133357,"Taxi-Unternehmen Bautzen-4",1).await;
-    data.insert_company(State(s.clone()), 14.381821307922678,51.169106961190806,"Taxi-Unternehmen Bautzen-5",1).await;
-    data.insert_company(State(s.clone()), 14.708969872564097,51.43354047439519,"Taxi-Unternehmen Görtitz-1",3).await;
-    data.insert_company(State(s.clone()), 14.879525132220152,51.22165543174137,"Taxi-Unternehmen Görlitz-2",3).await;
-    data.insert_company(State(s.clone()), 14.753736228472121,51.04190085802671,"Taxi-Unternehmen Görlitz-3",3).await;
+    data.create_company(State(s.clone()), axum::Json(CreateCompany{name: "Taxi-Unternehmen Bautzen-1".to_string(), zone: 2, lng: 13.895983751721786, lat: 51.220826461859644})).await;
+    data.create_company(State(s.clone()), axum::Json(CreateCompany{name: "Taxi-Unternehmen Bautzen-2".to_string(), zone: 2, lng: 14.034681384488607, lat: 51.31633774366952})).await;
+    data.create_company(State(s.clone()), axum::Json(CreateCompany{name: "Taxi-Unternehmen Bautzen-3".to_string(), zone: 2, lng: 14.179674338162073, lat: 51.46704814415014})).await;
+    data.create_company(State(s.clone()), axum::Json(CreateCompany{name: "Taxi-Unternehmen Bautzen-4".to_string(), zone: 1, lng: 14.244972698642613, lat: 51.27251252133357})).await;
+    data.create_company(State(s.clone()), axum::Json(CreateCompany{name: "Taxi-Unternehmen Bautzen-5".to_string(), zone: 1, lng: 14.381821307922678, lat: 51.169106961190806})).await;
+    data.create_company(State(s.clone()), axum::Json(CreateCompany{name: "Taxi-Unternehmen Görlitz-1".to_string(), zone: 3, lng: 14.708969872564097, lat: 51.43354047439519})).await;
+    data.create_company(State(s.clone()), axum::Json(CreateCompany{name: "Taxi-Unternehmen Görlitz-2".to_string(), zone: 3, lng: 14.879525132220152, lat: 51.22165543174137})).await;
+    data.create_company(State(s.clone()), axum::Json(CreateCompany{name: "Taxi-Unternehmen Görlitz-3".to_string(), zone: 3, lng: 14.753736228472121, lat: 51.04190085802671})).await;
 
     data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB1-1".to_string(), company: 1, ..Default::default()})).await;
     data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB1-2".to_string(), company: 1, ..Default::default()})).await;

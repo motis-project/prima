@@ -3,6 +3,7 @@ use crate::{AppState,State};
 use crate::entities::prelude::*;
 
 use crate::{error,info};
+use geo::Point;
 use geojson::{GeoJson, Geometry,};
 use sea_orm::TryIntoModel;
 use sea_orm::{EntityTrait, ActiveValue};
@@ -12,6 +13,37 @@ use serde::Deserialize;
 use axum::Json;
 use std::collections::HashMap;
 
+
+struct Comp{
+    id: i32,
+    central_coordinates: geo::Point,
+    zone: i32,
+    name: String,
+}
+impl Comp{
+    fn from(creator: CreateCompany, new_id: i32)->Self{
+        Self{
+            id: new_id,
+            zone: creator.zone,
+            name: creator.name,
+            central_coordinates: Point::new(1.234, 2.345),
+        }
+    }
+}
+
+#[derive(Deserialize)]
+pub struct CreateCompany {
+    pub lat: f32,
+    pub lng: f32,
+    pub zone: i32,
+    pub name: String,
+}
+
+#[derive(Deserialize)]
+pub struct CreateZone {
+    pub area: String,
+    pub name: String,
+}
 
 #[derive(Deserialize)]
 pub struct CreateVehicle {
@@ -36,7 +68,6 @@ impl Default for CreateVehicle {
         }
     }
 }
-/*
 pub struct Interval{
     pub start_time: NaiveDateTime,
     pub end_time: NaiveDateTime,
@@ -72,6 +103,7 @@ impl Interval{
         }
     }
 }
+/*
 struct CapacityTreeRoot{
     children: Vec<CompanyNode>,
 }
@@ -263,11 +295,11 @@ impl Data{
         self.vehicle_specifics.push(active_m.try_into().unwrap());
     }
 
-    pub async fn insert_zone(&mut self, State(s): State<AppState>, multi_polygon: &str, name: &str){
+    pub async fn insert_zone(&mut self, State(s): State<AppState>, Json(post_request): Json<CreateZone>) {
         let result = Zone::insert(zone::ActiveModel {
             id: ActiveValue::NotSet,
-            area: ActiveValue::Set(multi_polygon.to_string()),
-            name: ActiveValue::Set(name.to_string())
+            area: ActiveValue::Set(post_request.area.to_string()),
+            name: ActiveValue::Set(post_request.name.to_string())
         })
         .exec(s.db())
         .await;
@@ -275,12 +307,33 @@ impl Data{
             Ok(_) => {info!("Zone created")},
             Err(e) => error!("Error creating zone: {e:?}"),
         }
-        let geojson = multi_polygon.parse::<GeoJson>().unwrap();
+        let geojson = post_request.area.parse::<GeoJson>().unwrap();
         let feature:Geometry = Geometry::try_from(geojson).unwrap();
         self.zones.push(geo::MultiPolygon::try_from(feature).unwrap());
     }
     
-    pub async fn insert_company(&mut self, State(s): State<AppState>, lng: f32, lat: f32, name: &str, zone: i32){
+    pub async fn create_company(&mut self, State(s): State<AppState>, Json(post_request): Json<CreateCompany>) {
+        let mut active_m = company::ActiveModel {
+            id: ActiveValue::NotSet,
+            longitude: ActiveValue::Set(post_request.lng),
+            latitude: ActiveValue::Set(post_request.lat),
+            name: ActiveValue::Set(post_request.name.to_string()),
+            zone: ActiveValue::Set(post_request.zone),
+        };
+        let result = Company::insert(active_m.clone())
+        .exec(s.db())
+        .await;
+
+        let mut last_insert_id = -1;
+        match result {
+            Ok(_) => {last_insert_id = result.unwrap().last_insert_id; info!("Company created")},
+            Err(e) => error!("Error creating company: {e:?}"),
+        }
+        active_m.id = ActiveValue::Set(last_insert_id);
+        self.companies.push(active_m.try_into().unwrap());
+    }
+    /*
+    pub async fn create_company(&mut self, State(s): State<AppState>, lng: f32, lat: f32, name: &str, zone: i32){
         let mut active_m = company::ActiveModel {
             id: ActiveValue::NotSet,
             longitude: ActiveValue::Set(lng),
@@ -300,6 +353,7 @@ impl Data{
         active_m.id = ActiveValue::Set(last_insert_id);
         self.companies.push(active_m.try_into().unwrap());
     }
+    */
     
     pub async fn insert_capacity(&mut self, State(s): State<AppState>, company: i32, amount: i32, seats: i32, wheelchairs: i32, storage_space: i32, start: NaiveDateTime, end_time: NaiveDateTime){
         let mut specs_id = -1;
@@ -313,11 +367,7 @@ impl Data{
             //since the new capacity is associated with a new set of vehicle specifics, it cannot collide with any relevant interval, since intervals are grouped by company and vehicle specifics.
             specs_id = self.find_or_create_vehicle_specs(State(s.clone()), seats, wheelchairs, storage_space).await;
         }else{
-            for c in self.companies.iter(){
-                for vs in self.vehicle_specifics.iter(){
 
-                }
-            }
         }
         let mut active_m = capacity::ActiveModel {
             id: ActiveValue::NotSet,
