@@ -2,25 +2,171 @@ use crate::entities::{vehicle_specifics, vehicle, company, capacity, zone, event
 use crate::{AppState,State};
 use crate::entities::prelude::*;
 
+use crate::{error,info};
 use geojson::{GeoJson, Geometry,};
-use sea_orm::{Database, TryIntoModel};
-use std::env;
+use sea_orm::TryIntoModel;
 use sea_orm::{EntityTrait, ActiveValue};
 use chrono::NaiveDateTime;
+use serde::de::IntoDeserializer;
 use serde::Deserialize;
 use axum::Json;
+use std::collections::HashMap;
+
 
 #[derive(Deserialize)]
-struct CreateVehicle {
-    license_plate: String,
-    company: i32,
-    /*
-    //defaulted for mvp
-    seats: i32,
-    wheelchairs: i32,
-    storage_space: i32,
-     */
+pub struct CreateVehicle {
+    pub license_plate: String,
+    pub company: i32,
+
+    //there are default values for the rest of the fields
+    pub seats: i32,
+    pub wheelchairs: i32,
+    pub storage_space: i32,
 }
+
+//default for simplification in the minimum viable product
+impl Default for CreateVehicle {
+    fn default() -> CreateVehicle {
+        CreateVehicle {
+            license_plate: "".to_string(),
+            company: -1,
+            seats: 3,
+            wheelchairs: 0,
+            storage_space: 0,
+        }
+    }
+}
+/*
+pub struct Interval{
+    pub start_time: NaiveDateTime,
+    pub end_time: NaiveDateTime,
+}
+
+impl Interval{
+    pub fn overlaps(self, other: Interval)->bool{
+        !(self.start_time>other.end_time||self.end_time<other.start_time)
+    }
+    pub fn touches(self, other: Interval)->bool{
+        self.start_time<=other.start_time&&self.end_time<=other.end_time||
+        self.start_time>=other.start_time&&self.end_time>=other.end_time
+    }
+    pub fn merge(&mut self, mut other: Interval){
+        self.start_time = if self.start_time<other.start_time{self.start_time}else{other.start_time};
+        self.end_time = if self.end_time<other.end_time{self.end_time}else{other.end_time};
+    }
+    pub fn contains(self, other: Interval)->bool{
+        self.start_time<=other.start_time||self.end_time>=other.end_time
+    }
+    pub fn splits(self, other: Interval)->bool{
+        self.start_time>other.start_time||self.end_time<other.end_time
+    }
+    pub fn split(self, other: Interval)->(Interval,Interval){
+        (Interval{start_time: other.start_time, end_time: self.start_time},
+            Interval{start_time: self.end_time, end_time: other.end_time})
+    }
+    pub fn cut(&mut self, other: Interval){
+        if self.start_time <= other.start_time {
+            self.end_time = other.start_time;
+        }else{
+            self.start_time = other.end_time;
+        }
+    }
+}
+struct CapacityTreeRoot{
+    children: Vec<CompanyNode>,
+}
+impl CapacityTreeRoot{
+    fn insert(&mut self, company: i32, vehicle_specifics: i32, interval: Interval, amount: i32){
+        let a = self.get_or_create(company).get_or_create(vehicle_specifics).insert_and_handle_overlaps(interval, amount);
+    }
+
+    fn get_or_create(&mut self, company: i32)->CompanyNode{
+        for c in self.children.iter(){
+            if c.company == company{
+                return *c
+            }
+        }
+        let node = CompanyNode::new(company);
+        self.children.push(node);
+        node
+    }
+}
+struct CompanyNode{
+    company: i32,
+    children: Vec<VehicleSpecificsNode>,
+}
+impl CompanyNode{
+    fn get_or_create(&mut self, specs: i32)->VehicleSpecificsNode{
+        for vs in self.children.iter(){
+            if vs.vehicle_specifics == specs{
+                return *vs
+            }
+        }
+        let node = VehicleSpecificsNode::new(specs);
+        self.children.push(node);
+        node
+    }
+
+    fn new(c: i32) -> Self {
+        Self{
+            company: c,
+            children: Vec::new(),
+        }
+    }
+}
+struct VehicleSpecificsNode{
+    vehicle_specifics: i32,
+    children: Vec<IntervalNode>,
+}
+impl VehicleSpecificsNode{
+    fn insert_and_handle_overlaps(&mut self, mut interval: Interval, amount: i32){
+        for i in self.children.iter(){
+            if !i.interval.overlaps(interval){continue;}
+            if i.interval.touches(interval){
+                if amount == i.amount{
+                    interval.merge(i.interval);
+                    //delete i.interval
+                    continue;
+                }else{
+                    i.interval.cut(interval);
+                }
+            }
+            if interval.contains(i.interval){
+                //delete i.interval
+                continue;
+            }
+            if interval.splits(i.interval){
+                if amount != i.amount{
+                    let (left,right) = interval.split(i.interval);
+                    //delete i, insert: left,right,interval
+                }
+                return
+            }
+        }
+        self.children.push(IntervalNode::new(interval, amount));
+    }
+
+    fn new(vs: i32) -> Self {
+        Self{
+            vehicle_specifics: vs,
+            children: Vec::new(),
+        }
+    }
+}
+struct IntervalNode{
+    interval: Interval,
+    amount: i32,
+}
+impl IntervalNode{
+    fn new(interv: Interval, a: i32) -> Self {
+        Self{
+            interval: interv,
+            amount: a,
+        }
+    }
+}
+
+*/
 
 pub struct Data{
     zones: Vec<geo::MultiPolygon>,
@@ -43,10 +189,6 @@ impl Data{
             highest_specs_id: 0}
     }
 
-    async fn create_vehicle(&mut self, State(s): State<AppState>, Json(post_request): Json<CreateVehicle>) {
-        self.insert_vehicle(State(s), post_request.company, &post_request.license_plate, 3,0,0).await;
-    }
-
     pub async fn read_data(&mut self, State(s): State<AppState>){
         let zone: Vec<zone::Model> = Zone::find()
             .all(s.db())
@@ -55,7 +197,7 @@ impl Data{
         self.events = Event::find().all(s.db()).await.unwrap();
         self.vehicles = Vehicle::find().all(s.db()).await.unwrap();
         self.vehicle_specifics = VehicleSpecifics::find().all(s.db()).await.unwrap();
-        self.capacities = Capacity::find().all(s.db()).await.unwrap();
+        //self.capacities = Capacity::find().all(s.db()).await.unwrap();
         for z in zone.iter(){
             let geojson = z.area.parse::<GeoJson>().unwrap();
             let feature:Geometry = Geometry::try_from(geojson).unwrap();
@@ -64,34 +206,61 @@ impl Data{
     }
 
     pub async fn find_or_create_vehicle_specs(&mut self, State(s): State<AppState>, seats:i32, wheelchairs: i32, storage_space: i32)->i32{
-        self.insert_vehicle_specifics(State(s), seats, wheelchairs, storage_space).await;
+        self.create_vehicle_specifics(State(s), seats, wheelchairs, storage_space).await;
         self.highest_specs_id += 1;
         self.highest_specs_id
     }
 
-    pub async fn insert_vehicle(&mut self, State(s): State<AppState>, company:i32, license_plate: &str, seats:i32, wheelchairs: i32, storage_space: i32){
+    pub async fn create_vehicle(&mut self, State(s): State<AppState>, Json(post_request): Json<CreateVehicle>) {
+        //check whether the vehicle fits one of the existing vehicle_specs, otherwise create a new one
         let mut specs_id = -1;
         for specs in self.vehicle_specifics.iter(){
-            if seats==specs.seats && wheelchairs == specs.wheelchairs && storage_space == specs.storage_space{
+            if post_request.seats==specs.seats && post_request.wheelchairs == specs.wheelchairs && post_request.storage_space == specs.storage_space{
                 specs_id = specs.id;
                 break;
             }
         }
         if specs_id==-1{
-            specs_id = self.find_or_create_vehicle_specs(State(s.clone()), seats,wheelchairs,storage_space).await;
+            specs_id = self.find_or_create_vehicle_specs(State(s.clone()), post_request.seats,post_request.wheelchairs,post_request.storage_space).await;
         }
         let mut active_m = vehicle::ActiveModel {
             id: ActiveValue::NotSet,
-            company: ActiveValue::Set(company),
-            license_plate: ActiveValue::Set(license_plate.to_string()),
+            company: ActiveValue::Set(post_request.company),
+            license_plate: ActiveValue::Set(post_request.license_plate.to_string()),
             specifics: ActiveValue::Set(specs_id),
         };
         let result = Vehicle::insert(active_m.clone())
         .exec(s.db())
         .await;
+        let mut last_insert_id = 0;
+        match result {
+            Ok(_) => {last_insert_id = result.unwrap().last_insert_id;info!("Vehicle with id {} created",last_insert_id)},
+            Err(e) => error!("Error creating vehicle: {e:?}"),
+        }
 
-        active_m.id = ActiveValue::Set(result.unwrap().last_insert_id);
+        active_m.id = ActiveValue::Set(last_insert_id);
         self.vehicles.push(active_m.try_into_model().unwrap());
+    }
+    
+    pub async fn create_vehicle_specifics(&mut self, State(s): State<AppState>, seats: i32, wheelchairs: i32, storage_space: i32){
+        let mut active_m = vehicle_specifics::ActiveModel {
+            id: ActiveValue::NotSet,
+            seats: ActiveValue::Set(seats),
+            wheelchairs: ActiveValue::Set(wheelchairs),
+            storage_space: ActiveValue::Set(storage_space),
+        };
+        let result = VehicleSpecifics::insert(active_m.clone())
+        .exec(s.db())
+        .await;
+
+        let mut last_insert_id = -1;
+        match result {
+            Ok(_) => {last_insert_id = result.unwrap().last_insert_id;info!("Vehicle specifics with id {} created",last_insert_id)},
+            Err(e) => error!("Error creating vehicle specifics: {e:?}"),
+        }
+
+        active_m.id = ActiveValue::Set(last_insert_id);
+        self.vehicle_specifics.push(active_m.try_into().unwrap());
     }
 
     pub async fn insert_zone(&mut self, State(s): State<AppState>, multi_polygon: &str, name: &str){
@@ -102,48 +271,63 @@ impl Data{
         })
         .exec(s.db())
         .await;
+        match result {
+            Ok(_) => {info!("Zone created")},
+            Err(e) => error!("Error creating zone: {e:?}"),
+        }
+        let geojson = multi_polygon.parse::<GeoJson>().unwrap();
+        let feature:Geometry = Geometry::try_from(geojson).unwrap();
+        self.zones.push(geo::MultiPolygon::try_from(feature).unwrap());
     }
     
-    pub async fn insert_vehicle_specifics(&mut self, State(s): State<AppState>, seats: i32, wheelchairs: i32, storage_space: i32){
-        let mut active_m = vehicle_specifics::ActiveModel {
-            id: ActiveValue::NotSet,
-            seats: ActiveValue::Set(seats),
-            wheelchairs: ActiveValue::Set(wheelchairs),
-            storage_space: ActiveValue::Set(storage_space),
-        };
-        let result = VehicleSpecifics::insert(active_m.clone())
-        .exec(s.db())
-        .await;
-    
-        active_m.id = ActiveValue::Set(result.unwrap().last_insert_id);
-        self.vehicle_specifics.push(active_m.try_into().unwrap());
-    }
-    
-    pub async fn insert_company(&mut self, State(s): State<AppState>, lng: f32, lat: f32, n: &str, z: i32){
+    pub async fn insert_company(&mut self, State(s): State<AppState>, lng: f32, lat: f32, name: &str, zone: i32){
         let mut active_m = company::ActiveModel {
             id: ActiveValue::NotSet,
             longitude: ActiveValue::Set(lng),
             latitude: ActiveValue::Set(lat),
-            name: ActiveValue::Set(n.to_string()),
-            zone: ActiveValue::Set(z),
+            name: ActiveValue::Set(name.to_string()),
+            zone: ActiveValue::Set(zone),
         };
         let result = Company::insert(active_m.clone())
         .exec(s.db())
         .await;
 
-        active_m.id = ActiveValue::Set(result.unwrap().last_insert_id);
+        let mut last_insert_id = -1;
+        match result {
+            Ok(_) => {last_insert_id = result.unwrap().last_insert_id; info!("Company created")},
+            Err(e) => error!("Error creating company: {e:?}"),
+        }
+        active_m.id = ActiveValue::Set(last_insert_id);
         self.companies.push(active_m.try_into().unwrap());
     }
     
-    pub async fn insert_capacity(&mut self, State(s): State<AppState>, c: i32, a: i32, spec: i32, start: NaiveDateTime, f: NaiveDateTime){
-        let result = Capacity::insert(capacity::ActiveModel {
+    pub async fn insert_capacity(&mut self, State(s): State<AppState>, company: i32, amount: i32, seats: i32, wheelchairs: i32, storage_space: i32, start: NaiveDateTime, end_time: NaiveDateTime){
+        let mut specs_id = -1;
+        for specs in self.vehicle_specifics.iter(){
+            if seats==specs.seats && wheelchairs == specs.wheelchairs && storage_space == specs.storage_space{
+                specs_id = specs.id;
+                break;
+            }
+        }
+        if specs_id==-1{
+            //since the new capacity is associated with a new set of vehicle specifics, it cannot collide with any relevant interval, since intervals are grouped by company and vehicle specifics.
+            specs_id = self.find_or_create_vehicle_specs(State(s.clone()), seats, wheelchairs, storage_space).await;
+        }else{
+            for c in self.companies.iter(){
+                for vs in self.vehicle_specifics.iter(){
+
+                }
+            }
+        }
+        let mut active_m = capacity::ActiveModel {
             id: ActiveValue::NotSet,
-            company: ActiveValue::Set(c),
-            amount: ActiveValue::Set(a),
-            vehicle_specifics: ActiveValue::Set(spec),
+            company: ActiveValue::Set(company),
+            amount: ActiveValue::Set(amount),
+            vehicle_specifics: ActiveValue::Set(specs_id),
             start_time: ActiveValue::Set(start),
-            end_time: ActiveValue::Set(f),
-        })
+            end_time: ActiveValue::Set(end_time),
+        };
+        let result = Capacity::insert(active_m)
         .exec(s.db())
         .await;
     }
@@ -188,12 +372,5 @@ impl Data{
         })
         .exec(s.db())
         .await;
-    }
-
-    pub async fn receive_capacity_post_request(){
-        let params = [("foo", "bar"), ("baz", "quux")];
-        let client = reqwest::Client::new();
-        let _res = client.post("http://httpbin.org/post")
-        .form(&params);
     }
 }

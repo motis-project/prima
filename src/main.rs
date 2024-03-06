@@ -1,5 +1,5 @@
 use crate::entities::prelude::User;
-
+use crate::be::backend::CreateVehicle;
 use crate::district_geojson::{bautzen_split_1::BAUTZEN1,bautzen_split_2::BAUTZEN2, gorlitz::GORLITZ};
 use crate::be::backend::Data;
 
@@ -172,8 +172,6 @@ async fn init(State(s): State<AppState>){
     data.insert_zone(State(s.clone()), BAUTZEN2, "Bautzen West").await;
     data.insert_zone(State(s.clone()), GORLITZ, "Görlitz").await;
 
-    data.insert_vehicle_specifics(State(s.clone()), 3,0,0).await;
-
     data.insert_company(State(s.clone()), 13.895983751721786,51.220826461859644,"Taxi-Unternehmen Bautzen-1",2).await;
     data.insert_company(State(s.clone()), 14.034681384488607,51.31633774366952,"Taxi-Unternehmen Bautzen-2",2).await;
     data.insert_company(State(s.clone()), 14.179674338162073,51.46704814415014,"Taxi-Unternehmen Bautzen-3",2).await;
@@ -183,56 +181,56 @@ async fn init(State(s): State<AppState>){
     data.insert_company(State(s.clone()), 14.879525132220152,51.22165543174137,"Taxi-Unternehmen Görlitz-2",3).await;
     data.insert_company(State(s.clone()), 14.753736228472121,51.04190085802671,"Taxi-Unternehmen Görlitz-3",3).await;
 
-    data.insert_vehicle(State(s.clone()), 1, "TUB1-1", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 1, "TUB1-2", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 1, "TUB1-3", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 1, "TUB1-4", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 1, "TUB1-5", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 2, "TUB2-1", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 2, "TUB2-2", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 2, "TUB2-3", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 3, "TUB3-1", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 3, "TUB3-2", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 3, "TUB3-3", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 3, "TUB3-4", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 4, "TUB4-1", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 4, "TUB4-2", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 5, "TUB5-1", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 5, "TUB5-2", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 5, "TUB5-3", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 6, "TUG1-1", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 6, "TUG1-2", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 6, "TUG1-3", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 7, "TUG2-1", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 7, "TUG2-2", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 7, "TUG2-3", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 7, "TUG2-4", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 8, "TUG3-1", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 8, "TUG3-2", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 8, "TUG3-3", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 8, "TUG3-4", 3, 0, 0).await;
-    data.insert_vehicle(State(s.clone()), 8, "TUG3-5", 3, 0, 0).await;
-
-    data.insert_capacity(State(s.clone()), 1, 4, 1, NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 1, 2, 1, NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(16, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(18, 00, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 1, 5, 1, NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 2, 3, 1, NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(15, 30, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 2, 1, 1, NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(7, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(11, 30, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 3, 2, 1, NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(8, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(12, 30, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 3, 4, 1, NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(7, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(12, 00, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 3, 4, 1, NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(11, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(16, 30, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 4, 2, 1, NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(8, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(16, 30, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 4, 2, 1, NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(10, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(15, 15, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 5, 2, 1, NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(8, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(13, 15, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 5, 3, 1, NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(11, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 35, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 6, 3, 1, NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(7, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(11, 35, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 6, 1, 1, NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(13, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(17, 0, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 6, 3, 1, NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(11, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(15, 0, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 7, 4, 1, NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(15, 0, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 7, 3, 1, NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(10, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(13, 0, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 8, 5, 1, NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(9, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(12, 30, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 8, 3, 1, NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(8, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(13, 0, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 8, 4, 1, NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(10, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(15, 0, 0).unwrap()).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB1-1".to_string(), company: 1, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB1-2".to_string(), company: 1, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB1-3".to_string(), company: 1, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB1-4".to_string(), company: 1, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB1-5".to_string(), company: 1, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB2-1".to_string(), company: 2, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB2-2".to_string(), company: 2, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB2-3".to_string(), company: 2, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB3-1".to_string(), company: 3, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB3-2".to_string(), company: 3, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB3-3".to_string(), company: 3, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB3-4".to_string(), company: 3, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB4-1".to_string(), company: 4, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB4-2".to_string(), company: 4, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB5-1".to_string(), company: 5, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB5-2".to_string(), company: 5, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUB5-3".to_string(), company: 5, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG1-1".to_string(), company: 6, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG1-2".to_string(), company: 6, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG1-3".to_string(), company: 6, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG2-1".to_string(), company: 7, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG2-2".to_string(), company: 7, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG2-3".to_string(), company: 7, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG2-4".to_string(), company: 7, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG3-1".to_string(), company: 8, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG3-2".to_string(), company: 8, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG3-3".to_string(), company: 8, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG3-4".to_string(), company: 8, ..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG3-5".to_string(), company: 8,..Default::default()})).await;
+    
+    data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 1, 2, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(16, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(18, 00, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 1, 5, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 2, 3, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(15, 30, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 2, 1, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(7, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(11, 30, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 3, 2, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(8, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(12, 30, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 3, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(7, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(12, 00, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 3, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(11, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(16, 30, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 4, 2, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(8, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(16, 30, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 4, 2, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(10, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(15, 15, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 5, 2, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(8, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(13, 15, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 5, 3, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(11, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 35, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 6, 3, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(7, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(11, 35, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 6, 1, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(13, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(17, 0, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 6, 3, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(11, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(15, 0, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 7, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(15, 0, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 7, 3, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(10, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(13, 0, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 8, 5, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(9, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(12, 30, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 8, 3, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(8, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(13, 0, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 8, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(10, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(15, 0, 0).unwrap()).await;
 
     data.insert_event_pair(State(s.clone()), 14.225917859910453, 51.26183078936296, NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 20, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), 1, None, 1, 1, 2, 0, 0, false,
     14.324673828581723, 51.336726303316794, NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(10, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(10, 10, 0).unwrap(), false).await;
