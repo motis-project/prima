@@ -30,3 +30,16 @@ async function logout_user() {
     console.log(data);
   });
 }
+
+function toggle_select(id) {
+  sel = document.getElementById("sel-" + id);
+  if (sel.value === "none") {
+    sel.style = "background-color: lightcoral;";
+  } else {
+    sel.style = "background-color: lightgreen;";
+  }
+}
+
+function show_route(tour_id) {
+  console.log(tour_id);
+}
