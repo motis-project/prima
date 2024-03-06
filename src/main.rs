@@ -7,15 +7,13 @@ use axum::{
     Form, Router,
 };
 use dotenv::dotenv;
-use entities::{event::Model, user};
+use entities::user;
 use itertools::Itertools;
 use log::setup_logging;
 use migration::{Migrator, MigratorTrait};
 use notify::Watcher;
-use reqwest::redirect;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, Database, DbConn, DbErr, EntityTrait, QueryFilter,
-    Set, Update,
+    ActiveModelTrait, ActiveValue, ColumnTrait, Database, DbConn, EntityTrait, QueryFilter, Set,
 };
 use serde::Deserialize;
 use serde::Serialize;

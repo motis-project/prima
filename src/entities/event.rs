@@ -7,20 +7,34 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub r#type: i32,
     #[sea_orm(column_type = "Float")]
     pub latitude: f32,
     #[sea_orm(column_type = "Float")]
     pub longitude: f32,
     pub scheduled_time: DateTime,
     pub communicated_time: DateTime,
-    pub vehicle: i32,
+    pub vehicle: Option<i32>,
     pub customer: i32,
-    pub driver: i32,
+    pub chain_id: Option<i32>,
+    pub request_id: i32,
+    pub company: i32,
+    pub passengers: i32,
+    pub wheelchairs: i32,
+    pub is_pickup: bool,
+    pub connects_public_transport: bool,
+    pub luggage: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::company::Entity",
+        from = "Column::Company",
+        to = "super::company::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Company,
     #[sea_orm(
         belongs_to = "super::user::Entity",
         from = "Column::Customer",
@@ -28,15 +42,7 @@ pub enum Relation {
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    User2,
-    #[sea_orm(
-        belongs_to = "super::user::Entity",
-        from = "Column::Driver",
-        to = "super::user::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
-    User1,
+    User,
     #[sea_orm(
         belongs_to = "super::vehicle::Entity",
         from = "Column::Vehicle",
@@ -45,6 +51,18 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     Vehicle,
+}
+
+impl Related<super::company::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Company.def()
+    }
+}
+
+impl Related<super::user::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::User.def()
+    }
 }
 
 impl Related<super::vehicle::Entity> for Entity {

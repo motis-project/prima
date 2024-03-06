@@ -3,6 +3,8 @@ pub use sea_orm_migration::prelude::*;
 mod m20220101_000001_init;
 mod m20240209_145121_user_pwd_email;
 mod m20240222_160326_user_active_flag;
+mod m20240225_091835_mvp;
+mod m20240304_210904_vehicle_specifics_table;
 
 pub struct Migrator;
 
@@ -13,6 +15,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20220101_000001_init::Migration),
             Box::new(m20240209_145121_user_pwd_email::Migration),
             Box::new(m20240222_160326_user_active_flag::Migration),
+            Box::new(m20240225_091835_mvp::Migration),
+            Box::new(m20240304_210904_vehicle_specifics_table::Migration),
         ]
     }
 }

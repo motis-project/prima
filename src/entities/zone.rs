@@ -8,9 +8,20 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub area: String,
+    #[sea_orm(unique)]
+    pub name: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(has_many = "super::company::Entity")]
+    Company,
+}
+
+impl Related<super::company::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Company.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}

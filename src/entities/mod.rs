@@ -2,7 +2,10 @@
 
 pub mod prelude;
 
+pub mod capacity;
+pub mod company;
 pub mod event;
 pub mod user;
 pub mod vehicle;
+pub mod vehicle_specifics;
 pub mod zone;
