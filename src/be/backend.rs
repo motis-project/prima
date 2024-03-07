@@ -1,6 +1,7 @@
 use crate::entities::{vehicle_specifics, vehicle, company, capacity, zone, event};
 use crate::{AppState,State};
 use crate::entities::prelude::*;
+use crate::be::interval::Interval;
 
 use crate::{error,info};
 use geo::Point;
@@ -8,7 +9,6 @@ use geojson::{GeoJson, Geometry,};
 use sea_orm::TryIntoModel;
 use sea_orm::{EntityTrait, ActiveValue};
 use chrono::NaiveDateTime;
-use serde::de::IntoDeserializer;
 use serde::Deserialize;
 use axum::Json;
 use std::collections::HashMap;
@@ -68,137 +68,121 @@ impl Default for CreateVehicle {
         }
     }
 }
-pub struct Interval{
-    pub start_time: NaiveDateTime,
-    pub end_time: NaiveDateTime,
-}
 
-impl Interval{
-    pub fn overlaps(self, other: Interval)->bool{
-        !(self.start_time>other.end_time||self.end_time<other.start_time)
-    }
-    pub fn touches(self, other: Interval)->bool{
-        self.start_time<=other.start_time&&self.end_time<=other.end_time||
-        self.start_time>=other.start_time&&self.end_time>=other.end_time
-    }
-    pub fn merge(&mut self, mut other: Interval){
-        self.start_time = if self.start_time<other.start_time{self.start_time}else{other.start_time};
-        self.end_time = if self.end_time<other.end_time{self.end_time}else{other.end_time};
-    }
-    pub fn contains(self, other: Interval)->bool{
-        self.start_time<=other.start_time||self.end_time>=other.end_time
-    }
-    pub fn splits(self, other: Interval)->bool{
-        self.start_time>other.start_time||self.end_time<other.end_time
-    }
-    pub fn split(self, other: Interval)->(Interval,Interval){
-        (Interval{start_time: other.start_time, end_time: self.start_time},
-            Interval{start_time: self.end_time, end_time: other.end_time})
-    }
-    pub fn cut(&mut self, other: Interval){
-        if self.start_time <= other.start_time {
-            self.end_time = other.start_time;
-        }else{
-            self.start_time = other.end_time;
-        }
-    }
-}
-/*
-struct CapacityTreeRoot{
-    children: Vec<CompanyNode>,
-}
-impl CapacityTreeRoot{
-    fn insert(&mut self, company: i32, vehicle_specifics: i32, interval: Interval, amount: i32){
-        let a = self.get_or_create(company).get_or_create(vehicle_specifics).insert_and_handle_overlaps(interval, amount);
-    }
 
-    fn get_or_create(&mut self, company: i32)->CompanyNode{
-        for c in self.children.iter(){
-            if c.company == company{
-                return *c
-            }
-        }
-        let node = CompanyNode::new(company);
-        self.children.push(node);
-        node
-    }
-}
-struct CompanyNode{
+#[derive(Eq, PartialEq, Hash, Copy, Clone,Debug)]
+pub struct CapacityKey{
+    vehicle_specs_id: i32,
     company: i32,
-    children: Vec<VehicleSpecificsNode>,
+    interval: Interval,
 }
-impl CompanyNode{
-    fn get_or_create(&mut self, specs: i32)->VehicleSpecificsNode{
-        for vs in self.children.iter(){
-            if vs.vehicle_specifics == specs{
-                return *vs
-            }
+
+
+pub struct Capacities{
+    capacities: HashMap<CapacityKey, i32>,
+    do_not_insert: bool,
+    mark_delete: Vec<CapacityKey>,
+    to_insert_keys: Vec<CapacityKey>,
+    to_insert_amounts: Vec<i32>,
+}
+impl Capacities{
+
+    async fn insert_into_db(&self, State(s): State<AppState>, key: &CapacityKey, new_amount: i32){
+        let active_m = capacity::ActiveModel {
+            id: ActiveValue::NotSet,
+            company: ActiveValue::Set(key.company),
+            amount: ActiveValue::Set(new_amount),
+            vehicle_specifics: ActiveValue::Set(key.vehicle_specs_id),
+            start_time: ActiveValue::Set(key.interval.start_time),
+            end_time: ActiveValue::Set(key.interval.end_time),
+        };
+        let result = Capacity::insert(active_m.clone())
+        .exec(s.clone().db())
+        .await;
+    
+        match result {
+            Ok(_) => {info!("Capacity created")},
+            Err(e) => error!("Error creating capacity: {e:?}"),
         }
-        let node = VehicleSpecificsNode::new(specs);
-        self.children.push(node);
-        node
     }
 
-    fn new(c: i32) -> Self {
-        Self{
-            company: c,
-            children: Vec::new(),
-        }
-    }
-}
-struct VehicleSpecificsNode{
-    vehicle_specifics: i32,
-    children: Vec<IntervalNode>,
-}
-impl VehicleSpecificsNode{
-    fn insert_and_handle_overlaps(&mut self, mut interval: Interval, amount: i32){
-        for i in self.children.iter(){
-            if !i.interval.overlaps(interval){continue;}
-            if i.interval.touches(interval){
-                if amount == i.amount{
-                    interval.merge(i.interval);
-                    //delete i.interval
-                    continue;
-                }else{
-                    i.interval.cut(interval);
-                }
-            }
-            if interval.contains(i.interval){
-                //delete i.interval
+    async fn insert_new_capacity(&mut self, State(s): State<AppState>, vehicle_specs: i32, new_company: i32, new_interval: &mut Interval, new_amount: i32){
+        let mut overlap_found = false;
+        for (key, old_amount) in self.capacities.iter(){
+            let old_interval = key.interval;
+            if key.company != new_company || key.vehicle_specs_id != vehicle_specs || !old_interval.touches(new_interval) {continue;}
+            if new_interval.contains(&old_interval){
+                println!("delete==============================================={} contains {}",new_interval, old_interval);
+                self.mark_delete.push(*key);
                 continue;
             }
-            if interval.splits(i.interval){
-                if amount != i.amount{
-                    let (left,right) = interval.split(i.interval);
-                    //delete i, insert: left,right,interval
+            if *old_amount == new_amount{
+                if old_interval.contains(&new_interval){
+                    println!("do nothing==============================================={}",new_interval);
+                    self.do_not_insert = true;
+                    break;
                 }
-                return
+                if new_interval.overlaps(&old_interval) {
+                    println!("merge==============================================={} and {}",old_interval, new_interval);
+                    new_interval.merge(&old_interval);
+                    self.mark_delete.push(*key);
+                    if overlap_found {break;}
+                    overlap_found = true;
+                    continue;
+                }
+            }else{
+                if old_interval.contains(new_interval){
+                    let (left,right) = old_interval.split(&new_interval);
+                    println!("split==============================================={} split by{} => {}, {}",old_interval,new_interval, left, right);
+                    self.to_insert_keys.push(CapacityKey{interval: left, vehicle_specs_id: key.vehicle_specs_id, company: key.company});
+                    self.to_insert_keys.push(CapacityKey{interval: right, vehicle_specs_id: key.vehicle_specs_id, company: key.company});
+                    self.to_insert_amounts.push(*old_amount);
+                    self.to_insert_amounts.push(*old_amount);
+                    self.mark_delete.push(*key);
+                    break;
+                }
+                if new_interval.overlaps(&old_interval){
+                    println!("cut==============================================={} by {} => {}",old_interval, new_interval, new_interval.cut(&old_interval));
+                    self.to_insert_keys.push(CapacityKey{interval: new_interval.cut(&old_interval), vehicle_specs_id: key.vehicle_specs_id, company: key.company});
+                    self.to_insert_amounts.push(*old_amount);
+                    self.mark_delete.push(*key);
+                    if overlap_found {break;}
+                    overlap_found = true;
+                    continue;
+                }
             }
         }
-        self.children.push(IntervalNode::new(interval, amount));
+        if !self.do_not_insert {
+            self.insert_into_db(State(s), &CapacityKey{vehicle_specs_id: vehicle_specs, company: new_company, interval: *new_interval}, new_amount).await;
+            self.capacities.insert(CapacityKey{vehicle_specs_id: vehicle_specs, company: new_company, interval: *new_interval}, new_amount);
+            println!("inserted interval: {}", new_interval);
+        }
+        self.do_not_insert = false;
+        
+    }
+    async fn delete_marked(&mut self, State(s): State<AppState>){
+        for key in self.mark_delete.clone(){
+            self.capacities.remove(&key);
+            println!("deleted interval: {}", key.interval);
+        }
+        self.mark_delete.clear();
+    }
+    async fn insert_collected(&mut self, State(s): State<AppState>){
+        for (pos,key) in self.to_insert_keys.iter().enumerate(){
+            self.insert_into_db(State(s.clone()), key, self.to_insert_amounts[pos]).await;
+            self.capacities.insert(*key, self.to_insert_amounts[pos]);
+            println!("inserted interval: {}", key.interval);
+        }
+        self.to_insert_amounts.clear();
+        self.to_insert_keys.clear();
     }
 
-    fn new(vs: i32) -> Self {
-        Self{
-            vehicle_specifics: vs,
-            children: Vec::new(),
-        }
+    pub async fn insert(&mut self, State(s): State<AppState>, vehicle_specs: i32, new_company: i32, new_interval: &mut Interval, new_amount: i32){
+        self.insert_new_capacity(State(s.clone()), vehicle_specs,new_company,new_interval,new_amount).await;
+        self.insert_collected(State(s.clone())).await;
+        self.delete_marked(State(s)).await;
     }
 }
-struct IntervalNode{
-    interval: Interval,
-    amount: i32,
-}
-impl IntervalNode{
-    fn new(interv: Interval, a: i32) -> Self {
-        Self{
-            interval: interv,
-            amount: a,
-        }
-    }
-}
-
-*/
 
 pub struct Data{
     zones: Vec<geo::MultiPolygon>,
@@ -206,7 +190,7 @@ pub struct Data{
     events: Vec<event::Model>,
     vehicles: Vec<vehicle::Model>,
     vehicle_specifics: Vec<vehicle_specifics::Model>,
-    capacities: Vec<capacity::Model>,
+    capacities: Capacities,
     highest_specs_id: i32,
 }
 
@@ -217,7 +201,7 @@ impl Data{
             events: Vec::<event::Model>::new(),
             vehicles: Vec::<vehicle::Model>::new(),
             vehicle_specifics: Vec::<vehicle_specifics::Model>::new(),
-            capacities: Vec::<capacity::Model>::new(),
+            capacities: Capacities { capacities: HashMap::<CapacityKey,i32>::new(), do_not_insert: false, mark_delete: Vec::<CapacityKey>::new(), to_insert_keys: Vec::<CapacityKey>::new(), to_insert_amounts: Vec::<i32>::new() },
             highest_specs_id: 0}
     }
 
@@ -332,30 +316,11 @@ impl Data{
         active_m.id = ActiveValue::Set(last_insert_id);
         self.companies.push(active_m.try_into().unwrap());
     }
-    /*
-    pub async fn create_company(&mut self, State(s): State<AppState>, lng: f32, lat: f32, name: &str, zone: i32){
-        let mut active_m = company::ActiveModel {
-            id: ActiveValue::NotSet,
-            longitude: ActiveValue::Set(lng),
-            latitude: ActiveValue::Set(lat),
-            name: ActiveValue::Set(name.to_string()),
-            zone: ActiveValue::Set(zone),
-        };
-        let result = Company::insert(active_m.clone())
-        .exec(s.db())
-        .await;
-
-        let mut last_insert_id = -1;
-        match result {
-            Ok(_) => {last_insert_id = result.unwrap().last_insert_id; info!("Company created")},
-            Err(e) => error!("Error creating company: {e:?}"),
-        }
-        active_m.id = ActiveValue::Set(last_insert_id);
-        self.companies.push(active_m.try_into().unwrap());
-    }
-    */
     
-    pub async fn insert_capacity(&mut self, State(s): State<AppState>, company: i32, amount: i32, seats: i32, wheelchairs: i32, storage_space: i32, start: NaiveDateTime, end_time: NaiveDateTime){
+    pub async fn insert_capacity(&mut self, State(s): State<AppState>, company: i32, amount: i32, seats: i32, wheelchairs: i32, storage_space: i32, start: NaiveDateTime, end: NaiveDateTime){
+        if end<=start{
+            error!("Error creating capacity");
+        }
         let mut specs_id = -1;
         for specs in self.vehicle_specifics.iter(){
             if seats==specs.seats && wheelchairs == specs.wheelchairs && storage_space == specs.storage_space{
@@ -364,22 +329,27 @@ impl Data{
             }
         }
         if specs_id==-1{
-            //since the new capacity is associated with a new set of vehicle specifics, it cannot collide with any relevant interval, since intervals are grouped by company and vehicle specifics.
+            //The new capacity is associated with a new set of vehicle specifics, it cannot collide with any relevant interval, since intervals are grouped by company and vehicle specifics.
             specs_id = self.find_or_create_vehicle_specs(State(s.clone()), seats, wheelchairs, storage_space).await;
-        }else{
+            
+            let active_m = capacity::ActiveModel {
+                id: ActiveValue::NotSet,
+                company: ActiveValue::Set(company),
+                amount: ActiveValue::Set(amount),
+                vehicle_specifics: ActiveValue::Set(specs_id),
+                start_time: ActiveValue::Set(start),
+                end_time: ActiveValue::Set(end),
+            };
+            let result = Capacity::insert(active_m)
+            .exec(s.db())
+            .await;
 
+            match result {
+                Ok(_) => {info!("Capacity created")},
+                Err(e) => error!("Error creating capacity: {e:?}"),
+            }
         }
-        let mut active_m = capacity::ActiveModel {
-            id: ActiveValue::NotSet,
-            company: ActiveValue::Set(company),
-            amount: ActiveValue::Set(amount),
-            vehicle_specifics: ActiveValue::Set(specs_id),
-            start_time: ActiveValue::Set(start),
-            end_time: ActiveValue::Set(end_time),
-        };
-        let result = Capacity::insert(active_m)
-        .exec(s.db())
-        .await;
+        self.capacities.insert_new_capacity(State(s), specs_id, company, &mut Interval{start_time: start, end_time: end}, amount);
     }
     
     pub async fn insert_event_pair(&mut self, State(s): State<AppState>, lng1: f32, lat1: f32, sched_t1: NaiveDateTime, comm_t1: NaiveDateTime, cus:i32, ch_id: Option<i32>, req_id: i32, comp: i32, pass: i32, wheel: i32, lug: i32, c_p_t1: bool,
@@ -424,3 +394,137 @@ impl Data{
         .await;
     }
 }
+
+/*
+#[cfg(test)]
+mod test {
+    use crate::be::backend::HashMap;
+    use crate::be::backend::CapacityKey;
+    use chrono::NaiveDate;
+    use crate::be::interval::Interval;
+    use super::Capacities;
+    use chrono::Timelike;
+
+    #[test]
+    fn test() {
+        let interval: Interval =  Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 0, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(10, 0, 0).unwrap()};
+        let interval1: Interval =  Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(12, 0, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(13, 0, 0).unwrap()};
+        let interval2: Interval =  Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 30, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(10, 30, 0).unwrap()};
+        let interval3: Interval =  Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(8, 30, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 30, 0).unwrap()};
+        let interval5: Interval =  Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 15, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 45, 0).unwrap()};
+        let mut interval_merge1_2: Interval = interval.clone();
+        interval_merge1_2.merge(&interval2);
+        assert_eq!(interval_merge1_2.start_time.hour(), 9);
+        assert_eq!(interval_merge1_2.start_time.minute(), 0);
+        assert_eq!(interval_merge1_2.end_time.hour(), 10);
+        assert_eq!(interval_merge1_2.end_time.minute(), 30);
+        let (left,right) = interval.split(&interval5);
+        let mut interval_merge_3_5 = interval3.clone();
+        interval_merge_3_5.merge(&interval5);
+        
+        let mut cap = Capacities{capacities: HashMap::<CapacityKey, i32>::new(),
+            do_not_insert: false,
+            mark_delete: Vec::<CapacityKey>::new(),
+            to_insert_keys: Vec::<CapacityKey>::new(),
+            to_insert_amounts: Vec::<i32>::new(),};
+
+            println!("_____________________{}",interval);
+        cap.insert(&1, &1, &mut interval.clone(), 5);//9:00 - 10:00
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval},).unwrap(),5 as i32);
+        assert_eq!(cap.capacities.keys().len(), 1);
+        assert_eq!(cap.do_not_insert, false);
+        assert_eq!(cap.mark_delete.is_empty(), true);
+        assert_eq!(cap.to_insert_amounts.is_empty(), true);
+        assert_eq!(cap.to_insert_keys.is_empty(), true);
+
+        println!("_____________________{}",interval1);
+        cap.insert(&1, &1, &mut interval1.clone(), 5);//12:00 - 13:00
+        //interval and interval1 do not touch an should both appear in capacities
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval},).unwrap(),5 as i32);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval1},).unwrap(),5 as i32);
+        assert_eq!(cap.capacities.keys().len(), 2);
+        assert_eq!(cap.do_not_insert, false);
+        assert_eq!(cap.mark_delete.is_empty(), true);
+        assert_eq!(cap.to_insert_amounts.is_empty(), true);
+        assert_eq!(cap.to_insert_keys.is_empty(), true);
+        
+        println!("_____________________{}",interval2);
+        cap.insert(&1, &1, &mut interval2.clone(), 5);//9:00 - 10:30
+        //interval_merge1_2: 9:00 - 10:30
+        //interval1 and 2 are overlapping, since they were introduced with the same amount, the merged interval is expected to be in capacities
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval_merge1_2},).unwrap(),5 as i32);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval1},).unwrap(),5 as i32);
+        assert_eq!(cap.capacities.keys().len(), 2);
+        assert_eq!(cap.do_not_insert, false);
+        assert_eq!(cap.mark_delete.is_empty(), true);
+        assert_eq!(cap.to_insert_amounts.is_empty(), true);
+        assert_eq!(cap.to_insert_keys.is_empty(), true);
+        
+        println!("_____________________{}",interval3);
+        assert_eq!(interval3.cut(&interval_merge1_2).start_time.hour(), 9);
+        assert_eq!(interval3.cut(&interval_merge1_2).start_time.minute(), 30);
+        assert_eq!(interval3.cut(&interval_merge1_2).end_time.hour(), 10);
+        assert_eq!(interval3.cut(&interval_merge1_2).end_time.minute(), 30);
+        assert_eq!(cap.do_not_insert, false);
+        assert_eq!(cap.mark_delete.is_empty(), true);
+        assert_eq!(cap.to_insert_amounts.is_empty(), true);
+        assert_eq!(cap.to_insert_keys.is_empty(), true);
+
+
+        cap.insert(&1, &1, &mut interval3.clone(), 4);//8:30 - 9:30
+        //interval3.cut(&interval_merge1_2): 9:30 - 10:30
+        //reintroducing interval should leave (interval_merge_1_2 cut by interval and interval) in capacities (since they were introduced with different amounts)
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval3},).unwrap(),4 as i32);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval3.cut(&interval_merge1_2)},).unwrap(),5 as i32);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval1},).unwrap(),5 as i32);
+        assert_eq!(cap.capacities.keys().len(), 3);
+        assert_eq!(cap.do_not_insert, false);
+        assert_eq!(cap.mark_delete.is_empty(), true);
+        assert_eq!(cap.to_insert_amounts.is_empty(), true);
+        assert_eq!(cap.to_insert_keys.is_empty(), true);
+
+
+        println!("_____________________{}",interval5);
+        cap.insert(&1, &1, &mut interval5.clone(), 4);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval_merge_3_5},).unwrap(),4 as i32);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval_merge_3_5.cut(&interval_merge1_2)},).unwrap(),5 as i32);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval1},).unwrap(),5 as i32);
+        assert_eq!(cap.capacities.keys().len(), 3);
+        assert_eq!(cap.do_not_insert, false);
+        assert_eq!(cap.mark_delete.is_empty(), true);
+        assert_eq!(cap.to_insert_amounts.is_empty(), true);
+        assert_eq!(cap.to_insert_keys.is_empty(), true);
+
+
+        println!("_____________________{}",interval);
+        cap.insert(&1, &1, &mut interval.clone(), 3);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval},).unwrap(),3 as i32);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval.cut(&interval_merge_3_5)},).unwrap(),4 as i32);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval.cut(&interval2)},).unwrap(),5 as i32);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval1},).unwrap(),5 as i32);
+        assert_eq!(cap.capacities.keys().len(), 4);
+        assert_eq!(cap.do_not_insert, false);
+        assert_eq!(cap.mark_delete.is_empty(), true);
+        assert_eq!(cap.to_insert_amounts.is_empty(), true);
+        assert_eq!(cap.to_insert_keys.is_empty(), true);
+        
+
+        println!("__________________left___{}",left);//split
+        println!("_________________right____{}",right);//split
+        println!("_____________________{}",interval5);//split
+        cap.insert(&1, &1, &mut interval5.clone(), 1);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: left},).unwrap(),3 as i32);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: right},).unwrap(),3 as i32);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval5},).unwrap(),1 as i32);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval.cut(&interval_merge_3_5)},).unwrap(),4 as i32);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval.cut(&interval2)},).unwrap(),5 as i32);
+        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval1},).unwrap(),5 as i32);
+        assert_eq!(cap.capacities.keys().len(), 6);
+        assert_eq!(cap.do_not_insert, false);
+        assert_eq!(cap.mark_delete.is_empty(), true);
+        assert_eq!(cap.to_insert_amounts.is_empty(), true);
+        assert_eq!(cap.to_insert_keys.is_empty(), true);
+
+    }
+}
+ */

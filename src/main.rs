@@ -212,7 +212,7 @@ async fn init(State(s): State<AppState>){
     data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG3-5".to_string(), company: 8,..Default::default()})).await;
     
     data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 1, 2, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(16, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(18, 00, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 1, 2, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(11, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(18, 00, 0).unwrap()).await;
     data.insert_capacity(State(s.clone()), 1, 5, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
     data.insert_capacity(State(s.clone()), 2, 3, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(15, 30, 0).unwrap()).await;
     data.insert_capacity(State(s.clone()), 2, 1, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(7, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(11, 30, 0).unwrap()).await;

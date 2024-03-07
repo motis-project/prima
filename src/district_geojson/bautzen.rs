@@ -1,4 +1,4 @@
-pub static BAUTZEN: &str = 
+pub static _BAUTZEN: &str = 
 r#"{
   "type": "FeatureCollection",
   "features": [
