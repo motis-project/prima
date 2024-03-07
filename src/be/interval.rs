@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{Datelike, NaiveDate, NaiveDateTime};
 use std::fmt;
 
 #[derive(Copy,Clone, Eq, PartialEq, Hash, Debug)]
@@ -14,6 +14,15 @@ impl fmt::Display for Interval {
 }
 
 impl Interval{
+    pub fn touches_day(&self, day: NaiveDate)->bool{
+        let time_touches_day = |time: NaiveDateTime, day: NaiveDate| -> bool {
+            if time.day()==day.day()&&time.month()==day.month()&&time.year()==day.year()
+            {
+                return true
+            } return false
+          };
+        if time_touches_day(self.start_time,day)||time_touches_day(self.end_time,day){return true}false
+    }
     pub fn touches(self, other: &Interval)->bool{
         !(self.start_time>=other.end_time||self.end_time<=other.start_time)
     }

@@ -7,8 +7,8 @@ use crate::{error,info};
 use geo::Point;
 use geojson::{GeoJson, Geometry,};
 use sea_orm::TryIntoModel;
-use sea_orm::{EntityTrait, ActiveValue};
-use chrono::NaiveDateTime;
+use sea_orm::{DeleteResult, EntityTrait, ActiveValue};
+use chrono::{NaiveDate, NaiveDateTime};
 use serde::Deserialize;
 use axum::Json;
 use std::collections::HashMap;
@@ -37,6 +37,14 @@ pub struct CreateCompany {
     pub lng: f32,
     pub zone: i32,
     pub name: String,
+}
+
+
+#[derive(Deserialize)]
+pub struct GetCapacity{
+    pub company:i32,
+    pub vehicle_specs:i32,
+    pub day: NaiveDate,
 }
 
 #[derive(Deserialize)]
@@ -72,11 +80,11 @@ impl Default for CreateVehicle {
 
 #[derive(Eq, PartialEq, Hash, Copy, Clone,Debug)]
 pub struct CapacityKey{
+    id: i32,
     vehicle_specs_id: i32,
     company: i32,
-    interval: Interval,
+    pub interval: Interval,
 }
-
 
 pub struct Capacities{
     capacities: HashMap<CapacityKey, i32>,
@@ -84,10 +92,11 @@ pub struct Capacities{
     mark_delete: Vec<CapacityKey>,
     to_insert_keys: Vec<CapacityKey>,
     to_insert_amounts: Vec<i32>,
+    to_insert_ids: Vec<i32>,
 }
 impl Capacities{
 
-    async fn insert_into_db(&self, State(s): State<AppState>, key: &CapacityKey, new_amount: i32){
+    async fn insert_into_db(&self, State(s): State<AppState>, key: &CapacityKey, new_amount: i32)->i32{
         let active_m = capacity::ActiveModel {
             id: ActiveValue::NotSet,
             company: ActiveValue::Set(key.company),
@@ -99,11 +108,12 @@ impl Capacities{
         let result = Capacity::insert(active_m.clone())
         .exec(s.clone().db())
         .await;
-    
+        
         match result {
-            Ok(_) => {info!("Capacity created")},
+            Ok(_) => {info!("Capacity created");return result.unwrap().last_insert_id},
             Err(e) => error!("Error creating capacity: {e:?}"),
         }
+        -1
     }
 
     async fn insert_new_capacity(&mut self, State(s): State<AppState>, vehicle_specs: i32, new_company: i32, new_interval: &mut Interval, new_amount: i32){
@@ -134,8 +144,8 @@ impl Capacities{
                 if old_interval.contains(new_interval){
                     let (left,right) = old_interval.split(&new_interval);
                     println!("split==============================================={} split by{} => {}, {}",old_interval,new_interval, left, right);
-                    self.to_insert_keys.push(CapacityKey{interval: left, vehicle_specs_id: key.vehicle_specs_id, company: key.company});
-                    self.to_insert_keys.push(CapacityKey{interval: right, vehicle_specs_id: key.vehicle_specs_id, company: key.company});
+                    self.to_insert_keys.push(CapacityKey{interval: left, vehicle_specs_id: key.vehicle_specs_id, company: key.company, id: -1});
+                    self.to_insert_keys.push(CapacityKey{interval: right, vehicle_specs_id: key.vehicle_specs_id, company: key.company, id: -1});
                     self.to_insert_amounts.push(*old_amount);
                     self.to_insert_amounts.push(*old_amount);
                     self.mark_delete.push(*key);
@@ -143,9 +153,11 @@ impl Capacities{
                 }
                 if new_interval.overlaps(&old_interval){
                     println!("cut==============================================={} by {} => {}",old_interval, new_interval, new_interval.cut(&old_interval));
-                    self.to_insert_keys.push(CapacityKey{interval: new_interval.cut(&old_interval), vehicle_specs_id: key.vehicle_specs_id, company: key.company});
+                    self.to_insert_keys.push(CapacityKey{interval: new_interval.cut(&old_interval), vehicle_specs_id: key.vehicle_specs_id, company: key.company, id: -1});
                     self.to_insert_amounts.push(*old_amount);
+                    println!("__________________________ keys to insert#: {} amounts to insert#:{}", self.to_insert_keys.len(), self.to_insert_amounts.len());
                     self.mark_delete.push(*key);
+                    println!("__________________________ keys to delete#: {}", self.mark_delete.len());
                     if overlap_found {break;}
                     overlap_found = true;
                     continue;
@@ -153,25 +165,40 @@ impl Capacities{
             }
         }
         if !self.do_not_insert {
-            self.insert_into_db(State(s), &CapacityKey{vehicle_specs_id: vehicle_specs, company: new_company, interval: *new_interval}, new_amount).await;
-            self.capacities.insert(CapacityKey{vehicle_specs_id: vehicle_specs, company: new_company, interval: *new_interval}, new_amount);
-            println!("inserted interval: {}", new_interval);
+            let new_id:i32 = self.insert_into_db(State(s), &CapacityKey{vehicle_specs_id: vehicle_specs, company: new_company, interval: *new_interval, id: -1}, new_amount).await;
+            self.capacities.insert(CapacityKey{vehicle_specs_id: vehicle_specs, company: new_company, interval: *new_interval, id: new_id}, new_amount);
+            println!("__________________inserted interval: {}", new_interval);
         }
         self.do_not_insert = false;
         
     }
     async fn delete_marked(&mut self, State(s): State<AppState>){
+        println!("___________________delete_marked___________");
         for key in self.mark_delete.clone(){
+            println!("__________________start deleting interval: {}", key.interval);
+            let res: Result<DeleteResult,migration::DbErr> = Capacity::delete_by_id(key.id).exec(s.clone().db()).await;
+
             self.capacities.remove(&key);
-            println!("deleted interval: {}", key.interval);
+            println!("__________________deleted interval: {}", key.interval);
         }
         self.mark_delete.clear();
     }
-    async fn insert_collected(&mut self, State(s): State<AppState>){
+    async fn insert_collected_into_db(&mut self, State(s): State<AppState>){
+        println!("______insert collected into db________ keys to insert#: {} amounts to insert#:{}", self.to_insert_keys.len(), self.to_insert_amounts.len());
         for (pos,key) in self.to_insert_keys.iter().enumerate(){
-            self.insert_into_db(State(s.clone()), key, self.to_insert_amounts[pos]).await;
+            println!("__________________start inserting interval into db: {}", key.interval);
+            let new_id:i32 = self.insert_into_db(State(s.clone()), key, self.to_insert_amounts[pos]).await;
+            self.to_insert_ids.push(new_id);
+            println!("__________________inserted interval into db: {}", key.interval);
+        }
+    }
+
+    fn insert_collected(&mut self){
+        println!("______insert collected________ keys to insert#: {} amounts to insert#:{}", self.to_insert_keys.len(), self.to_insert_amounts.len());
+        for (pos,key) in self.to_insert_keys.iter_mut().enumerate(){
+            key.id = self.to_insert_ids[pos];
             self.capacities.insert(*key, self.to_insert_amounts[pos]);
-            println!("inserted interval: {}", key.interval);
+            println!("__________________inserted interval: {}", key.interval);
         }
         self.to_insert_amounts.clear();
         self.to_insert_keys.clear();
@@ -179,7 +206,9 @@ impl Capacities{
 
     pub async fn insert(&mut self, State(s): State<AppState>, vehicle_specs: i32, new_company: i32, new_interval: &mut Interval, new_amount: i32){
         self.insert_new_capacity(State(s.clone()), vehicle_specs,new_company,new_interval,new_amount).await;
-        self.insert_collected(State(s.clone())).await;
+        println!("________________________________insert_new_capcity is done");
+        self.insert_collected_into_db(State(s.clone())).await;
+        self.insert_collected();
         self.delete_marked(State(s)).await;
     }
 }
@@ -201,7 +230,7 @@ impl Data{
             events: Vec::<event::Model>::new(),
             vehicles: Vec::<vehicle::Model>::new(),
             vehicle_specifics: Vec::<vehicle_specifics::Model>::new(),
-            capacities: Capacities { capacities: HashMap::<CapacityKey,i32>::new(), do_not_insert: false, mark_delete: Vec::<CapacityKey>::new(), to_insert_keys: Vec::<CapacityKey>::new(), to_insert_amounts: Vec::<i32>::new() },
+            capacities: Capacities { to_insert_ids: Vec::<i32>::new(), capacities: HashMap::<CapacityKey,i32>::new(), do_not_insert: false, mark_delete: Vec::<CapacityKey>::new(), to_insert_keys: Vec::<CapacityKey>::new(), to_insert_amounts: Vec::<i32>::new() },
             highest_specs_id: 0}
     }
 
@@ -349,7 +378,7 @@ impl Data{
                 Err(e) => error!("Error creating capacity: {e:?}"),
             }
         }
-        self.capacities.insert_new_capacity(State(s), specs_id, company, &mut Interval{start_time: start, end_time: end}, amount);
+        self.capacities.insert(State(s), specs_id, company, &mut Interval{start_time: start, end_time: end}, amount).await;
     }
     
     pub async fn insert_event_pair(&mut self, State(s): State<AppState>, lng1: f32, lat1: f32, sched_t1: NaiveDateTime, comm_t1: NaiveDateTime, cus:i32, ch_id: Option<i32>, req_id: i32, comp: i32, pass: i32, wheel: i32, lug: i32, c_p_t1: bool,
@@ -392,6 +421,15 @@ impl Data{
         })
         .exec(s.db())
         .await;
+    }
+
+    pub async fn get_capacity(&self, Json(get_request): Json<GetCapacity>)->Vec<CapacityKey>{
+        let mut ret:Vec<CapacityKey> = Vec::<CapacityKey>::new();
+        for (key,val) in self.capacities.capacities.iter(){
+            if get_request.company!=key.company||get_request.vehicle_specs!=key.vehicle_specs_id||!key.interval.touches_day(get_request.day){continue;}
+            ret.push(key.clone());
+        }
+        ret
     }
 }
 
@@ -528,3 +566,34 @@ mod test {
     }
 }
  */
+
+ #[cfg(test)]
+ mod test {
+    use crate::{Tera,Database,env,Arc,Mutex,AppState,Data};
+    use chrono::NaiveDate;
+    use axum::extract::State;
+ 
+     #[tokio::test]
+    async fn test() {
+
+        let tera = match Tera::new("html/*.html") {
+            Ok(t) => Arc::new(Mutex::new(t)),
+            Err(e) => {
+                println!("Parsing error(s): {}", e);
+                ::std::process::exit(1);
+            }
+        };
+        let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
+        let conn = Database::connect(db_url)
+            .await
+            .expect("Database connection failed");
+        let s = AppState {
+            tera: tera,
+            db: Arc::new(conn),
+        };
+        let mut data = Data::new();
+        data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
+        data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(11, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(18, 00, 0).unwrap()).await;
+        
+    }
+}

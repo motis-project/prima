@@ -1,7 +1,7 @@
 use crate::entities::prelude::User;
 use crate::be::backend::{CreateZone, CreateVehicle, CreateCompany};
 use crate::district_geojson::{bautzen_split_ost::BAUTZEN_OST,bautzen_split_west::BAUTZEN_WEST, gorlitz::GORLITZ};
-use crate::be::backend::Data;
+use crate::be::backend::{GetCapacity,CapacityKey,Data};
 
 use chrono::NaiveDate;
 use axum::{
@@ -213,7 +213,7 @@ async fn init(State(s): State<AppState>){
     
     data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
     data.insert_capacity(State(s.clone()), 1, 2, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(11, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(18, 00, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 1, 5, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 1, 5, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(9, 15, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
     data.insert_capacity(State(s.clone()), 2, 3, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(15, 30, 0).unwrap()).await;
     data.insert_capacity(State(s.clone()), 2, 1, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(7, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(11, 30, 0).unwrap()).await;
     data.insert_capacity(State(s.clone()), 3, 2, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(8, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(12, 30, 0).unwrap()).await;
@@ -226,14 +226,19 @@ async fn init(State(s): State<AppState>){
     data.insert_capacity(State(s.clone()), 6, 3, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(7, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(11, 35, 0).unwrap()).await;
     data.insert_capacity(State(s.clone()), 6, 1, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(13, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(17, 0, 0).unwrap()).await;
     data.insert_capacity(State(s.clone()), 6, 3, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(11, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(15, 0, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 7, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(15, 0, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 7, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 00, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(15, 0, 0).unwrap()).await;
     data.insert_capacity(State(s.clone()), 7, 3, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(10, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(13, 0, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 8, 5, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(9, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(12, 30, 0).unwrap()).await;
-    data.insert_capacity(State(s.clone()), 8, 3, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(8, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(13, 0, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 8, 5, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(9, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(12, 30, 0).unwrap()).await;
+    data.insert_capacity(State(s.clone()), 8, 3, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(8, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(13, 0, 0).unwrap()).await;
     data.insert_capacity(State(s.clone()), 8, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(10, 30, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(15, 0, 0).unwrap()).await;
 
     data.insert_event_pair(State(s.clone()), 14.225917859910453, 51.26183078936296, NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 20, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), 1, None, 1, 1, 2, 0, 0, false,
     14.324673828581723, 51.336726303316794, NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(10, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(10, 10, 0).unwrap(), false).await;
+
+    let read_capacities = data.get_capacity(axum::Json(GetCapacity{company: 1, vehicle_specs: 1, day: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap()})).await;
+    for cap in read_capacities.iter(){
+        println!("interval found for capacity - get request with company: 1 and vehicle specs: 1:    {}",cap.interval);
+    }
 }
 
 
