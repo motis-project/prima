@@ -210,49 +210,49 @@ async fn init(State(s): State<AppState>){
     data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG3-2".to_string(), company: 8, ..Default::default()})).await;
     data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG3-3".to_string(), company: 8, ..Default::default()})).await;
     data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG3-4".to_string(), company: 8, ..Default::default()})).await;
-    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG3-5".to_string(), company: 8,..Default::default()})).await;
+    data.create_vehicle(State(s.clone()), axum::Json(CreateVehicle{license_plate: "TUG3-5".to_string(), company: 8, ..Default::default()})).await;
     
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 1, seats: 0, wheelchairs: 0, storage_space: 0, amount: 4, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 1, seats: 3, wheelchairs: 0, storage_space: 0, amount: 4, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 30, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 1, seats: 0, wheelchairs: 0, storage_space: 0, amount: 2, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 1, seats: 3, wheelchairs: 0, storage_space: 0, amount: 2, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(11, 0, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(18, 00, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 1, seats: 0, wheelchairs: 0, storage_space: 0, amount: 5, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 1, seats: 3, wheelchairs: 0, storage_space: 0, amount: 5, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(9, 15, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(14, 30, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 2, seats: 0, wheelchairs: 0, storage_space: 0, amount: 3, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 2, seats: 3, wheelchairs: 0, storage_space: 0, amount: 3, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(15, 30, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 2, seats: 0, wheelchairs: 0, storage_space: 0, amount: 1, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 2, seats: 3, wheelchairs: 0, storage_space: 0, amount: 1, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(7, 0, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(11, 30, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 3, seats: 0, wheelchairs: 0, storage_space: 0, amount: 2, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 3, seats: 3, wheelchairs: 0, storage_space: 0, amount: 2, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(8, 0, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(12, 30, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 3, seats: 0, wheelchairs: 0, storage_space: 0, amount: 4, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 3, seats: 3, wheelchairs: 0, storage_space: 0, amount: 4, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(7, 0, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(12, 0, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 3, seats: 0, wheelchairs: 0, storage_space: 0, amount: 4, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 3, seats: 3, wheelchairs: 0, storage_space: 0, amount: 4, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(11, 0, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(16, 30, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 4, seats: 0, wheelchairs: 0, storage_space: 0, amount: 2, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 4, seats: 3, wheelchairs: 0, storage_space: 0, amount: 2, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(8, 0, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(16, 30, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 4, seats: 0, wheelchairs: 0, storage_space: 0, amount: 2, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 4, seats: 3, wheelchairs: 0, storage_space: 0, amount: 2, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(10, 0, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(15, 15, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 5, seats: 0, wheelchairs: 0, storage_space: 0, amount: 2, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 5, seats: 3, wheelchairs: 0, storage_space: 0, amount: 2, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(8, 0, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(13, 15, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 5, seats: 0, wheelchairs: 0, storage_space: 0, amount: 3, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 5, seats: 3, wheelchairs: 0, storage_space: 0, amount: 3, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(11, 0, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 35, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 6, seats: 0, wheelchairs: 0, storage_space: 0, amount: 3, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 6, seats: 3, wheelchairs: 0, storage_space: 0, amount: 3, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(7, 30, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(11, 35, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 6, seats: 0, wheelchairs: 0, storage_space: 0, amount: 1, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 6, seats: 3, wheelchairs: 0, storage_space: 0, amount: 1, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(13, 0, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(17, 0, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 6, seats: 0, wheelchairs: 0, storage_space: 0, amount: 3, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 6, seats: 3, wheelchairs: 0, storage_space: 0, amount: 3, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(11, 0, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(15, 0, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 7, seats: 0, wheelchairs: 0, storage_space: 0, amount: 4, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 7, seats: 3, wheelchairs: 0, storage_space: 0, amount: 4, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 0, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(15, 0, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 7, seats: 0, wheelchairs: 0, storage_space: 0, amount: 3, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 7, seats: 3, wheelchairs: 0, storage_space: 0, amount: 3, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(10, 30, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(13, 0, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 8, seats: 0, wheelchairs: 0, storage_space: 0, amount: 5, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 8, seats: 3, wheelchairs: 0, storage_space: 0, amount: 5, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(9, 30, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 14).unwrap().and_hms_opt(12, 30, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 8, seats: 0, wheelchairs: 0, storage_space: 0, amount: 3, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 8, seats: 3, wheelchairs: 0, storage_space: 0, amount: 3, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(8, 30, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(13, 0, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 8, seats: 0, wheelchairs: 0, storage_space: 0, amount: 4, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 8, seats: 3, wheelchairs: 0, storage_space: 0, amount: 4, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(10, 30, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 16).unwrap().and_hms_opt(15, 0, 0).unwrap()}})).await;
-    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 8, seats: 0, wheelchairs: 0, storage_space: 0, amount: 4, interval:
+    data.create_capacity(State(s.clone()), axum::Json(CapacityInsert{company: 8, seats: 3, wheelchairs: 0, storage_space: 0, amount: 4, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 30, 0).unwrap()}})).await;
 
     data.insert_event_pair(State(s.clone()), 14.225917859910453, 51.26183078936296, NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 20, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), 1, None, 1, 1, 2, 0, 0, false,

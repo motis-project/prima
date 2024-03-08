@@ -260,6 +260,12 @@ impl Data{
     }
 
     pub async fn find_or_create_vehicle_specs(&mut self, State(s): State<AppState>, seats:i32, wheelchairs: i32, storage_space: i32)->i32{
+        for specs in self.vehicle_specifics.iter(){
+            if seats==specs.seats && wheelchairs == specs.wheelchairs && storage_space == specs.storage_space{
+                return specs.id
+            }
+        }
+        //println!("___________________===================____________new seats: {}", seats);
         self.create_vehicle_specifics(State(s), seats, wheelchairs, storage_space).await;
         self.highest_specs_id += 1;
         self.highest_specs_id
@@ -267,16 +273,7 @@ impl Data{
 
     pub async fn create_vehicle(&mut self, State(s): State<AppState>, Json(post_request): Json<CreateVehicle>) {
         //check whether the vehicle fits one of the existing vehicle_specs, otherwise create a new one
-        let mut specs_id = -1;
-        for specs in self.vehicle_specifics.iter(){
-            if post_request.seats==specs.seats && post_request.wheelchairs == specs.wheelchairs && post_request.storage_space == specs.storage_space{
-                specs_id = specs.id;
-                break;
-            }
-        }
-        if specs_id==-1{
-            specs_id = self.find_or_create_vehicle_specs(State(s.clone()), post_request.seats,post_request.wheelchairs,post_request.storage_space).await;
-        }
+        let specs_id = self.find_or_create_vehicle_specs(State(s.clone()), post_request.seats,post_request.wheelchairs,post_request.storage_space).await;
         let mut active_m = vehicle::ActiveModel {
             id: ActiveValue::NotSet,
             company: ActiveValue::Set(post_request.company),
@@ -361,34 +358,7 @@ impl Data{
         if end<=start{
             error!("Error creating capacity, invalid interval");
         }
-        let mut specs_id = -1;
-        for specs in self.vehicle_specifics.iter(){
-            if post_request.seats==specs.seats && post_request.wheelchairs == specs.wheelchairs && post_request.storage_space == specs.storage_space{
-                specs_id = specs.id;
-                break;
-            }
-        }
-        if specs_id==-1{
-            //The new capacity is associated with a new set of vehicle specifics, it cannot collide with any relevant interval, since intervals are grouped by company and vehicle specifics.
-            specs_id = self.find_or_create_vehicle_specs(State(s.clone()), post_request.seats, post_request.wheelchairs, post_request.storage_space).await;
-            
-            let active_m = capacity::ActiveModel {
-                id: ActiveValue::NotSet,
-                company: ActiveValue::Set(post_request.company),
-                amount: ActiveValue::Set(post_request.amount),
-                vehicle_specifics: ActiveValue::Set(specs_id),
-                start_time: ActiveValue::Set(start),
-                end_time: ActiveValue::Set(end),
-            };
-            let result = Capacity::insert(active_m)
-            .exec(s.db())
-            .await;
-
-            match result {
-                Ok(_) => {info!("Capacity created")},
-                Err(e) => error!("Error creating capacity: {e:?}"),
-            }
-        }
+        let specs_id = self.find_or_create_vehicle_specs(State(s.clone()), post_request.seats, post_request.wheelchairs, post_request.storage_space).await;
         self.capacities.insert(State(s), specs_id, post_request.company, &mut Interval{start_time: start, end_time: end}, post_request.amount).await;
     }
     
