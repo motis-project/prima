@@ -77,8 +77,17 @@ impl Default for CreateVehicle {
     }
 }
 
+#[derive(Deserialize)]
+pub struct CapacityInsert{
+    pub seats: i32,
+    pub wheelchairs: i32,
+    pub storage_space: i32,
+    pub company: i32,
+    pub interval: Interval,
+    pub amount: i32,
+}
 
-#[derive(Eq, PartialEq, Hash, Copy, Clone,Debug)]
+#[derive(Eq, PartialEq, Hash, Copy, Clone,Debug,Deserialize)]
 pub struct CapacityKey{
     id: i32,
     vehicle_specs_id: i32,
@@ -346,25 +355,27 @@ impl Data{
         self.companies.push(active_m.try_into().unwrap());
     }
     
-    pub async fn insert_capacity(&mut self, State(s): State<AppState>, company: i32, amount: i32, seats: i32, wheelchairs: i32, storage_space: i32, start: NaiveDateTime, end: NaiveDateTime){
+    pub async fn create_capacity(&mut self, State(s): State<AppState>, Json(post_request): Json<CapacityInsert>){
+        let start:NaiveDateTime = post_request.interval.start_time;
+        let end:NaiveDateTime = post_request.interval.end_time;
         if end<=start{
-            error!("Error creating capacity");
+            error!("Error creating capacity, invalid interval");
         }
         let mut specs_id = -1;
         for specs in self.vehicle_specifics.iter(){
-            if seats==specs.seats && wheelchairs == specs.wheelchairs && storage_space == specs.storage_space{
+            if post_request.seats==specs.seats && post_request.wheelchairs == specs.wheelchairs && post_request.storage_space == specs.storage_space{
                 specs_id = specs.id;
                 break;
             }
         }
         if specs_id==-1{
             //The new capacity is associated with a new set of vehicle specifics, it cannot collide with any relevant interval, since intervals are grouped by company and vehicle specifics.
-            specs_id = self.find_or_create_vehicle_specs(State(s.clone()), seats, wheelchairs, storage_space).await;
+            specs_id = self.find_or_create_vehicle_specs(State(s.clone()), post_request.seats, post_request.wheelchairs, post_request.storage_space).await;
             
             let active_m = capacity::ActiveModel {
                 id: ActiveValue::NotSet,
-                company: ActiveValue::Set(company),
-                amount: ActiveValue::Set(amount),
+                company: ActiveValue::Set(post_request.company),
+                amount: ActiveValue::Set(post_request.amount),
                 vehicle_specifics: ActiveValue::Set(specs_id),
                 start_time: ActiveValue::Set(start),
                 end_time: ActiveValue::Set(end),
@@ -378,7 +389,7 @@ impl Data{
                 Err(e) => error!("Error creating capacity: {e:?}"),
             }
         }
-        self.capacities.insert(State(s), specs_id, company, &mut Interval{start_time: start, end_time: end}, amount).await;
+        self.capacities.insert(State(s), specs_id, post_request.company, &mut Interval{start_time: start, end_time: end}, post_request.amount).await;
     }
     
     pub async fn insert_event_pair(&mut self, State(s): State<AppState>, lng1: f32, lat1: f32, sched_t1: NaiveDateTime, comm_t1: NaiveDateTime, cus:i32, ch_id: Option<i32>, req_id: i32, comp: i32, pass: i32, wheel: i32, lug: i32, c_p_t1: bool,
@@ -433,139 +444,6 @@ impl Data{
     }
 }
 
-/*
-#[cfg(test)]
-mod test {
-    use crate::be::backend::HashMap;
-    use crate::be::backend::CapacityKey;
-    use chrono::NaiveDate;
-    use crate::be::interval::Interval;
-    use super::Capacities;
-    use chrono::Timelike;
-
-    #[test]
-    fn test() {
-        let interval: Interval =  Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 0, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(10, 0, 0).unwrap()};
-        let interval1: Interval =  Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(12, 0, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(13, 0, 0).unwrap()};
-        let interval2: Interval =  Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 30, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(10, 30, 0).unwrap()};
-        let interval3: Interval =  Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(8, 30, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 30, 0).unwrap()};
-        let interval5: Interval =  Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 15, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 45, 0).unwrap()};
-        let mut interval_merge1_2: Interval = interval.clone();
-        interval_merge1_2.merge(&interval2);
-        assert_eq!(interval_merge1_2.start_time.hour(), 9);
-        assert_eq!(interval_merge1_2.start_time.minute(), 0);
-        assert_eq!(interval_merge1_2.end_time.hour(), 10);
-        assert_eq!(interval_merge1_2.end_time.minute(), 30);
-        let (left,right) = interval.split(&interval5);
-        let mut interval_merge_3_5 = interval3.clone();
-        interval_merge_3_5.merge(&interval5);
-        
-        let mut cap = Capacities{capacities: HashMap::<CapacityKey, i32>::new(),
-            do_not_insert: false,
-            mark_delete: Vec::<CapacityKey>::new(),
-            to_insert_keys: Vec::<CapacityKey>::new(),
-            to_insert_amounts: Vec::<i32>::new(),};
-
-            println!("_____________________{}",interval);
-        cap.insert(&1, &1, &mut interval.clone(), 5);//9:00 - 10:00
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval},).unwrap(),5 as i32);
-        assert_eq!(cap.capacities.keys().len(), 1);
-        assert_eq!(cap.do_not_insert, false);
-        assert_eq!(cap.mark_delete.is_empty(), true);
-        assert_eq!(cap.to_insert_amounts.is_empty(), true);
-        assert_eq!(cap.to_insert_keys.is_empty(), true);
-
-        println!("_____________________{}",interval1);
-        cap.insert(&1, &1, &mut interval1.clone(), 5);//12:00 - 13:00
-        //interval and interval1 do not touch an should both appear in capacities
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval},).unwrap(),5 as i32);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval1},).unwrap(),5 as i32);
-        assert_eq!(cap.capacities.keys().len(), 2);
-        assert_eq!(cap.do_not_insert, false);
-        assert_eq!(cap.mark_delete.is_empty(), true);
-        assert_eq!(cap.to_insert_amounts.is_empty(), true);
-        assert_eq!(cap.to_insert_keys.is_empty(), true);
-        
-        println!("_____________________{}",interval2);
-        cap.insert(&1, &1, &mut interval2.clone(), 5);//9:00 - 10:30
-        //interval_merge1_2: 9:00 - 10:30
-        //interval1 and 2 are overlapping, since they were introduced with the same amount, the merged interval is expected to be in capacities
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval_merge1_2},).unwrap(),5 as i32);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval1},).unwrap(),5 as i32);
-        assert_eq!(cap.capacities.keys().len(), 2);
-        assert_eq!(cap.do_not_insert, false);
-        assert_eq!(cap.mark_delete.is_empty(), true);
-        assert_eq!(cap.to_insert_amounts.is_empty(), true);
-        assert_eq!(cap.to_insert_keys.is_empty(), true);
-        
-        println!("_____________________{}",interval3);
-        assert_eq!(interval3.cut(&interval_merge1_2).start_time.hour(), 9);
-        assert_eq!(interval3.cut(&interval_merge1_2).start_time.minute(), 30);
-        assert_eq!(interval3.cut(&interval_merge1_2).end_time.hour(), 10);
-        assert_eq!(interval3.cut(&interval_merge1_2).end_time.minute(), 30);
-        assert_eq!(cap.do_not_insert, false);
-        assert_eq!(cap.mark_delete.is_empty(), true);
-        assert_eq!(cap.to_insert_amounts.is_empty(), true);
-        assert_eq!(cap.to_insert_keys.is_empty(), true);
-
-
-        cap.insert(&1, &1, &mut interval3.clone(), 4);//8:30 - 9:30
-        //interval3.cut(&interval_merge1_2): 9:30 - 10:30
-        //reintroducing interval should leave (interval_merge_1_2 cut by interval and interval) in capacities (since they were introduced with different amounts)
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval3},).unwrap(),4 as i32);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval3.cut(&interval_merge1_2)},).unwrap(),5 as i32);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval1},).unwrap(),5 as i32);
-        assert_eq!(cap.capacities.keys().len(), 3);
-        assert_eq!(cap.do_not_insert, false);
-        assert_eq!(cap.mark_delete.is_empty(), true);
-        assert_eq!(cap.to_insert_amounts.is_empty(), true);
-        assert_eq!(cap.to_insert_keys.is_empty(), true);
-
-
-        println!("_____________________{}",interval5);
-        cap.insert(&1, &1, &mut interval5.clone(), 4);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval_merge_3_5},).unwrap(),4 as i32);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval_merge_3_5.cut(&interval_merge1_2)},).unwrap(),5 as i32);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval1},).unwrap(),5 as i32);
-        assert_eq!(cap.capacities.keys().len(), 3);
-        assert_eq!(cap.do_not_insert, false);
-        assert_eq!(cap.mark_delete.is_empty(), true);
-        assert_eq!(cap.to_insert_amounts.is_empty(), true);
-        assert_eq!(cap.to_insert_keys.is_empty(), true);
-
-
-        println!("_____________________{}",interval);
-        cap.insert(&1, &1, &mut interval.clone(), 3);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval},).unwrap(),3 as i32);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval.cut(&interval_merge_3_5)},).unwrap(),4 as i32);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval.cut(&interval2)},).unwrap(),5 as i32);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval1},).unwrap(),5 as i32);
-        assert_eq!(cap.capacities.keys().len(), 4);
-        assert_eq!(cap.do_not_insert, false);
-        assert_eq!(cap.mark_delete.is_empty(), true);
-        assert_eq!(cap.to_insert_amounts.is_empty(), true);
-        assert_eq!(cap.to_insert_keys.is_empty(), true);
-        
-
-        println!("__________________left___{}",left);//split
-        println!("_________________right____{}",right);//split
-        println!("_____________________{}",interval5);//split
-        cap.insert(&1, &1, &mut interval5.clone(), 1);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: left},).unwrap(),3 as i32);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: right},).unwrap(),3 as i32);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval5},).unwrap(),1 as i32);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval.cut(&interval_merge_3_5)},).unwrap(),4 as i32);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval.cut(&interval2)},).unwrap(),5 as i32);
-        assert_eq!(*cap.capacities.get(&CapacityKey{vehicle_specs_id: 1, company: 1, interval: interval1},).unwrap(),5 as i32);
-        assert_eq!(cap.capacities.keys().len(), 6);
-        assert_eq!(cap.do_not_insert, false);
-        assert_eq!(cap.mark_delete.is_empty(), true);
-        assert_eq!(cap.to_insert_amounts.is_empty(), true);
-        assert_eq!(cap.to_insert_keys.is_empty(), true);
-
-    }
-}
- */
 
  #[cfg(test)]
  mod test {
@@ -592,8 +470,8 @@ mod test {
             db: Arc::new(conn),
         };
         let mut data = Data::new();
-        data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
-        data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(11, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(18, 00, 0).unwrap()).await;
+        //data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
+        //data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(11, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(18, 00, 0).unwrap()).await;
         
     }
 }
