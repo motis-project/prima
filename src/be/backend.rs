@@ -14,22 +14,6 @@ use axum::Json;
 use std::collections::HashMap;
 
 
-struct Comp{
-    id: i32,
-    central_coordinates: geo::Point,
-    zone: i32,
-    name: String,
-}
-impl Comp{
-    fn from(creator: CreateCompany, new_id: i32)->Self{
-        Self{
-            id: new_id,
-            zone: creator.zone,
-            name: creator.name,
-            central_coordinates: Point::new(1.234, 2.345),
-        }
-    }
-}
 
 #[derive(Deserialize)]
 pub struct CreateCompany {
@@ -78,13 +62,73 @@ impl Default for CreateVehicle {
 }
 
 #[derive(Deserialize)]
-pub struct CapacityInsert{
+pub struct CreateCapacity{
     pub seats: i32,
     pub wheelchairs: i32,
     pub storage_space: i32,
     pub company: i32,
     pub interval: Interval,
     pub amount: i32,
+}
+
+#[derive(Deserialize)]
+pub struct  RoutingRequest{
+    fixed_time: NaiveDateTime,
+    is_start_time_fixed: bool,
+    start_lat: f32,
+    start_lng: f32,
+    target_lat: f32,
+    target_lng: f32,
+    passengers: i32,
+    wheelchairs: i32,
+    luggage: i32,
+    customer: i32,
+}
+
+
+
+//_______________________________________________________________________________________________________________________
+
+
+struct Eve{
+    coordinates: geo::Point,
+    customer_id: i32,
+    passengers: i32,
+    wheelchairs: i32,
+    luggage: i32,
+    scheduled_time: NaiveDateTime,
+    communicated_time: NaiveDateTime,
+    chain_id: Option<i32>,
+    request_id: i32,
+    id: i32,
+    company: i32,
+    vehicle: Option<i32>,
+    is_pickup: bool,
+}
+impl Eve{
+    fn from(lat: f32, lng: f32, customer_id: i32, passengers: i32, wheelchairs: i32, luggage: i32, scheduled_time: NaiveDateTime,
+        communicated_time: NaiveDateTime, chain_id: Option<i32>, request_id: i32, id: i32, company: i32, vehicle: Option<i32>, is_pickup: bool,)->Self{
+        Self{
+            coordinates: Point::new(lat as f64, lng as f64), id, customer_id, passengers,wheelchairs, luggage, scheduled_time, communicated_time, chain_id, request_id, company, vehicle, is_pickup
+        }
+    }
+}
+
+struct Comp{
+    id: i32,
+    central_coordinates: geo::Point,
+    zone: i32,
+    name: String,
+}
+impl Comp{
+    fn from(creator: CreateCompany, new_id: i32)->Self{
+        Self{
+            id: new_id,
+            zone: creator.zone,
+            name: creator.name,
+            central_coordinates: Point::new(creator.lat as f64, creator.lng as f64),
+        }
+    }
 }
 
 #[derive(Eq, PartialEq, Hash, Copy, Clone,Debug,Deserialize)]
@@ -187,6 +231,11 @@ impl Capacities{
             println!("__________________start deleting interval: {}", key.interval);
             let res: Result<DeleteResult,migration::DbErr> = Capacity::delete_by_id(key.id).exec(s.clone().db()).await;
 
+            match res {
+                Ok(_) => {info!("Interval {} deleted from db", key.interval)},
+                Err(e) => error!("Error deleting interval: {e:?}"),
+            }
+
             self.capacities.remove(&key);
             println!("__________________deleted interval: {}", key.interval);
         }
@@ -224,8 +273,8 @@ impl Capacities{
 
 pub struct Data{
     zones: Vec<geo::MultiPolygon>,
-    companies: Vec<company::Model>,
-    events: Vec<event::Model>,
+    companies: Vec<Comp>,
+    events: Vec<Eve>,
     vehicles: Vec<vehicle::Model>,
     vehicle_specifics: Vec<vehicle_specifics::Model>,
     capacities: Capacities,
@@ -235,8 +284,8 @@ pub struct Data{
 impl Data{
     pub fn new() -> Self {
         Self {zones: Vec::<geo::MultiPolygon>::new(),
-            companies: Vec::<company::Model>::new(),
-            events: Vec::<event::Model>::new(),
+            companies: Vec::<Comp>::new(),
+            events: Vec::<Eve>::new(),
             vehicles: Vec::<vehicle::Model>::new(),
             vehicle_specifics: Vec::<vehicle_specifics::Model>::new(),
             capacities: Capacities { to_insert_ids: Vec::<i32>::new(), capacities: HashMap::<CapacityKey,i32>::new(), do_not_insert: false, mark_delete: Vec::<CapacityKey>::new(), to_insert_keys: Vec::<CapacityKey>::new(), to_insert_amounts: Vec::<i32>::new() },
@@ -247,8 +296,14 @@ impl Data{
         let zone: Vec<zone::Model> = Zone::find()
             .all(s.db())
             .await.unwrap();
-        self.companies = Company::find().all(s.db()).await.unwrap();
-        self.events = Event::find().all(s.db()).await.unwrap();
+        let company_models: Vec<<company::Entity as sea_orm::EntityTrait>::Model> = Company::find().all(s.db()).await.unwrap();
+        for company_model in company_models{
+            self.companies.push(Comp::from(CreateCompany{name: company_model.name, zone: company_model.zone, lat: company_model.latitude, lng: company_model.longitude}, company_model.id));
+        }
+        let event_models: Vec<<event::Entity as sea_orm::EntityTrait>::Model> = Event::find().all(s.db()).await.unwrap();
+        for e in event_models{
+            self.events.push(Eve::from(e.latitude,e.longitude,e.customer,e.passengers,e.wheelchairs,e.luggage,e.scheduled_time,e.communicated_time,e.chain_id,e.request_id,e.id,e.company,e.vehicle,e.is_pickup));
+        }
         self.vehicles = Vehicle::find().all(s.db()).await.unwrap();
         self.vehicle_specifics = VehicleSpecifics::find().all(s.db()).await.unwrap();
         //self.capacities = Capacity::find().all(s.db()).await.unwrap();
@@ -314,7 +369,7 @@ impl Data{
         self.vehicle_specifics.push(active_m.try_into().unwrap());
     }
 
-    pub async fn insert_zone(&mut self, State(s): State<AppState>, Json(post_request): Json<CreateZone>) {
+    pub async fn create_zone(&mut self, State(s): State<AppState>, Json(post_request): Json<CreateZone>) {
         let result = Zone::insert(zone::ActiveModel {
             id: ActiveValue::NotSet,
             area: ActiveValue::Set(post_request.area.to_string()),
@@ -349,10 +404,10 @@ impl Data{
             Err(e) => error!("Error creating company: {e:?}"),
         }
         active_m.id = ActiveValue::Set(last_insert_id);
-        self.companies.push(active_m.try_into().unwrap());
+        self.companies.push(Comp::from(post_request, last_insert_id));
     }
     
-    pub async fn create_capacity(&mut self, State(s): State<AppState>, Json(post_request): Json<CapacityInsert>){
+    pub async fn create_capacity(&mut self, State(s): State<AppState>, Json(post_request): Json<CreateCapacity>){
         let start:NaiveDateTime = post_request.interval.start_time;
         let end:NaiveDateTime = post_request.interval.end_time;
         if end<=start{
@@ -402,6 +457,10 @@ impl Data{
         })
         .exec(s.db())
         .await;
+    }
+
+    pub async fn handle_routing_request(&mut self, State(s): State<AppState>, Json(request): Json<RoutingRequest>){
+
     }
 
     pub async fn get_capacity(&self, Json(get_request): Json<GetCapacity>)->Vec<CapacityKey>{
