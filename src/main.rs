@@ -1,7 +1,8 @@
 use crate::entities::prelude::User;
 use crate::be::backend::{CreateZone, CreateVehicle, CreateCompany};
-use crate::district_geojson::{bautzen_split_ost::BAUTZEN_OST,bautzen_split_west::BAUTZEN_WEST, gorlitz::GORLITZ};
+use crate::constants::{bautzen_split_ost::BAUTZEN_OST,bautzen_split_west::BAUTZEN_WEST, gorlitz::GORLITZ};
 use crate::be::backend::{GetCapacity, Data};
+
 
 use be::backend::CreateCapacity;
 use chrono::NaiveDate;
@@ -36,7 +37,7 @@ mod entities;
 mod log;
 mod osrm;
 mod be;
-mod district_geojson;
+mod constants;
 
 #[derive(Clone)]
 struct AppState {
@@ -166,8 +167,8 @@ async fn users(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
 
 async fn init(State(s): State<AppState>){
     let mut data = Data::new();
-
-    insert_user().await;
+    data.create_user(State(s.clone()), axum::Json(be::backend::User{id: None, name: "Test".to_string(), is_driver: true, is_admin: true, email: "".to_string(),
+    password: Some("".to_string()), salt: "".to_string(), o_auth_id: Some("".to_string()), o_auth_provider: Some("".to_string())})).await;
 
     data.create_zone(State(s.clone()), axum::Json(CreateZone{name: "Bautzen Ost".to_string(), area: BAUTZEN_OST.to_string()})).await;
     data.create_zone(State(s.clone()), axum::Json(CreateZone{name: "Bautzen West".to_string(), area: BAUTZEN_WEST.to_string()})).await;
@@ -255,7 +256,7 @@ async fn init(State(s): State<AppState>){
     data.create_capacity(State(s.clone()), axum::Json(CreateCapacity{company: 8, seats: 3, wheelchairs: 0, storage_space: 0, amount: 4, interval:
         be::interval::Interval{start_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), end_time: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 30, 0).unwrap()}})).await;
 
-    data.insert_event_pair(State(s.clone()), 14.225917859910453, 51.26183078936296, NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 20, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), 1, None, 1, 1, 2, 0, 0, false,
+    data.insert_event_pair(State(s.clone()), &"".to_string(), &"".to_string(), 14.225917859910453, 51.26183078936296, NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 20, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), 1, None, 1, 1, 2, 0, 0, false,
     14.324673828581723, 51.336726303316794, NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(10, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(10, 10, 0).unwrap(), false).await;
 
     let read_capacities = data.get_capacity(axum::Json(GetCapacity{company: 1, vehicle_specs: 1, day: NaiveDate::from_ymd_opt(2024, 4, 15).unwrap()})).await;

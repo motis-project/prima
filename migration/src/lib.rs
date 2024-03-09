@@ -4,6 +4,7 @@ mod m20220101_000001_init;
 mod m20240209_145121_user_pwd_email;
 mod m20240225_091835_mvp;
 mod m20240304_210904_vehicle_specifics_table;
+mod m20240308_121823_store_adress;
 
 
 
@@ -20,6 +21,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20240209_145121_user_pwd_email::Migration),
             Box::new(m20240225_091835_mvp::Migration),
             Box::new(m20240304_210904_vehicle_specifics_table::Migration),
+            Box::new(m20240308_121823_store_adress::Migration),
         ]
     }
 }

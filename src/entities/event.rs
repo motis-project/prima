@@ -23,6 +23,8 @@ pub struct Model {
     pub is_pickup: bool,
     pub connects_public_transport: bool,
     pub luggage: i32,
+    pub target_address: String,
+    pub start_address: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
