@@ -13,6 +13,7 @@ pub struct Model {
     pub longitude: f32,
     pub scheduled_time: DateTime,
     pub communicated_time: DateTime,
+    pub company: i32,
     pub customer: i32,
     pub chain_id: i32,
     pub request_id: i32,

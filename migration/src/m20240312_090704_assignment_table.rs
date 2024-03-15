@@ -46,7 +46,6 @@ impl MigrationTrait for Migration {
                             .integer()
                             .not_null(),
                     )
-                    .drop_column(Event::Company)
                     .drop_column(Event::Vehicle)
                     .drop_column(Event::Wheelchairs)
                     .drop_column(Event::Passengers)

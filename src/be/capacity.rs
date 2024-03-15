@@ -1,7 +1,5 @@
 use crate::be::backend::CapacityKey;
 use crate::be::interval::Interval;
-use crate::entities::capacity;
-use crate::entities::prelude::Capacity;
 use crate::{error, info};
 use crate::{AppState, State};
 use sea_orm::{ActiveValue, DeleteResult, EntityTrait};
