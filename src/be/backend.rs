@@ -347,6 +347,7 @@ impl Data {
             salt: ActiveValue::Set(post_request.salt),
             o_auth_id: ActiveValue::Set(post_request.o_auth_id),
             o_auth_provider: ActiveValue::Set(post_request.o_auth_provider),
+            is_active: ActiveValue::Set(true),
         };
         let result = entities::prelude::User::insert(active_m.clone())
             .exec(s.db())
