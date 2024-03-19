@@ -5,6 +5,8 @@ mod m20240209_145121_user_pwd_email;
 mod m20240222_160326_user_active_flag;
 mod m20240225_091835_mvp;
 mod m20240304_210904_vehicle_specifics_table;
+mod m20240308_121823_store_adress;
+mod m20240312_090704_assignment_table;
 
 pub struct Migrator;
 
@@ -17,6 +19,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20240222_160326_user_active_flag::Migration),
             Box::new(m20240225_091835_mvp::Migration),
             Box::new(m20240304_210904_vehicle_specifics_table::Migration),
+            Box::new(m20240308_121823_store_adress::Migration),
+            Box::new(m20240312_090704_assignment_table::Migration),
         ]
     }
 }

@@ -22,11 +22,11 @@ const REQUEST_TEMPLATE: &str = r#"{
 
 #[derive(Serialize)]
 pub struct Coordinate {
-    lat: f64,
-    lng: f64,
+    pub lat: f64,
+    pub lng: f64,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Copy,Clone)]
 pub struct DistTime {
     pub dist: f64,
     pub time: f64,
