@@ -1,9 +1,6 @@
 use crate::{
-    be::{
-        backend::{
-            CreateCapacity, CreateCompany, CreateVehicle, CreateZone, Data, GetCapacity, UserData,
-        },
-        interval,
+    be::backend::{
+        CreateCompany, CreateVehicle, CreateVehicleAvailability, CreateZone, Data, UserData,
     },
     constants::{
         bautzen_split_ost::BAUTZEN_OST, bautzen_split_west::BAUTZEN_WEST, gorlitz::GORLITZ,
@@ -14,15 +11,16 @@ use crate::{
 use axum::extract::State;
 use chrono::NaiveDate;
 
-/* pub async fn init(State(s): State<AppState>) {
+pub async fn init(State(s): State<AppState>) {
     let mut data = Data::new();
+    let mut read_from_db_data = Data::new();
     data.create_user(
         State(s.clone()),
-        axum::Json(User {
+        axum::Json(UserData {
             id: None,
-            name: "Test".to_string(),
+            name: "TestDriver1".to_string(),
             is_driver: true,
-            is_admin: true,
+            is_admin: false,
             email: "".to_string(),
             password: Some("".to_string()),
             salt: "".to_string(),
@@ -31,6 +29,45 @@ use chrono::NaiveDate;
         }),
     )
     .await;
+
+    data.create_user(
+        State(s.clone()),
+        axum::Json(UserData {
+            id: None,
+            name: "TestUser1".to_string(),
+            is_driver: false,
+            is_admin: false,
+            email: "".to_string(),
+            password: Some("".to_string()),
+            salt: "".to_string(),
+            o_auth_id: Some("".to_string()),
+            o_auth_provider: Some("".to_string()),
+        }),
+    )
+    .await;
+
+    data.create_user(
+        State(s.clone()),
+        axum::Json(UserData {
+            id: None,
+            name: "TestUser2".to_string(),
+            is_driver: false,
+            is_admin: false,
+            email: "".to_string(),
+            password: Some("".to_string()),
+            salt: "".to_string(),
+            o_auth_id: Some("".to_string()),
+            o_auth_provider: Some("".to_string()),
+        }),
+    )
+    .await;
+
+    read_from_db_data.clear();
+    read_from_db_data.read_data(State(s.clone())).await;
+    println!(
+        "=_=_=__=__=_=_=_=_=_==_=_=_==_=====_=_=_=_=_==___________________________________________________________________________________________________is data synchronized after creating user: {}",
+        read_from_db_data == data
+    );
 
     data.create_zone(
         State(s.clone()),
@@ -56,6 +93,13 @@ use chrono::NaiveDate;
         }),
     )
     .await;
+
+    read_from_db_data.clear();
+    read_from_db_data.read_data(State(s.clone())).await;
+    println!(
+        "=_=_=__=__=_=_=_=_=_==_=_=_==_=====_=_=_=_=_==___________________________________________________________________________________________________is data synchronized after creating zones: {}",
+        read_from_db_data == data
+    );
 
     data.create_company(
         State(s.clone()),
@@ -137,6 +181,13 @@ use chrono::NaiveDate;
         }),
     )
     .await;
+
+    read_from_db_data.clear();
+    read_from_db_data.read_data(State(s.clone())).await;
+    println!(
+        "=_=_=__=__=_=_=_=_=_==_=_=_==_=====_=_=_=_=_==___________________________________________________________________________________________________is data synchronized after creating companies: {}",
+        read_from_db_data == data
+    );
 
     data.create_vehicle(
         State(s.clone()),
@@ -371,427 +422,53 @@ use chrono::NaiveDate;
     )
     .await;
 
-    data.create_capacity(
+    read_from_db_data.clear();
+    read_from_db_data.read_data(State(s.clone())).await;
+    println!(
+        "=_=_=__=__=_=_=_=_=_==_=_=_==_=====_=_=_=_=_==___________________________________________________________________________________________________is data synchronized after creating vehicles: {}",
+        read_from_db_data == data
+    );
+
+    data.create_availability(
         State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 1,
-            amount: 4,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(9, 10, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(14, 30, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 1,
-            amount: 2,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(11, 0, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(18, 00, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 1,
-            amount: 5,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 16)
-                    .unwrap()
-                    .and_hms_opt(9, 15, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 16)
-                    .unwrap()
-                    .and_hms_opt(14, 30, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 2,
-            amount: 3,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(9, 10, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(15, 30, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 2,
-            amount: 1,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(7, 0, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(11, 30, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 3,
-            amount: 2,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 14)
-                    .unwrap()
-                    .and_hms_opt(8, 0, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 14)
-                    .unwrap()
-                    .and_hms_opt(12, 30, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 3,
-            amount: 4,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(7, 0, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(12, 0, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 3,
-            amount: 4,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 16)
-                    .unwrap()
-                    .and_hms_opt(11, 0, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 16)
-                    .unwrap()
-                    .and_hms_opt(16, 30, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 4,
-            amount: 2,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 14)
-                    .unwrap()
-                    .and_hms_opt(8, 0, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 14)
-                    .unwrap()
-                    .and_hms_opt(16, 30, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 4,
-            amount: 2,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 16)
-                    .unwrap()
-                    .and_hms_opt(10, 0, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 16)
-                    .unwrap()
-                    .and_hms_opt(15, 15, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 5,
-            amount: 2,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 14)
-                    .unwrap()
-                    .and_hms_opt(8, 0, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 14)
-                    .unwrap()
-                    .and_hms_opt(13, 15, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 5,
-            amount: 3,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(11, 0, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(14, 35, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 6,
-            amount: 3,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 14)
-                    .unwrap()
-                    .and_hms_opt(7, 30, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 14)
-                    .unwrap()
-                    .and_hms_opt(11, 35, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 6,
-            amount: 1,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 14)
-                    .unwrap()
-                    .and_hms_opt(13, 0, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 14)
-                    .unwrap()
-                    .and_hms_opt(17, 0, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 6,
-            amount: 3,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 16)
-                    .unwrap()
-                    .and_hms_opt(11, 0, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 16)
-                    .unwrap()
-                    .and_hms_opt(15, 0, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 7,
-            amount: 4,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(9, 0, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(15, 0, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 7,
-            amount: 3,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 16)
-                    .unwrap()
-                    .and_hms_opt(10, 30, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 16)
-                    .unwrap()
-                    .and_hms_opt(13, 0, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 8,
-            amount: 5,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 14)
-                    .unwrap()
-                    .and_hms_opt(9, 30, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 14)
-                    .unwrap()
-                    .and_hms_opt(12, 30, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 8,
-            amount: 3,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(8, 30, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(13, 0, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 8,
-            amount: 4,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 16)
-                    .unwrap()
-                    .and_hms_opt(10, 30, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 16)
-                    .unwrap()
-                    .and_hms_opt(15, 0, 0)
-                    .unwrap(),
-            },
-        }),
-    )
-    .await;
-    data.create_capacity(
-        State(s.clone()),
-        axum::Json(CreateCapacity {
-            company: 8,
-            amount: 4,
-            interval: interval::Interval {
-                start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(9, 10, 0)
-                    .unwrap(),
-                end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(14, 30, 0)
-                    .unwrap(),
-            },
+        axum::Json(CreateVehicleAvailability {
+            start_time: (NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 10, 0)
+                .unwrap()),
+            end_time: (NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 11, 0)
+                .unwrap()),
+            vehicle: 1,
         }),
     )
     .await;
 
-    data.insert_event_pair_into_db(
+    data.create_availability(
         State(s.clone()),
-        &"".to_string(),
-        14.225917859910453,
-        51.26183078936296,
-        NaiveDate::from_ymd_opt(2024, 4, 15)
-            .unwrap()
-            .and_hms_opt(9, 20, 0)
-            .unwrap(),
-        NaiveDate::from_ymd_opt(2024, 4, 15)
-            .unwrap()
-            .and_hms_opt(9, 10, 0)
-            .unwrap(),
-        1,
-        1,
-        1,
-        1,
-        false,
-        false,
-        14.324673828581723,
-        51.336726303316794,
-        NaiveDate::from_ymd_opt(2024, 4, 15)
-            .unwrap()
-            .and_hms_opt(10, 0, 0)
-            .unwrap(),
-        NaiveDate::from_ymd_opt(2024, 4, 15)
-            .unwrap()
-            .and_hms_opt(10, 10, 0)
-            .unwrap(),
+        axum::Json(CreateVehicleAvailability {
+            start_time: (NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 11, 0)
+                .unwrap()),
+            end_time: (NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 12, 0)
+                .unwrap()),
+            vehicle: 1,
+        }),
     )
     .await;
+    println!(
+        "=_=_=__=__=_=_=_=_=_==_=_=_==_=====_=_=_=_=_==___________________________________________________________________________________________________is data synchronized after creating availabilities: {}",
+        read_from_db_data == data
+    );
 
-    let read_capacities = data
-        .get_capacity(axum::Json(GetCapacity {
-            company: 1,
-            time_frame_end: None,
-            time_frame_start: None,
-        }))
-        .await;
-    for (key, caps) in read_capacities.iter() {
-        for cap in caps.iter() {
-            println!("interval found for capacity - get request with company: 1, vehicle specs: 1  and amount: {}:    {}",key,cap);
-        }
-    }
-} */
+    read_from_db_data.clear();
+    read_from_db_data.read_data(State(s.clone())).await;
+    println!(
+        "=_=_=__=__=_=_=_=_=_==_=_=_==_=====_=_=_=_=_==___________________________________________________________________________________________________is data synchronized after creating availabilites: {}",
+        read_from_db_data == data
+    );
+}

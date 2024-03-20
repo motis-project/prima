@@ -353,7 +353,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         db: Arc::new(conn),
     };
 
-    // init::init(State(s.clone())).await;
+    init::init(State(s.clone())).await;
 
     let app = Router::new();
     let app = app.layer(livereload);
