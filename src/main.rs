@@ -7,12 +7,14 @@ use axum::{
 };
 use chrono::NaiveDate;
 use dotenv::dotenv;
-use entities::user;
+use entities::{prelude::User, user};
 use itertools::Itertools;
 use log::setup_logging;
 use migration::{Migrator, MigratorTrait};
 use notify::Watcher;
-use sea_orm::{ActiveValue, ColumnTrait, Database, DbConn, Set};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, Database, DbConn, EntityTrait, QueryFilter, Set,
+};
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::json;
@@ -30,8 +32,6 @@ use view::render::{
     get_route_details, render_driver_sign_in, render_home, render_login, render_register,
     render_tc_dashboard, render_tc_tours,
 };
-
-use entities::prelude::User;
 
 mod be;
 mod constants;

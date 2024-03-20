@@ -5,7 +5,7 @@ use axum::{
     routing::{get, post},
     Form, Router,
 };
-use sea_orm::DbConn;
+use sea_orm::{DbConn, EntityTrait};
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::json;

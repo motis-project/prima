@@ -128,7 +128,7 @@ pub struct GetVehicleById {
     pub time_frame_end: Option<NaiveDateTime>,
 }
 
-#[derive(Deserialize, PartialEq)]
+#[derive(Deserialize, PartialEq, Clone)]
 pub struct UserData {
     pub id: Option<i32>,
     pub name: String,
