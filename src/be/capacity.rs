@@ -1,11 +1,20 @@
-use crate::be::backend::CapacityKey;
+// use crate::be::backend::CapacityKey;
 use crate::be::interval::Interval;
 use crate::entities::capacity;
 use crate::entities::prelude::Capacity;
 use crate::{error, info};
 use crate::{AppState, State};
 use sea_orm::{ActiveValue, DeleteResult, EntityTrait};
+use serde::Deserialize;
 use std::collections::HashMap;
+
+#[derive(Eq, PartialEq, Hash, Copy, Clone, Debug, Deserialize)]
+pub struct CapacityKey {
+    pub id: i32,
+    pub vehicle_specs_id: i32,
+    pub company: i32,
+    pub interval: Interval,
+}
 
 pub struct Capacities {
     pub capacities: HashMap<CapacityKey, i32>,

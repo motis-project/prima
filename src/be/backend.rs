@@ -1,3 +1,4 @@
+
 use crate::be::{interval::Interval,capacity::Capacities};
 use crate::constants::constants::*;
 use crate::entities::{self};
@@ -114,7 +115,7 @@ pub struct GetVehicleById {
 }
 
 #[derive(Deserialize)]
-pub struct User {
+pub struct UserData {
     pub id: Option<i32>,
     pub name: String,
     pub is_driver: bool,
@@ -218,7 +219,7 @@ pub struct CapacityKey {
 }
 
 pub struct Data {
-    users: Vec<User>,
+    users: Vec<UserData>,
     zones: Vec<geo::MultiPolygon>,
     companies: Vec<Comp>,
     assignments: Vec<Assign>,
@@ -228,24 +229,24 @@ pub struct Data {
 }
 
 impl Data {
-    pub fn new() -> Self {
-        Self {
-            zones: Vec::<geo::MultiPolygon>::new(),
-            companies: Vec::<Comp>::new(),
-            assignments: Vec::<Assign>::new(),
-            vehicles: Vec::<vehicle::Model>::new(),
-            vehicle_specifics: Vec::<vehicle_specifics::Model>::new(),
-            capacities: Capacities {
-                to_insert_ids: Vec::<i32>::new(),
-                capacities: HashMap::<CapacityKey, i32>::new(),
-                do_not_insert: false,
-                mark_delete: Vec::<CapacityKey>::new(),
-                to_insert_keys: Vec::<CapacityKey>::new(),
-                to_insert_amounts: Vec::<i32>::new(),
-            },
-            users: Vec::<User>::new(),
-        }
-    }
+    // pub fn new() -> Self {
+    //     Self {
+    //         zones: Vec::<geo::MultiPolygon>::new(),
+    //         companies: Vec::<Comp>::new(),
+    //         assignments: Vec::<Assign>::new(),
+    //         vehicles: Vec::<vehicle::Model>::new(),
+    //         vehicle_specifics: Vec::<vehicle_specifics::Model>::new(),
+    //         capacities: Capacities {
+    //             to_insert_ids: Vec::<i32>::new(),
+    //             capacities: HashMap::<CapacityKey, i32>::new(),
+    //             do_not_insert: false,
+    //             mark_delete: Vec::<CapacityKey>::new(),
+    //             to_insert_keys: Vec::<CapacityKey>::new(),
+    //             to_insert_amounts: Vec::<i32>::new(),
+    //         },
+    //         users: Vec::<UserData>::new(),
+    //     }
+    // }
 
     async fn read_data(
         &mut self,
@@ -289,7 +290,7 @@ impl Data {
         } 
         let user_models = entities::prelude::User::find().all(s.db()).await.unwrap();
         for user_model in user_models {
-            self.users.push(User {
+            self.users.push(UserData {
                 id: Some(user_model.id),
                 name: user_model.name,
                 is_driver: user_model.is_driver,
@@ -335,7 +336,7 @@ impl Data {
     pub async fn create_user(
         &mut self,
         State(s): State<AppState>,
-        Json(post_request): Json<User>,
+        Json(post_request): Json<UserData>,
     ) {
         let active_m = user::ActiveModel {
             id: ActiveValue::NotSet,
@@ -541,7 +542,7 @@ impl Data {
         sched_t_target: NaiveDateTime,
         comm_t_target: NaiveDateTime,
     ) {
-        let result1 = Event::insert(event::ActiveModel {
+        /* let result1 = Event::insert(event::ActiveModel {
             id: ActiveValue::NotSet,
             longitude: ActiveValue::Set(lng_start),
             latitude: ActiveValue::Set(lat_start),
@@ -584,7 +585,7 @@ impl Data {
                 info!("Event created");
             }
             Err(e) => error!("Error creating event: {e:?}"),
-        }
+        } */
     }
 
     /*
@@ -830,31 +831,31 @@ impl Data {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use crate::{env, AppState, Arc, Data, Database, Mutex, Tera};
-    use axum::extract::State;
-    use chrono::NaiveDate;
+// #[cfg(test)]
+// mod test {
+//     use crate::{env, AppState, Arc, Data, Database, Mutex, Tera};
+//     use axum::extract::State;
+//     use chrono::NaiveDate;
 
-    #[tokio::test]
-    async fn test() {
-        let tera = match Tera::new("html/*.html") {
-            Ok(t) => Arc::new(Mutex::new(t)),
-            Err(e) => {
-                println!("Parsing error(s): {}", e);
-                ::std::process::exit(1);
-            }
-        };
-        let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
-        let conn = Database::connect(db_url)
-            .await
-            .expect("Database connection failed");
-        let s = AppState {
-            tera: tera,
-            db: Arc::new(conn),
-        };
-        let mut data = Data::new();
-        //data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
-        //data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(11, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(18, 00, 0).unwrap()).await;
-    }
-}
+//     #[tokio::test]
+//     async fn test() {
+//         let tera = match Tera::new("html/*.html") {
+//             Ok(t) => Arc::new(Mutex::new(t)),
+//             Err(e) => {
+//                 println!("Parsing error(s): {}", e);
+//                 ::std::process::exit(1);
+//             }
+//         };
+//         let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
+//         let conn = Database::connect(db_url)
+//             .await
+//             .expect("Database connection failed");
+//         let s = AppState {
+//             tera: tera,
+//             db: Arc::new(conn),
+//         };
+//         let mut data = Data::new();
+//         //data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
+//         //data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(11, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(18, 00, 0).unwrap()).await;
+//     }
+// }

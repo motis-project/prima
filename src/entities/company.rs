@@ -18,10 +18,10 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_many = "super::assignment::Entity")]
+    Assignment,
     #[sea_orm(has_many = "super::capacity::Entity")]
     Capacity,
-    #[sea_orm(has_many = "super::event::Entity")]
-    Event,
     #[sea_orm(has_many = "super::vehicle::Entity")]
     Vehicle,
     #[sea_orm(
@@ -34,15 +34,15 @@ pub enum Relation {
     Zone,
 }
 
-impl Related<super::capacity::Entity> for Entity {
+impl Related<super::assignment::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Capacity.def()
+        Relation::Assignment.def()
     }
 }
 
-impl Related<super::event::Entity> for Entity {
+impl Related<super::capacity::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Event.def()
+        Relation::Capacity.def()
     }
 }
 

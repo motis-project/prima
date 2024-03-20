@@ -13,28 +13,25 @@ pub struct Model {
     pub longitude: f32,
     pub scheduled_time: DateTime,
     pub communicated_time: DateTime,
-    pub vehicle: Option<i32>,
     pub customer: i32,
-    pub chain_id: Option<i32>,
+    pub chain_id: i32,
     pub request_id: i32,
-    pub company: i32,
-    pub passengers: i32,
-    pub wheelchairs: i32,
     pub is_pickup: bool,
     pub connects_public_transport: bool,
-    pub luggage: i32,
+    pub address: String,
+    pub required_vehicle_specifics: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "super::company::Entity",
-        from = "Column::Company",
-        to = "super::company::Column::Id",
+        belongs_to = "super::assignment::Entity",
+        from = "Column::ChainId",
+        to = "super::assignment::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    Company,
+    Assignment,
     #[sea_orm(
         belongs_to = "super::user::Entity",
         from = "Column::Customer",
@@ -44,18 +41,18 @@ pub enum Relation {
     )]
     User,
     #[sea_orm(
-        belongs_to = "super::vehicle::Entity",
-        from = "Column::Vehicle",
-        to = "super::vehicle::Column::Id",
+        belongs_to = "super::vehicle_specifics::Entity",
+        from = "Column::RequiredVehicleSpecifics",
+        to = "super::vehicle_specifics::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    Vehicle,
+    VehicleSpecifics,
 }
 
-impl Related<super::company::Entity> for Entity {
+impl Related<super::assignment::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Company.def()
+        Relation::Assignment.def()
     }
 }
 
@@ -65,9 +62,9 @@ impl Related<super::user::Entity> for Entity {
     }
 }
 
-impl Related<super::vehicle::Entity> for Entity {
+impl Related<super::vehicle_specifics::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Vehicle.def()
+        Relation::VehicleSpecifics.def()
     }
 }
 

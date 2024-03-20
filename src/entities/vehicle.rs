@@ -11,10 +11,13 @@ pub struct Model {
     pub license_plate: String,
     pub company: i32,
     pub specifics: i32,
+    pub active: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_many = "super::assignment::Entity")]
+    Assignment,
     #[sea_orm(
         belongs_to = "super::company::Entity",
         from = "Column::Company",
@@ -23,8 +26,6 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     Company,
-    #[sea_orm(has_many = "super::event::Entity")]
-    Event,
     #[sea_orm(
         belongs_to = "super::vehicle_specifics::Entity",
         from = "Column::Specifics",
@@ -35,15 +36,15 @@ pub enum Relation {
     VehicleSpecifics,
 }
 
-impl Related<super::company::Entity> for Entity {
+impl Related<super::assignment::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Company.def()
+        Relation::Assignment.def()
     }
 }
 
-impl Related<super::event::Entity> for Entity {
+impl Related<super::company::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Event.def()
+        Relation::Company.def()
     }
 }
 
