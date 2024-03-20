@@ -55,7 +55,6 @@ pub struct CreateVehicle {
 }
 
 #[derive(Deserialize)]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct CreateCapacity {
     //not needed in mvp
     //pub seats: i32,
