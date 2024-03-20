@@ -5,13 +5,24 @@ use crate::{
     constants::{
         bautzen_split_ost::BAUTZEN_OST, bautzen_split_west::BAUTZEN_WEST, gorlitz::GORLITZ,
     },
+    entities::{prelude::User, user},
     AppState,
 };
+use sea_orm::EntityTrait;
 
 use axum::extract::State;
 use chrono::NaiveDate;
 
 pub async fn init(State(s): State<AppState>) {
+    match User::find().all(s.clone().db()).await {
+        Ok(u) => {
+            if !u.is_empty() {
+                println!("users already exist, not running init() again.");
+                return;
+            }
+        }
+        Err(_) => (),
+    }
     let mut data = Data::new();
     let mut read_from_db_data = Data::new();
     data.create_user(
