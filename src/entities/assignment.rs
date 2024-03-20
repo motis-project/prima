@@ -10,7 +10,7 @@ pub struct Model {
     pub departure: DateTime,
     pub arrival: DateTime,
     pub company: i32,
-    pub vehicle: Option<i32>,
+    pub vehicle: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

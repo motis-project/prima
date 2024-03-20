@@ -3,7 +3,7 @@
 pub mod prelude;
 
 pub mod assignment;
-pub mod capacity;
+pub mod availability;
 pub mod company;
 pub mod event;
 pub mod user;

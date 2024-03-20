@@ -1,7 +1,7 @@
 use crate::{
     be::{
         backend::{
-            CreateCapacity, CreateCompany, CreateVehicle, CreateZone, Data, GetCapacity, User,
+            CreateCapacity, CreateCompany, CreateVehicle, CreateZone, Data, GetCapacity, UserData,
         },
         interval,
     },
