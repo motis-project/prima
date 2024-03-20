@@ -157,7 +157,7 @@ struct BestCombination {
 
 //start data structs_______________________________________________________________________________________________________________________
 #[derive(Clone, PartialEq)]
-struct AssignmentData {
+pub struct AssignmentData {
     pub id: usize,
     departure: NaiveDateTime,
     arrival: NaiveDateTime,
@@ -179,14 +179,14 @@ impl AssignmentData {
 }
 
 #[derive(Eq, PartialEq)]
-struct AvailabilityData {
+pub struct AvailabilityData {
     id: i32,
     interval: Interval,
 }
 
 #[derive(PartialEq)]
-struct VehicleData {
-    id: usize,
+pub struct VehicleData {
+    pub id: usize,
     pub license_plate: String,
     pub company: usize,
     pub specifics: usize,
@@ -1168,7 +1168,7 @@ impl Data {
     }
 
     //id->company_id
-    pub async fn get_vehicles(
+    pub fn get_vehicles(
         &self,
         Json(get_request): Json<GetVehicleById>,
     ) -> HashMap<usize, Vec<&VehicleData>> {

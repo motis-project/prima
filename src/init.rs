@@ -1,11 +1,12 @@
 use crate::{
     be::backend::{
-        CreateCompany, CreateVehicle, CreateVehicleAvailability, CreateZone, Data, UserData,
+        CreateCompany, CreateVehicle, CreateVehicleAvailability, CreateZone, Data, GetById,
+        GetVehicleById, UserData,
     },
     constants::{
         bautzen_split_ost::BAUTZEN_OST, bautzen_split_west::BAUTZEN_WEST, gorlitz::GORLITZ,
     },
-    entities::{prelude::User, user},
+    entities::{prelude::User, user, vehicle},
     AppState,
 };
 use sea_orm::EntityTrait;
@@ -482,4 +483,40 @@ pub async fn init(State(s): State<AppState>) {
         "=_=_=__=__=_=_=_=_=_==_=_=_==_=====_=_=_=_=_==___________________________________________________________________________________________________is data synchronized after creating availabilites: {}",
         read_from_db_data == data
     );
+
+    let assignments = data
+        .get_assignments_for_vehicle(axum::Json(GetById {
+            id: 1,
+            time_frame_end: None,
+            time_frame_start: None,
+        }))
+        .await;
+
+    println!("assignments size: {}", assignments.len());
+    for assignment in assignments.iter() {
+        println!("id: {}", assignment.id);
+    }
+
+    for i in 1..9 {
+        print_vehicles_of_company(&data, i);
+    }
+}
+
+fn print_vehicles_of_company(
+    data: &Data,
+    company_id: usize,
+) {
+    let vehicles_company = data.get_vehicles(axum::Json(GetVehicleById {
+        id: company_id,
+        active: None,
+        time_frame_end: None,
+        time_frame_start: None,
+    }));
+
+    println!("vehicles of company {}:", company_id);
+    for (_, vehicles) in vehicles_company.iter() {
+        for vehicle in vehicles.iter() {
+            println!("id: {}", vehicle.id);
+        }
+    }
 }
