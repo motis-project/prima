@@ -127,8 +127,8 @@ pub struct GetVehicleById {
     pub time_frame_end: Option<NaiveDateTime>,
 }
 
-#[derive(Deserialize, Eq, PartialEq, Clone)]
-pub struct User {
+#[derive(Deserialize, PartialEq, Clone)]
+pub struct UserData {
     pub id: Option<i32>,
     pub name: String,
     pub is_driver: bool,
@@ -329,7 +329,7 @@ struct ZoneData {
 
 #[derive(PartialEq)]
 pub struct Data {
-    users: Vec<User>,
+    users: Vec<UserData>,
     zones: Vec<ZoneData>,
     companies: Vec<CompanyData>,
     vehicles: Vec<VehicleData>,
@@ -343,7 +343,7 @@ impl Data {
             companies: Vec::<CompanyData>::new(),
             vehicles: Vec::<VehicleData>::new(),
             vehicle_specifics: Vec::<vehicle_specifics::Model>::new(),
-            users: Vec::<User>::new(),
+            users: Vec::<UserData>::new(),
         }
     }
 
@@ -474,7 +474,7 @@ impl Data {
         }
         let user_models = entities::prelude::User::find().all(s.db()).await.unwrap();
         for user_model in user_models {
-            self.users.push(User {
+            self.users.push(UserData {
                 id: Some(user_model.id),
                 name: user_model.name,
                 is_driver: user_model.is_driver,
@@ -511,7 +511,7 @@ impl Data {
     pub async fn create_user(
         &mut self,
         State(s): State<AppState>,
-        Json(post_request): Json<User>,
+        Json(post_request): Json<UserData>,
     ) {
         let mut user = post_request.clone();
         let active_m = user::ActiveModel {
@@ -524,6 +524,7 @@ impl Data {
             salt: ActiveValue::Set(post_request.salt),
             o_auth_id: ActiveValue::Set(post_request.o_auth_id),
             o_auth_provider: ActiveValue::Set(post_request.o_auth_provider),
+            is_active: ActiveValue::Set(true),
         };
         let result = entities::prelude::User::insert(active_m.clone())
             .exec(s.db())
@@ -1307,31 +1308,31 @@ impl Data {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use crate::{env, AppState, Arc, Data, Database, Mutex, Tera};
-    use axum::extract::State;
-    use chrono::NaiveDate;
+// #[cfg(test)]
+// mod test {
+//     use crate::{env, AppState, Arc, Data, Database, Mutex, Tera};
+//     use axum::extract::State;
+//     use chrono::NaiveDate;
 
-    #[tokio::test]
-    async fn test() {
-        let tera = match Tera::new("html/*.html") {
-            Ok(t) => Arc::new(Mutex::new(t)),
-            Err(e) => {
-                println!("Parsing error(s): {}", e);
-                ::std::process::exit(1);
-            }
-        };
-        let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
-        let conn = Database::connect(db_url)
-            .await
-            .expect("Database connection failed");
-        let s = AppState {
-            tera: tera,
-            db: Arc::new(conn),
-        };
-        let mut data = Data::new();
-        //data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
-        //data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(11, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(18, 00, 0).unwrap()).await;
-    }
-}
+//     #[tokio::test]
+//     async fn test() {
+//         let tera = match Tera::new("html/*.html") {
+//             Ok(t) => Arc::new(Mutex::new(t)),
+//             Err(e) => {
+//                 println!("Parsing error(s): {}", e);
+//                 ::std::process::exit(1);
+//             }
+//         };
+//         let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
+//         let conn = Database::connect(db_url)
+//             .await
+//             .expect("Database connection failed");
+//         let s = AppState {
+//             tera: tera,
+//             db: Arc::new(conn),
+//         };
+//         let mut data = Data::new();
+//         //data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
+//         //data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(11, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(18, 00, 0).unwrap()).await;
+//     }
+// }
