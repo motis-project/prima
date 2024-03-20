@@ -512,7 +512,7 @@ impl Data {
         &mut self,
         State(s): State<AppState>,
         Json(post_request): Json<UserData>,
-    ) {
+    ) -> StatusCode {
         let mut user = post_request.clone();
         let active_m = user::ActiveModel {
             id: ActiveValue::NotSet,
@@ -533,12 +533,9 @@ impl Data {
             Ok(_) => {
                 user.id = Some(result.unwrap().last_insert_id);
                 self.users.push(user);
-                //info!("Vehicle created");
+                StatusCode::CREATED
             }
-            Err(e) => {
-                error!("Error creating vehicle: {e:?}");
-                return;
-            }
+            Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -546,7 +543,7 @@ impl Data {
         &mut self,
         State(s): State<AppState>,
         Json(post_request): Json<CreateVehicle>,
-    ) {
+    ) -> StatusCode {
         //check whether the vehicle fits one of the existing vehicle_specs, otherwise create a new one
         let specs_id = self
             .find_or_create_vehicle_specs(
@@ -578,12 +575,9 @@ impl Data {
                     availability: Vec::new(),
                     assignments: Vec::new(),
                 });
-                //info!("Vehicle created")
+                StatusCode::CREATED
             }
-            Err(e) => {
-                error!("Error creating vehicle: {e:?}");
-                return;
-            }
+            Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -591,7 +585,7 @@ impl Data {
         &mut self,
         State(s): State<AppState>,
         Json(post_request): Json<CreateVehicleAvailability>,
-    ) {
+    ) -> StatusCode {
         let active_m = availability::ActiveModel {
             id: ActiveValue::NotSet,
             start_time: ActiveValue::Set(post_request.start_time),
@@ -611,12 +605,9 @@ impl Data {
                         result.unwrap().last_insert_id,
                     )
                     .await;
-                //info!("Availability created")
+                StatusCode::CREATED
             }
-            Err(e) => {
-                error!("Error creating availability: {e:?}");
-                return;
-            }
+            Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -637,27 +628,27 @@ impl Data {
             .exec(s.db())
             .await;
 
-        let mut last_insert_id = -1;
         match result {
             Ok(_) => {
+                let mut last_insert_id = -1;
                 last_insert_id = result.unwrap().last_insert_id;
-                //info!("Vehicle specifics with id {} created", last_insert_id)
+                active_m.id = ActiveValue::Set(last_insert_id);
+                self.vehicle_specifics.push(active_m.try_into().unwrap());
+                info!("Vehicle specifics with id {} created", last_insert_id);
+                last_insert_id
             }
             Err(e) => {
                 error!("Error creating vehicle specifics: {e:?}");
                 return -1;
             }
         }
-        active_m.id = ActiveValue::Set(last_insert_id);
-        self.vehicle_specifics.push(active_m.try_into().unwrap());
-        last_insert_id
     }
 
     pub async fn create_zone(
         &mut self,
         State(s): State<AppState>,
         Json(post_request): Json<CreateZone>,
-    ) {
+    ) -> StatusCode {
         let result = Zone::insert(zone::ActiveModel {
             id: ActiveValue::NotSet,
             area: ActiveValue::Set(post_request.area.to_string()),
@@ -673,12 +664,9 @@ impl Data {
                     id: result.unwrap().last_insert_id as usize,
                     area: geo::MultiPolygon::try_from(feature).unwrap(),
                 });
-                //info!("Zone created")
+                StatusCode::CREATED
             }
-            Err(e) => {
-                error!("Error creating zone: {e:?}");
-                return;
-            }
+            Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -686,7 +674,7 @@ impl Data {
         &mut self,
         State(s): State<AppState>,
         Json(post_request): Json<CreateCompany>,
-    ) {
+    ) -> StatusCode {
         let mut active_m = company::ActiveModel {
             id: ActiveValue::NotSet,
             longitude: ActiveValue::Set(post_request.lng),
@@ -701,12 +689,9 @@ impl Data {
                     post_request,
                     result.unwrap().last_insert_id,
                 ));
-                //info!("Company created")
+                StatusCode::CREATED
             }
-            Err(e) => {
-                error!("Error creating company: {e:?}");
-                return;
-            }
+            Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -783,13 +768,6 @@ impl Data {
                 return;
             }
         }
-    }
-
-    pub async fn handl_routing_request(
-        &mut self,
-        State(s): State<AppState>,
-        Json(request): Json<RoutingRequest>,
-    ) {
     }
 
     async fn get_companies_matching_start_point(
