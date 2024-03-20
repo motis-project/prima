@@ -7,14 +7,13 @@ use crate::entities::{assignment, company, event, user, vehicle, vehicle_specifi
 use crate::osrm::Coordinate;
 use crate::osrm::{DistTime, OSRM};
 
-use crate::{error, info};
-use crate::{AppState, State};
+use crate::{error, info, AppState, State, StatusCode};
+use axum::response::Html;
 use axum::Json;
 use chrono::{DateTime, Datelike, Duration, NaiveTime, Utc};
 use chrono::{NaiveDate, NaiveDateTime};
 use geo::prelude::*;
-use geo::Coord;
-use geo::Point;
+use geo::{Coord, Point};
 use geojson::{GeoJson, Geometry};
 use itertools::Itertools;
 use migration::Mode;
@@ -56,6 +55,7 @@ pub struct CreateVehicle {
 }
 
 #[derive(Deserialize)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct CreateCapacity {
     //not needed in mvp
     //pub seats: i32,
@@ -128,7 +128,7 @@ pub struct GetVehicleById {
     pub time_frame_end: Option<NaiveDateTime>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Eq, PartialEq, Clone)]
 pub struct User {
     pub id: Option<i32>,
     pub name: String,
@@ -141,7 +141,7 @@ pub struct User {
     pub o_auth_provider: Option<String>,
 }
 
-//_______________________________________________________________________________________________________________________
+//end of pub structs_______________________________________________________________________________________________________________________
 
 struct Comb {
     is_start_company: bool,
@@ -156,7 +156,8 @@ struct BestCombination {
     best_target_time_pos: usize,
 }
 
-#[derive(Clone)]
+//start data structs_______________________________________________________________________________________________________________________
+#[derive(Clone, PartialEq)]
 struct AssignmentData {
     pub id: usize,
     departure: NaiveDateTime,
@@ -178,12 +179,15 @@ impl AssignmentData {
     }
 }
 
+#[derive(Eq, PartialEq)]
 struct AvailabilityData {
-    id: usize,
+    id: i32,
     interval: Interval,
 }
 
+#[derive(PartialEq)]
 struct VehicleData {
+    id: usize,
     pub license_plate: String,
     pub company: usize,
     pub specifics: usize,
@@ -193,10 +197,17 @@ struct VehicleData {
 }
 
 impl VehicleData {
+    pub fn print(&self) {
+        println!("vehicle availability size: {}", self.availability.len());
+    }
+}
+
+impl VehicleData {
     async fn add_availability(
         &mut self,
         State(s): State<AppState>,
         new_interval: &mut Interval,
+        id: i32,
     ) {
         let mut mark_delete: Vec<usize> = Vec::new();
         for (pos, existing) in self.availability.iter().enumerate() {
@@ -215,22 +226,22 @@ impl VehicleData {
             }
         }
         for to_delete in mark_delete.clone() {
-            let res: Result<DeleteResult, migration::DbErr> =
+            let result: Result<DeleteResult, migration::DbErr> =
                 Availability::delete_by_id(self.availability[to_delete].id as i32)
                     .exec(s.clone().db())
                     .await;
-            match res {
+            match result {
                 Ok(_) => {
-                    info!(
-                        "Interval {} deleted from db",
-                        self.availability[to_delete].interval
-                    )
+                    self.availability.remove(to_delete);
+                    //info!("Interval {} deleted from db",self.availability[to_delete].interval,)
                 }
                 Err(e) => error!("Error deleting interval: {e:?}"),
             }
-
-            self.availability.remove(to_delete);
         }
+        self.availability.push(AvailabilityData {
+            id,
+            interval: *new_interval,
+        });
     }
     fn find_collisions(
         &self,
@@ -248,8 +259,8 @@ impl VehicleData {
     }
 }
 
-#[derive(Clone)]
-pub struct EventData {
+#[derive(Clone, PartialEq)]
+struct EventData {
     coordinates: geo::Point,
     scheduled_time: NaiveDateTime,
     communicated_time: NaiveDateTime,
@@ -290,6 +301,7 @@ impl EventData {
     }
 }
 
+#[derive(PartialEq)]
 struct CompanyData {
     id: usize,
     central_coordinates: geo::Point,
@@ -310,17 +322,16 @@ impl CompanyData {
     }
 }
 
-#[derive(Eq, PartialEq, Hash, Copy, Clone, Debug, Deserialize)]
-pub struct CapacityKey {
-    pub id: usize,
-    pub vehicle_specs_id: usize,
-    pub company: usize,
-    pub interval: Interval,
+#[derive(PartialEq)]
+struct ZoneData {
+    area: geo::MultiPolygon,
+    id: usize,
 }
 
+#[derive(PartialEq)]
 pub struct Data {
     users: Vec<User>,
-    zones: Vec<geo::MultiPolygon>,
+    zones: Vec<ZoneData>,
     companies: Vec<CompanyData>,
     vehicles: Vec<VehicleData>,
     vehicle_specifics: Vec<vehicle_specifics::Model>,
@@ -329,7 +340,7 @@ pub struct Data {
 impl Data {
     pub fn new() -> Self {
         Self {
-            zones: Vec::<geo::MultiPolygon>::new(),
+            zones: Vec::<ZoneData>::new(),
             companies: Vec::<CompanyData>::new(),
             vehicles: Vec::<VehicleData>::new(),
             vehicle_specifics: Vec::<vehicle_specifics::Model>::new(),
@@ -337,11 +348,52 @@ impl Data {
         }
     }
 
-    async fn read_data(
+    pub fn clear(&mut self) {
+        self.users.clear();
+        self.companies.clear();
+        self.vehicles.clear();
+        self.vehicle_specifics.clear();
+        self.zones.clear();
+    }
+
+    pub fn print(&self) {
+        for vehicle in self.vehicles.iter() {
+            print!("id: {}, ", vehicle.id);
+            vehicle.print();
+        }
+    }
+
+    pub fn do_intervals_touch(&self) -> bool {
+        self.vehicles
+            .iter()
+            .map(|vehicle| &vehicle.availability)
+            .any(|availability| {
+                availability
+                    .iter()
+                    .map(|availability| availability.interval)
+                    .zip(
+                        availability
+                            .iter()
+                            .map(|availability| availability.interval),
+                    )
+                    .filter(|availability_pair| availability_pair.0 != availability_pair.1)
+                    .any(|availability_pair| availability_pair.0.touches(&availability_pair.1))
+            })
+    }
+
+    pub async fn read_data(
         &mut self,
         State(s): State<AppState>,
     ) {
-        let zone: Vec<zone::Model> = Zone::find().all(s.db()).await.unwrap();
+        let zones: Vec<zone::Model> = Zone::find().all(s.db()).await.unwrap();
+        for zone in zones.iter() {
+            let geojson = zone.area.parse::<GeoJson>().unwrap();
+            let feature: Geometry = Geometry::try_from(geojson).unwrap();
+            self.zones.push(ZoneData {
+                area: geo::MultiPolygon::try_from(feature).unwrap(),
+                id: zone.id as usize,
+            });
+        }
         let company_models: Vec<<company::Entity as sea_orm::EntityTrait>::Model> =
             Company::find().all(s.db()).await.unwrap();
         for company_model in company_models {
@@ -355,8 +407,35 @@ impl Data {
                 company_model.id,
             ));
         }
-        let event_models: Vec<<event::Entity as sea_orm::EntityTrait>::Model> =
-            Event::find().all(s.db()).await.unwrap();
+        let vehicle_models: Vec<<vehicle::Entity as sea_orm::EntityTrait>::Model> =
+            Vehicle::find().all(s.db()).await.unwrap();
+        for vehicle in vehicle_models.iter() {
+            self.vehicles.push(VehicleData {
+                id: vehicle.id as usize,
+                license_plate: vehicle.license_plate.to_string(),
+                company: vehicle.company as usize,
+                specifics: vehicle.specifics as usize,
+                active: vehicle.active,
+                availability: Vec::new(),
+                assignments: Vec::new(),
+            })
+        }
+        let availability_models: Vec<<availability::Entity as sea_orm::EntityTrait>::Model> =
+            Availability::find().all(s.db()).await.unwrap();
+
+        for availability in availability_models.iter() {
+            println!("availability: {}", availability.id);
+            self.vehicles[(availability.vehicle - 1) as usize]
+                .add_availability(
+                    State(s.clone()),
+                    &mut Interval {
+                        start_time: availability.start_time,
+                        end_time: availability.end_time,
+                    },
+                    availability.id,
+                )
+                .await;
+        }
         let assignment_models: Vec<<assignment::Entity as sea_orm::EntityTrait>::Model> =
             Assignment::find().all(s.db()).await.unwrap();
         for a in assignment_models {
@@ -371,6 +450,8 @@ impl Data {
                     events: Vec::new(),
                 });
         }
+        let event_models: Vec<<event::Entity as sea_orm::EntityTrait>::Model> =
+            Event::find().all(s.db()).await.unwrap();
         for e in event_models {
             for v in self.vehicles.iter_mut() {
                 for a in v.assignments.iter_mut() {
@@ -406,15 +487,7 @@ impl Data {
                 o_auth_provider: user_model.o_auth_provider,
             });
         }
-        let vehicle_models = Vehicle::find().all(s.db()).await.unwrap();
         self.vehicle_specifics = VehicleSpecifics::find().all(s.db()).await.unwrap();
-        //self.capacities = Capacity::find().all(s.db()).await.unwrap();
-        for z in zone.iter() {
-            let geojson = z.area.parse::<GeoJson>().unwrap();
-            let feature: Geometry = Geometry::try_from(geojson).unwrap();
-            self.zones
-                .push(geo::MultiPolygon::try_from(feature).unwrap());
-        }
     }
 
     async fn find_or_create_vehicle_specs(
@@ -432,7 +505,6 @@ impl Data {
                 return specs.id;
             }
         }
-        //println!("___________________===================____________new seats: {}", seats);
         self.internal_create_vehicle_specifics(State(s), seats, wheelchairs, storage_space)
             .await
     }
@@ -442,6 +514,7 @@ impl Data {
         State(s): State<AppState>,
         Json(post_request): Json<User>,
     ) {
+        let mut user = post_request.clone();
         let active_m = user::ActiveModel {
             id: ActiveValue::NotSet,
             name: ActiveValue::Set(post_request.name),
@@ -456,13 +529,16 @@ impl Data {
         let result = entities::prelude::User::insert(active_m.clone())
             .exec(s.db())
             .await;
-        let mut last_insert_id = 0;
         match result {
             Ok(_) => {
-                last_insert_id = result.unwrap().last_insert_id;
-                info!("Vehicle with id {} created", last_insert_id)
+                user.id = Some(result.unwrap().last_insert_id);
+                self.users.push(user);
+                //info!("Vehicle created");
             }
-            Err(e) => error!("Error creating vehicle: {e:?}"),
+            Err(e) => {
+                error!("Error creating vehicle: {e:?}");
+                return;
+            }
         }
     }
 
@@ -491,26 +567,27 @@ impl Data {
             specifics: ActiveValue::Set(specs_id),
         };
         let result = Vehicle::insert(active_m.clone()).exec(s.db()).await;
-        let mut last_insert_id = 0;
         match result {
             Ok(_) => {
-                last_insert_id = result.unwrap().last_insert_id;
-                info!("Vehicle with id {} created", last_insert_id)
+                self.vehicles.push(VehicleData {
+                    id: result.unwrap().last_insert_id as usize,
+                    license_plate: post_request.license_plate,
+                    company: post_request.company as usize,
+                    specifics: specs_id as usize,
+                    active: false,
+                    availability: Vec::new(),
+                    assignments: Vec::new(),
+                });
+                //info!("Vehicle created")
             }
-            Err(e) => error!("Error creating vehicle: {e:?}"),
+            Err(e) => {
+                error!("Error creating vehicle: {e:?}");
+                return;
+            }
         }
-
-        self.vehicles.push(VehicleData {
-            license_plate: post_request.license_plate,
-            company: post_request.company as usize,
-            specifics: specs_id as usize,
-            active: false,
-            availability: Vec::new(),
-            assignments: Vec::new(),
-        });
     }
 
-    async fn create_availability(
+    pub async fn create_availability(
         &mut self,
         State(s): State<AppState>,
         Json(post_request): Json<CreateVehicleAvailability>,
@@ -524,19 +601,23 @@ impl Data {
         let result = Availability::insert(active_m.clone()).exec(s.db()).await;
         match result {
             Ok(_) => {
-                info!("Availability with created")
+                self.vehicles[(post_request.vehicle - 1) as usize]
+                    .add_availability(
+                        State(s.clone()),
+                        &mut Interval {
+                            start_time: post_request.start_time,
+                            end_time: post_request.end_time,
+                        },
+                        result.unwrap().last_insert_id,
+                    )
+                    .await;
+                //info!("Availability created")
             }
-            Err(e) => error!("Error creating availability: {e:?}"),
+            Err(e) => {
+                error!("Error creating availability: {e:?}");
+                return;
+            }
         }
-        self.vehicles[(post_request.vehicle - 1) as usize]
-            .add_availability(
-                State(s.clone()),
-                &mut Interval {
-                    start_time: post_request.start_time,
-                    end_time: post_request.end_time,
-                },
-            )
-            .await;
     }
 
     async fn internal_create_vehicle_specifics(
@@ -560,11 +641,13 @@ impl Data {
         match result {
             Ok(_) => {
                 last_insert_id = result.unwrap().last_insert_id;
-                info!("Vehicle specifics with id {} created", last_insert_id)
+                //info!("Vehicle specifics with id {} created", last_insert_id)
             }
-            Err(e) => error!("Error creating vehicle specifics: {e:?}"),
+            Err(e) => {
+                error!("Error creating vehicle specifics: {e:?}");
+                return -1;
+            }
         }
-
         active_m.id = ActiveValue::Set(last_insert_id);
         self.vehicle_specifics.push(active_m.try_into().unwrap());
         last_insert_id
@@ -584,14 +667,19 @@ impl Data {
         .await;
         match result {
             Ok(_) => {
-                info!("Zone created")
+                let geojson = post_request.area.parse::<GeoJson>().unwrap();
+                let feature: Geometry = Geometry::try_from(geojson).unwrap();
+                self.zones.push(ZoneData {
+                    id: result.unwrap().last_insert_id as usize,
+                    area: geo::MultiPolygon::try_from(feature).unwrap(),
+                });
+                //info!("Zone created")
             }
-            Err(e) => error!("Error creating zone: {e:?}"),
+            Err(e) => {
+                error!("Error creating zone: {e:?}");
+                return;
+            }
         }
-        let geojson = post_request.area.parse::<GeoJson>().unwrap();
-        let feature: Geometry = Geometry::try_from(geojson).unwrap();
-        self.zones
-            .push(geo::MultiPolygon::try_from(feature).unwrap());
     }
 
     pub async fn create_company(
@@ -607,18 +695,19 @@ impl Data {
             zone: ActiveValue::Set(post_request.zone),
         };
         let result = Company::insert(active_m.clone()).exec(s.db()).await;
-
-        let mut last_insert_id = -1;
         match result {
             Ok(_) => {
-                last_insert_id = result.unwrap().last_insert_id;
-                info!("Company created")
+                self.companies.push(CompanyData::from(
+                    post_request,
+                    result.unwrap().last_insert_id,
+                ));
+                //info!("Company created")
             }
-            Err(e) => error!("Error creating company: {e:?}"),
+            Err(e) => {
+                error!("Error creating company: {e:?}");
+                return;
+            }
         }
-        active_m.id = ActiveValue::Set(last_insert_id);
-        self.companies
-            .push(CompanyData::from(post_request, last_insert_id));
     }
 
     //TODO: remove pub when events can be created by handling routing requests
@@ -661,9 +750,12 @@ impl Data {
         .await;
         match result1 {
             Ok(_) => {
-                info!("event created");
+                () //info!("event created");
             }
-            Err(e) => error!("Error creating event: {e:?}"),
+            Err(e) => {
+                error!("Error creating event: {e:?}");
+                return;
+            }
         }
         let result2 = Event::insert(event::ActiveModel {
             id: ActiveValue::NotSet,
@@ -684,9 +776,12 @@ impl Data {
         .await;
         match result2 {
             Ok(_) => {
-                info!("Event created");
+                () //info!("Event created");
             }
-            Err(e) => error!("Error creating event: {e:?}"),
+            Err(e) => {
+                error!("Error creating event: {e:?}");
+                return;
+            }
         }
     }
 
@@ -702,7 +797,7 @@ impl Data {
         start: &geo::Point,
     ) -> Vec<bool> {
         let mut viable_zone_ids = Vec::<i32>::new();
-        for (pos, z) in self.zones.iter().enumerate() {
+        for (pos, z) in self.zones.iter().map(|z| &z.area).enumerate() {
             if z.contains(start) {
                 viable_zone_ids.push(pos as i32 + 1);
             }

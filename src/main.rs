@@ -1,5 +1,5 @@
 use crate::be::backend::{
-    CreateCapacity, CreateCompany, CreateVehicle, CreateZone, Data, GetById, GetCapacity,
+    CreateCompany, CreateVehicle, CreateVehicleAvailability, CreateZone, Data, GetById,
 };
 use crate::constants::{
     bautzen_split_ost::BAUTZEN_OST, bautzen_split_west::BAUTZEN_WEST, gorlitz::GORLITZ,
@@ -167,13 +167,14 @@ async fn users(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
 
 async fn init(State(s): State<AppState>) {
     let mut data = Data::new();
+    let mut read_from_db_data = Data::new();
     data.create_user(
         State(s.clone()),
         axum::Json(be::backend::User {
             id: None,
-            name: "Test".to_string(),
+            name: "TestDriver1".to_string(),
             is_driver: true,
-            is_admin: true,
+            is_admin: false,
             email: "".to_string(),
             password: Some("".to_string()),
             salt: "".to_string(),
@@ -182,6 +183,45 @@ async fn init(State(s): State<AppState>) {
         }),
     )
     .await;
+
+    data.create_user(
+        State(s.clone()),
+        axum::Json(be::backend::User {
+            id: None,
+            name: "TestUser1".to_string(),
+            is_driver: false,
+            is_admin: false,
+            email: "".to_string(),
+            password: Some("".to_string()),
+            salt: "".to_string(),
+            o_auth_id: Some("".to_string()),
+            o_auth_provider: Some("".to_string()),
+        }),
+    )
+    .await;
+
+    data.create_user(
+        State(s.clone()),
+        axum::Json(be::backend::User {
+            id: None,
+            name: "TestUser2".to_string(),
+            is_driver: false,
+            is_admin: false,
+            email: "".to_string(),
+            password: Some("".to_string()),
+            salt: "".to_string(),
+            o_auth_id: Some("".to_string()),
+            o_auth_provider: Some("".to_string()),
+        }),
+    )
+    .await;
+
+    read_from_db_data.clear();
+    read_from_db_data.read_data(State(s.clone())).await;
+    println!(
+        "=_=_=__=__=_=_=_=_=_==_=_=_==_=====_=_=_=_=_==___________________________________________________________________________________________________is data synchronized after creating user: {}",
+        read_from_db_data == data
+    );
 
     data.create_zone(
         State(s.clone()),
@@ -207,6 +247,13 @@ async fn init(State(s): State<AppState>) {
         }),
     )
     .await;
+
+    read_from_db_data.clear();
+    read_from_db_data.read_data(State(s.clone())).await;
+    println!(
+        "=_=_=__=__=_=_=_=_=_==_=_=_==_=====_=_=_=_=_==___________________________________________________________________________________________________is data synchronized after creating zones: {}",
+        read_from_db_data == data
+    );
 
     data.create_company(
         State(s.clone()),
@@ -288,6 +335,13 @@ async fn init(State(s): State<AppState>) {
         }),
     )
     .await;
+
+    read_from_db_data.clear();
+    read_from_db_data.read_data(State(s.clone())).await;
+    println!(
+        "=_=_=__=__=_=_=_=_=_==_=_=_==_=====_=_=_=_=_==___________________________________________________________________________________________________is data synchronized after creating companies: {}",
+        read_from_db_data == data
+    );
 
     data.create_vehicle(
         State(s.clone()),
@@ -521,6 +575,56 @@ async fn init(State(s): State<AppState>) {
         }),
     )
     .await;
+
+    read_from_db_data.clear();
+    read_from_db_data.read_data(State(s.clone())).await;
+    println!(
+        "=_=_=__=__=_=_=_=_=_==_=_=_==_=====_=_=_=_=_==___________________________________________________________________________________________________is data synchronized after creating vehicles: {}",
+        read_from_db_data == data
+    );
+
+    data.create_availability(
+        State(s.clone()),
+        axum::Json(CreateVehicleAvailability {
+            start_time: (NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 10, 0)
+                .unwrap()),
+            end_time: (NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 11, 0)
+                .unwrap()),
+            vehicle: 1,
+        }),
+    )
+    .await;
+
+    data.create_availability(
+        State(s.clone()),
+        axum::Json(CreateVehicleAvailability {
+            start_time: (NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 11, 0)
+                .unwrap()),
+            end_time: (NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 12, 0)
+                .unwrap()),
+            vehicle: 1,
+        }),
+    )
+    .await;
+    println!(
+        "=_=_=__=__=_=_=_=_=_==_=_=_==_=====_=_=_=_=_==___________________________________________________________________________________________________is data synchronized after creating availabilities: {}",
+        read_from_db_data == data
+    );
+
+    read_from_db_data.clear();
+    read_from_db_data.read_data(State(s.clone())).await;
+    println!(
+        "=_=_=__=__=_=_=_=_=_==_=_=_==_=====_=_=_=_=_==___________________________________________________________________________________________________is data synchronized after creating availabilites: {}",
+        read_from_db_data == data
+    );
 }
 
 #[tokio::main]
