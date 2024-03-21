@@ -99,11 +99,11 @@ struct BestCombination {
 #[derive(Clone, PartialEq)]
 pub struct AssignmentData {
     pub id: usize,
-    departure: NaiveDateTime,
-    arrival: NaiveDateTime,
-    company: usize,
-    vehicle: usize,
-    events: Vec<EventData>,
+    pub departure: NaiveDateTime,
+    pub arrival: NaiveDateTime,
+    pub company: usize,
+    pub vehicle: usize,
+    pub events: Vec<EventData>,
 }
 impl AssignmentData {
     fn new() -> Self {
@@ -198,18 +198,18 @@ impl VehicleData {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct EventData {
-    coordinates: geo::Point,
-    scheduled_time: NaiveDateTime,
-    communicated_time: NaiveDateTime,
-    customer: usize,
-    assignment: usize,
-    required_specs: usize,
-    request_id: usize,
+    pub coordinates: geo::Point,
+    pub scheduled_time: NaiveDateTime,
+    pub communicated_time: NaiveDateTime,
+    pub customer: usize,
+    pub assignment: usize,
+    pub required_specs: usize,
+    pub request_id: usize,
     pub id: usize,
-    is_pickup: bool,
-    company: usize,
+    pub is_pickup: bool,
+    pub company: usize,
 }
 impl EventData {
     fn from(
@@ -272,7 +272,7 @@ pub struct Data {
     users: Vec<UserData>,
     zones: Vec<ZoneData>,
     companies: Vec<CompanyData>,
-    vehicles: Vec<VehicleData>,
+    pub vehicles: Vec<VehicleData>,
     vehicle_specifics: Vec<vehicle_specifics::Model>,
 }
 
@@ -636,12 +636,147 @@ impl Data {
     }
 
     //TODO: remove pub when events can be created by handling routing requests
-    pub async fn insert_event_pair_into_db(
+    // assignment_id == None <=> assignment already exists
+    pub async fn insert_or_add_assignment(
+        &mut self,
+        assignment_id: Option<i32>,
+        departure: NaiveDateTime,
+        arrival: NaiveDateTime,
+        company: usize,
+        vehicle: usize,
+        State(s): State<AppState>,
+        start_address: &String,
+        target_address: &String,
+        lat_start: f32,
+        lng_start: f32,
+        sched_t_start: NaiveDateTime,
+        comm_t_start: NaiveDateTime,
+        customer: i32,
+        required_vehicle_specs: i32,
+        request_id: i32,
+        connects_public_transport1: bool,
+        connects_public_transport2: bool,
+        lat_target: f32,
+        lng_target: f32,
+        sched_t_target: NaiveDateTime,
+        comm_t_target: NaiveDateTime,
+    ) {
+        let id = match assignment_id {
+            Some(a_id) => a_id as usize,
+            None => {
+                let a_id = self
+                    .insert_assignment_into_db(
+                        State(s.clone()),
+                        departure,
+                        arrival,
+                        company,
+                        vehicle,
+                    )
+                    .await as usize;
+                (&mut self.vehicles[vehicle - 1])
+                    .assignments
+                    .push(AssignmentData {
+                        id: a_id,
+                        departure,
+                        arrival,
+                        company,
+                        vehicle,
+                        events: Vec::new(),
+                    });
+                a_id
+            }
+        };
+        let (start_event_id, target_event_id) = self
+            .insert_event_pair_into_db(
+                State(s),
+                start_address,
+                target_address,
+                lat_start,
+                lng_start,
+                sched_t_start,
+                comm_t_start,
+                company as i32,
+                customer,
+                id as i32,
+                required_vehicle_specs,
+                request_id,
+                connects_public_transport1,
+                connects_public_transport2,
+                lat_target,
+                lng_target,
+                sched_t_target,
+                comm_t_target,
+            )
+            .await;
+        let p1: Point = (lat_start as f64, lng_start as f64).into();
+        let p2: Point = (lat_target as f64, lng_target as f64).into();
+        let mut ev = vec![
+            EventData {
+                coordinates: p1,
+                scheduled_time: sched_t_start,
+                communicated_time: comm_t_start,
+                customer: customer as usize,
+                assignment: id,
+                required_specs: required_vehicle_specs as usize,
+                request_id: request_id as usize,
+                id: start_event_id as usize,
+                is_pickup: true,
+                company: company,
+            },
+            EventData {
+                coordinates: p2,
+                scheduled_time: sched_t_target,
+                communicated_time: comm_t_target,
+                customer: customer as usize,
+                assignment: id,
+                required_specs: required_vehicle_specs as usize,
+                request_id: request_id as usize,
+                id: target_event_id as usize,
+                is_pickup: false,
+                company: company,
+            },
+        ];
+        (&mut self.vehicles[vehicle - 1])
+            .assignments
+            .iter_mut()
+            .filter(|assignment| assignment.id == id)
+            .for_each(|assignment| assignment.events.append(&mut ev))
+    }
+
+    async fn insert_assignment_into_db(
+        &self,
+        State(s): State<AppState>,
+        departure: NaiveDateTime,
+        arrival: NaiveDateTime,
+        company: usize,
+        vehicle: usize,
+    ) -> i32 {
+        let result = Assignment::insert(assignment::ActiveModel {
+            id: ActiveValue::NotSet,
+            departure: ActiveValue::Set(departure),
+            arrival: ActiveValue::Set(arrival),
+            company: ActiveValue::Set(company as i32),
+            vehicle: ActiveValue::Set(vehicle as i32),
+        })
+        .exec(s.db())
+        .await;
+
+        match result {
+            Ok(_) => result.unwrap().last_insert_id,
+            Err(e) => {
+                error!("Error creating event: {e:?}");
+                return 0;
+            }
+        }
+    }
+
+    async fn insert_event_pair_into_db(
         &mut self,
         State(s): State<AppState>,
-        address: &String,
-        lng_start: f32,
+        start_address: &String,
+        target_address: &String,
         lat_start: f32,
+        lng_start: f32,
         sched_t_start: NaiveDateTime,
         comm_t_start: NaiveDateTime,
         company: i32,
@@ -651,11 +786,11 @@ impl Data {
         request_id: i32,
         connects_public_transport1: bool,
         connects_public_transport2: bool,
-        lng_target: f32,
         lat_target: f32,
+        lng_target: f32,
         sched_t_target: NaiveDateTime,
         comm_t_target: NaiveDateTime,
-    ) {
+    ) -> (i32, i32) {
         let result1 = Event::insert(event::ActiveModel {
             id: ActiveValue::NotSet,
             longitude: ActiveValue::Set(lng_start),
@@ -669,17 +804,15 @@ impl Data {
             request_id: ActiveValue::Set(request_id),
             is_pickup: ActiveValue::Set(true),
             connects_public_transport: ActiveValue::Set(connects_public_transport1),
-            address: ActiveValue::Set(address.to_string()),
+            address: ActiveValue::Set(start_address.to_string()),
         })
         .exec(s.db())
         .await;
         match result1 {
-            Ok(_) => {
-                () //info!("event created");
-            }
+            Ok(_) => (),
             Err(e) => {
                 error!("Error creating event: {e:?}");
-                return;
+                return (-1, -1);
             }
         }
         let result2 = Event::insert(event::ActiveModel {
@@ -695,19 +828,23 @@ impl Data {
             request_id: ActiveValue::Set(request_id),
             is_pickup: ActiveValue::Set(false),
             connects_public_transport: ActiveValue::Set(connects_public_transport2),
-            address: ActiveValue::Set(address.to_string()),
+            address: ActiveValue::Set(target_address.to_string()),
         })
         .exec(s.db())
         .await;
         match result2 {
             Ok(_) => {
-                () //info!("Event created");
+                ();
             }
             Err(e) => {
                 error!("Error creating event: {e:?}");
-                return;
+                return (-1, -1);
             }
         }
+        (
+            result1.unwrap().last_insert_id,
+            result2.unwrap().last_insert_id,
+        )
     }
 
     async fn get_companies_matching_start_point(
@@ -1073,6 +1210,7 @@ impl Data {
         self.insert_event_pair_into_db(
             State(s.clone()),
             &"".to_string(),
+            &"".to_string(),
             request.start_lng,
             request.start_lat,
             start_time,
@@ -1089,7 +1227,7 @@ impl Data {
             target_time,
             target_time,
         )
-        .await
+        .await;
     }
 
     pub async fn get_assignments_for_vehicle(

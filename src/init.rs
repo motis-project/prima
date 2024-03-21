@@ -11,7 +11,7 @@ use crate::{
 use sea_orm::EntityTrait;
 
 use axum::extract::State;
-use chrono::NaiveDate;
+use chrono::{NaiveDate, NaiveDateTime};
 
 pub async fn init(State(s): State<AppState>) {
     match User::find().all(s.clone().db()).await {
@@ -493,6 +493,109 @@ pub async fn init(State(s): State<AppState>) {
     for i in 1..9 {
         print_vehicles_of_company(&data, i);
     }
+
+    data.insert_or_add_assignment(
+        None,
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(9, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(10, 0, 0)
+            .unwrap(),
+        1,
+        1,
+        State(s.clone()),
+        &"karolinenplatz 5".to_string(),
+        &"Lichtwiesenweg 3".to_string(),
+        13.867512445295205,
+        51.22069201951501,
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(9, 15, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(9, 12, 0)
+            .unwrap(),
+        2,
+        1,
+        1,
+        false,
+        false,
+        14.025081097762154,
+        51.195075641827316,
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(9, 55, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(9, 18, 0)
+            .unwrap(),
+    )
+    .await;
+
+    read_from_db_data.clear();
+    read_from_db_data.read_data(State(s.clone())).await;
+    println!(
+        "=_=_=__=__=_=_=_=_=_==_=_=_==_=====_=_=_=_=_==___________________________________________________________________________________________________is data synchronized after creating assignment: {}",
+        read_from_db_data == data
+    );
+
+    /*
+    println!(
+        "number of assignments for vehicle 1: {} and number of the first assignments events: {}, departure: {}, arrival: {}, company: {}, vehicle: {}, id: {}",
+        data.vehicles[0].assignments.len(),
+        data.vehicles[0].assignments[0].events.len(),
+        data.vehicles[0].assignments[0].departure,
+        data.vehicles[0].assignments[0].arrival,
+        data.vehicles[0].assignments[0].company,
+        data.vehicles[0].assignments[0].vehicle,
+        data.vehicles[0].assignments[0].id
+    );
+    println!(
+        "event1: assginment:{},communicated_time:{},scheduled_time:{},x:{},y:{},company:{},id:{},customer:{},is_pickup:{},request_id:{},required_specs:{}",
+        data.vehicles[0].assignments[0].events[0].assignment,
+        data.vehicles[0].assignments[0].events[0].communicated_time,
+        data.vehicles[0].assignments[0].events[0].scheduled_time,
+        data.vehicles[0].assignments[0].events[0].coordinates.x(),
+        data.vehicles[0].assignments[0].events[0].coordinates.y(),
+        data.vehicles[0].assignments[0].events[0].company,
+        data.vehicles[0].assignments[0].events[0].id,
+        data.vehicles[0].assignments[0].events[0].customer,
+        data.vehicles[0].assignments[0].events[0].is_pickup,
+        data.vehicles[0].assignments[0].events[0].request_id,
+        data.vehicles[0].assignments[0].events[0].required_specs,
+    );
+
+    println!("for read data: ");
+
+    println!(
+        "number of assignments for vehicle 1: {} and number of the first assignments events: {}, departure: {}, arrival: {}, company: {}, vehicle: {}, id: {}",
+        read_from_db_data.vehicles[0].assignments.len(),
+        read_from_db_data.vehicles[0].assignments[0].events.len(),
+        read_from_db_data.vehicles[0].assignments[0].departure,
+        read_from_db_data.vehicles[0].assignments[0].arrival,
+        read_from_db_data.vehicles[0].assignments[0].company,
+        read_from_db_data.vehicles[0].assignments[0].vehicle,
+        read_from_db_data.vehicles[0].assignments[0].id
+    );
+    println!(
+        "event1: assginment:{},communicated_time:{},scheduled_time:{},x:{},y:{},company:{},id:{},customer:{},is_pickup:{},request_id:{},required_specs:{}",
+        read_from_db_data.vehicles[0].assignments[0].events[0].assignment,
+        read_from_db_data.vehicles[0].assignments[0].events[0].communicated_time,
+        read_from_db_data.vehicles[0].assignments[0].events[0].scheduled_time,
+        read_from_db_data.vehicles[0].assignments[0].events[0].coordinates.x(),
+        read_from_db_data.vehicles[0].assignments[0].events[0].coordinates.y(),
+        read_from_db_data.vehicles[0].assignments[0].events[0].company,
+        read_from_db_data.vehicles[0].assignments[0].events[0].id,
+        read_from_db_data.vehicles[0].assignments[0].events[0].customer,
+        read_from_db_data.vehicles[0].assignments[0].events[0].is_pickup,
+        read_from_db_data.vehicles[0].assignments[0].events[0].request_id,
+        read_from_db_data.vehicles[0].assignments[0].events[0].required_specs,
+    );*/
 }
 
 fn print_vehicles_of_company(
