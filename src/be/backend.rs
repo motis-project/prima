@@ -1,9 +1,8 @@
-use crate::be::interval::Interval;
+use crate::be::interval::{InfiniteInterval, Interval};
 use crate::constants::constants::*;
 use crate::entities::prelude::*;
 use crate::entities::{self, availability};
 use crate::entities::{assignment, company, event, user, vehicle, vehicle_specifics, zone};
-
 use crate::osrm::Coordinate;
 use crate::osrm::{DistTime, OSRM};
 
@@ -55,17 +54,6 @@ pub struct CreateVehicle {
 }
 
 #[derive(Deserialize)]
-pub struct CreateCapacity {
-    //not needed in mvp
-    //pub seats: i32,
-    //pub wheelchairs: i32,
-    //pub storage_space: i32,
-    pub company: i32,
-    pub interval: Interval,
-    pub amount: i32,
-}
-
-#[derive(Deserialize)]
 pub struct RoutingRequest {
     fixed_time: NaiveDateTime,
     is_start_time_fixed: bool,
@@ -77,54 +65,6 @@ pub struct RoutingRequest {
     //wheelchairs: i32,
     //luggage: i32,
     customer: i32,
-}
-
-#[derive(Deserialize)]
-pub struct GetCapacity {
-    pub company: i32,
-    //not needed in mvp
-    //pub vehicle_specs: i32,
-    pub time_frame_start: Option<NaiveDateTime>,
-    pub time_frame_end: Option<NaiveDateTime>,
-}
-
-#[derive(Deserialize)]
-pub struct GetById {
-    pub id: usize,
-    pub time_frame_start: Option<NaiveDateTime>,
-    pub time_frame_end: Option<NaiveDateTime>,
-}
-
-impl GetById {
-    fn contained_in_time_frame(
-        &self,
-        start: NaiveDateTime,
-        end: NaiveDateTime,
-    ) -> bool {
-        (match self.time_frame_start {
-            None => true,
-            Some(t) => start >= t,
-        } && match self.time_frame_end {
-            None => true,
-            Some(t) => end <= t,
-        })
-    }
-}
-
-#[derive(Deserialize)]
-pub struct GetBy2Ids {
-    pub id1: usize,
-    pub id2: usize,
-    //pub time_frame_start: Option<NaiveDateTime>,
-    //pub time_frame_end: Option<NaiveDateTime>,
-}
-
-#[derive(Deserialize)]
-pub struct GetVehicleById {
-    pub id: usize,
-    pub active: Option<bool>,
-    pub time_frame_start: Option<NaiveDateTime>,
-    pub time_frame_end: Option<NaiveDateTime>,
 }
 
 #[derive(Deserialize, PartialEq, Clone)]
@@ -259,7 +199,7 @@ impl VehicleData {
 }
 
 #[derive(Clone, PartialEq)]
-struct EventData {
+pub struct EventData {
     coordinates: geo::Point,
     scheduled_time: NaiveDateTime,
     communicated_time: NaiveDateTime,
@@ -1152,31 +1092,36 @@ impl Data {
         .await
     }
 
-    //id->vehicle_id
     pub async fn get_assignments_for_vehicle(
         &self,
-        Json(get_request): Json<GetById>,
+        vehicle_id: usize,
+        time_frame_start: Option<NaiveDateTime>,
+        time_frame_end: Option<NaiveDateTime>,
     ) -> Vec<&AssignmentData> {
-        if self.vehicles.len() < get_request.id {
+        let interval = InfiniteInterval {
+            time_frame_start,
+            time_frame_end,
+        };
+        if self.vehicles.len() < vehicle_id {
             //error vehicle not found
         }
-        self.vehicles[get_request.id]
+        self.vehicles[vehicle_id]
             .assignments
             .iter()
-            .filter(|a| get_request.contained_in_time_frame(a.departure, a.arrival))
+            .filter(|a| interval.contained_in_time_frame(a.departure, a.arrival))
             .collect_vec()
     }
 
-    //id->company_id
     pub fn get_vehicles(
         &self,
-        Json(get_request): Json<GetVehicleById>,
+        company_id: usize,
+        active: Option<bool>,
     ) -> HashMap<usize, Vec<&VehicleData>> {
         self.vehicles
             .iter()
             .filter(|v| {
-                v.company == get_request.id
-                    && match get_request.active {
+                v.company == company_id
+                    && match active {
                         Some(a) => a == v.active,
                         None => true,
                     }
@@ -1184,18 +1129,23 @@ impl Data {
             .into_group_map_by(|v| v.specifics)
     }
 
-    //id->user_id
     pub async fn get_events_for_user(
         &self,
-        Json(get_request): Json<GetById>,
+        user_id: usize,
+        time_frame_start: Option<NaiveDateTime>,
+        time_frame_end: Option<NaiveDateTime>,
     ) -> Vec<&EventData> {
+        let interval = InfiniteInterval {
+            time_frame_start,
+            time_frame_end,
+        };
         let mut ret = Vec::<&EventData>::new();
-        let customer_id = get_request.id;
+        let customer_id = user_id;
         for v in self.vehicles.iter() {
             for a in v.assignments.iter() {
                 for e in a.events.iter() {
                     if e.customer == customer_id
-                        && get_request.contained_in_time_frame(e.scheduled_time, e.scheduled_time)
+                        && interval.contained_in_time_frame(e.scheduled_time, e.scheduled_time)
                     {
                         ret.push(&e);
                     }
@@ -1205,10 +1155,10 @@ impl Data {
         ret
     }
 
-    //ignores time_frame, id1->company_id, id2 assignment id
     pub async fn get_company_conflicts_for_assignment(
         &self,
-        Json(get_request): Json<GetBy2Ids>,
+        company_id: usize,
+        assignment_id: usize,
     ) -> HashMap<usize, Vec<&AssignmentData>> {
         let mut interval = Interval {
             start_time: NaiveDateTime::MIN,
@@ -1217,7 +1167,7 @@ impl Data {
         let mut found = false;
         for v in self.vehicles.iter() {
             for a in v.assignments.iter() {
-                if a.id != get_request.id2 {
+                if a.id != assignment_id {
                     continue;
                 }
                 found = true;
@@ -1230,7 +1180,7 @@ impl Data {
             return ret;
         }
         for (i, v) in self.vehicles.iter().enumerate() {
-            if v.company != get_request.id1 {
+            if v.company != company_id {
                 continue;
             }
             let conflicting_assignments = v
@@ -1250,10 +1200,10 @@ impl Data {
         ret
     }
 
-    //id1->vehicle_id, id2 assignment id
     pub async fn get_vehicle_conflicts_for_assignment(
         &self,
-        Json(get_request): Json<GetBy2Ids>,
+        vehicle_id: usize,
+        assignment_id: usize,
     ) -> Vec<&AssignmentData> {
         let mut interval = Interval {
             start_time: NaiveDateTime::MIN,
@@ -1262,7 +1212,7 @@ impl Data {
         let mut found = false;
         for v in self.vehicles.iter() {
             for a in v.assignments.iter() {
-                if a.id != get_request.id2 {
+                if a.id != assignment_id {
                     continue;
                 }
                 found = true;
@@ -1273,7 +1223,7 @@ impl Data {
         if !found {
             return Vec::new();
         }
-        self.vehicles[get_request.id1]
+        self.vehicles[vehicle_id]
             .assignments
             .iter()
             .filter(|a| {

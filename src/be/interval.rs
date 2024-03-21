@@ -108,6 +108,27 @@ impl Interval {
     }
 }
 
+pub struct InfiniteInterval {
+    pub time_frame_start: Option<NaiveDateTime>,
+    pub time_frame_end: Option<NaiveDateTime>,
+}
+
+impl InfiniteInterval {
+    pub fn contained_in_time_frame(
+        &self,
+        start: NaiveDateTime,
+        end: NaiveDateTime,
+    ) -> bool {
+        (match self.time_frame_start {
+            None => true,
+            Some(t) => start >= t,
+        } && match self.time_frame_end {
+            None => true,
+            Some(t) => end <= t,
+        })
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::be::interval::Interval;
