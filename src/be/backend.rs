@@ -7,7 +7,8 @@ use crate::entities::{assignment, company, event, user, vehicle, vehicle_specifi
 use crate::osrm::Coordinate;
 use crate::osrm::{DistTime, OSRM};
 
-use crate::{error, info, AppState, State, StatusCode};
+use crate::{error, info, AppState};
+use axum::extract::State;
 use axum::response::Html;
 use axum::Json;
 use chrono::{DateTime, Datelike, Duration, NaiveTime, Utc};
