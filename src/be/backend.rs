@@ -53,20 +53,6 @@ pub struct CreateVehicle {
     pub storage_space: i32, */
 }
 
-#[derive(Deserialize)]
-pub struct RoutingRequest {
-    fixed_time: NaiveDateTime,
-    is_start_time_fixed: bool,
-    start_lat: f32,
-    start_lng: f32,
-    target_lat: f32,
-    target_lng: f32,
-    passengers: i32,
-    //wheelchairs: i32,
-    //luggage: i32,
-    customer: i32,
-}
-
 #[derive(Deserialize, PartialEq, Clone)]
 pub struct UserData {
     pub id: Option<i32>,
@@ -870,34 +856,42 @@ impl Data {
     pub async fn handle_routing_request(
         &mut self,
         State(s): State<AppState>,
-        Json(request): Json<RoutingRequest>,
+        fixed_time: NaiveDateTime,
+        is_start_time_fixed: bool,
+        start_lat: f32,
+        start_lng: f32,
+        target_lat: f32,
+        target_lng: f32,
+        customer: i32,
+        passengers: i32,
+        //wheelchairs: i32, luggage: i32,
     ) {
         let minimum_prep_time: Duration = Duration::seconds(3600);
         let now: NaiveDateTime = Utc::now().naive_utc();
 
         let sc = Coord {
-            x: request.start_lat as f64,
-            y: request.start_lng as f64,
+            x: start_lat as f64,
+            y: start_lng as f64,
         };
         let start: Point = sc.into();
         let tc = Coord {
-            x: request.target_lat as f64,
-            y: request.target_lng as f64,
+            x: target_lat as f64,
+            y: target_lng as f64,
         };
         let target: Point = tc.into();
 
         let beeline_time: Duration =
             Duration::minutes((start.geodesic_distance(&target)).round() as i64 / AIR_DIST_SPEED);
 
-        let mut start_time: NaiveDateTime = if request.is_start_time_fixed {
-            request.fixed_time
+        let mut start_time: NaiveDateTime = if is_start_time_fixed {
+            fixed_time
         } else {
-            request.fixed_time - beeline_time
+            fixed_time - beeline_time
         };
-        let mut target_time: NaiveDateTime = if request.is_start_time_fixed {
-            request.fixed_time + beeline_time
+        let mut target_time: NaiveDateTime = if is_start_time_fixed {
+            fixed_time + beeline_time
         } else {
-            request.fixed_time
+            fixed_time
         };
 
         if now + minimum_prep_time < start_time {
@@ -937,7 +931,7 @@ impl Data {
         //Find events valid for start and target based on beeline distances:
         for vehicle in self.vehicles.iter() {
             if !viable_companies[vehicle.company as usize]
-                || self.vehicle_specifics[vehicle.specifics as usize].seats < request.passengers
+                || self.vehicle_specifics[vehicle.specifics as usize].seats < passengers
             {
                 continue;
             }
@@ -1002,7 +996,7 @@ impl Data {
             }
             if !self.vehicles.iter().any(|v| {
                 v.company as usize == i
-                    && self.vehicle_specifics[v.specifics as usize].seats >= request.passengers
+                    && self.vehicle_specifics[v.specifics as usize].seats >= passengers
                     && v.find_collisions(start_time, target_time).is_empty()
                     && v.is_available(start_time, target_time)
             }) {
@@ -1012,12 +1006,12 @@ impl Data {
         }
         //get the actual costs
         let start_c = Coordinate {
-            lat: request.start_lat as f64,
-            lng: request.start_lat as f64,
+            lat: start_lat as f64,
+            lng: start_lat as f64,
         };
         let target_c = Coordinate {
-            lat: request.target_lat as f64,
-            lng: request.target_lng as f64,
+            lat: target_lat as f64,
+            lng: target_lng as f64,
         };
         let mut start_many = Vec::<Coordinate>::new();
         for (i, c) in self.companies.iter().enumerate() {
@@ -1045,15 +1039,15 @@ impl Data {
         let distance = distances_to_start.last().unwrap();
 
         //update start/target times using actual travel time instead of beeline-time
-        start_time = if request.is_start_time_fixed {
-            request.fixed_time
+        start_time = if is_start_time_fixed {
+            fixed_time
         } else {
-            request.fixed_time - Duration::minutes(distance.time as i64)
+            fixed_time - Duration::minutes(distance.time as i64)
         };
-        target_time = if request.is_start_time_fixed {
-            request.fixed_time + Duration::minutes(distance.time as i64)
+        target_time = if is_start_time_fixed {
+            fixed_time + Duration::minutes(distance.time as i64)
         } else {
-            request.fixed_time
+            fixed_time
         };
         distances_to_start.truncate(1); //remove distance from start to target
 
@@ -1119,7 +1113,7 @@ impl Data {
                     + distances_to_target[n_viable_companies + i].dist as i32 * KM_PRICE;
         }
         //create all viable combinations
-        let mut viable_combinations: Vec<(Comb)> = Vec::new();
+        let mut viable_combinations: Vec<Comb> = Vec::new();
         let mut company_pos = 0;
         for (i, c) in self.companies.iter().enumerate() {
             if !viable_companies[i] {
@@ -1211,19 +1205,19 @@ impl Data {
             State(s.clone()),
             &"".to_string(),
             &"".to_string(),
-            request.start_lng,
-            request.start_lat,
+            start_lng,
+            start_lat,
             start_time,
             start_time,
             company_id as i32,
-            request.customer,
+            customer,
             assignment_id.unwrap() as i32,
             1,
             1000,
             false,
             false,
-            request.target_lng,
-            request.target_lat,
+            target_lng,
+            target_lat,
             target_time,
             target_time,
         )
@@ -1241,7 +1235,7 @@ impl Data {
             time_frame_end,
         };
         if self.vehicles.len() < vehicle_id {
-            //error vehicle not found
+            return Vec::new();
         }
         self.vehicles[vehicle_id]
             .assignments
