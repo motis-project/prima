@@ -5,23 +5,128 @@ use crate::{
     constants::{
         bautzen_split_ost::BAUTZEN_OST, bautzen_split_west::BAUTZEN_WEST, gorlitz::GORLITZ,
     },
-    entities::prelude::User,
+    entities::{
+        assignment, availability, company, event, prelude::User, user, vehicle, vehicle_specifics,
+        zone,
+    },
     AppState,
 };
-use sea_orm::EntityTrait;
+use sea_orm::{DatabaseBackend, EntityTrait, Statement};
 
 use axum::extract::State;
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::NaiveDate;
+use migration::ConnectionTrait;
+/*ALTER SEQUENCE product_id_seq RESTART WITH 1453
+ */
 
-pub async fn init(State(s): State<AppState>) {
-    match User::find().all(s.clone().db()).await {
-        Ok(u) => {
-            if !u.is_empty() {
-                println!("users already exist, not running init() again.");
-                return;
+async fn clear(State(s): State<AppState>) {
+    match event::Entity::delete_many().exec(s.db()).await {
+        Ok(_) => match State(s.clone())
+            .db()
+            .execute_unprepared("ALTER SEQUENCE event_id_seq RESTART WITH 1")
+            .await
+        {
+            Ok(_) => (),
+            Err(e) => println!("{}", e),
+        },
+        Err(e) => println!("{}", e),
+    }
+    match assignment::Entity::delete_many().exec(s.db()).await {
+        Ok(_) => match State(s.clone())
+            .db()
+            .execute_unprepared("ALTER SEQUENCE assignment_id_seq RESTART WITH 1")
+            .await
+        {
+            Ok(_) => (),
+            Err(e) => println!("{}", e),
+        },
+        Err(e) => println!("{}", e),
+    }
+    match availability::Entity::delete_many().exec(s.db()).await {
+        Ok(_) => match State(s.clone())
+            .db()
+            .execute_unprepared("ALTER SEQUENCE availability_id_seq RESTART WITH 1")
+            .await
+        {
+            Ok(_) => (),
+            Err(e) => println!("{}", e),
+        },
+        Err(e) => println!("{}", e),
+    }
+    match vehicle::Entity::delete_many().exec(s.db()).await {
+        Ok(_) => match State(s.clone())
+            .db()
+            .execute_unprepared("ALTER SEQUENCE vehicle_id_seq RESTART WITH 1")
+            .await
+        {
+            Ok(_) => (),
+            Err(e) => println!("{}", e),
+        },
+        Err(e) => println!("{}", e),
+    }
+    match company::Entity::delete_many().exec(s.db()).await {
+        Ok(_) => match State(s.clone())
+            .db()
+            .execute_unprepared("ALTER SEQUENCE company_id_seq RESTART WITH 1")
+            .await
+        {
+            Ok(_) => (),
+            Err(e) => println!("{}", e),
+        },
+        Err(e) => println!("{}", e),
+    }
+    match zone::Entity::delete_many().exec(s.db()).await {
+        Ok(_) => match State(s.clone())
+            .db()
+            .execute_unprepared("ALTER SEQUENCE zone_id_seq RESTART WITH 1")
+            .await
+        {
+            Ok(_) => (),
+            Err(e) => println!("{}", e),
+        },
+        Err(e) => println!("{}", e),
+    }
+    match vehicle_specifics::Entity::delete_many().exec(s.db()).await {
+        Ok(_) => match State(s.clone())
+            .db()
+            .execute_unprepared("ALTER SEQUENCE vehicle_specifics_id_seq RESTART WITH 1")
+            .await
+        {
+            Ok(_) => (),
+            Err(e) => println!("{}", e),
+        },
+        Err(e) => println!("{}", e),
+    }
+    match user::Entity::delete_many().exec(s.db()).await {
+        Ok(_) => match State(s.clone())
+            .db()
+            .execute_unprepared("ALTER SEQUENCE user_id_seq RESTART WITH 1")
+            .await
+        {
+            Ok(_) => (),
+            Err(e) => println!("{}", e),
+        },
+        Err(e) => println!("{}", e),
+    }
+    println!("clear succesful");
+}
+
+pub async fn init(
+    State(s): State<AppState>,
+    clear_tables: bool,
+) {
+    if clear_tables {
+        clear(State(s.clone())).await;
+    } else {
+        match User::find().all(s.clone().db()).await {
+            Ok(u) => {
+                if !u.is_empty() {
+                    println!("users already exist, not running init() again.");
+                    return;
+                }
             }
+            Err(_) => (),
         }
-        Err(_) => (),
     }
     let mut data = Data::new();
     let mut read_from_db_data = Data::new();
