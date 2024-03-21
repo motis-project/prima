@@ -11,13 +11,11 @@ use crate::{
     },
     AppState,
 };
-use sea_orm::{DatabaseBackend, EntityTrait, Statement};
+use sea_orm::EntityTrait;
 
 use axum::extract::State;
 use chrono::NaiveDate;
 use migration::ConnectionTrait;
-/*ALTER SEQUENCE product_id_seq RESTART WITH 1453
- */
 
 async fn clear(State(s): State<AppState>) {
     match event::Entity::delete_many().exec(s.db()).await {
