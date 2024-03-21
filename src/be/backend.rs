@@ -535,10 +535,10 @@ impl Data {
             Ok(_) => {
                 user.id = Some(result.unwrap().last_insert_id);
                 self.users.push(user);
-                //info!("Vehicle created");
+                info!("User created");
             }
             Err(e) => {
-                error!("Error creating vehicle: {e:?}");
+                error!("Error creating user: {e:?}");
                 return;
             }
         }
@@ -1310,31 +1310,31 @@ impl Data {
     }
 }
 
-// #[cfg(test)]
-// mod test {
-//     use crate::{env, AppState, Arc, Data, Database, Mutex, Tera};
-//     use axum::extract::State;
-//     use chrono::NaiveDate;
+#[cfg(test)]
+mod test {
+    use crate::{be::backend::Data, env, AppState, Arc, Database, Mutex, Tera};
+    use axum::extract::State;
+    use chrono::NaiveDate;
 
-//     #[tokio::test]
-//     async fn test() {
-//         let tera = match Tera::new("html/*.html") {
-//             Ok(t) => Arc::new(Mutex::new(t)),
-//             Err(e) => {
-//                 println!("Parsing error(s): {}", e);
-//                 ::std::process::exit(1);
-//             }
-//         };
-//         let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
-//         let conn = Database::connect(db_url)
-//             .await
-//             .expect("Database connection failed");
-//         let s = AppState {
-//             tera: tera,
-//             db: Arc::new(conn),
-//         };
-//         let mut data = Data::new();
-//         //data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
-//         //data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(11, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(18, 00, 0).unwrap()).await;
-//     }
-// }
+    #[tokio::test]
+    async fn test() {
+        let tera = match Tera::new("html/*.html") {
+            Ok(t) => Arc::new(Mutex::new(t)),
+            Err(e) => {
+                println!("Parsing error(s): {}", e);
+                ::std::process::exit(1);
+            }
+        };
+        let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
+        let conn = Database::connect(db_url)
+            .await
+            .expect("Database connection failed");
+        let s = AppState {
+            tera: tera,
+            db: Arc::new(conn),
+        };
+        let mut data = Data::new();
+        //data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(9, 10, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(14, 30, 0).unwrap()).await;
+        //data.insert_capacity(State(s.clone()), 1, 4, 3, 0, 0,  NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(11, 0, 0).unwrap(), NaiveDate::from_ymd_opt(2024, 4, 15).unwrap().and_hms_opt(18, 00, 0).unwrap()).await;
+    }
+}

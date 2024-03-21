@@ -193,7 +193,7 @@ struct WayPoint {
     drop: bool,
 }
 
-pub async fn render_tc_tours(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
+pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
     // let username = User::find_by_id(1)
     //     .one(s.db())
     //     .await
@@ -257,7 +257,7 @@ pub async fn render_tc_tours(State(s): State<AppState>) -> Result<Html<String>, 
 
     let response = s
         .render(
-            "taxi-center/tc_tours-1.html",
+            "taxi-center/tours-1.html",
             &Context::from_serialize(json!({"tours": tours, "cars": cars})).map_err(|e| {
                 error!("Serialize error: {e:?}");
                 StatusCode::INTERNAL_SERVER_ERROR

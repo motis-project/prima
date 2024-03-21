@@ -22,12 +22,14 @@ use tracing::{error, info};
 
 use view::render::{
     get_route_details, render_driver_sign_in, render_home, render_login, render_register,
-    render_tc_dashboard, render_tc_tours,
+    render_tours,
 };
 
 use model::m_user::{
     create_user, delete_user, login_user, logout_user, post_json_test, update_user, users,
 };
+
+use model::m_test::test;
 
 mod be;
 mod constants;
@@ -103,6 +105,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // init::init(State(s.clone())).await;
+    // test().await;
 
     let app = Router::new();
     let app = app.layer(livereload);
@@ -114,11 +117,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = app.route("/users", get(users).with_state(s.clone()));
     let app = app.route("/", get(render_home).with_state(s.clone()));
     let app = app.route("/driver", get(render_driver_sign_in).with_state(s.clone()));
-    let app = app.route(
-        "/tc-dashboard",
-        get(render_tc_dashboard).with_state(s.clone()),
-    );
-    let app = app.route("/tc-tours", get(render_tc_tours).with_state(s.clone()));
+    // let app = app.route(
+    //     "/tc-dashboard",
+    //     get(render_tc_dashboard).with_state(s.clone()),
+    // );
+    let app = app.route("/tours", get(render_tours).with_state(s.clone()));
     let app = app.route(
         "/routes/:route_id",
         get(get_route_details).with_state(s.clone()),
