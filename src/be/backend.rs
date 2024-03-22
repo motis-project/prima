@@ -1,14 +1,12 @@
-use crate::be::interval::Interval;
+use crate::be::interval::{InfiniteInterval, Interval};
 use crate::constants::constants::*;
 use crate::entities::prelude::*;
 use crate::entities::{self, availability};
 use crate::entities::{assignment, company, event, user, vehicle, vehicle_specifics, zone};
-
 use crate::osrm::Coordinate;
 use crate::osrm::{DistTime, OSRM};
 
-use crate::{error, info, AppState};
-use axum::extract::State;
+use crate::{error, info, AppState, State};
 use axum::response::Html;
 use axum::Json;
 use chrono::{DateTime, Datelike, Duration, NaiveTime, Utc};
@@ -16,6 +14,7 @@ use chrono::{NaiveDate, NaiveDateTime};
 use geo::prelude::*;
 use geo::{Coord, Point};
 use geojson::{GeoJson, Geometry};
+use hyper::StatusCode;
 use itertools::Itertools;
 use migration::Mode;
 use sea_orm::TryIntoModel;
@@ -55,80 +54,6 @@ pub struct CreateVehicle {
     pub storage_space: i32, */
 }
 
-#[derive(Deserialize)]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-pub struct CreateCapacity {
-    //not needed in mvp
-    //pub seats: i32,
-    //pub wheelchairs: i32,
-    //pub storage_space: i32,
-    pub company: i32,
-    pub interval: Interval,
-    pub amount: i32,
-}
-
-#[derive(Deserialize)]
-pub struct RoutingRequest {
-    fixed_time: NaiveDateTime,
-    is_start_time_fixed: bool,
-    start_lat: f32,
-    start_lng: f32,
-    target_lat: f32,
-    target_lng: f32,
-    passengers: i32,
-    //wheelchairs: i32,
-    //luggage: i32,
-    customer: i32,
-}
-
-#[derive(Deserialize)]
-pub struct GetCapacity {
-    pub company: i32,
-    //not needed in mvp
-    //pub vehicle_specs: i32,
-    pub time_frame_start: Option<NaiveDateTime>,
-    pub time_frame_end: Option<NaiveDateTime>,
-}
-
-#[derive(Deserialize)]
-pub struct GetById {
-    pub id: usize,
-    pub time_frame_start: Option<NaiveDateTime>,
-    pub time_frame_end: Option<NaiveDateTime>,
-}
-
-impl GetById {
-    fn contained_in_time_frame(
-        &self,
-        start: NaiveDateTime,
-        end: NaiveDateTime,
-    ) -> bool {
-        (match self.time_frame_start {
-            None => true,
-            Some(t) => start >= t,
-        } && match self.time_frame_end {
-            None => true,
-            Some(t) => end <= t,
-        })
-    }
-}
-
-#[derive(Deserialize)]
-pub struct GetBy2Ids {
-    pub id1: usize,
-    pub id2: usize,
-    //pub time_frame_start: Option<NaiveDateTime>,
-    //pub time_frame_end: Option<NaiveDateTime>,
-}
-
-#[derive(Deserialize)]
-pub struct GetVehicleById {
-    pub id: usize,
-    pub active: Option<bool>,
-    pub time_frame_start: Option<NaiveDateTime>,
-    pub time_frame_end: Option<NaiveDateTime>,
-}
-
 #[derive(Deserialize, PartialEq, Clone)]
 pub struct UserData {
     pub id: Option<i32>,
@@ -159,13 +84,13 @@ struct BestCombination {
 
 //start data structs_______________________________________________________________________________________________________________________
 #[derive(Clone, PartialEq)]
-struct AssignmentData {
+pub struct AssignmentData {
     pub id: usize,
-    departure: NaiveDateTime,
-    arrival: NaiveDateTime,
-    company: usize,
-    vehicle: usize,
-    events: Vec<EventData>,
+    pub departure: NaiveDateTime,
+    pub arrival: NaiveDateTime,
+    pub company: usize,
+    pub vehicle: usize,
+    pub events: Vec<EventData>,
 }
 impl AssignmentData {
     fn new() -> Self {
@@ -181,14 +106,14 @@ impl AssignmentData {
 }
 
 #[derive(Eq, PartialEq)]
-struct AvailabilityData {
+pub struct AvailabilityData {
     id: i32,
     interval: Interval,
 }
 
 #[derive(PartialEq)]
-struct VehicleData {
-    id: usize,
+pub struct VehicleData {
+    pub id: usize,
     pub license_plate: String,
     pub company: usize,
     pub specifics: usize,
@@ -260,18 +185,18 @@ impl VehicleData {
     }
 }
 
-#[derive(Clone, PartialEq)]
-struct EventData {
-    coordinates: geo::Point,
-    scheduled_time: NaiveDateTime,
-    communicated_time: NaiveDateTime,
-    customer: usize,
-    assignment: usize,
-    required_specs: usize,
-    request_id: usize,
+#[derive(Copy, Clone, PartialEq)]
+pub struct EventData {
+    pub coordinates: geo::Point,
+    pub scheduled_time: NaiveDateTime,
+    pub communicated_time: NaiveDateTime,
+    pub customer: usize,
+    pub assignment: usize,
+    pub required_specs: usize,
+    pub request_id: usize,
     pub id: usize,
-    is_pickup: bool,
-    company: usize,
+    pub is_pickup: bool,
+    pub company: usize,
 }
 impl EventData {
     fn from(
@@ -334,7 +259,7 @@ pub struct Data {
     users: Vec<UserData>,
     zones: Vec<ZoneData>,
     companies: Vec<CompanyData>,
-    vehicles: Vec<VehicleData>,
+    pub vehicles: Vec<VehicleData>,
     vehicle_specifics: Vec<vehicle_specifics::Model>,
 }
 
@@ -514,7 +439,7 @@ impl Data {
         &mut self,
         State(s): State<AppState>,
         Json(post_request): Json<UserData>,
-    ) {
+    ) -> StatusCode {
         let mut user = post_request.clone();
         let active_m = user::ActiveModel {
             id: ActiveValue::NotSet,
@@ -535,12 +460,9 @@ impl Data {
             Ok(_) => {
                 user.id = Some(result.unwrap().last_insert_id);
                 self.users.push(user);
-                info!("User created");
+                StatusCode::CREATED
             }
-            Err(e) => {
-                error!("Error creating user: {e:?}");
-                return;
-            }
+            Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -548,7 +470,7 @@ impl Data {
         &mut self,
         State(s): State<AppState>,
         Json(post_request): Json<CreateVehicle>,
-    ) {
+    ) -> StatusCode {
         //check whether the vehicle fits one of the existing vehicle_specs, otherwise create a new one
         let specs_id = self
             .find_or_create_vehicle_specs(
@@ -580,12 +502,9 @@ impl Data {
                     availability: Vec::new(),
                     assignments: Vec::new(),
                 });
-                //info!("Vehicle created")
+                StatusCode::CREATED
             }
-            Err(e) => {
-                error!("Error creating vehicle: {e:?}");
-                return;
-            }
+            Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -593,7 +512,7 @@ impl Data {
         &mut self,
         State(s): State<AppState>,
         Json(post_request): Json<CreateVehicleAvailability>,
-    ) {
+    ) -> StatusCode {
         let active_m = availability::ActiveModel {
             id: ActiveValue::NotSet,
             start_time: ActiveValue::Set(post_request.start_time),
@@ -613,12 +532,9 @@ impl Data {
                         result.unwrap().last_insert_id,
                     )
                     .await;
-                //info!("Availability created")
+                StatusCode::CREATED
             }
-            Err(e) => {
-                error!("Error creating availability: {e:?}");
-                return;
-            }
+            Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -639,27 +555,27 @@ impl Data {
             .exec(s.db())
             .await;
 
-        let mut last_insert_id = -1;
         match result {
             Ok(_) => {
+                let mut last_insert_id = -1;
                 last_insert_id = result.unwrap().last_insert_id;
-                //info!("Vehicle specifics with id {} created", last_insert_id)
+                active_m.id = ActiveValue::Set(last_insert_id);
+                self.vehicle_specifics.push(active_m.try_into().unwrap());
+                info!("Vehicle specifics with id {} created", last_insert_id);
+                last_insert_id
             }
             Err(e) => {
                 error!("Error creating vehicle specifics: {e:?}");
                 return -1;
             }
         }
-        active_m.id = ActiveValue::Set(last_insert_id);
-        self.vehicle_specifics.push(active_m.try_into().unwrap());
-        last_insert_id
     }
 
     pub async fn create_zone(
         &mut self,
         State(s): State<AppState>,
         Json(post_request): Json<CreateZone>,
-    ) {
+    ) -> StatusCode {
         let result = Zone::insert(zone::ActiveModel {
             id: ActiveValue::NotSet,
             area: ActiveValue::Set(post_request.area.to_string()),
@@ -675,12 +591,9 @@ impl Data {
                     id: result.unwrap().last_insert_id as usize,
                     area: geo::MultiPolygon::try_from(feature).unwrap(),
                 });
-                //info!("Zone created")
+                StatusCode::CREATED
             }
-            Err(e) => {
-                error!("Error creating zone: {e:?}");
-                return;
-            }
+            Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -688,7 +601,7 @@ impl Data {
         &mut self,
         State(s): State<AppState>,
         Json(post_request): Json<CreateCompany>,
-    ) {
+    ) -> StatusCode {
         let mut active_m = company::ActiveModel {
             id: ActiveValue::NotSet,
             longitude: ActiveValue::Set(post_request.lng),
@@ -703,22 +616,154 @@ impl Data {
                     post_request,
                     result.unwrap().last_insert_id,
                 ));
-                //info!("Company created")
+                StatusCode::CREATED
             }
-            Err(e) => {
-                error!("Error creating company: {e:?}");
-                return;
-            }
+            Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
     //TODO: remove pub when events can be created by handling routing requests
-    pub async fn insert_event_pair_into_db(
+    // assignment_id == None <=> assignment already exists
+    pub async fn insert_or_add_assignment(
+        &mut self,
+        assignment_id: Option<i32>,
+        departure: NaiveDateTime,
+        arrival: NaiveDateTime,
+        company: usize,
+        vehicle: usize,
+        State(s): State<AppState>,
+        start_address: &String,
+        target_address: &String,
+        lat_start: f32,
+        lng_start: f32,
+        sched_t_start: NaiveDateTime,
+        comm_t_start: NaiveDateTime,
+        customer: i32,
+        required_vehicle_specs: i32,
+        request_id: i32,
+        connects_public_transport1: bool,
+        connects_public_transport2: bool,
+        lat_target: f32,
+        lng_target: f32,
+        sched_t_target: NaiveDateTime,
+        comm_t_target: NaiveDateTime,
+    ) {
+        let id = match assignment_id {
+            Some(a_id) => a_id as usize,
+            None => {
+                let a_id = self
+                    .insert_assignment_into_db(
+                        State(s.clone()),
+                        departure,
+                        arrival,
+                        company,
+                        vehicle,
+                    )
+                    .await as usize;
+                (&mut self.vehicles[vehicle - 1])
+                    .assignments
+                    .push(AssignmentData {
+                        id: a_id,
+                        departure,
+                        arrival,
+                        company,
+                        vehicle,
+                        events: Vec::new(),
+                    });
+                a_id
+            }
+        };
+        let (start_event_id, target_event_id) = self
+            .insert_event_pair_into_db(
+                State(s),
+                start_address,
+                target_address,
+                lat_start,
+                lng_start,
+                sched_t_start,
+                comm_t_start,
+                company as i32,
+                customer,
+                id as i32,
+                required_vehicle_specs,
+                request_id,
+                connects_public_transport1,
+                connects_public_transport2,
+                lat_target,
+                lng_target,
+                sched_t_target,
+                comm_t_target,
+            )
+            .await;
+        let p1: Point = (lat_start as f64, lng_start as f64).into();
+        let p2: Point = (lat_target as f64, lng_target as f64).into();
+        let mut ev = vec![
+            EventData {
+                coordinates: p1,
+                scheduled_time: sched_t_start,
+                communicated_time: comm_t_start,
+                customer: customer as usize,
+                assignment: id,
+                required_specs: required_vehicle_specs as usize,
+                request_id: request_id as usize,
+                id: start_event_id as usize,
+                is_pickup: true,
+                company: company,
+            },
+            EventData {
+                coordinates: p2,
+                scheduled_time: sched_t_target,
+                communicated_time: comm_t_target,
+                customer: customer as usize,
+                assignment: id,
+                required_specs: required_vehicle_specs as usize,
+                request_id: request_id as usize,
+                id: target_event_id as usize,
+                is_pickup: false,
+                company: company,
+            },
+        ];
+        (&mut self.vehicles[vehicle - 1])
+            .assignments
+            .iter_mut()
+            .filter(|assignment| assignment.id == id)
+            .for_each(|assignment| assignment.events.append(&mut ev))
+    }
+
+    async fn insert_assignment_into_db(
+        &self,
+        State(s): State<AppState>,
+        departure: NaiveDateTime,
+        arrival: NaiveDateTime,
+        company: usize,
+        vehicle: usize,
+    ) -> i32 {
+        let result = Assignment::insert(assignment::ActiveModel {
+            id: ActiveValue::NotSet,
+            departure: ActiveValue::Set(departure),
+            arrival: ActiveValue::Set(arrival),
+            company: ActiveValue::Set(company as i32),
+            vehicle: ActiveValue::Set(vehicle as i32),
+        })
+        .exec(s.db())
+        .await;
+
+        match result {
+            Ok(_) => result.unwrap().last_insert_id,
+            Err(e) => {
+                error!("Error creating event: {e:?}");
+                return 0;
+            }
+        }
+    }
+
+    async fn insert_event_pair_into_db(
         &mut self,
         State(s): State<AppState>,
-        address: &String,
-        lng_start: f32,
+        start_address: &String,
+        target_address: &String,
         lat_start: f32,
+        lng_start: f32,
         sched_t_start: NaiveDateTime,
         comm_t_start: NaiveDateTime,
         company: i32,
@@ -728,11 +773,11 @@ impl Data {
         request_id: i32,
         connects_public_transport1: bool,
         connects_public_transport2: bool,
-        lng_target: f32,
         lat_target: f32,
+        lng_target: f32,
         sched_t_target: NaiveDateTime,
         comm_t_target: NaiveDateTime,
-    ) {
+    ) -> (i32, i32) {
         let result1 = Event::insert(event::ActiveModel {
             id: ActiveValue::NotSet,
             longitude: ActiveValue::Set(lng_start),
@@ -746,17 +791,15 @@ impl Data {
             request_id: ActiveValue::Set(request_id),
             is_pickup: ActiveValue::Set(true),
             connects_public_transport: ActiveValue::Set(connects_public_transport1),
-            address: ActiveValue::Set(address.to_string()),
+            address: ActiveValue::Set(start_address.to_string()),
         })
         .exec(s.db())
         .await;
         match result1 {
-            Ok(_) => {
-                () //info!("event created");
-            }
+            Ok(_) => (),
             Err(e) => {
                 error!("Error creating event: {e:?}");
-                return;
+                return (-1, -1);
             }
         }
         let result2 = Event::insert(event::ActiveModel {
@@ -772,26 +815,23 @@ impl Data {
             request_id: ActiveValue::Set(request_id),
             is_pickup: ActiveValue::Set(false),
             connects_public_transport: ActiveValue::Set(connects_public_transport2),
-            address: ActiveValue::Set(address.to_string()),
+            address: ActiveValue::Set(target_address.to_string()),
         })
         .exec(s.db())
         .await;
         match result2 {
             Ok(_) => {
-                () //info!("Event created");
+                ();
             }
             Err(e) => {
                 error!("Error creating event: {e:?}");
-                return;
+                return (-1, -1);
             }
         }
-    }
-
-    pub async fn handl_routing_request(
-        &mut self,
-        State(s): State<AppState>,
-        Json(request): Json<RoutingRequest>,
-    ) {
+        (
+            result1.unwrap().last_insert_id,
+            result2.unwrap().last_insert_id,
+        )
     }
 
     async fn get_companies_matching_start_point(
@@ -817,34 +857,42 @@ impl Data {
     pub async fn handle_routing_request(
         &mut self,
         State(s): State<AppState>,
-        Json(request): Json<RoutingRequest>,
+        fixed_time: NaiveDateTime,
+        is_start_time_fixed: bool,
+        start_lat: f32,
+        start_lng: f32,
+        target_lat: f32,
+        target_lng: f32,
+        customer: i32,
+        passengers: i32,
+        //wheelchairs: i32, luggage: i32,
     ) {
         let minimum_prep_time: Duration = Duration::seconds(3600);
         let now: NaiveDateTime = Utc::now().naive_utc();
 
         let sc = Coord {
-            x: request.start_lat as f64,
-            y: request.start_lng as f64,
+            x: start_lat as f64,
+            y: start_lng as f64,
         };
         let start: Point = sc.into();
         let tc = Coord {
-            x: request.target_lat as f64,
-            y: request.target_lng as f64,
+            x: target_lat as f64,
+            y: target_lng as f64,
         };
         let target: Point = tc.into();
 
         let beeline_time: Duration =
             Duration::minutes((start.geodesic_distance(&target)).round() as i64 / AIR_DIST_SPEED);
 
-        let mut start_time: NaiveDateTime = if request.is_start_time_fixed {
-            request.fixed_time
+        let mut start_time: NaiveDateTime = if is_start_time_fixed {
+            fixed_time
         } else {
-            request.fixed_time - beeline_time
+            fixed_time - beeline_time
         };
-        let mut target_time: NaiveDateTime = if request.is_start_time_fixed {
-            request.fixed_time + beeline_time
+        let mut target_time: NaiveDateTime = if is_start_time_fixed {
+            fixed_time + beeline_time
         } else {
-            request.fixed_time
+            fixed_time
         };
 
         if now + minimum_prep_time < start_time {
@@ -884,7 +932,7 @@ impl Data {
         //Find events valid for start and target based on beeline distances:
         for vehicle in self.vehicles.iter() {
             if !viable_companies[vehicle.company as usize]
-                || self.vehicle_specifics[vehicle.specifics as usize].seats < request.passengers
+                || self.vehicle_specifics[vehicle.specifics as usize].seats < passengers
             {
                 continue;
             }
@@ -949,7 +997,7 @@ impl Data {
             }
             if !self.vehicles.iter().any(|v| {
                 v.company as usize == i
-                    && self.vehicle_specifics[v.specifics as usize].seats >= request.passengers
+                    && self.vehicle_specifics[v.specifics as usize].seats >= passengers
                     && v.find_collisions(start_time, target_time).is_empty()
                     && v.is_available(start_time, target_time)
             }) {
@@ -959,12 +1007,12 @@ impl Data {
         }
         //get the actual costs
         let start_c = Coordinate {
-            lat: request.start_lat as f64,
-            lng: request.start_lat as f64,
+            lat: start_lat as f64,
+            lng: start_lat as f64,
         };
         let target_c = Coordinate {
-            lat: request.target_lat as f64,
-            lng: request.target_lng as f64,
+            lat: target_lat as f64,
+            lng: target_lng as f64,
         };
         let mut start_many = Vec::<Coordinate>::new();
         for (i, c) in self.companies.iter().enumerate() {
@@ -992,15 +1040,15 @@ impl Data {
         let distance = distances_to_start.last().unwrap();
 
         //update start/target times using actual travel time instead of beeline-time
-        start_time = if request.is_start_time_fixed {
-            request.fixed_time
+        start_time = if is_start_time_fixed {
+            fixed_time
         } else {
-            request.fixed_time - Duration::minutes(distance.time as i64)
+            fixed_time - Duration::minutes(distance.time as i64)
         };
-        target_time = if request.is_start_time_fixed {
-            request.fixed_time + Duration::minutes(distance.time as i64)
+        target_time = if is_start_time_fixed {
+            fixed_time + Duration::minutes(distance.time as i64)
         } else {
-            request.fixed_time
+            fixed_time
         };
         distances_to_start.truncate(1); //remove distance from start to target
 
@@ -1066,7 +1114,7 @@ impl Data {
                     + distances_to_target[n_viable_companies + i].dist as i32 * KM_PRICE;
         }
         //create all viable combinations
-        let mut viable_combinations: Vec<(Comb)> = Vec::new();
+        let mut viable_combinations: Vec<Comb> = Vec::new();
         let mut company_pos = 0;
         for (i, c) in self.companies.iter().enumerate() {
             if !viable_companies[i] {
@@ -1157,50 +1205,56 @@ impl Data {
         self.insert_event_pair_into_db(
             State(s.clone()),
             &"".to_string(),
-            request.start_lng,
-            request.start_lat,
+            &"".to_string(),
+            start_lng,
+            start_lat,
             start_time,
             start_time,
             company_id as i32,
-            request.customer,
+            customer,
             assignment_id.unwrap() as i32,
             1,
             1000,
             false,
             false,
-            request.target_lng,
-            request.target_lat,
+            target_lng,
+            target_lat,
             target_time,
             target_time,
         )
-        .await
+        .await;
     }
 
-    //id->vehicle_id
     pub async fn get_assignments_for_vehicle(
         &self,
-        Json(get_request): Json<GetById>,
+        vehicle_id: usize,
+        time_frame_start: Option<NaiveDateTime>,
+        time_frame_end: Option<NaiveDateTime>,
     ) -> Vec<&AssignmentData> {
-        if self.vehicles.len() < get_request.id {
-            //error vehicle not found
+        let interval = InfiniteInterval {
+            time_frame_start,
+            time_frame_end,
+        };
+        if self.vehicles.len() < vehicle_id {
+            return Vec::new();
         }
-        self.vehicles[get_request.id]
+        self.vehicles[vehicle_id]
             .assignments
             .iter()
-            .filter(|a| get_request.contained_in_time_frame(a.departure, a.arrival))
+            .filter(|a| interval.contained_in_time_frame(a.departure, a.arrival))
             .collect_vec()
     }
 
-    //id->company_id
-    pub async fn get_vehicles(
+    pub fn get_vehicles(
         &self,
-        Json(get_request): Json<GetVehicleById>,
+        company_id: usize,
+        active: Option<bool>,
     ) -> HashMap<usize, Vec<&VehicleData>> {
         self.vehicles
             .iter()
             .filter(|v| {
-                v.company == get_request.id
-                    && match get_request.active {
+                v.company == company_id
+                    && match active {
                         Some(a) => a == v.active,
                         None => true,
                     }
@@ -1208,18 +1262,23 @@ impl Data {
             .into_group_map_by(|v| v.specifics)
     }
 
-    //id->user_id
     pub async fn get_events_for_user(
         &self,
-        Json(get_request): Json<GetById>,
+        user_id: usize,
+        time_frame_start: Option<NaiveDateTime>,
+        time_frame_end: Option<NaiveDateTime>,
     ) -> Vec<&EventData> {
+        let interval = InfiniteInterval {
+            time_frame_start,
+            time_frame_end,
+        };
         let mut ret = Vec::<&EventData>::new();
-        let customer_id = get_request.id;
+        let customer_id = user_id;
         for v in self.vehicles.iter() {
             for a in v.assignments.iter() {
                 for e in a.events.iter() {
                     if e.customer == customer_id
-                        && get_request.contained_in_time_frame(e.scheduled_time, e.scheduled_time)
+                        && interval.contained_in_time_frame(e.scheduled_time, e.scheduled_time)
                     {
                         ret.push(&e);
                     }
@@ -1229,10 +1288,10 @@ impl Data {
         ret
     }
 
-    //ignores time_frame, id1->company_id, id2 assignment id
     pub async fn get_company_conflicts_for_assignment(
         &self,
-        Json(get_request): Json<GetBy2Ids>,
+        company_id: usize,
+        assignment_id: usize,
     ) -> HashMap<usize, Vec<&AssignmentData>> {
         let mut interval = Interval {
             start_time: NaiveDateTime::MIN,
@@ -1241,7 +1300,7 @@ impl Data {
         let mut found = false;
         for v in self.vehicles.iter() {
             for a in v.assignments.iter() {
-                if a.id != get_request.id2 {
+                if a.id != assignment_id {
                     continue;
                 }
                 found = true;
@@ -1254,7 +1313,7 @@ impl Data {
             return ret;
         }
         for (i, v) in self.vehicles.iter().enumerate() {
-            if v.company != get_request.id1 {
+            if v.company != company_id {
                 continue;
             }
             let conflicting_assignments = v
@@ -1274,10 +1333,10 @@ impl Data {
         ret
     }
 
-    //id1->vehicle_id, id2 assignment id
     pub async fn get_vehicle_conflicts_for_assignment(
         &self,
-        Json(get_request): Json<GetBy2Ids>,
+        vehicle_id: usize,
+        assignment_id: usize,
     ) -> Vec<&AssignmentData> {
         let mut interval = Interval {
             start_time: NaiveDateTime::MIN,
@@ -1286,7 +1345,7 @@ impl Data {
         let mut found = false;
         for v in self.vehicles.iter() {
             for a in v.assignments.iter() {
-                if a.id != get_request.id2 {
+                if a.id != assignment_id {
                     continue;
                 }
                 found = true;
@@ -1297,7 +1356,7 @@ impl Data {
         if !found {
             return Vec::new();
         }
-        self.vehicles[get_request.id1]
+        self.vehicles[vehicle_id]
             .assignments
             .iter()
             .filter(|a| {

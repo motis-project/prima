@@ -1,4 +1,5 @@
 use axum::{
+    extract::State,
     routing::{get, post},
     Router,
 };
@@ -104,8 +105,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         db: Arc::new(conn),
     };
 
-    // init::init(State(s.clone())).await;
-    // test().await;
+    init::init(State(s.clone()), false).await;
 
     let app = Router::new();
     let app = app.layer(livereload);
