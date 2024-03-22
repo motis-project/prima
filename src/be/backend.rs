@@ -5,10 +5,13 @@ use crate::entities::{self, availability};
 use crate::entities::{assignment, company, event, user, vehicle, vehicle_specifics, zone};
 use crate::osrm::Coordinate;
 use crate::osrm::{DistTime, OSRM};
+use crate::{error, info, AppState};
 
-use crate::{error, info, AppState, State, StatusCode};
-use axum::response::Html;
-use axum::Json;
+use axum::{
+    extract::{Json, State},
+    http::StatusCode,
+};
+
 use chrono::{DateTime, Datelike, Duration, NaiveTime, Utc};
 use chrono::{NaiveDate, NaiveDateTime};
 use geo::prelude::*;
