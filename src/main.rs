@@ -24,7 +24,10 @@ use tower_http::{compression::CompressionLayer, services::ServeFile};
 use tower_livereload::LiveReloadLayer;
 use tracing::{error, info};
 
+mod be;
+mod constants;
 mod entities;
+mod init;
 mod log;
 mod osrm;
 
@@ -77,6 +80,7 @@ async fn users(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
         salt: ActiveValue::Set("".to_string()),
         o_auth_id: ActiveValue::Set(Some("".to_string())),
         o_auth_provider: ActiveValue::Set(Some("".to_string())),
+        is_active: ActiveValue::Set(true),
     })
     .exec(s.db())
     .await;
@@ -154,6 +158,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tera: tera,
         db: Arc::new(conn),
     };
+
+    init::init(State(s.clone()), true).await;
 
     let app = Router::new();
     let app = app.route("/calendar", get(calendar).with_state(s.clone()));
