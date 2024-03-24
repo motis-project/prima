@@ -70,26 +70,6 @@ async fn register(
 }
 
 async fn users(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
-    let result = User::insert(user::ActiveModel {
-        name: ActiveValue::Set("Test".to_string()),
-        id: ActiveValue::NotSet,
-        is_driver: ActiveValue::Set(true),
-        is_admin: ActiveValue::Set(true),
-        email: ActiveValue::Set("".to_string()),
-        password: ActiveValue::Set(Some("".to_string())),
-        salt: ActiveValue::Set("".to_string()),
-        o_auth_id: ActiveValue::Set(Some("".to_string())),
-        o_auth_provider: ActiveValue::Set(Some("".to_string())),
-        is_active: ActiveValue::Set(true),
-    })
-    .exec(s.db())
-    .await;
-
-    match result {
-        Ok(_) => info!("User added"),
-        Err(e) => error!("Error adding user: {e:?}"),
-    }
-
     let username = User::find_by_id(1)
         .one(s.db())
         .await
