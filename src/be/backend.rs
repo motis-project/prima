@@ -1,9 +1,6 @@
 use crate::{
     be::interval::{InfiniteInterval, Interval},
-    constants::{
-        constants::{AIR_DIST_SPEED, KM_PRICE, MINUTE_PRICE, MINUTE_WAITING_PRICE},
-        geo_points,
-    },
+    constants::constants::{AIR_DIST_SPEED, KM_PRICE, MINUTE_PRICE, MINUTE_WAITING_PRICE},
     entities::{
         assignment, availability, company, event,
         prelude::{
@@ -19,11 +16,12 @@ use crate::{
 use ::anyhow::{anyhow, Context, Result};
 use chrono::{Duration, NaiveDateTime, Utc};
 use geo::prelude::*;
-use geo::{Coord, Point};
-use geojson::{GeoJson, Geometry};
+use geo::Point;
 use itertools::Itertools;
 use sea_orm::{ActiveModelTrait, ActiveValue, DeleteResult, EntityTrait};
 use std::collections::HashMap;
+
+use super::geo_from_str::{self, multi_polygon_from_str};
 
 fn id_to_vec_pos(id: i32) -> usize {
     (id - 1) as usize
@@ -298,13 +296,14 @@ impl Data {
     ) {
         let zones: Vec<zone::Model> = Zone::find().all(s.db()).await.unwrap();
         for zone in zones.iter() {
-            let geojson = zone.area.parse::<GeoJson>().unwrap();
-            let feature: Geometry = Geometry::try_from(geojson).unwrap();
-            self.zones.push(ZoneData {
-                area: geo::MultiPolygon::try_from(feature).unwrap(),
-                name: zone.name.to_string(),
-                id: zone.id,
-            });
+            match multi_polygon_from_str(&zone.area) {
+                Err(e) => error!("{e:?}"),
+                Ok(mp) => self.zones.push(ZoneData {
+                    area: mp,
+                    name: zone.name.to_string(),
+                    id: zone.id,
+                }),
+            }
         }
         let company_models: Vec<<company::Entity as sea_orm::EntityTrait>::Model> =
             Company::find().all(s.db()).await.unwrap();
@@ -593,17 +592,21 @@ impl Data {
         .exec(s.db())
         .await;
         match result {
-            Ok(_) => {
-                let geojson = area.parse::<GeoJson>().unwrap();
-                let feature: Geometry = Geometry::try_from(geojson).unwrap();
-                self.zones.push(ZoneData {
-                    id: result.unwrap().last_insert_id,
-                    area: geo::MultiPolygon::try_from(feature).unwrap(),
-                    name,
-                });
-                StatusCode::CREATED
-            }
             Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Ok(_) => match multi_polygon_from_str(&area) {
+                Err(e) => {
+                    error!("{e:?}");
+                    StatusCode::BAD_REQUEST
+                }
+                Ok(mp) => {
+                    self.zones.push(ZoneData {
+                        id: result.unwrap().last_insert_id,
+                        area: mp,
+                        name,
+                    });
+                    StatusCode::CREATED
+                }
+            },
         }
     }
 
@@ -1553,21 +1556,15 @@ impl Data {
 #[cfg(test)]
 mod test {
     use crate::{
-        be::backend::Data, constants::geo_points, dotenv, env, init, AppState, Arc, Database,
-        Migrator, Mutex, Tera,
+        be::{backend::Data, geo_from_str::point_from_str},
+        constants::geo_points,
+        dotenv, env, init, AppState, Arc, Database, Migrator, Mutex, Tera,
     };
     use axum::extract::State;
     use chrono::{NaiveDate, Timelike};
     use geo::Contains;
-    use geojson::{GeoJson, Geometry};
     use migration::MigratorTrait;
 
-    fn create_point_from_str(s: &str) -> geo::Point {
-        let p1: geo::Point =
-            geo::Point::try_from(Geometry::try_from(s.parse::<GeoJson>().unwrap()).unwrap())
-                .unwrap();
-        p1
-    }
     fn check_zones(
         d: &Data,
         containing_companies: Vec<bool>,
@@ -1615,11 +1612,11 @@ mod test {
 
         assert_eq!(read_data == d, true);
 
-        let p_in_bautzen_ost = create_point_from_str(geo_points::P1_BAUTZEN_OST);
-        let p_in_bautzen_west = create_point_from_str(geo_points::P1_BAUTZEN_WEST);
-        let p_in_gorlitz = create_point_from_str(geo_points::P1_GORLITZ);
-        let p1_outside = create_point_from_str(geo_points::P1_OUTSIDE);
-        let p2_outside = create_point_from_str(geo_points::P2_OUTSIDE);
+        let p_in_bautzen_ost = point_from_str(geo_points::P1_BAUTZEN_OST).unwrap();
+        let p_in_bautzen_west = point_from_str(geo_points::P1_BAUTZEN_WEST).unwrap();
+        let p_in_gorlitz = point_from_str(geo_points::P1_GORLITZ).unwrap();
+        let p1_outside = point_from_str(geo_points::P1_OUTSIDE).unwrap();
+        let p2_outside = point_from_str(geo_points::P2_OUTSIDE).unwrap();
         //zonen tests:
         //0->Bautzen Ost
         assert_eq!(d.zones[0].area.contains(&p_in_bautzen_ost), true);
