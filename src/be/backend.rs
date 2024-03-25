@@ -10,7 +10,11 @@ use crate::{
         user, vehicle, vehicle_specifics, zone,
     },
     error,
-    osrm::{Coordinate, DistTime, OSRM},
+    osrm::{
+        Coordinate,
+        Dir::{Backward, Forward},
+        DistTime, OSRM,
+    },
     AppState, State, StatusCode,
 };
 
@@ -1016,7 +1020,7 @@ impl Data {
         println!("start: {};; {}", start_c.lat, start_c.lng);
         println!("target: {};; {}", target_c.lat, target_c.lng);
         let mut distances_to_start: Vec<DistTime> =
-            match osrm.one_to_many(start_c, start_many).await {
+            match osrm.one_to_many(start_c, start_many, Backward).await {
                 Ok(r) => r,
                 Err(e) => {
                     println!("problem with osrm: {}", e);
@@ -1061,8 +1065,10 @@ impl Data {
                 lng: c.central_coordinates.x(),
             });
         }
-        let distances_to_target: Vec<DistTime> =
-            osrm.one_to_many(target_c, target_many).await.unwrap();
+        let distances_to_target: Vec<DistTime> = osrm
+            .one_to_many(target_c, target_many, Forward)
+            .await
+            .unwrap();
         let n_viable_companies = viable_companies.iter().filter(|b| **b).count();
         for b in viable_companies.iter() {
             println!("b:{}", b);
