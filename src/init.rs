@@ -1,7 +1,11 @@
+use crate::init::geo_from_str::point_from_str;
 use crate::{
-    be::backend::Data,
+    be::{backend::Data, geo_from_str},
     constants::{
-        bautzen_split_ost::BAUTZEN_OST, bautzen_split_west::BAUTZEN_WEST, gorlitz::GORLITZ,
+        bautzen_split_ost::BAUTZEN_OST,
+        bautzen_split_west::BAUTZEN_WEST,
+        geo_points::{P1_BAUTZEN_OST, P1_BAUTZEN_WEST},
+        gorlitz::GORLITZ,
     },
     entities::{
         assignment, availability, company, event, prelude::User, user, vehicle, vehicle_specifics,
@@ -10,7 +14,7 @@ use crate::{
     AppState,
 };
 use axum::extract::State;
-use chrono::NaiveDate;
+use chrono::{NaiveDate, NaiveDateTime};
 use migration::ConnectionTrait;
 use sea_orm::EntityTrait;
 
@@ -109,6 +113,7 @@ async fn clear(State(s): State<AppState>) {
 pub async fn init(
     State(s): State<AppState>,
     clear_tables: bool,
+    stop_for_tests: bool,
 ) -> Data {
     if clear_tables {
         clear(State(s.clone())).await;
@@ -416,6 +421,30 @@ pub async fn init(
 
     data.change_vehicle_for_assignment(State(s.clone()), 1, 2)
         .await;
+
+    let p_in_bautzen_ost = point_from_str(P1_BAUTZEN_OST).unwrap();
+    let p_in_bautzen_west = point_from_str(P1_BAUTZEN_WEST).unwrap();
+
+    if stop_for_tests {
+        return data;
+    }
+    data.handle_routing_request(
+        State(s.clone()),
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(9, 10, 0)
+            .unwrap(),
+        true,
+        p_in_bautzen_ost.0.x,
+        p_in_bautzen_ost.0.y,
+        p_in_bautzen_west.0.x,
+        p_in_bautzen_west.0.y,
+        1,
+        2,
+        &"".to_string(),
+        &"".to_string(),
+    )
+    .await;
 
     data
 }

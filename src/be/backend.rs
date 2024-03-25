@@ -2,7 +2,8 @@ use crate::{
     be::interval::{InfiniteInterval, Interval},
     constants::constants::{AIR_DIST_SPEED, KM_PRICE, MINUTE_PRICE, MINUTE_WAITING_PRICE},
     entities::{
-        assignment, availability, company, event,
+        assignment::{self, ActiveModel},
+        availability, company, event,
         prelude::{
             Assignment, Availability, Company, Event, User, Vehicle, VehicleSpecifics, Zone,
         },
@@ -14,7 +15,7 @@ use crate::{
 };
 
 use ::anyhow::{anyhow, Context, Result};
-use chrono::{Duration, NaiveDateTime, Utc};
+use chrono::{Duration, NaiveDate, NaiveDateTime, Utc};
 use geo::prelude::*;
 use geo::Point;
 use itertools::Itertools;
@@ -29,6 +30,14 @@ fn id_to_vec_pos(id: i32) -> usize {
 
 fn vec_pos_to_id(pos: usize) -> i32 {
     1 + pos as i32
+}
+
+fn seconds_to_minutes(secs: i32) -> i32 {
+    secs / 60
+}
+
+fn meter_to_km(m: i32) -> i32 {
+    m / 1000
 }
 
 struct Comb {
@@ -249,6 +258,7 @@ pub struct Data {
     pub companies: Vec<CompanyData>,
     pub vehicles: Vec<VehicleData>,
     pub vehicle_specifics: Vec<VehicleSpecificsData>,
+    pub last_request_id: i32,
 }
 
 impl Data {
@@ -259,6 +269,7 @@ impl Data {
             vehicles: Vec::<VehicleData>::new(),
             vehicle_specifics: Vec::<VehicleSpecificsData>::new(),
             users: HashMap::<i32, UserData>::new(),
+            last_request_id: 1,
         }
     }
 
@@ -407,6 +418,20 @@ impl Data {
                 id: vs_m.id,
             })
         }
+        self.last_request_id = match self
+            .vehicles
+            .iter()
+            .flat_map(|v| &v.assignments)
+            .collect_vec()
+            .iter()
+            .flat_map(|a| &a.events)
+            .collect_vec()
+            .iter()
+            .max_by_key(|e| e.request_id)
+        {
+            None => 1,
+            Some(ev) => ev.request_id,
+        };
     }
 
     async fn find_or_create_vehicle_specs(
@@ -669,6 +694,19 @@ impl Data {
             }
             if to_remove_interval.overlaps(&existing.interval) {
                 existing.interval.cut(&to_remove_interval);
+                let mut active_m: availability::ActiveModel = Availability::find_by_id(existing.id)
+                    .one(s.clone().db())
+                    .await
+                    .expect("cannot find availability by id")
+                    .expect("")
+                    .try_into()
+                    .expect("");
+                active_m.start_time = ActiveValue::set(existing.interval.start_time);
+                active_m.end_time = ActiveValue::set(existing.interval.end_time);
+                match Availability::update(active_m).exec(s.clone().db()).await {
+                    Ok(_) => (),
+                    Err(e) => error!("Error deleting interval: {e:?}"),
+                }
             }
         }
         //sort in descending order, to avoid earlier removals affecting indices of later removals
@@ -746,7 +784,7 @@ impl Data {
                 {
                     Ok(result) => result.last_insert_id,
                     Err(e) => {
-                        error!("Error creating assignment: {e:?}"); //TODO panic
+                        error!("Error creating assignment: {e:?}");
                         0
                     }
                 };
@@ -773,7 +811,7 @@ impl Data {
                 sched_t_start,
                 comm_t_start,
                 customer,
-                id as i32,
+                id,
                 required_vehicle_specs,
                 request_id,
                 connects_public_transport1,
@@ -904,6 +942,210 @@ impl Data {
             }
         }
         viable_companies
+    }
+    pub async fn handle_routing_request(
+        &mut self,
+        State(s): State<AppState>,
+        fixed_time: NaiveDateTime,
+        is_start_time_fixed: bool,
+        start_lat: f64,  //for geo::Point  lat=y and lng is x
+        start_lng: f64,  //for geo::Point  lat=y and lng is x
+        target_lat: f64, //for geo::Point  lat=y and lng is x
+        target_lng: f64, //for geo::Point  lat=y and lng is x
+        customer: i32,
+        passengers: i32,
+        start_address: &String,
+        target_address: &String,
+        //wheelchairs: i32, luggage: i32,
+    ) {
+        let minimum_prep_time: Duration = Duration::seconds(3600);
+        let now: NaiveDateTime = Utc::now().naive_utc();
+
+        let start: Point = Point::new(start_lat as f64, start_lng as f64);
+
+        //find companies, that may process the request according to their zone
+        let mut viable_companies = self.get_companies_matching_start_location(&start).await;
+        println!("viable companies:");
+        for (i, is_viable) in viable_companies.iter().enumerate() {
+            if !is_viable {
+                continue;
+            }
+            println!(
+                "id: {}, zone id: {}",
+                self.companies[i].id, self.companies[i].zone
+            );
+        }
+
+        println!("viable companies after checking there is a vehicle available:");
+        for (i, is_viable) in viable_companies.iter().enumerate() {
+            if !is_viable {
+                continue;
+            }
+            println!(
+                "id: {}, zone id: {}",
+                self.companies[i].id, self.companies[i].zone
+            );
+        }
+        //get the actual costs
+        let start_c = Coordinate {
+            lng: start_lat,
+            lat: start_lng,
+        };
+        let target_c = Coordinate {
+            lng: target_lat,
+            lat: target_lng,
+        };
+        let mut start_many = Vec::<Coordinate>::new();
+        for (i, c) in self.companies.iter().enumerate() {
+            if !viable_companies[i] {
+                continue;
+            }
+            start_many.push(Coordinate {
+                lat: c.central_coordinates.y(),
+                lng: c.central_coordinates.x(),
+            });
+        }
+        start_many.push(Coordinate {
+            lat: target_c.lat,
+            lng: target_c.lng,
+        });
+        // add this to get distance between start and target of the new request
+        for sm in start_many.iter() {
+            println!("start manys: {}   -   {}", sm.lat, sm.lng);
+        }
+        let osrm = OSRM::new();
+        println!("start: {};; {}", start_c.lat, start_c.lng);
+        println!("target: {};; {}", target_c.lat, target_c.lng);
+        let mut distances_to_start: Vec<DistTime> =
+            match osrm.one_to_many(start_c, start_many).await {
+                Ok(r) => r,
+                Err(e) => {
+                    println!("problem with osrm: {}", e);
+                    Vec::new()
+                }
+            };
+        println!("result: {distances_to_start:?}");
+        let distance = match distances_to_start.last() {
+            Some(dt) => dt,
+            None => {
+                println!("distance was None");
+                &DistTime {
+                    time: -1.0,
+                    dist: -1.0,
+                }
+            }
+        };
+        println!("distance-time--   {}", distance.time);
+        println!("distance--   {}", distance.dist);
+
+        let travel_duration = Duration::minutes(seconds_to_minutes(distance.time as i32) as i64);
+        //start/target times using travel time
+        let start_time = if is_start_time_fixed {
+            fixed_time
+        } else {
+            fixed_time - travel_duration
+        };
+        let target_time = if is_start_time_fixed {
+            fixed_time + travel_duration
+        } else {
+            fixed_time
+        };
+        distances_to_start.truncate(distances_to_start.len() - 1); //remove distance from start to target
+
+        let mut target_many = Vec::<Coordinate>::new();
+        for (i, c) in self.companies.iter().enumerate() {
+            if !viable_companies[i] {
+                continue;
+            }
+            target_many.push(Coordinate {
+                lat: c.central_coordinates.y(),
+                lng: c.central_coordinates.x(),
+            });
+        }
+        let distances_to_target: Vec<DistTime> =
+            osrm.one_to_many(target_c, target_many).await.unwrap();
+        let n_viable_companies = viable_companies.iter().filter(|b| **b).count();
+        for b in viable_companies.iter() {
+            println!("b:{}", b);
+        }
+        println!("n_viable_companies: {}", n_viable_companies);
+
+        //create all viable combinations
+        let mut viable_combinations: Vec<Comb> = Vec::new();
+        let mut company_pos = 0;
+        for (i, _) in self.companies.iter().enumerate() {
+            if !viable_companies[i] {
+                continue;
+            }
+            println!("hallo");
+            let company_start_cost =
+                seconds_to_minutes(distances_to_start[company_pos].time as i32) * MINUTE_PRICE
+                    + meter_to_km(distances_to_start[company_pos].dist as i32) * KM_PRICE;
+            let company_target_cost =
+                seconds_to_minutes(distances_to_target[company_pos].time as i32) * MINUTE_PRICE
+                    + meter_to_km(distances_to_target[company_pos].dist as i32) * KM_PRICE;
+            viable_combinations.push(Comb {
+                is_start_company: true,
+                start_pos: i,
+                is_target_company: true,
+                target_pos: i,
+                cost: company_start_cost + company_target_cost,
+            });
+            println!("company: {}, start_dist: {}, target_dist: {}, start_time: {}, target_time: {}, start_cost: {}, target_cost: {}",
+            company_pos+1,meter_to_km(distances_to_start[company_pos].dist as i32),meter_to_km(distances_to_target[company_pos].dist as i32),
+            seconds_to_minutes(distances_to_start[company_pos].time as i32),seconds_to_minutes(distances_to_target[company_pos].time as i32),company_start_cost,company_target_cost);
+            company_pos += 1;
+        }
+        println!("n comb: {}", viable_combinations.len());
+        for vc in viable_combinations.iter() {
+            println!(
+                "cost: {} for company: {}",
+                vc.cost, self.companies[vc.start_pos].id,
+            );
+        }
+
+        if viable_combinations.is_empty() {
+            println!("no viable combinations!");
+            return;
+        }
+        println!("viable combination count: {}", viable_combinations.len());
+
+        //use cost function to sort the viable combinations
+        viable_combinations.sort_by(|a, b| a.cost.cmp(&(b.cost)));
+
+        if viable_combinations.len() == 0 {
+            //TODO
+        }
+        self.last_request_id += 1;
+        self.insert_or_add_assignment(
+            None,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 10, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 10, 0)
+                .unwrap(),
+            1,
+            State(s),
+            start_address,
+            target_address,
+            start_lat as f32,
+            start_lng as f32,
+            start_time,
+            start_time,
+            customer,
+            1,
+            self.last_request_id,
+            false,
+            false,
+            target_lat as f32,
+            target_lng as f32,
+            target_time,
+            target_time,
+        )
+        .await;
     }
     /*
     //does not work yet
@@ -1556,12 +1798,17 @@ impl Data {
 #[cfg(test)]
 mod test {
     use crate::{
-        be::{backend::Data, geo_from_str::point_from_str},
-        constants::geo_points,
+        be::{
+            backend::Data,
+            geo_from_str::{self, point_from_str},
+        },
+        constants::geo_points::{
+            self, P1_BAUTZEN_OST, P1_BAUTZEN_WEST, P1_GORLITZ, P1_OUTSIDE, P2_OUTSIDE, P3_OUTSIDE,
+        },
         dotenv, env, init, AppState, Arc, Database, Migrator, Mutex, Tera,
     };
     use axum::extract::State;
-    use chrono::{NaiveDate, Timelike};
+    use chrono::{NaiveDate, NaiveDateTime, Timelike};
     use geo::Contains;
     use migration::MigratorTrait;
 
@@ -1576,6 +1823,11 @@ mod test {
             } else {
                 assert_ne!(d.companies[i].zone, expected_zone);
             }
+        }
+    }
+    fn print_avas(data: &Data) {
+        for a in data.vehicles[0].availability.iter() {
+            println!("printing avas: {},   {}", a.id, a.interval);
         }
     }
     #[tokio::test]
@@ -1602,7 +1854,7 @@ mod test {
             db: Arc::new(conn),
         };
 
-        let mut d = init::init(State(s.clone()), true).await;
+        let mut d = init::init(State(s.clone()), true, true).await;
         assert_eq!(d.vehicles.len(), 29);
         assert_eq!(d.zones.len(), 3);
         assert_eq!(d.companies.len(), 8);
@@ -1612,11 +1864,12 @@ mod test {
 
         assert_eq!(read_data == d, true);
 
-        let p_in_bautzen_ost = point_from_str(geo_points::P1_BAUTZEN_OST).unwrap();
-        let p_in_bautzen_west = point_from_str(geo_points::P1_BAUTZEN_WEST).unwrap();
-        let p_in_gorlitz = point_from_str(geo_points::P1_GORLITZ).unwrap();
-        let p1_outside = point_from_str(geo_points::P1_OUTSIDE).unwrap();
-        let p2_outside = point_from_str(geo_points::P2_OUTSIDE).unwrap();
+        let p_in_bautzen_ost = point_from_str(P1_BAUTZEN_OST).unwrap();
+        let p_in_bautzen_west = point_from_str(P1_BAUTZEN_WEST).unwrap();
+        let p_in_gorlitz = point_from_str(P1_GORLITZ).unwrap();
+        let p1_outside = point_from_str(P1_OUTSIDE).unwrap();
+        let p2_outside = point_from_str(P2_OUTSIDE).unwrap();
+        let p3_outside = point_from_str(P3_OUTSIDE).unwrap();
         //zonen tests:
         //0->Bautzen Ost
         assert_eq!(d.zones[0].area.contains(&p_in_bautzen_ost), true);
@@ -1823,5 +2076,28 @@ mod test {
                 assert_eq!(company.id == 4, vehicles.len() == 2);
             }
         }
+
+        read_data.clear();
+        read_data.read_data(State(s.clone())).await;
+        assert_eq!(read_data == d, true);
+
+        d.handle_routing_request(
+            State(s.clone()),
+            NaiveDateTime::MIN,
+            true,
+            p_in_bautzen_ost.0.x,
+            p_in_bautzen_ost.0.y,
+            p_in_bautzen_west.0.x,
+            p_in_bautzen_west.0.y,
+            1,
+            2,
+            &"".to_string(),
+            &"".to_string(),
+        )
+        .await;
+
+        read_data.clear();
+        read_data.read_data(State(s.clone())).await;
+        assert_eq!(read_data == d, true);
     }
 }

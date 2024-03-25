@@ -139,7 +139,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         db: Arc::new(conn),
     };
 
-    init::init(State(s.clone()), true).await;
+    init::init(State(s.clone()), true, false).await;
 
     let app = Router::new();
     let app = app.route("/calendar", get(calendar).with_state(s.clone()));

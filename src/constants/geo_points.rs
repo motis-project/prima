@@ -31,9 +31,17 @@ pub const P1_OUTSIDE: &str = r#"{
   }"#;
 
 pub const P2_OUTSIDE: &str = r#"{
-    "coordinates": [
-      -113.85522390635406,
-      45.75338601832158
-    ],
-    "type": "Point"
-  }"#;
+      "coordinates": [
+        -113.85522390635406,
+        45.75338601832158
+      ],
+      "type": "Point"
+    }"#;
+
+pub const P3_OUTSIDE: &str = r#"{
+        "coordinates": [
+          8.710410671890173,
+          50.10046771409128
+        ],
+        "type": "Point"
+      }"#;
