@@ -202,6 +202,23 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        let foreign_key_event_driver = TableForeignKey::new()
+            .name("fk-event-driver")
+            .from_tbl(Event::Table)
+            .from_col(Event::Driver)
+            .to_tbl(User::Table)
+            .to_col(User::Id)
+            .to_owned();
+
+        manager
+            .alter_table(
+                Table::alter()
+                    .table(Event::Table)
+                    .add_foreign_key(&foreign_key_event_driver)
+                    .to_owned(),
+            )
+            .await?;
+
         manager
             .alter_table(
                 Table::alter()
@@ -211,13 +228,6 @@ impl MigrationTrait for Migration {
                     .drop_column(Vehicle::Wheelchairs)
                     .drop_column(Vehicle::StorageSpace)
                     .add_column(ColumnDef::new(Vehicle::Wheelchair).boolean().not_null())
-                    .add_column(
-                        ColumnDef::new(Vehicle::Id)
-                            .integer()
-                            .not_null()
-                            .auto_increment()
-                            .primary_key(),
-                    )
                     .to_owned(),
             )
             .await?;
@@ -256,6 +266,12 @@ enum Zone {
     Table,
     Id,
     Name,
+}
+
+#[derive(DeriveIden)]
+enum User {
+    Table,
+    Id,
 }
 
 #[derive(DeriveIden)]

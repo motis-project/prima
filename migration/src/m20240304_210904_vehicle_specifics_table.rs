@@ -118,6 +118,15 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        manager
+            .alter_table(
+                Table::alter()
+                    .table(Capacity::Table)
+                    .drop_column(Capacity::VehicleSpecifics)
+                    .to_owned(),
+            )
+            .await?;
+
         Ok(())
     }
 }
@@ -134,7 +143,6 @@ enum VehicleSpecifics {
 #[derive(DeriveIden)]
 enum Vehicle {
     Table,
-    Id,
     Seats,
     Wheelchairs,
     StorageSpace,

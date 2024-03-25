@@ -43,11 +43,45 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        let foreign_key_company = TableForeignKey::new()
+            .name("fk-company-zone_id")
+            .from_tbl(Assignment::Table)
+            .from_col(Assignment::Company)
+            .to_tbl(Company::Table)
+            .to_col(Company::Id)
+            .to_owned();
+
+        manager
+            .alter_table(
+                Table::alter()
+                    .table(Company::Table)
+                    .add_foreign_key(&foreign_key_company)
+                    .to_owned(),
+            )
+            .await?;
+
         manager
             .alter_table(
                 Table::alter()
                     .table(Event::Table)
                     .add_column(ColumnDef::new(Event::Company).integer().not_null())
+                    .to_owned(),
+            )
+            .await?;
+
+        let foreign_key_event_company = TableForeignKey::new()
+            .name("fk-company-zone_id")
+            .from_tbl(Event::Table)
+            .from_col(Event::Company)
+            .to_tbl(Company::Table)
+            .to_col(Company::Id)
+            .to_owned();
+
+        manager
+            .alter_table(
+                Table::alter()
+                    .table(Company::Table)
+                    .add_foreign_key(&foreign_key_event_company)
                     .to_owned(),
             )
             .await?;
@@ -62,7 +96,14 @@ enum Assignment {
 }
 
 #[derive(DeriveIden)]
+enum Company {
+    Table,
+    Id,
+}
+
+#[derive(DeriveIden)]
 enum Event {
     Table,
     Company,
+    Id,
 }
