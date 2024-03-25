@@ -1,3 +1,7 @@
+use geo::Point;
+
+use crate::be::geo_from_str::point_from_str;
+
 pub const P1_BAUTZEN_OST: &str = r#"{
     "type": "Point",
       "coordinates": [
@@ -22,6 +26,7 @@ pub const P1_GORLITZ: &str = r#"{
     "type": "Point"
   }"#;
 
+//Lisbon
 pub const P1_OUTSIDE: &str = r#"{
     "coordinates": [
       -9.133796076538431,
@@ -30,6 +35,7 @@ pub const P1_OUTSIDE: &str = r#"{
     "type": "Point"
   }"#;
 
+//USA
 pub const P2_OUTSIDE: &str = r#"{
       "coordinates": [
         -113.85522390635406,
@@ -38,6 +44,7 @@ pub const P2_OUTSIDE: &str = r#"{
       "type": "Point"
     }"#;
 
+//Frankfurt
 pub const P3_OUTSIDE: &str = r#"{
         "coordinates": [
           8.710410671890173,
@@ -45,3 +52,25 @@ pub const P3_OUTSIDE: &str = r#"{
         ],
         "type": "Point"
       }"#;
+
+pub struct TestPoints {
+    pub outside: Vec<Point>,
+    pub bautzen_ost: Vec<Point>,
+    pub bautzen_west: Vec<Point>,
+    pub gorlitz: Vec<Point>,
+}
+
+impl TestPoints {
+    pub fn new() -> Self {
+        Self {
+            gorlitz: vec![point_from_str(P1_GORLITZ).unwrap()],
+            bautzen_ost: vec![point_from_str(P1_BAUTZEN_OST).unwrap()],
+            bautzen_west: vec![point_from_str(P1_BAUTZEN_WEST).unwrap()],
+            outside: vec![
+                point_from_str(P1_OUTSIDE).unwrap(),
+                point_from_str(P2_OUTSIDE).unwrap(),
+                point_from_str(P3_OUTSIDE).unwrap(),
+            ],
+        }
+    }
+}

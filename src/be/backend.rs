@@ -16,8 +16,7 @@ use crate::{
 
 use ::anyhow::{anyhow, Context, Result};
 use chrono::{Duration, NaiveDate, NaiveDateTime, Utc};
-use geo::prelude::*;
-use geo::Point;
+use geo::{prelude::*, Point};
 use itertools::Itertools;
 use sea_orm::{ActiveModelTrait, ActiveValue, DeleteResult, EntityTrait};
 use std::collections::HashMap;
@@ -187,7 +186,7 @@ impl VehicleData {
 #[derive(Clone, PartialEq)]
 #[readonly::make]
 pub struct EventData {
-    pub coordinates: geo::Point,
+    pub coordinates: Point,
     pub scheduled_time: NaiveDateTime,
     pub communicated_time: NaiveDateTime,
     pub customer: i32,
@@ -228,7 +227,7 @@ impl EventData {
 #[readonly::make]
 pub struct CompanyData {
     pub id: i32,
-    pub central_coordinates: geo::Point,
+    pub central_coordinates: Point,
     pub zone: i32,
     pub name: String,
 }
@@ -926,7 +925,7 @@ impl Data {
 
     async fn get_companies_matching_start_location(
         &self,
-        start: &geo::Point,
+        start: &Point,
     ) -> Vec<bool> {
         let mut viable_zone_ids = Vec::<i32>::new();
         for (pos, zone) in self.zones.iter().enumerate() {
@@ -948,10 +947,10 @@ impl Data {
         State(s): State<AppState>,
         fixed_time: NaiveDateTime,
         is_start_time_fixed: bool,
-        start_lat: f64,  //for geo::Point  lat=y and lng is x
-        start_lng: f64,  //for geo::Point  lat=y and lng is x
-        target_lat: f64, //for geo::Point  lat=y and lng is x
-        target_lng: f64, //for geo::Point  lat=y and lng is x
+        start_lat: f64,  //for Point  lat=y and lng is x
+        start_lng: f64,  //for Point  lat=y and lng is x
+        target_lat: f64, //for Point  lat=y and lng is x
+        target_lng: f64, //for Point  lat=y and lng is x
         customer: i32,
         passengers: i32,
         start_address: &String,
@@ -1803,14 +1802,19 @@ mod test {
             geo_from_str::{self, point_from_str},
         },
         constants::geo_points::{
-            self, P1_BAUTZEN_OST, P1_BAUTZEN_WEST, P1_GORLITZ, P1_OUTSIDE, P2_OUTSIDE, P3_OUTSIDE,
+            self, TestPoints, P1_BAUTZEN_OST, P1_BAUTZEN_WEST, P1_GORLITZ, P1_OUTSIDE, P2_OUTSIDE,
+            P3_OUTSIDE,
         },
-        dotenv, env, init, AppState, Arc, Database, Migrator, Mutex, Tera,
+        dotenv, env, init,
+        init::StopFor::TEST1,
+        AppState, Arc, Database, Migrator, Mutex, Tera,
     };
     use axum::extract::State;
     use chrono::{NaiveDate, NaiveDateTime, Timelike};
-    use geo::Contains;
+    use geo::{Contains, Point};
     use migration::MigratorTrait;
+
+    use super::ZoneData;
 
     fn check_zones(
         d: &Data,
@@ -1825,10 +1829,23 @@ mod test {
             }
         }
     }
-    fn print_avas(data: &Data) {
-        for a in data.vehicles[0].availability.iter() {
-            println!("printing avas: {},   {}", a.id, a.interval);
+    fn check_points_in_zone(
+        expect: bool,
+        zone: &ZoneData,
+        points: &Vec<Point>,
+    ) {
+        for point in points.iter() {
+            assert_eq!(zone.area.contains(point), expect);
         }
+    }
+    async fn check_data_db_synchronized(
+        State(s): State<AppState>,
+        data: &Data,
+        read_data: &mut Data,
+    ) {
+        read_data.clear();
+        read_data.read_data(State(s.clone())).await;
+        assert_eq!(read_data == data, true);
     }
     #[tokio::test]
     async fn test() {
@@ -1854,41 +1871,38 @@ mod test {
             db: Arc::new(conn),
         };
 
-        let mut d = init::init(State(s.clone()), true, true).await;
+        let mut d = init::init(State(s.clone()), true, TEST1).await;
         assert_eq!(d.vehicles.len(), 29);
         assert_eq!(d.zones.len(), 3);
         assert_eq!(d.companies.len(), 8);
 
         let mut read_data = Data::new();
-        read_data.read_data(State(s.clone())).await;
+        check_data_db_synchronized(State(s.clone()), &d, &mut read_data).await;
 
-        assert_eq!(read_data == d, true);
+        let test_points = TestPoints::new();
 
-        let p_in_bautzen_ost = point_from_str(P1_BAUTZEN_OST).unwrap();
-        let p_in_bautzen_west = point_from_str(P1_BAUTZEN_WEST).unwrap();
-        let p_in_gorlitz = point_from_str(P1_GORLITZ).unwrap();
-        let p1_outside = point_from_str(P1_OUTSIDE).unwrap();
-        let p2_outside = point_from_str(P2_OUTSIDE).unwrap();
-        let p3_outside = point_from_str(P3_OUTSIDE).unwrap();
+        let p_in_bautzen_ost = test_points.bautzen_ost[0];
+        let p_in_bautzen_west = test_points.bautzen_west[0];
+        let p_in_gorlitz = test_points.gorlitz[0];
+        let p1_outside = test_points.outside[0];
+        let p2_outside = test_points.outside[1];
+        let p3_outside = test_points.outside[2];
         //zonen tests:
         //0->Bautzen Ost
-        assert_eq!(d.zones[0].area.contains(&p_in_bautzen_ost), true);
-        assert_eq!(d.zones[0].area.contains(&p_in_bautzen_west), false);
-        assert_eq!(d.zones[0].area.contains(&p_in_gorlitz), false);
-        assert_eq!(d.zones[0].area.contains(&p1_outside), false);
-        assert_eq!(d.zones[0].area.contains(&p2_outside), false);
+        check_points_in_zone(true, &d.zones[0], &test_points.bautzen_ost);
+        check_points_in_zone(false, &d.zones[0], &test_points.bautzen_west);
+        check_points_in_zone(false, &d.zones[0], &test_points.gorlitz);
+        check_points_in_zone(false, &d.zones[0], &test_points.outside);
         //1->Bautzen West
-        assert_eq!(d.zones[1].area.contains(&p_in_bautzen_ost), false);
-        assert_eq!(d.zones[1].area.contains(&p_in_bautzen_west), true);
-        assert_eq!(d.zones[1].area.contains(&p_in_gorlitz), false);
-        assert_eq!(d.zones[1].area.contains(&p1_outside), false);
-        assert_eq!(d.zones[1].area.contains(&p2_outside), false);
+        check_points_in_zone(false, &d.zones[1], &test_points.bautzen_ost);
+        check_points_in_zone(true, &d.zones[1], &test_points.bautzen_west);
+        check_points_in_zone(false, &d.zones[1], &test_points.gorlitz);
+        check_points_in_zone(false, &d.zones[1], &test_points.outside);
         //2->Görlitz
-        assert_eq!(d.zones[2].area.contains(&p_in_bautzen_ost), false);
-        assert_eq!(d.zones[2].area.contains(&p_in_bautzen_west), false);
-        assert_eq!(d.zones[2].area.contains(&p_in_gorlitz), true);
-        assert_eq!(d.zones[2].area.contains(&p1_outside), false);
-        assert_eq!(d.zones[2].area.contains(&p2_outside), false);
+        check_points_in_zone(false, &d.zones[2], &test_points.bautzen_ost);
+        check_points_in_zone(false, &d.zones[2], &test_points.bautzen_west);
+        check_points_in_zone(true, &d.zones[2], &test_points.gorlitz);
+        check_points_in_zone(false, &d.zones[2], &test_points.outside);
 
         check_zones(
             &d,
@@ -2077,9 +2091,7 @@ mod test {
             }
         }
 
-        read_data.clear();
-        read_data.read_data(State(s.clone())).await;
-        assert_eq!(read_data == d, true);
+        check_data_db_synchronized(State(s.clone()), &d, &mut read_data).await;
 
         d.handle_routing_request(
             State(s.clone()),
@@ -2096,8 +2108,6 @@ mod test {
         )
         .await;
 
-        read_data.clear();
-        read_data.read_data(State(s.clone())).await;
-        assert_eq!(read_data == d, true);
+        check_data_db_synchronized(State(s.clone()), &d, &mut read_data).await;
     }
 }

@@ -1,3 +1,4 @@
+use crate::constants::geo_points::TestPoints;
 use crate::init::geo_from_str::point_from_str;
 use crate::{
     be::{backend::Data, geo_from_str},
@@ -11,12 +12,19 @@ use crate::{
         assignment, availability, company, event, prelude::User, user, vehicle, vehicle_specifics,
         zone,
     },
+    init::StopFor::TEST1,
     AppState,
 };
 use axum::extract::State;
 use chrono::{NaiveDate, NaiveDateTime};
 use migration::ConnectionTrait;
 use sea_orm::EntityTrait;
+
+#[derive(PartialEq)]
+pub enum StopFor {
+    NOT,
+    TEST1,
+}
 
 async fn clear(State(s): State<AppState>) {
     match event::Entity::delete_many().exec(s.db()).await {
@@ -113,7 +121,7 @@ async fn clear(State(s): State<AppState>) {
 pub async fn init(
     State(s): State<AppState>,
     clear_tables: bool,
-    stop_for_tests: bool,
+    stop_for_tests: StopFor,
 ) -> Data {
     if clear_tables {
         clear(State(s.clone())).await;
@@ -422,10 +430,11 @@ pub async fn init(
     data.change_vehicle_for_assignment(State(s.clone()), 1, 2)
         .await;
 
-    let p_in_bautzen_ost = point_from_str(P1_BAUTZEN_OST).unwrap();
-    let p_in_bautzen_west = point_from_str(P1_BAUTZEN_WEST).unwrap();
+    let test_points = TestPoints::new();
+    let p_in_bautzen_ost = test_points.bautzen_ost[0];
+    let p_in_bautzen_west = test_points.bautzen_west[0];
 
-    if stop_for_tests {
+    if stop_for_tests == TEST1 {
         return data;
     }
     data.handle_routing_request(

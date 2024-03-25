@@ -1,4 +1,4 @@
-use crate::entities::prelude::User;
+use crate::{entities::prelude::User, init::StopFor::TEST1};
 use axum::{
     extract::State,
     http::{StatusCode, Uri},
@@ -139,7 +139,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         db: Arc::new(conn),
     };
 
-    init::init(State(s.clone()), true, false).await;
+    init::init(State(s.clone()), true, TEST1).await;
 
     let app = Router::new();
     let app = app.route("/calendar", get(calendar).with_state(s.clone()));
