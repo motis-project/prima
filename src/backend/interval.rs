@@ -125,7 +125,7 @@ impl InfiniteInterval {
 
 #[cfg(test)]
 mod test {
-    use crate::be::interval::Interval;
+    use crate::backend::interval::Interval;
     use chrono::{NaiveDate, Timelike};
     #[test]
     fn test() {

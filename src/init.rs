@@ -1,7 +1,7 @@
 use crate::constants::geo_points::TestPoints;
 use crate::init::geo_from_str::point_from_str;
 use crate::{
-    be::{backend::Data, geo_from_str},
+    backend::{data::Data, geo_from_str},
     constants::{
         bautzen_split_ost::BAUTZEN_OST,
         bautzen_split_west::BAUTZEN_WEST,

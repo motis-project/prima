@@ -1,5 +1,5 @@
 use crate::{
-    be::interval::{InfiniteInterval, Interval},
+    backend::interval::{InfiniteInterval, Interval},
     constants::constants::{AIR_DIST_SPEED, KM_PRICE, MINUTE_PRICE, MINUTE_WAITING_PRICE},
     entities::{
         assignment::{self, ActiveModel},
@@ -1808,8 +1808,8 @@ impl Data {
 mod test {
     use super::{CompanyData, ZoneData};
     use crate::{
-        be::{
-            backend::Data,
+        backend::{
+            data::Data,
             geo_from_str::{self, point_from_str},
         },
         constants::geo_points::{

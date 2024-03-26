@@ -1,6 +1,6 @@
 use geo::Point;
 
-use crate::be::geo_from_str::point_from_str;
+use crate::backend::geo_from_str::point_from_str;
 
 pub const P1_BAUTZEN_OST: &str = r#"{
     "type": "Point",
