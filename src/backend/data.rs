@@ -23,8 +23,12 @@ use ::anyhow::Result;
 use chrono::{Duration, NaiveDate, NaiveDateTime, Utc};
 use geo::{prelude::*, MultiPolygon, Point};
 use itertools::Itertools;
-use sea_orm::{ActiveModelTrait, ActiveValue, EntityTrait};
-use std::collections::HashMap;
+use migration::DbErr;
+use sea_orm::{ActiveModelTrait, ActiveValue, EntityTrait, RuntimeErr, SqlErr};
+use std::{
+    collections::HashMap,
+    fmt::{Debug, Display},
+};
 
 fn id_to_vec_pos(id: i32) -> usize {
     (id - 1) as usize
@@ -557,6 +561,9 @@ impl Data {
                 0,
             )
             .await;
+        if specs_id == -1 {
+            return StatusCode::INTERNAL_SERVER_ERROR;
+        }
 
         match Vehicle::insert(vehicle::ActiveModel {
             id: ActiveValue::NotSet,
@@ -581,7 +588,9 @@ impl Data {
                 StatusCode::CREATED
             }
             Err(e) => {
-                println!("Error creating vehicle  {}", e);
+                if matches!(e.sql_err(), Some(SqlErr::UniqueConstraintViolation(_))) {
+                    return StatusCode::CONFLICT;
+                }
                 StatusCode::INTERNAL_SERVER_ERROR
             }
         }
@@ -632,7 +641,12 @@ impl Data {
                 );
                 StatusCode::CREATED
             }
-            Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Err(e) => {
+                if matches!(e.sql_err(), Some(SqlErr::UniqueConstraintViolation(_))) {
+                    return StatusCode::CONFLICT;
+                }
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
         }
     }
 
@@ -672,7 +686,12 @@ impl Data {
         .exec(s.db())
         .await;
         match result {
-            Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Err(e) => {
+                if matches!(e.sql_err(), Some(SqlErr::UniqueConstraintViolation(_))) {
+                    return StatusCode::CONFLICT;
+                }
+                return StatusCode::INTERNAL_SERVER_ERROR;
+            }
             Ok(_) => match multi_polygon_from_str(&area) {
                 Err(e) => {
                     error!("{e:?}");
@@ -717,7 +736,12 @@ impl Data {
                 });
                 StatusCode::CREATED
             }
-            Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Err(e) => {
+                if matches!(e.sql_err(), Some(SqlErr::UniqueConstraintViolation(_))) {
+                    return StatusCode::CONFLICT;
+                }
+                return StatusCode::INTERNAL_SERVER_ERROR;
+            }
         }
     }
 

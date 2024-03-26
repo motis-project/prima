@@ -9,6 +9,7 @@ mod m20240308_121823_store_adress;
 mod m20240312_090704_assignment_table;
 mod m20240312_152829_concrete_vehicles_replace_capacities;
 mod m20240322_232453_delete_redundant_cols;
+mod m20240326_180155_user_unique_cols;
 
 pub struct Migrator;
 
@@ -25,6 +26,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20240312_090704_assignment_table::Migration),
             Box::new(m20240312_152829_concrete_vehicles_replace_capacities::Migration),
             Box::new(m20240322_232453_delete_redundant_cols::Migration),
+            Box::new(m20240326_180155_user_unique_cols::Migration),
         ]
     }
 }

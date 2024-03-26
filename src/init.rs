@@ -1,12 +1,8 @@
 use crate::constants::geo_points::TestPoints;
-use crate::init::geo_from_str::point_from_str;
 use crate::{
-    backend::{data::Data, geo_from_str},
+    backend::data::Data,
     constants::{
-        bautzen_split_ost::BAUTZEN_OST,
-        bautzen_split_west::BAUTZEN_WEST,
-        geo_points::{P1_BAUTZEN_OST, P1_BAUTZEN_WEST},
-        gorlitz::GORLITZ,
+        bautzen_split_ost::BAUTZEN_OST, bautzen_split_west::BAUTZEN_WEST, gorlitz::GORLITZ,
     },
     entities::{
         assignment, availability, company, event, prelude::User, user, vehicle, vehicle_specifics,
@@ -16,13 +12,12 @@ use crate::{
     AppState,
 };
 use axum::extract::State;
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::NaiveDate;
 use migration::ConnectionTrait;
 use sea_orm::EntityTrait;
 
 #[derive(PartialEq)]
 pub enum StopFor {
-    NOT,
     TEST1,
 }
 
@@ -145,7 +140,7 @@ pub async fn init(
         "TestDriver1".to_string(),
         true,
         false,
-        "".to_string(),
+        "test@aol.com".to_string(),
         Some("".to_string()),
         "".to_string(),
         Some("".to_string()),
@@ -158,7 +153,7 @@ pub async fn init(
         "TestUser1".to_string(),
         false,
         false,
-        "".to_string(),
+        "test@web.com".to_string(),
         Some("".to_string()),
         "".to_string(),
         Some("".to_string()),
@@ -171,7 +166,7 @@ pub async fn init(
         "TestUser2".to_string(),
         false,
         false,
-        "".to_string(),
+        "test@mail.com".to_string(),
         Some("".to_string()),
         "".to_string(),
         Some("".to_string()),
@@ -401,31 +396,6 @@ pub async fn init(
         3,
     )
     .await;
-    /*
-        println!("handle routing request output:");
-        data.handle_routing_request(
-            State(&s),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(10, 55, 0)
-                .unwrap(),
-            true,
-            14.025081097762154,
-            51.195075641827316,
-            13.867512445295205,
-            51.22069201951501,
-            2,
-            2,
-        )
-        .await;
-
-        read_from_db_data.clear();
-        read_from_db_data.read_data(State(&s)).await;
-        println!(
-                "=_=_=__=__=_=_=_=_=_==_=_=_==_=====_=_=_=_=_==___________________________________________________________________________________________________is data synchronized before changing assignment vehicle: {}",
-                read_from_db_data == data
-            );
-    */
 
     data.change_vehicle_for_assignment(State(&s), 1, 2).await;
 
