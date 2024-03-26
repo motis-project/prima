@@ -2,7 +2,7 @@ use crate::{
     backend::interval::{InfiniteInterval, Interval},
     constants::constants::{AIR_DIST_SPEED, KM_PRICE, MINUTE_PRICE, MINUTE_WAITING_PRICE},
     entities::{
-        assignment::{self, ActiveModel},
+        assignment::{self},
         availability, company, event,
         prelude::{
             Assignment, Availability, Company, Event, User, Vehicle, VehicleSpecifics, Zone,
@@ -18,21 +18,16 @@ use crate::{
     AppState, State, StatusCode,
 };
 
-use ::anyhow::{anyhow, Context, Result};
+use super::geo_from_str::multi_polygon_from_str;
+use ::anyhow::Result;
 use chrono::{Duration, NaiveDate, NaiveDateTime, Utc};
 use geo::{prelude::*, MultiPolygon, Point};
 use itertools::Itertools;
-use sea_orm::{ActiveModelTrait, ActiveValue, DeleteResult, EntityTrait};
-use std::{collections::HashMap, hash::Hash};
-
-use super::geo_from_str::{self, multi_polygon_from_str};
+use sea_orm::{ActiveModelTrait, ActiveValue, EntityTrait};
+use std::collections::HashMap;
 
 fn id_to_vec_pos(id: i32) -> usize {
     (id - 1) as usize
-}
-
-fn vec_pos_to_id(pos: usize) -> i32 {
-    1 + pos as i32
 }
 
 fn seconds_to_minutes(secs: i32) -> i32 {
@@ -51,11 +46,6 @@ struct Comb {
     cost: i32,
 }
 
-struct BestCombination {
-    best_start_time_pos: usize,
-    best_target_time_pos: usize,
-}
-
 #[derive(Clone, PartialEq)]
 #[readonly::make]
 pub struct AssignmentData {
@@ -70,7 +60,7 @@ impl AssignmentData {
         &self,
         indent: &str,
     ) {
-        print!(
+        println!(
             "{}id: {}, departure: {}, arrival: {}\n",
             indent, self.id, self.departure, self.arrival
         );
@@ -116,14 +106,14 @@ impl VehicleData {
         State(s): State<&AppState>,
         new_interval: &mut Interval,
         id_or_none: Option<i32>, //None->insert availability into db, this yields the id->create availability in data with this id.  Some->create in data with given id, nothing to do in db
-    ) {
+    ) -> StatusCode {
         let mut mark_delete: Vec<i32> = Vec::new();
         for (id, existing) in self.availability.iter() {
             if !existing.interval.touches(&new_interval) {
                 continue;
             }
             if existing.interval.contains(&new_interval) {
-                return;
+                return StatusCode::CREATED;
             }
             if new_interval.contains(&existing.interval) {
                 mark_delete.push(*id);
@@ -158,7 +148,7 @@ impl VehicleData {
                 Ok(result) => result.last_insert_id,
                 Err(e) => {
                     error!("Error creating availability in db: {}", e);
-                    return;
+                    return StatusCode::INTERNAL_SERVER_ERROR;
                 }
             },
         };
@@ -169,8 +159,11 @@ impl VehicleData {
                 interval: *new_interval,
             },
         ) {
-            None => (),
-            Some(_) => error!("Key already existed in availability"),
+            None => return StatusCode::CREATED,
+            Some(_) => {
+                error!("Key already existed in availability");
+                return StatusCode::INTERNAL_SERVER_ERROR;
+            }
         }
     }
 }
@@ -662,8 +655,7 @@ impl Data {
                 },
                 None,
             )
-            .await;
-        StatusCode::CREATED
+            .await
     }
 
     pub async fn create_zone(
@@ -772,7 +764,10 @@ impl Data {
                 active_m.end_time = ActiveValue::set(existing.interval.end_time);
                 match Availability::update(active_m).exec(s.clone().db()).await {
                     Ok(_) => (),
-                    Err(e) => error!("Error deleting interval: {e:?}"),
+                    Err(e) => {
+                        error!("Error deleting interval: {e:?}");
+                        return StatusCode::INTERNAL_SERVER_ERROR;
+                    }
                 }
             }
         }
@@ -1586,6 +1581,9 @@ impl Data {
         assignment_id: i32,
         new_vehicle_id: i32,
     ) -> StatusCode {
+        if id_to_vec_pos(new_vehicle_id) > self.vehicles.len() {
+            return StatusCode::BAD_REQUEST;
+        }
         let vehicles = &mut self.vehicles;
         let old_vehicle_id_vec: Vec<i32> = vehicles
             .iter()
@@ -1783,49 +1781,51 @@ impl Data {
         &self,
         company_id: i32,
         assignment_id: i32,
-    ) -> HashMap<i32, Vec<&AssignmentData>> {
-        let mut interval = Interval {
-            start_time: NaiveDateTime::MIN,
-            end_time: NaiveDateTime::MAX,
+    ) -> Result<HashMap<i32, Vec<&AssignmentData>>, StatusCode> {
+        let assignments = self
+            .vehicles
+            .iter()
+            .filter(|vehicle| {
+                vehicle.company == company_id
+                    && vehicle
+                        .assignments
+                        .iter()
+                        .any(|(a_id, _)| *a_id == assignment_id)
+            })
+            .map(|vehicle| &vehicle.assignments[&assignment_id])
+            .collect_vec();
+        if assignments.len() > 1 {
+            error!("bad backend state, multiple assignments with same id");
+        }
+        if assignments.is_empty() {
+            return Err(StatusCode::NOT_FOUND);
+        }
+        let interval = Interval {
+            start_time: assignments[0].departure,
+            end_time: assignments[0].arrival,
         };
+
+        let mut ret = HashMap::<i32, Vec<&AssignmentData>>::new();
         self.vehicles
             .iter()
             .filter(|vehicle| vehicle.company == company_id)
-            .flat_map(|vehicle| &vehicle.assignments)
-            .filter(|(id, _)| **id == assignment_id)
-            .for_each(|(_, assignment)| {
-                interval.start_time = assignment.departure;
-                interval.end_time = assignment.arrival
-            });
-        let mut ret = HashMap::<i32, Vec<&AssignmentData>>::new();
-        if interval.start_time == NaiveDateTime::MIN {
-            error!("invalid company-id: {}", company_id);
-            return ret;
-        }
-        if interval.end_time == NaiveDateTime::MAX {
-            error!("invalid assignment-id: {}", assignment_id);
-            return ret;
-        }
-        for vehicle in self.vehicles.iter() {
-            if vehicle.company != company_id {
-                continue;
-            }
-            let conflicting_assignments = vehicle
-                .assignments
-                .iter()
-                .map(|(_, a)| a)
-                .filter(|a| {
-                    interval.touches(&Interval {
-                        start_time: a.departure,
-                        end_time: a.arrival,
+            .for_each(|vehicle| {
+                let conflicts = vehicle
+                    .assignments
+                    .iter()
+                    .map(|(_, assignment)| assignment)
+                    .filter(|assignment| {
+                        interval.touches(&Interval {
+                            start_time: assignment.departure,
+                            end_time: assignment.arrival,
+                        })
                     })
-                })
-                .collect_vec();
-            if !conflicting_assignments.is_empty() {
-                ret.insert(vehicle.id, conflicting_assignments);
-            }
-        }
-        ret
+                    .collect_vec();
+                if !conflicts.is_empty() {
+                    ret.insert(vehicle.id, conflicts);
+                }
+            });
+        Ok(ret)
     }
 
     #[allow(dead_code)]
@@ -1869,6 +1869,8 @@ impl Data {
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
+
     use super::{CompanyData, ZoneData};
     use crate::{
         backend::{
@@ -1879,8 +1881,10 @@ mod test {
             self, TestPoints, P1_BAUTZEN_OST, P1_BAUTZEN_WEST, P1_GORLITZ, P1_OUTSIDE, P2_OUTSIDE,
             P3_OUTSIDE,
         },
-        dotenv, env, init,
-        init::StopFor::TEST1,
+        dotenv,
+        entities::company,
+        env,
+        init::{self, StopFor::TEST1},
         AppState, Arc, Database, Migrator, Mutex, Tera,
     };
     use axum::extract::State;
@@ -1950,13 +1954,6 @@ mod test {
         check_data_db_synchronized(State(&s), &d, &mut read_data).await;
 
         let test_points = TestPoints::new();
-
-        let p_in_bautzen_ost = test_points.bautzen_ost[0];
-        let p_in_bautzen_west = test_points.bautzen_west[0];
-        let p_in_gorlitz = test_points.gorlitz[0];
-        let p1_outside = test_points.outside[0];
-        let p2_outside = test_points.outside[1];
-        let p3_outside = test_points.outside[2];
         //zonen tests:
         //0->Bautzen Ost
         check_points_in_zone(true, &d.zones[0], &test_points.bautzen_ost);
@@ -2111,11 +2108,12 @@ mod test {
 
         //get_company_conflicts_for_assignment_____________________________________________________________________________________________________________________________________________
         for company in d.companies.iter() {
-            for (v, assignments) in d
-                .get_company_conflicts_for_assignment(company.id, 1)
-                .await
-                .iter()
-            {
+            let conflicts = match d.get_company_conflicts_for_assignment(company.id, 1).await {
+                Ok(c) => c,
+                Err(_) => HashMap::new(),
+            };
+            assert_eq!(conflicts.is_empty(), company.id != 1);
+            for (v, assignments) in conflicts.iter() {
                 assert_eq!(company.id, 1);
                 assert_eq!(assignments.len() == 0, *v != 2);
             }
@@ -2146,9 +2144,8 @@ mod test {
 
         check_data_db_synchronized(State(&s), &d, &mut read_data).await;
 
-        println!("printing assignments before");
-        d.print_assignments(true);
-
+        let p_in_bautzen_ost = test_points.bautzen_ost[0];
+        let p_in_bautzen_west = test_points.bautzen_west[0];
         d.handle_routing_request(
             State(&s),
             NaiveDate::from_ymd_opt(2024, 4, 15)
@@ -2167,10 +2164,6 @@ mod test {
         )
         .await;
 
-        println!("");
-        println!("printing assignments after");
-        d.print_assignments(true);
-
-        //check_data_db_synchronized(State(&s), &d, &mut read_data).await;
+        check_data_db_synchronized(State(&s), &d, &mut read_data).await;
     }
 }
