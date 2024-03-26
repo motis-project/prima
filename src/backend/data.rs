@@ -23,7 +23,7 @@ use chrono::{Duration, NaiveDate, NaiveDateTime, Utc};
 use geo::{prelude::*, MultiPolygon, Point};
 use itertools::Itertools;
 use sea_orm::{ActiveModelTrait, ActiveValue, DeleteResult, EntityTrait};
-use std::collections::HashMap;
+use std::{collections::HashMap, hash::Hash};
 
 use super::geo_from_str::{self, multi_polygon_from_str};
 
@@ -63,7 +63,6 @@ pub struct AssignmentData {
     pub departure: NaiveDateTime,
     pub arrival: NaiveDateTime,
     pub vehicle: i32,
-    pub events: Vec<EventData>,
 }
 
 impl AssignmentData {
@@ -118,8 +117,8 @@ impl VehicleData {
         new_interval: &mut Interval,
         id_or_none: Option<i32>, //None->insert availability into db, this yields the id->create availability in data with this id.  Some->create in data with given id, nothing to do in db
     ) {
-        let mut mark_delete: Vec<usize> = Vec::new();
-        for (pos, existing) in self.availability.iter().enumerate() {
+        let mut mark_delete: Vec<i32> = Vec::new();
+        for (id, existing) in self.availability.iter() {
             if !existing.interval.touches(&new_interval) {
                 continue;
             }
@@ -127,22 +126,20 @@ impl VehicleData {
                 return;
             }
             if new_interval.contains(&existing.interval) {
-                mark_delete.push(pos);
+                mark_delete.push(*id);
             }
             if new_interval.overlaps(&existing.interval) {
-                mark_delete.push(pos);
+                mark_delete.push(*id);
                 new_interval.merge(&existing.interval);
             }
         }
-        //sort in descending order, to avoid earlier removals affecting indices of later removals
-        mark_delete.sort_by(|a, b| b.cmp(a));
         for to_delete in mark_delete {
-            match Availability::delete_by_id(self.availability[to_delete].id)
+            match Availability::delete_by_id(self.availability[&to_delete].id)
                 .exec(s.clone().db())
                 .await
             {
                 Ok(_) => {
-                    self.availability.remove(to_delete);
+                    self.availability.remove(&to_delete);
                 }
                 Err(e) => error!("Error deleting interval: {e:?}"),
             }
@@ -161,17 +158,20 @@ impl VehicleData {
                 Ok(result) => result.last_insert_id,
                 Err(e) => {
                     error!("Error creating availability in db: {}", e);
-                    -1
+                    return;
                 }
             },
         };
-        if id == -1 {
-            return;
-        }
-        self.availability.push(AvailabilityData {
+        match self.availability.insert(
             id,
-            interval: *new_interval,
-        })
+            AvailabilityData {
+                id,
+                interval: *new_interval,
+            },
+        ) {
+            None => (),
+            Some(_) => error!("Key already existed in availability"),
+        }
     }
 }
 
@@ -273,6 +273,7 @@ pub struct Data {
     pub companies: Vec<CompanyData>,                  //indexed by (id-1)
     pub vehicles: Vec<VehicleData>,                   //indexed by (id-1)
     pub vehicle_specifics: Vec<VehicleSpecificsData>, //indexed by (id-1)
+    pub events: HashMap<i32, EventData>,
     pub last_request_id: i32,
 }
 
@@ -284,6 +285,7 @@ impl Data {
             vehicles: Vec::<VehicleData>::new(),
             vehicle_specifics: Vec::<VehicleSpecificsData>::new(),
             users: HashMap::<i32, UserData>::new(),
+            events: HashMap::new(),
             last_request_id: 1,
         }
     }
@@ -305,8 +307,7 @@ impl Data {
             .any(|availability| {
                 let availability_intervals = availability
                     .iter()
-                    .map(|availability| availability.interval);
-
+                    .map(|(id, availability)| availability.interval);
                 availability_intervals
                     .clone()
                     .zip(availability_intervals)
@@ -319,14 +320,17 @@ impl Data {
         &self,
         print_events: bool,
     ) {
-        for assignment in self
+        for (a_id, assignment) in self
             .vehicles
             .iter()
             .flat_map(|vehicle| &vehicle.assignments)
         {
             assignment.print("");
             if print_events {
-                for event in assignment.events.iter() {
+                for (_, event) in self.events.iter() {
+                    if *a_id != event.assignment {
+                        continue;
+                    }
                     event.print("   ");
                 }
             }
@@ -379,8 +383,8 @@ impl Data {
                 company: vehicle.company,
                 specifics: vehicle.specifics,
                 active: vehicle.active,
-                availability: Vec::new(),
-                assignments: Vec::new(),
+                availability: HashMap::new(),
+                assignments: HashMap::new(),
             })
         }
 
@@ -410,35 +414,40 @@ impl Data {
         for assignment in assignment_models {
             self.vehicles[id_to_vec_pos(assignment.vehicle)]
                 .assignments
-                .push(AssignmentData {
-                    arrival: assignment.arrival,
-                    departure: assignment.departure,
-                    id: assignment.id,
-                    vehicle: assignment.vehicle,
-                    events: Vec::new(),
-                });
+                .insert(
+                    assignment.id,
+                    AssignmentData {
+                        arrival: assignment.arrival,
+                        departure: assignment.departure,
+                        id: assignment.id,
+                        vehicle: assignment.vehicle,
+                    },
+                );
         }
 
         let event_models: Vec<<event::Entity as sea_orm::EntityTrait>::Model> = Event::find()
             .all(s.db())
             .await
             .expect("Error while reading from Database.");
-        for event in event_models {
+        for event_m in event_models {
             for vehicle in self.vehicles.iter_mut() {
-                for assignment in vehicle.assignments.iter_mut() {
-                    if assignment.id == event.chain_id {
-                        assignment.events.push(EventData::from(
-                            event.id,
-                            event.latitude,
-                            event.longitude,
-                            event.scheduled_time,
-                            event.communicated_time,
-                            event.customer,
-                            event.chain_id,
-                            event.required_vehicle_specifics,
-                            event.request_id,
-                            event.is_pickup,
-                        ));
+                for (id, assignment) in vehicle.assignments.iter_mut() {
+                    if *id == event_m.chain_id {
+                        self.events.insert(
+                            event_m.id,
+                            EventData::from(
+                                event_m.id,
+                                event_m.latitude,
+                                event_m.longitude,
+                                event_m.scheduled_time,
+                                event_m.communicated_time,
+                                event_m.customer,
+                                event_m.chain_id,
+                                event_m.required_vehicle_specifics,
+                                event_m.request_id,
+                                event_m.is_pickup,
+                            ),
+                        );
                     }
                 }
             }
@@ -479,19 +488,9 @@ impl Data {
             })
         }
 
-        self.last_request_id = match self
-            .vehicles
-            .iter()
-            .flat_map(|vehicle| &vehicle.assignments)
-            .collect_vec()
-            .iter()
-            .flat_map(|assignment| &assignment.events)
-            .collect_vec()
-            .iter()
-            .max_by_key(|event| event.request_id)
-        {
+        self.last_request_id = match self.events.iter().max_by_key(|(_, event)| event.request_id) {
             None => 1,
-            Some(ev) => ev.request_id,
+            Some(ev) => ev.1.request_id,
         };
     }
 
@@ -583,8 +582,8 @@ impl Data {
                     company,
                     specifics: specs_id,
                     active: false,
-                    availability: Vec::new(),
-                    assignments: Vec::new(),
+                    availability: HashMap::new(),
+                    assignments: HashMap::new(),
                 });
                 StatusCode::CREATED
             }
@@ -740,24 +739,24 @@ impl Data {
         if start_time > end_time {
             return StatusCode::NOT_ACCEPTABLE;
         }
-        let mut mark_delete: Vec<usize> = Vec::new();
+        let mut mark_delete: Vec<i32> = Vec::new();
         let mut to_insert: Option<(Interval, Interval)> = None;
         let to_remove_interval = Interval {
             start_time,
             end_time,
         };
         let vehicle = &mut self.vehicles[id_to_vec_pos(vehicle_id)];
-        for (pos, existing) in vehicle.availability.iter_mut().enumerate() {
+        for (id, existing) in vehicle.availability.iter_mut() {
             if !existing.interval.touches(&to_remove_interval) {
                 continue;
             }
             if existing.interval.contains(&to_remove_interval) {
-                mark_delete.push(pos);
+                mark_delete.push(*id);
                 to_insert = Some(existing.interval.split(&to_remove_interval));
                 break;
             }
             if to_remove_interval.contains(&existing.interval) {
-                mark_delete.push(pos);
+                mark_delete.push(*id);
                 continue;
             }
             if to_remove_interval.overlaps(&existing.interval) {
@@ -777,15 +776,13 @@ impl Data {
                 }
             }
         }
-        //sort in descending order, to avoid earlier removals affecting indices of later removals
-        mark_delete.sort_by(|a, b| b.cmp(a));
         for to_delete in mark_delete {
-            match Availability::delete_by_id(vehicle.availability[to_delete].id)
+            match Availability::delete_by_id(vehicle.availability[&to_delete].id)
                 .exec(s.clone().db())
                 .await
             {
                 Ok(_) => {
-                    vehicle.availability.remove(to_delete);
+                    vehicle.availability.remove(&to_delete);
                 }
                 Err(e) => error!("Error deleting interval: {e:?}"),
             }
@@ -849,13 +846,15 @@ impl Data {
                 //now create assignment in self(data)
                 (&mut self.vehicles[id_to_vec_pos(vehicle)])
                     .assignments
-                    .push(AssignmentData {
-                        id: a_id,
-                        departure,
-                        arrival,
-                        vehicle,
-                        events: Vec::new(),
-                    });
+                    .insert(
+                        a_id,
+                        AssignmentData {
+                            id: a_id,
+                            departure,
+                            arrival,
+                            vehicle,
+                        },
+                    );
                 a_id
             }
         };
@@ -880,39 +879,36 @@ impl Data {
                 comm_t_target,
             )
             .await;
-        //insert events into self(data)
-        (&mut self.vehicles[id_to_vec_pos(vehicle)])
-            .assignments
-            .iter_mut()
-            .filter(|assignment| assignment.id == id) //since ids are unique this filter yields only one assignment
-            .for_each(|assignment| {
-                assignment.events.append(&mut vec![
-                    //pickup-event
-                    EventData {
-                        coordinates: Point::new(lat_start as f64, lng_start as f64),
-                        scheduled_time: sched_t_start,
-                        communicated_time: comm_t_start,
-                        customer: customer,
-                        assignment: id,
-                        required_specs: required_vehicle_specs,
-                        request_id: request_id,
-                        id: start_event_id,
-                        is_pickup: true,
-                    },
-                    //dropoff-event
-                    EventData {
-                        coordinates: Point::new(lat_target as f64, lng_target as f64),
-                        scheduled_time: sched_t_target,
-                        communicated_time: comm_t_target,
-                        customer: customer,
-                        assignment: id,
-                        required_specs: required_vehicle_specs,
-                        request_id: request_id,
-                        id: target_event_id,
-                        is_pickup: false,
-                    },
-                ])
-            });
+        //pickup-event
+        self.events.insert(
+            start_event_id,
+            EventData {
+                coordinates: Point::new(lat_start as f64, lng_start as f64),
+                scheduled_time: sched_t_start,
+                communicated_time: comm_t_start,
+                customer,
+                assignment: id,
+                required_specs: required_vehicle_specs,
+                request_id,
+                id: start_event_id,
+                is_pickup: true,
+            },
+        );
+        //dropoff-event
+        self.events.insert(
+            target_event_id,
+            EventData {
+                coordinates: Point::new(lat_target as f64, lng_target as f64),
+                scheduled_time: sched_t_target,
+                communicated_time: comm_t_target,
+                customer: customer,
+                assignment: id,
+                required_specs: required_vehicle_specs,
+                request_id: request_id,
+                id: target_event_id,
+                is_pickup: false,
+            },
+        );
     }
 
     async fn insert_event_pair_into_db(
@@ -1597,7 +1593,7 @@ impl Data {
                 vehicle
                     .assignments
                     .iter()
-                    .any(|assignment| assignment.id == assignment_id)
+                    .any(|(id, _)| *id == assignment_id)
             })
             .map(|vehicle| vehicle.id)
             .collect();
@@ -1609,22 +1605,22 @@ impl Data {
             return StatusCode::INTERNAL_SERVER_ERROR;
         }
         let old_vehicle_id = old_vehicle_id_vec[0];
-        let to_move_pos = vehicles[id_to_vec_pos(old_vehicle_id)]
-            .assignments
-            .iter()
-            .enumerate()
-            .filter(|(_pos, a)| a.id == assignment_id)
-            .map(|(pos, _)| pos)
-            .collect::<Vec<usize>>()[0];
 
-        let mut assignment_to_move = vehicles[id_to_vec_pos(old_vehicle_id)]
+        let mut assignment_to_move = match vehicles[id_to_vec_pos(old_vehicle_id)]
             .assignments
-            .swap_remove(to_move_pos);
+            .remove(&assignment_id)
+        {
+            None => {
+                error!("Assignment missing");
+                return StatusCode::INTERNAL_SERVER_ERROR;
+            }
+            Some(a) => a,
+        };
         assignment_to_move.vehicle = new_vehicle_id;
 
         vehicles[id_to_vec_pos(new_vehicle_id)]
             .assignments
-            .push(assignment_to_move.clone());
+            .insert(assignment_to_move.id, assignment_to_move.clone());
 
         let model: Option<assignment::Model> = match Assignment::find_by_id(assignment_to_move.id)
             .one(s.db())
@@ -1666,7 +1662,7 @@ impl Data {
                         .iter()
                         .any(|availability| availability.interval.contains(&interval)) 
                         */
-                    && !vehicle.assignments.iter().any(|assignment| {
+                    && !vehicle.assignments.iter().any(|(_,assignment)| {
                         //this check might disallow some concatenations of jobs where time is saved by not having to return to the company central, TODO: fix
                         Interval {
                             start_time: assignment.departure,
@@ -1712,6 +1708,7 @@ impl Data {
         self.vehicles[id_to_vec_pos(vehicle_id)]
             .assignments
             .iter()
+            .map(|(_, assignment)| assignment)
             .filter(|assignment| {
                 interval.contained_in_time_frame(assignment.departure, assignment.arrival)
             })
@@ -1731,15 +1728,16 @@ impl Data {
         if self.vehicles.len() < id_to_vec_pos(vehicle_id) {
             return Vec::new();
         }
-        self.vehicles[id_to_vec_pos(vehicle_id)]
-            .assignments
+        self.events
             .iter()
-            .flat_map(|assignment| &assignment.events)
-            .filter(|event| {
-                interval.contained_in_time_frame(event.scheduled_time, event.scheduled_time)
-                    || interval
-                        .contained_in_time_frame(event.communicated_time, event.communicated_time)
+            .filter(|(_, event)| {
+                interval.contained_in_time_frame(event.scheduled_time, event.communicated_time)
+                    && self.vehicles[id_to_vec_pos(vehicle_id)]
+                        .assignments
+                        .iter()
+                        .any(|(a_id, _)| event.assignment == *a_id)
             })
+            .map(|(_, e)| e)
             .collect_vec()
     }
 
@@ -1770,14 +1768,13 @@ impl Data {
             time_frame_start,
             time_frame_end,
         };
-        self.vehicles
+        self.events
             .iter()
-            .flat_map(|vehicle| &vehicle.assignments)
-            .flat_map(|assignment| &assignment.events)
-            .filter(|event| {
-                event.customer == user_id
-                    && interval.contained_in_time_frame(event.scheduled_time, event.scheduled_time)
+            .filter(|(_, event)| {
+                interval.contained_in_time_frame(event.scheduled_time, event.communicated_time)
+                    && event.customer == user_id
             })
+            .map(|(_, event)| event)
             .collect_vec()
     }
 
@@ -1795,8 +1792,8 @@ impl Data {
             .iter()
             .filter(|vehicle| vehicle.company == company_id)
             .flat_map(|vehicle| &vehicle.assignments)
-            .filter(|assignment| assignment.id == assignment_id)
-            .for_each(|assignment| {
+            .filter(|(id, _)| **id == assignment_id)
+            .for_each(|(_, assignment)| {
                 interval.start_time = assignment.departure;
                 interval.end_time = assignment.arrival
             });
@@ -1816,6 +1813,7 @@ impl Data {
             let conflicting_assignments = vehicle
                 .assignments
                 .iter()
+                .map(|(_, a)| a)
                 .filter(|a| {
                     interval.touches(&Interval {
                         start_time: a.departure,
@@ -1840,6 +1838,7 @@ impl Data {
             .vehicles
             .iter()
             .flat_map(|vehicle| &vehicle.assignments)
+            .map(|(_, a)| a)
             .filter(|assignment| assignment.id == assignment_id)
             .map(|assignment| Interval {
                 start_time: assignment.departure,
@@ -1856,6 +1855,7 @@ impl Data {
         self.vehicles[id_to_vec_pos(vehicle_id)]
             .assignments
             .iter()
+            .map(|(_, a)| a)
             .filter(|assignment| {
                 assignment.id != assignment_id
                     && intervals[0].touches(&Interval {
@@ -2076,9 +2076,12 @@ mod test {
         .await;
         //remove non-touching
         assert_eq!(d.vehicles[0].availability.len(), 1);
-        assert_eq!(d.vehicles[0].availability[0].interval.start_time.hour(), 10);
         assert_eq!(
-            d.vehicles[0].availability[0].interval.start_time.minute(),
+            d.vehicles[0].availability[&1].interval.start_time.hour(),
+            10
+        );
+        assert_eq!(
+            d.vehicles[0].availability[&1].interval.start_time.minute(),
             10
         );
 
@@ -2097,9 +2100,12 @@ mod test {
         .await;
         //remove overlapping
         assert_eq!(d.vehicles[0].availability.len(), 1);
-        assert_eq!(d.vehicles[0].availability[0].interval.start_time.hour(), 11);
         assert_eq!(
-            d.vehicles[0].availability[0].interval.start_time.minute(),
+            d.vehicles[0].availability[&1].interval.start_time.hour(),
+            11
+        );
+        assert_eq!(
+            d.vehicles[0].availability[&1].interval.start_time.minute(),
             0
         );
 
