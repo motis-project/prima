@@ -66,6 +66,18 @@ pub struct AssignmentData {
     pub events: Vec<EventData>,
 }
 
+impl AssignmentData {
+    fn print(
+        &self,
+        indent: &str,
+    ) {
+        print!(
+            "{}id: {}, departure: {}, arrival: {}\n",
+            indent, self.id, self.departure, self.arrival
+        );
+    }
+}
+
 #[derive(Clone, Eq, PartialEq)]
 #[readonly::make]
 pub struct AvailabilityData {
@@ -95,8 +107,8 @@ pub struct VehicleData {
     pub company: i32,
     pub specifics: i32,
     pub active: bool,
-    pub availability: Vec<AvailabilityData>,
-    pub assignments: Vec<AssignmentData>,
+    pub availability: HashMap<i32, AvailabilityData>,
+    pub assignments: HashMap<i32, AssignmentData>,
 }
 
 impl VehicleData {
@@ -161,23 +173,6 @@ impl VehicleData {
             interval: *new_interval,
         })
     }
-    /*
-        fn find_collisions(
-            &self,
-            start_time: NaiveDateTime,
-            end_time: NaiveDateTime,
-        ) -> Vec<EventData> {
-            Vec::new() //TODO
-        }
-
-        fn is_available(
-            &self,
-            start_time: NaiveDateTime,
-            end_time: NaiveDateTime,
-        ) -> bool {
-            false //TODO
-        }
-    */
 }
 
 #[derive(Clone, PartialEq)]
@@ -218,6 +213,16 @@ impl EventData {
             is_pickup,
         }
     }
+
+    fn print(
+        &self,
+        indent: &str,
+    ) {
+        print!(
+            "{}id: {}, scheduled_time: {}, communicated_time: {}, customer: {}, assignment: {}, request_id: {}, required_specs: {}, is_pickup: {}\n",
+            indent, self.id, self.scheduled_time, self.communicated_time, self.customer, self.assignment, self.request_id, self.required_specs, self.is_pickup
+        );
+    }
 }
 
 #[derive(PartialEq)]
@@ -236,6 +241,20 @@ pub struct VehicleSpecificsData {
     pub seats: i32,
     pub wheelchairs: i32,
     pub storage_space: i32,
+}
+
+impl VehicleSpecificsData {
+    fn fulfills(
+        &self,
+        seats: i32,
+        wheelchairs: i32,
+        storage: i32,
+    ) -> bool {
+        if self.seats >= seats && self.wheelchairs >= wheelchairs && self.storage_space >= storage {
+            return true;
+        }
+        return false;
+    }
 }
 
 #[derive(PartialEq)]
@@ -294,6 +313,24 @@ impl Data {
                     .filter(|interval_pair| interval_pair.0 != interval_pair.1)
                     .any(|interval_pair| interval_pair.0.touches(&interval_pair.1))
             })
+    }
+
+    fn print_assignments(
+        &self,
+        print_events: bool,
+    ) {
+        for assignment in self
+            .vehicles
+            .iter()
+            .flat_map(|vehicle| &vehicle.assignments)
+        {
+            assignment.print("");
+            if print_events {
+                for event in assignment.events.iter() {
+                    event.print("   ");
+                }
+            }
+        }
     }
 
     pub async fn read_data_from_db(
@@ -961,24 +998,38 @@ impl Data {
         target_address: &String,
         //wheelchairs: i32, luggage: i32,
     ) -> StatusCode {
-        let minimum_prep_time: Duration = Duration::seconds(3600);
+        let minimum_prep_time: Duration = Duration::hours(1);
         let now: NaiveDateTime = Utc::now().naive_utc();
         if is_start_time_fixed && now + minimum_prep_time > fixed_time {
+            return StatusCode::EXPECTATION_FAILED;
+        }
+        if passengers > 3 {
             return StatusCode::EXPECTATION_FAILED;
         }
 
         let start: Point = Point::new(start_lat as f64, start_lng as f64);
 
-        //find companies, that may process the request according to their zone
-        let viable_companies = self.get_companies_containing_point(&start).await;
-        println!("viable companies:");
-        for company in viable_companies.iter() {
-            println!("id: {}, zone id: {}", company.id, company.zone);
-        }
+        //find companies, and vehicles that may process the request according to their zone, availability, collisions with other assignments and vehicle-specifics (based on beeline distance)
+        let viable_vehicles = self.get_viable_vehicles(
+            Interval {
+                start_time: fixed_time,
+                end_time: fixed_time,
+            },
+            passengers,
+            &start,
+        );
 
-        println!("viable companies after checking there is a vehicle available:");
-        for company in viable_companies.iter() {
-            println!("id: {}, zone id: {}", company.id, company.zone);
+        let viable_companies = viable_vehicles
+            .iter()
+            .map(|(company_id, _)| &self.companies[id_to_vec_pos(*company_id)])
+            .collect_vec();
+
+        println!("viable vehicles:");
+        for (c, vs) in viable_vehicles.iter() {
+            println!("company: {}", c);
+            for v in vs {
+                println!("  vehicle: {}", v.id);
+            }
         }
         //get the actual costs
         let start_c = Coordinate {
@@ -996,38 +1047,30 @@ impl Data {
                 lng: company.central_coordinates.x(),
             });
         }
+        // add this to get distance between start and target of the new request
         start_many.push(Coordinate {
             lat: target_c.lat,
             lng: target_c.lng,
         });
-        // add this to get distance between start and target of the new request
-        for sm in start_many.iter() {
-            println!("start manys: {}   -   {}", sm.lat, sm.lng);
-        }
         let osrm = OSRM::new();
-        println!("start: {};; {}", start_c.lat, start_c.lng);
-        println!("target: {};; {}", target_c.lat, target_c.lng);
         let mut distances_to_start: Vec<DistTime> =
             match osrm.one_to_many(start_c, start_many, Backward).await {
                 Ok(r) => r,
                 Err(e) => {
-                    println!("problem with osrm: {}", e);
+                    error!("problem with osrm: {}", e);
                     Vec::new()
                 }
             };
-        println!("result: {distances_to_start:?}");
         let distance = match distances_to_start.last() {
             Some(dt) => dt,
             None => {
-                println!("distance was None");
+                error!("distances to start was empty");
                 &DistTime {
                     time: -1.0,
                     dist: -1.0,
                 }
             }
         };
-        println!("distance-time--   {}", distance.time);
-        println!("distance--   {}", distance.dist);
 
         let travel_duration = Duration::minutes(seconds_to_minutes(distance.time as i32) as i64);
         //start/target times using travel time
@@ -1050,12 +1093,14 @@ impl Data {
                 lng: company.central_coordinates.x(),
             });
         }
-        let distances_to_target: Vec<DistTime> = osrm
-            .one_to_many(target_c, target_many, Forward)
-            .await
-            .unwrap();
-        let n_viable_companies = viable_companies.len();
-        println!("n_viable_companies: {}", n_viable_companies);
+        let distances_to_target: Vec<DistTime> =
+            match osrm.one_to_many(target_c, target_many, Forward).await {
+                Ok(r) => r,
+                Err(e) => {
+                    error!("problem with osrm: {}", e);
+                    Vec::new()
+                }
+            };
 
         //create all viable combinations
         let mut viable_combinations: Vec<Comb> = Vec::new();
@@ -1074,30 +1119,15 @@ impl Data {
                 target_pos: pos_in_data,
                 cost: company_start_cost + company_target_cost,
             });
-            println!("company: {}, start_dist: {}, target_dist: {}, start_time: {}, target_time: {}, start_cost: {}, target_cost: {}",
-            pos_in_data+1,meter_to_km(distances_to_start[pos_in_viable].dist as i32),meter_to_km(distances_to_target[pos_in_viable].dist as i32),
-            seconds_to_minutes(distances_to_start[pos_in_viable].time as i32),seconds_to_minutes(distances_to_target[pos_in_viable].time as i32),company_start_cost,company_target_cost);
-        }
-        println!("n comb: {}", viable_combinations.len());
-        for vc in viable_combinations.iter() {
-            println!(
-                "cost: {} for company: {}",
-                vc.cost, self.companies[vc.start_pos].id,
-            );
         }
 
         if viable_combinations.is_empty() {
-            println!("no viable combinations!");
             return StatusCode::NOT_ACCEPTABLE;
         }
-        println!("viable combination count: {}", viable_combinations.len());
 
         //use cost function to sort the viable combinations
         viable_combinations.sort_by(|a, b| a.cost.cmp(&(b.cost)));
 
-        if viable_combinations.len() == 0 {
-            //TODO
-        }
         self.last_request_id += 1;
         self.insert_or_add_assignment(
             None,
@@ -1615,6 +1645,39 @@ impl Data {
         StatusCode::ACCEPTED
     }
 
+    //keys of returned hashmap are the company-ids of the vehicles in the associated value
+    fn get_viable_vehicles(
+        &self,
+        interval: Interval,
+        passengers: i32,
+        start: &Point,
+    ) -> HashMap<i32, Vec<&VehicleData>> {
+        self.vehicles
+            .iter()
+            .filter(|vehicle| {
+                self.zones[id_to_vec_pos(self.companies[id_to_vec_pos(vehicle.company)].zone)]
+                    .area
+                    .contains(start)
+                    && self.vehicle_specifics[id_to_vec_pos(vehicle.specifics)]
+                        .fulfills(passengers, 0, 0)
+                    /*    
+                    && vehicle
+                        .availability
+                        .iter()
+                        .any(|availability| availability.interval.contains(&interval)) 
+                        */
+                    && !vehicle.assignments.iter().any(|assignment| {
+                        //this check might disallow some concatenations of jobs where time is saved by not having to return to the company central, TODO: fix
+                        Interval {
+                            start_time: assignment.departure,
+                            end_time: assignment.arrival,
+                        }
+                        .touches(&interval)
+                    })
+            })
+            .into_group_map_by(|vehicle| vehicle.company)
+    }
+
     async fn get_companies_containing_point(
         &self,
         start: &Point,
@@ -2077,9 +2140,15 @@ mod test {
 
         check_data_db_synchronized(State(&s), &d, &mut read_data).await;
 
+        println!("printing assignments before");
+        d.print_assignments(true);
+
         d.handle_routing_request(
             State(&s),
-            NaiveDateTime::MIN,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 10, 0)
+                .unwrap(),
             true,
             p_in_bautzen_ost.0.x,
             p_in_bautzen_ost.0.y,
@@ -2091,6 +2160,10 @@ mod test {
             &"".to_string(),
         )
         .await;
+
+        println!("");
+        println!("printing assignments after");
+        d.print_assignments(true);
 
         //check_data_db_synchronized(State(&s), &d, &mut read_data).await;
     }
