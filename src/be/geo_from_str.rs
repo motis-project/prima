@@ -5,15 +5,9 @@ use geojson::{GeoJson, Geometry};
 
 pub fn multi_polygon_from_str(s: &str) -> Result<MultiPolygon, geojson::Error> {
     match s.parse::<GeoJson>() {
-        Err(e) => {
-            error!("{}", e);
-            Err(e)
-        }
+        Err(e) => Err(e),
         Ok(geo_json) => match Geometry::try_from(geo_json) {
-            Err(e) => {
-                error!("{}", e);
-                Err(e)
-            }
+            Err(e) => Err(e),
             Ok(feature) => MultiPolygon::try_from(feature),
         },
     }

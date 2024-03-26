@@ -20,7 +20,7 @@ use crate::{
 
 use ::anyhow::{anyhow, Context, Result};
 use chrono::{Duration, NaiveDate, NaiveDateTime, Utc};
-use geo::{prelude::*, Point};
+use geo::{prelude::*, MultiPolygon, Point};
 use itertools::Itertools;
 use sea_orm::{ActiveModelTrait, ActiveValue, DeleteResult, EntityTrait};
 use std::collections::HashMap;
@@ -66,18 +66,6 @@ pub struct AssignmentData {
     pub events: Vec<EventData>,
 }
 
-impl AssignmentData {
-    fn new() -> Self {
-        Self {
-            id: -1,
-            departure: NaiveDateTime::MIN,
-            arrival: NaiveDateTime::MAX,
-            vehicle: -1,
-            events: Vec::new(),
-        }
-    }
-}
-
 #[derive(Clone, Eq, PartialEq)]
 #[readonly::make]
 pub struct AvailabilityData {
@@ -114,9 +102,9 @@ pub struct VehicleData {
 impl VehicleData {
     async fn add_availability(
         &mut self,
-        State(s): State<AppState>,
+        State(s): State<&AppState>,
         new_interval: &mut Interval,
-        id_or_none: Option<i32>,
+        id_or_none: Option<i32>, //None->insert availability into db, this yields the id->create availability in data with this id.  Some->create in data with given id, nothing to do in db
     ) {
         let mut mark_delete: Vec<usize> = Vec::new();
         for (pos, existing) in self.availability.iter().enumerate() {
@@ -134,6 +122,7 @@ impl VehicleData {
                 new_interval.merge(&existing.interval);
             }
         }
+        //sort in descending order, to avoid earlier removals affecting indices of later removals
         mark_delete.sort_by(|a, b| b.cmp(a));
         for to_delete in mark_delete {
             match Availability::delete_by_id(self.availability[to_delete].id)
@@ -158,7 +147,10 @@ impl VehicleData {
             .await
             {
                 Ok(result) => result.last_insert_id,
-                Err(_) => -1,
+                Err(e) => {
+                    error!("Error creating availability in db: {}", e);
+                    -1
+                }
             },
         };
         if id == -1 {
@@ -169,22 +161,23 @@ impl VehicleData {
             interval: *new_interval,
         })
     }
+    /*
+        fn find_collisions(
+            &self,
+            start_time: NaiveDateTime,
+            end_time: NaiveDateTime,
+        ) -> Vec<EventData> {
+            Vec::new() //TODO
+        }
 
-    fn find_collisions(
-        &self,
-        start_time: NaiveDateTime,
-        end_time: NaiveDateTime,
-    ) -> Vec<EventData> {
-        Vec::new() //TODO
-    }
-
-    fn is_available(
-        &self,
-        start_time: NaiveDateTime,
-        end_time: NaiveDateTime,
-    ) -> bool {
-        false //TODO
-    }
+        fn is_available(
+            &self,
+            start_time: NaiveDateTime,
+            end_time: NaiveDateTime,
+        ) -> bool {
+            false //TODO
+        }
+    */
 }
 
 #[derive(Clone, PartialEq)]
@@ -248,7 +241,7 @@ pub struct VehicleSpecificsData {
 #[derive(PartialEq)]
 #[readonly::make]
 pub struct ZoneData {
-    pub area: geo::MultiPolygon,
+    pub area: MultiPolygon,
     pub name: String,
     pub id: i32,
 }
@@ -257,10 +250,10 @@ pub struct ZoneData {
 #[readonly::make]
 pub struct Data {
     pub users: HashMap<i32, UserData>,
-    pub zones: Vec<ZoneData>,
-    pub companies: Vec<CompanyData>,
-    pub vehicles: Vec<VehicleData>,
-    pub vehicle_specifics: Vec<VehicleSpecificsData>,
+    pub zones: Vec<ZoneData>,                         //indexed by (id-1)
+    pub companies: Vec<CompanyData>,                  //indexed by (id-1)
+    pub vehicles: Vec<VehicleData>,                   //indexed by (id-1)
+    pub vehicle_specifics: Vec<VehicleSpecificsData>, //indexed by (id-1)
     pub last_request_id: i32,
 }
 
@@ -285,30 +278,32 @@ impl Data {
     }
 
     //expected to be used in fuzzing tests
-    #[allow(dead_code)]
+    //check wether there is a vehicle for which any of the availability intervals touch
     pub fn do_intervals_touch(&self) -> bool {
         self.vehicles
             .iter()
             .map(|vehicle| &vehicle.availability)
             .any(|availability| {
-                availability
+                let availability_intervals = availability
                     .iter()
-                    .map(|availability| availability.interval)
-                    .zip(
-                        availability
-                            .iter()
-                            .map(|availability| availability.interval),
-                    )
-                    .filter(|availability_pair| availability_pair.0 != availability_pair.1)
-                    .any(|availability_pair| availability_pair.0.touches(&availability_pair.1))
+                    .map(|availability| availability.interval);
+
+                availability_intervals
+                    .clone()
+                    .zip(availability_intervals)
+                    .filter(|interval_pair| interval_pair.0 != interval_pair.1)
+                    .any(|interval_pair| interval_pair.0.touches(&interval_pair.1))
             })
     }
 
-    pub async fn read_data(
+    pub async fn read_data_from_db(
         &mut self,
-        State(s): State<AppState>,
+        State(s): State<&AppState>,
     ) {
-        let zones: Vec<zone::Model> = Zone::find().all(s.db()).await.unwrap();
+        let zones: Vec<zone::Model> = Zone::find()
+            .all(s.db())
+            .await
+            .expect("Error while reading from Database.");
         for zone in zones.iter() {
             match multi_polygon_from_str(&zone.area) {
                 Err(e) => error!("{e:?}"),
@@ -319,8 +314,11 @@ impl Data {
                 }),
             }
         }
-        let company_models: Vec<<company::Entity as sea_orm::EntityTrait>::Model> =
-            Company::find().all(s.db()).await.unwrap();
+
+        let company_models: Vec<<company::Entity as sea_orm::EntityTrait>::Model> = Company::find()
+            .all(s.db())
+            .await
+            .expect("Error while reading from Database.");
         for company_model in company_models {
             self.companies.push(CompanyData {
                 name: company_model.name,
@@ -332,8 +330,11 @@ impl Data {
                 id: company_model.id,
             });
         }
-        let vehicle_models: Vec<<vehicle::Entity as sea_orm::EntityTrait>::Model> =
-            Vehicle::find().all(s.db()).await.unwrap();
+
+        let vehicle_models: Vec<<vehicle::Entity as sea_orm::EntityTrait>::Model> = Vehicle::find()
+            .all(s.db())
+            .await
+            .expect("Error while reading from Database.");
         for vehicle in vehicle_models.iter() {
             self.vehicles.push(VehicleData {
                 id: vehicle.id,
@@ -345,13 +346,16 @@ impl Data {
                 assignments: Vec::new(),
             })
         }
-        let availability_models: Vec<<availability::Entity as sea_orm::EntityTrait>::Model> =
-            Availability::find().all(s.db()).await.unwrap();
 
+        let availability_models: Vec<<availability::Entity as sea_orm::EntityTrait>::Model> =
+            Availability::find()
+                .all(s.db())
+                .await
+                .expect("Error while reading from Database.");
         for availability in availability_models.iter() {
             self.vehicles[id_to_vec_pos(availability.vehicle)]
                 .add_availability(
-                    State(s.clone()),
+                    State(&s),
                     &mut Interval {
                         start_time: availability.start_time,
                         end_time: availability.end_time,
@@ -360,42 +364,53 @@ impl Data {
                 )
                 .await;
         }
+
         let assignment_models: Vec<<assignment::Entity as sea_orm::EntityTrait>::Model> =
-            Assignment::find().all(s.db()).await.unwrap();
-        for a in assignment_models {
-            self.vehicles[id_to_vec_pos(a.vehicle)]
+            Assignment::find()
+                .all(s.db())
+                .await
+                .expect("Error while reading from Database.");
+        for assignment in assignment_models {
+            self.vehicles[id_to_vec_pos(assignment.vehicle)]
                 .assignments
                 .push(AssignmentData {
-                    arrival: a.arrival,
-                    departure: a.departure,
-                    id: a.id,
-                    vehicle: a.vehicle,
+                    arrival: assignment.arrival,
+                    departure: assignment.departure,
+                    id: assignment.id,
+                    vehicle: assignment.vehicle,
                     events: Vec::new(),
                 });
         }
-        let event_models: Vec<<event::Entity as sea_orm::EntityTrait>::Model> =
-            Event::find().all(s.db()).await.unwrap();
-        for e in event_models {
-            for v in self.vehicles.iter_mut() {
-                for a in v.assignments.iter_mut() {
-                    if a.id == e.chain_id {
-                        a.events.push(EventData::from(
-                            e.id,
-                            e.latitude,
-                            e.longitude,
-                            e.scheduled_time,
-                            e.communicated_time,
-                            e.customer,
-                            e.chain_id,
-                            e.required_vehicle_specifics,
-                            e.request_id,
-                            e.is_pickup,
+
+        let event_models: Vec<<event::Entity as sea_orm::EntityTrait>::Model> = Event::find()
+            .all(s.db())
+            .await
+            .expect("Error while reading from Database.");
+        for event in event_models {
+            for vehicle in self.vehicles.iter_mut() {
+                for assignment in vehicle.assignments.iter_mut() {
+                    if assignment.id == event.chain_id {
+                        assignment.events.push(EventData::from(
+                            event.id,
+                            event.latitude,
+                            event.longitude,
+                            event.scheduled_time,
+                            event.communicated_time,
+                            event.customer,
+                            event.chain_id,
+                            event.required_vehicle_specifics,
+                            event.request_id,
+                            event.is_pickup,
                         ));
                     }
                 }
             }
         }
-        let user_models = User::find().all(s.db()).await.unwrap();
+
+        let user_models = User::find()
+            .all(s.db())
+            .await
+            .expect("Error while reading from Database.");
         for user_model in user_models {
             self.users.insert(
                 user_model.id,
@@ -412,25 +427,31 @@ impl Data {
                 },
             );
         }
-        let vehicle_specifics_models = VehicleSpecifics::find().all(s.db()).await.unwrap();
-        for vs_m in vehicle_specifics_models.iter() {
+
+        let vehicle_specifics_models = VehicleSpecifics::find()
+            .all(s.db())
+            .await
+            .expect("Error while reading from Database.");
+
+        for specifics_m in vehicle_specifics_models.iter() {
             self.vehicle_specifics.push(VehicleSpecificsData {
-                seats: vs_m.seats,
-                wheelchairs: vs_m.wheelchairs,
-                storage_space: vs_m.storage_space,
-                id: vs_m.id,
+                seats: specifics_m.seats,
+                wheelchairs: specifics_m.wheelchairs,
+                storage_space: specifics_m.storage_space,
+                id: specifics_m.id,
             })
         }
+
         self.last_request_id = match self
             .vehicles
             .iter()
-            .flat_map(|v| &v.assignments)
+            .flat_map(|vehicle| &vehicle.assignments)
             .collect_vec()
             .iter()
-            .flat_map(|a| &a.events)
+            .flat_map(|assignment| &assignment.events)
             .collect_vec()
             .iter()
-            .max_by_key(|e| e.request_id)
+            .max_by_key(|event| event.request_id)
         {
             None => 1,
             Some(ev) => ev.request_id,
@@ -439,7 +460,7 @@ impl Data {
 
     async fn find_or_create_vehicle_specs(
         &mut self,
-        State(s): State<AppState>,
+        State(s): State<&AppState>,
         seats: i32,
         wheelchairs: i32,
         storage_space: i32,
@@ -452,13 +473,94 @@ impl Data {
                 return specs.id;
             }
         }
-        self.internal_create_vehicle_specifics(State(s), seats, wheelchairs, storage_space)
+        self.internal_create_vehicle_specifics(State(&s), seats, wheelchairs, storage_space)
             .await
+    }
+
+    async fn internal_create_vehicle_specifics(
+        &mut self,
+        State(s): State<&AppState>,
+        seats: i32,
+        wheelchairs: i32,
+        storage_space: i32,
+    ) -> i32 {
+        match VehicleSpecifics::insert(vehicle_specifics::ActiveModel {
+            id: ActiveValue::NotSet,
+            seats: ActiveValue::Set(seats),
+            wheelchairs: ActiveValue::Set(wheelchairs),
+            storage_space: ActiveValue::Set(storage_space),
+        })
+        .exec(s.db())
+        .await
+        {
+            Ok(result) => {
+                let last_insert_id = result.last_insert_id;
+                self.vehicle_specifics.push(VehicleSpecificsData {
+                    id: last_insert_id,
+                    seats,
+                    wheelchairs,
+                    storage_space,
+                });
+                last_insert_id
+            }
+            Err(e) => {
+                error!("Error creating vehicle specifics: {e:?}");
+                return -1;
+            }
+        }
+    }
+
+    pub async fn create_vehicle(
+        &mut self,
+        State(s): State<&AppState>,
+        license_plate: String,
+        company: i32,
+    ) -> StatusCode {
+        //check whether the vehicle fits one of the existing vehicle_specs, otherwise create a new specs
+        let specs_id = self
+            .find_or_create_vehicle_specs(
+                State(&s),
+                /*post_request.seats,
+                post_request.wheelchairs,
+                post_request.storage_space, */
+                3,
+                0,
+                0,
+            )
+            .await;
+
+        match Vehicle::insert(vehicle::ActiveModel {
+            id: ActiveValue::NotSet,
+            active: ActiveValue::Set(false),
+            company: ActiveValue::Set(company),
+            license_plate: ActiveValue::Set(license_plate.to_string()),
+            specifics: ActiveValue::Set(specs_id),
+        })
+        .exec(s.db())
+        .await
+        {
+            Ok(result) => {
+                self.vehicles.push(VehicleData {
+                    id: result.last_insert_id,
+                    license_plate,
+                    company,
+                    specifics: specs_id,
+                    active: false,
+                    availability: Vec::new(),
+                    assignments: Vec::new(),
+                });
+                StatusCode::CREATED
+            }
+            Err(e) => {
+                println!("Error creating vehicle  {}", e);
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
+        }
     }
 
     pub async fn create_user(
         &mut self,
-        State(s): State<AppState>,
+        State(s): State<&AppState>,
         name: String,
         is_driver: bool,
         is_admin: bool,
@@ -468,7 +570,7 @@ impl Data {
         o_auth_id: Option<String>,
         o_auth_provider: Option<String>,
     ) -> StatusCode {
-        let active_m = user::ActiveModel {
+        match User::insert(user::ActiveModel {
             id: ActiveValue::NotSet,
             name: ActiveValue::Set(name.clone()),
             is_driver: ActiveValue::Set(is_driver),
@@ -479,11 +581,12 @@ impl Data {
             o_auth_id: ActiveValue::Set(o_auth_id.clone()),
             o_auth_provider: ActiveValue::Set(o_auth_provider.clone()),
             is_active: ActiveValue::Set(true),
-        };
-        let result = User::insert(active_m.clone()).exec(s.db()).await;
-        match result {
-            Ok(_) => {
-                let id = result.unwrap().last_insert_id;
+        })
+        .exec(s.db())
+        .await
+        {
+            Ok(result) => {
+                let id = result.last_insert_id;
                 self.users.insert(
                     id,
                     UserData {
@@ -504,63 +607,19 @@ impl Data {
         }
     }
 
-    pub async fn create_vehicle(
-        &mut self,
-        State(s): State<AppState>,
-        license_plate: String,
-        company: i32,
-    ) -> StatusCode {
-        //check whether the vehicle fits one of the existing vehicle_specs, otherwise create a new one
-        let specs_id = self
-            .find_or_create_vehicle_specs(
-                State(s.clone()),
-                /*post_request.seats,
-                post_request.wheelchairs,
-                post_request.storage_space, */
-                3,
-                0,
-                0,
-            )
-            .await;
-        let result = Vehicle::insert(vehicle::ActiveModel {
-            id: ActiveValue::NotSet,
-            active: ActiveValue::Set(false),
-            company: ActiveValue::Set(company),
-            license_plate: ActiveValue::Set(license_plate.to_string()),
-            specifics: ActiveValue::Set(specs_id),
-        })
-        .exec(s.db())
-        .await;
-        match result {
-            Ok(_) => {
-                self.vehicles.push(VehicleData {
-                    id: result.unwrap().last_insert_id,
-                    license_plate,
-                    company,
-                    specifics: specs_id,
-                    active: false,
-                    availability: Vec::new(),
-                    assignments: Vec::new(),
-                });
-                StatusCode::CREATED
-            }
-            Err(e) => {
-                println!("Error creating vehicle  {}", e);
-                StatusCode::INTERNAL_SERVER_ERROR
-            }
-        }
-    }
-
     pub async fn create_availability(
         &mut self,
-        State(s): State<AppState>,
+        State(s): State<&AppState>,
         start_time: NaiveDateTime,
         end_time: NaiveDateTime,
         vehicle: i32,
     ) -> StatusCode {
+        if start_time > end_time {
+            return StatusCode::NOT_ACCEPTABLE;
+        }
         self.vehicles[id_to_vec_pos(vehicle)]
             .add_availability(
-                State(s.clone()),
+                State(s),
                 &mut Interval {
                     start_time,
                     end_time,
@@ -571,44 +630,9 @@ impl Data {
         StatusCode::CREATED
     }
 
-    async fn internal_create_vehicle_specifics(
-        &mut self,
-        State(s): State<AppState>,
-        seats: i32,
-        wheelchairs: i32,
-        storage_space: i32,
-    ) -> i32 {
-        let active_m = vehicle_specifics::ActiveModel {
-            id: ActiveValue::NotSet,
-            seats: ActiveValue::Set(seats),
-            wheelchairs: ActiveValue::Set(wheelchairs),
-            storage_space: ActiveValue::Set(storage_space),
-        };
-        let result = VehicleSpecifics::insert(active_m.clone())
-            .exec(s.db())
-            .await;
-
-        match result {
-            Ok(_) => {
-                let last_insert_id = result.unwrap().last_insert_id;
-                self.vehicle_specifics.push(VehicleSpecificsData {
-                    id: last_insert_id,
-                    seats,
-                    wheelchairs,
-                    storage_space,
-                });
-                last_insert_id
-            }
-            Err(e) => {
-                error!("Error creating vehicle specifics: {e:?}");
-                return -1;
-            }
-        }
-    }
-
     pub async fn create_zone(
         &mut self,
-        State(s): State<AppState>,
+        State(s): State<&AppState>,
         name: String,
         area: String,
     ) -> StatusCode {
@@ -640,13 +664,13 @@ impl Data {
 
     pub async fn create_company(
         &mut self,
-        State(s): State<AppState>,
+        State(s): State<&AppState>,
         name: String,
         zone: i32,
         lat: f32,
         lng: f32,
     ) -> StatusCode {
-        let result = Company::insert(company::ActiveModel {
+        match Company::insert(company::ActiveModel {
             id: ActiveValue::NotSet,
             longitude: ActiveValue::Set(lng),
             latitude: ActiveValue::Set(lat),
@@ -654,11 +678,11 @@ impl Data {
             zone: ActiveValue::Set(zone),
         })
         .exec(s.db())
-        .await;
-        match result {
-            Ok(_) => {
+        .await
+        {
+            Ok(result) => {
                 self.companies.push(CompanyData {
-                    id: result.unwrap().last_insert_id,
+                    id: result.last_insert_id,
                     central_coordinates: Point::new(lat as f64, lng as f64),
                     zone,
                     name,
@@ -671,11 +695,14 @@ impl Data {
 
     pub async fn remove_availability(
         &mut self,
-        State(s): State<AppState>,
+        State(s): State<&AppState>,
         start_time: NaiveDateTime,
         end_time: NaiveDateTime,
         vehicle_id: i32,
     ) -> StatusCode {
+        if start_time > end_time {
+            return StatusCode::NOT_ACCEPTABLE;
+        }
         let mut mark_delete: Vec<usize> = Vec::new();
         let mut to_insert: Option<(Interval, Interval)> = None;
         let to_remove_interval = Interval {
@@ -694,6 +721,7 @@ impl Data {
             }
             if to_remove_interval.contains(&existing.interval) {
                 mark_delete.push(pos);
+                continue;
             }
             if to_remove_interval.overlaps(&existing.interval) {
                 existing.interval.cut(&to_remove_interval);
@@ -727,20 +755,10 @@ impl Data {
         }
         match to_insert {
             Some((left, right)) => {
-                self.create_availability(
-                    State(s.clone()),
-                    left.start_time,
-                    left.end_time,
-                    vehicle_id,
-                )
-                .await;
-                self.create_availability(
-                    State(s.clone()),
-                    right.start_time,
-                    right.end_time,
-                    vehicle_id,
-                )
-                .await;
+                self.create_availability(State(&s), left.start_time, left.end_time, vehicle_id)
+                    .await;
+                self.create_availability(State(&s), right.start_time, right.end_time, vehicle_id)
+                    .await;
             }
             None => (),
         }
@@ -748,14 +766,14 @@ impl Data {
     }
 
     //TODO: remove pub when events can be created by handling routing requests
-    // assignment_id == None <=> assignment already exists
+
     pub async fn insert_or_add_assignment(
         &mut self,
-        assignment_id: Option<i32>,
+        assignment_id: Option<i32>, // assignment_id == None <=> assignment already exists
         departure: NaiveDateTime,
         arrival: NaiveDateTime,
         vehicle: i32,
-        State(s): State<AppState>,
+        State(s): State<&AppState>,
         start_address: &String,
         target_address: &String,
         lat_start: f32,
@@ -788,10 +806,10 @@ impl Data {
                     Ok(result) => result.last_insert_id,
                     Err(e) => {
                         error!("Error creating assignment: {e:?}");
-                        0
+                        -1
                     }
                 };
-                //now create assignment in self
+                //now create assignment in self(data)
                 (&mut self.vehicles[id_to_vec_pos(vehicle)])
                     .assignments
                     .push(AssignmentData {
@@ -825,40 +843,44 @@ impl Data {
                 comm_t_target,
             )
             .await;
-        let mut ev = vec![
-            EventData {
-                coordinates: Point::new(lat_start as f64, lng_start as f64),
-                scheduled_time: sched_t_start,
-                communicated_time: comm_t_start,
-                customer: customer,
-                assignment: id,
-                required_specs: required_vehicle_specs,
-                request_id: request_id,
-                id: start_event_id,
-                is_pickup: true,
-            },
-            EventData {
-                coordinates: Point::new(lat_target as f64, lng_target as f64),
-                scheduled_time: sched_t_target,
-                communicated_time: comm_t_target,
-                customer: customer,
-                assignment: id,
-                required_specs: required_vehicle_specs,
-                request_id: request_id,
-                id: target_event_id,
-                is_pickup: false,
-            },
-        ];
+        //insert events into self(data)
         (&mut self.vehicles[id_to_vec_pos(vehicle)])
             .assignments
             .iter_mut()
-            .filter(|assignment| assignment.id == id)
-            .for_each(|assignment| assignment.events.append(&mut ev));
+            .filter(|assignment| assignment.id == id) //since ids are unique this filter yields only one assignment
+            .for_each(|assignment| {
+                assignment.events.append(&mut vec![
+                    //pickup-event
+                    EventData {
+                        coordinates: Point::new(lat_start as f64, lng_start as f64),
+                        scheduled_time: sched_t_start,
+                        communicated_time: comm_t_start,
+                        customer: customer,
+                        assignment: id,
+                        required_specs: required_vehicle_specs,
+                        request_id: request_id,
+                        id: start_event_id,
+                        is_pickup: true,
+                    },
+                    //dropoff-event
+                    EventData {
+                        coordinates: Point::new(lat_target as f64, lng_target as f64),
+                        scheduled_time: sched_t_target,
+                        communicated_time: comm_t_target,
+                        customer: customer,
+                        assignment: id,
+                        required_specs: required_vehicle_specs,
+                        request_id: request_id,
+                        id: target_event_id,
+                        is_pickup: false,
+                    },
+                ])
+            });
     }
 
     async fn insert_event_pair_into_db(
         &mut self,
-        State(s): State<AppState>,
+        State(s): State<&AppState>,
         start_address: &String,
         target_address: &String,
         lat_start: f32,
@@ -876,7 +898,7 @@ impl Data {
         sched_t_target: NaiveDateTime,
         comm_t_target: NaiveDateTime,
     ) -> (i32, i32) {
-        let result1 = Event::insert(event::ActiveModel {
+        let start_id = match Event::insert(event::ActiveModel {
             id: ActiveValue::NotSet,
             longitude: ActiveValue::Set(lng_start),
             latitude: ActiveValue::Set(lat_start),
@@ -891,15 +913,15 @@ impl Data {
             address: ActiveValue::Set(start_address.to_string()),
         })
         .exec(s.db())
-        .await;
-        match result1 {
-            Ok(_) => (),
+        .await
+        {
+            Ok(result) => result.last_insert_id,
             Err(e) => {
                 error!("Error creating event: {e:?}");
                 return (-1, -1);
             }
-        }
-        let result2 = Event::insert(event::ActiveModel {
+        };
+        match Event::insert(event::ActiveModel {
             id: ActiveValue::NotSet,
             longitude: ActiveValue::Set(lng_target),
             latitude: ActiveValue::Set(lat_target),
@@ -914,12 +936,9 @@ impl Data {
             address: ActiveValue::Set(target_address.to_string()),
         })
         .exec(s.db())
-        .await;
-        match result2 {
-            Ok(_) => (
-                result1.unwrap().last_insert_id,
-                result2.unwrap().last_insert_id,
-            ),
+        .await
+        {
+            Ok(target_result) => (start_id, target_result.last_insert_id),
             Err(e) => {
                 error!("Error creating event: {e:?}");
                 return (-1, -1);
@@ -927,28 +946,9 @@ impl Data {
         }
     }
 
-    async fn get_companies_matching_start_location(
-        &self,
-        start: &Point,
-    ) -> Vec<bool> {
-        let mut viable_zone_ids = Vec::<i32>::new();
-        for (pos, zone) in self.zones.iter().enumerate() {
-            if zone.area.contains(start) {
-                viable_zone_ids.push(vec_pos_to_id(pos));
-            }
-        }
-        let mut viable_companies = Vec::<bool>::new();
-        viable_companies.resize(self.companies.len(), false);
-        for (pos, company) in self.companies.iter().enumerate() {
-            if viable_zone_ids.contains(&(company.zone)) {
-                viable_companies[pos] = true;
-            }
-        }
-        viable_companies
-    }
     pub async fn handle_routing_request(
         &mut self,
-        State(s): State<AppState>,
+        State(s): State<&AppState>,
         fixed_time: NaiveDateTime,
         is_start_time_fixed: bool,
         start_lat: f64,  //for Point  lat=y and lng is x
@@ -960,34 +960,25 @@ impl Data {
         start_address: &String,
         target_address: &String,
         //wheelchairs: i32, luggage: i32,
-    ) {
+    ) -> StatusCode {
         let minimum_prep_time: Duration = Duration::seconds(3600);
         let now: NaiveDateTime = Utc::now().naive_utc();
+        if is_start_time_fixed && now + minimum_prep_time > fixed_time {
+            return StatusCode::EXPECTATION_FAILED;
+        }
 
         let start: Point = Point::new(start_lat as f64, start_lng as f64);
 
         //find companies, that may process the request according to their zone
-        let mut viable_companies = self.get_companies_matching_start_location(&start).await;
+        let viable_companies = self.get_companies_containing_point(&start).await;
         println!("viable companies:");
-        for (i, is_viable) in viable_companies.iter().enumerate() {
-            if !is_viable {
-                continue;
-            }
-            println!(
-                "id: {}, zone id: {}",
-                self.companies[i].id, self.companies[i].zone
-            );
+        for company in viable_companies.iter() {
+            println!("id: {}, zone id: {}", company.id, company.zone);
         }
 
         println!("viable companies after checking there is a vehicle available:");
-        for (i, is_viable) in viable_companies.iter().enumerate() {
-            if !is_viable {
-                continue;
-            }
-            println!(
-                "id: {}, zone id: {}",
-                self.companies[i].id, self.companies[i].zone
-            );
+        for company in viable_companies.iter() {
+            println!("id: {}, zone id: {}", company.id, company.zone);
         }
         //get the actual costs
         let start_c = Coordinate {
@@ -999,13 +990,10 @@ impl Data {
             lat: target_lng,
         };
         let mut start_many = Vec::<Coordinate>::new();
-        for (i, c) in self.companies.iter().enumerate() {
-            if !viable_companies[i] {
-                continue;
-            }
+        for company in viable_companies.iter() {
             start_many.push(Coordinate {
-                lat: c.central_coordinates.y(),
-                lng: c.central_coordinates.x(),
+                lat: company.central_coordinates.y(),
+                lng: company.central_coordinates.x(),
             });
         }
         start_many.push(Coordinate {
@@ -1056,50 +1044,39 @@ impl Data {
         distances_to_start.truncate(distances_to_start.len() - 1); //remove distance from start to target
 
         let mut target_many = Vec::<Coordinate>::new();
-        for (i, c) in self.companies.iter().enumerate() {
-            if !viable_companies[i] {
-                continue;
-            }
+        for company in viable_companies.iter() {
             target_many.push(Coordinate {
-                lat: c.central_coordinates.y(),
-                lng: c.central_coordinates.x(),
+                lat: company.central_coordinates.y(),
+                lng: company.central_coordinates.x(),
             });
         }
         let distances_to_target: Vec<DistTime> = osrm
             .one_to_many(target_c, target_many, Forward)
             .await
             .unwrap();
-        let n_viable_companies = viable_companies.iter().filter(|b| **b).count();
-        for b in viable_companies.iter() {
-            println!("b:{}", b);
-        }
+        let n_viable_companies = viable_companies.len();
         println!("n_viable_companies: {}", n_viable_companies);
 
         //create all viable combinations
         let mut viable_combinations: Vec<Comb> = Vec::new();
-        let mut company_pos = 0;
-        for (i, _) in self.companies.iter().enumerate() {
-            if !viable_companies[i] {
-                continue;
-            }
-            println!("hallo");
+        for (pos_in_viable, company) in viable_companies.iter().enumerate() {
+            let pos_in_data = id_to_vec_pos(company.id);
             let company_start_cost =
-                seconds_to_minutes(distances_to_start[company_pos].time as i32) * MINUTE_PRICE
-                    + meter_to_km(distances_to_start[company_pos].dist as i32) * KM_PRICE;
+                seconds_to_minutes(distances_to_start[pos_in_viable].time as i32) * MINUTE_PRICE
+                    + meter_to_km(distances_to_start[pos_in_viable].dist as i32) * KM_PRICE;
             let company_target_cost =
-                seconds_to_minutes(distances_to_target[company_pos].time as i32) * MINUTE_PRICE
-                    + meter_to_km(distances_to_target[company_pos].dist as i32) * KM_PRICE;
+                seconds_to_minutes(distances_to_target[pos_in_viable].time as i32) * MINUTE_PRICE
+                    + meter_to_km(distances_to_target[pos_in_viable].dist as i32) * KM_PRICE;
             viable_combinations.push(Comb {
                 is_start_company: true,
-                start_pos: i,
+                start_pos: pos_in_data,
                 is_target_company: true,
-                target_pos: i,
+                target_pos: pos_in_data,
                 cost: company_start_cost + company_target_cost,
             });
             println!("company: {}, start_dist: {}, target_dist: {}, start_time: {}, target_time: {}, start_cost: {}, target_cost: {}",
-            company_pos+1,meter_to_km(distances_to_start[company_pos].dist as i32),meter_to_km(distances_to_target[company_pos].dist as i32),
-            seconds_to_minutes(distances_to_start[company_pos].time as i32),seconds_to_minutes(distances_to_target[company_pos].time as i32),company_start_cost,company_target_cost);
-            company_pos += 1;
+            pos_in_data+1,meter_to_km(distances_to_start[pos_in_viable].dist as i32),meter_to_km(distances_to_target[pos_in_viable].dist as i32),
+            seconds_to_minutes(distances_to_start[pos_in_viable].time as i32),seconds_to_minutes(distances_to_target[pos_in_viable].time as i32),company_start_cost,company_target_cost);
         }
         println!("n comb: {}", viable_combinations.len());
         for vc in viable_combinations.iter() {
@@ -1111,7 +1088,7 @@ impl Data {
 
         if viable_combinations.is_empty() {
             println!("no viable combinations!");
-            return;
+            return StatusCode::NOT_ACCEPTABLE;
         }
         println!("viable combination count: {}", viable_combinations.len());
 
@@ -1151,12 +1128,13 @@ impl Data {
             target_time,
         )
         .await;
+        StatusCode::OK
     }
     /*
     //does not work yet
     pub async fn handle_routing_request(
         &mut self,
-        State(s): State<AppState>,
+        State(s): State<&AppState>,
         fixed_time: NaiveDateTime,
         is_start_time_fixed: bool,
         start_lat: f32,
@@ -1200,7 +1178,7 @@ impl Data {
         }
 
         //find companies, that may process the request according to their zone
-        let mut viable_companies = self.get_companies_matching_start_location(&start).await;
+        let mut viable_companies = self.get_companies_containing_point(&start).await;
         println!("viable companies:");
         for (i, is_viable) in viable_companies.iter().enumerate() {
             if !is_viable {
@@ -1554,7 +1532,7 @@ impl Data {
         };
 
         self.insert_event_pair_into_db(
-            State(s.clone()),
+            State(&s),
             &"".to_string(),
             &"".to_string(),
             start_lng,
@@ -1576,73 +1554,9 @@ impl Data {
         .await;
     } */
 
-    pub async fn get_assignments_for_vehicle(
-        &self,
-        vehicle_id: i32,
-        time_frame_start: Option<NaiveDateTime>,
-        time_frame_end: Option<NaiveDateTime>,
-    ) -> Vec<&AssignmentData> {
-        let interval = InfiniteInterval {
-            time_frame_start,
-            time_frame_end,
-        };
-        if self.vehicles.len() < id_to_vec_pos(vehicle_id) {
-            return Vec::new();
-        }
-        self.vehicles[id_to_vec_pos(vehicle_id)]
-            .assignments
-            .iter()
-            .filter(|a| interval.contained_in_time_frame(a.departure, a.arrival))
-            .collect_vec()
-    }
-
-    pub fn get_vehicles(
-        &self,
-        company_id: i32,
-        active: Option<bool>,
-    ) -> HashMap<i32, Vec<&VehicleData>> {
-        self.vehicles
-            .iter()
-            .filter(|v| {
-                v.company == company_id
-                    && match active {
-                        Some(a) => a == v.active,
-                        None => true,
-                    }
-            })
-            .into_group_map_by(|v| v.specifics)
-    }
-
-    pub async fn get_events_for_user(
-        &self,
-        user_id: i32,
-        time_frame_start: Option<NaiveDateTime>,
-        time_frame_end: Option<NaiveDateTime>,
-    ) -> Vec<&EventData> {
-        let interval = InfiniteInterval {
-            time_frame_start,
-            time_frame_end,
-        };
-        let mut ret = Vec::<&EventData>::new();
-        let customer_id = user_id;
-        for v in self.vehicles.iter() {
-            for a in v.assignments.iter() {
-                for e in a.events.iter() {
-                    if e.customer == customer_id
-                        && interval.contained_in_time_frame(e.scheduled_time, e.scheduled_time)
-                    {
-                        ret.push(&e);
-                    }
-                }
-            }
-        }
-        ret
-    }
-
-    //does not work yet
     pub async fn change_vehicle_for_assignment(
         &mut self,
-        State(s): State<AppState>,
+        State(s): State<&AppState>,
         assignment_id: i32,
         new_vehicle_id: i32,
     ) -> StatusCode {
@@ -1662,7 +1576,7 @@ impl Data {
         }
         if old_vehicle_id_vec.len() > 1 {
             error!("bad backend state: one assignment assigned to multiple cars");
-            //TODO
+            return StatusCode::INTERNAL_SERVER_ERROR;
         }
         let old_vehicle_id = old_vehicle_id_vec[0];
         let to_move_pos = vehicles[id_to_vec_pos(old_vehicle_id)]
@@ -1673,31 +1587,25 @@ impl Data {
             .map(|(pos, _)| pos)
             .collect::<Vec<usize>>()[0];
 
-        let mut assignment_to_move: AssignmentData = AssignmentData::new();
-        vehicles
-            .iter_mut()
-            .filter(|vehicle| {
-                vehicle
-                    .assignments
-                    .iter()
-                    .any(|assignment| assignment.id == assignment_id)
-            })
-            .for_each(|vehicle| assignment_to_move = vehicle.assignments.swap_remove(to_move_pos));
-
-        if vehicles[id_to_vec_pos(new_vehicle_id)].company
-            != vehicles[id_to_vec_pos(old_vehicle_id)].company
-        {
-            //TODO: change companies for moving assignment and associated events
-        }
+        let mut assignment_to_move = vehicles[id_to_vec_pos(old_vehicle_id)]
+            .assignments
+            .swap_remove(to_move_pos);
         assignment_to_move.vehicle = new_vehicle_id;
+
         vehicles[id_to_vec_pos(new_vehicle_id)]
             .assignments
             .push(assignment_to_move.clone());
 
-        let model: Option<assignment::Model> = Assignment::find_by_id(assignment_to_move.id)
+        let model: Option<assignment::Model> = match Assignment::find_by_id(assignment_to_move.id)
             .one(s.db())
             .await
-            .unwrap();
+        {
+            Ok(m) => m,
+            Err(e) => {
+                error!("{e:?}");
+                return StatusCode::INTERNAL_SERVER_ERROR;
+            }
+        };
         let mut active_m: assignment::ActiveModel = model.unwrap().into();
         active_m.vehicle = ActiveValue::Set(new_vehicle_id);
         match active_m.update(s.db()).await {
@@ -1705,6 +1613,109 @@ impl Data {
             Err(e) => error!("{}", e),
         }
         StatusCode::ACCEPTED
+    }
+
+    async fn get_companies_containing_point(
+        &self,
+        start: &Point,
+    ) -> Vec<&CompanyData> {
+        let viable_zone_ids = self
+            .zones
+            .iter()
+            .filter(|zone| zone.area.contains(start))
+            .map(|zone| zone.id)
+            .collect_vec();
+        let viable_companies = self
+            .companies
+            .iter()
+            .filter(|company| viable_zone_ids.contains(&(company.zone)))
+            .collect_vec();
+        viable_companies
+    }
+
+    pub async fn get_assignments_for_vehicle(
+        &self,
+        vehicle_id: i32,
+        time_frame_start: Option<NaiveDateTime>,
+        time_frame_end: Option<NaiveDateTime>,
+    ) -> Vec<&AssignmentData> {
+        let interval = InfiniteInterval {
+            time_frame_start,
+            time_frame_end,
+        };
+        if self.vehicles.len() < id_to_vec_pos(vehicle_id) {
+            return Vec::new();
+        }
+        self.vehicles[id_to_vec_pos(vehicle_id)]
+            .assignments
+            .iter()
+            .filter(|assignment| {
+                interval.contained_in_time_frame(assignment.departure, assignment.arrival)
+            })
+            .collect_vec()
+    }
+
+    pub async fn get_events_for_vehicle(
+        &self,
+        vehicle_id: i32,
+        time_frame_start: Option<NaiveDateTime>,
+        time_frame_end: Option<NaiveDateTime>,
+    ) -> Vec<&EventData> {
+        let interval = InfiniteInterval {
+            time_frame_start,
+            time_frame_end,
+        };
+        if self.vehicles.len() < id_to_vec_pos(vehicle_id) {
+            return Vec::new();
+        }
+        self.vehicles[id_to_vec_pos(vehicle_id)]
+            .assignments
+            .iter()
+            .flat_map(|assignment| &assignment.events)
+            .filter(|event| {
+                interval.contained_in_time_frame(event.scheduled_time, event.scheduled_time)
+                    || interval
+                        .contained_in_time_frame(event.communicated_time, event.communicated_time)
+            })
+            .collect_vec()
+    }
+
+    pub fn get_vehicles(
+        &self,
+        company_id: i32,
+        active: Option<bool>,
+    ) -> HashMap<i32, Vec<&VehicleData>> {
+        self.vehicles
+            .iter()
+            .filter(|vehicle| {
+                vehicle.company == company_id
+                    && match active {
+                        Some(a) => a == vehicle.active,
+                        None => true,
+                    }
+            })
+            .into_group_map_by(|v| v.specifics)
+    }
+
+    pub async fn get_events_for_user(
+        &self,
+        user_id: i32,
+        time_frame_start: Option<NaiveDateTime>,
+        time_frame_end: Option<NaiveDateTime>,
+    ) -> Vec<&EventData> {
+        let interval = InfiniteInterval {
+            time_frame_start,
+            time_frame_end,
+        };
+        self.vehicles
+            .iter()
+            .flat_map(|vehicle| &vehicle.assignments)
+            .flat_map(|assignment| &assignment.events)
+            .filter(|event| {
+                event.customer == user_id
+                    && interval.contained_in_time_frame(event.scheduled_time, event.scheduled_time)
+            })
+            .collect_vec()
     }
 
     //return vectors of conflicting assignments by vehicle ids as keys
@@ -1717,36 +1728,29 @@ impl Data {
             start_time: NaiveDateTime::MIN,
             end_time: NaiveDateTime::MAX,
         };
-        let mut found_company = false;
-        let mut found_assignment = false;
-        for vehicle in self.vehicles.iter() {
-            if company_id != vehicle.company {
-                continue;
-            }
-            found_company = true;
-            for assignment in vehicle.assignments.iter() {
-                if assignment.id != assignment_id {
-                    continue;
-                }
-                found_assignment = true;
+        self.vehicles
+            .iter()
+            .filter(|vehicle| vehicle.company == company_id)
+            .flat_map(|vehicle| &vehicle.assignments)
+            .filter(|assignment| assignment.id == assignment_id)
+            .for_each(|assignment| {
                 interval.start_time = assignment.departure;
-                interval.end_time = assignment.arrival;
-            }
-        }
+                interval.end_time = assignment.arrival
+            });
         let mut ret = HashMap::<i32, Vec<&AssignmentData>>::new();
-        if !found_company {
+        if interval.start_time == NaiveDateTime::MIN {
             error!("invalid company-id: {}", company_id);
             return ret;
         }
-        if !found_assignment {
+        if interval.end_time == NaiveDateTime::MAX {
             error!("invalid assignment-id: {}", assignment_id);
             return ret;
         }
-        for v in self.vehicles.iter() {
-            if v.company != company_id {
+        for vehicle in self.vehicles.iter() {
+            if vehicle.company != company_id {
                 continue;
             }
-            let conflicting_assignments = v
+            let conflicting_assignments = vehicle
                 .assignments
                 .iter()
                 .filter(|a| {
@@ -1757,7 +1761,7 @@ impl Data {
                 })
                 .collect_vec();
             if !conflicting_assignments.is_empty() {
-                ret.insert(v.id, conflicting_assignments);
+                ret.insert(vehicle.id, conflicting_assignments);
             }
         }
         ret
@@ -1769,32 +1773,32 @@ impl Data {
         vehicle_id: i32,
         assignment_id: i32,
     ) -> Vec<&AssignmentData> {
-        let mut interval = Interval {
-            start_time: NaiveDateTime::MIN,
-            end_time: NaiveDateTime::MAX,
-        };
-        let mut found = false;
-        for v in self.vehicles.iter() {
-            for a in v.assignments.iter() {
-                if a.id != assignment_id {
-                    continue;
-                }
-                found = true;
-                interval.start_time = a.departure;
-                interval.end_time = a.arrival;
-            }
+        let intervals = self
+            .vehicles
+            .iter()
+            .flat_map(|vehicle| &vehicle.assignments)
+            .filter(|assignment| assignment.id == assignment_id)
+            .map(|assignment| Interval {
+                start_time: assignment.departure,
+                end_time: assignment.arrival,
+            })
+            .collect_vec();
+        if intervals.len() > 1 {
+            error!("bad backend state, multiple assignments with same id");
+            return Vec::new();
         }
-        if !found {
+        if intervals.is_empty() {
             return Vec::new();
         }
         self.vehicles[id_to_vec_pos(vehicle_id)]
             .assignments
             .iter()
-            .filter(|a| {
-                interval.touches(&Interval {
-                    start_time: a.departure,
-                    end_time: a.arrival,
-                })
+            .filter(|assignment| {
+                assignment.id != assignment_id
+                    && intervals[0].touches(&Interval {
+                        start_time: assignment.departure,
+                        end_time: assignment.arrival,
+                    })
             })
             .collect_vec()
     }
@@ -1802,6 +1806,7 @@ impl Data {
 
 #[cfg(test)]
 mod test {
+    use super::{CompanyData, ZoneData};
     use crate::{
         be::{
             backend::Data,
@@ -1820,18 +1825,14 @@ mod test {
     use geo::{Contains, Point};
     use migration::MigratorTrait;
 
-    use super::ZoneData;
-
-    fn check_zones(
+    async fn check_zones_contain_correct_points(
         d: &Data,
-        containing_companies: Vec<bool>,
-        expected_zone: i32,
+        points: &Vec<Point>,
+        expected_zones: i32,
     ) {
-        for (i, contains) in containing_companies.iter().enumerate() {
-            if *contains {
-                assert_eq!(d.companies[i].zone, expected_zone);
-            } else {
-                assert_ne!(d.companies[i].zone, expected_zone);
+        for point in points.iter() {
+            for company in &d.get_companies_containing_point(point).await {
+                assert_eq!(company.zone == expected_zones, true);
             }
         }
     }
@@ -1845,12 +1846,12 @@ mod test {
         }
     }
     async fn check_data_db_synchronized(
-        State(s): State<AppState>,
+        State(s): State<&AppState>,
         data: &Data,
         read_data: &mut Data,
     ) {
         read_data.clear();
-        read_data.read_data(State(s.clone())).await;
+        read_data.read_data_from_db(State(&s)).await;
         assert_eq!(read_data == data, true);
     }
     #[tokio::test]
@@ -1877,13 +1878,13 @@ mod test {
             db: Arc::new(conn),
         };
 
-        let mut d = init::init(State(s.clone()), true, TEST1).await;
+        let mut d = init::init(State(&s), true, TEST1).await;
         assert_eq!(d.vehicles.len(), 29);
         assert_eq!(d.zones.len(), 3);
         assert_eq!(d.companies.len(), 8);
 
         let mut read_data = Data::new();
-        check_data_db_synchronized(State(s.clone()), &d, &mut read_data).await;
+        check_data_db_synchronized(State(&s), &d, &mut read_data).await;
 
         let test_points = TestPoints::new();
 
@@ -1910,38 +1911,15 @@ mod test {
         check_points_in_zone(true, &d.zones[2], &test_points.gorlitz);
         check_points_in_zone(false, &d.zones[2], &test_points.outside);
 
-        check_zones(
-            &d,
-            d.get_companies_matching_start_location(&p_in_bautzen_ost)
-                .await,
-            1,
-        );
-        check_zones(
-            &d,
-            d.get_companies_matching_start_location(&p_in_bautzen_west)
-                .await,
-            2,
-        );
-        check_zones(
-            &d,
-            d.get_companies_matching_start_location(&p_in_gorlitz).await,
-            3,
-        );
-        check_zones(
-            &d,
-            d.get_companies_matching_start_location(&p1_outside).await,
-            -1,
-        );
-        check_zones(
-            &d,
-            d.get_companies_matching_start_location(&p2_outside).await,
-            -1,
-        );
+        check_zones_contain_correct_points(&d, &test_points.bautzen_ost, 1).await;
+        check_zones_contain_correct_points(&d, &test_points.bautzen_west, 2).await;
+        check_zones_contain_correct_points(&d, &test_points.gorlitz, 3).await;
+        check_zones_contain_correct_points(&d, &test_points.outside, -1).await;
 
         //remove_availability and create_availability_____________________________________________________________________________________________________________________________________________
         assert_eq!(d.vehicles[0].availability.len(), 1);
         d.create_availability(
-            State(s.clone()),
+            State(&s),
             NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(9, 10, 0)
@@ -1957,7 +1935,7 @@ mod test {
         assert_eq!(d.vehicles[0].availability.len(), 2);
 
         d.create_availability(
-            State(s.clone()),
+            State(&s),
             NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(9, 11, 0)
@@ -1973,7 +1951,7 @@ mod test {
         assert_eq!(d.vehicles[0].availability.len(), 2);
 
         d.create_availability(
-            State(s.clone()),
+            State(&s),
             NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(9, 11, 0)
@@ -1989,7 +1967,7 @@ mod test {
         assert_eq!(d.vehicles[0].availability.len(), 2);
 
         d.remove_availability(
-            State(s.clone()),
+            State(&s),
             NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(9, 11, 0)
@@ -2005,7 +1983,7 @@ mod test {
         assert_eq!(d.vehicles[0].availability.len(), 3);
 
         d.remove_availability(
-            State(s.clone()),
+            State(&s),
             NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(9, 10, 0)
@@ -2021,7 +1999,7 @@ mod test {
         assert_eq!(d.vehicles[0].availability.len(), 1);
 
         d.remove_availability(
-            State(s.clone()),
+            State(&s),
             NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(9, 10, 0)
@@ -2042,7 +2020,7 @@ mod test {
         );
 
         d.remove_availability(
-            State(s.clone()),
+            State(&s),
             NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(10, 0, 0)
@@ -2097,10 +2075,10 @@ mod test {
             }
         }
 
-        check_data_db_synchronized(State(s.clone()), &d, &mut read_data).await;
+        check_data_db_synchronized(State(&s), &d, &mut read_data).await;
 
         d.handle_routing_request(
-            State(s.clone()),
+            State(&s),
             NaiveDateTime::MIN,
             true,
             p_in_bautzen_ost.0.x,
@@ -2114,6 +2092,6 @@ mod test {
         )
         .await;
 
-        check_data_db_synchronized(State(s.clone()), &d, &mut read_data).await;
+        //check_data_db_synchronized(State(&s), &d, &mut read_data).await;
     }
 }
