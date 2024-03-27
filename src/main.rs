@@ -1,3 +1,4 @@
+use crate::{entities::prelude::User, init::StopFor::TEST1};
 use axum::{
     extract::State,
     routing::{get, post},
@@ -32,7 +33,7 @@ use model::m_user::{
 
 use model::m_test::test;
 
-mod be;
+mod backend;
 mod constants;
 mod entities;
 mod init;
@@ -105,7 +106,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         db: Arc::new(conn),
     };
 
-    init::init(State(s.clone()), false).await;
+    init::init(State(&s), true, TEST1).await;
 
     let app = Router::new();
     let app = app.layer(livereload);

@@ -5,53 +5,61 @@ pub struct Migration;
 
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
-    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+    async fn up(
+        &self,
+        manager: &SchemaManager,
+    ) -> Result<(), DbErr> {
         manager
-        .create_table(
-            Table::create()
-                .table(Company::Table)
-                .if_not_exists()
-                .col(
-                    ColumnDef::new(Company::Id)
-                        .integer()
-                        .not_null()
-                        .auto_increment()
-                        .primary_key(),
-                )
-                .col(ColumnDef::new(Company::Name).string().not_null().unique_key())
-                .col(ColumnDef::new(Company::Longitude).float().not_null())
-                .col(ColumnDef::new(Company::Latitude).float().not_null())
-                .col(ColumnDef::new(Company::Zone).integer().not_null())
-                .to_owned(),
-        )
-        .await?;
-    
+            .create_table(
+                Table::create()
+                    .table(Company::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(Company::Id)
+                            .integer()
+                            .not_null()
+                            .auto_increment()
+                            .primary_key(),
+                    )
+                    .col(
+                        ColumnDef::new(Company::Name)
+                            .string()
+                            .not_null()
+                            .unique_key(),
+                    )
+                    .col(ColumnDef::new(Company::Longitude).float().not_null())
+                    .col(ColumnDef::new(Company::Latitude).float().not_null())
+                    .col(ColumnDef::new(Company::Zone).integer().not_null())
+                    .to_owned(),
+            )
+            .await?;
+
         manager
-        .create_table(
-            Table::create()
-                .table(Capacity::Table)
-                .if_not_exists()
-                .col(
-                    ColumnDef::new(Capacity::Id)
-                        .integer()
-                        .not_null()
-                        .auto_increment()
-                        .primary_key(),
-                )
-                .col(ColumnDef::new(Capacity::Company).integer().not_null())
-                .col(ColumnDef::new(Capacity::StartTime).date_time().not_null())
-                .col(ColumnDef::new(Capacity::EndTime).date_time().not_null())
-                .col(ColumnDef::new(Capacity::Amount).integer().not_null())
-                .foreign_key(
-                    ForeignKey::create()
-                        .name("fk-capacity-company_id")
-                        .from(Capacity::Table, Capacity::Company)
-                        .to(Company::Table, Company::Id),
-                )
-                .to_owned(),
-        )
-        .await?;
-    
+            .create_table(
+                Table::create()
+                    .table(Capacity::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(Capacity::Id)
+                            .integer()
+                            .not_null()
+                            .auto_increment()
+                            .primary_key(),
+                    )
+                    .col(ColumnDef::new(Capacity::Company).integer().not_null())
+                    .col(ColumnDef::new(Capacity::StartTime).date_time().not_null())
+                    .col(ColumnDef::new(Capacity::EndTime).date_time().not_null())
+                    .col(ColumnDef::new(Capacity::Amount).integer().not_null())
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk-capacity-company_id")
+                            .from(Capacity::Table, Capacity::Company)
+                            .to(Company::Table, Company::Id),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
         manager
             .alter_table(
                 Table::alter()
@@ -59,7 +67,7 @@ impl MigrationTrait for Migration {
                     .add_column(ColumnDef::new(Zone::Name).string().not_null().unique_key())
                     .to_owned(),
             )
-        .await?;
+            .await?;
 
         manager
             .alter_table(
@@ -71,15 +79,18 @@ impl MigrationTrait for Migration {
                     .add_column(ColumnDef::new(Event::Passengers).integer().not_null())
                     .add_column(ColumnDef::new(Event::Wheelchairs).integer().not_null())
                     .add_column(ColumnDef::new(Event::IsPickup).boolean().not_null())
-                    .add_column(ColumnDef::new(Event::ConnectsPublicTransport).boolean().not_null())
+                    .add_column(
+                        ColumnDef::new(Event::ConnectsPublicTransport)
+                            .boolean()
+                            .not_null(),
+                    )
                     .add_column(ColumnDef::new(Event::Luggage).integer().not_null())
                     .drop_column(Event::Driver)
                     .drop_column(Event::Type)
                     .modify_column(ColumnDef::new(Event::Vehicle).null())
                     .to_owned(),
             )
-        .await?;
-
+            .await?;
 
         manager
             .alter_table(
@@ -87,40 +98,42 @@ impl MigrationTrait for Migration {
                     .table(Vehicle::Table)
                     .drop_column(Vehicle::Wheelchair)
                     .add_column(ColumnDef::new(Vehicle::Wheelchairs).integer().not_null())
-                    .add_column(ColumnDef::new(Vehicle::LicensePlate).string().not_null().unique_key())
+                    .add_column(
+                        ColumnDef::new(Vehicle::LicensePlate)
+                            .string()
+                            .not_null()
+                            .unique_key(),
+                    )
                     .add_column(ColumnDef::new(Vehicle::Company).integer().not_null())
                     .add_column(ColumnDef::new(Vehicle::StorageSpace).integer().not_null())
                     .to_owned(),
             )
-        .await?;
- 
+            .await?;
 
         let foreign_key_next = TableForeignKey::new()
-        .name("fk-vehicle-company_id")
-        .from_tbl(Vehicle::Table)
-        .from_col(Vehicle::Company)
-        .to_tbl(Company::Table)
-        .to_col(Company::Id)
-        .to_owned();
+            .name("fk-vehicle-company_id")
+            .from_tbl(Vehicle::Table)
+            .from_col(Vehicle::Company)
+            .to_tbl(Company::Table)
+            .to_col(Company::Id)
+            .to_owned();
 
         manager
-        .alter_table(
-            Table::alter()
-                .table(Vehicle::Table)
-                .add_foreign_key(&foreign_key_next)
-                .to_owned(),
-        )
-        .await?;
-
+            .alter_table(
+                Table::alter()
+                    .table(Vehicle::Table)
+                    .add_foreign_key(&foreign_key_next)
+                    .to_owned(),
+            )
+            .await?;
 
         let foreign_key_zone = TableForeignKey::new()
-        .name("fk-company-zone_id")
-        .from_tbl(Company::Table)
-        .from_col(Company::Zone)
-        .to_tbl(Zone::Table)
-        .to_col(Zone::Id)
-        .to_owned();
-
+            .name("fk-company-zone_id")
+            .from_tbl(Company::Table)
+            .from_col(Company::Zone)
+            .to_tbl(Zone::Table)
+            .to_col(Zone::Id)
+            .to_owned();
 
         manager
             .alter_table(
@@ -132,12 +145,12 @@ impl MigrationTrait for Migration {
             .await?;
 
         let foreign_key_company = TableForeignKey::new()
-        .name("fk-event-company_id")
-        .from_tbl(Event::Table)
-        .from_col(Event::Company)
-        .to_tbl(Company::Table)
-        .to_col(Company::Id)
-        .to_owned();
+            .name("fk-event-company_id")
+            .from_tbl(Event::Table)
+            .from_col(Event::Company)
+            .to_tbl(Company::Table)
+            .to_col(Company::Id)
+            .to_owned();
 
         manager
             .alter_table(
@@ -150,41 +163,59 @@ impl MigrationTrait for Migration {
         Ok(())
     }
 
-    
-    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+    async fn down(
+        &self,
+        manager: &SchemaManager,
+    ) -> Result<(), DbErr> {
         manager
             .drop_table(Table::drop().table(Company::Table).to_owned())
-        .await?;
+            .await?;
         manager
             .drop_table(Table::drop().table(Capacity::Table).to_owned())
-        .await?;
-
+            .await?;
 
         manager
             .alter_table(
                 Table::alter()
-                .table(Zone::Table)
-                .drop_column(Zone::Name)
-                .to_owned()
+                    .table(Zone::Table)
+                    .drop_column(Zone::Name)
+                    .to_owned(),
             )
             .await?;
 
         manager
             .alter_table(
                 Table::alter()
-                .table(Event::Table)
-                .drop_column(Event::ChainId)
-                .drop_column(Event::RequestId)
-                .drop_column(Event::Company)
-                .drop_column(Event::Passengers)
-                .drop_column(Event::Wheelchairs)
-                .drop_column(Event::IsPickup)
-                .drop_column(Event::ConnectsPublicTransport)
-                .drop_column(Event::Luggage)
-                .add_column(ColumnDef::new(Event::Type).integer().not_null())
-                .add_column(ColumnDef::new(Event::Driver).integer().not_null())
-                .modify_column(ColumnDef::new(Event::Vehicle).not_null())
-                .to_owned()
+                    .table(Event::Table)
+                    .drop_column(Event::ChainId)
+                    .drop_column(Event::RequestId)
+                    .drop_column(Event::Company)
+                    .drop_column(Event::Passengers)
+                    .drop_column(Event::Wheelchairs)
+                    .drop_column(Event::IsPickup)
+                    .drop_column(Event::ConnectsPublicTransport)
+                    .drop_column(Event::Luggage)
+                    .add_column(ColumnDef::new(Event::Type).integer().not_null())
+                    .add_column(ColumnDef::new(Event::Driver).integer().not_null())
+                    .modify_column(ColumnDef::new(Event::Vehicle).not_null())
+                    .to_owned(),
+            )
+            .await?;
+
+        let foreign_key_event_driver = TableForeignKey::new()
+            .name("fk-event-driver")
+            .from_tbl(Event::Table)
+            .from_col(Event::Driver)
+            .to_tbl(User::Table)
+            .to_col(User::Id)
+            .to_owned();
+
+        manager
+            .alter_table(
+                Table::alter()
+                    .table(Event::Table)
+                    .add_foreign_key(&foreign_key_event_driver)
+                    .to_owned(),
             )
             .await?;
 
@@ -197,15 +228,8 @@ impl MigrationTrait for Migration {
                     .drop_column(Vehicle::Wheelchairs)
                     .drop_column(Vehicle::StorageSpace)
                     .add_column(ColumnDef::new(Vehicle::Wheelchair).boolean().not_null())
-                    .add_column(
-                        ColumnDef::new(Vehicle::Id)
-                            .integer()
-                            .not_null()
-                            .auto_increment()
-                            .primary_key(),
-                    )
-                    .to_owned()
-                )
+                    .to_owned(),
+            )
             .await?;
         Ok(())
     }
@@ -242,6 +266,12 @@ enum Zone {
     Table,
     Id,
     Name,
+}
+
+#[derive(DeriveIden)]
+enum User {
+    Table,
+    Id,
 }
 
 #[derive(DeriveIden)]

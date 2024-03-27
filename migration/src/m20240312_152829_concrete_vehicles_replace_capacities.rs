@@ -86,6 +86,15 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             )
             .await?;
+
+        manager
+            .alter_table(
+                Table::alter()
+                    .table(Assignment::Table)
+                    .modify_column(ColumnDef::new(Assignment::Vehicle).null())
+                    .to_owned(),
+            )
+            .await?;
         Ok(())
     }
 }

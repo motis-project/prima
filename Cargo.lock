@@ -2513,6 +2513,7 @@ dependencies = [
  "itertools 0.12.1",
  "migration",
  "notify",
+ "readonly",
  "reqwest",
  "sea-orm",
  "sea-orm-cli",
@@ -2631,6 +2632,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom",
+]
+
+[[package]]
+name = "readonly"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb656d27c22b5c47154452686cae5e096f12e124daacb36a0bfcb32dbebb39e3"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.48",
 ]
 
 [[package]]
@@ -2995,9 +3007,9 @@ dependencies = [
 
 [[package]]
 name = "sea-orm-cli"
-version = "0.12.14"
+version = "0.12.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "465ea2308d4716837e9af4a2cff8e14c28135867a580bb93e9e03d408a3a6afb"
+checksum = "620bc560062ae251b1366bde43b3f1508445cab5c2c8cbdb397034638ab1b357"
 dependencies = [
  "async-std",
  "chrono",
@@ -3015,9 +3027,9 @@ dependencies = [
 
 [[package]]
 name = "sea-orm-codegen"
-version = "0.12.14"
+version = "0.12.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "515fb555cbbe586cd2c251a39fbc6d0e52a84b353dd63c4320205553b865ac81"
+checksum = "6edc65d76c9a0d693611b8dafac12802406a426410f95beb63ae1ce69354a703"
 dependencies = [
  "heck",
  "proc-macro2",

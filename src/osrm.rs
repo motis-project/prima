@@ -2,8 +2,12 @@ use anyhow::{anyhow, Result};
 use serde::Serialize;
 use serde_json::Value;
 use tera::Tera;
+pub enum Dir {
+    Forward,
+    Backward,
+}
 
-const REQUEST_TEMPLATE: &str = r#"{
+const FORWARD_REQUEST_TEMPLATE: &str = r#"{
     "destination":{
         "type":"Module",
         "target":"/osrm/one_to_many"
@@ -19,6 +23,22 @@ const REQUEST_TEMPLATE: &str = r#"{
         "many": {{ many }}
     }
 }"#;
+const BACKWARD_REQUEST_TEMPLATE: &str = r#"{
+    "destination":{
+        "type":"Module",
+        "target":"/osrm/one_to_many"
+    },
+    "content_type":"OSRMOneToManyRequest",
+    "content":{
+        "profile":"car",
+        "direction":"Backward",
+        "one":{
+            "lat":{{ one.lat }},
+            "lng":{{ one.lng }}
+        },
+        "many": {{ many }}
+    }
+}"#;
 
 #[derive(Serialize)]
 pub struct Coordinate {
@@ -26,7 +46,7 @@ pub struct Coordinate {
     pub lng: f64,
 }
 
-#[derive(Debug,Copy,Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct DistTime {
     pub dist: f64,
     pub time: f64,
@@ -40,7 +60,8 @@ pub struct OSRM {
 impl OSRM {
     pub fn new() -> Self {
         let mut tera = Tera::default();
-        tera.add_raw_template("x", &REQUEST_TEMPLATE).unwrap();
+        tera.add_raw_template("x", &FORWARD_REQUEST_TEMPLATE)
+            .unwrap();
         let client = reqwest::Client::new();
         Self { tera, client }
     }
@@ -49,6 +70,7 @@ impl OSRM {
         &self,
         one: Coordinate,
         many: Vec<Coordinate>,
+        direction: Dir,
     ) -> Result<Vec<DistTime>> {
         let mut ctx = tera::Context::new();
         ctx.try_insert("one", &one)?;
@@ -84,7 +106,11 @@ impl OSRM {
 
 #[cfg(test)]
 mod test {
-    use crate::osrm::{Coordinate, OSRM};
+    use crate::osrm::{
+        Coordinate,
+        Dir::{Backward, Forward},
+        OSRM,
+    };
     use anyhow::Result;
 
     #[tokio::test]
@@ -106,6 +132,7 @@ mod test {
                         lng: 8.6743927,
                     },
                 ],
+                Forward,
             )
             .await?;
         println!("result: {result:?}");

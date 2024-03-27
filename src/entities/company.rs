@@ -18,10 +18,6 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::assignment::Entity")]
-    Assignment,
-    #[sea_orm(has_many = "super::event::Entity")]
-    Event,
     #[sea_orm(has_many = "super::vehicle::Entity")]
     Vehicle,
     #[sea_orm(
@@ -32,18 +28,6 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     Zone,
-}
-
-impl Related<super::assignment::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Assignment.def()
-    }
-}
-
-impl Related<super::event::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Event.def()
-    }
 }
 
 impl Related<super::vehicle::Entity> for Entity {

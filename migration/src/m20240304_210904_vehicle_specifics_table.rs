@@ -5,7 +5,10 @@ pub struct Migration;
 
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
-    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+    async fn up(
+        &self,
+        manager: &SchemaManager,
+    ) -> Result<(), DbErr> {
         manager
             .create_table(
                 Table::create()
@@ -19,8 +22,16 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(VehicleSpecifics::Seats).integer().not_null())
-                    .col(ColumnDef::new(VehicleSpecifics::Wheelchairs).integer().not_null())
-                    .col(ColumnDef::new(VehicleSpecifics::StorageSpace).integer().not_null())
+                    .col(
+                        ColumnDef::new(VehicleSpecifics::Wheelchairs)
+                            .integer()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(VehicleSpecifics::StorageSpace)
+                            .integer()
+                            .not_null(),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -33,10 +44,10 @@ impl MigrationTrait for Migration {
                     .drop_column(Vehicle::Wheelchairs)
                     .drop_column(Vehicle::StorageSpace)
                     .add_column(ColumnDef::new(Vehicle::Specifics).integer().not_null())
-                    .to_owned()
+                    .to_owned(),
             )
             .await?;
-        
+
         let foreign_key_specifics = TableForeignKey::new()
             .name("fk-vehicle-specifics")
             .from_tbl(Vehicle::Table)
@@ -58,11 +69,15 @@ impl MigrationTrait for Migration {
             .alter_table(
                 Table::alter()
                     .table(Capacity::Table)
-                    .add_column(ColumnDef::new(Capacity::VehicleSpecifics).integer().not_null())
-                    .to_owned()
+                    .add_column(
+                        ColumnDef::new(Capacity::VehicleSpecifics)
+                            .integer()
+                            .not_null(),
+                    )
+                    .to_owned(),
             )
             .await?;
-        
+
         let foreign_key_vehicle_specifics = TableForeignKey::new()
             .name("fk-capacity-vehicle_specifics")
             .from_tbl(Capacity::Table)
@@ -70,7 +85,7 @@ impl MigrationTrait for Migration {
             .to_tbl(VehicleSpecifics::Table)
             .to_col(VehicleSpecifics::Id)
             .to_owned();
-    
+
         manager
             .alter_table(
                 Table::alter()
@@ -83,12 +98,15 @@ impl MigrationTrait for Migration {
         Ok(())
     }
 
-    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+    async fn down(
+        &self,
+        manager: &SchemaManager,
+    ) -> Result<(), DbErr> {
         manager
             .drop_table(Table::drop().table(VehicleSpecifics::Table).to_owned())
             .await?;
-        
-            manager
+
+        manager
             .alter_table(
                 Table::alter()
                     .table(Vehicle::Table)
@@ -96,7 +114,16 @@ impl MigrationTrait for Migration {
                     .add_column(ColumnDef::new(Vehicle::Wheelchairs).integer().not_null())
                     .add_column(ColumnDef::new(Vehicle::StorageSpace).integer().not_null())
                     .drop_column(Vehicle::Specifics)
-                    .to_owned()
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .alter_table(
+                Table::alter()
+                    .table(Capacity::Table)
+                    .drop_column(Capacity::VehicleSpecifics)
+                    .to_owned(),
             )
             .await?;
 
@@ -116,7 +143,6 @@ enum VehicleSpecifics {
 #[derive(DeriveIden)]
 enum Vehicle {
     Table,
-    Id,
     Seats,
     Wheelchairs,
     StorageSpace,

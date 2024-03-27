@@ -16,7 +16,6 @@ pub struct Model {
     pub customer: i32,
     pub chain_id: i32,
     pub request_id: i32,
-    pub company: i32,
     pub is_pickup: bool,
     pub connects_public_transport: bool,
     pub address: String,
@@ -33,14 +32,6 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     Assignment,
-    #[sea_orm(
-        belongs_to = "super::company::Entity",
-        from = "Column::Company",
-        to = "super::company::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
-    Company,
     #[sea_orm(
         belongs_to = "super::user::Entity",
         from = "Column::Customer",
@@ -62,12 +53,6 @@ pub enum Relation {
 impl Related<super::assignment::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Assignment.def()
-    }
-}
-
-impl Related<super::company::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Company.def()
     }
 }
 

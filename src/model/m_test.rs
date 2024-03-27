@@ -1,7 +1,5 @@
 use crate::{
-    be::backend::{
-        CreateCompany, CreateVehicle, CreateVehicleAvailability, CreateZone, Data, UserData,
-    },
+    backend::data::Data,
     constants::{
         bautzen_split_ost::BAUTZEN_OST, bautzen_split_west::BAUTZEN_WEST, gorlitz::GORLITZ,
     },
@@ -29,12 +27,12 @@ pub async fn test() {
         db: Arc::new(conn),
     };
     let mut data = Data::new();
-    data.create_vehicle(
-        State(s.clone()),
+    /* data.create_vehicle(
+        State(&s),
         axum::Json(CreateVehicle {
             license_plate: "TUG3-6".to_string(),
             company: 1,
         }),
     )
-    .await;
+    .await; */
 }

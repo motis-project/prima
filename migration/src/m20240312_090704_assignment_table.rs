@@ -50,7 +50,6 @@ impl MigrationTrait for Migration {
                     .drop_column(Event::Wheelchairs)
                     .drop_column(Event::Passengers)
                     .drop_column(Event::Luggage)
-                    //.rename_column(Event::ChainId, Event::Assignment)
                     .to_owned(),
             )
             .await?;
@@ -130,7 +129,29 @@ impl MigrationTrait for Migration {
                 Table::alter()
                     .table(Event::Table)
                     .modify_column(ColumnDef::new(Event::ChainId).null())
-                    //.rename_column(Event::Assignment, Event::ChainId)
+                    .drop_column(Event::ChainId)
+                    .drop_column(Event::RequiredVehicleSpecifics)
+                    .add_column(ColumnDef::new(Event::Vehicle).integer().not_null())
+                    .add_column(ColumnDef::new(Event::Wheelchairs).integer().not_null())
+                    .add_column(ColumnDef::new(Event::Passengers).integer().not_null())
+                    .add_column(ColumnDef::new(Event::Luggage).integer().not_null())
+                    .to_owned(),
+            )
+            .await?;
+
+        let foreign_key_event_vehicle = TableForeignKey::new()
+            .name("fk-event-specs")
+            .from_tbl(Event::Table)
+            .from_col(Event::Vehicle)
+            .to_tbl(Vehicle::Table)
+            .to_col(Vehicle::Id)
+            .to_owned();
+
+        manager
+            .alter_table(
+                Table::alter()
+                    .table(Event::Table)
+                    .add_foreign_key(&foreign_key_event_vehicle)
                     .to_owned(),
             )
             .await?;
@@ -171,7 +192,6 @@ enum Event {
     Table,
     ChainId,
     Vehicle,
-    Company,
     Wheelchairs,
     Passengers,
     Luggage,

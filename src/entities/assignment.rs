@@ -9,20 +9,11 @@ pub struct Model {
     pub id: i32,
     pub departure: DateTime,
     pub arrival: DateTime,
-    pub company: i32,
     pub vehicle: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::company::Entity",
-        from = "Column::Company",
-        to = "super::company::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
-    Company,
     #[sea_orm(has_many = "super::event::Entity")]
     Event,
     #[sea_orm(
@@ -33,12 +24,6 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     Vehicle,
-}
-
-impl Related<super::company::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Company.def()
-    }
 }
 
 impl Related<super::event::Entity> for Entity {
