@@ -1,4 +1,4 @@
-pub const AIR_DIST_SPEED: i64 = 60;
+pub const BEELINE_KMH: f64 = 60.0;
 pub const MINUTE_WAITING_PRICE: i32 = 20;
 pub const MINUTE_PRICE: i32 = 30;
 pub const KM_PRICE: i32 = 50;

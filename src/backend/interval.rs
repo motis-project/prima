@@ -18,6 +18,21 @@ impl fmt::Display for Interval {
 }
 
 impl Interval {
+    pub fn is_valid(&self) -> bool {
+        let min_year = NaiveDate::from_ymd_opt(2024, 1, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        let max_year = NaiveDate::from_ymd_opt(100000, 1, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        if self.start_time > self.end_time || self.start_time < min_year || self.end_time > max_year
+        {
+            return false;
+        }
+        true
+    }
     pub fn touches_day(
         &self,
         day: NaiveDate,
