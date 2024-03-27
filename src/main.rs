@@ -7,12 +7,11 @@ use axum::{
     Router,
 };
 use dotenv::dotenv;
-use entities::user;
 use itertools::Itertools;
 use log::setup_logging;
 use migration::{Migrator, MigratorTrait};
 use notify::Watcher;
-use sea_orm::{ActiveValue, Database, DbConn, EntityTrait};
+use sea_orm::{Database, DbConn, EntityTrait};
 use serde_json::json;
 use std::{
     env,
@@ -22,9 +21,12 @@ use std::{
 use tera::{Context, Tera};
 use tower_http::{compression::CompressionLayer, services::ServeFile};
 use tower_livereload::LiveReloadLayer;
-use tracing::{error, info};
+use tracing::error;
 
+mod backend;
+mod constants;
 mod entities;
+mod init;
 mod log;
 mod osrm;
 
@@ -67,25 +69,6 @@ async fn register(
 }
 
 async fn users(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
-    let result = User::insert(user::ActiveModel {
-        name: ActiveValue::Set("Test".to_string()),
-        id: ActiveValue::NotSet,
-        is_driver: ActiveValue::Set(true),
-        is_admin: ActiveValue::Set(true),
-        email: ActiveValue::Set("".to_string()),
-        password: ActiveValue::Set(Some("".to_string())),
-        salt: ActiveValue::Set("".to_string()),
-        o_auth_id: ActiveValue::Set(Some("".to_string())),
-        o_auth_provider: ActiveValue::Set(Some("".to_string())),
-    })
-    .exec(s.db())
-    .await;
-
-    match result {
-        Ok(_) => info!("User added"),
-        Err(e) => error!("Error adding user: {e:?}"),
-    }
-
     let username = User::find_by_id(1)
         .one(s.db())
         .await
@@ -154,6 +137,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tera: tera,
         db: Arc::new(conn),
     };
+
+    init::init(State(&s), true).await;
 
     let app = Router::new();
     let app = app.route("/calendar", get(calendar).with_state(s.clone()));
