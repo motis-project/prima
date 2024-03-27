@@ -1,5 +1,5 @@
 use crate::{
-    backend::interval::{InfiniteInterval, Interval},
+    backend::interval::Interval,
     constants::constants::{BEELINE_KMH, KM_PRICE, MINUTE_PRICE},
     entities::{
         assignment::{self},
@@ -1415,12 +1415,12 @@ impl Data {
     pub async fn get_assignments_for_vehicle(
         &self,
         vehicle_id: i32,
-        time_frame_start: Option<NaiveDateTime>,
-        time_frame_end: Option<NaiveDateTime>,
+        time_frame_start: NaiveDateTime,
+        time_frame_end: NaiveDateTime,
     ) -> Vec<&AssignmentData> {
-        let interval = InfiniteInterval {
-            time_frame_start,
-            time_frame_end,
+        let interval = Interval {
+            start_time: time_frame_start,
+            end_time: time_frame_end,
         };
         if self.vehicles.len() < id_to_vec_pos(vehicle_id) {
             return Vec::new();
@@ -1430,7 +1430,10 @@ impl Data {
             .iter()
             .map(|(_, assignment)| assignment)
             .filter(|assignment| {
-                interval.contained_in_time_frame(assignment.departure, assignment.arrival)
+                interval.touches(&Interval {
+                    start_time: assignment.departure,
+                    end_time: assignment.arrival,
+                })
             })
             .collect_vec()
     }
@@ -1438,12 +1441,12 @@ impl Data {
     pub async fn get_events_for_vehicle(
         &self,
         vehicle_id: i32,
-        time_frame_start: Option<NaiveDateTime>,
-        time_frame_end: Option<NaiveDateTime>,
+        time_frame_start: NaiveDateTime,
+        time_frame_end: NaiveDateTime,
     ) -> Vec<&EventData> {
-        let interval = InfiniteInterval {
-            time_frame_start,
-            time_frame_end,
+        let interval = Interval {
+            start_time: time_frame_start,
+            end_time: time_frame_end,
         };
         if self.vehicles.len() < id_to_vec_pos(vehicle_id) {
             return Vec::new();
@@ -1451,11 +1454,13 @@ impl Data {
         self.events
             .iter()
             .filter(|(_, event)| {
-                interval.contained_in_time_frame(event.scheduled_time, event.communicated_time)
-                    && self.vehicles[id_to_vec_pos(vehicle_id)]
-                        .assignments
-                        .iter()
-                        .any(|(a_id, _)| event.assignment == *a_id)
+                interval.touches(&Interval {
+                    start_time: event.scheduled_time,
+                    end_time: event.communicated_time,
+                }) && self.vehicles[id_to_vec_pos(vehicle_id)]
+                    .assignments
+                    .iter()
+                    .any(|(a_id, _)| event.assignment == *a_id)
             })
             .map(|(_, e)| e)
             .collect_vec()
@@ -1481,18 +1486,22 @@ impl Data {
     pub async fn get_events_for_user(
         &self,
         user_id: i32,
-        time_frame_start: Option<NaiveDateTime>,
-        time_frame_end: Option<NaiveDateTime>,
+        time_frame_start: NaiveDateTime,
+        time_frame_end: NaiveDateTime,
     ) -> Vec<&EventData> {
-        let interval = InfiniteInterval {
-            time_frame_start,
-            time_frame_end,
+        let interval = Interval {
+            start_time: time_frame_start,
+            end_time: time_frame_end,
         };
         self.events
             .iter()
             .filter(|(_, event)| {
-                interval.contained_in_time_frame(event.scheduled_time, event.communicated_time)
-                    && event.customer == user_id
+                let mut event_interval = Interval {
+                    start_time: event.scheduled_time,
+                    end_time: event.communicated_time,
+                };
+                event_interval.flip_if_necessary();
+                interval.touches(&event_interval) && event.customer == user_id
             })
             .map(|(_, event)| event)
             .collect_vec()
@@ -1596,14 +1605,12 @@ mod test {
     use crate::{
         backend::data::Data,
         constants::{geo_points::TestPoints, gorlitz::GORLITZ},
-        dotenv,
-        entities::vehicle,
-        env,
+        dotenv, env,
         init::{self, StopFor::TEST1},
         AppState, Arc, Database, Migrator, Mutex, Tera,
     };
     use axum::extract::State;
-    use chrono::{NaiveDate, Timelike};
+    use chrono::{NaiveDate, NaiveDateTime, Timelike};
     use geo::{Contains, Point};
     use hyper::StatusCode;
     use migration::MigratorTrait;
@@ -1838,7 +1845,9 @@ mod test {
         //get_events_for_user_____________________________________________________________________________________________________________________________________________
         for (user_id, _) in d.users.iter() {
             assert_eq!(
-                d.get_events_for_user(*user_id, None, None).await.is_empty(),
+                d.get_events_for_user(*user_id, NaiveDateTime::MIN, NaiveDateTime::MAX)
+                    .await
+                    .is_empty(),
                 *user_id != 2
             );
         }

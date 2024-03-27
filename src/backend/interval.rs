@@ -33,6 +33,13 @@ impl Interval {
         }
         true
     }
+    pub fn flip_if_necessary(&mut self) {
+        if self.start_time > self.end_time {
+            let buffer = self.start_time;
+            self.start_time = self.end_time;
+            self.end_time = buffer;
+        }
+    }
     pub fn touches_day(
         &self,
         day: NaiveDate,
@@ -117,31 +124,10 @@ impl Interval {
     }
 }
 
-pub struct InfiniteInterval {
-    pub time_frame_start: Option<NaiveDateTime>,
-    pub time_frame_end: Option<NaiveDateTime>,
-}
-
-impl InfiniteInterval {
-    pub fn contained_in_time_frame(
-        &self,
-        start: NaiveDateTime,
-        end: NaiveDateTime,
-    ) -> bool {
-        (match self.time_frame_start {
-            None => true,
-            Some(t) => start >= t,
-        } && match self.time_frame_end {
-            None => true,
-            Some(t) => end <= t,
-        })
-    }
-}
-
 #[cfg(test)]
 mod test {
     use crate::backend::interval::Interval;
-    use chrono::{NaiveDate, Timelike};
+    use chrono::{NaiveDate, NaiveDateTime, Timelike};
     #[test]
     fn test() {
         let mut interval: Interval = Interval {
@@ -261,6 +247,44 @@ mod test {
         assert_eq!(interval.start_time.minute(), 30);
         assert_eq!(interval.end_time.hour(), 10);
         assert_eq!(interval.end_time.minute(), 30);
+
+        let mut invalid_interval1 = Interval {
+            start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(12, 0, 0)
+                .unwrap(),
+            end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(11, 0, 0)
+                .unwrap(),
+        };
+        assert_eq!(invalid_interval1.is_valid(), false);
+        invalid_interval1.flip_if_necessary();
+        assert_eq!(invalid_interval1.is_valid(), true);
+
+        let mut invalid_interval2 = Interval {
+            start_time: NaiveDateTime::MIN,
+            end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(11, 0, 0)
+                .unwrap(),
+        };
+        assert_eq!(invalid_interval2.is_valid(), false);
+        invalid_interval2.flip_if_necessary();
+        assert_eq!(invalid_interval2.is_valid(), false);
+        assert_eq!(invalid_interval2.start_time, NaiveDateTime::MIN);
+
+        let mut invalid_interval3 = Interval {
+            start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(11, 0, 0)
+                .unwrap(),
+            end_time: NaiveDateTime::MAX,
+        };
+        assert_eq!(invalid_interval3.is_valid(), false);
+        invalid_interval3.flip_if_necessary();
+        assert_eq!(invalid_interval3.is_valid(), false);
+        assert_eq!(invalid_interval3.end_time, NaiveDateTime::MAX);
 
         //TODO: anything with 2 intervals that touch in exactly one point for example: 9:00 - 10:00 and 10:00 - 11:00
     }
