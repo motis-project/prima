@@ -640,6 +640,92 @@ pub async fn init(
     )
     .await;
 
+    data.insert_or_add_assignment(
+        None,
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(9, 30, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(10, 20, 0)
+            .unwrap(),
+        1,
+        1,
+        State(s.clone()),
+        &"karolinenplatz 5".to_string(),
+        &"Lichtwiesenweg 3".to_string(),
+        13.867512445295205,
+        51.22069201951501,
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(9, 15, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(9, 12, 0)
+            .unwrap(),
+        2,
+        1,
+        1,
+        false,
+        false,
+        14.025081097762154,
+        51.195075641827316,
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(9, 55, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(9, 18, 0)
+            .unwrap(),
+    )
+    .await;
+
+    data.insert_or_add_assignment(
+        None,
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(11, 0, 0)
+            .unwrap(),
+        1,
+        1,
+        State(s.clone()),
+        &"karolinenplatz 5".to_string(),
+        &"Lichtwiesenweg 3".to_string(),
+        13.867512445295205,
+        51.22069201951501,
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(9, 15, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(9, 12, 0)
+            .unwrap(),
+        2,
+        1,
+        1,
+        false,
+        false,
+        14.025081097762154,
+        51.195075641827316,
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(9, 55, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(2024, 4, 15)
+            .unwrap()
+            .and_hms_opt(9, 18, 0)
+            .unwrap(),
+    )
+    .await;
+
     read_from_db_data.clear();
     read_from_db_data.read_data(State(s.clone())).await;
     println!(
