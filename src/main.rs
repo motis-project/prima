@@ -1,4 +1,4 @@
-use crate::{entities::prelude::User, init::StopFor::TEST1};
+use crate::entities::prelude::User;
 use axum::{
     extract::State,
     http::{StatusCode, Uri},
@@ -7,12 +7,11 @@ use axum::{
     Router,
 };
 use dotenv::dotenv;
-use entities::user;
 use itertools::Itertools;
 use log::setup_logging;
 use migration::{Migrator, MigratorTrait};
 use notify::Watcher;
-use sea_orm::{ActiveValue, Database, DbConn, EntityTrait};
+use sea_orm::{Database, DbConn, EntityTrait};
 use serde_json::json;
 use std::{
     env,
@@ -22,7 +21,7 @@ use std::{
 use tera::{Context, Tera};
 use tower_http::{compression::CompressionLayer, services::ServeFile};
 use tower_livereload::LiveReloadLayer;
-use tracing::{error, info};
+use tracing::error;
 
 mod backend;
 mod constants;
@@ -139,7 +138,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         db: Arc::new(conn),
     };
 
-    init::init(State(&s), true, TEST1).await;
+    init::init(State(&s), true).await;
 
     let app = Router::new();
     let app = app.route("/calendar", get(calendar).with_state(s.clone()));

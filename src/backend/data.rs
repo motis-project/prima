@@ -1,6 +1,5 @@
 use crate::{
-    backend::interval::Interval,
-    constants::constants::{BEELINE_KMH, KM_PRICE, MINUTE_PRICE},
+    backend::{geo_from_str::multi_polygon_from_str, interval::Interval},
     entities::{
         assignment::{self},
         availability, company, event,
@@ -9,18 +8,11 @@ use crate::{
         },
         user, vehicle, vehicle_specifics, zone,
     },
-    error,
-    osrm::{
-        Coordinate,
-        Dir::{Backward, Forward},
-        DistTime, OSRM,
-    },
-    AppState, State, StatusCode,
+    error, AppState, State, StatusCode,
 };
 
-use super::geo_from_str::multi_polygon_from_str;
 use ::anyhow::Result;
-use chrono::{Duration, NaiveDateTime, Utc};
+use chrono::NaiveDateTime;
 use geo::{prelude::*, MultiPolygon, Point};
 use itertools::Itertools;
 use sea_orm::{ActiveModelTrait, ActiveValue, EntityTrait};
@@ -1099,194 +1091,6 @@ impl Data {
         }
     }
 
-    pub async fn handle_routing_request(
-        &mut self,
-        State(s): State<&AppState>,
-        fixed_time: NaiveDateTime,
-        is_start_time_fixed: bool,
-        start_lat: f64,  //for Point  lat=y and lng is x
-        start_lng: f64,  //for Point  lat=y and lng is x
-        target_lat: f64, //for Point  lat=y and lng is x
-        target_lng: f64, //for Point  lat=y and lng is x
-        customer: i32,
-        passengers: i32,
-        start_address: &String,
-        target_address: &String,
-        //wheelchairs: i32, luggage: i32,
-    ) -> StatusCode {
-        let minimum_prep_time: Duration = Duration::hours(1);
-        let now: NaiveDateTime = Utc::now().naive_utc();
-        if now > fixed_time {
-            return StatusCode::BAD_REQUEST;
-        }
-        if is_start_time_fixed && now + minimum_prep_time > fixed_time {
-            return StatusCode::NO_CONTENT;
-        }
-        if passengers > 3 {
-            return StatusCode::NO_CONTENT;
-        }
-
-        let start = Point::new(start_lat as f64, start_lng as f64);
-        let target = Point::new(target_lat as f64, target_lng as f64);
-        let beeline_time = Duration::minutes(hrs_to_minutes(
-            meter_to_km_f(start.geodesic_distance(&target)) / BEELINE_KMH,
-        ));
-        let (start_time, target_time) = if is_start_time_fixed {
-            (fixed_time, fixed_time + beeline_time)
-        } else {
-            (fixed_time - beeline_time, fixed_time)
-        };
-
-        //find companies, and vehicles that may process the request according to their zone, availability, collisions with other assignments and vehicle-specifics (based on beeline distance)
-        let viable_vehicles = self
-            .get_viable_vehicles(
-                Interval {
-                    start_time,
-                    end_time: target_time,
-                },
-                passengers,
-                &start,
-            )
-            .await;
-
-        let viable_companies = viable_vehicles
-            .iter()
-            .map(|(company_id, _)| &self.companies[id_to_vec_pos(*company_id)])
-            .collect_vec();
-
-        println!("viable vehicles:");
-        for (c, vs) in viable_vehicles.iter() {
-            println!("company: {}", c);
-            for v in vs {
-                println!("  vehicle: {}", v.id);
-            }
-        }
-        //get the actual costs
-        let start_c = Coordinate {
-            lng: start_lat,
-            lat: start_lng,
-        };
-        let target_c = Coordinate {
-            lng: target_lat,
-            lat: target_lng,
-        };
-        let mut start_many = Vec::<Coordinate>::new();
-        for company in viable_companies.iter() {
-            start_many.push(Coordinate {
-                lat: company.central_coordinates.y(),
-                lng: company.central_coordinates.x(),
-            });
-        }
-        // add this to get distance between start and target of the new request
-        start_many.push(Coordinate {
-            lat: target_c.lat,
-            lng: target_c.lng,
-        });
-        let osrm = OSRM::new();
-        let mut distances_to_start: Vec<DistTime> =
-            match osrm.one_to_many(start_c, start_many, Backward).await {
-                Ok(r) => r,
-                Err(e) => {
-                    error!("problem with osrm: {}", e);
-                    Vec::new()
-                }
-            };
-        let mut target_many = Vec::<Coordinate>::new();
-        for company in viable_companies.iter() {
-            target_many.push(Coordinate {
-                lat: company.central_coordinates.y(),
-                lng: company.central_coordinates.x(),
-            });
-        }
-        let distances_to_target: Vec<DistTime> =
-            match osrm.one_to_many(target_c, target_many, Forward).await {
-                Ok(r) => r,
-                Err(e) => {
-                    error!("problem with osrm: {}", e);
-                    Vec::new()
-                }
-            };
-
-        let travel_duration = match distances_to_start.last() {
-            Some(dt) => Duration::minutes(seconds_to_minutes(dt.time as i32) as i64),
-            None => {
-                error!("distances to start was empty");
-                return StatusCode::INTERNAL_SERVER_ERROR;
-            }
-        };
-        //start/target times using travel time
-        let start_time = if is_start_time_fixed {
-            fixed_time
-        } else {
-            fixed_time - travel_duration
-        };
-        let target_time = if is_start_time_fixed {
-            fixed_time + travel_duration
-        } else {
-            fixed_time
-        };
-        if now + minimum_prep_time > start_time {
-            return StatusCode::NO_CONTENT;
-        }
-        distances_to_start.truncate(distances_to_start.len() - 1); //remove distance from start to target
-
-        //create all viable combinations
-        let mut viable_combinations: Vec<Combination> = Vec::new();
-        for (pos_in_viable, company) in viable_companies.iter().enumerate() {
-            let pos_in_data = id_to_vec_pos(company.id);
-            let start_dist_time = distances_to_start[pos_in_viable];
-            let target_dist_time = distances_to_target[pos_in_viable];
-
-            let company_start_cost = seconds_to_minutes(start_dist_time.time as i32) * MINUTE_PRICE
-                + meter_to_km(start_dist_time.dist as i32) * KM_PRICE;
-
-            let company_target_cost = seconds_to_minutes(target_dist_time.time as i32)
-                * MINUTE_PRICE
-                + meter_to_km(target_dist_time.dist as i32) * KM_PRICE;
-            viable_combinations.push(Combination {
-                is_start_company: true,
-                start_pos: pos_in_data,
-                is_target_company: true,
-                target_pos: pos_in_data,
-                cost: company_start_cost + company_target_cost,
-            });
-        }
-
-        if viable_combinations.is_empty() {
-            return StatusCode::NO_CONTENT;
-        }
-
-        //use cost function to sort the viable combinations
-        viable_combinations.sort_by(|a, b| a.cost.cmp(&(b.cost)));
-
-        self.next_request_id += 1;
-        let status_code = self
-            .insert_or_add_assignment(
-                None,
-                start_time,
-                target_time,
-                1,
-                State(s),
-                start_address,
-                target_address,
-                start_lat as f32,
-                start_lng as f32,
-                start_time,
-                start_time,
-                customer,
-                1,
-                self.next_request_id,
-                false,
-                false,
-                target_lat as f32,
-                target_lng as f32,
-                target_time,
-                target_time,
-            )
-            .await;
-        status_code
-    }
-
     pub async fn change_vehicle_for_assignment(
         &mut self,
         State(s): State<&AppState>,
@@ -1606,7 +1410,7 @@ mod test {
         backend::data::Data,
         constants::{geo_points::TestPoints, gorlitz::GORLITZ},
         dotenv, env,
-        init::{self, StopFor::TEST1},
+        init::init,
         AppState, Arc, Database, Migrator, Mutex, Tera,
     };
     use axum::extract::State;
@@ -1668,7 +1472,7 @@ mod test {
             db: Arc::new(conn),
         };
 
-        let mut d = init::init(State(&s), true, TEST1).await;
+        let mut d = init(State(&s), true).await;
         assert_eq!(d.vehicles.len(), 29);
         assert_eq!(d.zones.len(), 3);
         assert_eq!(d.companies.len(), 8);
@@ -1866,26 +1670,6 @@ mod test {
                 assert_eq!(company.id == 4, vehicles.len() == 2);
             }
         }
-
-        let p_in_bautzen_ost = test_points.bautzen_ost[0];
-        let p_in_bautzen_west = test_points.bautzen_west[0];
-        d.handle_routing_request(
-            State(&s),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(9, 10, 0)
-                .unwrap(),
-            true,
-            p_in_bautzen_ost.0.x,
-            p_in_bautzen_ost.0.y,
-            p_in_bautzen_west.0.x,
-            p_in_bautzen_west.0.y,
-            1,
-            2,
-            &"".to_string(),
-            &"".to_string(),
-        )
-        .await;
 
         //validate UniqueKeyViolation handling when creating data (expect StatusCode::CONFLICT)_______________________________________________________
         //unique keys:  table               keys
