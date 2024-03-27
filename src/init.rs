@@ -1,6 +1,6 @@
-use crate::constants::geo_points::TestPoints;
 use crate::{
     backend::data::Data,
+    constants::geo_points::TestPoints,
     constants::{
         bautzen_split_ost::BAUTZEN_OST, bautzen_split_west::BAUTZEN_WEST, gorlitz::GORLITZ,
     },
@@ -8,6 +8,7 @@ use crate::{
         assignment, availability, company, event, prelude::User, user, vehicle, vehicle_specifics,
         zone,
     },
+    error,
     init::StopFor::TEST1,
     AppState,
 };
@@ -29,9 +30,9 @@ async fn clear(State(s): State<&AppState>) {
             .await
         {
             Ok(_) => (),
-            Err(e) => println!("{}", e),
+            Err(e) => error!("{}", e),
         },
-        Err(e) => println!("{}", e),
+        Err(e) => error!("{}", e),
     }
     match assignment::Entity::delete_many().exec(s.db()).await {
         Ok(_) => match State(&s)
@@ -40,9 +41,9 @@ async fn clear(State(s): State<&AppState>) {
             .await
         {
             Ok(_) => (),
-            Err(e) => println!("{}", e),
+            Err(e) => error!("{}", e),
         },
-        Err(e) => println!("{}", e),
+        Err(e) => error!("{}", e),
     }
     match availability::Entity::delete_many().exec(s.db()).await {
         Ok(_) => match State(&s)
@@ -51,9 +52,9 @@ async fn clear(State(s): State<&AppState>) {
             .await
         {
             Ok(_) => (),
-            Err(e) => println!("{}", e),
+            Err(e) => error!("{}", e),
         },
-        Err(e) => println!("{}", e),
+        Err(e) => error!("{}", e),
     }
     match vehicle::Entity::delete_many().exec(s.db()).await {
         Ok(_) => match State(&s)
@@ -62,9 +63,9 @@ async fn clear(State(s): State<&AppState>) {
             .await
         {
             Ok(_) => (),
-            Err(e) => println!("{}", e),
+            Err(e) => error!("{}", e),
         },
-        Err(e) => println!("{}", e),
+        Err(e) => error!("{}", e),
     }
     match company::Entity::delete_many().exec(s.db()).await {
         Ok(_) => match State(&s)
@@ -73,9 +74,9 @@ async fn clear(State(s): State<&AppState>) {
             .await
         {
             Ok(_) => (),
-            Err(e) => println!("{}", e),
+            Err(e) => error!("{}", e),
         },
-        Err(e) => println!("{}", e),
+        Err(e) => error!("{}", e),
     }
     match zone::Entity::delete_many().exec(s.db()).await {
         Ok(_) => match State(&s)
@@ -84,9 +85,9 @@ async fn clear(State(s): State<&AppState>) {
             .await
         {
             Ok(_) => (),
-            Err(e) => println!("{}", e),
+            Err(e) => error!("{}", e),
         },
-        Err(e) => println!("{}", e),
+        Err(e) => error!("{}", e),
     }
     match vehicle_specifics::Entity::delete_many().exec(s.db()).await {
         Ok(_) => match State(&s)
@@ -95,9 +96,9 @@ async fn clear(State(s): State<&AppState>) {
             .await
         {
             Ok(_) => (),
-            Err(e) => println!("{}", e),
+            Err(e) => error!("{}", e),
         },
-        Err(e) => println!("{}", e),
+        Err(e) => error!("{}", e),
     }
     match user::Entity::delete_many().exec(s.db()).await {
         Ok(_) => match State(&s)
@@ -106,9 +107,9 @@ async fn clear(State(s): State<&AppState>) {
             .await
         {
             Ok(_) => (),
-            Err(e) => println!("{}", e),
+            Err(e) => error!("{}", e),
         },
-        Err(e) => println!("{}", e),
+        Err(e) => error!("{}", e),
     }
     println!("clear succesful");
 }

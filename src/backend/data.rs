@@ -1,6 +1,6 @@
 use crate::{
     backend::interval::{InfiniteInterval, Interval},
-    constants::constants::{BEELINE_KMH, KM_PRICE, MINUTE_PRICE, MINUTE_WAITING_PRICE},
+    constants::constants::{BEELINE_KMH, KM_PRICE, MINUTE_PRICE},
     entities::{
         assignment::{self},
         availability, company, event,
@@ -34,8 +34,9 @@ EXPECTATION_FAILED              foreign key violation
 CONFLICT                        unique key violation
 NO_CONTENT                      used in remove_interval and handle_request, request did not produce an error but did not change anything either (in case of request->denied)
 NOT_ACCEPTABLE                  provided interval is not valid
-NOT_FOUND                       provided id was not found
+NOT_FOUND                       data with provided id was not found
 CREATED                         request processed succesfully, data has been created
+OK                              request processed succesfully
 */
 
 fn id_to_vec_pos(id: i32) -> usize {
@@ -861,7 +862,10 @@ impl Data {
                 Ok(_) => {
                     vehicle.availability.remove(&to_delete);
                 }
-                Err(e) => error!("Error deleting interval: {e:?}"),
+                Err(e) => {
+                    error!("Error deleting interval: {e:?}");
+                    return StatusCode::INTERNAL_SERVER_ERROR;
+                }
             }
         }
         match to_insert {
@@ -873,7 +877,7 @@ impl Data {
             }
             None => (),
         }
-        StatusCode::CREATED
+        StatusCode::OK
     }
 
     //TODO: remove pub when events can be created by handling routing requests
@@ -900,8 +904,44 @@ impl Data {
         sched_t_target: NaiveDateTime,
         comm_t_target: NaiveDateTime,
     ) -> StatusCode {
+        if !(Interval {
+            start_time: departure,
+            end_time: arrival,
+        })
+        .is_valid()
+            || !(Interval {
+                start_time: sched_t_start,
+                end_time: sched_t_target,
+            })
+            .is_valid()
+            || !(Interval {
+                start_time: comm_t_start,
+                end_time: comm_t_target,
+            })
+            .is_valid()
+        {
+            return StatusCode::NOT_ACCEPTABLE;
+        }
+        if self.users.len() < customer as usize {
+            return StatusCode::EXPECTATION_FAILED;
+        }
+        if self.vehicles.len() < vehicle as usize {
+            return StatusCode::EXPECTATION_FAILED;
+        }
         let id = match assignment_id {
-            Some(a_id) => a_id, //assignment already exists
+            Some(a_id) => {
+                //assignment already exists
+                if self
+                    .vehicles
+                    .iter()
+                    .flat_map(|vehicle| &vehicle.assignments)
+                    .count()
+                    < a_id as usize
+                {
+                    return StatusCode::EXPECTATION_FAILED;
+                }
+                a_id
+            }
             None => {
                 //assignment does not exist, create it in database, which yields the id
                 let a_id = match Assignment::insert(assignment::ActiveModel {
@@ -1595,8 +1635,6 @@ mod test {
     ) {
         read_data.clear();
         read_data.read_data_from_db(State(&s)).await;
-        println!("request_id: {}", data.next_request_id);
-        println!("read request_id: {}", read_data.next_request_id);
         assert_eq!(read_data == data, true);
     }
     #[tokio::test]
@@ -1964,7 +2002,6 @@ mod test {
         let n_companies = d.companies.len();
 
         //insert vehicle with non-existing company
-        println!("n_compane:{}", n_companies);
         assert_eq!(
             d.create_vehicle(
                 State(&s),
@@ -1976,7 +2013,6 @@ mod test {
         );
         assert_eq!(d.vehicles.len(), n_vehicles);
         //insert vehicle with existing company
-        println!("n_compane:{}", n_companies);
         assert_eq!(
             d.create_vehicle(
                 State(&s),
@@ -2240,6 +2276,7 @@ mod test {
             n_availabilities
         );
 
+        //TODO: tests for insert_or_add_assignment
         check_data_db_synchronized(State(&s), &d, &mut read_data).await;
     }
 }
