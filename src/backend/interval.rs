@@ -1,4 +1,4 @@
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{Duration, NaiveDate, NaiveDateTime};
 use serde::Deserialize;
 use std::fmt;
 
@@ -28,55 +28,58 @@ impl Interval {
             end_time: NaiveDateTime::max(start_time, end_time),
         }
     }
-    pub fn touches_day(
+    pub fn overlaps_day(
         &self,
         day: NaiveDate,
     ) -> bool {
-        self.start_time.date() == day || self.end_time.date() == day
+        self.overlaps(&Interval::new(
+            day.and_hms_opt(0, 0, 0).unwrap(),
+            day.and_hms_opt(0, 0, 0).unwrap() + Duration::days(1),
+        ))
     }
     pub fn overlaps(
-        self,
+        &self,
         other: &Interval,
     ) -> bool {
         self.start_time <= other.end_time && self.end_time >= other.start_time
     }
     pub fn contains(
-        self,
+        &self,
         other: &Interval,
     ) -> bool {
         self.start_time <= other.start_time && self.end_time >= other.end_time
     }
     pub fn contains_point(
-        self,
+        &self,
         point_in_time: &NaiveDateTime,
     ) -> bool {
         self.start_time <= *point_in_time && self.end_time >= *point_in_time
     }
-    //asserts that self and other overlap, neither contains the other
     pub fn merge(
         &self,
         other: &Interval,
     ) -> Interval {
+        assert!(self.overlaps(other) && !self.contains(other) && !other.contains(self));
         Interval::new(
             NaiveDateTime::min(self.start_time, other.start_time),
             NaiveDateTime::max(self.end_time, other.end_time),
         )
     }
-    //asserts that splitter is contained in self, but not vice versa
     pub fn split(
-        self,
+        &self,
         splitter: &Interval,
     ) -> (Interval, Interval) {
+        assert!(self.contains(splitter) && !splitter.contains(self));
         (
             Interval::new(self.start_time, splitter.start_time),
             Interval::new(splitter.end_time, self.end_time),
         )
     }
-    //asserts that the intervals (self and cutter) overlap each other but neither one contains the other.
     pub fn cut(
         &self,
         cutter: &Interval,
     ) -> Interval {
+        assert!(self.overlaps(cutter) && !self.contains(cutter) && !cutter.contains(self));
         if self.start_time < cutter.start_time {
             Interval::new(self.start_time, cutter.start_time)
         } else {
@@ -102,12 +105,12 @@ mod test {
                 .and_hms_opt(10, 0, 0)
                 .unwrap(),
         );
-        let non_touching_interval: Interval = Interval::new(
-            NaiveDate::from_ymd_opt(2024, 4, 15)
+        let non_overlapping_interval: Interval = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 18)
                 .unwrap()
                 .and_hms_opt(11, 0, 0)
                 .unwrap(),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
+            NaiveDate::from_ymd_opt(2024, 4, 19)
                 .unwrap()
                 .and_hms_opt(12, 0, 0)
                 .unwrap(),
@@ -157,19 +160,19 @@ mod test {
         assert_eq!(interval.contains(&overlapping_interval2), false);
         assert_eq!(interval.contains(&containing_interval), false);
         assert_eq!(interval.contains(&contained_interval), true);
-        assert_eq!(interval.overlaps(&non_touching_interval), false);
+        assert_eq!(interval.overlaps(&non_overlapping_interval), false);
 
         assert_eq!(overlapping_interval.contains(&interval), false);
         assert_eq!(overlapping_interval2.contains(&interval), false);
         assert_eq!(containing_interval.contains(&interval), true);
         assert_eq!(contained_interval.contains(&interval), false);
-        assert_eq!(non_touching_interval.overlaps(&interval), false);
+        assert_eq!(non_overlapping_interval.overlaps(&interval), false);
 
         assert_eq!(interval.overlaps(&overlapping_interval), true);
         assert_eq!(interval.overlaps(&overlapping_interval2), true);
         assert_eq!(interval.overlaps(&containing_interval), true);
         assert_eq!(interval.overlaps(&contained_interval), true);
-        assert_eq!(interval.overlaps(&non_touching_interval), false);
+        assert_eq!(interval.overlaps(&non_overlapping_interval), false);
 
         let cut_interval = interval.cut(&overlapping_interval); //cut 9:30 - 10:30 from 9:00 - 10:00 -> expext 9:00 - 9:30
         assert_eq!(cut_interval.start_time.hour(), 9);
@@ -219,6 +222,55 @@ mod test {
                 .unwrap(),
         );
         assert_eq!(interval.start_time < interval.end_time, true);
+    }
+
+    #[test]
+    fn test_day_overlaps() {
+        let day = NaiveDate::from_ymd_opt(2024, 4, 18).unwrap();
+        let next_day_as_interval: Interval = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 19)
+                .unwrap()
+                .and_hms_opt(0, 0, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 20)
+                .unwrap()
+                .and_hms_opt(0, 0, 0)
+                .unwrap(),
+        );
+        let overlapping_interval: Interval = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 18)
+                .unwrap()
+                .and_hms_opt(11, 0, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 19)
+                .unwrap()
+                .and_hms_opt(12, 0, 0)
+                .unwrap(),
+        );
+        let contained_interval: Interval = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 18)
+                .unwrap()
+                .and_hms_opt(11, 0, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 18)
+                .unwrap()
+                .and_hms_opt(12, 0, 0)
+                .unwrap(),
+        );
+        let non_overlapping_interval: Interval = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 19)
+                .unwrap()
+                .and_hms_opt(11, 0, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 19)
+                .unwrap()
+                .and_hms_opt(12, 0, 0)
+                .unwrap(),
+        );
+        assert!(!non_overlapping_interval.overlaps_day(day));
+        assert!(overlapping_interval.overlaps_day(day));
+        assert!(contained_interval.overlaps_day(day));
+        assert!(next_day_as_interval.overlaps_day(day));
     }
 
     #[test]
