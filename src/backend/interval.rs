@@ -29,6 +29,7 @@ impl Interval {
             end_time: NaiveDateTime::max(start_time, end_time),
         }
     }
+
     pub fn overlaps_day(
         &self,
         day: NaiveDate,
@@ -38,30 +39,35 @@ impl Interval {
             day.and_hms_opt(0, 0, 0).unwrap() + Duration::days(1),
         ))
     }
+
     pub fn touches(
         &self,
         other: &Interval,
     ) -> bool {
         self.start_time == other.end_time || self.end_time == other.start_time
     }
+
     pub fn overlaps(
         &self,
         other: &Interval,
     ) -> bool {
         self.start_time < other.end_time && self.end_time > other.start_time
     }
+
     pub fn contains(
         &self,
         other: &Interval,
     ) -> bool {
         self.start_time <= other.start_time && self.end_time >= other.end_time
     }
+
     pub fn contains_point(
         &self,
         point_in_time: &NaiveDateTime,
     ) -> bool {
         self.start_time <= *point_in_time && self.end_time >= *point_in_time
     }
+
     pub fn merge(
         &self,
         other: &Interval,
@@ -76,6 +82,7 @@ impl Interval {
             NaiveDateTime::max(self.end_time, other.end_time),
         )
     }
+
     pub fn split(
         &self,
         splitter: &Interval,
@@ -86,6 +93,7 @@ impl Interval {
             Interval::new(splitter.end_time, self.end_time),
         )
     }
+    
     pub fn cut(
         &self,
         cutter: &Interval,
