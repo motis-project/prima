@@ -15,7 +15,7 @@ impl fmt::Display for Interval {
         &self,
         f: &mut fmt::Formatter<'_>,
     ) -> fmt::Result {
-        write!(f, "{} - {}", self.start_time.time(), self.end_time.time())
+        write!(f, "{} - {}", self.start_time, self.end_time)
     }
 }
 
@@ -38,8 +38,11 @@ impl Interval {
             day.and_hms_opt(0, 0, 0).unwrap() + Duration::days(1),
         ))
     }
-    pub fn touches (&self,other:&Interval) ->bool {
-        self.start_time ==other.end_time || self.end_time==other.start_time
+    pub fn touches(
+        &self,
+        other: &Interval,
+    ) -> bool {
+        self.start_time == other.end_time || self.end_time == other.start_time
     }
     pub fn overlaps(
         &self,
@@ -63,7 +66,11 @@ impl Interval {
         &self,
         other: &Interval,
     ) -> Interval {
-        assert!((self.touches(other)||self.overlaps(other)) && !self.contains(other) && !other.contains(self));
+        assert!(
+            (self.touches(other) || self.overlaps(other))
+                && !self.contains(other)
+                && !other.contains(self)
+        );
         Interval::new(
             NaiveDateTime::min(self.start_time, other.start_time),
             NaiveDateTime::max(self.end_time, other.end_time),
@@ -73,7 +80,7 @@ impl Interval {
         &self,
         splitter: &Interval,
     ) -> (Interval, Interval) {
-        assert!(self.contains(splitter) && !splitter.contains(self));
+        assert!(self.contains(splitter) && splitter != self);
         (
             Interval::new(self.start_time, splitter.start_time),
             Interval::new(splitter.end_time, self.end_time),
