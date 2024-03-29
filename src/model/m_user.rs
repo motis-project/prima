@@ -12,7 +12,7 @@ use tera::Context;
 use tracing::{error, info};
 
 use crate::entities::{prelude::User, user};
-use crate::AppState;
+use crate::init::AppState;
 
 #[derive(Deserialize)]
 pub struct SignUpForm {

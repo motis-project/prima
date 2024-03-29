@@ -22,12 +22,15 @@ pub async fn test() {
     let conn = Database::connect(db_url)
         .await
         .expect("Database connection failed");
+
+    /* let mut data = Data::new();
     let s = AppState {
         tera: tera,
         db: Arc::new(conn),
+        data: Arc::new(data),
     };
-    let mut data = Data::new();
-    /* data.create_vehicle(
+
+    data.create_vehicle(
         State(&s),
         axum::Json(CreateVehicle {
             license_plate: "TUG3-6".to_string(),

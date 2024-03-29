@@ -12,7 +12,7 @@
     <div class="flex items-center justify-between space-y-2">
         <div>
             <h2 class="text-2xl font-bold tracking-tight">Touren</h2>
-            <p class="text-muted-foreground">Hier können Fahrzeuge gebuchten Touren zugewiesen werden</p>
+            <p class="text-muted-foreground">Hier können Fahrzeuge gebuchten Touren zugewiesen werden.</p>
         </div>
         <!-- <div class="flex items-center space-x-2"><button
                 class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground px-4 py-2 relative h-8 w-8 rounded-full"
@@ -104,17 +104,17 @@
                                     class="peer h-4 w-4 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground translate-y-[2px]"
                                     aria-label="Select row"></button>
                             </td>
-                            <!-- <td
-                                class="p-2 align-middle [&amp;:has([role=checkbox])]:pr-0 [&amp;>[role=checkbox]]:translate-y-[2px]">
-                                <div class="w-[80px]">{{ tour.date }}</div>
-                            </td> -->
                             <td
                                 class="p-2 align-middle [&amp;:has([role=checkbox])]:pr-0 [&amp;>[role=checkbox]]:translate-y-[2px]">
-                                <div class="w-[80px]">{{ tour.departure }}</div>
+                                <div class="w-[80px]">{{ tour.date }}</div>
                             </td>
                             <td
                                 class="p-2 align-middle [&amp;:has([role=checkbox])]:pr-0 [&amp;>[role=checkbox]]:translate-y-[2px]">
-                                <div class="w-[80px]">{{ tour.arrival }}</div>
+                                <div class="w-[80px]">{{ tour.start_time }}</div>
+                            </td>
+                            <td
+                                class="p-2 align-middle [&amp;:has([role=checkbox])]:pr-0 [&amp;>[role=checkbox]]:translate-y-[2px]">
+                                <div class="w-[80px]">{{ tour.end_time }}</div>
                             </td>
                             <td
                                 class="p-2 align-middle [&amp;:has([role=checkbox])]:pr-0 [&amp;>[role=checkbox]]:translate-y-[2px]">
@@ -123,23 +123,10 @@
                                     type="button" id="radix-:r8d:" aria-haspopup="menu" aria-expanded="false"
                                     onclick=" window.open('/routes/{{ tour.id }}','_blank')">...</button>
                             </td>
-                            <!-- <td
+                            <td
                                 class="p-2 align-middle [&amp;:has([role=checkbox])]:pr-0 [&amp;>[role=checkbox]]:translate-y-[2px]">
-                                <select id="sel-{{ tour.id }}" onchange="toggle_select({{ tour.id }})" {% if tour.car %}
-                                    value="{{ tour.car.id }}" style="background-color: lightgreen;" {% else %}
-                                    value="none" style="background-color: lightcoral;" {% endif %}>
-                                    <option value="none">------------------</option>
-                                    {% for car in cars %}
-                                    {% if tour.car %}
-                                    <option value="{{ car.id }}" {% if tour.car.id==car.id %} selected {% endif %}>
-                                        {% else %}
-                                    <option value="{{ car.id }}">
-                                        {% endif %}
-                                        {{car.plate }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </td> -->
+                                <div class="w-[80px]">{{ tour.plate }}</div>
+                            </td>
                             <td></td>
                         </tr>
                         {% endfor %}

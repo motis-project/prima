@@ -1,8 +1,8 @@
 use chrono::{Datelike, NaiveDate, NaiveDateTime};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::fmt;
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Deserialize)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Deserialize, Serialize)]
 pub struct Interval {
     pub start_time: NaiveDateTime,
     pub end_time: NaiveDateTime,

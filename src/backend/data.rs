@@ -10,12 +10,13 @@ use crate::{
         user, vehicle, vehicle_specifics, zone,
     },
     error,
+    init::AppState,
     osrm::{
         Coordinate,
         Dir::{Backward, Forward},
         DistTime, OSRM,
     },
-    AppState, State,
+    State,
 };
 
 use super::geo_from_str::multi_polygon_from_str;
@@ -24,8 +25,13 @@ use chrono::{Duration, NaiveDateTime, Utc};
 use geo::{prelude::*, MultiPolygon, Point};
 use hyper::StatusCode;
 use itertools::Itertools;
-use sea_orm::{ActiveModelTrait, ActiveValue, EntityTrait};
-use std::collections::HashMap;
+use migration::RcOrArc;
+use sea_orm::{ActiveModelTrait, ActiveValue, DatabaseConnection, DbConn, EntityTrait};
+use serde::Serialize;
+use std::{
+    collections::HashMap,
+    sync::{Mutex, OnceLock},
+};
 
 /*
 StatusCode and associated errors/results:
@@ -68,7 +74,7 @@ struct Combination {
     cost: i32,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Serialize)]
 #[readonly::make]
 pub struct AssignmentData {
     pub id: i32,
@@ -89,7 +95,7 @@ impl AssignmentData {
     }
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq, Serialize)]
 #[readonly::make]
 pub struct AvailabilityData {
     pub id: i32,
@@ -110,7 +116,7 @@ pub struct UserData {
     pub o_auth_provider: Option<String>,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Serialize)]
 #[readonly::make]
 pub struct VehicleData {
     pub id: i32,
@@ -125,7 +131,8 @@ pub struct VehicleData {
 impl VehicleData {
     async fn add_availability(
         &mut self,
-        State(s): State<&AppState>,
+        // State(s): State<&AppState>,
+        db: &DbConn,
         new_interval: &mut Interval,
         id_or_none: Option<i32>, //None->insert availability into db, this yields the id->create availability in data with this id.  Some->create in data with given id, nothing to do in db
     ) -> StatusCode {
@@ -147,7 +154,8 @@ impl VehicleData {
         }
         for to_delete in mark_delete {
             match Availability::delete_by_id(self.availability[&to_delete].id)
-                .exec(s.clone().db())
+                // .exec(s.clone().db())
+                .exec(db)
                 .await
             {
                 Ok(_) => {
@@ -167,7 +175,7 @@ impl VehicleData {
                 end_time: ActiveValue::Set(new_interval.end_time),
                 vehicle: ActiveValue::Set(self.id),
             })
-            .exec(s.db())
+            .exec(db)
             .await
             {
                 Ok(result) => result.last_insert_id,
@@ -361,10 +369,10 @@ impl Data {
 
     pub async fn read_data_from_db(
         &mut self,
-        State(s): State<&AppState>,
+        db: &DbConn,
     ) {
         let zones: Vec<zone::Model> = Zone::find()
-            .all(s.db())
+            .all(db)
             .await
             .expect("Error while reading from Database.");
         for zone in zones.iter() {
@@ -379,7 +387,7 @@ impl Data {
         }
 
         let company_models: Vec<<company::Entity as sea_orm::EntityTrait>::Model> = Company::find()
-            .all(s.db())
+            .all(db)
             .await
             .expect("Error while reading from Database.");
         for company_model in company_models {
@@ -395,7 +403,7 @@ impl Data {
         }
 
         let vehicle_models: Vec<<vehicle::Entity as sea_orm::EntityTrait>::Model> = Vehicle::find()
-            .all(s.db())
+            .all(db)
             .await
             .expect("Error while reading from Database.");
         for vehicle in vehicle_models.iter() {
@@ -412,13 +420,13 @@ impl Data {
 
         let availability_models: Vec<<availability::Entity as sea_orm::EntityTrait>::Model> =
             Availability::find()
-                .all(s.db())
+                .all(db)
                 .await
                 .expect("Error while reading from Database.");
         for availability in availability_models.iter() {
             self.vehicles[id_to_vec_pos(availability.vehicle)]
                 .add_availability(
-                    State(&s),
+                    db,
                     &mut Interval {
                         start_time: availability.start_time,
                         end_time: availability.end_time,
@@ -430,7 +438,7 @@ impl Data {
 
         let assignment_models: Vec<<assignment::Entity as sea_orm::EntityTrait>::Model> =
             Assignment::find()
-                .all(s.db())
+                .all(db)
                 .await
                 .expect("Error while reading from Database.");
         for assignment in assignment_models {
@@ -448,7 +456,7 @@ impl Data {
         }
 
         let event_models: Vec<<event::Entity as sea_orm::EntityTrait>::Model> = Event::find()
-            .all(s.db())
+            .all(db)
             .await
             .expect("Error while reading from Database.");
         for event_m in event_models {
@@ -470,7 +478,7 @@ impl Data {
         }
 
         let user_models = User::find()
-            .all(s.db())
+            .all(db)
             .await
             .expect("Error while reading from Database.");
         for user_model in user_models {
@@ -491,7 +499,7 @@ impl Data {
         }
 
         let vehicle_specifics_models = VehicleSpecifics::find()
-            .all(s.db())
+            .all(db)
             .await
             .expect("Error while reading from Database.");
 
@@ -612,6 +620,13 @@ impl Data {
         }
     }
 
+    pub fn get_vehicle_by_id(
+        &self,
+        id: usize,
+    ) -> &VehicleData {
+        return self.vehicles.get(id).unwrap();
+    }
+
     pub async fn does_user_with_name_exist(
         &self,
         name: &String,
@@ -702,7 +717,7 @@ impl Data {
             return StatusCode::EXPECTATION_FAILED;
         }
         self.vehicles[id_to_vec_pos(vehicle)]
-            .add_availability(State(s), &mut interval, None)
+            .add_availability(s.db(), &mut interval, None)
             .await
     }
 
@@ -945,6 +960,7 @@ impl Data {
             }
             None => {
                 //assignment does not exist, create it in database, which yields the id
+                println!("Vehicle insertion: {}", vehicle);
                 let a_id = match Assignment::insert(assignment::ActiveModel {
                     id: ActiveValue::NotSet,
                     departure: ActiveValue::Set(departure),
@@ -1476,12 +1492,29 @@ impl Data {
             .iter()
             .filter(|vehicle| {
                 vehicle.company == company_id
-                    && match active {
-                        Some(a) => a == vehicle.active,
-                        None => true,
-                    }
+                /* && match active {
+                    Some(a) => a == vehicle.active,
+                    None => true,
+                } */
             })
             .into_group_map_by(|v| v.specifics)
+    }
+
+    pub async fn get_vehicles_(
+        &self,
+        company_id: i32,
+        active: Option<bool>,
+    ) -> Vec<&VehicleData> {
+        self.vehicles
+            .iter()
+            .filter(|vehicle| {
+                vehicle.company == company_id
+                /* && match active {
+                    Some(a) => a == vehicle.active,
+                    None => true,
+                } */
+            })
+            .collect()
     }
 
     pub async fn get_events_for_user(
@@ -1598,6 +1631,11 @@ impl Data {
     }
 }
 
+pub fn get_or_init() -> &'static Mutex<Data> {
+    static data: OnceLock<Mutex<Data>> = OnceLock::new();
+    data.get_or_init(|| Mutex::new(Data::new()))
+}
+/*
 #[cfg(test)]
 mod test {
     use std::collections::HashMap;
@@ -1664,12 +1702,15 @@ mod test {
                 ::std::process::exit(1);
             }
         };
-        let s = AppState {
-            tera,
-            db: Arc::new(conn),
-        };
 
+        let mut s = AppState {
+            tera: tera,
+            db: Arc::new(conn),
+            data: Arc::new(Data::new()),
+        };
         let mut d = init::init(State(&s), true, TEST1).await;
+        s.data = Arc::new(d);
+
         assert_eq!(d.vehicles.len(), 29);
         assert_eq!(d.zones.len(), 3);
         assert_eq!(d.companies.len(), 8);
@@ -2290,3 +2331,4 @@ mod test {
         check_data_db_synchronized(State(&s), &d, &mut read_data).await;
     }
 }
+*/

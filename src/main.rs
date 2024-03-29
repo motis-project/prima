@@ -1,10 +1,11 @@
-use crate::{entities::prelude::User, init::StopFor::TEST1};
+use crate::init::StopFor::TEST1;
 use axum::{
     extract::State,
     routing::{get, post},
     Router,
 };
 
+use backend::data::Data;
 use dotenv::dotenv;
 
 use itertools::Itertools;
@@ -20,7 +21,7 @@ use std::{
 use tera::{Context, Tera};
 use tower_http::{compression::CompressionLayer, services::ServeFile};
 use tower_livereload::LiveReloadLayer;
-use tracing::{error, info};
+use tracing::error;
 
 use view::render::{
     get_route_details, render_driver_sign_in, render_home, render_login, render_register,
@@ -31,8 +32,6 @@ use model::m_user::{
     create_user, delete_user, login_user, logout_user, post_json_test, update_user, users,
 };
 
-use model::m_test::test;
-
 mod backend;
 mod constants;
 mod entities;
@@ -42,36 +41,10 @@ mod model;
 mod osrm;
 mod view;
 
-#[derive(Clone)]
-struct AppState {
-    tera: Arc<Mutex<Tera>>,
-    db: Arc<DbConn>,
-}
-
-impl AppState {
-    fn render(
-        &self,
-        template_name: &str,
-        context: &Context,
-    ) -> Result<String, tera::Error> {
-        self.tera.lock().unwrap().render(template_name, context)
-    }
-
-    fn db(&self) -> &DbConn {
-        &*self.db
-    }
-}
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     setup_logging()?;
     dotenv().ok();
-
-    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
-    let conn = Database::connect(db_url)
-        .await
-        .expect("Database connection failed");
-    Migrator::up(&conn, None).await.unwrap();
 
     let livereload = LiveReloadLayer::new();
     let reloader = livereload.reloader();
@@ -101,12 +74,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         notify::RecursiveMode::NonRecursive,
     )?;
 
-    let s = AppState {
-        tera: tera,
-        db: Arc::new(conn),
-    };
-
-    init::init(State(&s), true, TEST1).await;
+    let s = init::init(tera, false, TEST1).await;
 
     let app = Router::new();
     let app = app.layer(livereload);

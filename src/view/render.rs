@@ -1,18 +1,22 @@
+use std::collections::HashMap;
+
 use axum::{
     extract::{Json, State},
     http::{StatusCode, Uri},
     response::{Html, Redirect},
-    routing::{get, post},
-    Form, Router,
 };
+use chrono::NaiveDate;
 use sea_orm::{DbConn, EntityTrait};
-use serde::Deserialize;
 use serde::Serialize;
 use serde_json::json;
 use tera::Context;
 use tracing::{error, info};
 
-use crate::{entities::prelude::User, AppState};
+use crate::{
+    backend::data::{AssignmentData, Data, VehicleData},
+    entities::prelude::User,
+    init::AppState,
+};
 
 pub async fn get_route_details(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
     // let user = User::find_by_id(1)
@@ -167,7 +171,7 @@ struct Tour {
     date: String,
     start_time: String,
     end_time: String,
-    car: Option<Car>,
+    plate: String,
 }
 
 #[derive(Serialize, Clone)]
@@ -194,71 +198,63 @@ struct WayPoint {
 }
 
 pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
-    // let username = User::find_by_id(1)
-    //     .one(s.db())
-    //     .await
-    //     .map_err(|e| {
-    //         error!("Database error: {e:?}");
-    //         StatusCode::INTERNAL_SERVER_ERROR
-    //     })?
-    //     .ok_or(StatusCode::NOT_FOUND)?
-    //     .name
-    //     .clone();
+    // let data = s.data();
+    let data = Data::new();
 
-    let car_0 = Car {
-        id: 0,
-        plate: "DA-AA 0815".to_string(),
-        seats: 4,
-    };
+    let company_id = 1;
+    // let vehicles: HashMap<i32, Vec<&VehicleData>> = data.get_vehicles(company_id, Some(true)).await;
+    let vehicles: Vec<&VehicleData> = data.get_vehicles_(company_id, Some(true)).await;
+    println!("Number of vehicles: {}", vehicles.len());
 
-    let car_1 = Car {
-        id: 1,
-        plate: "DA-AA 0816".to_string(),
-        seats: 4,
-    };
+    let start_time = NaiveDate::from_ymd_opt(2024, 4, 15)
+        .unwrap()
+        .and_hms_opt(0, 0, 0)
+        .unwrap();
+    let end_time = NaiveDate::from_ymd_opt(2024, 4, 15)
+        .unwrap()
+        .and_hms_opt(23, 59, 59)
+        .unwrap();
 
-    let car_2 = Car {
-        id: 2,
-        plate: "DA-AA 0817".to_string(),
-        seats: 4,
-    };
+    let mut tours_all: Vec<&AssignmentData> = Vec::new();
+    // for (id, v) in vehicles.iter() {
+    //     let tours_vehicle = data
+    //         .get_assignments_for_vehicle(*id, start_time, end_time)
+    //         .await;
+    //     tours_all.extend(tours_vehicle);
+    // }
+    for v in vehicles.iter() {
+        let tours_vehicle = data
+            .get_assignments_for_vehicle(v.id, start_time, end_time)
+            .await;
+        tours_all.extend(tours_vehicle);
+    }
 
-    let mut cars = Vec::new();
+    let mut tours: Vec<Tour> = Vec::new();
 
-    cars.push(car_0.to_owned());
-    cars.push(car_1.to_owned());
-    cars.push(car_2.to_owned());
+    for tour in tours_all.iter() {
+        tours.push(Tour {
+            id: tour.vehicle,
+            date: tour.departure.date().to_string(),
+            start_time: tour.departure.time().to_string(),
+            end_time: tour.arrival.time().to_string(),
+            plate: data
+                .get_vehicle_by_id(tour.vehicle as usize)
+                .license_plate
+                .to_string(),
+        });
 
-    let mut tours = Vec::new();
-
-    tours.push(Tour {
-        id: 0,
-        date: "01.03.2024".to_string(),
-        start_time: "12:00".to_string(),
-        end_time: "12:45".to_string(),
-        car: None,
-    });
-
-    tours.push(Tour {
-        id: 1,
-        date: "01.03.2024".to_string(),
-        start_time: "11:30".to_string(),
-        end_time: "12:45".to_string(),
-        car: Some(car_1.to_owned()),
-    });
-
-    tours.push(Tour {
-        id: 2,
-        date: "01.03.2024".to_string(),
-        start_time: "10:30".to_string(),
-        end_time: "12:00".to_string(),
-        car: None,
-    });
+        /* for (id, v) in vehicles.iter() {
+            let conflicts = data
+                .get_vehicle_conflicts_for_assignment(*id, tour.id)
+                .await;
+            println!("vehicle_id: {}, conflicts: {}", id, conflicts.len())
+        } */
+    }
 
     let response = s
         .render(
-            "taxi-center/tours-1.html",
-            &Context::from_serialize(json!({"tours": tours, "cars": cars})).map_err(|e| {
+            "taxi-center/tours.html",
+            &Context::from_serialize(json!({"tours": tours, "cars": vehicles})).map_err(|e| {
                 error!("Serialize error: {e:?}");
                 StatusCode::INTERNAL_SERVER_ERROR
             })?,
