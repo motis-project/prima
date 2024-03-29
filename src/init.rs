@@ -314,7 +314,7 @@ pub async fn init(
     data.create_vehicle(State(&s), "TUG3-5".to_string(), 8)
         .await;
 
-    data.insert_or_add_assignment(
+    data.insert_or_addto_tour(
         None,
         NaiveDate::from_ymd_opt(2024, 4, 15)
             .unwrap()
@@ -397,8 +397,6 @@ pub async fn init(
         3,
     )
     .await;
-
-    data.change_vehicle_for_assignment(State(&s), 1, 2).await;
 
     let test_points = TestPoints::new();
     let p_in_bautzen_ost = test_points.bautzen_ost[0];

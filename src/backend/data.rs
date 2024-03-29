@@ -2,8 +2,7 @@ use crate::{
     backend::interval::Interval,
     constants::constants::{BEELINE_KMH, KM_PRICE, MINUTE_PRICE},
     entities::{
-        assignment::{self},
-        availability, company, event,
+        assignment, availability, company, event,
         prelude::{
             Assignment, Availability, Company, Event, User, Vehicle, VehicleSpecifics, Zone,
         },
@@ -20,7 +19,7 @@ use crate::{
 
 use super::geo_from_str::multi_polygon_from_str;
 use ::anyhow::Result;
-use chrono::{Duration, NaiveDateTime, Utc};
+use chrono::{Duration, NaiveDate, NaiveDateTime, Utc};
 use geo::{prelude::*, MultiPolygon, Point};
 use itertools::Itertools;
 use sea_orm::{ActiveModelTrait, ActiveValue, EntityTrait};
@@ -29,7 +28,7 @@ use std::collections::HashMap;
 /*
 StatusCode and associated errors/results:
 INTERNAL_SERVER_ERROR           something bad happened
-BAD_REQUEST                     invalid geojson for multipolygon (area of zone)
+BAD_REQUEST                     invalid geojson for multipolygon (area of zone), provided ids do not match
 EXPECTATION_FAILED              foreign key violation
 CONFLICT                        unique key violation
 NO_CONTENT                      used in remove_interval and handle_request, request did not produce an error but did not change anything either (in case of request->denied)
@@ -66,17 +65,16 @@ struct Combination {
     target_pos: usize,
     cost: i32,
 }
-
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 #[readonly::make]
-pub struct AssignmentData {
+pub struct TourData {
     pub id: i32,
     pub departure: NaiveDateTime,
     pub arrival: NaiveDateTime,
     pub vehicle: i32,
 }
 
-impl AssignmentData {
+impl TourData {
     fn print(
         &self,
         indent: &str,
@@ -86,9 +84,16 @@ impl AssignmentData {
             indent, self.id, self.departure, self.arrival
         );
     }
+
+    fn touches(
+        &self,
+        interval: &Interval,
+    ) -> bool {
+        interval.touches(&Interval::new(self.departure, self.arrival))
+    }
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 #[readonly::make]
 pub struct AvailabilityData {
     pub id: i32,
@@ -109,7 +114,7 @@ pub struct UserData {
     pub o_auth_provider: Option<String>,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 #[readonly::make]
 pub struct VehicleData {
     pub id: i32,
@@ -118,10 +123,27 @@ pub struct VehicleData {
     pub specifics: i32,
     pub active: bool,
     pub availability: HashMap<i32, AvailabilityData>,
-    pub assignments: HashMap<i32, AssignmentData>,
+    pub tours: HashMap<i32, TourData>,
 }
 
 impl VehicleData {
+    fn print(&self) {
+        println!(
+            "id: {}, license: {}, company: {}, specs: {}",
+            self.id, self.license_plate, self.company, self.specifics
+        );
+    }
+    fn new() -> Self {
+        Self {
+            id: -1,
+            license_plate: "".to_string(),
+            company: -1,
+            specifics: -1,
+            active: true,
+            availability: HashMap::new(),
+            tours: HashMap::new(),
+        }
+    }
     async fn add_availability(
         &mut self,
         State(s): State<&AppState>,
@@ -192,14 +214,14 @@ impl VehicleData {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 #[readonly::make]
 pub struct EventData {
     pub coordinates: Point,
     pub scheduled_time: NaiveDateTime,
     pub communicated_time: NaiveDateTime,
     pub customer: i32,
-    pub assignment: i32,
+    pub tour: i32,
     pub required_specs: i32,
     pub request_id: i32,
     pub id: i32,
@@ -213,7 +235,7 @@ impl EventData {
         scheduled_time: NaiveDateTime,
         communicated_time: NaiveDateTime,
         customer: i32,
-        assignment: i32,
+        tour: i32,
         required_specs: i32,
         request_id: i32,
         is_pickup: bool,
@@ -224,7 +246,7 @@ impl EventData {
             scheduled_time,
             communicated_time,
             customer,
-            assignment,
+            tour,
             request_id,
             required_specs,
             is_pickup,
@@ -236,13 +258,19 @@ impl EventData {
         indent: &str,
     ) {
         print!(
-            "{}id: {}, scheduled_time: {}, communicated_time: {}, customer: {}, assignment: {}, request_id: {}, required_specs: {}, is_pickup: {}\n",
-            indent, self.id, self.scheduled_time, self.communicated_time, self.customer, self.assignment, self.request_id, self.required_specs, self.is_pickup
+            "{}id: {}, scheduled_time: {}, communicated_time: {}, customer: {}, tour: {}, request_id: {}, required_specs: {}, is_pickup: {}\n",
+            indent, self.id, self.scheduled_time, self.communicated_time, self.customer, self.tour, self.request_id, self.required_specs, self.is_pickup
         );
+    }
+
+    fn touches(&self, interval: &Interval)->bool{
+        let mut event_interval = Interval::new(self.scheduled_time, self.communicated_time,);
+        event_interval.flip_if_necessary();
+        event_interval.touches(interval)
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 #[readonly::make]
 pub struct CompanyData {
     pub id: i32,
@@ -251,7 +279,18 @@ pub struct CompanyData {
     pub name: String,
 }
 
-#[derive(PartialEq)]
+impl CompanyData {
+    fn new() -> Self {
+        Self {
+            id: -1,
+            central_coordinates: Point::new(0.0, 0.0),
+            zone: -1,
+            name: "".to_string(),
+        }
+    }
+}
+
+#[derive(PartialEq, Clone)]
 #[readonly::make]
 pub struct VehicleSpecificsData {
     pub id: i32,
@@ -274,7 +313,7 @@ impl VehicleSpecificsData {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 #[readonly::make]
 pub struct ZoneData {
     pub area: MultiPolygon,
@@ -282,7 +321,7 @@ pub struct ZoneData {
     pub id: i32,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 #[readonly::make]
 pub struct Data {
     pub users: HashMap<i32, UserData>,
@@ -337,19 +376,15 @@ impl Data {
     }
 
     #[allow(dead_code)] //test/output function
-    fn print_assignments(
+    fn print_tours(
         &self,
         print_events: bool,
     ) {
-        for (a_id, assignment) in self
-            .vehicles
-            .iter()
-            .flat_map(|vehicle| &vehicle.assignments)
-        {
-            assignment.print("");
+        for (t_id, tour) in self.vehicles.iter().flat_map(|vehicle| &vehicle.tours) {
+            tour.print("");
             if print_events {
                 for (_, event) in self.events.iter() {
-                    if *a_id != event.assignment {
+                    if *t_id != event.tour {
                         continue;
                     }
                     event.print("   ");
@@ -358,14 +393,57 @@ impl Data {
         }
     }
 
+    #[allow(dead_code)] //test/output function
+    pub fn print_vehicles(&self) {
+        for v in &self.vehicles {
+            v.print();
+        }
+    }
+
+    fn max_event_id(&self)->i32{
+        match self.events.iter().map(|(id,_)|id).max(){
+            Some(id)=>*id,
+            None=>0,
+        }
+    }
+
+    fn max_company_id(&self)->i32{
+        match self.companies.iter().map(|company|company.id).max(){
+            Some(id)=>id,
+            None=>0,
+        }
+    }
+
+    fn max_tour_id(&self)->i32{
+        match self.vehicles.iter().flat_map(|vehicle|&vehicle.tours).map(|(id,_)|id).max(){
+            Some(id)=>*id,
+            None=>0,
+        }
+    }
+
+    fn max_user_id(&self)->i32{
+        match self.users.iter().map(|(id,_)|id).max(){
+            Some(id)=>*id,
+            None=>0,
+        }
+    }
+
+    fn max_vehicle_id(&self)->i32{
+        match self.vehicles.iter().map(|vehicle|vehicle.id).max(){
+            Some(id)=>id,
+            None=>0,
+        }
+    }
+    
     pub async fn read_data_from_db(
         &mut self,
         State(s): State<&AppState>,
     ) {
-        let zones: Vec<zone::Model> = Zone::find()
+        let mut zones: Vec<zone::Model> = Zone::find()
             .all(s.db())
             .await
             .expect("Error while reading from Database.");
+        zones.sort_by_key(|z| z.id);
         for zone in zones.iter() {
             match multi_polygon_from_str(&zone.area) {
                 Err(e) => error!("{e:?}"),
@@ -381,8 +459,10 @@ impl Data {
             .all(s.db())
             .await
             .expect("Error while reading from Database.");
+        self.companies
+            .resize(company_models.len(), CompanyData::new());
         for company_model in company_models {
-            self.companies.push(CompanyData {
+            self.companies[id_to_vec_pos(company_model.id)] = CompanyData {
                 name: company_model.name,
                 zone: company_model.zone,
                 central_coordinates: Point::new(
@@ -390,23 +470,27 @@ impl Data {
                     company_model.longitude as f64,
                 ),
                 id: company_model.id,
-            });
+            };
         }
 
-        let vehicle_models: Vec<<vehicle::Entity as sea_orm::EntityTrait>::Model> = Vehicle::find()
-            .all(s.db())
-            .await
-            .expect("Error while reading from Database.");
+        let mut vehicle_models: Vec<<vehicle::Entity as sea_orm::EntityTrait>::Model> =
+            Vehicle::find()
+                .all(s.db())
+                .await
+                .expect("Error while reading from Database.");
+        self.vehicles
+            .resize(vehicle_models.len(), VehicleData::new());
+        vehicle_models.sort_by_key(|v| v.id);
         for vehicle in vehicle_models.iter() {
-            self.vehicles.push(VehicleData {
+            self.vehicles[id_to_vec_pos(vehicle.id)] = VehicleData {
                 id: vehicle.id,
                 license_plate: vehicle.license_plate.to_string(),
                 company: vehicle.company,
                 specifics: vehicle.specifics,
                 active: vehicle.active,
                 availability: HashMap::new(),
-                assignments: HashMap::new(),
-            })
+                tours: HashMap::new(),
+            };
         }
 
         let availability_models: Vec<<availability::Entity as sea_orm::EntityTrait>::Model> =
@@ -427,23 +511,21 @@ impl Data {
                 .await;
         }
 
-        let assignment_models: Vec<<assignment::Entity as sea_orm::EntityTrait>::Model> =
+        let tour_models: Vec<<assignment::Entity as sea_orm::EntityTrait>::Model> =
             Assignment::find()
                 .all(s.db())
                 .await
                 .expect("Error while reading from Database.");
-        for assignment in assignment_models {
-            self.vehicles[id_to_vec_pos(assignment.vehicle)]
-                .assignments
-                .insert(
-                    assignment.id,
-                    AssignmentData {
-                        arrival: assignment.arrival,
-                        departure: assignment.departure,
-                        id: assignment.id,
-                        vehicle: assignment.vehicle,
-                    },
-                );
+        for tour in tour_models {
+            self.vehicles[id_to_vec_pos(tour.vehicle)].tours.insert(
+                tour.id,
+                TourData {
+                    arrival: tour.arrival,
+                    departure: tour.departure,
+                    id: tour.id,
+                    vehicle: tour.vehicle,
+                },
+            );
         }
 
         let event_models: Vec<<event::Entity as sea_orm::EntityTrait>::Model> = Event::find()
@@ -600,7 +682,7 @@ impl Data {
                     specifics: specs_id,
                     active: false,
                     availability: HashMap::new(),
-                    assignments: HashMap::new(),
+                    tours: HashMap::new(),
                 });
                 StatusCode::CREATED
             }
@@ -790,7 +872,7 @@ impl Data {
         end_time: NaiveDateTime,
         vehicle_id: i32,
     ) -> StatusCode {
-        if self.vehicles.len() <= vehicle_id as usize {
+        if self.max_vehicle_id() < vehicle_id || vehicle_id as usize <= 0{
             return StatusCode::NOT_FOUND;
         }
         let to_remove_interval = Interval {
@@ -880,10 +962,22 @@ impl Data {
         StatusCode::OK
     }
 
+    fn get_n_availabilities(&self)->usize{
+        self.vehicles.iter().flat_map(|vehicle|&vehicle.availability).count()
+    }
+
+    fn get_n_tours(&self)->usize{
+        self
+        .vehicles
+        .iter()
+        .flat_map(|vehicle| &vehicle.tours)
+        .count()
+    }
+
     //TODO: remove pub when events can be created by handling routing requests
-    pub async fn insert_or_add_assignment(
+    pub async fn insert_or_addto_tour(
         &mut self,
-        assignment_id: Option<i32>, // assignment_id == None <=> assignment already exists
+        tour_id: Option<i32>, // tour_id == None <=> tour already exists
         departure: NaiveDateTime,
         arrival: NaiveDateTime,
         vehicle: i32,
@@ -904,47 +998,27 @@ impl Data {
         sched_t_target: NaiveDateTime,
         comm_t_target: NaiveDateTime,
     ) -> StatusCode {
-        if !(Interval {
-            start_time: departure,
-            end_time: arrival,
-        })
-        .is_valid()
-            || !(Interval {
-                start_time: sched_t_start,
-                end_time: sched_t_target,
-            })
-            .is_valid()
-            || !(Interval {
-                start_time: comm_t_start,
-                end_time: comm_t_target,
-            })
-            .is_valid()
+        if !(Interval::new(departure,arrival)).is_valid()
+            || !(Interval::new(sched_t_start, sched_t_target,)).is_valid()
+            || !(Interval::new(comm_t_start, comm_t_target,)).is_valid()
         {
             return StatusCode::NOT_ACCEPTABLE;
         }
-        if self.users.len() < customer as usize {
+        if self.users.len() < customer as usize || self.vehicles.len() < vehicle as usize {
             return StatusCode::EXPECTATION_FAILED;
         }
-        if self.vehicles.len() < vehicle as usize {
-            return StatusCode::EXPECTATION_FAILED;
-        }
-        let id = match assignment_id {
-            Some(a_id) => {
-                //assignment already exists
-                if self
-                    .vehicles
-                    .iter()
-                    .flat_map(|vehicle| &vehicle.assignments)
-                    .count()
-                    < a_id as usize
+        let id = match tour_id {
+            Some(t_id) => {
+                //tour already exists
+                if self.get_n_tours() < t_id as usize
                 {
                     return StatusCode::EXPECTATION_FAILED;
                 }
-                a_id
+                t_id
             }
             None => {
-                //assignment does not exist, create it in database, which yields the id
-                let a_id = match Assignment::insert(assignment::ActiveModel {
+                //tour does not exist, create it in database, which yields the id
+                let t_id = match Assignment::insert(assignment::ActiveModel {
                     id: ActiveValue::NotSet,
                     departure: ActiveValue::Set(departure),
                     arrival: ActiveValue::Set(arrival),
@@ -955,26 +1029,24 @@ impl Data {
                 {
                     Ok(result) => result.last_insert_id,
                     Err(e) => {
-                        error!("Error creating assignment: {e:?}");
+                        error!("Error creating tour: {e:?}");
                         return StatusCode::INTERNAL_SERVER_ERROR;
                     }
                 };
-                //now create assignment in self(data)
-                (&mut self.vehicles[id_to_vec_pos(vehicle)])
-                    .assignments
-                    .insert(
-                        a_id,
-                        AssignmentData {
-                            id: a_id,
-                            departure,
-                            arrival,
-                            vehicle,
-                        },
-                    );
-                a_id
+                //now create tour in self(data)
+                (&mut self.vehicles[id_to_vec_pos(vehicle)]).tours.insert(
+                    t_id,
+                    TourData {
+                        id: t_id,
+                        departure,
+                        arrival,
+                        vehicle,
+                    },
+                );
+                t_id
             }
         };
-        let (start_event_id, target_event_id) = self
+        let result = self
             .insert_event_pair_into_db(
                 State(s),
                 start_address,
@@ -995,40 +1067,43 @@ impl Data {
                 comm_t_target,
             )
             .await;
-        if start_event_id == -1 {
-            return StatusCode::INTERNAL_SERVER_ERROR;
+        match result{
+            Err(e)=>{
+                return e;
+            },
+            Ok((start_event_id, target_event_id))=>{
+                //pickup-event
+                self.events.insert(
+                    start_event_id,
+                    EventData {
+                        coordinates: Point::new(lat_start as f64, lng_start as f64),
+                        scheduled_time: sched_t_start,
+                        communicated_time: comm_t_start,
+                        customer,
+                        tour: id,
+                        required_specs: required_vehicle_specs,
+                        request_id,
+                        id: start_event_id,
+                        is_pickup: true,
+                    },
+                );
+                //dropoff-event
+                self.events.insert(
+                    target_event_id, EventData {
+                        coordinates: Point::new(lat_target as f64, lng_target as f64),
+                        scheduled_time: sched_t_target,
+                        communicated_time: comm_t_target,
+                        customer,
+                        tour: id,
+                        required_specs: required_vehicle_specs,
+                        request_id,
+                        id: target_event_id,
+                        is_pickup: false,
+                    },
+                );
+                return StatusCode::CREATED;
+            }
         }
-        //pickup-event
-        self.events.insert(
-            start_event_id,
-            EventData {
-                coordinates: Point::new(lat_start as f64, lng_start as f64),
-                scheduled_time: sched_t_start,
-                communicated_time: comm_t_start,
-                customer,
-                assignment: id,
-                required_specs: required_vehicle_specs,
-                request_id,
-                id: start_event_id,
-                is_pickup: true,
-            },
-        );
-        //dropoff-event
-        self.events.insert(
-            target_event_id,
-            EventData {
-                coordinates: Point::new(lat_target as f64, lng_target as f64),
-                scheduled_time: sched_t_target,
-                communicated_time: comm_t_target,
-                customer,
-                assignment: id,
-                required_specs: required_vehicle_specs,
-                request_id,
-                id: target_event_id,
-                is_pickup: false,
-            },
-        );
-        StatusCode::CREATED
     }
 
     async fn insert_event_pair_into_db(
@@ -1041,7 +1116,7 @@ impl Data {
         sched_t_start: NaiveDateTime,
         comm_t_start: NaiveDateTime,
         customer: i32,
-        assignment: i32,
+        tour: i32,
         required_vehicle_specs: i32,
         request_id: i32,
         connects_public_transport1: bool,
@@ -1050,7 +1125,7 @@ impl Data {
         lng_target: f32,
         sched_t_target: NaiveDateTime,
         comm_t_target: NaiveDateTime,
-    ) -> (i32, i32) {
+    ) -> Result<(i32, i32),StatusCode> {
         let start_id = match Event::insert(event::ActiveModel {
             id: ActiveValue::NotSet,
             longitude: ActiveValue::Set(lng_start),
@@ -1058,7 +1133,7 @@ impl Data {
             scheduled_time: ActiveValue::Set(sched_t_start),
             communicated_time: ActiveValue::Set(comm_t_start),
             customer: ActiveValue::Set(customer),
-            chain_id: ActiveValue::Set(assignment),
+            chain_id: ActiveValue::Set(tour),
             required_vehicle_specifics: ActiveValue::Set(required_vehicle_specs),
             request_id: ActiveValue::Set(request_id),
             is_pickup: ActiveValue::Set(true),
@@ -1071,7 +1146,7 @@ impl Data {
             Ok(result) => result.last_insert_id,
             Err(e) => {
                 error!("Error creating event: {e:?}");
-                return (-1, -1);
+                return Err(StatusCode::INTERNAL_SERVER_ERROR);
             }
         };
         match Event::insert(event::ActiveModel {
@@ -1081,7 +1156,7 @@ impl Data {
             scheduled_time: ActiveValue::Set(sched_t_target),
             communicated_time: ActiveValue::Set(comm_t_target),
             customer: ActiveValue::Set(customer),
-            chain_id: ActiveValue::Set(assignment),
+            chain_id: ActiveValue::Set(tour),
             required_vehicle_specifics: ActiveValue::Set(required_vehicle_specs),
             request_id: ActiveValue::Set(request_id),
             is_pickup: ActiveValue::Set(false),
@@ -1091,10 +1166,10 @@ impl Data {
         .exec(s.db())
         .await
         {
-            Ok(target_result) => (start_id, target_result.last_insert_id),
+            Ok(target_result) => Ok((start_id, target_result.last_insert_id)),
             Err(e) => {
                 error!("Error creating event: {e:?}");
-                return (-1, -1);
+                return Err(StatusCode::INTERNAL_SERVER_ERROR);
             }
         }
     }
@@ -1117,10 +1192,7 @@ impl Data {
         let minimum_prep_time: Duration = Duration::hours(1);
         let now: NaiveDateTime = Utc::now().naive_utc();
         if now > fixed_time {
-            return StatusCode::BAD_REQUEST;
-        }
-        if is_start_time_fixed && now + minimum_prep_time > fixed_time {
-            return StatusCode::NO_CONTENT;
+            return StatusCode::NOT_ACCEPTABLE;
         }
         if passengers > 3 {
             return StatusCode::NO_CONTENT;
@@ -1136,18 +1208,13 @@ impl Data {
         } else {
             (fixed_time - beeline_time, fixed_time)
         };
+        if now + minimum_prep_time > start_time {
+            return StatusCode::NO_CONTENT;
+        }
 
-        //find companies, and vehicles that may process the request according to their zone, availability, collisions with other assignments and vehicle-specifics (based on beeline distance)
+        //find companies, and vehicles that may process the request according to their zone, availability, collisions with other tours and vehicle-specifics (based on beeline distance)
         let viable_vehicles = self
-            .get_viable_vehicles(
-                Interval {
-                    start_time,
-                    end_time: target_time,
-                },
-                passengers,
-                &start,
-            )
-            .await;
+            .get_viable_vehicles(Interval::new(start_time,target_time),passengers,&start,).await;
 
         let viable_companies = viable_vehicles
             .iter()
@@ -1161,7 +1228,6 @@ impl Data {
                 println!("  vehicle: {}", v.id);
             }
         }
-        //get the actual costs
         let start_c = Coordinate {
             lng: start_lat,
             lat: start_lng,
@@ -1170,6 +1236,7 @@ impl Data {
             lng: target_lat,
             lat: target_lng,
         };
+        //get the actual costs
         let mut start_many = Vec::<Coordinate>::new();
         for company in viable_companies.iter() {
             start_many.push(Coordinate {
@@ -1261,7 +1328,7 @@ impl Data {
 
         self.next_request_id += 1;
         let status_code = self
-            .insert_or_add_assignment(
+            .insert_or_addto_tour(
                 None,
                 start_time,
                 target_time,
@@ -1287,56 +1354,28 @@ impl Data {
         status_code
     }
 
-    pub async fn change_vehicle_for_assignment(
+    pub async fn change_vehicle_for_tour(
         &mut self,
         State(s): State<&AppState>,
-        assignment_id: i32,
+        tour_id: i32,
         new_vehicle_id: i32,
     ) -> StatusCode {
-        if id_to_vec_pos(new_vehicle_id) > self.vehicles.len() {
+        if self.max_vehicle_id() < new_vehicle_id  || new_vehicle_id as usize <= 0{
             return StatusCode::NOT_FOUND;
         }
-        let vehicles = &mut self.vehicles;
-        let old_vehicle_id_vec: Vec<i32> = vehicles
-            .iter()
-            .filter(|vehicle| {
-                vehicle
-                    .assignments
-                    .iter()
-                    .any(|(id, _)| *id == assignment_id)
-            })
-            .map(|vehicle| vehicle.id)
-            .collect();
-        if old_vehicle_id_vec.is_empty() {
-            return StatusCode::NOT_FOUND;
-        }
-        if old_vehicle_id_vec.len() > 1 {
-            error!("bad backend state: one assignment assigned to multiple cars");
-            return StatusCode::INTERNAL_SERVER_ERROR;
-        }
-        let old_vehicle_id = old_vehicle_id_vec[0];
-
-        let mut assignment_to_move = match vehicles[id_to_vec_pos(old_vehicle_id)]
-            .assignments
-            .remove(&assignment_id)
-        {
-            None => {
-                error!("Assignment missing");
-                return StatusCode::INTERNAL_SERVER_ERROR;
-            }
-            Some(a) => a,
+        let old_vehicle_id = match self.get_tour(tour_id).await{
+            Ok(tour)=> tour.vehicle,
+            Err(e)=>return e,
         };
-        assignment_to_move.vehicle = new_vehicle_id;
-
-        vehicles[id_to_vec_pos(new_vehicle_id)]
-            .assignments
-            .insert(assignment_to_move.id, assignment_to_move.clone());
+        let mut moved_tour = match self.vehicles[id_to_vec_pos(old_vehicle_id)].tours.remove(&tour_id){
+            None=>return StatusCode::INTERNAL_SERVER_ERROR,
+            Some(t)=> t,
+        };
+        moved_tour.vehicle = new_vehicle_id;
+        self.vehicles[id_to_vec_pos(new_vehicle_id)].tours.insert(tour_id,moved_tour);  
 
         let mut active_m: assignment::ActiveModel =
-            match Assignment::find_by_id(assignment_to_move.id)
-                .one(s.db())
-                .await
-            {
+            match Assignment::find_by_id(tour_id).one(s.db()).await {
                 Err(e) => {
                     error!("{e:?}");
                     return StatusCode::INTERNAL_SERVER_ERROR;
@@ -1363,34 +1402,29 @@ impl Data {
         StatusCode::ACCEPTED
     }
 
-    //keys of returned hashmap are the company-ids of the vehicles in the associated value
     async fn get_viable_vehicles(
         &self,
         interval: Interval,
         passengers: i32,
         start: &Point,
     ) -> HashMap<i32, Vec<&VehicleData>> {
-        let companies = self
+        let zone_viable_companies = self
             .companies
             .iter()
             .filter(|company| self.zones[id_to_vec_pos(company.zone)].area.contains(start))
             .collect_vec();
         self.vehicles
             .iter()
-            .filter(|vehicle| {
-                companies.contains(&&self.companies[id_to_vec_pos(vehicle.company)])
+            .filter(|vehicle| 
+                zone_viable_companies.contains(&&self.companies[id_to_vec_pos(vehicle.company)])
                     && self.vehicle_specifics[id_to_vec_pos(vehicle.specifics)]
                         .fulfills(passengers, 0, 0)
-                    && !vehicle.assignments.iter().any(|(_, assignment)| {
+                    && !vehicle.tours.iter().any(|(_, tour)| {
                         //this check might disallow some concatenations of jobs where time is saved by not having to return to the company central, TODO: fix when concatenations should be supported
-                        Interval {
-                            start_time: assignment.departure,
-                            end_time: assignment.arrival,
-                        }
-                        .touches(&interval)
+                        tour.touches(&interval)
                     }
                     && vehicle.availability.iter().any(|(_,availability)|availability.interval.contains(&interval)))
-            })
+            )
             .into_group_map_by(|vehicle| vehicle.company)
     }
 
@@ -1412,30 +1446,25 @@ impl Data {
         viable_companies
     }
 
-    pub async fn get_assignments_for_vehicle(
+    pub async fn get_tours_for_vehicle(
         &self,
         vehicle_id: i32,
         time_frame_start: NaiveDateTime,
         time_frame_end: NaiveDateTime,
-    ) -> Vec<&AssignmentData> {
-        let interval = Interval {
-            start_time: time_frame_start,
-            end_time: time_frame_end,
-        };
-        if self.vehicles.len() < id_to_vec_pos(vehicle_id) {
-            return Vec::new();
+    ) -> Result<Vec<&TourData>, StatusCode> {
+        let time_frame = Interval::new(time_frame_start,time_frame_end);
+        if time_frame.is_flipped() {
+            return Err(StatusCode::NOT_ACCEPTABLE);
         }
-        self.vehicles[id_to_vec_pos(vehicle_id)]
-            .assignments
+        if self.max_vehicle_id() < vehicle_id  || vehicle_id as usize <= 0{
+            return Err(StatusCode::NOT_FOUND);
+        }
+        Ok(self.vehicles[id_to_vec_pos(vehicle_id)]
+            .tours
             .iter()
-            .map(|(_, assignment)| assignment)
-            .filter(|assignment| {
-                interval.touches(&Interval {
-                    start_time: assignment.departure,
-                    end_time: assignment.arrival,
-                })
-            })
-            .collect_vec()
+            .map(|(_, tour)| tour)
+            .filter(|tour|tour.touches(&time_frame))
+            .collect_vec())
     }
 
     pub async fn get_events_for_vehicle(
@@ -1443,35 +1472,41 @@ impl Data {
         vehicle_id: i32,
         time_frame_start: NaiveDateTime,
         time_frame_end: NaiveDateTime,
-    ) -> Vec<&EventData> {
-        let interval = Interval {
+    ) -> Result<Vec<&EventData>, StatusCode> {
+        let time_frame = Interval {
             start_time: time_frame_start,
             end_time: time_frame_end,
         };
-        if self.vehicles.len() < id_to_vec_pos(vehicle_id) {
-            return Vec::new();
+        if time_frame.is_flipped() {
+            return Err(StatusCode::NOT_ACCEPTABLE);
         }
-        self.events
+        if self.max_vehicle_id() < vehicle_id || vehicle_id as usize <= 0 {
+            return Err(StatusCode::NOT_FOUND);
+        }
+        Ok(self
+            .events
             .iter()
             .filter(|(_, event)| {
-                interval.touches(&Interval {
-                    start_time: event.scheduled_time,
-                    end_time: event.communicated_time,
-                }) && self.vehicles[id_to_vec_pos(vehicle_id)]
-                    .assignments
-                    .iter()
-                    .any(|(a_id, _)| event.assignment == *a_id)
+                event.touches(&time_frame)
+                    && self.vehicles[id_to_vec_pos(vehicle_id)]
+                        .tours
+                        .iter()
+                        .any(|(t_id, _)| event.tour == *t_id)
             })
             .map(|(_, e)| e)
-            .collect_vec()
+            .collect_vec())
     }
 
     pub async fn get_vehicles(
         &self,
         company_id: i32,
         active: Option<bool>,
-    ) -> HashMap<i32, Vec<&VehicleData>> {
-        self.vehicles
+    ) -> Result<HashMap<i32, Vec<&VehicleData>>, StatusCode> {
+        if self.max_company_id() < company_id  || company_id as usize <= 0{
+            return Err(StatusCode::NOT_FOUND);
+        }
+        Ok(self
+            .vehicles
             .iter()
             .filter(|vehicle| {
                 vehicle.company == company_id
@@ -1480,7 +1515,7 @@ impl Data {
                         None => true,
                     }
             })
-            .into_group_map_by(|v| v.specifics)
+            .into_group_map_by(|v| v.specifics))
     }
 
     pub async fn get_events_for_user(
@@ -1488,68 +1523,121 @@ impl Data {
         user_id: i32,
         time_frame_start: NaiveDateTime,
         time_frame_end: NaiveDateTime,
-    ) -> Vec<&EventData> {
-        let interval = Interval {
+    ) -> Result<Vec<&EventData>, StatusCode> {
+        if self.max_user_id() < user_id  || user_id as usize <= 0{
+            return Err(StatusCode::NOT_FOUND);
+        }
+        let time_frame = Interval {
             start_time: time_frame_start,
             end_time: time_frame_end,
         };
-        self.events
+        if time_frame.is_flipped() {
+            return Err(StatusCode::NOT_ACCEPTABLE);
+        }
+        Ok(self
+            .events
             .iter()
             .filter(|(_, event)| {
-                let mut event_interval = Interval {
-                    start_time: event.scheduled_time,
-                    end_time: event.communicated_time,
-                };
-                event_interval.flip_if_necessary();
-                interval.touches(&event_interval) && event.customer == user_id
+                event.touches(&time_frame) && event.customer == user_id
             })
             .map(|(_, event)| event)
-            .collect_vec()
+            .collect_vec())
     }
 
-    //return vectors of conflicting assignments by vehicle ids as keys
-    pub async fn get_company_conflicts_for_assignment(
+    pub async fn get_tour(
+        &self,
+        tour_id: i32,
+    ) -> Result<&TourData, StatusCode> {
+        match self
+            .vehicles
+            .iter()
+            .flat_map(|vehicle| &vehicle.tours)
+            .find(|(t_id, _)| **t_id == tour_id)
+            .map(|(_, t)| t)
+        {
+            Some(t) => return Ok(t),
+            None => return Err(StatusCode::NOT_FOUND),
+        }
+    }
+
+    //does consider the provdided tour_id a conflict
+    pub async fn get_idle_vehicles_for_company(
         &self,
         company_id: i32,
-        assignment_id: i32,
-    ) -> Result<HashMap<i32, Vec<&AssignmentData>>, StatusCode> {
-        let assignments = self
+        tour_id: i32,
+        consider_provided_tour_conflict: bool,
+    ) -> Result<Vec<&VehicleData>, StatusCode> {
+        if self.max_company_id() < company_id  || company_id as usize <= 0{
+            return Err(StatusCode::NOT_FOUND);
+        }
+        let tour_interval = match self.get_tour(tour_id).await {
+            Ok(t) => Interval::new(t.departure, t.arrival),
+            Err(code) => return Err(code),
+        };
+        Ok(self
             .vehicles
             .iter()
             .filter(|vehicle| {
                 vehicle.company == company_id
-                    && vehicle
-                        .assignments
-                        .iter()
-                        .any(|(a_id, _)| *a_id == assignment_id)
+                    && !vehicle.tours
+                    .iter()
+                    .filter(|(_,tour)|!(!consider_provided_tour_conflict && tour_id==tour.id))
+                    .any(|(_, tour)| tour.touches(&tour_interval)
+                    )
             })
-            .map(|vehicle| &vehicle.assignments[&assignment_id])
-            .collect_vec();
-        if assignments.len() > 1 {
-            error!("bad backend state, multiple assignments with same id");
-        }
-        if assignments.is_empty() {
+            .collect_vec())
+    }
+
+    //does consider the provdided tour_id a conflict
+    pub async fn is_vehicle_idle(
+        &self,
+        vehicle_id: i32,
+        tour_id: i32,
+        consider_provided_tour_conflict: bool,
+    ) -> Result<bool, StatusCode> {
+        if self.max_vehicle_id() < vehicle_id  || vehicle_id as usize <= 0{
             return Err(StatusCode::NOT_FOUND);
         }
-        let interval = Interval {
-            start_time: assignments[0].departure,
-            end_time: assignments[0].arrival,
+        let tour_interval = match self.get_tour(tour_id).await {
+            Ok(t) => Interval::new(t.departure, t.arrival),
+            Err(code) => return Err(code),
+        };
+        Ok(!self.vehicles[id_to_vec_pos(vehicle_id)]
+            .tours
+            .iter()
+            .filter(|(_,tour)|!(!consider_provided_tour_conflict && tour_id==tour.id))
+            .any(|(_, tour)| tour.touches(&tour_interval)
+            ))
+    }
+
+    //return vectors of conflicting tours by vehicle ids as keys
+    //does not consider the provided tour_id as a conflict
+    pub async fn get_company_conflicts_for_tour(
+        &self,
+        company_id: i32,
+        tour_id: i32,
+        consider_provided_tour_conflict: bool,
+    ) -> Result<HashMap<i32, Vec<&TourData>>, StatusCode> {
+        if self.max_company_id() < company_id  || company_id as usize <= 0{
+            return Err(StatusCode::NOT_FOUND);
+        }
+        let provided_tour_interval = match self.get_tour(tour_id).await {
+            Ok(t) => Interval::new(t.departure, t.arrival),
+            Err(code) => return Err(code),
         };
 
-        let mut ret = HashMap::<i32, Vec<&AssignmentData>>::new();
+        let mut ret = HashMap::<i32, Vec<&TourData>>::new();
         self.vehicles
             .iter()
             .filter(|vehicle| vehicle.company == company_id)
             .for_each(|vehicle| {
                 let conflicts = vehicle
-                    .assignments
+                    .tours
                     .iter()
-                    .map(|(_, assignment)| assignment)
-                    .filter(|assignment| {
-                        interval.touches(&Interval {
-                            start_time: assignment.departure,
-                            end_time: assignment.arrival,
-                        })
+                    .map(|(_, tour)| tour)
+                    .filter(|tour| {     
+                        !(!consider_provided_tour_conflict && tour_id == tour.id)
+                        && tour.touches(&provided_tour_interval)
                     })
                     .collect_vec();
                 if !conflicts.is_empty() {
@@ -1559,48 +1647,109 @@ impl Data {
         Ok(ret)
     }
 
-    pub async fn get_vehicle_conflicts_for_assignment(
+    //does not consider the provided tour_id as a conflict
+    pub async fn get_vehicle_conflicts_for_tour(
         &self,
         vehicle_id: i32,
-        assignment_id: i32,
-    ) -> Vec<&AssignmentData> {
-        let intervals = self
-            .vehicles
-            .iter()
-            .flat_map(|vehicle| &vehicle.assignments)
-            .map(|(_, a)| a)
-            .filter(|assignment| assignment.id == assignment_id)
-            .map(|assignment| Interval {
-                start_time: assignment.departure,
-                end_time: assignment.arrival,
-            })
-            .collect_vec();
-        if intervals.len() > 1 {
-            error!("bad backend state, multiple assignments with same id");
-            return Vec::new();
+        tour_id: i32,
+        consider_provided_tour_conflict: bool,
+    ) -> Result<Vec<&TourData>, StatusCode> {
+        if self.max_vehicle_id() < vehicle_id  || vehicle_id as usize <= 0{
+            return Err(StatusCode::NOT_FOUND);
         }
-        if intervals.is_empty() {
-            return Vec::new();
-        }
-        self.vehicles[id_to_vec_pos(vehicle_id)]
-            .assignments
+        let tour_interval = match self.get_tour(tour_id).await {
+            Ok(t) => Interval::new(t.departure, t.arrival),
+            Err(code) => return Err(code),
+        };
+        Ok(self.vehicles[id_to_vec_pos(vehicle_id)]
+            .tours
             .iter()
-            .map(|(_, a)| a)
-            .filter(|assignment| {
-                assignment.id != assignment_id
-                    && intervals[0].touches(&Interval {
-                        start_time: assignment.departure,
-                        end_time: assignment.arrival,
-                    })
-            })
-            .collect_vec()
+            .map(|(_, t)| t)
+            .filter(|tour| 
+                !(!consider_provided_tour_conflict && tour_id == tour.id)
+                && tour.touches(&tour_interval)
+            )
+            .collect_vec())
+    }
+
+    pub async fn get_assignment_conflicts_for_event(
+        &self,
+        event_id: i32,
+        company_id: Option<i32>
+        )->Result<Vec<&TourData>,StatusCode>{
+            if self.max_event_id() < event_id || event_id as usize <= 0{
+                return Err(StatusCode::NOT_FOUND);
+            }
+            match company_id{
+                None=>(),
+                Some(id)=>if self.max_company_id()<id || id as usize <= 0{
+                    return Err(StatusCode::NOT_FOUND);
+                }
+            }
+            let event = &self.events[&event_id];
+            let mut event_interval = Interval::new(event.communicated_time,event.scheduled_time);
+            event_interval.flip_if_necessary();
+            Ok(self.vehicles
+                .iter()
+                .filter(|vehicle|match company_id{
+                    None=>true,
+                    Some(id)=>vehicle.company==id
+                })
+                .flat_map(|vehicle|&vehicle.tours)
+                .map(|(_,tour)|tour)
+                .filter(|tour|tour.touches(&event_interval))
+                .collect_vec())
+    }
+
+    pub async fn is_vehicle_available(
+        &self,
+        vehicle_id: i32,
+        start_time: NaiveDateTime,
+        end_time: NaiveDateTime,
+    ) -> Result<bool, StatusCode> {
+        if self.max_vehicle_id() < vehicle_id  || vehicle_id as usize <= 0{
+            return Err(StatusCode::NOT_FOUND);
+        }
+        let interval = Interval {
+            start_time,
+            end_time,
+        };
+        if !interval.is_valid() {
+            return Err(StatusCode::NOT_ACCEPTABLE);
+        }
+        Ok(self.vehicles[id_to_vec_pos(vehicle_id)]
+            .availability
+            .iter()
+            .any(|(_, availability)| availability.interval.contains(&interval)))
+    }
+
+    pub async fn get_events_for_tour(
+        &self,
+        tour_id: i32,
+        start_time: NaiveDateTime,
+        end_time: NaiveDateTime,
+    ) -> Result<Vec<&EventData>, StatusCode> {
+        if self.max_tour_id() < tour_id  || tour_id as usize <= 0{
+            return Err(StatusCode::NOT_FOUND);
+        }
+        let interval = Interval {
+            start_time,
+            end_time,
+        };
+        if interval.is_flipped() {
+            return Err(StatusCode::NOT_ACCEPTABLE);
+        }
+        Ok(self
+            .events
+            .iter()
+            .map(|(_, e)| e)
+            .filter(|e| e.tour == tour_id)
+            .collect_vec())
     }
 }
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
-
     use super::ZoneData;
     use crate::{
         backend::data::Data,
@@ -1610,10 +1759,57 @@ mod test {
         AppState, Arc, Database, Migrator, Mutex, Tera,
     };
     use axum::extract::State;
-    use chrono::{NaiveDate, NaiveDateTime, Timelike};
+    use chrono::{Duration, NaiveDate, NaiveDateTime};
     use geo::{Contains, Point};
     use hyper::StatusCode;
     use migration::MigratorTrait;
+    use serial_test::serial;
+    use std::collections::HashMap;
+    
+    async fn insert_or_addto_test_tour(
+        data: &mut Data,
+        tour_id: Option<i32>,
+        departure: NaiveDateTime,
+        arrival: NaiveDateTime,
+        vehicle: i32,
+        State(s): State<&AppState>,
+    ) -> StatusCode {
+        data.insert_or_addto_tour(
+            tour_id,
+            departure,
+            arrival,
+            vehicle,
+            State(&s),
+            &"karolinenplatz 5".to_string(),
+            &"Lichtwiesenweg 3".to_string(),
+            13.867512445295205,
+            51.22069201951501,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 15, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 12, 0)
+                .unwrap(),
+            2,
+            1,
+            1,
+            false,
+            false,
+            14.025081097762154,
+            51.195075641827316,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 55, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 18, 0)
+                .unwrap(),
+        )
+        .await
+    }
 
     async fn check_zones_contain_correct_points(
         d: &Data,
@@ -1621,11 +1817,17 @@ mod test {
         expected_zones: i32,
     ) {
         for point in points.iter() {
-            for company in &d.get_companies_containing_point(point).await {
-                assert_eq!(company.zone == expected_zones, true);
+            let companies_containing_point = d.get_companies_containing_point(point).await;
+            for company in &d.companies {
+                if companies_containing_point.contains(&company){
+                    assert_eq!(company.zone == expected_zones, true);
+                }else{
+                    assert_eq!(company.zone == expected_zones, false);
+                }
             }
         }
     }
+
     fn check_points_in_zone(
         expect: bool,
         zone: &ZoneData,
@@ -1635,17 +1837,65 @@ mod test {
             assert_eq!(zone.area.contains(point), expect);
         }
     }
+
     async fn check_data_db_synchronized(
         State(s): State<&AppState>,
         data: &Data,
-        read_data: &mut Data,
     ) {
-        read_data.clear();
+        let mut read_data = Data::new();
         read_data.read_data_from_db(State(&s)).await;
-        assert_eq!(read_data == data, true);
+        assert_eq!(read_data == *data, true);
     }
-    #[tokio::test]
-    async fn test() {
+
+    async fn insert_or_add_test_tour(
+        data: &mut Data,
+        vehicle_id: i32,
+        State(s): State<&AppState>,
+    ) -> StatusCode {
+        data.insert_or_addto_tour(
+            None,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 10, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(10, 0, 0)
+                .unwrap(),
+            vehicle_id,
+            State(&s),
+            &"karolinenplatz 5".to_string(),
+            &"Lichtwiesenweg 3".to_string(),
+            13.867512445295205,
+            51.22069201951501,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 15, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 12, 0)
+                .unwrap(),
+            2,
+            1,
+            1,
+            false,
+            false,
+            14.025081097762154,
+            51.195075641827316,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 55, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 18, 0)
+                .unwrap(),
+        )
+        .await
+    }
+
+    async fn test_main() -> AppState {
         dotenv().ok();
         let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
         let conn = Database::connect(db_url)
@@ -1663,20 +1913,28 @@ mod test {
                 ::std::process::exit(1);
             }
         };
-        let s = AppState {
+        AppState {
             tera,
             db: Arc::new(conn),
-        };
+        }
+    }
 
+    #[tokio::test]
+    #[serial]
+    async fn test_zones() {
+        let s = test_main().await;
         let mut d = init::init(State(&s), true, TEST1).await;
-        assert_eq!(d.vehicles.len(), 29);
-        assert_eq!(d.zones.len(), 3);
-        assert_eq!(d.companies.len(), 8);
-
-        let mut read_data = Data::new();
-        check_data_db_synchronized(State(&s), &d, &mut read_data).await;
-
         let test_points = TestPoints::new();
+        //Validate invalid multipolygon handling when creating zone (expect StatusCode::BAD_REQUEST)
+        assert_eq!(
+            d.create_zone(
+                State(&s),
+                "some new zone name".to_string(),
+                "invalid multipolygon".to_string()
+            )
+            .await,
+            StatusCode::BAD_REQUEST
+        );
         //zonen tests:
         //0->Bautzen Ost
         check_points_in_zone(true, &d.zones[0], &test_points.bautzen_ost);
@@ -1699,200 +1957,19 @@ mod test {
         check_zones_contain_correct_points(&d, &test_points.gorlitz, 3).await;
         check_zones_contain_correct_points(&d, &test_points.outside, -1).await;
 
-        //remove_availability and create_availability_____________________________________________________________________________________________________________________________________________
-        assert_eq!(d.vehicles[0].availability.len(), 1);
-        d.create_availability(
-            State(&s),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(9, 10, 0)
-                .unwrap(),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(9, 11, 0)
-                .unwrap(),
-            1,
-        )
-        .await;
-        //add non-touching
-        assert_eq!(d.vehicles[0].availability.len(), 2);
-
-        d.create_availability(
-            State(&s),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(9, 11, 0)
-                .unwrap(),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(9, 12, 0)
-                .unwrap(),
-            1,
-        )
-        .await;
-        //add touching in 1 point
-        assert_eq!(d.vehicles[0].availability.len(), 2);
-
-        d.create_availability(
-            State(&s),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(9, 11, 0)
-                .unwrap(),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(9, 13, 0)
-                .unwrap(),
-            1,
-        )
-        .await;
-        //add containing/contained (equal)
-        assert_eq!(d.vehicles[0].availability.len(), 2);
-
-        d.remove_availability(
-            State(&s),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(9, 11, 0)
-                .unwrap(),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(9, 12, 0)
-                .unwrap(),
-            1,
-        )
-        .await;
-        //remove split
-        assert_eq!(d.vehicles[0].availability.len(), 3);
-
-        d.remove_availability(
-            State(&s),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(9, 10, 0)
-                .unwrap(),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(9, 13, 0)
-                .unwrap(),
-            1,
-        )
-        .await;
-        //remove containing
-        assert_eq!(d.vehicles[0].availability.len(), 1);
-
-        d.remove_availability(
-            State(&s),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(9, 10, 0)
-                .unwrap(),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(9, 13, 0)
-                .unwrap(),
-            1,
-        )
-        .await;
-        //remove non-touching
-        assert_eq!(d.vehicles[0].availability.len(), 1);
-        assert_eq!(
-            d.vehicles[0].availability[&1].interval.start_time.hour(),
-            10
-        );
-        assert_eq!(
-            d.vehicles[0].availability[&1].interval.start_time.minute(),
-            10
-        );
-
-        d.remove_availability(
-            State(&s),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(10, 0, 0)
-                .unwrap(),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(11, 0, 0)
-                .unwrap(),
-            1,
-        )
-        .await;
-        //remove overlapping
-        assert_eq!(d.vehicles[0].availability.len(), 1);
-        assert_eq!(
-            d.vehicles[0].availability[&1].interval.start_time.hour(),
-            11
-        );
-        assert_eq!(
-            d.vehicles[0].availability[&1].interval.start_time.minute(),
-            0
-        );
-
-        //get_company_conflicts_for_assignment_____________________________________________________________________________________________________________________________________________
-        for company in d.companies.iter() {
-            let conflicts = match d.get_company_conflicts_for_assignment(company.id, 1).await {
-                Ok(c) => c,
-                Err(_) => HashMap::new(),
-            };
-            assert_eq!(conflicts.is_empty(), company.id != 1);
-            for (v, assignments) in conflicts.iter() {
-                assert_eq!(company.id, 1);
-                assert_eq!(assignments.len() == 0, *v != 2);
-            }
-        }
-
-        //get_events_for_user_____________________________________________________________________________________________________________________________________________
-        for (user_id, _) in d.users.iter() {
-            assert_eq!(
-                d.get_events_for_user(*user_id, NaiveDateTime::MIN, NaiveDateTime::MAX)
-                    .await
-                    .is_empty(),
-                *user_id != 2
-            );
-        }
-
-        //get_vehicles_____________________________________________________________________________________________________________________________________________
-        for company in d.companies.iter() {
-            let vehicles = d.get_vehicles(company.id, None).await;
-            for (specs, vehicles) in vehicles.iter() {
-                assert_eq!(*specs, 1);
-                assert_eq!((company.id == 1 || company.id == 8), vehicles.len() == 5);
-                assert_eq!((company.id == 3 || company.id == 7), vehicles.len() == 4);
-                assert_eq!(
-                    (company.id == 2 || company.id == 5 || company.id == 6),
-                    vehicles.len() == 3
-                );
-                assert_eq!(company.id == 4, vehicles.len() == 2);
-            }
-        }
-
-        let p_in_bautzen_ost = test_points.bautzen_ost[0];
-        let p_in_bautzen_west = test_points.bautzen_west[0];
-        d.handle_routing_request(
-            State(&s),
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(9, 10, 0)
-                .unwrap(),
-            true,
-            p_in_bautzen_ost.0.x,
-            p_in_bautzen_ost.0.y,
-            p_in_bautzen_west.0.x,
-            p_in_bautzen_west.0.y,
-            1,
-            2,
-            &"".to_string(),
-            &"".to_string(),
-        )
-        .await;
-
-        //validate UniqueKeyViolation handling when creating data (expect StatusCode::CONFLICT)_______________________________________________________
+        check_data_db_synchronized(State(&s), &d).await;
+    }
+    #[tokio::test]
+    #[serial]
+    async fn test_key_violations() {
+        let s = test_main().await;
+        let mut d = init::init(State(&s), true, TEST1).await;
+        //validate UniqueKeyViolation handling when creating data (expect StatusCode::CONFLICT)
         //unique keys:  table               keys
         //              user                name, email
         //              zone                name
         //              company             name
-        //              vehicle             license plate
+        //              vehicle             license-plate
         let n_users = d.users.len();
         //insert user with existing name
         assert_eq!(
@@ -1910,6 +1987,7 @@ mod test {
             .await,
             StatusCode::CONFLICT
         );
+        assert_eq!(d.users.len(), n_users);
         //insert user with existing email
         assert_eq!(
             d.create_user(
@@ -1941,7 +2019,6 @@ mod test {
         )
         .await;
         assert_eq!(d.users.len(), n_users + 1);
-        let n_users = d.users.len();
 
         //insert zone with existing name
         let n_zones = d.zones.len();
@@ -1974,14 +2051,77 @@ mod test {
         );
         assert_eq!(d.vehicles.len(), n_vehicles);
 
-        //Validate ForeignKeyViolation handling when creating data (expect StatusCode::EXPECTATION_FAILED)__________________________________________________________
+        //Validate ForeignKeyViolation handling when creating data (expect StatusCode::EXPECTATION_FAILED)
         //foreign keys: table               keys
         //              company             zone
         //              vehicle             company specifics           TODO: test specifics when mvp restriction on specifics is lifted
         //              availability        vehicle
-        //              assignment          vehicle                     TODO: test this when handle_request is testable
-        //              event               user assignment specifics   TODO: test this when handle_request is testable
-
+        //              tour                vehicle
+        //              event               user tour specifics         TODO: test specifics when mvp restriction on specifics is lifted
+        let base_time = NaiveDate::from_ymd_opt(5000, 1, 1)
+            .unwrap()
+            .and_hms_opt(10, 0, 0)
+            .unwrap();
+        let in_2_hours = base_time + Duration::hours(2);
+        let in_3_hours = base_time + Duration::hours(3);
+        let n_tours = d.get_n_tours();
+        let n_events = d.events.len();
+        assert_eq!(
+            insert_or_add_test_tour(&mut d, 100, State(&s)).await,
+            StatusCode::EXPECTATION_FAILED
+        );
+        assert_eq!(
+            insert_or_add_test_tour(&mut d, 100, State(&s)).await,
+            StatusCode::EXPECTATION_FAILED
+        );
+        assert_eq!(
+            d.insert_event_pair_into_db(
+                State(&s),
+                &"".to_string(),
+                &"".to_string(),
+                0.0,
+                0.0,
+                in_2_hours,
+                in_2_hours,
+                100, //customer
+                1,
+                1,
+                1,
+                false,
+                false,
+                0.0,
+                0.0,
+                in_3_hours,
+                in_3_hours
+            )
+            .await,
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        );
+        assert_eq!(
+            d.insert_event_pair_into_db(
+                State(&s),
+                &"".to_string(),
+                &"".to_string(),
+                0.0,
+                0.0,
+                in_2_hours,
+                in_2_hours,
+                1,
+                100, //tour
+                1,
+                1,
+                false,
+                false,
+                0.0,
+                0.0,
+                in_3_hours,
+                in_3_hours
+            )
+            .await,
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        );
+        assert_eq!(n_events, d.events.len());
+        assert_eq!(n_tours, d.get_n_tours());
         //insert company with non-existing zone
         assert_eq!(
             d.create_company(
@@ -2032,234 +2172,685 @@ mod test {
             StatusCode::CREATED
         );
         assert_eq!(d.vehicles.len(), n_vehicles + 1);
-        let n_vehicles = d.vehicles.len();
 
-        //insert vehicle with non-existing vehicle-specifics should be added if specifics are no longer restricted for mvp->TODO
+        check_data_db_synchronized(State(&s), &d).await;
+    }
 
-        //insert availability with non-existing vehicle
-        let n_availabilities = d
-            .vehicles
-            .iter()
-            .flat_map(|vehicle| &vehicle.availability)
-            .count();
+    #[tokio::test]
+    #[serial]
+    async fn test_invalid_id_parameter_handling() {
+        let s = test_main().await;
+        let mut d = init::init(State(&s), true, TEST1).await;
+
+        let base_time = NaiveDate::from_ymd_opt(5000, 1, 1)
+            .unwrap()
+            .and_hms_opt(10, 0, 0)
+            .unwrap();
+        let in_2_hours = base_time + Duration::hours(2);
+        let in_3_hours = base_time + Duration::hours(3);
+        let d_copy = d.clone();
+
+        let max_event_id = d.max_event_id();
+        let max_company_id = d.max_company_id();
+        let max_tour_id = d.max_tour_id();
+        let max_user_id = d.max_user_id();
+        //get_assignment_conflicts_for_event
+        assert_eq!(
+            d.get_assignment_conflicts_for_event(0, None).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_assignment_conflicts_for_event(1, None).await.is_ok(),true);
+        assert_eq!(
+            d.get_assignment_conflicts_for_event(max_event_id+1, None).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_assignment_conflicts_for_event(max_event_id, None).await.is_ok(),true);
+
+        assert_eq!(
+            d.get_assignment_conflicts_for_event(1, Some(0)).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_assignment_conflicts_for_event(1, Some(1)).await.is_ok(),true);
+        assert_eq!(
+            d.get_assignment_conflicts_for_event(1, Some(1+max_company_id)).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_assignment_conflicts_for_event(1, Some(max_company_id)).await.is_ok(),true);
+
+        //get_company_conflicts_for_tour
+        assert_eq!(
+            d.get_company_conflicts_for_tour(0, 1, true).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_company_conflicts_for_tour(1, 1, true).await.is_ok(),true);
+        assert_eq!(
+            d.get_company_conflicts_for_tour(max_company_id+1, 1, true).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_company_conflicts_for_tour(max_company_id, 1, true).await.is_ok(),true);
+
+        assert_eq!(
+            d.get_company_conflicts_for_tour(1, 0, true).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_company_conflicts_for_tour(1, 1, true).await.is_ok(),true);
+        assert_eq!(
+            d.get_company_conflicts_for_tour(1, max_tour_id+1, true).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_company_conflicts_for_tour(1, max_tour_id, true).await.is_ok(),true);
+
+        //get_events_for_user
+        assert_eq!(
+            d.get_events_for_user(0, in_2_hours, in_3_hours).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_events_for_user(1, in_2_hours, in_3_hours).await.is_ok(),true);
+        assert_eq!(
+            d.get_events_for_user(max_user_id+1, in_2_hours, in_3_hours).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_events_for_user(max_user_id, in_2_hours, in_3_hours).await.is_ok(),true);
+
+        //get_vehicles
+        assert_eq!(
+            d.get_vehicles(0, None).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_vehicles(1, None).await.is_ok(),true);
+        assert_eq!(
+            d.get_vehicles(max_company_id+1,  None).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_vehicles(max_company_id,  None).await.is_ok(),true);
+
+
+            //TODO
+        assert_eq!(
+            d.get_vehicle_conflicts_for_tour(50, 1, true).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_vehicle_conflicts_for_tour(1, 50, true).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_events_for_tour(50, in_2_hours, in_3_hours).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.is_vehicle_available(50, in_2_hours, in_3_hours,).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.is_vehicle_idle(1, 50, true).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.is_vehicle_idle(50, 1, true).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_idle_vehicles_for_company(1, 50, true).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_idle_vehicles_for_company(50, 1, true).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_events_for_vehicle(50, in_2_hours, in_3_hours).await,Err(StatusCode::NOT_FOUND)
+        );
+        assert_eq!(
+            d.get_tours_for_vehicle(50, in_2_hours, in_3_hours).await,Err( StatusCode::NOT_FOUND)
+        );
+        assert_eq!(d.get_tour(50).await,Err( StatusCode::NOT_FOUND));
+        assert_eq!(
+            d.change_vehicle_for_tour(State(&s), 50, 1).await,StatusCode::NOT_FOUND
+        );
+        assert_eq!(
+            d.change_vehicle_for_tour(State(&s), 1, 50).await,StatusCode::NOT_FOUND
+        );
+        assert_eq!(
+            d.remove_availability(State(&s), in_2_hours, in_3_hours, 50).await,StatusCode::NOT_FOUND,
+        );
+        assert_eq!(d_copy == d, true);
+        check_data_db_synchronized(State(&s), &d).await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_invalid_interval_parameter_handling() {
+        let s = test_main().await;
+        let mut d = init::init(State(&s), true, TEST1).await;
+        let d_copy = d.clone();
+
+        let base_time = NaiveDate::from_ymd_opt(5000, 1, 1)
+            .unwrap()
+            .and_hms_opt(10, 0, 0)
+            .unwrap();
+        let in_2_hours = base_time + Duration::hours(2);
+        let in_3_hours = base_time + Duration::hours(3);
+        //flipped interval
+        assert_eq!(
+            d.get_tours_for_vehicle(1, in_3_hours, in_2_hours).await,Err(StatusCode::NOT_ACCEPTABLE)
+        );
+        //interval range not limited
+        assert_eq!(
+            match d.get_tours_for_vehicle(1, NaiveDateTime::MIN, NaiveDateTime::MAX).await
+            {
+                Err(e) => {
+                    println!("{e:?}");
+                    false
+                }
+                Ok(_) => true,
+            },
+            true
+        );
+        //flipped interval
+        assert_eq!(
+            d.get_events_for_user(1, in_3_hours, in_2_hours).await,Err(StatusCode::NOT_ACCEPTABLE)
+        );
+        //interval range not limited
+        assert_eq!(
+            match d.get_events_for_user(1, NaiveDateTime::MIN, NaiveDateTime::MAX).await
+            {
+                Err(e) => {
+                    println!("{e:?}");
+                    false
+                }
+                Ok(_) => true,
+            },
+            true
+        );
+        //flipped interval
+        assert_eq!(
+            d.get_events_for_tour(1, in_3_hours, in_2_hours).await,Err(StatusCode::NOT_ACCEPTABLE)
+        );
+        //interval range not limited
+        assert_eq!(
+            match d.get_events_for_tour(1, NaiveDateTime::MIN, NaiveDateTime::MAX).await
+            {
+                Err(e) => {
+                    println!("{e:?}");
+                    false
+                }
+                Ok(_) => true,
+            },
+            true
+        );
+        //flipped interval
+        assert_eq!(
+            d.get_events_for_vehicle(1, in_3_hours, in_2_hours).await,Err(StatusCode::NOT_ACCEPTABLE)
+        );
+        //interval range not limited
+        assert_eq!(
+            match d.get_events_for_vehicle(1, NaiveDateTime::MIN, NaiveDateTime::MAX).await
+            {
+                Err(e) => {
+                    println!("{e:?}");
+                    false
+                }
+                Ok(_) => true,
+            },
+            true
+        );
+        let n_availabilities = d.get_n_availabilities();
+        //flipped interval
+        assert_eq!(
+            d.create_availability(State(&s), base_time + Duration::hours(1), base_time, 1)
+                .await,StatusCode::NOT_ACCEPTABLE
+        );
+        assert_eq!(
+            d.get_n_availabilities(),
+            n_availabilities
+        );
+        //starttime before year 2024
         assert_eq!(
             d.create_availability(
                 State(&s),
-                NaiveDate::from_ymd_opt(2024, 4, 15)
+                NaiveDateTime::MIN,
+                base_time + Duration::hours(1),
+                1
+            )
+            .await,
+            StatusCode::NOT_ACCEPTABLE
+        );
+        assert_eq!(
+            d.get_n_availabilities(),
+            n_availabilities
+        );
+        //endtime after year 100000
+        assert_eq!(
+            d.create_availability(
+                State(&s),
+                base_time,
+                NaiveDate::from_ymd_opt(100000, 4, 15)
                     .unwrap()
-                    .and_hms_opt(9, 10, 0)
+                    .and_hms_opt(10, 0, 0)
+                    .unwrap(),
+                1
+            )
+            .await,
+            StatusCode::NOT_ACCEPTABLE
+        );
+        assert_eq!(
+            d.get_n_availabilities(),
+            n_availabilities
+        );
+        //flipped interval
+        assert_eq!(
+            d.remove_availability(State(&s), base_time + Duration::hours(1), base_time, 1)
+                .await,
+            StatusCode::NOT_ACCEPTABLE
+        );
+        assert_eq!(
+            d.get_n_availabilities(),
+            n_availabilities
+        );
+        //starttime before year 2024
+        assert_eq!(
+            d.remove_availability(
+                State(&s),
+                NaiveDate::from_ymd_opt(2023, 4, 15)
+                    .unwrap()
+                    .and_hms_opt(11, 10, 0)
                     .unwrap(),
                 NaiveDate::from_ymd_opt(2024, 4, 15)
                     .unwrap()
                     .and_hms_opt(10, 0, 0)
                     .unwrap(),
+                1
+            )
+            .await,
+            StatusCode::NOT_ACCEPTABLE
+        );
+        //endtime after year 100000
+        assert_eq!(
+            d.remove_availability(
+                State(&s),
+                NaiveDate::from_ymd_opt(2024, 4, 15)
+                    .unwrap()
+                    .and_hms_opt(11, 10, 0)
+                    .unwrap(),
+                NaiveDate::from_ymd_opt(100000, 4, 15)
+                    .unwrap()
+                    .and_hms_opt(10, 0, 0)
+                    .unwrap(),
+                1
+            )
+            .await,
+            StatusCode::NOT_ACCEPTABLE
+        );
+        assert_eq!(
+            d.get_n_availabilities(),
+            n_availabilities
+        );
+        //flipped interval
+        assert_eq!(
+            d.is_vehicle_available(1, in_3_hours, in_2_hours).await,Err(StatusCode::NOT_ACCEPTABLE)
+        );
+        //starttime before year 2024
+        assert_eq!(
+            d.is_vehicle_available(1, NaiveDateTime::MIN, in_3_hours).await,Err(StatusCode::NOT_ACCEPTABLE)
+        );
+        //endtime after year 100000
+        assert_eq!(
+            d.is_vehicle_available(1, in_3_hours, NaiveDateTime::MAX).await,Err(StatusCode::NOT_ACCEPTABLE)
+        );
+
+        assert_eq!(d == d_copy, true);
+        check_data_db_synchronized(State(&s), &d).await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_init() {
+        let s = test_main().await;
+        let mut d = init::init(State(&s), true, TEST1).await;
+
+        assert_eq!(d.vehicles.len(), 29);
+        assert_eq!(d.zones.len(), 3);
+        assert_eq!(d.companies.len(), 8);
+
+        let test_points = TestPoints::new();
+        d.change_vehicle_for_tour(State(&s), 1, 2).await;
+
+        //get_company_conflicts_for_tour
+        for company in d.companies.iter() {
+            let conflicts = match d.get_company_conflicts_for_tour(company.id, 1, true).await {
+                Ok(c) => c,
+                Err(_) => HashMap::new(),
+            };
+            assert_eq!(conflicts.is_empty(), company.id != 1);
+            for (v, tours) in conflicts.iter() {
+                assert_eq!(company.id, 1);
+                assert_eq!(tours.len() == 0, *v != 2);
+            }
+        }
+
+        //get_events_for_user
+        for (user_id, _) in d.users.iter() {
+            assert_eq!(
+                d.get_events_for_user(
+                    *user_id,
+                    NaiveDate::from_ymd_opt(2024, 1, 1)
+                        .unwrap()
+                        .and_hms_opt(1, 0, 0)
+                        .unwrap(),
+                    NaiveDate::from_ymd_opt(6000, 4, 15)
+                        .unwrap()
+                        .and_hms_opt(14, 0, 0)
+                        .unwrap(),
+                )
+                .await
+                .unwrap()
+                .is_empty(),
+                *user_id != 2 // only user 2 has events
+            );
+            if *user_id == 2{
+                assert_eq!(d.get_events_for_user(
+                    *user_id,
+                    NaiveDate::from_ymd_opt(2024, 1, 1)
+                        .unwrap()
+                        .and_hms_opt(1, 0, 0)
+                        .unwrap(),
+                    NaiveDate::from_ymd_opt(6000, 4, 15)
+                        .unwrap()
+                        .and_hms_opt(14, 0, 0)
+                        .unwrap(),
+                    )
+                    .await
+                    .unwrap().len(),2
+                );
+            }
+        }
+
+        //get_vehicles
+        for company in d.companies.iter() {
+            let vehicles = d.get_vehicles(company.id, None).await.unwrap();
+            for (specs, vehicles) in vehicles.iter() {
+                assert_eq!(*specs, 1);
+                assert_eq!((company.id == 1 || company.id == 8), vehicles.len() == 5);
+                assert_eq!((company.id == 3 || company.id == 7), vehicles.len() == 4);
+                assert_eq!(
+                    (company.id == 2 || company.id == 5 || company.id == 6),
+                    vehicles.len() == 3
+                );
+                assert_eq!(company.id == 4, vehicles.len() == 2);
+            }
+        }
+
+        //insert vehicle with non-existing vehicle-specifics test should be added if specifics are no longer restricted for mvp->TODO
+
+        assert_eq!(d.vehicles[1].tours.len(), 1);
+        assert_eq!(
+            d.get_events_for_vehicle(2, NaiveDateTime::MIN, NaiveDateTime::MAX)
+                .await
+                .unwrap()
+                .len(),
+            2
+        );
+        insert_or_add_test_tour(&mut d, 2, State(&s)).await;
+        assert_eq!(d.vehicles[1].tours.len(), 2);
+        assert_eq!(
+            d.get_events_for_vehicle(2, NaiveDateTime::MIN, NaiveDateTime::MAX)
+                .await
+                .unwrap()
+                .len(),
+            4
+        );
+
+        for company in d.companies.iter() {
+            let conflicts = match d.get_company_conflicts_for_tour(company.id, 1, true).await {
+                Ok(c) => c,
+                Err(_) => HashMap::new(),
+            };
+            assert_eq!(conflicts.is_empty(), company.id != 1);
+            for (v, tours) in conflicts.iter() {
+                assert_eq!(company.id, 1);
+                assert_eq!(tours.len() == 0, *v != 2);
+                assert_eq!(tours.len() == 2, *v == 2);
+            }
+        }
+
+        insert_or_add_test_tour(&mut d, 7, State(&s)).await;
+        assert_eq!(d.vehicles[1].tours.len(), 2);
+        assert_eq!(
+            d.get_events_for_vehicle(2, NaiveDateTime::MIN, NaiveDateTime::MAX)
+                .await
+                .unwrap()
+                .len(),
+            4
+        );
+        assert_eq!(d.vehicles[6].tours.len(), 1);
+        assert_eq!(
+            d.get_events_for_vehicle(7, NaiveDateTime::MIN, NaiveDateTime::MAX)
+                .await
+                .unwrap()
+                .len(),
+            2
+        );
+        for tour_id in 1..4 {
+            //vehicle 2 has tours with ids 1 and 2, vehicle 7 has tour with id 3, no other vehicles have tours
+            if tour_id == 3 {
+                //consider_provided_tour_conflict parameter only affects vehicle 7, since it is assigned tour_id  (3)
+                assert_eq!(
+                    d.get_vehicle_conflicts_for_tour(2, tour_id, true)
+                        .await
+                        .unwrap()
+                        .len(),
+                    2
+                );
+                assert_eq!(
+                    d.get_vehicle_conflicts_for_tour(2, tour_id, false)
+                        .await
+                        .unwrap()
+                        .len(),
+                    2
+                );
+                assert_eq!(
+                    d.get_vehicle_conflicts_for_tour(7, tour_id, true)
+                        .await
+                        .unwrap()
+                        .len(),
+                    1
+                );
+                assert_eq!(
+                    d.get_vehicle_conflicts_for_tour(7, tour_id, false) 
+                        .await
+                        .unwrap()
+                        .len(),
+                    0
+                );
+            } else if tour_id == 1 || tour_id == 2 {
+                //consider_provided_tour_conflict parameter only affects vehicle 2, since it is assigned tour_id  (1 or 2)
+                assert_eq!(
+                    d.get_vehicle_conflicts_for_tour(2, tour_id, true)
+                        .await
+                        .unwrap()
+                        .len(),
+                    2
+                );
+                assert_eq!(
+                    d.get_vehicle_conflicts_for_tour(2, tour_id, false)
+                        .await
+                        .unwrap()
+                        .len(),
+                    1
+                );
+                assert_eq!(
+                    d.get_vehicle_conflicts_for_tour(7, tour_id, true)
+                        .await
+                        .unwrap()
+                        .len(),
+                    1
+                );
+                assert_eq!(
+                    d.get_vehicle_conflicts_for_tour(7, tour_id, false)
+                        .await
+                        .unwrap()
+                        .len(),
+                    1
+                );
+            } 
+            for v_id in 1..d.vehicles.len() + 1 {
+                if v_id == 7 || v_id == 2 {
+                    continue;
+                }
+                assert_eq!(
+                    d.get_vehicle_conflicts_for_tour(v_id as i32, tour_id, true)
+                        .await
+                        .unwrap()
+                        .len(),
+                    0
+                );
+            }
+        }
+
+        let p_in_bautzen_ost = test_points.bautzen_ost[0];
+        let p_in_bautzen_west = test_points.bautzen_west[0];
+        d.handle_routing_request(
+            State(&s),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 10, 0)
+                .unwrap(),
+            true,
+            p_in_bautzen_ost.0.x,
+            p_in_bautzen_ost.0.y,
+            p_in_bautzen_west.0.x,
+            p_in_bautzen_west.0.y,
+            1,
+            2,
+            &"".to_string(),
+            &"".to_string(),
+        )
+        .await;
+
+        check_data_db_synchronized(State(&s), &d).await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn availability_test() {
+        let s = test_main().await;
+        let mut d = init::init(State(&s), true, TEST1).await;
+        let n_vehicles = d.vehicles.len();
+
+        let base_time = NaiveDate::from_ymd_opt(5000, 4, 15)
+            .unwrap()
+            .and_hms_opt(9, 10, 0)
+            .unwrap();
+        let in_2_hours = base_time + Duration::hours(2);
+        let in_3_hours = base_time + Duration::hours(3);
+
+        //remove_availability and create_availability
+        assert_eq!(d.vehicles[0].availability.len(), 1);
+        //remove availabilies created in init
+        d.remove_availability(
+            State(&s),
+            NaiveDate::from_ymd_opt(2024, 1, 1)
+                .unwrap()
+                .and_hms_opt(0, 0, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2026, 1, 1)
+                .unwrap()
+                .and_hms_opt(0, 0, 0)
+                .unwrap(),
+            1,
+        )
+        .await;
+        assert_eq!(d.vehicles[0].availability.len(), 0);
+        //add non-touching
+        d.create_availability(State(&s), in_2_hours, in_3_hours, 1)
+            .await;
+        assert_eq!(d.vehicles[0].availability.len(), 1);
+        assert_eq!(d.vehicles[0].availability.len(), 1);
+        //add touching
+        d.create_availability(
+            State(&s),
+            in_2_hours + Duration::hours(1),
+            in_3_hours + Duration::hours(1),
+            1,
+        )
+        .await;
+        assert_eq!(d.vehicles[0].availability.len(), 1);
+        //add containing/contained (equal)
+        d.create_availability(State(&s), in_2_hours, in_3_hours, 1)
+            .await;
+        assert_eq!(d.vehicles[0].availability.len(), 1);
+
+        //remove non-touching
+        d.remove_availability(
+            State(&s),
+            base_time + Duration::weeks(1),
+            base_time + Duration::weeks(2),
+            1,
+        )
+        .await;
+        assert_eq!(d.vehicles[0].availability.len(), 1);
+        //remove split
+        d.remove_availability(
+            State(&s),
+            in_2_hours + Duration::minutes(5),
+            in_3_hours - Duration::minutes(5),
+            1,
+        )
+        .await;
+        assert_eq!(d.vehicles[0].availability.len(), 2);
+        //remove overlapping
+        d.remove_availability(
+            State(&s),
+            in_2_hours - Duration::minutes(90),
+            in_3_hours - Duration::minutes(100),
+            1,
+        )
+        .await;
+        assert_eq!(d.vehicles[0].availability.len(), 2);
+        //remove containing
+        d.remove_availability(
+            State(&s),
+            in_2_hours - Duration::minutes(1),
+            in_3_hours + Duration::hours(3),
+            1,
+        )
+        .await;
+        assert_eq!(d.vehicles[0].availability.len(), 0);
+
+        //Validate StatusCode cases
+        //insert availability with non-existing vehicle
+        let n_availabilities = d.get_n_availabilities();
+        assert_eq!(
+            d.create_availability(
+                State(&s),
+                base_time,
+                base_time + Duration::hours(1),
                 1 + n_vehicles as i32
             )
             .await,
             StatusCode::EXPECTATION_FAILED
         );
         assert_eq!(
-            d.vehicles
-                .iter()
-                .flat_map(|vehicle| &vehicle.availability)
-                .count(),
+            d.get_n_availabilities(),
             n_availabilities
         );
         //insert availability with existing vehicle
-        let n_availabilities = d
-            .vehicles
-            .iter()
-            .flat_map(|vehicle| &vehicle.availability)
-            .count();
+        let n_availabilities = d.get_n_availabilities();
         assert_eq!(
             d.create_availability(
                 State(&s),
-                NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(9, 10, 0)
-                    .unwrap(),
-                NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(10, 0, 0)
-                    .unwrap(),
+                base_time,
+                base_time + Duration::hours(1),
                 n_vehicles as i32
             )
             .await,
             StatusCode::CREATED
         );
         assert_eq!(
-            d.vehicles
-                .iter()
-                .flat_map(|vehicle| &vehicle.availability)
-                .count(),
+            d.get_n_availabilities(),
             n_availabilities + 1
         );
-        let n_availabilities = d
-            .vehicles
-            .iter()
-            .flat_map(|vehicle| &vehicle.availability)
-            .count();
+        let n_availabilities = d.get_n_availabilities();
 
-        //Validate invalid multipolygon handling when creating zone (expect StatusCode::BAD_REQUEST)__________________________________________________________
         assert_eq!(
-            d.create_zone(
-                State(&s),
-                "some new zone name".to_string(),
-                "invalid multipolygon".to_string()
-            )
-            .await,
-            StatusCode::BAD_REQUEST
-        );
-        assert_eq!(d.zones.len(), n_zones);
-
-        //Validate invalid interval handling when creating data (expect StatusCode::NOT_ACCEPTABLE)__________________________________________________________
-        //starttime > endtime
-        assert_eq!(
-            d.create_availability(
-                State(&s),
-                NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(11, 10, 0)
-                    .unwrap(),
-                NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(10, 0, 0)
-                    .unwrap(),
-                1
-            )
-            .await,
-            StatusCode::NOT_ACCEPTABLE
-        );
-        assert_eq!(
-            d.vehicles
-                .iter()
-                .flat_map(|vehicle| &vehicle.availability)
-                .count(),
-            n_availabilities
-        );
-        //starttime before year 2024
-        assert_eq!(
-            d.create_availability(
-                State(&s),
-                NaiveDate::from_ymd_opt(2023, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(11, 10, 0)
-                    .unwrap(),
-                NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(10, 0, 0)
-                    .unwrap(),
-                1
-            )
-            .await,
-            StatusCode::NOT_ACCEPTABLE
-        );
-        assert_eq!(
-            d.vehicles
-                .iter()
-                .flat_map(|vehicle| &vehicle.availability)
-                .count(),
-            n_availabilities
-        );
-        //endtime after year 100000
-        assert_eq!(
-            d.create_availability(
-                State(&s),
-                NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(11, 10, 0)
-                    .unwrap(),
-                NaiveDate::from_ymd_opt(100000, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(10, 0, 0)
-                    .unwrap(),
-                1
-            )
-            .await,
-            StatusCode::NOT_ACCEPTABLE
-        );
-        assert_eq!(
-            d.vehicles
-                .iter()
-                .flat_map(|vehicle| &vehicle.availability)
-                .count(),
-            n_availabilities
-        );
-        //remove
-        //starttime > endtime
-        assert_eq!(
-            d.remove_availability(
-                State(&s),
-                NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(11, 10, 0)
-                    .unwrap(),
-                NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(10, 0, 0)
-                    .unwrap(),
-                1
-            )
-            .await,
-            StatusCode::NOT_ACCEPTABLE
-        );
-        assert_eq!(
-            d.vehicles
-                .iter()
-                .flat_map(|vehicle| &vehicle.availability)
-                .count(),
-            n_availabilities
-        );
-        //starttime before year 2024
-        assert_eq!(
-            d.remove_availability(
-                State(&s),
-                NaiveDate::from_ymd_opt(2023, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(11, 10, 0)
-                    .unwrap(),
-                NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(10, 0, 0)
-                    .unwrap(),
-                1
-            )
-            .await,
-            StatusCode::NOT_ACCEPTABLE
-        );
-        assert_eq!(
-            d.vehicles
-                .iter()
-                .flat_map(|vehicle| &vehicle.availability)
-                .count(),
-            n_availabilities
-        );
-        //endtime after year 100000
-        assert_eq!(
-            d.remove_availability(
-                State(&s),
-                NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(11, 10, 0)
-                    .unwrap(),
-                NaiveDate::from_ymd_opt(100000, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(10, 0, 0)
-                    .unwrap(),
-                1
-            )
-            .await,
-            StatusCode::NOT_ACCEPTABLE
-        );
-        assert_eq!(
-            d.vehicles
-                .iter()
-                .flat_map(|vehicle| &vehicle.availability)
-                .count(),
+            d.get_n_availabilities(),
             n_availabilities
         );
 
-        //Validate nothing happened case handling when removing availabilies (expect StatusCode::NO_CONTENT)__________________________________________________________
+        //Validate nothing happened case handling when removing availabilies (expect StatusCode::NO_CONTENT)
         //endtime after year 100000
         assert_eq!(
             d.remove_availability(
@@ -2278,14 +2869,178 @@ mod test {
             StatusCode::NO_CONTENT
         );
         assert_eq!(
-            d.vehicles
-                .iter()
-                .flat_map(|vehicle| &vehicle.availability)
-                .count(),
+            d.get_n_availabilities(),
             n_availabilities
         );
 
-        //TODO: tests for insert_or_add_assignment
-        check_data_db_synchronized(State(&s), &d, &mut read_data).await;
+        d.insert_or_addto_tour(
+            None,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 10, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(10, 0, 0)
+                .unwrap(),
+            1,
+            State(&s),
+            &"karolinenplatz 5".to_string(),
+            &"Lichtwiesenweg 3".to_string(),
+            13.867512445295205,
+            51.22069201951501,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 15, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 12, 0)
+                .unwrap(),
+            2,
+            1,
+            1,
+            false,
+            false,
+            14.025081097762154,
+            51.195075641827316,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 55, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 18, 0)
+                .unwrap(),
+        )
+        .await;
+
+        d.insert_or_addto_tour(
+            None,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 10, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(10, 0, 0)
+                .unwrap(),
+            1,
+            State(&s),
+            &"karolinenplatz 5".to_string(),
+            &"Lichtwiesenweg 3".to_string(),
+            13.867512445295205,
+            51.22069201951501,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 15, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 12, 0)
+                .unwrap(),
+            2,
+            1,
+            1,
+            false,
+            false,
+            14.025081097762154,
+            51.195075641827316,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 55, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 18, 0)
+                .unwrap(),
+        )
+        .await;
+
+        d.insert_or_addto_tour(
+            None,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 10, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(10, 0, 0)
+                .unwrap(),
+            1,
+            State(&s),
+            &"karolinenplatz 5".to_string(),
+            &"Lichtwiesenweg 3".to_string(),
+            13.867512445295205,
+            51.22069201951501,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 15, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 12, 0)
+                .unwrap(),
+            2,
+            1,
+            1,
+            false,
+            false,
+            14.025081097762154,
+            51.195075641827316,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 55, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 18, 0)
+                .unwrap(),
+        )
+        .await;
+
+        d.insert_or_addto_tour(
+            None,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 10, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(10, 0, 0)
+                .unwrap(),
+            1,
+            State(&s),
+            &"karolinenplatz 5".to_string(),
+            &"Lichtwiesenweg 3".to_string(),
+            13.867512445295205,
+            51.22069201951501,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 15, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 12, 0)
+                .unwrap(),
+            2,
+            1,
+            1,
+            false,
+            false,
+            14.025081097762154,
+            51.195075641827316,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 55, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 18, 0)
+                .unwrap(),
+        )
+        .await;
+
+        check_data_db_synchronized(State(&s), &d).await;
     }
 }

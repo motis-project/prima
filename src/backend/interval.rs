@@ -18,6 +18,21 @@ impl fmt::Display for Interval {
 }
 
 impl Interval {
+    pub fn new(
+        start_time: NaiveDateTime,
+        end_time: NaiveDateTime,
+    ) -> Self {
+        Self {
+            start_time,
+            end_time,
+        }
+    }
+    pub fn is_flipped(&self) -> bool {
+        if self.end_time < self.start_time {
+            return true;
+        }
+        return false;
+    }
     pub fn is_valid(&self) -> bool {
         let min_year = NaiveDate::from_ymd_opt(2024, 1, 1)
             .unwrap()
@@ -101,14 +116,8 @@ impl Interval {
         splitter: &Interval,
     ) -> (Interval, Interval) {
         (
-            Interval {
-                start_time: self.start_time,
-                end_time: splitter.start_time,
-            },
-            Interval {
-                start_time: splitter.end_time,
-                end_time: self.end_time,
-            },
+            Interval::new(self.start_time, splitter.start_time),
+            Interval::new(splitter.end_time, self.end_time),
         )
     }
     //asserts that the intervals (self and cutter) overlap each other but neither one contains the other.
@@ -130,66 +139,66 @@ mod test {
     use chrono::{NaiveDate, NaiveDateTime, Timelike};
     #[test]
     fn test() {
-        let mut interval: Interval = Interval {
-            start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+        let mut interval: Interval = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(9, 0, 0)
                 .unwrap(),
-            end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+            NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(10, 0, 0)
                 .unwrap(),
-        };
-        let non_touching_interval: Interval = Interval {
-            start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+        );
+        let non_touching_interval: Interval = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(11, 0, 0)
                 .unwrap(),
-            end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+            NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(12, 0, 0)
                 .unwrap(),
-        };
-        let overlapping_interval: Interval = Interval {
-            start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+        );
+        let overlapping_interval: Interval = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(9, 30, 0)
                 .unwrap(),
-            end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+            NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(10, 30, 0)
                 .unwrap(),
-        };
-        let overlapping_interval2: Interval = Interval {
-            start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+        );
+        let overlapping_interval2: Interval = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(8, 30, 0)
                 .unwrap(),
-            end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+            NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(9, 30, 0)
                 .unwrap(),
-        };
-        let containing_interval: Interval = Interval {
-            start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+        );
+        let containing_interval: Interval = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(8, 0, 0)
                 .unwrap(),
-            end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+            NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(11, 0, 0)
                 .unwrap(),
-        };
-        let contained_interval: Interval = Interval {
-            start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+        );
+        let contained_interval: Interval = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(9, 15, 0)
                 .unwrap(),
-            end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+            NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(9, 45, 0)
                 .unwrap(),
-        };
+        );
 
         assert_eq!(interval.touches(&non_touching_interval), false);
         assert_eq!(interval.touches(&overlapping_interval), true);
@@ -248,44 +257,103 @@ mod test {
         assert_eq!(interval.end_time.hour(), 10);
         assert_eq!(interval.end_time.minute(), 30);
 
-        let mut invalid_interval1 = Interval {
-            start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+        let mut invalid_interval1 = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(12, 0, 0)
                 .unwrap(),
-            end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+            NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(11, 0, 0)
                 .unwrap(),
-        };
+        );
         assert_eq!(invalid_interval1.is_valid(), false);
         invalid_interval1.flip_if_necessary();
         assert_eq!(invalid_interval1.is_valid(), true);
 
-        let mut invalid_interval2 = Interval {
-            start_time: NaiveDateTime::MIN,
-            end_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+        let mut invalid_interval2 = Interval::new(
+            NaiveDateTime::MIN,
+            NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(11, 0, 0)
                 .unwrap(),
-        };
+        );
         assert_eq!(invalid_interval2.is_valid(), false);
         invalid_interval2.flip_if_necessary();
         assert_eq!(invalid_interval2.is_valid(), false);
         assert_eq!(invalid_interval2.start_time, NaiveDateTime::MIN);
 
-        let mut invalid_interval3 = Interval {
-            start_time: NaiveDate::from_ymd_opt(2024, 4, 15)
+        let mut invalid_interval3 = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(11, 0, 0)
                 .unwrap(),
-            end_time: NaiveDateTime::MAX,
-        };
+            NaiveDateTime::MAX,
+        );
         assert_eq!(invalid_interval3.is_valid(), false);
         invalid_interval3.flip_if_necessary();
         assert_eq!(invalid_interval3.is_valid(), false);
         assert_eq!(invalid_interval3.end_time, NaiveDateTime::MAX);
 
-        //TODO: anything with 2 intervals that touch in exactly one point for example: 9:00 - 10:00 and 10:00 - 11:00
+        //test 1 point touches
+        let mid_1_point_touch = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 15, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 45, 0)
+                .unwrap(),
+        );
+        let right_1_point_touch = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 45, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 55, 0)
+                .unwrap(),
+        );
+        let left_1_point_touch = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 5, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 15, 0)
+                .unwrap(),
+        );
+        assert_eq!(mid_1_point_touch.touches(&right_1_point_touch), true);
+        assert_eq!(mid_1_point_touch.contains(&right_1_point_touch), false);
+        assert_eq!(mid_1_point_touch.overlaps(&right_1_point_touch), true);
+
+        assert_eq!(mid_1_point_touch.touches(&left_1_point_touch), true);
+        assert_eq!(mid_1_point_touch.contains(&left_1_point_touch), false);
+        assert_eq!(mid_1_point_touch.overlaps(&left_1_point_touch), true);
+
+        let mut mid_copy = mid_1_point_touch.clone();
+        mid_copy.merge(&left_1_point_touch); //merge 9:15 - 9:45 and 9:05 - 9:15 -> expext 9:05 - 9:45
+        assert_eq!(mid_copy.start_time.hour(), 9);
+        assert_eq!(mid_copy.start_time.minute(), 5);
+        assert_eq!(mid_copy.end_time.hour(), 9);
+        assert_eq!(mid_copy.end_time.minute(), 45);
+        mid_copy.merge(&right_1_point_touch); //merge 9:05 - 9:45 and 9:45 - 9:55 -> expext 9:05 - 9:55
+        assert_eq!(mid_copy.start_time.hour(), 9);
+        assert_eq!(mid_copy.start_time.minute(), 5);
+        assert_eq!(mid_copy.end_time.hour(), 9);
+        assert_eq!(mid_copy.end_time.minute(), 55);
+
+        let mut mid_copy = mid_1_point_touch.clone(); //cut 9:05 - 9:15 and 9:45 - 9:55 from expext 9:15 - 9:45 -> expect 9:15 - 9:45
+        mid_copy.cut(&left_1_point_touch);
+        mid_copy.cut(&right_1_point_touch);
+        assert_eq!(mid_copy.start_time.hour(), 9);
+        assert_eq!(mid_copy.start_time.minute(), 15);
+        assert_eq!(mid_copy.start_time.second(), 0);
+        assert_eq!(mid_copy.end_time.hour(), 9);
+        assert_eq!(mid_copy.end_time.minute(), 45);
+        assert_eq!(mid_copy.end_time.second(), 0);
     }
 }
