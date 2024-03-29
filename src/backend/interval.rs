@@ -1,4 +1,4 @@
-use chrono::{Datelike, NaiveDate, NaiveDateTime};
+use chrono::{NaiveDate, NaiveDateTime};
 use serde::Deserialize;
 use std::fmt;
 
@@ -28,37 +28,17 @@ impl Interval {
             end_time: NaiveDateTime::max(start_time, end_time),
         }
     }
-    pub fn is_valid(&self) -> bool {
-        let min_year = NaiveDate::from_ymd_opt(2024, 1, 1)
-            .unwrap()
-            .and_hms_opt(0, 0, 0)
-            .unwrap();
-        let max_year = NaiveDate::from_ymd_opt(100000, 1, 1)
-            .unwrap()
-            .and_hms_opt(0, 0, 0)
-            .unwrap();
-        self.start_time >= min_year && self.end_time <= max_year
-    }
     pub fn touches_day(
         &self,
         day: NaiveDate,
     ) -> bool {
         self.start_time.date() == day || self.end_time.date() == day
     }
-    pub fn touches(
-        self,
-        other: &Interval,
-    ) -> bool {
-        self.start_time <= other.end_time && self.end_time >= other.start_time
-    }
-    //overlaps asserts that the two intervals are touching
-    //returns true iff self and other touch but neither one contains the other
     pub fn overlaps(
         self,
         other: &Interval,
     ) -> bool {
-        (self.start_time <= other.start_time && self.end_time <= other.end_time)
-            || (self.start_time >= other.start_time && self.end_time >= other.end_time)
+        self.start_time <= other.end_time && self.end_time >= other.start_time
     }
     pub fn contains(
         self,
@@ -74,11 +54,13 @@ impl Interval {
     }
     //asserts that self and other overlap, neither contains the other
     pub fn merge(
-        &mut self,
+        &self,
         other: &Interval,
-    ) {
-        self.start_time = NaiveDateTime::min(self.start_time, other.start_time);
-        self.end_time = NaiveDateTime::max(self.end_time, other.end_time);
+    ) -> Interval {
+        Interval::new(
+            NaiveDateTime::min(self.start_time, other.start_time),
+            NaiveDateTime::max(self.end_time, other.end_time),
+        )
     }
     //asserts that splitter is contained in self, but not vice versa
     pub fn split(
@@ -92,13 +74,13 @@ impl Interval {
     }
     //asserts that the intervals (self and cutter) overlap each other but neither one contains the other.
     pub fn cut(
-        &mut self,
+        &self,
         cutter: &Interval,
-    ) {
+    ) -> Interval {
         if self.start_time < cutter.start_time {
-            self.end_time = cutter.start_time;
+            Interval::new(self.start_time, cutter.start_time)
         } else {
-            self.start_time = cutter.end_time;
+            Interval::new(cutter.end_time, self.end_time)
         }
     }
 }
@@ -106,11 +88,11 @@ impl Interval {
 #[cfg(test)]
 mod test {
     use crate::backend::interval::Interval;
-    use chrono::{NaiveDate, NaiveDateTime, Timelike};
+    use chrono::{NaiveDate, Timelike};
     #[test]
     fn test() {
         //interval is the reference interval. The other intervals are named according to their realtion to interval.
-        let mut interval: Interval = Interval::new(
+        let interval: Interval = Interval::new(
             NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(9, 0, 0)
@@ -171,37 +153,31 @@ mod test {
                 .unwrap(),
         );
 
-        assert_eq!(interval.touches(&non_touching_interval), false);
-        assert_eq!(interval.touches(&overlapping_interval), true);
-        assert_eq!(interval.touches(&overlapping_interval2), true);
-        assert_eq!(interval.touches(&containing_interval), true);
-        assert_eq!(interval.touches(&contained_interval), true);
-
         assert_eq!(interval.contains(&overlapping_interval), false);
         assert_eq!(interval.contains(&overlapping_interval2), false);
         assert_eq!(interval.contains(&containing_interval), false);
         assert_eq!(interval.contains(&contained_interval), true);
+        assert_eq!(interval.overlaps(&non_touching_interval), false);
 
         assert_eq!(overlapping_interval.contains(&interval), false);
         assert_eq!(overlapping_interval2.contains(&interval), false);
         assert_eq!(containing_interval.contains(&interval), true);
         assert_eq!(contained_interval.contains(&interval), false);
+        assert_eq!(non_touching_interval.overlaps(&interval), false);
 
         assert_eq!(interval.overlaps(&overlapping_interval), true);
         assert_eq!(interval.overlaps(&overlapping_interval2), true);
-        assert_eq!(interval.overlaps(&containing_interval), false);
-        assert_eq!(interval.overlaps(&contained_interval), false);
+        assert_eq!(interval.overlaps(&containing_interval), true);
+        assert_eq!(interval.overlaps(&contained_interval), true);
+        assert_eq!(interval.overlaps(&non_touching_interval), false);
 
-        let mut cut_interval = interval.clone();
-        cut_interval.cut(&overlapping_interval); //cut 9:30 - 10:30 from 9:00 - 10:00 -> expext 9:00 - 9:30
-        println!("e_after: {}",cut_interval);
+        let cut_interval = interval.cut(&overlapping_interval); //cut 9:30 - 10:30 from 9:00 - 10:00 -> expext 9:00 - 9:30
         assert_eq!(cut_interval.start_time.hour(), 9);
         assert_eq!(cut_interval.start_time.minute(), 0);
         assert_eq!(cut_interval.end_time.hour(), 9);
         assert_eq!(cut_interval.end_time.minute(), 30);
 
-        cut_interval = interval.clone();
-        cut_interval.cut(&overlapping_interval2); //cut 8:30 - 9:30 from 9:00 - 10:00 -> expext 9:30 - 10:00
+        let cut_interval = interval.cut(&overlapping_interval2); //cut 8:30 - 9:30 from 9:00 - 10:00 -> expext 9:30 - 10:00
         assert_eq!(cut_interval.start_time.hour(), 9);
         assert_eq!(cut_interval.start_time.minute(), 30);
         assert_eq!(cut_interval.end_time.hour(), 10);
@@ -217,17 +193,17 @@ mod test {
         assert_eq!(right.end_time.hour(), 10);
         assert_eq!(right.end_time.minute(), 0);
 
-        interval.merge(&overlapping_interval); //merge 9:00 - 10:00 and 9:30 - 10:30 -> expext 9:00 - 10:30
-        assert_eq!(interval.start_time.hour(), 9);
-        assert_eq!(interval.start_time.minute(), 0);
-        assert_eq!(interval.end_time.hour(), 10);
-        assert_eq!(interval.end_time.minute(), 30);
+        let merged = interval.merge(&overlapping_interval); //merge 9:00 - 10:00 and 9:30 - 10:30 -> expext 9:00 - 10:30
+        assert_eq!(merged.start_time.hour(), 9);
+        assert_eq!(merged.start_time.minute(), 0);
+        assert_eq!(merged.end_time.hour(), 10);
+        assert_eq!(merged.end_time.minute(), 30);
 
-        interval.merge(&overlapping_interval2); //merge 9:00 - 10:30 and 8:30 - 9:30 -> expext 8:30 - 10:30
-        assert_eq!(interval.start_time.hour(), 8);
-        assert_eq!(interval.start_time.minute(), 30);
-        assert_eq!(interval.end_time.hour(), 10);
-        assert_eq!(interval.end_time.minute(), 30);
+        let merged = interval.merge(&overlapping_interval2); //merge 9:00 - 10:00 and 8:30 - 9:30 -> expext 8:30 - 10:00
+        assert_eq!(merged.start_time.hour(), 8);
+        assert_eq!(merged.start_time.minute(), 30);
+        assert_eq!(merged.end_time.hour(), 10);
+        assert_eq!(merged.end_time.minute(), 0);
     }
 
     #[test]
@@ -244,7 +220,7 @@ mod test {
         );
         assert_eq!(interval.start_time < interval.end_time, true);
     }
-    
+
     #[test]
     fn test_1_point_touches() {
         //test 1 point touches
@@ -278,76 +254,33 @@ mod test {
                 .and_hms_opt(9, 15, 0)
                 .unwrap(),
         );
-        assert_eq!(mid_1_point_touch.touches(&right_1_point_touch), true);
+        assert_eq!(mid_1_point_touch.overlaps(&right_1_point_touch), true);
         assert_eq!(mid_1_point_touch.contains(&right_1_point_touch), false);
         assert_eq!(mid_1_point_touch.overlaps(&right_1_point_touch), true);
 
-        assert_eq!(mid_1_point_touch.touches(&left_1_point_touch), true);
+        assert_eq!(mid_1_point_touch.overlaps(&left_1_point_touch), true);
         assert_eq!(mid_1_point_touch.contains(&left_1_point_touch), false);
         assert_eq!(mid_1_point_touch.overlaps(&left_1_point_touch), true);
 
-        let mut mid_copy = mid_1_point_touch.clone();
-        mid_copy.merge(&left_1_point_touch); //merge 9:15 - 9:45 and 9:05 - 9:15 -> expext 9:05 - 9:45
-        assert_eq!(mid_copy.start_time.hour(), 9);
-        assert_eq!(mid_copy.start_time.minute(), 5);
-        assert_eq!(mid_copy.end_time.hour(), 9);
-        assert_eq!(mid_copy.end_time.minute(), 45);
-        mid_copy.merge(&right_1_point_touch); //merge 9:05 - 9:45 and 9:45 - 9:55 -> expext 9:05 - 9:55
-        assert_eq!(mid_copy.start_time.hour(), 9);
-        assert_eq!(mid_copy.start_time.minute(), 5);
-        assert_eq!(mid_copy.end_time.hour(), 9);
-        assert_eq!(mid_copy.end_time.minute(), 55);
+        let left_merge = mid_1_point_touch.merge(&left_1_point_touch); //merge 9:15 - 9:45 and 9:05 - 9:15 -> expext 9:05 - 9:45
+        assert_eq!(left_merge.start_time.hour(), 9);
+        assert_eq!(left_merge.start_time.minute(), 5);
+        assert_eq!(left_merge.end_time.hour(), 9);
+        assert_eq!(left_merge.end_time.minute(), 45);
+        let right_merge = mid_1_point_touch.merge(&right_1_point_touch); //merge 9:15 - 9:45 and 9:45 - 9:55 -> expext 9:15 - 9:55
+        assert_eq!(right_merge.start_time.hour(), 9);
+        assert_eq!(right_merge.start_time.minute(), 15);
+        assert_eq!(right_merge.end_time.hour(), 9);
+        assert_eq!(right_merge.end_time.minute(), 55);
 
-        let mut mid_copy = mid_1_point_touch.clone(); //cut 9:05 - 9:15 and 9:45 - 9:55 from expext 9:15 - 9:45 -> expect 9:15 - 9:45
-        mid_copy.cut(&left_1_point_touch);
-        mid_copy.cut(&right_1_point_touch);
-        assert_eq!(mid_copy.start_time.hour(), 9);
-        assert_eq!(mid_copy.start_time.minute(), 15);
-        assert_eq!(mid_copy.start_time.second(), 0);
-        assert_eq!(mid_copy.end_time.hour(), 9);
-        assert_eq!(mid_copy.end_time.minute(), 45);
-        assert_eq!(mid_copy.end_time.second(), 0);
-    }
-
-    #[test]
-    fn test_is_valid() {
-        assert_eq!(
-            Interval::new(
-                NaiveDateTime::MIN,
-                NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(9, 15, 0)
-                    .unwrap(),
-            )
-            .is_valid(),
-            false
-        );
-
-        assert_eq!(
-            Interval::new(
-                NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(9, 15, 0)
-                    .unwrap(),
-                NaiveDateTime::MAX
-            )
-            .is_valid(),
-            false
-        );
-
-        assert_eq!(
-            Interval::new(
-                NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(9, 15, 0)
-                    .unwrap(),
-                NaiveDate::from_ymd_opt(2024, 4, 15)
-                    .unwrap()
-                    .and_hms_opt(9, 15, 0)
-                    .unwrap()
-            )
-            .is_valid(),
-            true
-        );
+        let merge = mid_1_point_touch
+            .cut(&left_1_point_touch)
+            .cut(&right_1_point_touch); //cut 9:05 - 9:15 and 9:45 - 9:55 from expext 9:15 - 9:45 -> expect 9:15 - 9:45
+        assert_eq!(merge.start_time.hour(), 9);
+        assert_eq!(merge.start_time.minute(), 15);
+        assert_eq!(merge.start_time.second(), 0);
+        assert_eq!(merge.end_time.hour(), 9);
+        assert_eq!(merge.end_time.minute(), 45);
+        assert_eq!(merge.end_time.second(), 0);
     }
 }
