@@ -5,6 +5,7 @@ use std::fmt;
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Deserialize)]
 #[readonly::make]
 pub struct Interval {
+    //intervals are halfopen
     pub start_time: NaiveDateTime,
     pub end_time: NaiveDateTime,
 }
@@ -37,11 +38,14 @@ impl Interval {
             day.and_hms_opt(0, 0, 0).unwrap() + Duration::days(1),
         ))
     }
+    pub fn touches (&self,other:&Interval) ->bool {
+        self.start_time ==other.end_time || self.end_time==other.start_time
+    }
     pub fn overlaps(
         &self,
         other: &Interval,
     ) -> bool {
-        self.start_time <= other.end_time && self.end_time >= other.start_time
+        self.start_time < other.end_time && self.end_time > other.start_time
     }
     pub fn contains(
         &self,
@@ -59,7 +63,7 @@ impl Interval {
         &self,
         other: &Interval,
     ) -> Interval {
-        assert!(self.overlaps(other) && !self.contains(other) && !other.contains(self));
+        assert!((self.touches(other)||self.overlaps(other)) && !self.contains(other) && !other.contains(self));
         Interval::new(
             NaiveDateTime::min(self.start_time, other.start_time),
             NaiveDateTime::max(self.end_time, other.end_time),
@@ -270,7 +274,7 @@ mod test {
         assert!(!non_overlapping_interval.overlaps_day(day));
         assert!(overlapping_interval.overlaps_day(day));
         assert!(contained_interval.overlaps_day(day));
-        assert!(next_day_as_interval.overlaps_day(day));
+        assert!(!next_day_as_interval.overlaps_day(day));
     }
 
     #[test]
@@ -306,13 +310,13 @@ mod test {
                 .and_hms_opt(9, 15, 0)
                 .unwrap(),
         );
-        assert_eq!(mid_1_point_touch.overlaps(&right_1_point_touch), true);
+        assert_eq!(mid_1_point_touch.overlaps(&right_1_point_touch), false);
         assert_eq!(mid_1_point_touch.contains(&right_1_point_touch), false);
-        assert_eq!(mid_1_point_touch.overlaps(&right_1_point_touch), true);
+        assert_eq!(mid_1_point_touch.touches(&right_1_point_touch), true);
 
-        assert_eq!(mid_1_point_touch.overlaps(&left_1_point_touch), true);
+        assert_eq!(mid_1_point_touch.overlaps(&left_1_point_touch), false);
         assert_eq!(mid_1_point_touch.contains(&left_1_point_touch), false);
-        assert_eq!(mid_1_point_touch.overlaps(&left_1_point_touch), true);
+        assert_eq!(mid_1_point_touch.touches(&right_1_point_touch), true);
 
         let left_merge = mid_1_point_touch.merge(&left_1_point_touch); //merge 9:15 - 9:45 and 9:05 - 9:15 -> expext 9:05 - 9:45
         assert_eq!(left_merge.start_time.hour(), 9);
@@ -326,13 +330,91 @@ mod test {
         assert_eq!(right_merge.end_time.minute(), 55);
 
         let merge = mid_1_point_touch
-            .cut(&left_1_point_touch)
-            .cut(&right_1_point_touch); //cut 9:05 - 9:15 and 9:45 - 9:55 from expext 9:15 - 9:45 -> expect 9:15 - 9:45
+            .merge(&left_1_point_touch)
+            .merge(&right_1_point_touch); //merge 9:05 - 9:15, 9:15 - 9 - 45  and  9:45 - 9:55 expext 9:05 - 9:45 -> expect 9:15 - 9:55
         assert_eq!(merge.start_time.hour(), 9);
-        assert_eq!(merge.start_time.minute(), 15);
+        assert_eq!(merge.start_time.minute(), 05);
         assert_eq!(merge.start_time.second(), 0);
         assert_eq!(merge.end_time.hour(), 9);
-        assert_eq!(merge.end_time.minute(), 45);
+        assert_eq!(merge.end_time.minute(), 55);
         assert_eq!(merge.end_time.second(), 0);
+    }
+
+    #[should_panic]
+    #[test]
+    fn test_cut_assertion_failed() {
+        let i1 = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 15, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 45, 0)
+                .unwrap(),
+        );
+        let i2 = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 45, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 55, 0)
+                .unwrap(),
+        );
+        i1.cut(&i2);
+    }
+
+    #[should_panic]
+    #[test]
+    fn test_merge_assertion_failed() {
+        let i1 = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 15, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 45, 0)
+                .unwrap(),
+        );
+        let i2 = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 46, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 55, 0)
+                .unwrap(),
+        );
+        i1.merge(&i2);
+    }
+
+    #[should_panic]
+    #[test]
+    fn test_split_assertion_failed() {
+        let i1 = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 15, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 45, 0)
+                .unwrap(),
+        );
+        let i2 = Interval::new(
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 15, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 45, 0)
+                .unwrap(),
+        );
+        i1.split(&i2);
     }
 }
