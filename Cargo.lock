@@ -2407,6 +2407,7 @@ dependencies = [
  "itertools",
  "migration",
  "notify",
+ "readonly",
  "reqwest",
  "sea-orm",
  "serde",
@@ -2524,6 +2525,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom",
+]
+
+[[package]]
+name = "readonly"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb656d27c22b5c47154452686cae5e096f12e124daacb36a0bfcb32dbebb39e3"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.48",
 ]
 
 [[package]]

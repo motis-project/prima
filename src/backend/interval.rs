@@ -3,6 +3,7 @@ use serde::Deserialize;
 use std::fmt;
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Deserialize)]
+#[readonly::make]
 pub struct Interval {
     pub start_time: NaiveDateTime,
     pub end_time: NaiveDateTime,
@@ -23,15 +24,9 @@ impl Interval {
         end_time: NaiveDateTime,
     ) -> Self {
         Self {
-            start_time,
-            end_time,
+            start_time: NaiveDateTime::min(start_time, end_time),
+            end_time: NaiveDateTime::max(start_time, end_time),
         }
-    }
-    pub fn is_flipped(&self) -> bool {
-        if self.end_time < self.start_time {
-            return true;
-        }
-        false
     }
     pub fn is_valid(&self) -> bool {
         let min_year = NaiveDate::from_ymd_opt(2024, 1, 1)
@@ -42,33 +37,13 @@ impl Interval {
             .unwrap()
             .and_hms_opt(0, 0, 0)
             .unwrap();
-        if self.is_flipped() || self.start_time < min_year || self.end_time > max_year
-        {
-            return false;
-        }
-        true
-    }
-    pub fn flip_if_necessary(&mut self) {
-        if self.start_time > self.end_time {
-            let buffer = self.start_time;
-            self.start_time = self.end_time;
-            self.end_time = buffer;
-        }
+        self.start_time >= min_year && self.end_time <= max_year
     }
     pub fn touches_day(
         &self,
         day: NaiveDate,
     ) -> bool {
-        let time_touches_day = |time: NaiveDateTime, day: NaiveDate| -> bool {
-            if time.day() == day.day() && time.month() == day.month() && time.year() == day.year() {
-                return true;
-            }
-            false
-        };
-        if time_touches_day(self.start_time, day) || time_touches_day(self.end_time, day) {
-            return true;
-        }
-        false
+        self.start_time.date() == day || self.end_time.date() == day
     }
     pub fn touches(
         self,
@@ -102,16 +77,8 @@ impl Interval {
         &mut self,
         other: &Interval,
     ) {
-        self.start_time = if self.start_time < other.start_time {
-            self.start_time
-        } else {
-            other.start_time
-        };
-        self.end_time = if self.end_time > other.end_time {
-            self.end_time
-        } else {
-            other.end_time
-        };
+        self.start_time = NaiveDateTime::min(self.start_time, other.start_time);
+        self.end_time = NaiveDateTime::max(self.end_time, other.end_time);
     }
     //asserts that splitter is contained in self, but not vice versa
     pub fn split(
@@ -142,6 +109,7 @@ mod test {
     use chrono::{NaiveDate, NaiveDateTime, Timelike};
     #[test]
     fn test() {
+        //interval is the reference interval. The other intervals are named according to their realtion to interval.
         let mut interval: Interval = Interval::new(
             NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
@@ -225,14 +193,15 @@ mod test {
         assert_eq!(interval.overlaps(&contained_interval), false);
 
         let mut cut_interval = interval.clone();
-        cut_interval.cut(&overlapping_interval); //cut 9:00 - 10:00 from 9:30 - 10:30 -> expext 10:00 - 10:30
+        cut_interval.cut(&overlapping_interval); //cut 9:30 - 10:30 from 9:00 - 10:00 -> expext 9:00 - 9:30
+        println!("e_after: {}",cut_interval);
         assert_eq!(cut_interval.start_time.hour(), 9);
         assert_eq!(cut_interval.start_time.minute(), 0);
         assert_eq!(cut_interval.end_time.hour(), 9);
         assert_eq!(cut_interval.end_time.minute(), 30);
 
         cut_interval = interval.clone();
-        cut_interval.cut(&overlapping_interval2); //cut 9:00 - 10:00 from 8:30 - 9:30 -> expext 8:30 - 9:00
+        cut_interval.cut(&overlapping_interval2); //cut 8:30 - 9:30 from 9:00 - 10:00 -> expext 9:30 - 10:00
         assert_eq!(cut_interval.start_time.hour(), 9);
         assert_eq!(cut_interval.start_time.minute(), 30);
         assert_eq!(cut_interval.end_time.hour(), 10);
@@ -259,8 +228,11 @@ mod test {
         assert_eq!(interval.start_time.minute(), 30);
         assert_eq!(interval.end_time.hour(), 10);
         assert_eq!(interval.end_time.minute(), 30);
+    }
 
-        let mut invalid_interval1 = Interval::new(
+    #[test]
+    fn test_start_bigger_end() {
+        let interval = Interval::new(
             NaiveDate::from_ymd_opt(2024, 4, 15)
                 .unwrap()
                 .and_hms_opt(12, 0, 0)
@@ -270,34 +242,11 @@ mod test {
                 .and_hms_opt(11, 0, 0)
                 .unwrap(),
         );
-        assert_eq!(invalid_interval1.is_valid(), false);
-        invalid_interval1.flip_if_necessary();
-        assert_eq!(invalid_interval1.is_valid(), true);
-
-        let mut invalid_interval2 = Interval::new(
-            NaiveDateTime::MIN,
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(11, 0, 0)
-                .unwrap(),
-        );
-        assert_eq!(invalid_interval2.is_valid(), false);
-        invalid_interval2.flip_if_necessary();
-        assert_eq!(invalid_interval2.is_valid(), false);
-        assert_eq!(invalid_interval2.start_time, NaiveDateTime::MIN);
-
-        let mut invalid_interval3 = Interval::new(
-            NaiveDate::from_ymd_opt(2024, 4, 15)
-                .unwrap()
-                .and_hms_opt(11, 0, 0)
-                .unwrap(),
-            NaiveDateTime::MAX,
-        );
-        assert_eq!(invalid_interval3.is_valid(), false);
-        invalid_interval3.flip_if_necessary();
-        assert_eq!(invalid_interval3.is_valid(), false);
-        assert_eq!(invalid_interval3.end_time, NaiveDateTime::MAX);
-
+        assert_eq!(interval.start_time < interval.end_time, true);
+    }
+    
+    #[test]
+    fn test_1_point_touches() {
         //test 1 point touches
         let mid_1_point_touch = Interval::new(
             NaiveDate::from_ymd_opt(2024, 4, 15)
@@ -358,5 +307,47 @@ mod test {
         assert_eq!(mid_copy.end_time.hour(), 9);
         assert_eq!(mid_copy.end_time.minute(), 45);
         assert_eq!(mid_copy.end_time.second(), 0);
+    }
+
+    #[test]
+    fn test_is_valid() {
+        assert_eq!(
+            Interval::new(
+                NaiveDateTime::MIN,
+                NaiveDate::from_ymd_opt(2024, 4, 15)
+                    .unwrap()
+                    .and_hms_opt(9, 15, 0)
+                    .unwrap(),
+            )
+            .is_valid(),
+            false
+        );
+
+        assert_eq!(
+            Interval::new(
+                NaiveDate::from_ymd_opt(2024, 4, 15)
+                    .unwrap()
+                    .and_hms_opt(9, 15, 0)
+                    .unwrap(),
+                NaiveDateTime::MAX
+            )
+            .is_valid(),
+            false
+        );
+
+        assert_eq!(
+            Interval::new(
+                NaiveDate::from_ymd_opt(2024, 4, 15)
+                    .unwrap()
+                    .and_hms_opt(9, 15, 0)
+                    .unwrap(),
+                NaiveDate::from_ymd_opt(2024, 4, 15)
+                    .unwrap()
+                    .and_hms_opt(9, 15, 0)
+                    .unwrap()
+            )
+            .is_valid(),
+            true
+        );
     }
 }
