@@ -172,6 +172,7 @@ struct Tour {
     start_time: String,
     end_time: String,
     plate: String,
+    conflict: bool,
 }
 
 #[derive(Serialize, Clone)]
@@ -198,13 +199,11 @@ struct WayPoint {
 }
 
 pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
-    // let data = s.data();
-    let data = Data::new();
+    let data = s.data();
 
     let company_id = 1;
-    // let vehicles: HashMap<i32, Vec<&VehicleData>> = data.get_vehicles(company_id, Some(true)).await;
-    let vehicles: Vec<&VehicleData> = data.get_vehicles_(company_id, Some(true)).await;
-    println!("Number of vehicles: {}", vehicles.len());
+    //let vehicles: HashMap<i32, Vec<&VehicleData>> = data.get_vehicles(company_id, Some(true)).await;
+    let vehicles = data.get_vehicles_(company_id, Some(true)).await;
 
     let start_time = NaiveDate::from_ymd_opt(2024, 4, 15)
         .unwrap()
@@ -216,22 +215,43 @@ pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, Sta
         .unwrap();
 
     let mut tours_all: Vec<&AssignmentData> = Vec::new();
+
+    // if vehicles is HashMap
     // for (id, v) in vehicles.iter() {
     //     let tours_vehicle = data
     //         .get_assignments_for_vehicle(*id, start_time, end_time)
     //         .await;
     //     tours_all.extend(tours_vehicle);
     // }
+
     for v in vehicles.iter() {
         let tours_vehicle = data
             .get_assignments_for_vehicle(v.id, start_time, end_time)
             .await;
+        // println!("v_id: {}", v.id);
+        // for tv in tours_vehicle.iter() {
+        //     println!("Asignment id: {}", tv.id);
+        // }
         tours_all.extend(tours_vehicle);
     }
 
     let mut tours: Vec<Tour> = Vec::new();
 
     for tour in tours_all.iter() {
+        let conflict = false;
+
+        println!("\nTour {}:", tour.id);
+
+        for v in vehicles.iter() {
+            let conflicts = data
+                .get_vehicle_conflicts_for_assignment(v.id, tour.id)
+                .await;
+            println!("vehicle_id: {}, conflicts:", v.id);
+            for confl_asmt in conflicts {
+                println!("{}", confl_asmt.id);
+            }
+        }
+
         tours.push(Tour {
             id: tour.vehicle,
             date: tour.departure.date().to_string(),
@@ -241,14 +261,8 @@ pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, Sta
                 .get_vehicle_by_id(tour.vehicle as usize)
                 .license_plate
                 .to_string(),
+            conflict,
         });
-
-        /* for (id, v) in vehicles.iter() {
-            let conflicts = data
-                .get_vehicle_conflicts_for_assignment(*id, tour.id)
-                .await;
-            println!("vehicle_id: {}, conflicts: {}", id, conflicts.len())
-        } */
     }
 
     let response = s

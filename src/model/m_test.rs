@@ -3,7 +3,6 @@ use crate::{
     constants::{
         bautzen_split_ost::BAUTZEN_OST, bautzen_split_west::BAUTZEN_WEST, gorlitz::GORLITZ,
     },
-    AppState,
 };
 
 use crate::{env, Arc, Database, Mutex, Tera};

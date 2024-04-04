@@ -520,7 +520,7 @@ impl Data {
 
     async fn find_or_create_vehicle_specs(
         &mut self,
-        State(s): State<&AppState>,
+        db: &DbConn,
         seats: i32,
         wheelchairs: i32,
         storage_space: i32,
@@ -539,7 +539,7 @@ impl Data {
             wheelchairs: ActiveValue::Set(wheelchairs),
             storage_space: ActiveValue::Set(storage_space),
         })
-        .exec(s.db())
+        .exec(db)
         .await
         {
             Ok(result) => {
@@ -561,7 +561,7 @@ impl Data {
 
     pub async fn create_vehicle(
         &mut self,
-        State(s): State<&AppState>,
+        db: &DbConn,
         license_plate: String,
         company: i32,
     ) -> StatusCode {
@@ -578,13 +578,10 @@ impl Data {
         //check whether the vehicle fits one of the existing vehicle_specs, otherwise create a new specs
         let specs_id = self
             .find_or_create_vehicle_specs(
-                State(&s),
-                /*seats,
-                wheelchairs,
-                storage_space, */
-                3,
-                0,
-                0,
+                db, /*seats,
+                    wheelchairs,
+                    storage_space, */
+                3, 0, 0,
             )
             .await;
         if specs_id == -1 {
@@ -598,7 +595,7 @@ impl Data {
             license_plate: ActiveValue::Set(license_plate.to_string()),
             specifics: ActiveValue::Set(specs_id),
         })
-        .exec(s.db())
+        .exec(db)
         .await
         {
             Ok(result) => {
@@ -643,7 +640,7 @@ impl Data {
 
     pub async fn create_user(
         &mut self,
-        State(s): State<&AppState>,
+        db: &DbConn,
         name: String,
         is_driver: bool,
         is_admin: bool,
@@ -671,7 +668,7 @@ impl Data {
             o_auth_provider: ActiveValue::Set(o_auth_provider.clone()),
             is_active: ActiveValue::Set(true),
         })
-        .exec(s.db())
+        .exec(db)
         .await
         {
             Ok(result) => {
@@ -701,7 +698,7 @@ impl Data {
 
     pub async fn create_availability(
         &mut self,
-        State(s): State<&AppState>,
+        db: &DbConn,
         start_time: NaiveDateTime,
         end_time: NaiveDateTime,
         vehicle: i32,
@@ -717,13 +714,13 @@ impl Data {
             return StatusCode::EXPECTATION_FAILED;
         }
         self.vehicles[id_to_vec_pos(vehicle)]
-            .add_availability(s.db(), &mut interval, None)
+            .add_availability(db, &mut interval, None)
             .await
     }
 
     pub async fn create_zone(
         &mut self,
-        State(s): State<&AppState>,
+        db: &DbConn,
         name: String,
         area_str: String,
     ) -> StatusCode {
@@ -741,7 +738,7 @@ impl Data {
             name: ActiveValue::Set(name.to_string()),
             area: ActiveValue::Set(area_str.to_string()),
         })
-        .exec(s.db())
+        .exec(db)
         .await
         {
             Err(e) => {
@@ -761,7 +758,7 @@ impl Data {
 
     pub async fn create_company(
         &mut self,
-        State(s): State<&AppState>,
+        db: &DbConn,
         name: String,
         zone: i32,
         lat: f32,
@@ -780,7 +777,7 @@ impl Data {
             name: ActiveValue::Set(name.to_string()),
             zone: ActiveValue::Set(zone),
         })
-        .exec(s.db())
+        .exec(db)
         .await
         {
             Ok(result) => {
@@ -801,7 +798,7 @@ impl Data {
 
     pub async fn remove_availability(
         &mut self,
-        State(s): State<&AppState>,
+        db: &DbConn,
         start_time: NaiveDateTime,
         end_time: NaiveDateTime,
         vehicle_id: i32,
@@ -837,10 +834,7 @@ impl Data {
             if to_remove_interval.overlaps(&existing.interval) {
                 existing.interval.cut(&to_remove_interval);
                 let mut active_m: availability::ActiveModel =
-                    match Availability::find_by_id(existing.id)
-                        .one(s.clone().db())
-                        .await
-                    {
+                    match Availability::find_by_id(existing.id).one(db).await {
                         Err(e) => {
                             error!("{e:?}");
                             return StatusCode::INTERNAL_SERVER_ERROR;
@@ -858,7 +852,7 @@ impl Data {
                     };
                 active_m.start_time = ActiveValue::set(existing.interval.start_time);
                 active_m.end_time = ActiveValue::set(existing.interval.end_time);
-                match Availability::update(active_m).exec(s.clone().db()).await {
+                match Availability::update(active_m).exec(db).await {
                     Ok(_) => (),
                     Err(e) => {
                         error!("Error deleting interval: {e:?}");
@@ -872,7 +866,7 @@ impl Data {
         }
         for to_delete in mark_delete {
             match Availability::delete_by_id(vehicle.availability[&to_delete].id)
-                .exec(s.clone().db())
+                .exec(db)
                 .await
             {
                 Ok(_) => {
@@ -886,9 +880,9 @@ impl Data {
         }
         match to_insert {
             Some((left, right)) => {
-                self.create_availability(State(&s), left.start_time, left.end_time, vehicle_id)
+                self.create_availability(db, left.start_time, left.end_time, vehicle_id)
                     .await;
-                self.create_availability(State(&s), right.start_time, right.end_time, vehicle_id)
+                self.create_availability(db, right.start_time, right.end_time, vehicle_id)
                     .await;
             }
             None => (),
@@ -903,7 +897,8 @@ impl Data {
         departure: NaiveDateTime,
         arrival: NaiveDateTime,
         vehicle: i32,
-        State(s): State<&AppState>,
+        // State(s): State<&AppState>,
+        db: &DbConn,
         start_address: &String,
         target_address: &String,
         lat_start: f32,
@@ -967,7 +962,7 @@ impl Data {
                     arrival: ActiveValue::Set(arrival),
                     vehicle: ActiveValue::Set(vehicle),
                 })
-                .exec(s.db())
+                .exec(db)
                 .await
                 {
                     Ok(result) => result.last_insert_id,
@@ -993,7 +988,7 @@ impl Data {
         };
         let (start_event_id, target_event_id) = self
             .insert_event_pair_into_db(
-                State(s),
+                db,
                 start_address,
                 target_address,
                 lat_start,
@@ -1050,7 +1045,7 @@ impl Data {
 
     async fn insert_event_pair_into_db(
         &mut self,
-        State(s): State<&AppState>,
+        db: &DbConn,
         start_address: &String,
         target_address: &String,
         lat_start: f32,
@@ -1082,7 +1077,7 @@ impl Data {
             connects_public_transport: ActiveValue::Set(connects_public_transport1),
             address: ActiveValue::Set(start_address.to_string()),
         })
-        .exec(s.db())
+        .exec(db)
         .await
         {
             Ok(result) => result.last_insert_id,
@@ -1105,7 +1100,7 @@ impl Data {
             connects_public_transport: ActiveValue::Set(connects_public_transport2),
             address: ActiveValue::Set(target_address.to_string()),
         })
-        .exec(s.db())
+        .exec(db)
         .await
         {
             Ok(target_result) => (start_id, target_result.last_insert_id),
@@ -1118,7 +1113,7 @@ impl Data {
 
     pub async fn handle_routing_request(
         &mut self,
-        State(s): State<&AppState>,
+        db: &DbConn,
         fixed_time: NaiveDateTime,
         is_start_time_fixed: bool,
         start_lat: f64,  //for Point  lat=y and lng is x
@@ -1283,7 +1278,7 @@ impl Data {
                 start_time,
                 target_time,
                 1,
-                State(s),
+                db,
                 start_address,
                 target_address,
                 start_lat as f32,
@@ -1306,7 +1301,7 @@ impl Data {
 
     pub async fn change_vehicle_for_assignment(
         &mut self,
-        State(s): State<&AppState>,
+        db: &DbConn,
         assignment_id: i32,
         new_vehicle_id: i32,
     ) -> StatusCode {
@@ -1350,10 +1345,7 @@ impl Data {
             .insert(assignment_to_move.id, assignment_to_move.clone());
 
         let mut active_m: assignment::ActiveModel =
-            match Assignment::find_by_id(assignment_to_move.id)
-                .one(s.db())
-                .await
-            {
+            match Assignment::find_by_id(assignment_to_move.id).one(db).await {
                 Err(e) => {
                     error!("{e:?}");
                     return StatusCode::INTERNAL_SERVER_ERROR;
@@ -1370,7 +1362,7 @@ impl Data {
                 },
             };
         active_m.vehicle = ActiveValue::Set(new_vehicle_id);
-        match active_m.update(s.db()).await {
+        match active_m.update(db).await {
             Ok(_) => (),
             Err(e) => {
                 error!("{}", e);
