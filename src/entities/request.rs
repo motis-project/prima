@@ -3,33 +3,38 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "vehicle")]
+#[sea_orm(table_name = "request")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    #[sea_orm(unique)]
-    pub license_plate: String,
-    pub company: i32,
-    pub specifics: i32,
+    pub tour: i32,
+    pub customer: i32,
+    pub required_vehicle_specifics: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::availability::Entity")]
-    Availability,
+    #[sea_orm(has_many = "super::event::Entity")]
+    Event,
     #[sea_orm(
-        belongs_to = "super::company::Entity",
-        from = "Column::Company",
-        to = "super::company::Column::Id",
+        belongs_to = "super::tour::Entity",
+        from = "Column::Tour",
+        to = "super::tour::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    Company,
-    #[sea_orm(has_many = "super::tour::Entity")]
     Tour,
     #[sea_orm(
+        belongs_to = "super::user::Entity",
+        from = "Column::Customer",
+        to = "super::user::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    User,
+    #[sea_orm(
         belongs_to = "super::vehicle_specifics::Entity",
-        from = "Column::Specifics",
+        from = "Column::RequiredVehicleSpecifics",
         to = "super::vehicle_specifics::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
@@ -37,21 +42,21 @@ pub enum Relation {
     VehicleSpecifics,
 }
 
-impl Related<super::availability::Entity> for Entity {
+impl Related<super::event::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Availability.def()
-    }
-}
-
-impl Related<super::company::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Company.def()
+        Relation::Event.def()
     }
 }
 
 impl Related<super::tour::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Tour.def()
+    }
+}
+
+impl Related<super::user::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::User.def()
     }
 }
 
