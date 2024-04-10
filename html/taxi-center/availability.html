@@ -1,0 +1,37 @@
+{% extends "base3.html" %}
+{% block content %}
+
+<div>
+    <h1>Fahrzeuge</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Kennzeichen</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vehicle in vehicles %}
+            <tr>
+                <td>{{vehicle.id}}</td>
+                <td>{{vehicle.license_plate}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <input type="button" value="+" onclick="add_vehicle()" />
+</div>
+
+<div>
+    <form action="/vehicle" method="post">
+        <label for="license_plate">Kennzeichen:</label><br>
+        <input type="text" id="license_plate" name="license_plate"><br>
+        <label for="availability_start">Verfügbar von:</label><br>
+        <input type="text" id="av-start" name="availability_start"><br>
+        <label for="availability_end">Verfügbar bis:</label><br>
+        <input type="text" id="av-end" name="availability_end"><br>
+        <input type="submit" value="Submit">
+    </form>
+</div>
+
+{% endblock content %}

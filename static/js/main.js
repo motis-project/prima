@@ -43,3 +43,7 @@ function toggle_select(id) {
 function show_route(tour_id) {
   console.log(tour_id);
 }
+
+function add_vehicle() {
+  console.log('clicked');
+}

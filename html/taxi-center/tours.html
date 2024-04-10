@@ -12,7 +12,7 @@
     <div class="flex items-center justify-between space-y-2">
         <div>
             <h2 class="text-2xl font-bold tracking-tight">Touren</h2>
-            <p class="text-muted-foreground">Hier können Fahrzeuge gebuchten Touren zugewiesen werden.</p>
+            <p class="text-muted-foreground">Hier können Fahrzeuge auf gebuchte Touren neu zugewiesen werden.</p>
         </div>
         <!-- <div class="flex items-center space-x-2"><button
                 class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground px-4 py-2 relative h-8 w-8 rounded-full"
@@ -62,6 +62,10 @@
                                     aria-label="Select all"></button></th>
                             <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;>[role=checkbox]]:translate-y-[2px]"
                                 colspan="1">
+                                <div class="">Id</div>
+                            </th>
+                            <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;>[role=checkbox]]:translate-y-[2px]"
+                                colspan="1">
                                 <div class="flex items-center space-x-2"><button
                                         class="inline-flex items-center justify-center whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground rounded-md px-3 text-xs -ml-3 h-8 data-[state=open]:bg-accent"
                                         type="button" id="radix-:r87:" aria-haspopup="menu" aria-expanded="false"
@@ -90,6 +94,10 @@
                                 <div class="">Fahrzeug</div>
                             </th>
                             <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;>[role=checkbox]]:translate-y-[2px]"
+                                colspan="1">
+                                <div class="">Konflikt</div>
+                            </th>
+                            <th class="h-10 px-2 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;>[role=checkbox]]:translate-y-[2px]"
                                 colspan="1"></th>
                         </tr>
                     </thead>
@@ -103,6 +111,10 @@
                                     value="on"
                                     class="peer h-4 w-4 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground translate-y-[2px]"
                                     aria-label="Select row"></button>
+                            </td>
+                            <td
+                                class="p-2 align-middle [&amp;:has([role=checkbox])]:pr-0 [&amp;>[role=checkbox]]:translate-y-[2px]">
+                                <div class="w-[80px]">{{ tour.id }}</div>
                             </td>
                             <td
                                 class="p-2 align-middle [&amp;:has([role=checkbox])]:pr-0 [&amp;>[role=checkbox]]:translate-y-[2px]">
@@ -126,6 +138,10 @@
                             <td
                                 class="p-2 align-middle [&amp;:has([role=checkbox])]:pr-0 [&amp;>[role=checkbox]]:translate-y-[2px]">
                                 <div class="w-[80px]">{{ tour.plate }}</div>
+                            </td>
+                            <td
+                                class="p-2 align-middle [&amp;:has([role=checkbox])]:pr-0 [&amp;>[role=checkbox]]:translate-y-[2px]">
+                                <div class="w-[80px]">{{ tour.conflict }}</div>
                             </td>
                             <td></td>
                         </tr>
