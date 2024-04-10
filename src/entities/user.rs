@@ -7,9 +7,10 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    #[sea_orm(unique)]
-    pub name: String,
+    pub display_name: String,
+    pub company: Option<i32>,
     pub is_driver: bool,
+    pub is_disponent: bool,
     pub is_admin: bool,
     #[sea_orm(unique)]
     pub email: String,
@@ -22,13 +23,27 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::event::Entity")]
-    Event,
+    #[sea_orm(
+        belongs_to = "super::company::Entity",
+        from = "Column::Company",
+        to = "super::company::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Company,
+    #[sea_orm(has_many = "super::request::Entity")]
+    Request,
 }
 
-impl Related<super::event::Entity> for Entity {
+impl Related<super::company::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Event.def()
+        Relation::Company.def()
+    }
+}
+
+impl Related<super::request::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Request.def()
     }
 }
 

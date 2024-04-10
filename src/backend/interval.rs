@@ -200,35 +200,35 @@ mod test {
                 .unwrap(),
         );
 
-        assert_eq!(interval.touches(&non_touching_interval), false);
-        assert_eq!(interval.touches(&overlapping_interval), true);
-        assert_eq!(interval.touches(&overlapping_interval2), true);
-        assert_eq!(interval.touches(&containing_interval), true);
-        assert_eq!(interval.touches(&contained_interval), true);
+        assert!(interval.touches(&non_touching_interval));
+        assert!(interval.touches(&overlapping_interval));
+        assert!(interval.touches(&overlapping_interval2));
+        assert!(interval.touches(&containing_interval));
+        assert!(interval.touches(&contained_interval));
 
-        assert_eq!(interval.contains(&overlapping_interval), false);
-        assert_eq!(interval.contains(&overlapping_interval2), false);
-        assert_eq!(interval.contains(&containing_interval), false);
-        assert_eq!(interval.contains(&contained_interval), true);
+        assert!(interval.contains(&overlapping_interval));
+        assert!(interval.contains(&overlapping_interval2));
+        assert!(interval.contains(&containing_interval));
+        assert!(interval.contains(&contained_interval));
 
-        assert_eq!(overlapping_interval.contains(&interval), false);
-        assert_eq!(overlapping_interval2.contains(&interval), false);
-        assert_eq!(containing_interval.contains(&interval), true);
-        assert_eq!(contained_interval.contains(&interval), false);
+        assert!(overlapping_interval.contains(&interval));
+        assert!(overlapping_interval2.contains(&interval));
+        assert!(containing_interval.contains(&interval));
+        assert!(contained_interval.contains(&interval));
 
-        assert_eq!(interval.overlaps(&overlapping_interval), true);
-        assert_eq!(interval.overlaps(&overlapping_interval2), true);
-        assert_eq!(interval.overlaps(&containing_interval), false);
-        assert_eq!(interval.overlaps(&contained_interval), false);
+        assert!(interval.overlaps(&overlapping_interval));
+        assert!(interval.overlaps(&overlapping_interval2));
+        assert!(interval.overlaps(&containing_interval));
+        assert!(interval.overlaps(&contained_interval));
 
-        let mut cut_interval = interval.clone();
+        let mut cut_interval = interval;
         cut_interval.cut(&overlapping_interval); //cut 9:00 - 10:00 from 9:30 - 10:30 -> expext 10:00 - 10:30
         assert_eq!(cut_interval.start_time.hour(), 9);
         assert_eq!(cut_interval.start_time.minute(), 0);
         assert_eq!(cut_interval.end_time.hour(), 9);
         assert_eq!(cut_interval.end_time.minute(), 30);
 
-        cut_interval = interval.clone();
+        cut_interval = interval;
         cut_interval.cut(&overlapping_interval2); //cut 9:00 - 10:00 from 8:30 - 9:30 -> expext 8:30 - 9:00
         assert_eq!(cut_interval.start_time.hour(), 9);
         assert_eq!(cut_interval.start_time.minute(), 30);
@@ -267,9 +267,9 @@ mod test {
                 .and_hms_opt(11, 0, 0)
                 .unwrap(),
         );
-        assert_eq!(invalid_interval1.is_valid(), false);
+        assert!(invalid_interval1.is_valid());
         invalid_interval1.flip_if_necessary();
-        assert_eq!(invalid_interval1.is_valid(), true);
+        assert!(invalid_interval1.is_valid());
 
         let mut invalid_interval2 = Interval::new(
             NaiveDateTime::MIN,
@@ -278,9 +278,9 @@ mod test {
                 .and_hms_opt(11, 0, 0)
                 .unwrap(),
         );
-        assert_eq!(invalid_interval2.is_valid(), false);
+        assert!(invalid_interval2.is_valid());
         invalid_interval2.flip_if_necessary();
-        assert_eq!(invalid_interval2.is_valid(), false);
+        assert!(invalid_interval2.is_valid());
         assert_eq!(invalid_interval2.start_time, NaiveDateTime::MIN);
 
         let mut invalid_interval3 = Interval::new(
@@ -290,9 +290,9 @@ mod test {
                 .unwrap(),
             NaiveDateTime::MAX,
         );
-        assert_eq!(invalid_interval3.is_valid(), false);
+        assert!(invalid_interval3.is_valid());
         invalid_interval3.flip_if_necessary();
-        assert_eq!(invalid_interval3.is_valid(), false);
+        assert!(invalid_interval3.is_valid());
         assert_eq!(invalid_interval3.end_time, NaiveDateTime::MAX);
 
         //test 1 point touches
@@ -326,15 +326,15 @@ mod test {
                 .and_hms_opt(9, 15, 0)
                 .unwrap(),
         );
-        assert_eq!(mid_1_point_touch.touches(&right_1_point_touch), true);
-        assert_eq!(mid_1_point_touch.contains(&right_1_point_touch), false);
-        assert_eq!(mid_1_point_touch.overlaps(&right_1_point_touch), true);
+        assert!(mid_1_point_touch.touches(&right_1_point_touch));
+        assert!(mid_1_point_touch.contains(&right_1_point_touch));
+        assert!(mid_1_point_touch.overlaps(&right_1_point_touch));
 
-        assert_eq!(mid_1_point_touch.touches(&left_1_point_touch), true);
-        assert_eq!(mid_1_point_touch.contains(&left_1_point_touch), false);
-        assert_eq!(mid_1_point_touch.overlaps(&left_1_point_touch), true);
+        assert!(mid_1_point_touch.touches(&left_1_point_touch));
+        assert!(mid_1_point_touch.contains(&left_1_point_touch));
+        assert!(mid_1_point_touch.overlaps(&left_1_point_touch));
 
-        let mut mid_copy = mid_1_point_touch.clone();
+        let mut mid_copy = mid_1_point_touch;
         mid_copy.merge(&left_1_point_touch); //merge 9:15 - 9:45 and 9:05 - 9:15 -> expext 9:05 - 9:45
         assert_eq!(mid_copy.start_time.hour(), 9);
         assert_eq!(mid_copy.start_time.minute(), 5);
@@ -346,7 +346,7 @@ mod test {
         assert_eq!(mid_copy.end_time.hour(), 9);
         assert_eq!(mid_copy.end_time.minute(), 55);
 
-        let mut mid_copy = mid_1_point_touch.clone(); //cut 9:05 - 9:15 and 9:45 - 9:55 from expext 9:15 - 9:45 -> expect 9:15 - 9:45
+        let mut mid_copy = mid_1_point_touch; //cut 9:05 - 9:15 and 9:45 - 9:55 from expext 9:15 - 9:45 -> expect 9:15 - 9:45
         mid_copy.cut(&left_1_point_touch);
         mid_copy.cut(&right_1_point_touch);
         assert_eq!(mid_copy.start_time.hour(), 9);
