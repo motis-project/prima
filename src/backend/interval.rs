@@ -77,6 +77,7 @@ impl Interval {
                 && !self.contains(other)
                 && !other.contains(self)
         );
+        println!("merging");
         Interval::new(
             NaiveDateTime::min(self.start_time, other.start_time),
             NaiveDateTime::max(self.end_time, other.end_time),

@@ -94,8 +94,8 @@ pub struct TourData {
 
 #[async_trait]
 impl PrimaTour for TourData {
-    async fn get_vehicle_license_plate(&self) -> &str {
-        ""
+    async fn get_events(&self) -> Vec<Box<&dyn PrimaEvent>> {
+        self.events.iter().map(|event| Box::new(event as &dyn PrimaEvent)).collect_vec()
     }
 }
 
@@ -146,6 +146,8 @@ pub struct UserData {
     id: i32,
     name: String,
     is_driver: bool,
+    is_disponent: bool,
+    company_id: Option<i32>,
     is_admin: bool,
     email: String,
     password: Option<String>,
@@ -159,21 +161,25 @@ impl PrimaUser for UserData {
     async fn get_id(&self) -> i32{
         self.id
     }
+    
+    async fn get_name(&self) -> &str {
+        &self.name
+    }
 
     async fn is_driver(&self) -> bool{
         self.is_driver
     }
 
     async fn is_disponent(&self) -> bool{
-        false // TODO
+        self.is_disponent
     }
 
     async fn is_admin(&self) -> bool{
         self.is_admin
     }
 
-    async fn get_company_id(&self) -> Option<bool>{
-        None // TODO
+    async fn get_company_id(&self) -> Option<i32>{
+        self.company_id
     }
 }
 
@@ -240,24 +246,25 @@ impl VehicleData {
         new_interval: &mut Interval,
         id_or_none: Option<i32>, //None->insert availability into db, this yields the id->create availability in data with this id.  Some->create in data with given id, nothing to do in db
     ) -> StatusCode {
+        println!("{}",new_interval);
         let mut mark_delete: Vec<i32> = Vec::new();
         for (id, existing) in self.availability.iter() {
             if !existing.interval.overlaps(new_interval) {
-                if existing.interval.touches(new_interval){
+                if existing.interval.touches(new_interval) && existing.interval != *new_interval{
                     mark_delete.push(*id);
-                    new_interval.merge(&existing.interval);
+                    *new_interval = new_interval.merge(&existing.interval);
                 }
                 continue;
             }
             if existing.interval.contains(new_interval) {
-                return StatusCode::CREATED;
+                return StatusCode::OK;
             }
             if new_interval.contains(&existing.interval) {
                 mark_delete.push(*id);
             }
             if new_interval.overlaps(&existing.interval) {
                 mark_delete.push(*id);
-                new_interval.merge(&existing.interval);
+                *new_interval = new_interval.merge(&existing.interval);
             }
         }
         for to_delete in mark_delete {
@@ -331,12 +338,8 @@ impl PrimaEvent for EventData {
         self.id
     }
 
-    async fn get_vehicle_license_plate(&self) -> &str {
-        ""
-    }
-
-    async fn get_customer_name(&self) -> &str {
-        ""
+    async fn get_customer_id(&self) -> i32 {
+        self.customer
     }
 
     async fn get_lat(&self) -> f32 {
@@ -375,6 +378,7 @@ pub struct CompanyData {
     central_coordinates: Point,
     zone: i32,
     name: String,
+    email: String,
 }
 
 #[async_trait]
@@ -395,6 +399,7 @@ impl CompanyData {
             central_coordinates: Point::new(0.0, 0.0),
             zone: -1,
             name: "".to_string(),
+            email: "".to_string(),
         }
     }
 }
@@ -715,6 +720,7 @@ impl PrimaData for Data{
                     company_model.longitude as f64,
                 ),
                 id: company_model.id,
+                email: company_model.email,
             };
         }
 
@@ -806,6 +812,8 @@ impl PrimaData for Data{
                     id: user_model.id,
                     name: user_model.display_name,
                     is_driver: user_model.is_driver,
+                    is_disponent: user_model.is_disponent,
+                    company_id: user_model.company,
                     is_admin: user_model.is_admin,
                     email: user_model.email,
                     password: user_model.password,
@@ -815,7 +823,7 @@ impl PrimaData for Data{
                 },
             );
         }
-        self.next_request_id = self.max_event_id();
+        self.next_request_id = self.max_event_id()+1;
     }
 
     async fn create_vehicle(
@@ -881,11 +889,20 @@ impl PrimaData for Data{
         o_auth_id: Option<String>,
         o_auth_provider: Option<String>,
     ) -> StatusCode {
-        if self.users.iter().any(|(_, user)| user.email == *email) {
+        print!("{}   {}",email, name);
+        if self.users.values().any(|user| user.email == *email) {
+            println!("      denied");
             return StatusCode::CONFLICT;
         }
+        println!("      accepted");
         if !is_user_role_valid(is_driver, is_disponent, is_admin, company){
             return StatusCode::BAD_REQUEST;
+        }
+        match company{
+            None=>(),
+            Some(c_id) => if self.companies.len() < c_id as usize{
+                return StatusCode::NOT_FOUND;
+            }
         }
         match User::insert(user::ActiveModel {
             id: ActiveValue::NotSet,
@@ -912,6 +929,8 @@ impl PrimaData for Data{
                         id,
                         name: name.to_string(),
                         is_driver,
+                        is_disponent,
+                        company_id: company,
                         is_admin,
                         email: email.to_string(),
                         password,
@@ -995,7 +1014,7 @@ impl PrimaData for Data{
         if self.zones.len() < zone as usize {
             return StatusCode::EXPECTATION_FAILED;
         }
-        if self.companies.iter().any(|company| company.name == name) {
+        if self.companies.iter().any(|company| company.email == email) {
             return StatusCode::CONFLICT;
         }
         match Company::insert(company::ActiveModel {
@@ -1015,6 +1034,7 @@ impl PrimaData for Data{
                     central_coordinates: Point::new(lat as f64, lng as f64),
                     zone,
                     name: name.to_string(),
+                    email: email.to_string(),
                 });
                 StatusCode::CREATED
             }
@@ -1042,7 +1062,7 @@ impl PrimaData for Data{
             return StatusCode::NOT_ACCEPTABLE;
         }
         let mut mark_delete: Vec<i32> = Vec::new();
-        let mut to_insert: Option<(Interval, Interval)> = None;
+        let mut to_insert = Vec::<Interval>::new();
         let vehicle = &mut self.vehicles[id_to_vec_pos(vehicle_id)];
         let mut touched = false;
         for (id, existing) in vehicle.availability.iter_mut() {
@@ -1052,7 +1072,9 @@ impl PrimaData for Data{
             touched = true;
             if existing.interval.contains(&to_remove_interval) {
                 mark_delete.push(*id);
-                to_insert = Some(existing.interval.split(&to_remove_interval));
+                let (left,right) = existing.interval.split(&to_remove_interval);
+                to_insert.push(left);
+                to_insert.push(right);
                 break;
             }
             if to_remove_interval.contains(&existing.interval) {
@@ -1060,30 +1082,8 @@ impl PrimaData for Data{
                 continue;
             }
             if to_remove_interval.overlaps(&existing.interval) {
-                existing.interval.cut(&to_remove_interval);
-                let mut active_m: availability::ActiveModel =
-                    match Availability::find_by_id(existing.id)
-                        .one(&self.db_connection)
-                        .await
-                    {
-                        Err(e) => {
-                            error!("{e:?}");
-                            return StatusCode::INTERNAL_SERVER_ERROR;
-                        }
-                        Ok(model_opt) => match model_opt {
-                            None => return StatusCode::INTERNAL_SERVER_ERROR,
-                            Some(model) => (model as availability::Model).into()
-                        },
-                    };
-                active_m.start_time = ActiveValue::set(existing.interval.start_time);
-                active_m.end_time = ActiveValue::set(existing.interval.end_time);
-                match Availability::update(active_m).exec(&self.db_connection).await {
-                    Ok(_) => (),
-                    Err(e) => {
-                        error!("Error deleting interval: {e:?}");
-                        return StatusCode::INTERNAL_SERVER_ERROR;
-                    }
-                }
+                mark_delete.push(*id);
+                to_insert.push(existing.interval.cut(&to_remove_interval));
             }
         }
         if !touched {
@@ -1103,10 +1103,8 @@ impl PrimaData for Data{
                 }
             }
         }
-        if let Some((left, right)) = to_insert {
-            self.create_availability(left.start_time, left.end_time, vehicle_id)
-            .await;
-            self.create_availability(right.start_time, right.end_time, vehicle_id)
+        for insert_interval in to_insert.iter() {
+            self.create_availability(insert_interval.start_time, insert_interval.end_time, vehicle_id)
             .await;
         }
         StatusCode::OK
@@ -1159,6 +1157,16 @@ impl PrimaData for Data{
             return  Err(StatusCode::NOT_FOUND);
         }
         Ok(Box::new(self.companies.iter().find(|company| company.id == company_id).unwrap() as &dyn PrimaCompany))
+    }
+
+    async fn get_user(
+        &self,
+        user_id: i32,
+    ) -> Result<Box<&dyn PrimaUser>, StatusCode>{
+        if self.users.len() <= user_id as usize{
+            return  Err(StatusCode::NOT_FOUND);
+        }
+        Ok(Box::new(&self.users[&user_id] as &dyn PrimaUser))
     }
 
     async fn get_tours(
@@ -2029,18 +2037,28 @@ mod test {
 
         check_data_db_synchronized(&d).await;
     }
+    
+    #[tokio::test]
+    #[serial]
+    async fn test_synchronization() {
+        let db_conn = test_main().await;
+        let d = init::init(&db_conn, true, 5000).await;
+        //d.create_user("name", false, false, None, true, "email", Some("password".to_string()), "salt", Some("o_auth_id".to_string()), Some("o_auth_provider".to_string())).await;
+        check_data_db_synchronized(&d).await;
+    }
+
     #[tokio::test]
     #[serial]
     async fn test_key_violations() {
         let db_conn = test_main().await;
-        let mut d = init::init(&db_conn, true, 5000).await;
+        let mut d = init::init(&db_conn,true,5000).await;
         //validate UniqueKeyViolation handling when creating data (expect StatusCode::CONFLICT)
         //unique keys:  table               keys
         //              user                name, email
         //              zone                name
         //              company             name
         //              vehicle             license-plate
-        let n_users = d.users.len();
+        let mut n_users = d.users.len();
         //insert user with existing name
         assert_eq!(
             d.create_user(
@@ -2056,16 +2074,17 @@ mod test {
                 Some("".to_string()),
             )
             .await,
-            StatusCode::CONFLICT
+            StatusCode::CREATED
         );
-        assert_eq!(d.users.len(), n_users);
+        assert_eq!(d.users.len(), n_users+1);
+        n_users = d.users.len();
         //insert user with existing email
         assert_eq!(
             d.create_user(
                 "TestDriver2",
                 true,
                 false,
-                Some(1),
+                Some(2),
                 false,
                 "test@aol.com",
                 Some("".to_string()),
@@ -2078,19 +2097,19 @@ mod test {
         );
         assert_eq!(d.users.len(), n_users);
         //insert user with new name and email
-        d.create_user(
+        assert_eq!(d.create_user(
             "TestDriver2",
-            true,
-            true,
-            Some(1),
             false,
-            "test@gmail.com",
+            false,
+            None,
+            false,
+            "test@gmail2.com",
             Some("".to_string()),
             "",
             Some("".to_string()),
             Some("".to_string()),
         )
-        .await;
+        .await, StatusCode::CREATED);
         assert_eq!(d.users.len(), n_users + 1);
 
         //insert zone with existing name
@@ -2103,7 +2122,7 @@ mod test {
         assert_eq!(d.zones.len(), n_zones);
 
         //insert company with existing name
-        let n_companies = d.companies.len();
+        let mut n_companies = d.companies.len();
         assert_eq!(
             d.create_company(
                 "Taxi-Unternehmen Bautzen-1",
@@ -2113,7 +2132,7 @@ mod test {
                 1.0
             )
             .await,
-            StatusCode::CONFLICT
+            StatusCode::CREATED
         );
 
         //insert vehicle with existing license plate
@@ -2202,20 +2221,21 @@ mod test {
             d.create_company(
                 "some new name",
                 1 + n_zones as i32,
-                "a@b",
+                "y@x",
                 1.0,
                 1.0
             )
             .await,
             StatusCode::EXPECTATION_FAILED
         );
-        assert_eq!(d.companies.len(), n_companies);
+        assert_eq!(d.companies.len(), n_companies+1);
+        n_companies=d.companies.len();
         //insert company with existing zone
         assert_eq!(
             d.create_company(
                 "some new name",
                 n_zones as i32,
-                "b@c",
+                "x@z",
                 1.0,
                 1.0
             )
@@ -2225,6 +2245,18 @@ mod test {
         assert_eq!(d.companies.len(), n_companies + 1);
         let n_companies = d.companies.len();
 
+        //insert company with existing email
+        assert_eq!(
+            d.create_company(
+                "some new name",
+                n_zones as i32,
+                "a@b",
+                1.0,
+                1.0
+            )
+            .await,
+            StatusCode::CONFLICT
+        );
         //insert vehicle with non-existing company
         assert_eq!(
             d.create_vehicle(
@@ -2390,7 +2422,10 @@ mod test {
     async fn test_invalid_interval_parameter_handling() {
         let db_conn = test_main().await;
         let mut d = init::init(&db_conn, true, 5000).await;
-        let d_copy = d.clone();
+        let mut d_copy = Data::new(&db_conn);
+        d_copy.read_data_from_db().await;
+
+        check_data_db_synchronized(&d).await;
 
         let base_time = NaiveDate::from_ymd_opt(5000, 1, 1)
             .unwrap()
@@ -2398,6 +2433,15 @@ mod test {
             .unwrap();
         //let in_3_hours = base_time + Duration::hours(3);
         //interval range not limited
+        println!("max_v_id: {}, vehicles: {}, company_1_vehicles_via_getter: {}", d.max_vehicle_id(), d.vehicles.len(), d.get_vehicles(1).await.unwrap().len());
+        println!("{}", match d.get_tours(1,NaiveDateTime::MIN, NaiveDateTime::MAX).await{
+            Ok(_)=>"no error",
+            Err(e)=>if matches!(e,StatusCode::NOT_FOUND){
+                "not found error"
+            }else{
+                "unexpected error"
+            },
+        });
         assert!(d.get_tours(1, NaiveDateTime::MIN, NaiveDateTime::MAX).await.is_ok());
         //interval range not limited
         assert!(d.get_events_for_user(1, NaiveDateTime::MIN, NaiveDateTime::MAX).await.is_ok());
@@ -2690,6 +2734,7 @@ mod test {
     async fn availability_test() {
         let db_conn = test_main().await;
         let mut d = init::init(&db_conn, true, 5000).await;
+        println!("init done");
         let n_vehicles = d.vehicles.len();
 
         let base_time = NaiveDate::from_ymd_opt(5000, 4, 15)
@@ -2700,8 +2745,8 @@ mod test {
         let in_3_hours = base_time + Duration::hours(3);
 
         assert_eq!(d.vehicles[0].availability.len(), 1);
-        //remove availabilies created in init
-        d.remove_availability(
+        //try removing availability created in init (needed for tour)
+        assert_eq!(d.remove_availability(
             NaiveDate::from_ymd_opt(5000, 1, 1)
                 .unwrap()
                 .and_hms_opt(0, 0, 0)
@@ -2712,24 +2757,24 @@ mod test {
                 .unwrap(),
             1,
         )
-        .await;
-        assert_eq!(d.vehicles[0].availability.len(), 0);
-        //add non-touching
-        d.create_availability(in_2_hours, in_3_hours, 1)
-            .await;
+        .await,StatusCode::NOT_ACCEPTABLE);
         assert_eq!(d.vehicles[0].availability.len(), 1);
+        //add non-touching
+        assert_eq!(d.create_availability(in_2_hours, in_3_hours, 1)
+            .await,StatusCode::CREATED);
+        assert_eq!(d.vehicles[0].availability.len(), 2);
         //add touching
-        d.create_availability(
+        assert_eq!(d.create_availability(
             in_2_hours + Duration::hours(1),
             in_3_hours + Duration::hours(1),
             1,
         )
-        .await;
-        assert_eq!(d.vehicles[0].availability.len(), 1);
+        .await,StatusCode::CREATED);
+        assert_eq!(d.vehicles[0].availability.len(), 2);
         //add containing/contained (equal)
-        d.create_availability(in_2_hours, in_3_hours, 1)
-            .await;
-        assert_eq!(d.vehicles[0].availability.len(), 1);
+        assert_eq!(d.create_availability(in_2_hours, in_3_hours, 1)
+            .await,StatusCode::OK);
+        assert_eq!(d.vehicles[0].availability.len(), 2);
 
         //remove non-touching
         d.remove_availability(
@@ -2738,7 +2783,7 @@ mod test {
             1,
         )
         .await;
-        assert_eq!(d.vehicles[0].availability.len(), 1);
+        assert_eq!(d.vehicles[0].availability.len(), 2);
         //remove split
         d.remove_availability(
             in_2_hours + Duration::minutes(5),
@@ -2746,7 +2791,7 @@ mod test {
             1,
         )
         .await;
-        assert_eq!(d.vehicles[0].availability.len(), 2);
+        assert_eq!(d.vehicles[0].availability.len(), 3);
         //remove overlapping
         d.remove_availability(
             in_2_hours - Duration::minutes(90),
@@ -2754,7 +2799,7 @@ mod test {
             1,
         )
         .await;
-        assert_eq!(d.vehicles[0].availability.len(), 2);
+        assert_eq!(d.vehicles[0].availability.len(), 3);
         //remove containing
         d.remove_availability(
             in_2_hours - Duration::minutes(1),
@@ -2762,7 +2807,7 @@ mod test {
             1,
         )
         .await;
-        assert_eq!(d.vehicles[0].availability.len(), 0);
+        assert_eq!(d.vehicles[0].availability.len(), 1);
 
         //Validate StatusCode cases
         //insert availability with non-existing vehicle

@@ -1,7 +1,9 @@
 use crate::{
     backend::{data::Data, lib::PrimaData},
     constants::{bautzen_ost::BAUTZEN_OST, bautzen_west::BAUTZEN_WEST, gorlitz::GORLITZ},
-    entities::{availability, company, event, prelude::User, tour, user, vehicle, zone},
+    entities::{
+        address, availability, company, event, prelude::User, request, tour, user, vehicle, zone,
+    },
     error,
 };
 use chrono::NaiveDate;
@@ -14,7 +16,7 @@ enum InitType {
     Default,
 }
 
-async fn clear(db_conn: &DbConn) {
+pub async fn clear(db_conn: &DbConn) {
     match event::Entity::delete_many().exec(db_conn).await {
         Ok(_) => match db_conn
             .execute_unprepared("ALTER SEQUENCE event_id_seq RESTART WITH 1")
@@ -27,7 +29,7 @@ async fn clear(db_conn: &DbConn) {
     }
     match tour::Entity::delete_many().exec(db_conn).await {
         Ok(_) => match db_conn
-            .execute_unprepared("ALTER SEQUENCE tours_id_seq RESTART WITH 1")
+            .execute_unprepared("ALTER SEQUENCE tour_id_seq RESTART WITH 1")
             .await
         {
             Ok(_) => (),
@@ -55,6 +57,16 @@ async fn clear(db_conn: &DbConn) {
         },
         Err(e) => error!("{}", e),
     }
+    match user::Entity::delete_many().exec(db_conn).await {
+        Ok(_) => match db_conn
+            .execute_unprepared("ALTER SEQUENCE user_id_seq RESTART WITH 1")
+            .await
+        {
+            Ok(_) => (),
+            Err(e) => error!("{}", e),
+        },
+        Err(e) => error!("{}", e),
+    }
     match company::Entity::delete_many().exec(db_conn).await {
         Ok(_) => match db_conn
             .execute_unprepared("ALTER SEQUENCE company_id_seq RESTART WITH 1")
@@ -75,9 +87,19 @@ async fn clear(db_conn: &DbConn) {
         },
         Err(e) => error!("{}", e),
     }
-    match user::Entity::delete_many().exec(db_conn).await {
+    match address::Entity::delete_many().exec(db_conn).await {
         Ok(_) => match db_conn
-            .execute_unprepared("ALTER SEQUENCE user_id_seq RESTART WITH 1")
+            .execute_unprepared("ALTER SEQUENCE address_id_seq RESTART WITH 1")
+            .await
+        {
+            Ok(_) => (),
+            Err(e) => error!("{}", e),
+        },
+        Err(e) => error!("{}", e),
+    }
+    match request::Entity::delete_many().exec(db_conn).await {
+        Ok(_) => match db_conn
+            .execute_unprepared("ALTER SEQUENCE request_id_seq RESTART WITH 1")
             .await
         {
             Ok(_) => (),
@@ -109,48 +131,6 @@ pub async fn init(
         }
     }
     let mut data = Data::new(db_conn);
-
-    data.create_user(
-        "TestDriver1",
-        true,
-        false,
-        Some(1),
-        false,
-        "test@aol.com",
-        Some("".to_string()),
-        "",
-        Some("".to_string()),
-        Some("".to_string()),
-    )
-    .await;
-
-    data.create_user(
-        "TestUser1",
-        false,
-        false,
-        None,
-        false,
-        "test@web.com",
-        Some("".to_string()),
-        "",
-        Some("".to_string()),
-        Some("".to_string()),
-    )
-    .await;
-
-    data.create_user(
-        "TestUser2",
-        false,
-        false,
-        None,
-        false,
-        "test@mail.com",
-        Some("".to_string()),
-        "",
-        Some("".to_string()),
-        Some("".to_string()),
-    )
-    .await;
 
     data.create_zone("Bautzen Ost", BAUTZEN_OST).await;
     data.create_zone("Bautzen West", BAUTZEN_WEST).await;
@@ -221,6 +201,48 @@ pub async fn init(
     )
     .await;
 
+    data.create_user(
+        "TestDriver1",
+        true,
+        false,
+        Some(1),
+        false,
+        "test@aol.com",
+        Some("".to_string()),
+        "",
+        Some("".to_string()),
+        Some("".to_string()),
+    )
+    .await;
+
+    data.create_user(
+        "TestUser1",
+        false,
+        false,
+        None,
+        false,
+        "test@web.com",
+        Some("".to_string()),
+        "",
+        Some("".to_string()),
+        Some("".to_string()),
+    )
+    .await;
+
+    data.create_user(
+        "TestUser2",
+        false,
+        false,
+        None,
+        false,
+        "test@mail.com",
+        Some("".to_string()),
+        "",
+        Some("".to_string()),
+        Some("".to_string()),
+    )
+    .await;
+
     data.create_vehicle(&"TUB1-1".to_string(), 1).await;
     data.create_vehicle(&"TUB1-2".to_string(), 1).await;
     data.create_vehicle(&"TUB1-3".to_string(), 1).await;
@@ -253,11 +275,11 @@ pub async fn init(
 
     data.insert_or_addto_tour(
         None,
-        NaiveDate::from_ymd_opt(year, 4, 15)
+        NaiveDate::from_ymd_opt(year, 4, 19)
             .unwrap()
             .and_hms_opt(9, 10, 0)
             .unwrap(),
-        NaiveDate::from_ymd_opt(year, 4, 15)
+        NaiveDate::from_ymd_opt(year, 4, 19)
             .unwrap()
             .and_hms_opt(10, 0, 0)
             .unwrap(),
@@ -266,11 +288,11 @@ pub async fn init(
         &"Lichtwiesenweg 3".to_string(),
         13.867512445295205,
         51.22069201951501,
-        NaiveDate::from_ymd_opt(year, 4, 15)
+        NaiveDate::from_ymd_opt(year, 4, 19)
             .unwrap()
             .and_hms_opt(9, 15, 0)
             .unwrap(),
-        NaiveDate::from_ymd_opt(year, 4, 15)
+        NaiveDate::from_ymd_opt(year, 4, 19)
             .unwrap()
             .and_hms_opt(9, 12, 0)
             .unwrap(),
@@ -283,11 +305,11 @@ pub async fn init(
         false,
         14.025081097762154,
         51.195075641827316,
-        NaiveDate::from_ymd_opt(year, 4, 15)
+        NaiveDate::from_ymd_opt(year, 4, 19)
             .unwrap()
             .and_hms_opt(9, 55, 0)
             .unwrap(),
-        NaiveDate::from_ymd_opt(year, 4, 15)
+        NaiveDate::from_ymd_opt(year, 4, 19)
             .unwrap()
             .and_hms_opt(9, 18, 0)
             .unwrap(),
@@ -295,11 +317,11 @@ pub async fn init(
     .await;
 
     data.create_availability(
-        NaiveDate::from_ymd_opt(year, 4, 15)
+        NaiveDate::from_ymd_opt(year, 4, 19)
             .unwrap()
             .and_hms_opt(10, 10, 0)
             .unwrap(),
-        NaiveDate::from_ymd_opt(year, 4, 15)
+        NaiveDate::from_ymd_opt(year, 4, 19)
             .unwrap()
             .and_hms_opt(14, 0, 0)
             .unwrap(),
@@ -308,11 +330,11 @@ pub async fn init(
     .await;
 
     data.create_availability(
-        NaiveDate::from_ymd_opt(year, 4, 15)
+        NaiveDate::from_ymd_opt(year, 4, 19)
             .unwrap()
             .and_hms_opt(10, 10, 0)
             .unwrap(),
-        NaiveDate::from_ymd_opt(year, 4, 15)
+        NaiveDate::from_ymd_opt(year, 4, 19)
             .unwrap()
             .and_hms_opt(14, 0, 0)
             .unwrap(),
@@ -321,11 +343,11 @@ pub async fn init(
     .await;
 
     data.create_availability(
-        NaiveDate::from_ymd_opt(year, 4, 15)
+        NaiveDate::from_ymd_opt(year, 4, 19)
             .unwrap()
             .and_hms_opt(10, 10, 0)
             .unwrap(),
-        NaiveDate::from_ymd_opt(year, 4, 15)
+        NaiveDate::from_ymd_opt(year, 4, 19)
             .unwrap()
             .and_hms_opt(14, 0, 0)
             .unwrap(),

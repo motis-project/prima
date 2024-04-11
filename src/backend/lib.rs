@@ -19,16 +19,15 @@ OK                              request processed succesfully
 
 #[async_trait]
 pub trait PrimaTour {
-    async fn get_vehicle_license_plate(&self) -> &str;
+    async fn get_events(&self) -> Vec<Box<&dyn PrimaEvent>>;
 }
 
 #[async_trait]
 pub trait PrimaEvent {
     async fn get_id(&self) -> i32;
-    async fn get_customer_name(&self) -> &str;
-    async fn get_vehicle_license_plate(&self) -> &str;
     async fn get_lat(&self) -> f32;
     async fn get_lng(&self) -> f32;
+    async fn get_customer_id(&self) -> i32;
     async fn get_address_id(&self) -> i32;
 }
 
@@ -43,10 +42,11 @@ pub trait PrimaVehicle {
 #[async_trait]
 pub trait PrimaUser {
     async fn get_id(&self) -> i32;
+    async fn get_name(&self) -> &str;
     async fn is_driver(&self) -> bool;
     async fn is_disponent(&self) -> bool;
     async fn is_admin(&self) -> bool;
-    async fn get_company_id(&self) -> Option<bool>;
+    async fn get_company_id(&self) -> Option<i32>;
 }
 
 #[async_trait]
@@ -118,6 +118,11 @@ pub trait PrimaData: Send + Sync {
         &self,
         company_id: i32,
     ) -> Result<Box<&dyn PrimaCompany>, StatusCode>;
+
+    async fn get_user(
+        &self,
+        user_id: i32,
+    ) -> Result<Box<&dyn PrimaUser>, StatusCode>;
 
     async fn get_address(
         &self,
