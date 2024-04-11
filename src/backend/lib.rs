@@ -37,21 +37,9 @@ pub trait PrimaUser {
 }
 
 #[async_trait]
-pub trait PrimaVehicleSpecifics {
-    async fn get_seats(&self) -> i32;
-    async fn get_wheelchairs(&self) -> i32;
-    async fn get_storage_space(&self) -> i32;
-}
-
-#[async_trait]
 pub trait PrimaCompany {
     async fn get_id(&self) -> i32;
     async fn get_name(&self) -> &str;
-}
-
-#[async_trait]
-pub trait PrimaAvailability {
-    async fn get_interval(&self) -> &Interval;
 }
 
 #[async_trait]
@@ -66,14 +54,14 @@ pub trait PrimaData: Send + Sync {
 
     async fn create_user(
         &mut self,
-        name: String,
+        name: &str,
         is_driver: bool,
         is_disponent: bool,
         company: Option<i32>,
         is_admin: bool,
-        email: String,
+        email: &str,
         password: Option<String>,
-        salt: String,
+        salt: &str,
         o_auth_id: Option<String>,
         o_auth_provider: Option<String>,
     ) -> StatusCode;
@@ -87,15 +75,15 @@ pub trait PrimaData: Send + Sync {
 
     async fn create_zone(
         &mut self,
-        name: String,
-        area_str: String,
+        name: &str,
+        area_str: &str,
     ) -> StatusCode;
 
     async fn create_company(
         &mut self,
-        name: String,
+        name: &str,
         zone: i32,
-        email: String,
+        email: &str,
         lat: f32,
         lng: f32,
     ) -> StatusCode;
@@ -182,4 +170,31 @@ pub trait PrimaData: Send + Sync {
         event_id: i32,
         company_id: Option<i32>,
     ) -> Result<Vec<Box<&dyn PrimaTour>>, StatusCode>;
+
+    async fn get_availability_intervals(
+        &self,
+        vehicle_id: i32,
+        time_frame_start: NaiveDateTime,
+        time_frame_end: NaiveDateTime,
+    ) -> Result<Vec<&Interval>, StatusCode>;
+
+    async fn is_vehicle_available(
+        &self,
+        vehicle: i32,
+        tour_id: i32,
+    ) -> Result<bool, StatusCode>;
+
+    async fn handle_routing_request(
+        &mut self,
+        fixed_time: NaiveDateTime,
+        is_start_time_fixed: bool,
+        start_lat: f32,
+        start_lng: f32,
+        target_lat: f32,
+        target_lng: f32,
+        customer: i32,
+        passengers: i32,
+        start_address: &String,
+        target_address: &String,
+    ) -> StatusCode;
 }

@@ -1,4 +1,3 @@
-use crate::backend::data::Data;
 use axum::{
     extract::State,
     http::{StatusCode, Uri},
@@ -51,9 +50,14 @@ async fn calendar(
     _uri: Uri,
     State(s): State<AppState>,
 ) -> Result<Html<String>, StatusCode> {
+    s.data
+        .write()
+        .await
+        .create_vehicle(&"test_vehicle_1".to_string(), 1)
+        .await;
     s.render("calendar.html", &Context::new())
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
-        .map(|x| Html(x))
+        .map(Html)
 }
 
 async fn register(
@@ -62,7 +66,7 @@ async fn register(
 ) -> Result<Html<String>, StatusCode> {
     s.render("register.html", &Context::new())
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
-        .map(|x| Html(x))
+        .map(Html)
 }
 /*
 async fn users(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {

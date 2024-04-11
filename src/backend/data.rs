@@ -19,7 +19,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use sea_orm::DbConn;
-use super::{geo_from_str::multi_polygon_from_str, lib::PrimaAvailability};
+use super::geo_from_str::multi_polygon_from_str;
 use ::anyhow::Result;
 use chrono::{Duration, NaiveDateTime, NaiveDate, Utc};
 use geo::{prelude::*, MultiPolygon, Point};
@@ -136,13 +136,6 @@ impl TourData {
 pub struct AvailabilityData {
     id: i32,
     interval: Interval,
-}
-
-#[async_trait]
-impl PrimaAvailability for AvailabilityData {
-    async fn get_interval(&self) -> &Interval {
-        &self.interval
-    }
 }
 
 #[derive(PartialEq, Clone)]
@@ -415,26 +408,6 @@ pub struct AddressData {
 
 #[derive(PartialEq, Clone)]
 #[readonly::make]
-struct VehicleSpecificsData {
-    id: i32,
-    seats: i32,
-    wheelchairs: i32,
-    storage_space: i32,
-}
-
-impl VehicleSpecificsData {
-    fn fulfills(
-        &self,
-        seats: i32,
-        wheelchairs: i32,
-        storage: i32,
-    ) -> bool {
-        self.seats >= seats && self.wheelchairs >= wheelchairs && self.storage_space >= storage
-    }
-}
-
-#[derive(PartialEq, Clone)]
-#[readonly::make]
 pub struct ZoneData {
     area: MultiPolygon,
     name: String,
@@ -465,6 +438,243 @@ impl PartialEq for Data {
 
 #[async_trait]
 impl PrimaData for Data{
+        async fn handle_routing_request(
+            &mut self, 
+            fixed_time: NaiveDateTime,
+            is_start_time_fixed: bool,
+            start_lat: f32,  //for Point  lat=y and lng is x
+            start_lng: f32,  //for Point  lat=y and lng is x
+            target_lat: f32, //for Point  lat=y and lng is x
+            target_lng: f32, //for Point  lat=y and lng is x
+            customer: i32,
+            passengers: i32,
+            start_address: &String,
+            target_address: &String,
+            //wheelchairs: i32, luggage: i32,
+        ) -> StatusCode {
+            let minimum_prep_time: Duration = Duration::hours(1);
+            let now: NaiveDateTime = Utc::now().naive_utc();
+            if now > fixed_time {
+                return StatusCode::NOT_ACCEPTABLE;
+            }
+            if passengers > 3 {                                                                 // TODO: change when mvp restriction is lifted
+                return StatusCode::NO_CONTENT;
+            }
+    
+            let start = Point::new(start_lat as f64, start_lng as f64);
+            let target = Point::new(target_lat as f64, target_lng as f64);
+            let beeline_time = Duration::minutes(hrs_to_minutes(
+                meter_to_km_f(start.geodesic_distance(&target)) / BEELINE_KMH,
+            ));
+            let (start_time, target_time) = if is_start_time_fixed {
+                (fixed_time, fixed_time + beeline_time)
+            } else {
+                (fixed_time - beeline_time, fixed_time)
+            };
+            if now + minimum_prep_time > start_time {
+                return StatusCode::NO_CONTENT;
+            }
+    
+            let beeline_interval = Interval::new(start_time, target_time);
+            // Find companies and vehicles that may process the request according to their zone, and vehicle-specifics.
+            // Also filter for availability and collisions with other tours (based on their first and last events and the beeline distance between start and target of the newly requested tour)
+            let candidate_vehicles = self.get_viable_vehicles(&beeline_interval, passengers, &start).await;
+            let mut n_companies = 0;
+            let mut viable_concatenations = Vec::<TourConcatenationCase>::new();
+            for (company_id, vehicles) in candidate_vehicles.iter().into_group_map_by(|vehicle|vehicle.company){
+                if vehicles.iter().any(|vehicle|!vehicle.tours.iter().any(|tour|tour.overlaps(&beeline_interval))){
+                    viable_concatenations.push(TourConcatenationCase::NewTour {company_id});
+                    n_companies += 1;
+                }
+            }
+            for vehicle in candidate_vehicles.iter() {
+                let predecessor_tour = match vehicle.tours.iter()
+                    .filter(|tour|tour.get_last_event().unwrap().scheduled_time < start_time)
+                    .max_by_key(|tour|tour.get_last_event().unwrap().scheduled_time){
+                    None => {
+                        return StatusCode::INTERNAL_SERVER_ERROR;
+                    },
+                    Some(tour)=>tour,
+                };
+                let predecessor_event_id = predecessor_tour.get_last_event().unwrap().id;
+                let successor_tour = match vehicle.tours.iter()
+                    .filter(|tour|tour.get_first_event().unwrap().scheduled_time < target_time)
+                    .max_by_key(|tour|tour.get_first_event().unwrap().scheduled_time){
+                    None => {
+                        return StatusCode::INTERNAL_SERVER_ERROR;
+                    },
+                    Some(tour)=>tour,
+                };
+                let successor_event_id = successor_tour.get_first_event().unwrap().id;
+                viable_concatenations.push(TourConcatenationCase::Insert { vehicle_id: vehicle.id, predecessor_tour_id: predecessor_tour.id, successor_tour_id: successor_tour.id, predecessor_event_id, successor_event_id});
+                if successor_tour.arrival < start_time{
+                    viable_concatenations.push(TourConcatenationCase::Append { vehicle_id: vehicle.id, predecessor_tour_id: predecessor_tour.id, predecessor_event_id});
+                }
+                if predecessor_tour.departure > target_time{
+                    viable_concatenations.push(TourConcatenationCase::Prepend { vehicle_id: vehicle.id, successor_tour_id: successor_tour.id, successor_event_id});
+                }
+            }
+    
+            for v in candidate_vehicles.iter() {
+                println!("company: {}, vehicle: {}", v.company, v.id);
+            }
+            let start_c = Coordinate {
+                lng: start_lat as f64,
+                lat: start_lng as f64,
+            };
+            let target_c = Coordinate {
+                lng: target_lat as f64,
+                lat: target_lng as f64,
+            };
+            
+            let mut start_many = Vec::<Coordinate>::with_capacity(n_companies+candidate_vehicles.len()+1);
+            let mut pos = 0;
+            for case in viable_concatenations.iter() {
+                match case{
+                    TourConcatenationCase::Append{vehicle_id, predecessor_tour_id, predecessor_event_id} =>(),
+                    TourConcatenationCase::Prepend{vehicle_id, successor_tour_id, successor_event_id} =>(),
+                    TourConcatenationCase::NewTour{company_id} => {
+                        start_many[pos] = Coordinate {
+                            lat: self.get_company(*company_id).central_coordinates.y(),
+                            lng: self.get_company(*company_id).central_coordinates.x(),
+                        };
+                        pos+=1;
+                    },
+                    TourConcatenationCase::Insert{vehicle_id, predecessor_tour_id, successor_tour_id, predecessor_event_id, successor_event_id} => {
+                        let predecessor_event_coordinates = self.get_event(*vehicle_id, *predecessor_tour_id, *predecessor_event_id).await.coordinates;
+                        start_many[pos] = Coordinate {
+                            lat: predecessor_event_coordinates.y(),
+                            lng: predecessor_event_coordinates.x(),
+                        };
+                        pos+=1;
+                    },
+                }
+            }
+            // add this to get distance between start and target of the new request
+            start_many[pos] = Coordinate {
+                lat: target_c.lat,
+                lng: target_c.lng,
+            };
+            let osrm = OSRM::new();
+            let mut distances_to_start: Vec<DistTime> =
+                match osrm.one_to_many(start_c, start_many, Backward).await {
+                    Ok(r) => r,
+                    Err(e) => {
+                        error!("problem with osrm: {}", e);
+                        Vec::new()
+                    }
+                };
+            let mut target_many = Vec::<Coordinate>::with_capacity(n_companies+candidate_vehicles.len());
+            pos = 0;
+            for case in viable_concatenations {
+                match case{
+                    TourConcatenationCase::Append{vehicle_id, predecessor_tour_id, predecessor_event_id} =>(),
+                    TourConcatenationCase::Prepend{vehicle_id, successor_tour_id, successor_event_id} =>(),
+                    TourConcatenationCase::NewTour{company_id} => {
+                        target_many[pos] = Coordinate {
+                            lat: self.get_company(company_id).central_coordinates.y(),
+                            lng: self.get_company(company_id).central_coordinates.x(),
+                        };
+                        pos+=1
+                    },
+                    TourConcatenationCase::Insert{vehicle_id, predecessor_tour_id, successor_tour_id, predecessor_event_id, successor_event_id} => {
+                        let successor_event_coordinates = self.get_event(vehicle_id, successor_tour_id, successor_event_id).await.coordinates;
+                        target_many.push(Coordinate {
+                            lat: successor_event_coordinates.y(),
+                            lng: successor_event_coordinates.x(),
+                        });
+                        pos+=1;
+                    },
+                }
+            }
+            let distances_to_target: Vec<DistTime> =
+                match osrm.one_to_many(target_c, target_many, Forward).await {
+                    Ok(r) => r,
+                    Err(e) => {
+                        error!("problem with osrm: {}", e);
+                        Vec::new()
+                    }
+                };
+    
+            let travel_duration = match distances_to_start.last() {
+                Some(dt) => Duration::minutes(seconds_to_minutes(dt.time as i32) as i64),
+                None => {
+                    error!("distances to start was empty");
+                    return StatusCode::INTERNAL_SERVER_ERROR;
+                }
+            };
+            //start/target times using travel time
+            let start_time = if is_start_time_fixed {
+                fixed_time
+            } else {
+                fixed_time - travel_duration
+            };
+            let target_time = if is_start_time_fixed {
+                fixed_time + travel_duration
+            } else {
+                fixed_time
+            };
+            if now + minimum_prep_time > start_time {
+                return StatusCode::NO_CONTENT;
+            }
+            distances_to_start.truncate(distances_to_start.len() - 1); //remove distance from start to target
+    /*
+            //create all viable combinations
+            let mut viable_combinations: Vec<Combination> = Vec::new();
+            for (pos_in_viable, company) in viable_companies.iter().enumerate() {
+                let pos_in_data = id_to_vec_pos(company.id);
+                let start_dist_time = distances_to_start[pos_in_viable];
+                let target_dist_time = distances_to_target[pos_in_viable];
+    
+                let company_start_cost = seconds_to_minutes(start_dist_time.time as i32) * MINUTE_PRICE
+                    + meter_to_km(start_dist_time.dist as i32) * KM_PRICE;
+    
+                let company_target_cost = seconds_to_minutes(target_dist_time.time as i32)
+                    * MINUTE_PRICE
+                    + meter_to_km(target_dist_time.dist as i32) * KM_PRICE;
+                viable_combinations.push(Combination {
+                    is_start_company: true,
+                    start_pos: pos_in_data,
+                    is_target_company: true,
+                    target_pos: pos_in_data,
+                    cost: company_start_cost + company_target_cost,
+                });
+            }
+    
+            if viable_combinations.is_empty() {
+                return StatusCode::NO_CONTENT;
+            }
+    
+            viable_combinations.sort_by(|a, b| a.cost.cmp(&(b.cost)));
+     */
+            self.next_request_id += 1;
+            self
+                .insert_or_addto_tour(
+                    None,
+                    start_time,
+                    target_time,
+                    1,
+                    start_address,
+                    target_address,
+                    start_lat,
+                    start_lng,
+                    start_time,
+                    start_time,
+                    customer,
+                    1,
+                    0,
+                    0,
+                    self.next_request_id,
+                    false,
+                    false,
+                    target_lat,
+                    target_lng,
+                    target_time,
+                    target_time,
+                )
+                .await
+        } 
+
     async fn read_data_from_db(
         &mut self,
     ) {
@@ -654,14 +864,14 @@ impl PrimaData for Data{
 
     async fn create_user(
         &mut self,
-        name: String,
+        name: &str,
         is_driver: bool,
         is_disponent: bool,
         company: Option<i32>,
         is_admin: bool,
-        email: String,
+        email: &str,
         password: Option<String>,
-        salt: String,
+        salt: &str,
         o_auth_id: Option<String>,
         o_auth_provider: Option<String>,
     ) -> StatusCode {
@@ -670,12 +880,12 @@ impl PrimaData for Data{
         }
         match User::insert(user::ActiveModel {
             id: ActiveValue::NotSet,
-            display_name: ActiveValue::Set(name.clone()),
+            display_name: ActiveValue::Set(name.to_string()),
             is_driver: ActiveValue::Set(is_driver),
             is_admin: ActiveValue::Set(is_admin),
-            email: ActiveValue::Set(email.clone()),
+            email: ActiveValue::Set(email.to_string()),
             password: ActiveValue::Set(password.clone()),
-            salt: ActiveValue::Set(salt.clone()),
+            salt: ActiveValue::Set(salt.to_string()),
             o_auth_id: ActiveValue::Set(o_auth_id.clone()),
             o_auth_provider: ActiveValue::Set(o_auth_provider.clone()),
             company: ActiveValue::Set(company),
@@ -692,12 +902,12 @@ impl PrimaData for Data{
                     id,
                     UserData {
                         id,
-                        name,
+                        name: name.to_string(),
                         is_driver,
                         is_admin,
-                        email,
+                        email: email.to_string(),
                         password,
-                        salt,
+                        salt: salt.to_string(),
                         o_auth_id,
                         o_auth_provider,
                     },
@@ -731,13 +941,13 @@ impl PrimaData for Data{
 
     async fn create_zone(
         &mut self,
-        name: String,
-        area_str: String,
+        name: &str,
+        area_str: &str,
     ) -> StatusCode {
         if self.zones.iter().any(|zone| zone.name == name) {
             return StatusCode::CONFLICT;
         }
-        let area = match multi_polygon_from_str(&area_str) {
+        let area = match multi_polygon_from_str(area_str) {
             Err(_) => {
                 return StatusCode::BAD_REQUEST;
             }
@@ -759,7 +969,7 @@ impl PrimaData for Data{
                 self.zones.push(ZoneData {
                     id: result.last_insert_id,
                     area,
-                    name,
+                    name: name.to_string(),
                 });
                 StatusCode::CREATED
             }
@@ -768,9 +978,9 @@ impl PrimaData for Data{
 
     async fn create_company(
         &mut self,
-        name: String,
+        name: &str,
         zone: i32,
-        email: String,
+        email: &str,
         lat: f32,
         lng: f32,
     ) -> StatusCode {
@@ -786,7 +996,7 @@ impl PrimaData for Data{
             latitude: ActiveValue::Set(lat),
             display_name: ActiveValue::Set(name.to_string()),
             zone: ActiveValue::Set(zone),
-            email: ActiveValue::Set(email),
+            email: ActiveValue::Set(email.to_string()),
         })
         .exec(&self.db_connection)
         .await
@@ -796,7 +1006,7 @@ impl PrimaData for Data{
                     id: result.last_insert_id,
                     central_coordinates: Point::new(lat as f64, lng as f64),
                     zone,
-                    name,
+                    name: name.to_string(),
                 });
                 StatusCode::CREATED
             }
@@ -1171,6 +1381,44 @@ impl PrimaData for Data{
             .collect_vec())
         };
     }
+    
+    async fn is_vehicle_available(
+        &self,
+        vehicle_id: i32,
+        tour_id: i32,
+    ) -> Result<bool, StatusCode> {
+        if self.max_vehicle_id() < vehicle_id  || vehicle_id as usize <= 0{
+            return Err(StatusCode::NOT_FOUND);
+        }
+        let vehicle = &self.vehicles[id_to_vec_pos(vehicle_id)];
+        let tour = match vehicle.tours.iter().find(|tour| tour.id == tour_id){
+            Some(t) => t,
+            None => return Err(StatusCode::NOT_FOUND),
+        };
+        let tour_interval = Interval::new(
+            tour.departure,
+            tour.arrival
+        );
+        Ok(vehicle
+            .availability
+            .iter()
+            .any(|(_, availability)| availability.interval.contains(&tour_interval)))
+    }
+
+    async fn get_availability_intervals(
+        &self,
+        vehicle_id: i32,
+        time_frame_start: NaiveDateTime,
+        time_frame_end: NaiveDateTime,
+    ) -> Result<Vec<&Interval>, StatusCode>{
+        if self.max_vehicle_id() < vehicle_id  || vehicle_id as usize <= 0{
+            return Err(StatusCode::NOT_FOUND);
+        }
+        Ok(match self.vehicles.iter().find(|vehicle| vehicle.id == vehicle_id){
+            Some(v) => v,
+            None=> return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        }.availability.values().map(|availability| &availability.interval).filter(|availability_interval| Interval::new(time_frame_start, time_frame_end).overlaps(availability_interval)).collect_vec())
+    }
 }// end of PrimaData Trait implementation
 
 impl Data {
@@ -1196,9 +1444,9 @@ impl Data {
     }
 
     //expected to be used in fuzzing tests
-    //check wether there is a vehicle for which any of the availability intervals touch
+    //check wether there is a vehicle for which any of the availability intervals overlap
     #[allow(dead_code)] //test/output function
-    pub fn do_intervals_touch(&self) -> bool {
+    pub fn do_intervals_overlap(&self) -> bool {
         self.vehicles
             .iter()
             .map(|vehicle| &vehicle.availability)
@@ -1210,7 +1458,7 @@ impl Data {
                     .clone()
                     .zip(availability_intervals)
                     .filter(|interval_pair| interval_pair.0 != interval_pair.1)
-                    .any(|interval_pair| interval_pair.0.touches(&interval_pair.1))
+                    .any(|interval_pair| interval_pair.0.overlaps(&interval_pair.1))
             })
     }
 
@@ -1381,9 +1629,7 @@ impl Data {
             )
             .await;
         match result{
-            Err(e)=>{
-                return e;
-            },
+            Err(e)=> e,
             Ok((start_event_id, target_event_id))=>{
                 let address_id = self.get_or_create_address("zip_code", "city", "street", "house_nr");
                 let events = &mut self.vehicles[id_to_vec_pos(vehicle)].tours[id_to_vec_pos(id)].events;
@@ -1485,246 +1731,6 @@ impl Data {
             }
         }
     }
-/*
-    pub async fn handle_routing_request(
-        &mut self,
-        
-        fixed_time: NaiveDateTime,
-        is_start_time_fixed: bool,
-        start_lat: f64,  //for Point  lat=y and lng is x
-        start_lng: f64,  //for Point  lat=y and lng is x
-        target_lat: f64, //for Point  lat=y and lng is x
-        target_lng: f64, //for Point  lat=y and lng is x
-        customer: i32,
-        passengers: i32,
-        start_address: &String,
-        target_address: &String,
-        //wheelchairs: i32, luggage: i32,
-    ) -> StatusCode {
-        let minimum_prep_time: Duration = Duration::hours(1);
-        let now: NaiveDateTime = Utc::now().naive_utc();
-        if now > fixed_time {
-            return StatusCode::NOT_ACCEPTABLE;
-        }
-        if passengers > 3 {                                                                 // TODO: change when mvp restriction is lifted
-            return StatusCode::NO_CONTENT;
-        }
-
-        let start = Point::new(start_lat, start_lng);
-        let target = Point::new(target_lat, target_lng);
-        let beeline_time = Duration::minutes(hrs_to_minutes(
-            meter_to_km_f(start.geodesic_distance(&target)) / BEELINE_KMH,
-        ));
-        let (start_time, target_time) = if is_start_time_fixed {
-            (fixed_time, fixed_time + beeline_time)
-        } else {
-            (fixed_time - beeline_time, fixed_time)
-        };
-        if now + minimum_prep_time > start_time {
-            return StatusCode::NO_CONTENT;
-        }
-
-        let beeline_interval = Interval::new(start_time, target_time);
-        // Find companies and vehicles that may process the request according to their zone, and vehicle-specifics.
-        // Also filter for availability and collisions with other tours (based on their first and last events and the beeline distance between start and target of the newly requested tour)
-        let candidate_vehicles = self.get_viable_vehicles(&beeline_interval, passengers, &start).await;
-        let mut n_companies = 0;
-        let viable_concatenations = Vec::<TourConcatenationCase>::new();
-        for (company_id, vehicles) in candidate_vehicles.iter().into_group_map_by(|vehicle|vehicle.company){
-            if vehicles.iter().any(|vehicle|!vehicle.tours.iter().any(|tour|tour.overlaps(&beeline_interval))){
-                viable_concatenations.push(TourConcatenationCase::NewTour {company_id});
-                n_companies += 1;
-            }
-        }
-        for vehicle in candidate_vehicles{
-            let predecessor_tour = match vehicle.tours.iter()
-                .map(|tour|tour)
-                .filter(|tour|tour.get_last_event().unwrap().scheduled_time < start_time)
-                .max_by_key(|tour|tour.get_last_event().unwrap().scheduled_time){
-                None => {
-                    return StatusCode::INTERNAL_SERVER_ERROR;
-                },
-                Some(tour)=>tour,
-            };
-            let predecessor_event_id = predecessor_tour.get_last_event().unwrap().id;
-            let successor_tour = match vehicle.tours.iter()
-                .map(|tour|tour)
-                .filter(|tour|tour.get_first_event().unwrap().scheduled_time < target_time)
-                .max_by_key(|tour|tour.get_first_event().unwrap().scheduled_time){
-                None => {
-                    return StatusCode::INTERNAL_SERVER_ERROR;
-                },
-                Some(tour)=>tour,
-            };
-            let successor_event_id = successor_tour.get_first_event().unwrap().id;
-            viable_concatenations.push(TourConcatenationCase::Insert { vehicle_id: vehicle.id, predecessor_tour_id: predecessor_tour.id, successor_tour_id: successor_tour.id, predecessor_event_id, successor_event_id});
-            if successor_tour.arrival < start_time{
-                viable_concatenations.push(TourConcatenationCase::Append { vehicle_id: vehicle.id, predecessor_tour_id: predecessor_tour.id, predecessor_event_id});
-            }
-            if predecessor_tour.departure > target_time{
-                viable_concatenations.push(TourConcatenationCase::Prepend { vehicle_id: vehicle.id, successor_tour_id: successor_tour.id, successor_event_id});
-            }
-        }
-
-        for v in candidate_vehicles.iter() {
-            println!("company: {}, vehicle: {}", v.company, v.id);
-        }
-        let start_c = Coordinate {
-            lng: start_lat,
-            lat: start_lng,
-        };
-        let target_c = Coordinate {
-            lng: target_lat,
-            lat: target_lng,
-        };
-        
-        let mut start_many = Vec::<Coordinate>::with_capacity(n_companies+candidate_vehicles.len()+1);
-        let mut pos = 0;
-        for case in viable_concatenations {
-            match case{
-                TourConcatenationCase::Append{vehicle_id, predecessor_tour_id, predecessor_event_id} =>(),
-                TourConcatenationCase::Prepend{vehicle_id, successor_tour_id, successor_event_id} =>(),
-                TourConcatenationCase::NewTour{company_id} => {
-                    start_many[pos] = Coordinate {
-                        lat: self.get_company(company_id).central_coordinates.y(),
-                        lng: self.get_company(company_id).central_coordinates.x(),
-                    };
-                    pos+=1;
-                },
-                TourConcatenationCase::Insert{vehicle_id, predecessor_tour_id, successor_tour_id, predecessor_event_id, successor_event_id} => {
-                    let predecessor_event_coordinates = self.get_event(vehicle_id, predecessor_tour_id, predecessor_event_id).await.coordinates;
-                    start_many[pos] = Coordinate {
-                        lat: predecessor_event_coordinates.y(),
-                        lng: predecessor_event_coordinates.x(),
-                    };
-                    pos+=1;
-                },
-            }
-        }
-        // add this to get distance between start and target of the new request
-        start_many[pos] = Coordinate {
-            lat: target_c.lat,
-            lng: target_c.lng,
-        };
-        let osrm = OSRM::new();
-        let mut distances_to_start: Vec<DistTime> =
-            match osrm.one_to_many(start_c, start_many, Backward).await {
-                Ok(r) => r,
-                Err(e) => {
-                    error!("problem with osrm: {}", e);
-                    Vec::new()
-                }
-            };
-        let mut target_many = Vec::<Coordinate>::with_capacity(n_companies+candidate_vehicles.len());
-        pos = 0;
-        for case in viable_concatenations {
-            match case{
-                TourConcatenationCase::Append{vehicle_id, predecessor_tour_id, predecessor_event_id} =>(),
-                TourConcatenationCase::Prepend{vehicle_id, successor_tour_id, successor_event_id} =>(),
-                TourConcatenationCase::NewTour{company_id} => {
-                    start_many[pos] = Coordinate {
-                        lat: self.get_company(company_id).central_coordinates.y(),
-                        lng: self.get_company(company_id).central_coordinates.x(),
-                    };
-                    pos+=1
-                },
-                TourConcatenationCase::Insert{vehicle_id, predecessor_tour_id, successor_tour_id, predecessor_event_id, successor_event_id} => {
-                    let successor_event_coordinates = self.get_event(vehicle_id, successor_tour_id, successor_event_id).await.coordinates;
-                    start_many.push(Coordinate {
-                        lat: successor_event_coordinates.y(),
-                        lng: successor_event_coordinates.x(),
-                    });
-                    pos+=1;
-                },
-            }
-        }
-        let distances_to_target: Vec<DistTime> =
-            match osrm.one_to_many(target_c, target_many, Forward).await {
-                Ok(r) => r,
-                Err(e) => {
-                    error!("problem with osrm: {}", e);
-                    Vec::new()
-                }
-            };
-
-        let travel_duration = match distances_to_start.last() {
-            Some(dt) => Duration::minutes(seconds_to_minutes(dt.time as i32) as i64),
-            None => {
-                error!("distances to start was empty");
-                return StatusCode::INTERNAL_SERVER_ERROR;
-            }
-        };
-        //start/target times using travel time
-        let start_time = if is_start_time_fixed {
-            fixed_time
-        } else {
-            fixed_time - travel_duration
-        };
-        let target_time = if is_start_time_fixed {
-            fixed_time + travel_duration
-        } else {
-            fixed_time
-        };
-        if now + minimum_prep_time > start_time {
-            return StatusCode::NO_CONTENT;
-        }
-        distances_to_start.truncate(distances_to_start.len() - 1); //remove distance from start to target
-
-        //create all viable combinations
-        let mut viable_combinations: Vec<Combination> = Vec::new();
-        for (pos_in_viable, company) in viable_companies.iter().enumerate() {
-            let pos_in_data = id_to_vec_pos(company.id);
-            let start_dist_time = distances_to_start[pos_in_viable];
-            let target_dist_time = distances_to_target[pos_in_viable];
-
-            let company_start_cost = seconds_to_minutes(start_dist_time.time as i32) * MINUTE_PRICE
-                + meter_to_km(start_dist_time.dist as i32) * KM_PRICE;
-
-            let company_target_cost = seconds_to_minutes(target_dist_time.time as i32)
-                * MINUTE_PRICE
-                + meter_to_km(target_dist_time.dist as i32) * KM_PRICE;
-            viable_combinations.push(Combination {
-                is_start_company: true,
-                start_pos: pos_in_data,
-                is_target_company: true,
-                target_pos: pos_in_data,
-                cost: company_start_cost + company_target_cost,
-            });
-        }
-
-        if viable_combinations.is_empty() {
-            return StatusCode::NO_CONTENT;
-        }
-
-        viable_combinations.sort_by(|a, b| a.cost.cmp(&(b.cost)));
-
-        self.next_request_id += 1;
-        let status_code = self
-            .insert_or_addto_tour(
-                None,
-                start_time,
-                target_time,
-                1,
-                State(s),
-                start_address,
-                target_address,
-                start_lat,
-                start_lng,
-                start_time,
-                start_time,
-                customer,
-                1,
-                self.next_request_id,
-                false,
-                false,
-                target_lat,
-                target_lng,
-                target_time,
-                target_time,
-            )
-            .await;
-        status_code
-    } */
 
     fn get_company(&self, company_id: i32) -> &CompanyData{
         &self.companies[id_to_vec_pos(company_id)]
@@ -1743,9 +1749,9 @@ impl Data {
                 zone_viable_companies.contains(&self.get_company(vehicle.company))
                     && vehicle.fulfills_requirements(passengers, 0, 0) // ensure that vehicle can transport the required people and things (TODO: replace zeros when mvp-restrictions are lifted)
                     && !vehicle.tours.iter().any(|tour| {// ensure that vehicle is not already occupied with another tour
-                        tour.any_tour_event_overlaps(&interval)
+                        tour.any_tour_event_overlaps(interval)
                     }
-                    && vehicle.availability.iter().any(|(_,availability)|availability.interval.contains(&interval)))// ensure that vehicle is available
+                    && vehicle.availability.iter().any(|(_,availability)|availability.interval.contains(interval)))// ensure that vehicle is available
             )
             //.map(|vehicle|vehicle.id)
             .collect_vec()
@@ -1755,7 +1761,7 @@ impl Data {
         &self,
         start: &Point,
     ) -> Vec<&CompanyData> {
-        let viable_zone_ids = self.get_zones_containing_point_ids(&start).await;
+        let viable_zone_ids = self.get_zones_containing_point_ids(start).await;
         let viable_companies = self
             .companies
             .iter()
@@ -1787,35 +1793,13 @@ impl Data {
             .flat_map(|vehicle| &vehicle.tours)
             .find(|tour| tour.id == tour_id)
         {
-            Some(t) => return Ok(t),
-            None => return Err(StatusCode::NOT_FOUND),
+            Some(t) => Ok(t),
+            None => Err(StatusCode::NOT_FOUND),
         }
     }
 
     async fn find_event(&self, event_id: i32)->Option<&EventData>{
         self.vehicles.iter().flat_map(|vehicle|vehicle.tours.iter().flat_map(|tour|&tour.events)).find(|event|event.id == event_id)
-    }
-
-    async fn is_vehicle_available(
-        &self,
-        vehicle_id: i32,
-        start_time: NaiveDateTime,
-        end_time: NaiveDateTime,
-    ) -> Result<bool, StatusCode> {
-        if self.max_vehicle_id() < vehicle_id  || vehicle_id as usize <= 0{
-            return Err(StatusCode::NOT_FOUND);
-        }
-        let interval = Interval::new(
-            start_time,
-            end_time
-        );
-        if !is_valid(&interval) {
-            return Err(StatusCode::NOT_ACCEPTABLE);
-        }
-        Ok(self.vehicles[id_to_vec_pos(vehicle_id)]
-            .availability
-            .iter()
-            .any(|(_, availability)| availability.interval.contains(&interval)))
     }
 }
 
@@ -1831,7 +1815,7 @@ mod test {
         Database, Migrator,
     };
     use sea_orm::DbConn;
-    use chrono::{Duration, NaiveDate, NaiveDateTime, Utc};
+    use chrono::{Duration, NaiveDate, NaiveDateTime};
     use geo::{Contains, Point};
     use hyper::StatusCode;
     use migration::MigratorTrait;
@@ -1987,8 +1971,8 @@ mod test {
         //Validate invalid multipolygon handling when creating zone (expect StatusCode::BAD_REQUEST)
         assert_eq!(
             d.create_zone(
-                "some new zone name".to_string(),
-                "invalid multipolygon".to_string()
+                "some new zone name",
+                "invalid multipolygon"
             )
             .await,
             StatusCode::BAD_REQUEST
@@ -2032,14 +2016,14 @@ mod test {
         //insert user with existing name
         assert_eq!(
             d.create_user(
-                "TestDriver1".to_string(),
+                "TestDriver1",
                 true,
                 false,
                 Some(1),
                 false,
-                "test@gmail.com".to_string(),
+                "test@gmail.com",
                 Some("".to_string()),
-                "".to_string(),
+                "",
                 Some("".to_string()),
                 Some("".to_string()),
             )
@@ -2050,14 +2034,14 @@ mod test {
         //insert user with existing email
         assert_eq!(
             d.create_user(
-                "TestDriver2".to_string(),
+                "TestDriver2",
                 true,
                 false,
                 Some(1),
                 false,
-                "test@aol.com".to_string(),
+                "test@aol.com",
                 Some("".to_string()),
-                "".to_string(),
+                "",
                 Some("".to_string()),
                 Some("".to_string()),
             )
@@ -2067,14 +2051,14 @@ mod test {
         assert_eq!(d.users.len(), n_users);
         //insert user with new name and email
         d.create_user(
-            "TestDriver2".to_string(),
+            "TestDriver2",
             true,
             true,
             Some(1),
             false,
-            "test@gmail.com".to_string(),
+            "test@gmail.com",
             Some("".to_string()),
-            "".to_string(),
+            "",
             Some("".to_string()),
             Some("".to_string()),
         )
@@ -2084,7 +2068,7 @@ mod test {
         //insert zone with existing name
         let n_zones = d.zones.len();
         assert_eq!(
-            d.create_zone("Görlitz".to_string(), GORLITZ.to_string())
+            d.create_zone("Görlitz", GORLITZ)
                 .await,
             StatusCode::CONFLICT
         );
@@ -2094,9 +2078,9 @@ mod test {
         let n_companies = d.companies.len();
         assert_eq!(
             d.create_company(
-                "Taxi-Unternehmen Bautzen-1".to_string(),
+                "Taxi-Unternehmen Bautzen-1",
                 1,
-                "mustermann@web.de".to_string(),
+                "mustermann@web.de",
                 1.0,
                 1.0
             )
@@ -2115,10 +2099,10 @@ mod test {
         //Validate ForeignKeyViolation handling when creating data (expect StatusCode::EXPECTATION_FAILED)
         //foreign keys: table               keys
         //              company             zone
-        //              vehicle             company specifics           TODO: test specifics when mvp restriction on specifics is lifted
+        //              vehicle             company
         //              availability        vehicle
         //              tour                vehicle
-        //              event               user tour specifics         TODO: test specifics when mvp restriction on specifics is lifted
+        //              event               user tour
         let base_time = NaiveDate::from_ymd_opt(5000, 1, 1)
             .unwrap()
             .and_hms_opt(10, 0, 0)
@@ -2188,9 +2172,9 @@ mod test {
         //insert company with non-existing zone
         assert_eq!(
             d.create_company(
-                "some new name".to_string(),
+                "some new name",
                 1 + n_zones as i32,
-                "a@b".to_string(),
+                "a@b",
                 1.0,
                 1.0
             )
@@ -2201,9 +2185,9 @@ mod test {
         //insert company with existing zone
         assert_eq!(
             d.create_company(
-                "some new name".to_string(),
+                "some new name",
                 n_zones as i32,
-                "b@c".to_string(),
+                "b@c",
                 1.0,
                 1.0
             )
@@ -2384,7 +2368,7 @@ mod test {
             .unwrap()
             .and_hms_opt(10, 0, 0)
             .unwrap();
-        let in_3_hours = base_time + Duration::hours(3);
+        //let in_3_hours = base_time + Duration::hours(3);
         //interval range not limited
         assert!(d.get_tours(1, NaiveDateTime::MIN, NaiveDateTime::MAX).await.is_ok());
         //interval range not limited
@@ -2460,14 +2444,6 @@ mod test {
         assert_eq!(
             d.get_n_availabilities(),
             n_availabilities
-        );
-        //starttime before year 2024
-        assert_eq!(
-            d.is_vehicle_available(1, NaiveDateTime::MIN, in_3_hours).await,Err(StatusCode::NOT_ACCEPTABLE)
-        );
-        //endtime after year 100000
-        assert_eq!(
-            d.is_vehicle_available(1, in_3_hours, NaiveDateTime::MAX).await,Err(StatusCode::NOT_ACCEPTABLE)
         );
 
         assert!(d == d_copy);

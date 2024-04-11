@@ -105,114 +105,111 @@ pub async fn init(
     let mut data = Data::new(db_conn);
 
     data.create_user(
-        "TestDriver1".to_string(),
+        "TestDriver1",
         true,
         false,
         Some(1),
         false,
-        "test@aol.com".to_string(),
+        "test@aol.com",
         Some("".to_string()),
-        "".to_string(),
-        Some("".to_string()),
-        Some("".to_string()),
-    )
-    .await;
-
-    data.create_user(
-        "TestUser1".to_string(),
-        false,
-        false,
-        None,
-        false,
-        "test@web.com".to_string(),
-        Some("".to_string()),
-        "".to_string(),
+        "",
         Some("".to_string()),
         Some("".to_string()),
     )
     .await;
 
     data.create_user(
-        "TestUser2".to_string(),
+        "TestUser1",
         false,
         false,
         None,
         false,
-        "test@mail.com".to_string(),
+        "test@web.com",
         Some("".to_string()),
-        "".to_string(),
+        "",
         Some("".to_string()),
         Some("".to_string()),
     )
     .await;
 
-    data.create_zone("Bautzen Ost".to_string(), BAUTZEN_OST.to_string())
-        .await;
-    data.create_zone("Bautzen West".to_string(), BAUTZEN_WEST.to_string())
-        .await;
-    data.create_zone("Görlitz".to_string(), GORLITZ.to_string())
-        .await;
+    data.create_user(
+        "TestUser2",
+        false,
+        false,
+        None,
+        false,
+        "test@mail.com",
+        Some("".to_string()),
+        "",
+        Some("".to_string()),
+        Some("".to_string()),
+    )
+    .await;
+
+    data.create_zone("Bautzen Ost", BAUTZEN_OST).await;
+    data.create_zone("Bautzen West", BAUTZEN_WEST).await;
+    data.create_zone("Görlitz", GORLITZ).await;
 
     data.create_company(
-        "Taxi-Unternehmen Bautzen-1".to_string(),
+        "Taxi-Unternehmen Bautzen-1",
         2,
-        "a@b".to_string(),
+        "a@b",
         13.895983751721786,
         51.220826461859644,
     )
     .await;
     data.create_company(
-        "Taxi-Unternehmen Bautzen-2".to_string(),
+        "Taxi-Unternehmen Bautzen-2",
         2,
-        "b@c".to_string(),
+        "b@c",
         14.034681384488607,
         51.31633774366952,
     )
     .await;
     data.create_company(
-        "Taxi-Unternehmen Bautzen-3".to_string(),
+        "Taxi-Unternehmen Bautzen-3",
         2,
-        "c@d".to_string(),
+        "c@d",
         14.179674338162073,
         51.46704814415014,
     )
     .await;
     data.create_company(
-        "Taxi-Unternehmen Bautzen-4".to_string(),
+        "Taxi-Unternehmen Bautzen-4",
         1,
-        "d@e".to_string(),
+        "d@e",
         14.244972698642613,
         51.27251252133357,
     )
     .await;
     data.create_company(
-        "Taxi-Unternehmen Bautzen-5".to_string(),
+        "Taxi-Unternehmen Bautzen-5",
         1,
-        "e@f".to_string(),
+        "e@f",
         14.381821307922678,
         51.169106961190806,
     )
     .await;
     data.create_company(
-        "Taxi-Unternehmen Görlitz-1".to_string(),
+        "Taxi-Unternehmen Görlitz-1",
         3,
-        "f@g".to_string(),
+        "f@g",
         14.708969872564097,
         51.43354047439519,
     )
     .await;
     data.create_company(
-        "Taxi-Unternehmen Görlitz-2".to_string(),
+        "Taxi-Unternehmen Görlitz-2",
         3,
-        "g@h".to_string(),
+        "g@h",
         14.879525132220152,
         51.22165543174137,
     )
     .await;
     data.create_company(
-        "Taxi-Unternehmen Görlitz-3".to_string(),
+        "Taxi-Unternehmen Görlitz-3",
         3,
-        "h@i".to_string(),
+        "h@i",
         14.753736228472121,
         51.04190085802671,
     )
