@@ -27,25 +27,27 @@ use itertools::Itertools;
 use sea_orm::{ActiveModelTrait, ActiveValue, EntityTrait};
 use std::collections::HashMap;
 
-/*
-StatusCode and associated errors/results:
-INTERNAL_SERVER_ERROR           something bad happened
-BAD_REQUEST                     invalid geojson for multipolygon (area of zone), or provided ids do not match
-EXPECTATION_FAILED              foreign key violation
-CONFLICT                        unique key violation
-NO_CONTENT                      used in remove_interval and handle_request, request did not produce an error but did not change anything either (in case of request->denied)
-NOT_ACCEPTABLE                  provided interval is not valid, or request is in the past
-NOT_FOUND                       data with provided id was not found
-CREATED                         request processed succesfully, data has been created
-OK                              request processed succesfully
-*/
-
 #[derive(PartialEq, Eq, Hash)]
 enum TourConcatenationCase {
     Prepend{ vehicle_id: i32, successor_tour_id: i32, successor_event_id: i32},
     Append{vehicle_id: i32, predecessor_tour_id: i32, predecessor_event_id: i32},
     NewTour{company_id: i32},
     Insert{vehicle_id: i32,  predecessor_tour_id: i32, successor_tour_id: i32, predecessor_event_id: i32, successor_event_id: i32}
+}
+
+fn is_user_role_valid(is_driver: bool, is_disponent: bool, is_admin: bool, company_id: Option<i32>) -> bool{
+    match company_id {
+        None => if is_driver || is_disponent {
+            return false;
+        },
+        Some(_) => if !is_driver && !is_disponent {
+            return false;
+        },
+    }
+    if is_admin && (is_driver || is_disponent) {
+        return false;
+    }
+    true
 }
 
 fn id_to_vec_pos(id: i32) -> usize {
@@ -442,10 +444,10 @@ impl PrimaData for Data{
             &mut self, 
             fixed_time: NaiveDateTime,
             is_start_time_fixed: bool,
-            start_lat: f32,  //for Point  lat=y and lng is x
-            start_lng: f32,  //for Point  lat=y and lng is x
-            target_lat: f32, //for Point  lat=y and lng is x
-            target_lng: f32, //for Point  lat=y and lng is x
+            start_lat: f32,
+            start_lng: f32,
+            target_lat: f32,
+            target_lng: f32,
             customer: i32,
             passengers: i32,
             start_address: &String,
@@ -878,6 +880,9 @@ impl PrimaData for Data{
         if self.users.iter().any(|(_, user)| user.email == *email) {
             return StatusCode::CONFLICT;
         }
+        if !is_user_role_valid(is_driver, is_disponent, is_admin, company){
+            return StatusCode::BAD_REQUEST;
+        }
         match User::insert(user::ActiveModel {
             id: ActiveValue::NotSet,
             display_name: ActiveValue::Set(name.to_string()),
@@ -891,7 +896,6 @@ impl PrimaData for Data{
             company: ActiveValue::Set(company),
             is_active: ActiveValue::Set(true),
             is_disponent: ActiveValue::Set(is_disponent),
-
         })
         .exec(&self.db_connection)
         .await
@@ -1023,8 +1027,11 @@ impl PrimaData for Data{
         end_time: NaiveDateTime,
         vehicle_id: i32,
     ) -> StatusCode {
-        if self.max_vehicle_id() < vehicle_id || vehicle_id as usize <= 0{
-            return StatusCode::NOT_FOUND;
+        match self.is_vehicle_idle(vehicle_id, start_time, end_time).await{
+            Ok(idle) => if !idle{
+                return StatusCode::NOT_ACCEPTABLE;
+            },
+            Err(e)=>return e,
         }
         let to_remove_interval = Interval::new(start_time, end_time);
         if !is_valid(&to_remove_interval) {
@@ -1522,6 +1529,23 @@ impl Data {
         .count()
     }
 
+    async fn is_vehicle_idle(
+        &self,
+        vehicle_id: i32,
+        time_frame_start: NaiveDateTime,
+        time_frame_end: NaiveDateTime,
+    ) -> Result<bool, StatusCode> {
+        if self.max_vehicle_id() < vehicle_id  || vehicle_id as usize <= 0{
+            return Err(StatusCode::NOT_FOUND);
+        }
+        let interval = Interval::new(time_frame_start, time_frame_end);
+        Ok(!self.vehicles[id_to_vec_pos(vehicle_id)]
+            .tours
+            .iter()
+            .any(|tour| tour.overlaps(&interval)
+            ))
+    }
+
     fn get_or_create_address(&mut self, zip_code: &str, city: &str, street: &str, house_nr: &str) -> i32 {
         match self.addresses.iter().find(|address| address.zip_code == zip_code && address.city == city && address.street == street && address.house_nr == house_nr){
             Some(a) => a.id,
@@ -1747,13 +1771,12 @@ impl Data {
             .iter()
             .filter(|vehicle| 
                 zone_viable_companies.contains(&self.get_company(vehicle.company))
-                    && vehicle.fulfills_requirements(passengers, 0, 0) // ensure that vehicle can transport the required people and things (TODO: replace zeros when mvp-restrictions are lifted)
-                    && !vehicle.tours.iter().any(|tour| {// ensure that vehicle is not already occupied with another tour
-                        tour.any_tour_event_overlaps(interval)
+                    && vehicle.fulfills_requirements(passengers, 0, 0)//TODO: replace zeros when mvp-restrictions are lifted
+                    && !vehicle.tours.iter()
+                    .any(|tour| {tour.any_tour_event_overlaps(interval)
                     }
-                    && vehicle.availability.iter().any(|(_,availability)|availability.interval.contains(interval)))// ensure that vehicle is available
+                    && vehicle.availability.iter().any(|(_,availability)|availability.interval.contains(interval)))
             )
-            //.map(|vehicle|vehicle.id)
             .collect_vec()
     }
 

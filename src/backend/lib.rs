@@ -4,6 +4,19 @@ use chrono::NaiveDateTime;
 use hyper::StatusCode;
 use std::collections::HashMap;
 
+/*
+StatusCode and associated errors/results:
+INTERNAL_SERVER_ERROR           something bad happened
+BAD_REQUEST                     invalid geojson for multipolygon (area of zone), or provided ids do not match, or invalid user role
+EXPECTATION_FAILED              foreign key violation
+CONFLICT                        unique key violation
+NO_CONTENT                      used in remove_interval and handle_request, request did not produce an error but did not change anything either (in case of request->denied)
+NOT_ACCEPTABLE                  provided interval is not valid, or request is in the past, or trying to remove availability needed for a tour
+NOT_FOUND                       data with provided id was not found
+CREATED                         request processed succesfully, data has been created
+OK                              request processed succesfully
+*/
+
 #[async_trait]
 pub trait PrimaTour {
     async fn get_vehicle_license_plate(&self) -> &str;
