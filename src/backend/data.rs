@@ -402,10 +402,7 @@ impl CompanyData {
 #[derive(Debug, PartialEq, Clone)]
 pub struct AddressData {
     id: i32,
-    zip_code: String,
-    city: String,
-    street: String,
-    house_nr: String,
+    address: String,
 }
 
 #[derive(PartialEq, Clone)]
@@ -675,7 +672,14 @@ impl PrimaData for Data{
                     target_time,
                 )
                 .await
-        } 
+        }
+
+    async fn get_address(
+        &self,
+        address_id: i32,
+    ) -> &str{
+        &self.addresses[id_to_vec_pos(address_id)].address
+    }    
 
     async fn read_data_from_db(
         &mut self,
@@ -1546,13 +1550,13 @@ impl Data {
             ))
     }
 
-    fn get_or_create_address(&mut self, zip_code: &str, city: &str, street: &str, house_nr: &str) -> i32 {
-        match self.addresses.iter().find(|address| address.zip_code == zip_code && address.city == city && address.street == street && address.house_nr == house_nr){
+    fn find_or_create_address(&mut self, address: &str) -> i32 {
+        match self.addresses.iter().find(|a| a.address == address){
             Some(a) => a.id,
             None => {
                 let id = self.addresses.len() as i32 + 1;
-                let address = AddressData{id, zip_code: zip_code.to_string(), city: city.to_string(), street: street.to_string(), house_nr: house_nr.to_string()};
-                self.addresses.push(address);
+                let a = AddressData{id, address: address.to_string()};
+                self.addresses.push(a);
                 id
             }
         }
@@ -1655,7 +1659,8 @@ impl Data {
         match result{
             Err(e)=> e,
             Ok((start_event_id, target_event_id))=>{
-                let address_id = self.get_or_create_address("zip_code", "city", "street", "house_nr");
+                let start_address_id = self.find_or_create_address(start_address);
+                let target_address_id = self.find_or_create_address(target_address);
                 let events = &mut self.vehicles[id_to_vec_pos(vehicle)].tours[id_to_vec_pos(id)].events;
                 //pickup-event
                 events.push(
@@ -1671,7 +1676,7 @@ impl Data {
                         request_id,
                         id: start_event_id,
                         is_pickup: true,
-                        address_id,
+                        address_id: start_address_id,
                     },
                 );
                 //dropoff-event
@@ -1687,7 +1692,7 @@ impl Data {
                         request_id,
                         id: target_event_id,
                         is_pickup: false,
-                        address_id,
+                        address_id: target_address_id,
                     },
                 );
                 StatusCode::CREATED

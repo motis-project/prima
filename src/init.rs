@@ -8,6 +8,12 @@ use chrono::NaiveDate;
 use migration::ConnectionTrait;
 use sea_orm::{DbConn, EntityTrait};
 
+enum InitType {
+    BackendTest,
+    FrontEnd,
+    Default,
+}
+
 async fn clear(db_conn: &DbConn) {
     match event::Entity::delete_many().exec(db_conn).await {
         Ok(_) => match db_conn

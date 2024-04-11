@@ -119,6 +119,11 @@ pub trait PrimaData: Send + Sync {
         company_id: i32,
     ) -> Result<Box<&dyn PrimaCompany>, StatusCode>;
 
+    async fn get_address(
+        &self,
+        address_id: i32,
+    ) -> &str;
+
     async fn get_tours(
         &self,
         vehicle_id: i32,
