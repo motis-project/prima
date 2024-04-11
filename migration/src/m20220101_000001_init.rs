@@ -93,7 +93,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(User::OAuthId).string())
                     .col(ColumnDef::new(User::OAuthProvider).string())
                     .col(
-                        ColumnDef::new(User::Active)
+                        ColumnDef::new(User::IsActive)
                             .boolean()
                             .not_null()
                             .default(true),
@@ -103,33 +103,6 @@ impl MigrationTrait for Migration {
                             .name("fk-user-company_id")
                             .from(User::Table, User::Company)
                             .to(Company::Table, Company::Id),
-                    )
-                    .to_owned(),
-            )
-            .await?;
-
-        manager
-            .create_table(
-                Table::create()
-                    .table(VehicleSpecifics::Table)
-                    .if_not_exists()
-                    .col(
-                        ColumnDef::new(VehicleSpecifics::Id)
-                            .integer()
-                            .not_null()
-                            .auto_increment()
-                            .primary_key(),
-                    )
-                    .col(ColumnDef::new(VehicleSpecifics::Seats).integer().not_null())
-                    .col(
-                        ColumnDef::new(VehicleSpecifics::Wheelchairs)
-                            .integer()
-                            .not_null(),
-                    )
-                    .col(
-                        ColumnDef::new(VehicleSpecifics::StorageSpace)
-                            .integer()
-                            .not_null(),
                     )
                     .to_owned(),
             )
@@ -154,18 +127,18 @@ impl MigrationTrait for Migration {
                             .unique_key(),
                     )
                     .col(ColumnDef::new(Vehicle::Company).integer().not_null())
-                    .col(ColumnDef::new(Vehicle::Specifics).integer().not_null())
+                    .col(ColumnDef::new(Vehicle::Seats).integer().not_null())
+                    .col(
+                        ColumnDef::new(Vehicle::WheelchairCapacity)
+                            .integer()
+                            .not_null(),
+                    )
+                    .col(ColumnDef::new(Vehicle::StorageSpace).integer().not_null())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-vehicle-company_id")
                             .from(Vehicle::Table, Vehicle::Company)
                             .to(Company::Table, Company::Id),
-                    )
-                    .foreign_key(
-                        ForeignKey::create()
-                            .name("fk-vehicle-specifics_id")
-                            .from(Vehicle::Table, Vehicle::Specifics)
-                            .to(VehicleSpecifics::Table, VehicleSpecifics::Id),
                     )
                     .to_owned(),
             )
@@ -237,10 +210,7 @@ impl MigrationTrait for Migration {
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(Address::ZipCode).string().not_null())
-                    .col(ColumnDef::new(Address::Street).string().not_null())
-                    .col(ColumnDef::new(Address::City).string().not_null())
-                    .col(ColumnDef::new(Address::HouseNumber).string().not_null())
+                    .col(ColumnDef::new(Address::Address).string().not_null())
                     .to_owned(),
             )
             .await?;
@@ -259,17 +229,9 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(Request::Tour).integer().not_null())
                     .col(ColumnDef::new(Request::Customer).integer().not_null())
-                    .col(
-                        ColumnDef::new(Request::RequiredVehicleSpecifics)
-                            .integer()
-                            .not_null(),
-                    )
-                    .foreign_key(
-                        ForeignKey::create()
-                            .name("fk-request-required_specifics_id")
-                            .from(Request::Table, Request::RequiredVehicleSpecifics)
-                            .to(VehicleSpecifics::Table, VehicleSpecifics::Id),
-                    )
+                    .col(ColumnDef::new(Request::Passengers).integer().not_null())
+                    .col(ColumnDef::new(Request::Wheelchairs).integer().not_null())
+                    .col(ColumnDef::new(Request::Luggage).integer().not_null())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-request-tour_id")
@@ -357,9 +319,6 @@ impl MigrationTrait for Migration {
             .drop_table(Table::drop().table(Request::Table).to_owned())
             .await?;
         manager
-            .drop_table(Table::drop().table(VehicleSpecifics::Table).to_owned())
-            .await?;
-        manager
             .drop_table(Table::drop().table(Address::Table).to_owned())
             .await?;
         Ok(())
@@ -378,7 +337,7 @@ enum User {
     Email,
     OAuthId,
     OAuthProvider,
-    Active,
+    IsActive,
     Password,
     Salt,
 }
@@ -392,21 +351,14 @@ enum Zone {
 }
 
 #[derive(DeriveIden)]
-enum VehicleSpecifics {
-    Table,
-    Id,
-    Seats,
-    Wheelchairs,
-    StorageSpace,
-}
-
-#[derive(DeriveIden)]
 enum Vehicle {
     Table,
     Id,
     LicensePlate,
     Company,
-    Specifics,
+    Seats,
+    WheelchairCapacity,
+    StorageSpace,
 }
 
 #[derive(DeriveIden)]
@@ -444,17 +396,16 @@ enum Request {
     Id,
     Tour,
     Customer,
-    RequiredVehicleSpecifics,
+    Passengers,
+    Wheelchairs,
+    Luggage,
 }
 
 #[derive(DeriveIden)]
 enum Address {
     Table,
     Id,
-    ZipCode,
-    City,
-    Street,
-    HouseNumber,
+    Address,
 }
 
 #[derive(DeriveIden)]
