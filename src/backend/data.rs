@@ -34,10 +34,6 @@ enum TourConcatenationCase {
     Insert{vehicle_id: i32,  predecessor_tour_id: i32, successor_tour_id: i32, predecessor_event_id: i32, successor_event_id: i32}
 }
 
-enum TourTimeComparisonMode{
-    EventBased, TimeAtCentral
-}
-
 fn is_user_role_valid(is_driver: bool, is_disponent: bool, is_admin: bool, company_id: Option<i32>) -> bool{
     match company_id {
         None => if is_driver || is_disponent {
@@ -222,12 +218,19 @@ impl VehicleData{
         passengers<4   //TODO when mvp-restrictions are lifted
     }
 
-    fn may_vehicle_operate_in(&self, interval: &Interval, mode: TourTimeComparisonMode) -> bool{
+    fn may_vehicle_operate_in(&self, interval: &Interval) -> bool{
         self.availability.values().any(|availability| availability.interval.contains(&interval))
-                && !self.tours.iter().any(|tour|match mode{
-                    TourTimeComparisonMode::EventBased=>true,
-                    TourTimeComparisonMode::TimeAtCentral=>tour.overlaps(&interval),
-                })
+                && !self.tours.iter().any(|tour| tour.overlaps(&interval)
+            )
+    }
+
+    fn get_last_tour_before(&self, time: &NaiveDateTime) -> Option<&TourData> {
+        self.tours.iter().filter(|tour| tour.departure < *time).max_by_key(|tour| tour.departure)
+    }
+
+
+    fn get_first_tour_after(&self, time: &NaiveDateTime) -> Option<&TourData> {
+        self.tours.iter().filter(|tour| tour.arrival > *time).max_by_key(|tour| tour.arrival)
     }
 }
 
@@ -544,16 +547,34 @@ impl PrimaData for Data{
                     viable_concatenations.push(TourConcatenationCase::NewTour {company_id});
             }
             for vehicle in vehicles.iter(){
-                let predecessor_event: EventData = &vehicle.get_first_event_after(&beeline_interval.end_time);
-                if vehicle.may_vehicle_operate_in(
-                    &Interval::new(beeline_interval.start_time - approach_beeline_duration, beeline_interval.end_time + get_beeline_duration_in_minutes(&predecessor_event.coordinates, &target))){
-                        viable_concatenations.push(TourConcatenationCase::Append {vehicle_id: vehicle.id, predecessor_event_id: predecessor_event.id, predecessor_tour_id: 1});
+                let post_tour = &match vehicle.get_first_tour_after(&beeline_interval.end_time){
+                    Some(t) => t,
+                    None => continue,
+                };
+                let post_event = &match post_tour.get_first_event(){
+                  Some(e) =>  e,
+                  None => continue,
+                };
+                let pre_tour = &match vehicle.get_last_tour_before(&beeline_interval.end_time){
+                    Some(t) => t,
+                    None => continue,
+                };
+                let pre_event = &match pre_tour.get_last_event(){
+                    Some(e) =>  e,
+                    None => continue,
+                  };
+                let append_full_beeline_interval = Interval::new(beeline_interval.start_time - approach_beeline_duration, beeline_interval.end_time + get_beeline_duration_in_minutes(&predecessor_event.coordinates, &target));
+                if vehicle.availability.values().any(|availability| availability.interval.contains(&append_full_beeline_interval))
+                    && pre_event.scheduled_time < append_full_beeline_interval.start_time
+                    && post_tour.arrival > append_full_beeline_interval.end_time                    
+                    {
+                        viable_concatenations.push(TourConcatenationCase::Append {vehicle_id: vehicle.id, predecessor_event_id: pre_event.id, predecessor_tour_id: pre_tour.id});
                 }
-
-                let successor_event = &vehicle.get_last_event_before(&beeline_interval.start_time);
-                if vehicle.may_vehicle_operate_in(
-                    &Interval::new(beeline_interval.start_time - get_beeline_duration_in_minutes(&predecessor_event.coordinates, &target), beeline_interval.end_time + return_beeline_duration)){
-                        viable_concatenations.push(TourConcatenationCase::Prepend {vehicle_id: vehicle.id, successor_event_id: successor_event.id, successor_tour_id: 1});
+                if vehicle.availability.values().any(|availability| availability.interval.contains(&append_full_beeline_interval))
+                    && post_event.scheduled_time > append_full_beeline_interval.end_time
+                    && post_tour.departure < append_full_beeline_interval.start_time
+                    {
+                        viable_concatenations.push(TourConcatenationCase::Prepend {vehicle_id: vehicle.id, successor_event_id: post_event.id, successor_tour_id: post_tour.id});
                 }
             }
         }
@@ -1847,7 +1868,8 @@ impl Data {
             .filter(|vehicle| 
                 zone_viable_companies.contains(&self.get_company(vehicle.company))
                     && vehicle.fulfills_requirements(passengers)
-                    && vehicle.may_vehicle_operate_in(&travel_time_interval, TourTimeComparisonMode::EventBased)
+                    && !vehicle.tours.iter().any(|tour| tour.do_tour_events_overlap(&travel_time_interval))
+                    && vehicle.availability.values().any(|availability| availability.interval.contains(&travel_time_interval))
             )
             .collect_vec()
     }
