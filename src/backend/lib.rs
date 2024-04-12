@@ -217,7 +217,7 @@ pub trait PrimaData: Send + Sync {
         target_lng: f32,
         customer: i32,
         passengers: i32,
-        start_address: &String,
-        target_address: &String,
+        start_address: &str,
+        target_address: &str,
     ) -> StatusCode;
 }

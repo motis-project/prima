@@ -1,3 +1,4 @@
+use crate::init::InitType;
 use axum::{
     extract::State,
     http::{StatusCode, Uri},
@@ -135,7 +136,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
 
     //let data = Data::new(&conn);
-    let data = init::init(&conn, true, 5000).await;
+    let data = init::init(&conn, true, 5000, InitType::Default).await;
 
     let s = AppState {
         tera,

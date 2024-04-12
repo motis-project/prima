@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Result};
+use geo::Coord;
 use serde::Serialize;
 use serde_json::Value;
 use tera::Tera;
@@ -68,8 +69,8 @@ impl OSRM {
 
     pub async fn one_to_many(
         &self,
-        one: Coordinate,
-        many: Vec<Coordinate>,
+        one: Coord,
+        many: Vec<Coord>,
         direction: Dir,
     ) -> Result<Vec<DistTime>> {
         let mut ctx = tera::Context::new();
@@ -107,7 +108,7 @@ impl OSRM {
 #[cfg(test)]
 mod test {
     use crate::osrm::{
-        Coordinate,
+        Coord,
         Dir::{Backward, Forward},
         OSRM,
     };
@@ -118,18 +119,18 @@ mod test {
         let osrm = OSRM::new();
         let result = osrm
             .one_to_many(
-                Coordinate {
-                    lat: 49.87738029,
-                    lng: 8.64555359,
+                Coord {
+                    x: 49.87738029,
+                    y: 8.64555359,
                 },
                 vec![
-                    Coordinate {
-                        lat: 50.11485439,
-                        lng: 8.65791321,
+                    Coord {
+                        x: 50.11485439,
+                        y: 8.65791321,
                     },
-                    Coordinate {
-                        lat: 49.39444062,
-                        lng: 8.6743927,
+                    Coord {
+                        x: 49.39444062,
+                        y: 8.6743927,
                     },
                 ],
                 Forward,

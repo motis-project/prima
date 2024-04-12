@@ -10,7 +10,7 @@ use chrono::NaiveDate;
 use migration::ConnectionTrait;
 use sea_orm::{DbConn, EntityTrait};
 
-enum InitType {
+pub enum InitType {
     BackendTest,
     FrontEnd,
     Default,
@@ -20,6 +20,26 @@ pub async fn clear(db_conn: &DbConn) {
     match event::Entity::delete_many().exec(db_conn).await {
         Ok(_) => match db_conn
             .execute_unprepared("ALTER SEQUENCE event_id_seq RESTART WITH 1")
+            .await
+        {
+            Ok(_) => (),
+            Err(e) => error!("{}", e),
+        },
+        Err(e) => error!("{}", e),
+    }
+    match address::Entity::delete_many().exec(db_conn).await {
+        Ok(_) => match db_conn
+            .execute_unprepared("ALTER SEQUENCE address_id_seq RESTART WITH 1")
+            .await
+        {
+            Ok(_) => (),
+            Err(e) => error!("{}", e),
+        },
+        Err(e) => error!("{}", e),
+    }
+    match request::Entity::delete_many().exec(db_conn).await {
+        Ok(_) => match db_conn
+            .execute_unprepared("ALTER SEQUENCE request_id_seq RESTART WITH 1")
             .await
         {
             Ok(_) => (),
@@ -87,26 +107,6 @@ pub async fn clear(db_conn: &DbConn) {
         },
         Err(e) => error!("{}", e),
     }
-    match address::Entity::delete_many().exec(db_conn).await {
-        Ok(_) => match db_conn
-            .execute_unprepared("ALTER SEQUENCE address_id_seq RESTART WITH 1")
-            .await
-        {
-            Ok(_) => (),
-            Err(e) => error!("{}", e),
-        },
-        Err(e) => error!("{}", e),
-    }
-    match request::Entity::delete_many().exec(db_conn).await {
-        Ok(_) => match db_conn
-            .execute_unprepared("ALTER SEQUENCE request_id_seq RESTART WITH 1")
-            .await
-        {
-            Ok(_) => (),
-            Err(e) => error!("{}", e),
-        },
-        Err(e) => error!("{}", e),
-    }
     println!("clear succesful");
 }
 
@@ -114,22 +114,133 @@ pub async fn init(
     db_conn: &DbConn,
     clear_tables: bool,
     year: i32,
+    t: InitType,
 ) -> Data {
     if clear_tables {
         clear(db_conn).await;
-    } else {
-        match User::find().all(db_conn).await {
-            Ok(u) => {
-                if !u.is_empty() {
-                    println!("users already exist, not running init() again.");
-                    let mut data = Data::new(db_conn);
-                    data.read_data_from_db().await;
-                    return data;
-                }
-            }
-            Err(_) => (),
+    }
+    if let Ok(u) = User::find().all(db_conn).await {
+        if !u.is_empty() {
+            println!("users already exist, not running init() again.");
+            let mut data = Data::new(db_conn);
+            data.read_data_from_db().await;
+            return data;
         }
     }
+    match t {
+        InitType::Default => init_default(db_conn, year).await,
+        InitType::FrontEnd => init_default(db_conn, year).await,
+        InitType::BackendTest => init_backend_test(db_conn, year).await,
+    }
+}
+
+async fn init_backend_test(
+    db_conn: &DbConn,
+    year: i32,
+) -> Data {
+    println!("hi");
+    let mut data = Data::new(db_conn);
+
+    data.create_zone("Bautzen West", BAUTZEN_WEST).await;
+    data.create_zone("Bautzen Ost", BAUTZEN_OST).await;
+    data.create_zone("Görlitz", GORLITZ).await;
+
+    data.create_company(
+        "Taxi-Unternehmen Bautzen-1",
+        1,
+        "a@b",
+        13.895983751721786,
+        51.220826461859644,
+    )
+    .await;
+    data.create_company(
+        "Taxi-Unternehmen Bautzen-2",
+        1,
+        "b@c",
+        14.034681384488607,
+        51.31633774366952,
+    )
+    .await;
+
+    data.create_user(
+        "TestDriver1",
+        true,
+        false,
+        Some(1),
+        false,
+        "test@aol.com",
+        Some("".to_string()),
+        "",
+        Some("".to_string()),
+        Some("".to_string()),
+    )
+    .await;
+
+    data.create_user(
+        "TestUser1",
+        false,
+        false,
+        None,
+        false,
+        "test@web.com",
+        Some("".to_string()),
+        "",
+        Some("".to_string()),
+        Some("".to_string()),
+    )
+    .await;
+
+    data.create_vehicle(&"TUB1-1".to_string(), 1).await;
+    data.create_vehicle(&"TUB1-2".to_string(), 1).await;
+    data.create_vehicle(&"TUB2-1".to_string(), 2).await;
+    data.create_vehicle(&"TUB2-2".to_string(), 2).await;
+
+    data.create_availability(
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(14, 0, 0)
+            .unwrap(),
+        1,
+    )
+    .await;
+
+    data.create_availability(
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(14, 0, 0)
+            .unwrap(),
+        2,
+    )
+    .await;
+
+    data.create_availability(
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(14, 0, 0)
+            .unwrap(),
+        3,
+    )
+    .await;
+
+    data
+}
+
+async fn init_default(
+    db_conn: &DbConn,
+    year: i32,
+) -> Data {
     let mut data = Data::new(db_conn);
 
     data.create_zone("Bautzen Ost", BAUTZEN_OST).await;
@@ -300,9 +411,6 @@ pub async fn init(
         3,
         0,
         0,
-        1,
-        false,
-        false,
         14.025081097762154,
         51.195075641827316,
         NaiveDate::from_ymd_opt(year, 4, 19)
