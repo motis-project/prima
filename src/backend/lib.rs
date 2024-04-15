@@ -61,10 +61,11 @@ pub trait PrimaData: Send + Sync {
 
     async fn create_vehicle(
         &mut self,
-        license_plate: &String,
+        license_plate: &str,
         company: i32,
     ) -> StatusCode;
 
+    #[allow(clippy::too_many_arguments)]
     async fn create_user(
         &mut self,
         name: &str,
@@ -207,6 +208,7 @@ pub trait PrimaData: Send + Sync {
         tour_id: i32,
     ) -> Result<bool, StatusCode>;
 
+    #[allow(clippy::too_many_arguments)]
     async fn handle_routing_request(
         &mut self,
         fixed_time: NaiveDateTime,

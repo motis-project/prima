@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 pub const BAUTZEN: &str = r#"{
     "type": "MultiPolygon",
     "coordinates": [

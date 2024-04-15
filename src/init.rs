@@ -138,29 +138,16 @@ async fn init_backend_test(
     db_conn: &DbConn,
     year: i32,
 ) -> Data {
-    println!("hi");
     let mut data = Data::new(db_conn);
 
-    data.create_zone("Bautzen West", BAUTZEN_WEST).await;
     data.create_zone("Bautzen Ost", BAUTZEN_OST).await;
+    data.create_zone("Bautzen West", BAUTZEN_WEST).await;
     data.create_zone("Görlitz", GORLITZ).await;
 
-    data.create_company(
-        "Taxi-Unternehmen Bautzen-1",
-        1,
-        "a@b",
-        13.895983751721786,
-        51.220826461859644,
-    )
-    .await;
-    data.create_company(
-        "Taxi-Unternehmen Bautzen-2",
-        1,
-        "b@c",
-        14.034681384488607,
-        51.31633774366952,
-    )
-    .await;
+    data.create_company("Taxi-Unternehmen Bautzen-1", 1, "a@b", 13.895983, 51.220826)
+        .await;
+    data.create_company("Taxi-Unternehmen Bautzen-2", 1, "b@c", 14.034681, 51.316337)
+        .await;
 
     data.create_user(
         "TestDriver1",
@@ -190,10 +177,10 @@ async fn init_backend_test(
     )
     .await;
 
-    data.create_vehicle(&"TUB1-1".to_string(), 1).await;
-    data.create_vehicle(&"TUB1-2".to_string(), 1).await;
-    data.create_vehicle(&"TUB2-1".to_string(), 2).await;
-    data.create_vehicle(&"TUB2-2".to_string(), 2).await;
+    data.create_vehicle("TUB1-1", 1).await;
+    data.create_vehicle("TUB1-2", 1).await;
+    data.create_vehicle("TUB2-1", 2).await;
+    data.create_vehicle("TUB2-2", 2).await;
 
     data.create_availability(
         NaiveDate::from_ymd_opt(year, 4, 19)
@@ -354,35 +341,35 @@ async fn init_default(
     )
     .await;
 
-    data.create_vehicle(&"TUB1-1".to_string(), 1).await;
-    data.create_vehicle(&"TUB1-2".to_string(), 1).await;
-    data.create_vehicle(&"TUB1-3".to_string(), 1).await;
-    data.create_vehicle(&"TUB1-4".to_string(), 1).await;
-    data.create_vehicle(&"TUB1-5".to_string(), 1).await;
-    data.create_vehicle(&"TUB2-1".to_string(), 2).await;
-    data.create_vehicle(&"TUB2-2".to_string(), 2).await;
-    data.create_vehicle(&"TUB2-3".to_string(), 2).await;
-    data.create_vehicle(&"TUB3-1".to_string(), 3).await;
-    data.create_vehicle(&"TUB3-2".to_string(), 3).await;
-    data.create_vehicle(&"TUB3-3".to_string(), 3).await;
-    data.create_vehicle(&"TUB3-4".to_string(), 3).await;
-    data.create_vehicle(&"TUB4-1".to_string(), 4).await;
-    data.create_vehicle(&"TUB4-2".to_string(), 4).await;
-    data.create_vehicle(&"TUB5-1".to_string(), 5).await;
-    data.create_vehicle(&"TUB5-2".to_string(), 5).await;
-    data.create_vehicle(&"TUB5-3".to_string(), 5).await;
-    data.create_vehicle(&"TUG1-1".to_string(), 6).await;
-    data.create_vehicle(&"TUG1-2".to_string(), 6).await;
-    data.create_vehicle(&"TUG1-3".to_string(), 6).await;
-    data.create_vehicle(&"TUG2-1".to_string(), 7).await;
-    data.create_vehicle(&"TUG2-2".to_string(), 7).await;
-    data.create_vehicle(&"TUG2-3".to_string(), 7).await;
-    data.create_vehicle(&"TUG2-4".to_string(), 7).await;
-    data.create_vehicle(&"TUG3-1".to_string(), 8).await;
-    data.create_vehicle(&"TUG3-2".to_string(), 8).await;
-    data.create_vehicle(&"TUG3-3".to_string(), 8).await;
-    data.create_vehicle(&"TUG3-4".to_string(), 8).await;
-    data.create_vehicle(&"TUG3-5".to_string(), 8).await;
+    data.create_vehicle("TUB1-1", 1).await;
+    data.create_vehicle("TUB1-2", 1).await;
+    data.create_vehicle("TUB1-3", 1).await;
+    data.create_vehicle("TUB1-4", 1).await;
+    data.create_vehicle("TUB1-5", 1).await;
+    data.create_vehicle("TUB2-1", 2).await;
+    data.create_vehicle("TUB2-2", 2).await;
+    data.create_vehicle("TUB2-3", 2).await;
+    data.create_vehicle("TUB3-1", 3).await;
+    data.create_vehicle("TUB3-2", 3).await;
+    data.create_vehicle("TUB3-3", 3).await;
+    data.create_vehicle("TUB3-4", 3).await;
+    data.create_vehicle("TUB4-1", 4).await;
+    data.create_vehicle("TUB4-2", 4).await;
+    data.create_vehicle("TUB5-1", 5).await;
+    data.create_vehicle("TUB5-2", 5).await;
+    data.create_vehicle("TUB5-3", 5).await;
+    data.create_vehicle("TUG1-1", 6).await;
+    data.create_vehicle("TUG1-2", 6).await;
+    data.create_vehicle("TUG1-3", 6).await;
+    data.create_vehicle("TUG2-1", 7).await;
+    data.create_vehicle("TUG2-2", 7).await;
+    data.create_vehicle("TUG2-3", 7).await;
+    data.create_vehicle("TUG2-4", 7).await;
+    data.create_vehicle("TUG3-1", 8).await;
+    data.create_vehicle("TUG3-2", 8).await;
+    data.create_vehicle("TUG3-3", 8).await;
+    data.create_vehicle("TUG3-4", 8).await;
+    data.create_vehicle("TUG3-5", 8).await;
 
     data.insert_or_addto_tour(
         None,
@@ -395,10 +382,10 @@ async fn init_default(
             .and_hms_opt(10, 0, 0)
             .unwrap(),
         1,
-        &"karolinenplatz 5".to_string(),
-        &"Lichtwiesenweg 3".to_string(),
-        13.867512445295205,
-        51.22069201951501,
+        "karolinenplatz 5",
+        "Lichtwiesenweg 3",
+        13.867512,
+        51.22069,
         NaiveDate::from_ymd_opt(year, 4, 19)
             .unwrap()
             .and_hms_opt(9, 15, 0)
@@ -411,8 +398,8 @@ async fn init_default(
         3,
         0,
         0,
-        14.025081097762154,
-        51.195075641827316,
+        14.025081,
+        51.195075,
         NaiveDate::from_ymd_opt(year, 4, 19)
             .unwrap()
             .and_hms_opt(9, 55, 0)

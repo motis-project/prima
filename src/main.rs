@@ -54,7 +54,7 @@ async fn calendar(
     s.data
         .write()
         .await
-        .create_vehicle(&"test_vehicle_1".to_string(), 1)
+        .create_vehicle("test_vehicle_1", 1)
         .await;
     s.render("calendar.html", &Context::new())
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
@@ -146,13 +146,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     s.data
         .write()
         .await
-        .create_vehicle(&"test_vehicle_1".to_string(), 1)
+        .create_vehicle("test_vehicle_1", 1)
         .await;
 
     s.data
         .write()
         .await
-        .create_vehicle(&"test_vehicle_2".to_string(), 1)
+        .create_vehicle("test_vehicle_2", 1)
         .await;
 
     let mutex_guarded_data3 = s.data.read().await;

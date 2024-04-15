@@ -30,6 +30,7 @@ impl Interval {
         }
     }
 
+    #[allow(dead_code)]
     pub fn overlaps_day(
         &self,
         day: NaiveDate,
@@ -77,7 +78,6 @@ impl Interval {
                 && !self.contains(other)
                 && !other.contains(self)
         );
-        println!("merging");
         Interval::new(
             NaiveDateTime::min(self.start_time, other.start_time),
             NaiveDateTime::max(self.end_time, other.end_time),
@@ -105,6 +105,17 @@ impl Interval {
         } else {
             Interval::new(cutter.end_time, self.end_time)
         }
+    }
+
+    pub fn expand(
+        &self,
+        prepone_start_by: Duration,
+        postpone_end_by: Duration,
+    ) -> Interval {
+        Interval::new(
+            self.start_time - prepone_start_by,
+            self.end_time + postpone_end_by,
+        )
     }
 }
 
