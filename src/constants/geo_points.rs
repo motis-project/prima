@@ -4,38 +4,38 @@ use crate::backend::geo_from_str::point_from_str;
 
 #[allow(dead_code)]
 pub const P1_BAUTZEN_OST: &str = r#"{
-    "type": "Point",
-      "coordinates": [
-        14.388424281729897,
-        51.34271309395561
-      ]
-  }"#;
+  "coordinates": [
+    14.378378034923514,
+    51.344226544488095
+  ],
+  "type": "Point"
+}"#;
 
 #[allow(dead_code)]
 pub const P2_BAUTZEN_OST: &str = r#"{
-    "coordinates": [
-      14.359163546182856,
-      51.421657386809926
-    ],
-    "type": "Point"
+  "coordinates": [
+    14.374001381305305,
+    51.427085613703355
+  ],
+  "type": "Point"
 }"#;
 
 #[allow(dead_code)]
 pub const P3_BAUTZEN_OST: &str = r#"{
-    "coordinates": [
-      14.554516781670685,
-      51.173339659283414
-    ],
-    "type": "Point"
+  "coordinates": [
+    14.564385235549707,
+    51.17845730664959
+  ],
+  "type": "Point"
 }"#;
 
 #[allow(dead_code)]
 pub const P4_BAUTZEN_OST: &str = r#"{
-    "coordinates": [
-      14.187381947096696,
-      51.157929675768486
-    ],
-    "type": "Point"
+  "coordinates": [
+    14.169587948391865,
+    51.14995235819626
+  ],
+  "type": "Point"
 }"#;
 
 #[allow(dead_code)]
@@ -58,11 +58,11 @@ pub const P2_BAUTZEN_WEST: &str = r#"{
 
 #[allow(dead_code)]
 pub const P3_BAUTZEN_WEST: &str = r#"{
-    "coordinates": [
-      13.9528292197908,
-      51.347601960830275
-    ],
-    "type": "Point"
+  "coordinates": [
+    13.96519847594351,
+    51.34745819293906
+  ],
+  "type": "Point"
 }"#;
 
 #[allow(dead_code)]

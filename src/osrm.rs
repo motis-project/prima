@@ -25,6 +25,7 @@ const FORWARD_REQUEST_TEMPLATE: &str = r#"{
     }
 }"#;
 
+#[allow(dead_code)]
 const BACKWARD_REQUEST_TEMPLATE: &str = r#"{
     "destination":{
         "type":"Module",
@@ -103,7 +104,15 @@ impl OSRM {
             .text()
             .await?;
 
-        let v: Value = serde_json::from_str(&res)?;
+        let v_res: Result<Value, serde_json::Error> = serde_json::from_str(&res);
+        let v = match v_res {
+            Ok(v) => v,
+            Err(e) => {
+                println!("serde error when deserializing osrm-response: {}", e);
+                return Err(e.into());
+            }
+        };
+
         Ok(v.get("content")
             .ok_or_else(|| anyhow!("MOTIS response had no content"))?
             .get("costs")

@@ -4,7 +4,7 @@ use crate::{
         interval::Interval,
         lib::{PrimaCompany, PrimaData, PrimaEvent, PrimaTour, PrimaUser, PrimaVehicle},
     },
-    constants::constants::{BEELINE_KMH, MINUTE_PRICE, MINUTE_WAITING_PRICE, MIN_PREP_MINUTES},
+    constants::primitives::{BEELINE_KMH, MINUTE_PRICE, MINUTE_WAITING_PRICE, MIN_PREP_MINUTES},
     entities::{
         address, availability, company, event,
         prelude::{Address, Availability, Company, Event, Request, Tour, User, Vehicle, Zone},
@@ -577,6 +577,11 @@ impl PrimaData for Data {
                 Vec::new()
             }
         };
+
+        println!(
+            "dist: {} and time: {}",
+            osrm_result[0].dist, osrm_result[0].time
+        );
 
         println!("size of osrm result: {}", osrm_result.len());
         if osrm_result.is_empty() || osrm_result.len() > 1 {
@@ -3452,10 +3457,10 @@ mod test {
             d.handle_routing_request(
                 Utc::now().naive_utc() + Duration::minutes(5),
                 true,
-                49.87738,
-                8.64555,
-                50.11485,
-                8.65791,
+                test_points.bautzen_west[0].y() as f32,
+                test_points.bautzen_west[0].x() as f32,
+                test_points.bautzen_west[1].y() as f32,
+                test_points.bautzen_west[1].x() as f32,
                 1,
                 1,
                 "start_address",
@@ -3479,7 +3484,6 @@ mod test {
 
         let test_points = TestPoints::new();
 
-        // non-existing user
         assert_eq!(
             d.handle_routing_request(
                 base_time,

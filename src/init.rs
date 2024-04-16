@@ -11,7 +11,9 @@ use migration::ConnectionTrait;
 use sea_orm::{DbConn, EntityTrait};
 
 pub enum InitType {
+    #[allow(dead_code)]
     BackendTest,
+    #[allow(dead_code)]
     FrontEnd,
     Default,
 }
@@ -234,70 +236,22 @@ async fn init_default(
     data.create_zone("Bautzen West", BAUTZEN_WEST).await;
     data.create_zone("Görlitz", GORLITZ).await;
 
-    data.create_company(
-        "Taxi-Unternehmen Bautzen-1",
-        2,
-        "a@b",
-        13.895983751721786,
-        51.220826461859644,
-    )
-    .await;
-    data.create_company(
-        "Taxi-Unternehmen Bautzen-2",
-        2,
-        "b@c",
-        14.034681384488607,
-        51.31633774366952,
-    )
-    .await;
-    data.create_company(
-        "Taxi-Unternehmen Bautzen-3",
-        2,
-        "c@d",
-        14.179674338162073,
-        51.46704814415014,
-    )
-    .await;
-    data.create_company(
-        "Taxi-Unternehmen Bautzen-4",
-        1,
-        "d@e",
-        14.244972698642613,
-        51.27251252133357,
-    )
-    .await;
-    data.create_company(
-        "Taxi-Unternehmen Bautzen-5",
-        1,
-        "e@f",
-        14.381821307922678,
-        51.169106961190806,
-    )
-    .await;
-    data.create_company(
-        "Taxi-Unternehmen Görlitz-1",
-        3,
-        "f@g",
-        14.708969872564097,
-        51.43354047439519,
-    )
-    .await;
-    data.create_company(
-        "Taxi-Unternehmen Görlitz-2",
-        3,
-        "g@h",
-        14.879525132220152,
-        51.22165543174137,
-    )
-    .await;
-    data.create_company(
-        "Taxi-Unternehmen Görlitz-3",
-        3,
-        "h@i",
-        14.753736228472121,
-        51.04190085802671,
-    )
-    .await;
+    data.create_company("Taxi-Unternehmen Bautzen-1", 2, "a@b", 13.895984, 51.220826)
+        .await;
+    data.create_company("Taxi-Unternehmen Bautzen-2", 2, "b@c", 14.034681, 51.316338)
+        .await;
+    data.create_company("Taxi-Unternehmen Bautzen-3", 2, "c@d", 14.179674, 51.46705)
+        .await;
+    data.create_company("Taxi-Unternehmen Bautzen-4", 1, "d@e", 14.244972, 51.27251)
+        .await;
+    data.create_company("Taxi-Unternehmen Bautzen-5", 1, "e@f", 14.381821, 51.169107)
+        .await;
+    data.create_company("Taxi-Unternehmen Görlitz-1", 3, "f@g", 14.70897, 51.43354)
+        .await;
+    data.create_company("Taxi-Unternehmen Görlitz-2", 3, "g@h", 14.879525, 51.221655)
+        .await;
+    data.create_company("Taxi-Unternehmen Görlitz-3", 3, "h@i", 14.7537362, 51.0419)
+        .await;
 
     data.create_user(
         "TestDriver1",
