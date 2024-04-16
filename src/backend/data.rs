@@ -12,6 +12,7 @@ use crate::{
     },
     error,
     osrm::{
+        self,
         Dir::{Backward, Forward},
         DistTime, OSRM,
     },
@@ -554,21 +555,17 @@ impl PrimaData for Data {
         let minimum_prep_time: Duration = Duration::minutes(MIN_PREP_MINUTES);
 
         let start_c = Coord {
-            x: start_lat as f64,
-            y: start_lng as f64,
+            y: start_lat as f64,
+            x: start_lng as f64,
         };
         let target_c = Coord {
-            x: target_lat as f64,
-            y: target_lng as f64,
+            y: target_lat as f64,
+            x: target_lng as f64,
         };
 
         let start = Point::from(start_c);
         let target = Point::from(target_c);
 
-        println!(
-            "coordinates: {} - {} and for target:  {} - {}",
-            start_c.x, start_c.y, target_c.x, target_c.y
-        );
         let osrm = OSRM::new();
         let osrm_result = match osrm.one_to_many(start_c, vec![target_c], Forward).await {
             Ok(r) => r,
@@ -577,6 +574,10 @@ impl PrimaData for Data {
                 Vec::new()
             }
         };
+
+        if osrm_result.is_empty() {
+            return StatusCode::NOT_FOUND;
+        }
 
         println!(
             "dist: {} and time: {}",
@@ -589,6 +590,7 @@ impl PrimaData for Data {
         }
 
         let travel_duration = seconds_to_minutes_duration(osrm_result[0].time);
+        println!("travel duration: {}", travel_duration.num_minutes());
 
         let (start_time, target_time) = if is_start_time_fixed {
             (fixed_time, fixed_time + travel_duration)
@@ -600,6 +602,8 @@ impl PrimaData for Data {
         }
 
         let travel_interval = Interval::new(start_time, target_time);
+
+        println!("travel interval: {}", travel_interval);
 
         // Find vehicles that may process the request according to the zone of their, and their vehicle-specifics.
         let candidate_vehicles = self.get_candidate_vehicles(passengers, &start).await;
@@ -630,6 +634,23 @@ impl PrimaData for Data {
                 &self.companies[id_to_vec_pos(company_id)].central_coordinates;
             let approach_duration = beeline_duration(company_coordinates, &start);
             let return_duration = beeline_duration(company_coordinates, &target);
+            println!(
+                "geodesic distance approach: {} from_lat: {}, from_lng{},  to_lat: {}, to_lng: {}",
+                company_coordinates.geodesic_distance(&start),
+                company_coordinates.x(),
+                company_coordinates.y(),
+                start.x(),
+                start.y()
+            );
+            println!(
+                "durations for approach: {} and return: {}",
+                approach_duration.num_minutes(),
+                return_duration.num_minutes()
+            );
+            println!(
+                "full beeline interval: {}",
+                travel_interval.expand(approach_duration, return_duration)
+            );
             if vehicles.iter().any(|vehicle| {
                 self.may_vehicle_operate_during::<false, false>(
                     vehicle,
@@ -663,7 +684,10 @@ impl PrimaData for Data {
                     .flat_map(|tour| &tour.events)
                     .min_by_key(|event| event.scheduled_time);
                 match predecessor_event_opt {
-                    None => (),
+                    None => {
+                        println!("vehicle {} has no predecessor event", vehicle.license_plate);
+                        ()
+                    }
                     Some(pred_event) => {
                         if self.may_vehicle_operate_during::<true, false>(
                             vehicle,
@@ -693,7 +717,10 @@ impl PrimaData for Data {
                     }
                 }
                 match successor_event_opt {
-                    None => (),
+                    None => {
+                        println!("vehicle {} has no succecessor event", vehicle.license_plate);
+                        ()
+                    }
                     Some(succ_event) => {
                         if self.may_vehicle_operate_during::<false, true>(
                             vehicle,
@@ -723,7 +750,13 @@ impl PrimaData for Data {
                     }
                 }
                 match (predecessor_event_opt, successor_event_opt) {
-                    (None, None) => (),
+                    (None, None) => {
+                        println!(
+                            "vehicle {} has no predecessor or successor event",
+                            vehicle.license_plate
+                        );
+                        ()
+                    }
                     (None, Some(_)) => (),
                     (Some(_), None) => (),
                     (Some(pred_event), Some(succ_event)) => {
@@ -757,6 +790,12 @@ impl PrimaData for Data {
                 }
             }
         }
+
+        println!(
+            "candidate assignment count: {}",
+            candidate_assignments.len()
+        );
+
         let distances_to_start: Vec<DistTime> =
             match osrm.one_to_many(start_c, start_many, Backward).await {
                 Ok(r) => r,
@@ -2152,6 +2191,17 @@ impl Data {
             .filter(|zone| zone.area.contains(start))
             .map(|zone| zone.id)
             .collect_vec();
+        println!(
+            "candidate zone count: {}",
+            zones_containing_start_point_ids.len()
+        );
+        for c in self.companies.iter() {
+            println!(
+                "does {} contain start-point? -> {}",
+                c.name,
+                zones_containing_start_point_ids.contains(&c.zone)
+            );
+        }
         let mut candidate_vehicles = Vec::<&VehicleData>::new();
         for (company_id, vehicles) in self
             .vehicles
@@ -2159,7 +2209,9 @@ impl Data {
             .group_by(|vehicle| vehicle.company)
             .into_iter()
         {
-            if !zones_containing_start_point_ids.contains(&company_id) {
+            if !zones_containing_start_point_ids
+                .contains(&self.companies[id_to_vec_pos(company_id)].zone)
+            {
                 continue;
             }
             candidate_vehicles.append(
@@ -3473,32 +3525,38 @@ mod test {
 
     #[tokio::test]
     #[serial]
-    async fn test_handle_request_p() {
+    async fn test_handle_concrete() {
         let db_conn = test_main().await;
         let mut d = init::init(&db_conn, true, 5000, InitType::BackendTest).await;
 
-        let base_time = NaiveDate::from_ymd_opt(5000, 1, 1)
+        let start_time = NaiveDate::from_ymd_opt(5000, 4, 19)
             .unwrap()
-            .and_hms_opt(10, 0, 0)
+            .and_hms_opt(10, 50, 0)
             .unwrap();
 
         let test_points = TestPoints::new();
 
+        println!(
+            "does zone {} contain point? -> {}",
+            d.zones[0].name,
+            d.zones[0].area.contains(&test_points.bautzen_ost[0])
+        );
+
         assert_eq!(
             d.handle_routing_request(
-                base_time,
+                start_time,
                 true,
-                test_points.bautzen_ost[0].y() as f32,
                 test_points.bautzen_ost[0].x() as f32,
-                test_points.bautzen_ost[1].y() as f32,
+                test_points.bautzen_ost[0].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
-                d.users.len() as i32,
+                test_points.bautzen_ost[1].y() as f32,
+                1,
                 1,
                 "start_address",
                 "target_address",
             )
             .await,
-            StatusCode::NOT_FOUND
+            StatusCode::NO_CONTENT
         );
     }
 }

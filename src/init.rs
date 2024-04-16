@@ -146,10 +146,22 @@ async fn init_backend_test(
     data.create_zone("Bautzen West", BAUTZEN_WEST).await;
     data.create_zone("Görlitz", GORLITZ).await;
 
-    data.create_company("Taxi-Unternehmen Bautzen-1", 1, "a@b", 13.895983, 51.220826)
-        .await;
-    data.create_company("Taxi-Unternehmen Bautzen-2", 1, "b@c", 14.034681, 51.316337)
-        .await;
+    data.create_company(
+        "Taxi-Unternehmen Bautzen-1",
+        1,
+        "a@b",
+        51.225477417796185,
+        13.900540991188535,
+    )
+    .await;
+    data.create_company(
+        "Taxi-Unternehmen Bautzen-2",
+        1,
+        "b@c",
+        51.31332140852808,
+        14.03045830811405,
+    )
+    .await;
 
     data.create_user(
         "TestDriver1",

@@ -1,4 +1,4 @@
-pub const BEELINE_KMH: f64 = 60.0;
+pub const BEELINE_KMH: f64 = 80.0;
 pub const MINUTE_WAITING_PRICE: i32 = 20;
 pub const MINUTE_PRICE: i32 = 30;
 #[allow(dead_code)]
