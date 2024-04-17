@@ -84,18 +84,9 @@ impl OSRM {
                 .replace('y', "lat")
                 .replace('x', "lng"),
         )?;
-        /*
-                println!(
-                    "request: {}  -  {}",
-                    &serde_json::to_string(&one).unwrap(),
-                    &serde_json::to_string(&many)
-                        .unwrap()
-                        .replace('y', "lat")
-                        .replace('x', "lng")
-                );
-        */
+
         let request = self.tera.render("x", &ctx)?;
-        let res = self
+        let mut res = self
             .client
             .post("https://europe.motis-project.de/")
             .body(request)
@@ -103,6 +94,8 @@ impl OSRM {
             .await?
             .text()
             .await?;
+        res = res.replace("179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368",
+             &format!("{}", 99999999).to_string());
 
         let v_res: Result<Value, serde_json::Error> = serde_json::from_str(&res);
         let v = match v_res {

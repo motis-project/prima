@@ -14,8 +14,8 @@ pub const P1_BAUTZEN_OST: &str = r#"{
 #[allow(dead_code)]
 pub const P2_BAUTZEN_OST: &str = r#"{
   "coordinates": [
-    14.374001381305305,
-    51.427085613703355
+    14.331422107936675,
+    51.347412537500446
   ],
   "type": "Point"
 }"#;

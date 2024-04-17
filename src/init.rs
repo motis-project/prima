@@ -131,9 +131,16 @@ pub async fn init(
     }
     match t {
         InitType::Default => init_default(db_conn, year).await,
-        InitType::FrontEnd => init_default(db_conn, year).await,
+        InitType::FrontEnd => init_frontend(db_conn, year).await,
         InitType::BackendTest => init_backend_test(db_conn, year).await,
     }
+}
+
+async fn init_frontend(
+    db_conn: &DbConn,
+    year: i32,
+) -> Data {
+    Data::new(db_conn)
 }
 
 async fn init_backend_test(
@@ -150,16 +157,24 @@ async fn init_backend_test(
         "Taxi-Unternehmen Bautzen-1",
         1,
         "a@b",
-        51.225477417796185,
-        13.900540991188535,
+        13.941692218589253,
+        51.2039353265838,
     )
     .await;
     data.create_company(
         "Taxi-Unternehmen Bautzen-2",
         1,
         "b@c",
-        51.31332140852808,
         14.03045830811405,
+        51.31332140852808,
+    )
+    .await;
+    data.create_company(
+        "Taxi-Unternehmen Görlitz-1",
+        2,
+        "c@d",
+        14.03145830811405,
+        51.27332140852808,
     )
     .await;
 
@@ -195,6 +210,7 @@ async fn init_backend_test(
     data.create_vehicle("TUB1-2", 1).await;
     data.create_vehicle("TUB2-1", 2).await;
     data.create_vehicle("TUB2-2", 2).await;
+    data.create_vehicle("TUG1-1", 3).await;
 
     data.create_availability(
         NaiveDate::from_ymd_opt(year, 4, 19)
