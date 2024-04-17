@@ -4,7 +4,7 @@ pub const MINUTE_PRICE: i32 = 30;
 #[allow(dead_code)]
 pub const KM_PRICE: i32 = 50;
 #[allow(dead_code)]
-pub const PASSENGER_CHANGE_TIME: i32 = 4;
+pub const PASSENGER_CHANGE_MINUTES: i64 = 2;
 #[allow(dead_code)]
 pub const FLAT_BUFFER_TIME: i32 = 5;
 #[allow(dead_code)]

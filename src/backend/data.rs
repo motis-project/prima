@@ -4,7 +4,9 @@ use crate::{
         interval::Interval,
         lib::{PrimaCompany, PrimaData, PrimaEvent, PrimaTour, PrimaUser, PrimaVehicle},
     },
-    constants::primitives::{BEELINE_KMH, MINUTE_PRICE, MINUTE_WAITING_PRICE, MIN_PREP_MINUTES},
+    constants::primitives::{
+        BEELINE_KMH, MINUTE_PRICE, MINUTE_WAITING_PRICE, MIN_PREP_MINUTES, PASSENGER_CHANGE_MINUTES,
+    },
     entities::{
         address, availability, company, event,
         prelude::{Address, Availability, Company, Event, Request, Tour, User, Vehicle, Zone},
@@ -210,6 +212,16 @@ impl TourData {
 pub struct AvailabilityData {
     id: i32,
     interval: Interval,
+}
+
+#[cfg(test)]
+impl AvailabilityData {
+    fn print(
+        &self,
+        indent: &str,
+    ) {
+        println!("{}id: {}, interval: {}", indent, self.id, self.interval);
+    }
 }
 
 #[derive(PartialEq, Clone)]
@@ -549,6 +561,7 @@ pub struct Data {
     vehicles: Vec<VehicleData>,  //indexed by (id-1)
     addresses: Vec<AddressData>,
     db_connection: DbConn,
+    osrm: OSRM,
 }
 
 impl PartialEq for Data {
@@ -579,6 +592,10 @@ impl PrimaData for Data {
         target_address: &str,
         //wheelchairs: i32, luggage: i32, TODO
     ) -> StatusCode {
+        // TODOs:
+        //- add buffer based on travel time or duration
+        //- compute costs based on distance instead of travel time, when osm provides the distances
+        //- manage communicated times and use them to allow more concatenations
         if customer
             > match self.users.keys().max() {
                 None => 0,
@@ -612,8 +629,11 @@ impl PrimaData for Data {
         let start = Point::from(start_c);
         let target = Point::from(target_c);
 
-        let osrm = OSRM::new();
-        let osrm_result = match osrm.one_to_many(start_c, vec![target_c], Forward).await {
+        let osrm_result = match self
+            .osrm
+            .one_to_many(start_c, vec![target_c], Forward)
+            .await
+        {
             Ok(r) => r,
             Err(_) => Vec::new(),
         };
@@ -635,7 +655,11 @@ impl PrimaData for Data {
             return StatusCode::NO_CONTENT;
         }
 
-        let travel_interval = Interval::new(start_time, target_time);
+        let passenger_change_duration = Duration::minutes(PASSENGER_CHANGE_MINUTES);
+        let travel_interval = Interval::new(
+            start_time - passenger_change_duration,
+            target_time + passenger_change_duration,
+        );
 
         // Find vehicles that may process the request according their vehicle-specifics and to the zone of their company.
         let candidate_vehicles = self.get_candidate_vehicles(passengers, &start).await;
@@ -792,7 +816,7 @@ impl PrimaData for Data {
         }
 
         let distances_to_start: Vec<DistTime> =
-            match osrm.one_to_many(start_c, start_many, Backward).await {
+            match self.osrm.one_to_many(start_c, start_many, Backward).await {
                 Ok(r) => r,
                 Err(e) => {
                     error!("problem with osrm: {}", e);
@@ -800,7 +824,7 @@ impl PrimaData for Data {
                 }
             };
         let distances_to_target: Vec<DistTime> =
-            match osrm.one_to_many(target_c, target_many, Forward).await {
+            match self.osrm.one_to_many(target_c, target_many, Forward).await {
                 Ok(r) => r,
                 Err(e) => {
                     error!("problem with osrm: {}", e);
@@ -828,6 +852,7 @@ impl PrimaData for Data {
         });
         let mut chosen_tour_id: Option<i32> = None;
         let mut chosen_vehicle_id: Option<i32> = None;
+        println!("#of viable cases: {}", cost_permutation.len());
         for i in cost_permutation.iter() {
             let approach_duration =
                 seconds_to_minutes_duration(distances_to_start[case_idx_to_start_idx[*i]].time);
@@ -835,6 +860,7 @@ impl PrimaData for Data {
                 seconds_to_minutes_duration(distances_to_target[case_idx_to_target_idx[*i]].time);
             match candidate_assignments[*i].case {
                 TourConcatCase::NewTour { company_id } => {
+                    println!("case: NewTour for company: {}", company_id);
                     for (candidate_company_id, vehicles) in candidate_vehicles
                         .iter()
                         .into_group_map_by(|vehicle| vehicle.company)
@@ -842,6 +868,14 @@ impl PrimaData for Data {
                         if company_id != candidate_company_id {
                             continue;
                         }
+                        println!(
+                            "company found, it has {} candidate vehicles",
+                            vehicles.len()
+                        );
+                        println!(
+                            "{}",
+                            &travel_interval.expand(approach_duration, return_duration)
+                        );
                         chosen_vehicle_id = vehicles
                             .iter()
                             .find(|vehicle| {
@@ -862,6 +896,7 @@ impl PrimaData for Data {
                     vehicle_id,
                     previous_event_time: _,
                 } => {
+                    println!("case: NewTour");
                     if self.may_vehicle_operate_during::<true, false>(
                         &self.vehicles[id_to_vec_pos(vehicle_id)],
                         &travel_interval.expand(approach_duration, return_duration),
@@ -888,6 +923,7 @@ impl PrimaData for Data {
                     vehicle_id,
                     next_event_time: _,
                 } => {
+                    println!("case: NewTour");
                     if self.may_vehicle_operate_during::<false, true>(
                         &self.vehicles[id_to_vec_pos(vehicle_id)],
                         &travel_interval.expand(approach_duration, return_duration),
@@ -1416,6 +1452,7 @@ impl PrimaData for Data {
         tour_id: i32,
         new_vehicle_id: i32,
     ) -> StatusCode {
+        //TODO ensure that vehicle also is able to approach and return in time
         if self.max_vehicle_id() < new_vehicle_id || new_vehicle_id as usize <= 0 {
             return StatusCode::NOT_FOUND;
         }
@@ -1423,16 +1460,69 @@ impl PrimaData for Data {
             Ok(tour) => tour.vehicle,
             Err(e) => return e,
         };
-        let tour_vec_pos = self.vehicles[id_to_vec_pos(old_vehicle_id)]
+        let tour_idx = self.vehicles[id_to_vec_pos(old_vehicle_id)]
             .tours
             .iter()
             .enumerate()
             .find(|(_, tour)| tour.id == tour_id)
             .map(|(pos, _)| pos)
             .unwrap();
+        let tour = &self.vehicles[id_to_vec_pos(old_vehicle_id)].tours[tour_idx];
+        let first_event_opt = tour.events.iter().min_by_key(|event| event.scheduled_time);
+        let last_event_opt = tour.events.iter().max_by_key(|event| event.scheduled_time);
+        let new_vehicle_company_coordinates = Coord::from(
+            self.companies[id_to_vec_pos(self.vehicles[id_to_vec_pos(new_vehicle_id)].company)]
+                .central_coordinates,
+        );
+        let (approach_duration_res, return_duration_res) = match (first_event_opt, last_event_opt) {
+            (None, None) => return StatusCode::INTERNAL_SERVER_ERROR,
+            (Some(_), None) => return StatusCode::INTERNAL_SERVER_ERROR,
+            (None, Some(_)) => return StatusCode::INTERNAL_SERVER_ERROR,
+            (Some(first), Some(last)) => (
+                self.osrm
+                    .one_to_many(
+                        Coord::from(first.coordinates),
+                        vec![new_vehicle_company_coordinates],
+                        Forward,
+                    )
+                    .await,
+                self.osrm
+                    .one_to_many(
+                        Coord::from(last.coordinates),
+                        vec![new_vehicle_company_coordinates],
+                        Backward,
+                    )
+                    .await,
+            ),
+        };
+        let (approach_duration, return_duration) =
+            match (approach_duration_res, return_duration_res) {
+                (Err(e1), Err(e2)) => {
+                    error!("{} and {}", e1, e2);
+                    return StatusCode::INTERNAL_SERVER_ERROR;
+                }
+                (Ok(_), Err(e2)) => {
+                    error!("{}", e2);
+                    return StatusCode::INTERNAL_SERVER_ERROR;
+                }
+                (Err(e1), Ok(_)) => {
+                    error!("{}", e1);
+                    return StatusCode::INTERNAL_SERVER_ERROR;
+                }
+                (Ok(approach), Ok(ret)) => (approach, ret),
+            };
+        if !self.may_vehicle_operate_during::<true, true>(
+            &self.vehicles[id_to_vec_pos(new_vehicle_id)],
+            &Interval::new(
+                tour.departure - approach_duration,
+                tour.arrival + return_duration,
+            ),
+        ) {
+            return StatusCode::NOT_ACCEPTABLE;
+        }
         let mut moved_tour = self.vehicles[id_to_vec_pos(old_vehicle_id)]
             .tours
-            .remove(tour_vec_pos);
+            .remove(tour_idx);
         moved_tour.vehicle = new_vehicle_id;
         self.vehicles[id_to_vec_pos(new_vehicle_id)]
             .tours
@@ -1457,7 +1547,7 @@ impl PrimaData for Data {
                 return StatusCode::INTERNAL_SERVER_ERROR;
             }
         }
-        StatusCode::ACCEPTED
+        StatusCode::OK
     }
 
     async fn get_company(
@@ -1777,6 +1867,7 @@ impl Data {
             users: HashMap::<i32, UserData>::new(),
             addresses: Vec::new(),
             db_connection: db_connection.clone(),
+            osrm: OSRM::new(),
         }
     }
 
@@ -1788,7 +1879,7 @@ impl Data {
         println!("printing companies:");
         self.print_companies(indent);
         println!("printing vehicles:");
-        self.print_vehicles(indent);
+        self.print_vehicles(true, indent);
         println!("printing tours:");
         self.print_tours(true, indent);
         println!("printing addresses:");
@@ -1803,14 +1894,6 @@ impl Data {
         for a in self.addresses.iter() {
             a.print(indent);
         }
-    }
-
-    #[cfg(test)]
-    pub fn clear(&mut self) {
-        self.users.clear();
-        self.companies.clear();
-        self.vehicles.clear();
-        self.zones.clear();
     }
 
     async fn insert_request_into_db(
@@ -1846,25 +1929,6 @@ impl Data {
         }
     }
 
-    //expected to be used in fuzzing tests
-    //check wether there is a vehicle for which any of the availability intervals overlap
-    #[cfg(test)]
-    pub fn do_intervals_overlap(&self) -> bool {
-        self.vehicles
-            .iter()
-            .map(|vehicle| &vehicle.availability)
-            .any(|availability| {
-                let availability_intervals = availability
-                    .iter()
-                    .map(|(_, availability)| availability.interval);
-                availability_intervals
-                    .clone()
-                    .zip(availability_intervals)
-                    .filter(|interval_pair| interval_pair.0 != interval_pair.1)
-                    .any(|interval_pair| interval_pair.0.overlaps(&interval_pair.1))
-            })
-    }
-
     #[cfg(test)]
     fn print_tours(
         &self,
@@ -1876,6 +1940,7 @@ impl Data {
         for tour in self.vehicles.iter().flat_map(|vehicle| &vehicle.tours) {
             tour.print(indent);
             if print_events {
+                println!("{}printing events:", event_indent);
                 for event in tour.events.iter() {
                     if tour.id != event.tour {
                         continue;
@@ -1910,10 +1975,19 @@ impl Data {
     #[cfg(test)]
     pub fn print_vehicles(
         &self,
+        print_availabilities: bool,
         indent: &str,
     ) {
+        let mut availability_indent = "  ".to_string();
+        availability_indent.push_str(indent);
         for v in &self.vehicles {
             v.print(indent);
+            if print_availabilities {
+                println!("{}printing availabilites:", availability_indent);
+                for availability in v.availability.values() {
+                    availability.print(&availability_indent);
+                }
+            }
         }
     }
 
@@ -2354,7 +2428,9 @@ mod test {
             lib::PrimaData,
         },
         constants::{geo_points::TestPoints, gorlitz::GORLITZ},
-        dotenv, env,
+        dotenv,
+        entities::vehicle,
+        env,
         init::{init, InitType},
         Database, Migrator,
     };
@@ -2928,209 +3004,12 @@ mod test {
     #[serial]
     async fn test_init() {
         let db_conn = test_main().await;
-        let mut d = init(&db_conn, true, 5000, InitType::BackendTest).await;
+        let d = init(&db_conn, true, 5000, InitType::BackendTest).await;
 
         assert_eq!(d.vehicles.len(), 5);
         assert_eq!(d.zones.len(), 3);
         assert_eq!(d.companies.len(), 3);
-
-        d.change_vehicle_for_tour(1, 2).await;
-        /*
-                //get_company_conflicts_for_tour
-                for company in d.companies.iter() {
-                    let conflicts = match d.get_company_conflicts(company.id, 1, true).await {
-                        Ok(c) => c,
-                        Err(_) => HashMap::new(),
-                    };
-                    assert_eq!(conflicts.is_empty(), company.id != 1);
-                    for (v, tours) in conflicts.iter() {
-                        assert_eq!(company.id, 1);
-                        assert_eq!(tours.is_empty(), *v != 2);
-                    }
-                }
-
-                //get_events_for_user
-                for (user_id, _) in d.users.iter() {
-                    assert_eq!(
-                        d.get_events_for_user(
-                            *user_id,
-                            NaiveDate::from_ymd_opt(2024, 1, 1)
-                                .unwrap()
-                                .and_hms_opt(1, 0, 0)
-                                .unwrap(),
-                            NaiveDate::from_ymd_opt(6000, 4, 15)
-                                .unwrap()
-                                .and_hms_opt(14, 0, 0)
-                                .unwrap(),
-                        )
-                        .await
-                        .unwrap()
-                        .is_empty(),
-                        *user_id != 2 // only user 2 has events
-                    );
-                    if *user_id == 2 {
-                        assert_eq!(
-                            d.get_events_for_user(
-                                *user_id,
-                                NaiveDate::from_ymd_opt(2024, 1, 1)
-                                    .unwrap()
-                                    .and_hms_opt(1, 0, 0)
-                                    .unwrap(),
-                                NaiveDate::from_ymd_opt(6000, 4, 15)
-                                    .unwrap()
-                                    .and_hms_opt(14, 0, 0)
-                                    .unwrap(),
-                            )
-                            .await
-                            .unwrap()
-                            .len(),
-                            2
-                        );
-                    }
-                }
-                /*
-                       //get_vehicles
-                       for company in d.companies.iter() {
-                           let vehicles = d.get_vehicles(company.id, None).await.unwrap();
-                           for (specs, vehicles) in vehicles.iter() {
-                               assert_eq!(*specs, 1);
-                               assert_eq!((company.id == 1 || company.id == 8), vehicles.len() == 5);
-                               assert_eq!((company.id == 3 || company.id == 7), vehicles.len() == 4);
-                               assert_eq!(
-                                   (company.id == 2 || company.id == 5 || company.id == 6),
-                                   vehicles.len() == 3
-                               );
-                               assert_eq!(company.id == 4, vehicles.len() == 2);
-                           }
-                       }
-                */
-                //insert vehicle with non-existing vehicle-specifics test should be added if specifics are no longer restricted for mvp->TODO
-
-                assert_eq!(d.vehicles[1].tours.len(), 1);
-                assert_eq!(
-                    d.get_events_for_vehicle(2, NaiveDateTime::MIN, NaiveDateTime::MAX)
-                        .await
-                        .unwrap()
-                        .len(),
-                    2
-                );
-                insert_or_add_test_tour(&mut d, 2).await;
-                assert_eq!(d.vehicles[1].tours.len(), 2);
-                assert_eq!(
-                    d.get_events_for_vehicle(2, NaiveDateTime::MIN, NaiveDateTime::MAX)
-                        .await
-                        .unwrap()
-                        .len(),
-                    4
-                );
-
-                for company in d.companies.iter() {
-                    let conflicts = match d.get_company_conflicts(company.id, 1, true).await {
-                        Ok(c) => c,
-                        Err(_) => HashMap::new(),
-                    };
-                    assert_eq!(conflicts.is_empty(), company.id != 1);
-                    for (v, tours) in conflicts.iter() {
-                        assert_eq!(company.id, 1);
-                        assert_eq!(tours.is_empty(), *v != 2);
-                        assert_eq!(tours.len() == 2, *v == 2);
-                    }
-                }
-
-                insert_or_add_test_tour(&mut d, 7).await;
-                assert_eq!(d.vehicles[1].tours.len(), 2);
-                assert_eq!(
-                    d.get_events_for_vehicle(2, NaiveDateTime::MIN, NaiveDateTime::MAX)
-                        .await
-                        .unwrap()
-                        .len(),
-                    4
-                );
-                assert_eq!(d.vehicles[6].tours.len(), 1);
-                assert_eq!(
-                    d.get_events_for_vehicle(7, NaiveDateTime::MIN, NaiveDateTime::MAX)
-                        .await
-                        .unwrap()
-                        .len(),
-                    2
-                );
-                for tour_id in 1..4 {
-                    //vehicle 2 has tours with ids 1 and 2, vehicle 7 has tour with id 3, no other vehicles have tours
-                    if tour_id == 3 {
-                        //consider_provided_tour_conflict parameter only affects vehicle 7, since it is assigned tour_id  (3)
-                        assert_eq!(
-                            d.get_vehicle_conflicts(2, tour_id, true)
-                                .await
-                                .unwrap()
-                                .len(),
-                            2
-                        );
-                        assert_eq!(
-                            d.get_vehicle_conflicts(2, tour_id, false)
-                                .await
-                                .unwrap()
-                                .len(),
-                            2
-                        );
-                        assert_eq!(
-                            d.get_vehicle_conflicts(7, tour_id, true)
-                                .await
-                                .unwrap()
-                                .len(),
-                            1
-                        );
-                        assert_eq!(
-                            d.get_vehicle_conflicts(7, tour_id, false)
-                                .await
-                                .unwrap()
-                                .len(),
-                            0
-                        );
-                    } else if tour_id == 1 || tour_id == 2 {
-                        //consider_provided_tour_conflict parameter only affects vehicle 2, since it is assigned tour_id  (1 or 2)
-                        assert_eq!(
-                            d.get_vehicle_conflicts(2, tour_id, true)
-                                .await
-                                .unwrap()
-                                .len(),
-                            2
-                        );
-                        assert_eq!(
-                            d.get_vehicle_conflicts(2, tour_id, false)
-                                .await
-                                .unwrap()
-                                .len(),
-                            1
-                        );
-                        assert_eq!(
-                            d.get_vehicle_conflicts(7, tour_id, true)
-                                .await
-                                .unwrap()
-                                .len(),
-                            1
-                        );
-                        assert_eq!(
-                            d.get_vehicle_conflicts(7, tour_id, false)
-                                .await
-                                .unwrap()
-                                .len(),
-                            1
-                        );
-                    }
-                    for v_id in 1..d.vehicles.len() + 1 {
-                        if v_id == 7 || v_id == 2 {
-                            continue;
-                        }
-                        assert_eq!(
-                            d.get_vehicle_conflicts(v_id as i32, tour_id, true)
-                                .await
-                                .unwrap()
-                                .len(),
-                            0
-                        );
-                    }
-                }
-        */
+        assert_eq!(d.vehicles.iter().flat_map(|v| &v.availability).count(), 3);
     }
 
     #[tokio::test]
@@ -3459,10 +3338,10 @@ mod test {
             d.handle_routing_request(
                 base_time,
                 true,
-                test_points.bautzen_west[0].x() as f32,
-                test_points.bautzen_west[0].y() as f32,
-                test_points.bautzen_west[1].x() as f32,
-                test_points.bautzen_west[1].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
+                test_points.bautzen_ost[1].y() as f32,
                 1 + d.users.len() as i32,
                 1,
                 "start_address",
@@ -3477,10 +3356,10 @@ mod test {
             d.handle_routing_request(
                 base_time,
                 true,
-                test_points.bautzen_west[0].x() as f32,
-                test_points.bautzen_west[0].y() as f32,
-                test_points.bautzen_west[1].x() as f32,
-                test_points.bautzen_west[1].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
+                test_points.bautzen_ost[1].y() as f32,
                 1,
                 0,
                 "start_address",
@@ -3495,10 +3374,10 @@ mod test {
             d.handle_routing_request(
                 base_time,
                 true,
-                test_points.bautzen_west[0].x() as f32,
-                test_points.bautzen_west[0].y() as f32,
-                test_points.bautzen_west[1].x() as f32,
-                test_points.bautzen_west[1].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
+                test_points.bautzen_ost[1].y() as f32,
                 1,
                 -1,
                 "start_address",
@@ -3513,10 +3392,10 @@ mod test {
             d.handle_routing_request(
                 base_time,
                 true,
-                test_points.bautzen_west[0].x() as f32,
-                test_points.bautzen_west[0].y() as f32,
-                test_points.bautzen_west[1].x() as f32,
-                test_points.bautzen_west[1].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
+                test_points.bautzen_ost[1].y() as f32,
                 1,
                 4,
                 "start_address",
@@ -3531,10 +3410,10 @@ mod test {
             d.handle_routing_request(
                 Utc::now().naive_utc() - Duration::minutes(1),
                 true,
-                test_points.bautzen_west[0].x() as f32,
-                test_points.bautzen_west[0].y() as f32,
-                test_points.bautzen_west[1].x() as f32,
-                test_points.bautzen_west[1].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
+                test_points.bautzen_ost[1].y() as f32,
                 1,
                 1,
                 "start_address",
@@ -3544,15 +3423,15 @@ mod test {
             StatusCode::NOT_ACCEPTABLE
         );
 
-        // request denied
+        // request denied (no available vehicle)
         assert_eq!(
             d.handle_routing_request(
                 base_time,
                 true,
-                test_points.bautzen_west[0].y() as f32,
-                test_points.bautzen_west[0].x() as f32,
-                test_points.bautzen_west[1].y() as f32,
-                test_points.bautzen_west[1].x() as f32,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                test_points.bautzen_ost[1].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
                 1,
                 1,
                 "start_address",
@@ -3567,10 +3446,10 @@ mod test {
             d.handle_routing_request(
                 Utc::now().naive_utc() + Duration::minutes(5),
                 true,
-                test_points.bautzen_west[0].y() as f32,
-                test_points.bautzen_west[0].x() as f32,
-                test_points.bautzen_west[1].y() as f32,
-                test_points.bautzen_west[1].x() as f32,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                test_points.bautzen_ost[1].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
                 1,
                 1,
                 "start_address",
@@ -3578,6 +3457,27 @@ mod test {
             )
             .await,
             StatusCode::NO_CONTENT
+        );
+
+        //accepted_request
+        assert_eq!(
+            d.handle_routing_request(
+                NaiveDate::from_ymd_opt(5000, 4, 19)
+                    .unwrap()
+                    .and_hms_opt(11, 0, 0)
+                    .unwrap(),
+                true,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                test_points.bautzen_ost[1].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
+                1,
+                1,
+                "start_address",
+                "target_address",
+            )
+            .await,
+            StatusCode::CREATED
         );
     }
 
@@ -3797,6 +3697,246 @@ mod test {
                 .count(),
             4
         );
+
+        //repeat first request - no tour-concatenation and out of availability for other vehicles -> request denied
+        assert_eq!(
+            d.handle_routing_request(
+                start_time,
+                true,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                test_points.bautzen_ost[1].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
+                1,
+                1,
+                "start_address",
+                "target_address",
+            )
+            .await,
+            StatusCode::NO_CONTENT
+        );
+        assert_eq!(d.vehicles.iter().flat_map(|v| &v.tours).count(), 1);
+        assert_eq!(
+            d.vehicles
+                .iter()
+                .flat_map(|v| v.tours.iter().flat_map(|t| &t.events))
+                .count(),
+            4
+        );
+
+        //repeat first request postponed by 10 minutes- no tour-concatenation -> NewTour for company 1
+        assert_eq!(
+            d.handle_routing_request(
+                start_time + Duration::minutes(10),
+                true,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                test_points.bautzen_ost[1].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
+                1,
+                1,
+                "start_address",
+                "target_address",
+            )
+            .await,
+            StatusCode::CREATED
+        );
+        assert_eq!(d.vehicles.iter().flat_map(|v| &v.tours).count(), 2);
+        assert_eq!(
+            d.vehicles
+                .iter()
+                .flat_map(|v| v.tours.iter().flat_map(|t| &t.events))
+                .count(),
+            6
+        );
         check_data_db_synchronized(&d).await;
+    }
+
+    #[traced_test]
+    #[tokio::test]
+    #[serial]
+    async fn test_handle_request_append() {
+        let db_conn = test_main().await;
+        let mut d = init(&db_conn, true, 5000, InitType::BackendTest).await;
+
+        let start_time = NaiveDate::from_ymd_opt(5000, 4, 19)
+            .unwrap()
+            .and_hms_opt(11, 0, 0)
+            .unwrap();
+        let test_points = TestPoints::new();
+
+        assert_eq!(
+            d.handle_routing_request(
+                start_time,
+                true,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                test_points.bautzen_ost[1].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
+                1,
+                1,
+                "start_address",
+                "target_address",
+            )
+            .await,
+            StatusCode::CREATED
+        );
+        assert_eq!(d.vehicles.iter().flat_map(|v| &v.tours).count(), 1);
+        assert_eq!(
+            d.vehicles
+                .iter()
+                .flat_map(|v| v.tours.iter().flat_map(|t| &t.events))
+                .count(),
+            2
+        );
+        //reversed start and target coordinates in time for concatenation
+        assert_eq!(
+            d.handle_routing_request(
+                start_time + Duration::minutes(20),
+                true,
+                test_points.bautzen_ost[1].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                1,
+                1,
+                "start_address",
+                "target_address",
+            )
+            .await,
+            StatusCode::CREATED
+        );
+        assert_eq!(d.vehicles.iter().flat_map(|v| &v.tours).count(), 1);
+        assert_eq!(
+            d.vehicles
+                .iter()
+                .flat_map(|v| v.tours.iter().flat_map(|t| &t.events))
+                .count(),
+            4
+        );
+    }
+
+    #[traced_test]
+    #[tokio::test]
+    #[serial]
+    async fn test_handle_request_prepend() {
+        let db_conn = test_main().await;
+        let mut d = init(&db_conn, true, 5000, InitType::BackendTest).await;
+
+        let start_time = NaiveDate::from_ymd_opt(5000, 4, 19)
+            .unwrap()
+            .and_hms_opt(12, 30, 0)
+            .unwrap();
+        let test_points = TestPoints::new();
+
+        assert_eq!(
+            d.handle_routing_request(
+                start_time,
+                true,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                test_points.bautzen_ost[1].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
+                1,
+                1,
+                "start_address",
+                "target_address",
+            )
+            .await,
+            StatusCode::CREATED
+        );
+        assert_eq!(d.vehicles.iter().flat_map(|v| &v.tours).count(), 1);
+        assert_eq!(
+            d.vehicles
+                .iter()
+                .flat_map(|v| v.tours.iter().flat_map(|t| &t.events))
+                .count(),
+            2
+        );
+        //reversed start and target coordinates with fixed target time instead of fixed start time, in time for prepend
+        assert_eq!(
+            d.handle_routing_request(
+                start_time - Duration::minutes(15),
+                false,
+                test_points.bautzen_ost[1].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                1,
+                2,
+                "target_address",
+                "start_address",
+            )
+            .await,
+            StatusCode::CREATED
+        );
+        // since there are only 2 requests and those were concatenated, there must be 1 vehicle doing 1 tour with 4 events all other vehicles must not have any tours.
+        let mut vehicle_with_tours_found = false;
+        for v in d.vehicles.iter() {
+            if vehicle_with_tours_found {
+                assert!(v.tours.is_empty());
+            } else {
+                if !v.tours.is_empty() {
+                    assert!(v.tours.len() == 1);
+                    assert!(v.tours.iter().flat_map(|t| &t.events).count() == 4);
+                    vehicle_with_tours_found = true;
+                }
+            }
+        }
+        // since the second request was prepended to the first one, the earliest event must be part of the 2nd request.
+        assert_eq!(
+            d.vehicles
+                .iter()
+                .filter(|v| !v.tours.is_empty())
+                .flat_map(|v| &v.tours)
+                .flat_map(|t| &t.events)
+                .min_by_key(|ev| ev.scheduled_time)
+                .unwrap()
+                .request_id,
+            2,
+        );
+    }
+
+    #[traced_test]
+    #[tokio::test]
+    #[serial]
+    async fn test_change_vehicle() {
+        let db_conn = test_main().await;
+        let mut d = init(&db_conn, true, 5000, InitType::BackendTest).await;
+
+        let start_time = NaiveDate::from_ymd_opt(5000, 4, 19)
+            .unwrap()
+            .and_hms_opt(12, 30, 0)
+            .unwrap();
+        let test_points = TestPoints::new();
+
+        assert_eq!(
+            d.handle_routing_request(
+                start_time,
+                true,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                test_points.bautzen_ost[1].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
+                1,
+                1,
+                "start_address",
+                "target_address",
+            )
+            .await,
+            StatusCode::CREATED
+        );
+
+        //non-existing vehicle
+        assert_eq!(d.change_vehicle_for_tour(1, 6).await, StatusCode::NOT_FOUND);
+
+        //non-existing tour
+        assert_eq!(d.change_vehicle_for_tour(2, 1).await, StatusCode::NOT_FOUND);
+
+        //vehicle is not available during tour
+        assert_eq!(
+            d.change_vehicle_for_tour(1, 5).await,
+            StatusCode::NOT_ACCEPTABLE
+        );
     }
 }

@@ -55,6 +55,7 @@ pub struct DistTime {
     pub time: f64,
 }
 
+#[derive(Clone)]
 pub struct OSRM {
     client: reqwest::Client,
     tera: tera::Tera,
