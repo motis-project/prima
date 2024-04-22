@@ -42,11 +42,13 @@ enum TourConcatCase {
         vehicle_id: i32,
         previous_event_time: NaiveDateTime,
     },
+    /*
     Insert {
         vehicle_id: i32,
         previous_event_time: NaiveDateTime,
         next_event_time: NaiveDateTime,
     },
+     */
 }
 
 struct PossibleAssignment {
@@ -80,6 +82,7 @@ impl PossibleAssignment {
                 vehicle_id: _,
                 next_event_time,
             } => (next_event_time - *start_time).num_minutes() as i32 - approach_duration,
+            /*
             TourConcatCase::Insert {
                 vehicle_id: _,
                 previous_event_time,
@@ -90,6 +93,7 @@ impl PossibleAssignment {
                     - return_duration
                     - return_duration
             }
+             */
         };
         self.cost = MINUTE_PRICE * driving_minutes + MINUTE_WAITING_PRICE * waiting_minutes;
     }
@@ -142,12 +146,7 @@ fn beeline_duration(
         meter_to_km_f(p1.geodesic_distance(p2)) / BEELINE_KMH,
     ))
 }
-/*
-fn meter_to_km(m: i32) -> i32 {
-    assert!(m>=0);
-    m / 1000
-}
- */
+
 fn meter_to_km_f(m: f64) -> f64 {
     assert!(m >= 0.0); // TODO make sure this check can't produce errors because of rounding
     m / 1000.0
@@ -671,6 +670,8 @@ impl PrimaData for Data {
         let mut case_idx_to_target_idx = Vec::<usize>::new();
         let mut start_idx = 0;
         let mut target_idx = 0;
+        let mut start_company_idx = 0;
+        let mut target_company_idx = 0;
         // there are 4 general cases:
         // Creating a NewTour with only the new request (general case exists per company) or
         // (Prepend, Append, Insert) - the request to/between existing tour(s) (general case exists per vehicle)
@@ -702,12 +703,14 @@ impl PrimaData for Data {
                 case_idx_to_target_idx.push(target_idx);
                 start_idx += 1;
                 target_idx += 1;
+                start_company_idx = start_idx;
+                target_company_idx = target_idx;
                 was_company_inserted_into_target_many = true;
                 was_company_inserted_into_start_many = true;
             }
             for vehicle in vehicles.iter() {
-                let mut was_event_inserted_into_start_many = false;
-                let mut was_event_inserted_into_target_many = false;
+                //let mut was_event_inserted_into_start_many = false;
+                //let mut was_event_inserted_into_target_many = false;
                 let predecessor_event_opt = vehicle
                     .tours
                     .iter()
@@ -736,16 +739,17 @@ impl PrimaData for Data {
                                     previous_event_time: pred_event.scheduled_time,
                                 },
                             ));
-                            case_idx_to_target_idx.push(target_idx);
                             case_idx_to_start_idx.push(start_idx);
                             start_many.push(Coord::from(pred_event.coordinates));
                             start_idx += 1;
-                            was_event_inserted_into_start_many = true;
+                            //was_event_inserted_into_start_many = true;
                             if !was_company_inserted_into_target_many {
+                                target_company_idx = target_idx;
                                 target_idx += 1;
                                 target_many.push(Coord::from(*company_coordinates));
                                 was_company_inserted_into_target_many = true;
                             }
+                            case_idx_to_target_idx.push(target_company_idx);
                         }
                     }
                 }
@@ -766,15 +770,16 @@ impl PrimaData for Data {
                                 },
                             ));
                             case_idx_to_target_idx.push(target_idx);
-                            case_idx_to_start_idx.push(start_idx);
+                            target_many.push(Coord::from(succ_event.coordinates));
+                            target_idx += 1;
                             if !was_company_inserted_into_start_many {
+                                start_company_idx = start_idx;
                                 start_idx += 1;
                                 start_many.push(Coord::from(*company_coordinates));
                                 was_company_inserted_into_start_many = true;
                             }
-                            target_many.push(Coord::from(succ_event.coordinates));
-                            target_idx += 1;
-                            was_event_inserted_into_target_many = true;
+                            case_idx_to_start_idx.push(start_company_idx);
+                            //was_event_inserted_into_target_many = true;
                         }
                     }
                 }
@@ -782,7 +787,10 @@ impl PrimaData for Data {
                     (None, None) => (),
                     (None, Some(_)) => (),
                     (Some(_), None) => (),
-                    (Some(pred_event), Some(succ_event)) => {
+                    (Some(_pred_event), Some(_succ_event)) => {
+                        /*
+                            insert case is not part of mvp
+
                         if self.may_vehicle_operate_during::<true, true>(
                             vehicle,
                             &travel_interval.expand(
@@ -790,7 +798,6 @@ impl PrimaData for Data {
                                 beeline_duration(&succ_event.coordinates, &target),
                             ),
                         ) {
-                            /*insert case is not part of mvp
                             candidate_assignments.push(PossibleAssignment::new(
                                 TourConcatCase::Insert {
                                     vehicle_id: vehicle.id,
@@ -808,8 +815,8 @@ impl PrimaData for Data {
                                 target_idx += 1;
                                 target_many.push(Coord::from(succ_event.coordinates));
                             }
-                             */
                         }
+                        */
                     }
                 }
             }
@@ -834,7 +841,6 @@ impl PrimaData for Data {
 
         // compute cost for each possible way of accepting the request
         for (i, candidate) in candidate_assignments.iter_mut().enumerate() {
-            println!("count: {}", i);
             candidate.compute_cost(
                 seconds_to_minutes(distances_to_start[case_idx_to_start_idx[i]].time as i32),
                 seconds_to_minutes(distances_to_target[case_idx_to_target_idx[i]].time as i32),
@@ -852,7 +858,6 @@ impl PrimaData for Data {
         });
         let mut chosen_tour_id: Option<i32> = None;
         let mut chosen_vehicle_id: Option<i32> = None;
-        println!("#of viable cases: {}", cost_permutation.len());
         for i in cost_permutation.iter() {
             let approach_duration =
                 seconds_to_minutes_duration(distances_to_start[case_idx_to_start_idx[*i]].time);
@@ -860,7 +865,6 @@ impl PrimaData for Data {
                 seconds_to_minutes_duration(distances_to_target[case_idx_to_target_idx[*i]].time);
             match candidate_assignments[*i].case {
                 TourConcatCase::NewTour { company_id } => {
-                    println!("case: NewTour for company: {}", company_id);
                     for (candidate_company_id, vehicles) in candidate_vehicles
                         .iter()
                         .into_group_map_by(|vehicle| vehicle.company)
@@ -868,14 +872,6 @@ impl PrimaData for Data {
                         if company_id != candidate_company_id {
                             continue;
                         }
-                        println!(
-                            "company found, it has {} candidate vehicles",
-                            vehicles.len()
-                        );
-                        println!(
-                            "{}",
-                            &travel_interval.expand(approach_duration, return_duration)
-                        );
                         chosen_vehicle_id = vehicles
                             .iter()
                             .find(|vehicle| {
@@ -888,7 +884,10 @@ impl PrimaData for Data {
                         break;
                     }
                     if chosen_vehicle_id.is_some() {
-                        info!("case: NewTour");
+                        info!(
+                            "Request accepted! Case: NewTour for company: {}",
+                            company_id
+                        );
                         break;
                     }
                 }
@@ -896,7 +895,6 @@ impl PrimaData for Data {
                     vehicle_id,
                     previous_event_time: _,
                 } => {
-                    println!("case: NewTour");
                     if self.may_vehicle_operate_during::<true, false>(
                         &self.vehicles[id_to_vec_pos(vehicle_id)],
                         &travel_interval.expand(approach_duration, return_duration),
@@ -915,7 +913,11 @@ impl PrimaData for Data {
                             .max_by_key(|tour| tour.arrival)
                             .map(|tour| tour.id);
                         chosen_vehicle_id = Some(vehicle_id);
-                        info!("case: Append");
+                        info!(
+                            "Request accepted! Case: Append for vehicle: {} and tour: {}",
+                            vehicle_id,
+                            chosen_tour_id.unwrap()
+                        );
                         break;
                     }
                 }
@@ -923,7 +925,6 @@ impl PrimaData for Data {
                     vehicle_id,
                     next_event_time: _,
                 } => {
-                    println!("case: NewTour");
                     if self.may_vehicle_operate_during::<false, true>(
                         &self.vehicles[id_to_vec_pos(vehicle_id)],
                         &travel_interval.expand(approach_duration, return_duration),
@@ -935,45 +936,41 @@ impl PrimaData for Data {
                             .min_by_key(|tour| tour.departure)
                             .map(|tour| tour.id);
                         chosen_vehicle_id = Some(vehicle_id);
-                        info!("case: Prepend");
+                        info!(
+                            "Request accepted! Case: Prepend for vehicle: {} and tour: {}",
+                            vehicle_id,
+                            chosen_tour_id.unwrap()
+                        );
                         break;
                     }
-                }
-                TourConcatCase::Insert {
-                    vehicle_id,
-                    previous_event_time: _,
-                    next_event_time: _,
-                } => {
-                    if self.may_vehicle_operate_during::<false, false>(
-                        &self.vehicles[id_to_vec_pos(vehicle_id)],
-                        &travel_interval.expand(approach_duration, return_duration),
-                    ) {
-                        chosen_tour_id = self.vehicles[id_to_vec_pos(vehicle_id)]
-                            .tours
-                            .iter()
-                            .filter(|tour| tour.departure > target_time)
-                            .min_by_key(|tour| tour.departure)
-                            .map(|tour| tour.id);
-                        chosen_vehicle_id = Some(vehicle_id);
-                        info!("case: Insert");
-                        break;
-                    }
-                }
+                } /*
+                  TourConcatCase::Insert {
+                      vehicle_id,
+                      previous_event_time: _,
+                      next_event_time: _,
+                  } => {
+                      if self.may_vehicle_operate_during::<false, false>(
+                          &self.vehicles[id_to_vec_pos(vehicle_id)],
+                          &travel_interval.expand(approach_duration, return_duration),
+                      ) {
+                          chosen_tour_id = self.vehicles[id_to_vec_pos(vehicle_id)]
+                              .tours
+                              .iter()
+                              .filter(|tour| tour.departure > target_time)
+                              .min_by_key(|tour| tour.departure)
+                              .map(|tour| tour.id);
+                          chosen_vehicle_id = Some(vehicle_id);
+                          info!("case: Insert");
+                          break;
+                      }
+                  }
+                  */
             };
         }
 
         if chosen_vehicle_id.is_none() {
             return StatusCode::NO_CONTENT;
         }
-        info!(
-            "chosen vehicle: {} of company: {}, chosen tour: {}",
-            chosen_vehicle_id.unwrap(),
-            self.vehicles[id_to_vec_pos(chosen_vehicle_id.unwrap())].company,
-            match chosen_tour_id {
-                None => "none".to_string(),
-                Some(id) => id.to_string(),
-            }
-        );
         return self
             .insert_or_addto_tour(
                 chosen_tour_id,
@@ -1116,7 +1113,11 @@ impl PrimaData for Data {
                     .expect("Error while reading from Database.")
                     .unwrap();
             let vehicle_id = self.get_tour(request_m.tour).await.unwrap().vehicle;
-            self.vehicles[id_to_vec_pos(vehicle_id)].tours[id_to_vec_pos(request_m.tour)]
+            self.vehicles[id_to_vec_pos(vehicle_id)]
+                .tours
+                .iter_mut()
+                .find(|tour| tour.id == request_m.tour)
+                .unwrap()
                 .events
                 .push(EventData {
                     id: event_m.id,
@@ -1509,7 +1510,10 @@ impl PrimaData for Data {
                     error!("{}", e1);
                     return StatusCode::INTERNAL_SERVER_ERROR;
                 }
-                (Ok(approach), Ok(ret)) => (approach, ret),
+                (Ok(approach), Ok(ret)) => (
+                    seconds_to_minutes_duration(approach[0].time),
+                    seconds_to_minutes_duration(ret[0].time),
+                ),
             };
         if !self.may_vehicle_operate_during::<true, true>(
             &self.vehicles[id_to_vec_pos(new_vehicle_id)],
@@ -1872,6 +1876,7 @@ impl Data {
     }
 
     #[cfg(test)]
+    #[allow(dead_code)]
     pub fn print(&self) {
         let indent = "  ";
         println!("printing zones:");
@@ -1887,6 +1892,7 @@ impl Data {
     }
 
     #[cfg(test)]
+    #[allow(dead_code)]
     pub fn print_addresses(
         &self,
         indent: &str,
@@ -1930,6 +1936,7 @@ impl Data {
     }
 
     #[cfg(test)]
+    #[allow(dead_code)]
     fn print_tours(
         &self,
         print_events: bool,
@@ -1953,6 +1960,7 @@ impl Data {
     }
 
     #[cfg(test)]
+    #[allow(dead_code)]
     pub fn print_zones(
         &self,
         indent: &str,
@@ -1963,6 +1971,7 @@ impl Data {
     }
 
     #[cfg(test)]
+    #[allow(dead_code)]
     pub fn print_companies(
         &self,
         indent: &str,
@@ -1973,6 +1982,7 @@ impl Data {
     }
 
     #[cfg(test)]
+    #[allow(dead_code)]
     pub fn print_vehicles(
         &self,
         print_availabilities: bool,
@@ -2235,8 +2245,15 @@ impl Data {
                 return StatusCode::INTERNAL_SERVER_ERROR;
             }
         };
-        println!("===============________________________________________________________________________________id: {}, tour count: {}", id, self.vehicles.iter().flat_map(|v|&v.tours).count());
-        let events = &mut self.vehicles[id_to_vec_pos(vehicle)].tours[id_to_vec_pos(id)].events;
+        let events = &mut match self.vehicles[id_to_vec_pos(vehicle)]
+            .tours
+            .iter_mut()
+            .find(|tour| tour.id == id)
+        {
+            None => return StatusCode::INTERNAL_SERVER_ERROR,
+            Some(t) => t,
+        }
+        .events;
         //pickup-event
         events.push(EventData {
             coordinates: Point::new(lng_start as f64, lat_start as f64),
@@ -2417,6 +2434,11 @@ impl Data {
             .flat_map(|vehicle| vehicle.tours.iter().flat_map(|tour| &tour.events))
             .find(|event| event.id == event_id)
     }
+
+    #[allow(dead_code)]
+    fn tour_count(&self) -> usize {
+        self.vehicles.iter().flat_map(|v| &v.tours).count()
+    }
 }
 
 #[cfg(test)]
@@ -2428,9 +2450,7 @@ mod test {
             lib::PrimaData,
         },
         constants::{geo_points::TestPoints, gorlitz::GORLITZ},
-        dotenv,
-        entities::vehicle,
-        env,
+        dotenv, env,
         init::{init, InitType},
         Database, Migrator,
     };
@@ -3664,7 +3684,7 @@ mod test {
             .await,
             StatusCode::CREATED
         );
-        assert_eq!(d.vehicles.iter().flat_map(|v| &v.tours).count(), 1);
+        assert_eq!(d.tour_count(), 1);
         assert_eq!(
             d.vehicles
                 .iter()
@@ -3689,13 +3709,47 @@ mod test {
             .await,
             StatusCode::CREATED
         );
-        assert_eq!(d.vehicles.iter().flat_map(|v| &v.tours).count(), 1);
+        assert_eq!(d.tour_count(), 1);
         assert_eq!(
             d.vehicles
                 .iter()
                 .flat_map(|v| v.tours.iter().flat_map(|t| &t.events))
                 .count(),
             4
+        );
+
+        assert_eq!(
+            d.handle_routing_request(
+                start_time,
+                true,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                test_points.bautzen_ost[1].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
+                1,
+                1,
+                "start_address",
+                "target_address",
+            )
+            .await,
+            StatusCode::CREATED
+        );
+
+        assert_eq!(
+            d.handle_routing_request(
+                start_time,
+                true,
+                test_points.bautzen_ost[0].y() as f32,
+                test_points.bautzen_ost[0].x() as f32,
+                test_points.bautzen_ost[1].y() as f32,
+                test_points.bautzen_ost[1].x() as f32,
+                1,
+                1,
+                "start_address",
+                "target_address",
+            )
+            .await,
+            StatusCode::CREATED
         );
 
         //repeat first request - no tour-concatenation and out of availability for other vehicles -> request denied
@@ -3715,16 +3769,15 @@ mod test {
             .await,
             StatusCode::NO_CONTENT
         );
-        assert_eq!(d.vehicles.iter().flat_map(|v| &v.tours).count(), 1);
+        assert_eq!(d.tour_count(), 3);
         assert_eq!(
             d.vehicles
                 .iter()
                 .flat_map(|v| v.tours.iter().flat_map(|t| &t.events))
                 .count(),
-            4
+            8
         );
 
-        //repeat first request postponed by 10 minutes- no tour-concatenation -> NewTour for company 1
         assert_eq!(
             d.handle_routing_request(
                 start_time + Duration::minutes(10),
@@ -3741,13 +3794,13 @@ mod test {
             .await,
             StatusCode::CREATED
         );
-        assert_eq!(d.vehicles.iter().flat_map(|v| &v.tours).count(), 2);
+        assert_eq!(d.tour_count(), 3);
         assert_eq!(
             d.vehicles
                 .iter()
                 .flat_map(|v| v.tours.iter().flat_map(|t| &t.events))
                 .count(),
-            6
+            10
         );
         check_data_db_synchronized(&d).await;
     }
@@ -3781,7 +3834,7 @@ mod test {
             .await,
             StatusCode::CREATED
         );
-        assert_eq!(d.vehicles.iter().flat_map(|v| &v.tours).count(), 1);
+        assert_eq!(d.tour_count(), 1);
         assert_eq!(
             d.vehicles
                 .iter()
@@ -3806,7 +3859,7 @@ mod test {
             .await,
             StatusCode::CREATED
         );
-        assert_eq!(d.vehicles.iter().flat_map(|v| &v.tours).count(), 1);
+        assert_eq!(d.tour_count(), 1);
         assert_eq!(
             d.vehicles
                 .iter()
@@ -3845,7 +3898,7 @@ mod test {
             .await,
             StatusCode::CREATED
         );
-        assert_eq!(d.vehicles.iter().flat_map(|v| &v.tours).count(), 1);
+        assert_eq!(d.tour_count(), 1);
         assert_eq!(
             d.vehicles
                 .iter()
@@ -3875,12 +3928,11 @@ mod test {
         for v in d.vehicles.iter() {
             if vehicle_with_tours_found {
                 assert!(v.tours.is_empty());
-            } else {
-                if !v.tours.is_empty() {
-                    assert!(v.tours.len() == 1);
-                    assert!(v.tours.iter().flat_map(|t| &t.events).count() == 4);
-                    vehicle_with_tours_found = true;
-                }
+            }
+            if !v.tours.is_empty() {
+                assert!(v.tours.len() == 1);
+                assert!(v.tours.iter().flat_map(|t| &t.events).count() == 4);
+                vehicle_with_tours_found = true;
             }
         }
         // since the second request was prepended to the first one, the earliest event must be part of the 2nd request.

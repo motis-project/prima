@@ -138,7 +138,7 @@ pub async fn init(
 
 async fn init_frontend(
     db_conn: &DbConn,
-    year: i32,
+    _year: i32,
 ) -> Data {
     Data::new(db_conn)
 }
@@ -153,30 +153,12 @@ async fn init_backend_test(
     data.create_zone("Bautzen West", BAUTZEN_WEST).await;
     data.create_zone("Görlitz", GORLITZ).await;
 
-    data.create_company(
-        "Taxi-Unternehmen Bautzen-1",
-        1,
-        "a@b",
-        13.941692218589253,
-        51.2039353265838,
-    )
-    .await;
-    data.create_company(
-        "Taxi-Unternehmen Bautzen-2",
-        1,
-        "b@c",
-        14.03045830811405,
-        51.31332140852808,
-    )
-    .await;
-    data.create_company(
-        "Taxi-Unternehmen Görlitz-1",
-        2,
-        "c@d",
-        14.03145830811405,
-        51.27332140852808,
-    )
-    .await;
+    data.create_company("Taxi-Unternehmen Bautzen-1", 1, "a@b", 13.941692, 51.203935)
+        .await;
+    data.create_company("Taxi-Unternehmen Bautzen-2", 1, "b@c", 14.030458, 51.31332)
+        .await;
+    data.create_company("Taxi-Unternehmen Görlitz-1", 2, "c@d", 14.031458, 51.27332)
+        .await;
 
     data.create_user(
         "TestDriver1",
