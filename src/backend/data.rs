@@ -42,13 +42,6 @@ enum TourConcatCase {
         vehicle_id: i32,
         previous_event_time: NaiveDateTime,
     },
-    /*
-    Insert {
-        vehicle_id: i32,
-        previous_event_time: NaiveDateTime,
-        next_event_time: NaiveDateTime,
-    },
-     */
 }
 
 struct PossibleAssignment {
@@ -82,18 +75,6 @@ impl PossibleAssignment {
                 vehicle_id: _,
                 next_event_time,
             } => (next_event_time - *start_time).num_minutes() as i32 - approach_duration,
-            /*
-            TourConcatCase::Insert {
-                vehicle_id: _,
-                previous_event_time,
-                next_event_time,
-            } => {
-                ((next_event_time - *start_time) + (previous_event_time - *target_time))
-                    .num_minutes() as i32
-                    - return_duration
-                    - return_duration
-            }
-             */
         };
         self.cost = MINUTE_PRICE * driving_minutes + MINUTE_WAITING_PRICE * waiting_minutes;
     }
@@ -678,6 +659,8 @@ impl PrimaData for Data {
         // For each case check wether it can be ruled out based on beeline-travel-durations, otherwise create it.
         // Also collect all the necessary coordinates for the osrm-requests (in start_many and target_many)
         // and link each case to the respective coordinates (in case_idx_to_start_many_idx and case_idx_to_target_many_idx)
+
+        //Insert case is being ignored for now.
         for (company_id, vehicles) in candidate_vehicles
             .iter()
             .into_group_map_by(|vehicle| vehicle.company)
@@ -709,8 +692,6 @@ impl PrimaData for Data {
                 was_company_inserted_into_start_many = true;
             }
             for vehicle in vehicles.iter() {
-                //let mut was_event_inserted_into_start_many = false;
-                //let mut was_event_inserted_into_target_many = false;
                 let predecessor_event_opt = vehicle
                     .tours
                     .iter()
@@ -742,7 +723,6 @@ impl PrimaData for Data {
                             case_idx_to_start_idx.push(start_idx);
                             start_many.push(Coord::from(pred_event.coordinates));
                             start_idx += 1;
-                            //was_event_inserted_into_start_many = true;
                             if !was_company_inserted_into_target_many {
                                 target_company_idx = target_idx;
                                 target_idx += 1;
@@ -779,44 +759,7 @@ impl PrimaData for Data {
                                 was_company_inserted_into_start_many = true;
                             }
                             case_idx_to_start_idx.push(start_company_idx);
-                            //was_event_inserted_into_target_many = true;
                         }
-                    }
-                }
-                match (predecessor_event_opt, successor_event_opt) {
-                    (None, None) => (),
-                    (None, Some(_)) => (),
-                    (Some(_), None) => (),
-                    (Some(_pred_event), Some(_succ_event)) => {
-                        /*
-                            insert case is not part of mvp
-
-                        if self.may_vehicle_operate_during::<true, true>(
-                            vehicle,
-                            &travel_interval.expand(
-                                beeline_duration(&pred_event.coordinates, &start),
-                                beeline_duration(&succ_event.coordinates, &target),
-                            ),
-                        ) {
-                            candidate_assignments.push(PossibleAssignment::new(
-                                TourConcatCase::Insert {
-                                    vehicle_id: vehicle.id,
-                                    previous_event_time: pred_event.scheduled_time,
-                                    next_event_time: succ_event.scheduled_time,
-                                },
-                            ));
-                            case_idx_to_target_idx.push(target_idx);
-                            case_idx_to_start_idx.push(start_idx);
-                            if !was_event_inserted_into_start_many {
-                                start_idx += 1;
-                                start_many.push(Coord::from(pred_event.coordinates));
-                            }
-                            if !was_event_inserted_into_target_many {
-                                target_idx += 1;
-                                target_many.push(Coord::from(succ_event.coordinates));
-                            }
-                        }
-                        */
                     }
                 }
             }
@@ -943,28 +886,7 @@ impl PrimaData for Data {
                         );
                         break;
                     }
-                } /*
-                  TourConcatCase::Insert {
-                      vehicle_id,
-                      previous_event_time: _,
-                      next_event_time: _,
-                  } => {
-                      if self.may_vehicle_operate_during::<false, false>(
-                          &self.vehicles[id_to_vec_pos(vehicle_id)],
-                          &travel_interval.expand(approach_duration, return_duration),
-                      ) {
-                          chosen_tour_id = self.vehicles[id_to_vec_pos(vehicle_id)]
-                              .tours
-                              .iter()
-                              .filter(|tour| tour.departure > target_time)
-                              .min_by_key(|tour| tour.departure)
-                              .map(|tour| tour.id);
-                          chosen_vehicle_id = Some(vehicle_id);
-                          info!("case: Insert");
-                          break;
-                      }
-                  }
-                  */
+                }
             };
         }
 
