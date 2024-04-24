@@ -3837,4 +3837,36 @@ mod test {
         let c2 = d.get_company_for_user(&d.users[&UserIdT::new(2)]).await;
         assert!(c2.is_none());
     }
+
+    #[tokio::test]
+    #[serial]
+    async fn get_company_for_vehicle_test() {
+        let db_conn = test_main().await;
+        let d = init(&db_conn, true, 5000, InitType::BackendTest).await;
+
+        let c1 = d.get_company_for_vehicle(&d.vehicles[0]).await;
+        assert!(c1.is_ok());
+        let c1 = *c1.unwrap();
+        assert_eq!(c1.get_name().await, "Taxi-Unternehmen Bautzen-1");
+
+        let c2 = d.get_company_for_vehicle(&d.vehicles[1]).await;
+        assert!(c2.is_ok());
+        let c2 = *c2.unwrap();
+        assert_eq!(c2.get_name().await, "Taxi-Unternehmen Bautzen-1");
+
+        let c3 = d.get_company_for_vehicle(&d.vehicles[2]).await;
+        assert!(c3.is_ok());
+        let c3 = *c3.unwrap();
+        assert_eq!(c3.get_name().await, "Taxi-Unternehmen Bautzen-2");
+
+        let c4 = d.get_company_for_vehicle(&d.vehicles[3]).await;
+        assert!(c4.is_ok());
+        let c4 = *c4.unwrap();
+        assert_eq!(c4.get_name().await, "Taxi-Unternehmen Bautzen-2");
+
+        let c5 = d.get_company_for_vehicle(&d.vehicles[4]).await;
+        assert!(c5.is_ok());
+        let c5 = *c5.unwrap();
+        assert_eq!(c5.get_name().await, "Taxi-Unternehmen Görlitz-1");
+    }
 }

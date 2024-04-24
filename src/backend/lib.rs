@@ -235,4 +235,11 @@ pub trait PrimaData: Send + Sync {
             Some(company_id) => Some(self.get_company(company_id).await),
         }
     }
+
+    async fn get_company_for_vehicle(
+        &self,
+        vehicle: &dyn PrimaVehicle,
+    ) -> Result<Box<&dyn PrimaCompany>, StatusCode> {
+        self.get_company(vehicle.get_company_id().await).await
+    }
 }
