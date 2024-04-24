@@ -3785,4 +3785,39 @@ mod test {
             StatusCode::NOT_ACCEPTABLE
         );
     }
+
+    #[tokio::test]
+    #[serial]
+    async fn get_vehicles_test() {
+        let db_conn = test_main().await;
+        let d = init(&db_conn, true, 5000, InitType::BackendTest).await;
+
+        let c1_license_plates = vec!["TUB1-1", "TUB1-2"];
+        let c2_license_plates = vec!["TUB2-1", "TUB2-2"];
+        let c3_license_plates = vec!["TUG1-1"];
+
+        let c1_res = d.get_vehicles(CompanyIdT::new(1)).await;
+        assert!(c1_res.is_ok());
+        let c1 = c1_res.unwrap();
+        assert_eq!(c1.len(), 2);
+        assert!(c1_license_plates.contains(&(*c1[0]).get_license_plate().await));
+        assert!(c1_license_plates.contains(&(*c1[1]).get_license_plate().await));
+
+        let c2_res = d.get_vehicles(CompanyIdT::new(2)).await;
+        assert!(c2_res.is_ok());
+        let c2 = c2_res.unwrap();
+        assert_eq!(c2.len(), 2);
+        assert!(c2_license_plates.contains(&(*c2[0]).get_license_plate().await));
+        assert!(c2_license_plates.contains(&(*c2[1]).get_license_plate().await));
+
+        let c3_res = d.get_vehicles(CompanyIdT::new(3)).await;
+        assert!(c3_res.is_ok());
+        let c3 = c3_res.unwrap();
+        assert_eq!(c3.len(), 1);
+        assert!(c3_license_plates.contains(&(*c3[0]).get_license_plate().await));
+
+        let c4_res = d.get_vehicles(CompanyIdT::new(4)).await;
+        assert!(c4_res.is_err());
+        assert_eq!(c4_res.err(), Some(StatusCode::NOT_FOUND));
+    }
 }
