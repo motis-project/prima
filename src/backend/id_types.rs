@@ -14,37 +14,37 @@ pub trait IndexedIdT: IdT {
     ) -> bool;
 }
 
-#[derive(PartialEq, Eq, Clone, Hash, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash, Copy)]
 pub struct VehicleIdT {
     id: i32,
 }
 
-#[derive(PartialEq, Eq, Clone, Debug, Hash, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash, Copy)]
 pub struct CompanyIdT {
     id: i32,
 }
 
-#[derive(PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ZoneIdT {
     id: i32,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct TourIdT {
     id: i32,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Hash)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct UserIdT {
     id: i32,
 }
 
-#[derive(PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct EventIdT {
     id: i32,
 }
 
-#[derive(PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AddressIdT {
     id: i32,
 }

@@ -2948,6 +2948,36 @@ mod test {
 
     #[tokio::test]
     #[serial]
+    async fn get_events_for_tour_test() {
+        let db_conn = test_main().await;
+        let d = init(&db_conn, true, 5000, InitType::BackendTestWithEvents).await;
+
+        // Init creates 3 tours with ids 1,2,3. Each has 2 events.
+        let t1_result = d.get_events_for_tour(TourIdT::new(1)).await;
+        assert!(t1_result.is_ok());
+        assert!(t1_result.clone().unwrap().len() == 2);
+        let first_event = *(t1_result.unwrap()[0]);
+        assert_eq!(first_event.get_customer_id().await, UserIdT::new(1));
+
+        let t2_result = d.get_events_for_tour(TourIdT::new(2)).await;
+        assert!(t2_result.is_ok());
+        assert!(t2_result.clone().unwrap().len() == 2);
+        let first_event = *(t2_result.unwrap()[0]);
+        assert_eq!(first_event.get_customer_id().await, UserIdT::new(2));
+
+        let t3_result = d.get_events_for_tour(TourIdT::new(3)).await;
+        assert!(t3_result.is_ok());
+        assert!(t3_result.clone().unwrap().len() == 2);
+        let first_event = *(t3_result.unwrap()[0]);
+        assert_eq!(first_event.get_customer_id().await, UserIdT::new(1));
+
+        let t4_result = d.get_events_for_tour(TourIdT::new(4)).await;
+        assert!(t4_result.is_err());
+        assert_eq!(t4_result.err(), Some(StatusCode::NOT_FOUND));
+    }
+
+    #[tokio::test]
+    #[serial]
     async fn availability_statuscode_test() {
         let db_conn = test_main().await;
         let mut d = init(&db_conn, true, 5000, InitType::BackendTest).await;
