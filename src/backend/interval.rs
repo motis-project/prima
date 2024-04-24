@@ -93,7 +93,7 @@ impl Interval {
             Interval::new(splitter.end_time, self.end_time),
         )
     }
-    
+
     pub fn cut(
         &self,
         cutter: &Interval,
@@ -105,12 +105,23 @@ impl Interval {
             Interval::new(cutter.end_time, self.end_time)
         }
     }
+
+    pub fn expand(
+        &self,
+        prepone_start_by: Duration,
+        postpone_end_by: Duration,
+    ) -> Interval {
+        Interval::new(
+            self.start_time - prepone_start_by,
+            self.end_time + postpone_end_by,
+        )
+    }
 }
 
 #[cfg(test)]
 mod test {
     use crate::backend::interval::Interval;
-    use chrono::{NaiveDate, Timelike};
+    use chrono::{Datelike, Duration, NaiveDate, Timelike};
     #[test]
     fn test() {
         //interval is the reference interval. The other intervals are named according to their realtion to interval.
@@ -431,5 +442,53 @@ mod test {
                 .unwrap(),
         );
         i1.split(&i2);
+    }
+
+    #[test]
+    fn test_expand() {
+        let i1 = Interval::new(
+            //9:15 - 9:45
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 15, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 45, 0)
+                .unwrap(),
+        );
+
+        let expanded_interval = i1.expand(Duration::minutes(13), Duration::minutes(7));
+        assert_eq!(expanded_interval.start_time.hour(), 9);
+        assert_eq!(expanded_interval.start_time.minute(), 02);
+        assert_eq!(expanded_interval.start_time.second(), 0);
+        assert_eq!(expanded_interval.end_time.hour(), 9);
+        assert_eq!(expanded_interval.end_time.minute(), 52);
+        assert_eq!(expanded_interval.end_time.second(), 0);
+    }
+
+    #[test]
+    fn test_expand_to_new_day() {
+        let i1 = Interval::new(
+            //9:15 - 9:45
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 15, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 15)
+                .unwrap()
+                .and_hms_opt(9, 45, 0)
+                .unwrap(),
+        );
+        assert_eq!(i1.end_time.day(), 15);
+
+        let expanded_interval = i1.expand(Duration::minutes(0), Duration::hours(15));
+        assert_eq!(expanded_interval.start_time.hour(), 9);
+        assert_eq!(expanded_interval.start_time.minute(), 15);
+        assert_eq!(expanded_interval.start_time.second(), 0);
+        assert_eq!(expanded_interval.end_time.day(), 16);
+        assert_eq!(expanded_interval.end_time.hour(), 0);
+        assert_eq!(expanded_interval.end_time.minute(), 45);
+        assert_eq!(expanded_interval.end_time.second(), 0);
     }
 }
