@@ -2,11 +2,12 @@
 
 pub mod prelude;
 
-pub mod assignment;
+pub mod address;
 pub mod availability;
 pub mod company;
 pub mod event;
+pub mod request;
+pub mod tour;
 pub mod user;
 pub mod vehicle;
-pub mod vehicle_specifics;
 pub mod zone;

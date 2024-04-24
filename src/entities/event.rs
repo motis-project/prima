@@ -7,64 +7,46 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
+    pub is_pickup: bool,
     #[sea_orm(column_type = "Float")]
     pub latitude: f32,
     #[sea_orm(column_type = "Float")]
     pub longitude: f32,
     pub scheduled_time: DateTime,
     pub communicated_time: DateTime,
-    pub customer: i32,
-    pub chain_id: i32,
-    pub request_id: i32,
-    pub is_pickup: bool,
-    pub connects_public_transport: bool,
-    pub address: String,
-    pub required_vehicle_specifics: i32,
+    pub address: i32,
+    pub request: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "super::assignment::Entity",
-        from = "Column::ChainId",
-        to = "super::assignment::Column::Id",
+        belongs_to = "super::address::Entity",
+        from = "Column::Address",
+        to = "super::address::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    Assignment,
+    Address,
     #[sea_orm(
-        belongs_to = "super::user::Entity",
-        from = "Column::Customer",
-        to = "super::user::Column::Id",
+        belongs_to = "super::request::Entity",
+        from = "Column::Request",
+        to = "super::request::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    User,
-    #[sea_orm(
-        belongs_to = "super::vehicle_specifics::Entity",
-        from = "Column::RequiredVehicleSpecifics",
-        to = "super::vehicle_specifics::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
-    VehicleSpecifics,
+    Request,
 }
 
-impl Related<super::assignment::Entity> for Entity {
+impl Related<super::address::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Assignment.def()
+        Relation::Address.def()
     }
 }
 
-impl Related<super::user::Entity> for Entity {
+impl Related<super::request::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::User.def()
-    }
-}
-
-impl Related<super::vehicle_specifics::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::VehicleSpecifics.def()
+        Relation::Request.def()
     }
 }
 
