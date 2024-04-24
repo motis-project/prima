@@ -35,7 +35,7 @@ pub trait PrimaEvent {
 }
 
 #[async_trait]
-pub trait PrimaVehicle {
+pub trait PrimaVehicle: Send + Sync {
     async fn get_id(&self) -> &VehicleIdT;
     async fn get_license_plate(&self) -> &str;
     async fn get_company_id(&self) -> &CompanyIdT;
@@ -43,7 +43,7 @@ pub trait PrimaVehicle {
 }
 
 #[async_trait]
-pub trait PrimaUser {
+pub trait PrimaUser: Send + Sync {
     async fn get_id(&self) -> &UserIdT;
     async fn get_name(&self) -> &str;
     async fn is_driver(&self) -> bool;
@@ -120,7 +120,7 @@ pub trait PrimaData: Send + Sync {
 
     async fn get_company(
         &self,
-        company_id: CompanyIdT,
+        company_id: &CompanyIdT,
     ) -> Result<Box<&dyn PrimaCompany>, StatusCode>;
 
     async fn get_user(
@@ -225,4 +225,14 @@ pub trait PrimaData: Send + Sync {
         start_address: &str,
         target_address: &str,
     ) -> StatusCode;
+
+    async fn get_company_for_user(
+        &self,
+        user: &dyn PrimaUser,
+    ) -> Option<Result<Box<&dyn PrimaCompany>, StatusCode>> {
+        match user.get_company_id().await {
+            None => None,
+            Some(company_id) => Some(self.get_company(company_id).await),
+        }
+    }
 }

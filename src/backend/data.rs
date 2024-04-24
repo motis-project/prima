@@ -1496,7 +1496,7 @@ impl PrimaData for Data {
 
     async fn get_company(
         &self,
-        company_id: CompanyIdT,
+        company_id: &CompanyIdT,
     ) -> Result<Box<&dyn PrimaCompany>, StatusCode> {
         if !company_id.is_in_range(1, self.max_company_id()) {
             return Err(StatusCode::NOT_FOUND);
@@ -1504,7 +1504,7 @@ impl PrimaData for Data {
         Ok(Box::new(
             self.companies
                 .iter()
-                .find(|company| company.id == company_id)
+                .find(|company| &company.id == company_id)
                 .unwrap() as &dyn PrimaCompany,
         ))
     }
@@ -3819,5 +3819,22 @@ mod test {
         let c4_res = d.get_vehicles(CompanyIdT::new(4)).await;
         assert!(c4_res.is_err());
         assert_eq!(c4_res.err(), Some(StatusCode::NOT_FOUND));
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn get_company_for_user_test() {
+        let db_conn = test_main().await;
+        let d = init(&db_conn, true, 5000, InitType::BackendTest).await;
+
+        let c1 = d.get_company_for_user(&d.users[&UserIdT::new(1)]).await;
+        assert!(c1.is_some());
+        let c1 = c1.unwrap();
+        assert!(c1.is_ok());
+        let c1 = *c1.unwrap();
+        assert_eq!(c1.get_name().await, "Taxi-Unternehmen Bautzen-1");
+
+        let c2 = d.get_company_for_user(&d.users[&UserIdT::new(2)]).await;
+        assert!(c2.is_none());
     }
 }
