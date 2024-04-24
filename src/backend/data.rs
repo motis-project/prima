@@ -1,6 +1,10 @@
 use super::geo_from_str::multi_polygon_from_str;
 use crate::{
     backend::{
+        id_types::{
+            AddressIdT, CompanyIdT, EventIdT, IdT, IndexedIdT, TourIdT, UserIdT, VehicleIdT,
+            ZoneIdT,
+        },
         interval::Interval,
         lib::{PrimaCompany, PrimaData, PrimaEvent, PrimaTour, PrimaUser, PrimaVehicle},
     },
@@ -22,7 +26,7 @@ use crate::{
 use ::anyhow::Result;
 use async_trait::async_trait;
 use chrono::{Duration, NaiveDate, NaiveDateTime, Utc};
-use geo::{prelude::*, Coord, MultiPolygon, Point};
+use geo::{prelude::*, Coord, MultiPolygon, Point}; // x <-> latitude,  y <-> longitude
 use itertools::Itertools;
 use sea_orm::DbConn;
 use sea_orm::{ActiveModelTrait, ActiveValue, EntityTrait};
@@ -32,14 +36,14 @@ use tracing::info;
 #[derive(PartialEq, Eq, Hash)]
 enum TourConcatCase {
     NewTour {
-        company_id: i32,
+        company_id: CompanyIdT,
     },
     Prepend {
-        vehicle_id: i32,
+        vehicle_id: VehicleIdT,
         next_event_time: NaiveDateTime,
     },
     Append {
-        vehicle_id: i32,
+        vehicle_id: VehicleIdT,
         previous_event_time: NaiveDateTime,
     },
 }
@@ -84,7 +88,7 @@ fn is_user_role_valid(
     is_driver: bool,
     is_disponent: bool,
     is_admin: bool,
-    company_id: Option<i32>,
+    company_id: Option<CompanyIdT>,
 ) -> bool {
     match company_id {
         None => {
@@ -102,11 +106,6 @@ fn is_user_role_valid(
         return false;
     }
     true
-}
-
-fn id_to_vec_pos(id: i32) -> usize {
-    assert!(id >= 1);
-    (id - 1) as usize
 }
 
 fn seconds_to_minutes(seconds: i32) -> i32 {
@@ -147,13 +146,13 @@ fn is_valid(interval: &Interval) -> bool {
                 .unwrap()
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 #[readonly::make]
 pub struct TourData {
-    id: i32,
+    id: TourIdT,
     departure: NaiveDateTime, //departure from taxi central
     arrival: NaiveDateTime,   //arrival at taxi central
-    vehicle: i32,
+    vehicle: VehicleIdT,
     events: Vec<EventData>,
 }
 
@@ -169,13 +168,18 @@ impl PrimaTour for TourData {
 
 impl TourData {
     #[cfg(test)]
+    #[allow(dead_code)]
     fn print(
         &self,
         indent: &str,
     ) {
         println!(
             "{}id: {}, departure: {}, arrival: {}, vehicle: {}",
-            indent, self.id, self.departure, self.arrival, self.vehicle
+            indent,
+            self.id.id(),
+            self.departure,
+            self.arrival,
+            self.vehicle.id()
         );
     }
 
@@ -196,6 +200,8 @@ pub struct AvailabilityData {
 
 #[cfg(test)]
 impl AvailabilityData {
+    #[cfg(test)]
+    #[allow(dead_code)]
     fn print(
         &self,
         indent: &str,
@@ -207,11 +213,11 @@ impl AvailabilityData {
 #[derive(PartialEq, Clone)]
 #[readonly::make]
 pub struct UserData {
-    id: i32,
+    id: UserIdT,
     name: String,
     is_driver: bool,
     is_disponent: bool,
-    company_id: Option<i32>,
+    company_id: Option<CompanyIdT>,
     is_admin: bool,
     email: String,
     password: Option<String>,
@@ -222,8 +228,8 @@ pub struct UserData {
 
 #[async_trait]
 impl PrimaUser for UserData {
-    async fn get_id(&self) -> i32 {
-        self.id
+    async fn get_id(&self) -> &UserIdT {
+        &self.id
     }
 
     async fn get_name(&self) -> &str {
@@ -242,17 +248,17 @@ impl PrimaUser for UserData {
         self.is_admin
     }
 
-    async fn get_company_id(&self) -> Option<i32> {
-        self.company_id
+    async fn get_company_id(&self) -> &Option<CompanyIdT> {
+        &self.company_id
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 #[readonly::make]
 pub struct VehicleData {
-    id: i32,
+    id: VehicleIdT,
     license_plate: String,
-    company: i32,
+    company: CompanyIdT,
     seats: i32,
     wheelchair_capacity: i32,
     storage_space: i32,
@@ -267,20 +273,30 @@ impl VehicleData {
     ) -> bool {
         passengers < 4 //TODO when mvp-restrictions are lifted
     }
+
+    async fn get_tour(
+        &mut self,
+        tour_id: &TourIdT,
+    ) -> Result<&mut TourData, StatusCode> {
+        match self.tours.iter_mut().find(|tour| tour.id == *tour_id) {
+            Some(t) => Ok(t),
+            None => Err(StatusCode::NOT_FOUND),
+        }
+    }
 }
 
 #[async_trait]
 impl PrimaVehicle for VehicleData {
-    async fn get_id(&self) -> i32 {
-        self.id
+    async fn get_id(&self) -> &VehicleIdT {
+        &self.id
     }
 
     async fn get_license_plate(&self) -> &str {
         &self.license_plate
     }
 
-    async fn get_company_id(&self) -> i32 {
-        self.company
+    async fn get_company_id(&self) -> &CompanyIdT {
+        &self.company
     }
 
     async fn get_tours(&self) -> Vec<Box<&dyn PrimaTour>> {
@@ -299,14 +315,14 @@ impl VehicleData {
     ) {
         println!(
             "{}id: {}, license: {}, company: {}, seats: {}, wheelchair_capacity: {}, storage_space: {}",indent,
-            self.id, self.license_plate, self.company, self.seats, self.wheelchair_capacity, self.storage_space
+            self.id.id(), self.license_plate, self.company.id(), self.seats, self.wheelchair_capacity, self.storage_space
         );
     }
     fn new() -> Self {
         Self {
-            id: -1,
+            id: VehicleIdT::new(-1),
             license_plate: "".to_string(),
-            company: -1,
+            company: CompanyIdT::new(-1),
             seats: -1,
             wheelchair_capacity: -1,
             storage_space: -1,
@@ -360,7 +376,7 @@ impl VehicleData {
                 id: ActiveValue::NotSet,
                 start_time: ActiveValue::Set(new_interval.start_time),
                 end_time: ActiveValue::Set(new_interval.end_time),
-                vehicle: ActiveValue::Set(self.id),
+                vehicle: ActiveValue::Set(self.id.id()),
             })
             .exec(db_conn)
             .await
@@ -388,30 +404,30 @@ impl VehicleData {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 #[readonly::make]
 pub struct EventData {
-    id: i32,
+    id: EventIdT,
     coordinates: Point,
     scheduled_time: NaiveDateTime,
     communicated_time: NaiveDateTime,
-    customer: i32,
-    tour: i32,
+    customer: UserIdT,
+    tour: TourIdT,
     passengers: i32,
     wheelchairs: i32,
     luggage: i32,
     request_id: i32,
     is_pickup: bool,
-    address_id: i32,
+    address_id: AddressIdT,
 }
 
 #[async_trait]
 impl PrimaEvent for EventData {
-    async fn get_id(&self) -> i32 {
-        self.id
+    async fn get_id(&self) -> &EventIdT {
+        &self.id
     }
 
-    async fn get_customer_id(&self) -> i32 {
+    async fn get_customer_id(&self) -> UserIdT {
         self.customer
     }
 
@@ -423,20 +439,21 @@ impl PrimaEvent for EventData {
         self.coordinates.0.y as f32
     }
 
-    async fn get_address_id(&self) -> i32 {
-        self.address_id
+    async fn get_address_id(&self) -> &AddressIdT {
+        &self.address_id
     }
 }
 
 impl EventData {
     #[cfg(test)]
+    #[allow(dead_code)]
     fn print(
         &self,
         indent: &str,
     ) {
         println!(
             "{}id: {}, scheduled_time: {}, communicated_time: {}, customer: {}, tour: {}, request_id: {}, passengers: {}, wheelchairs: {}, luggage: {}, is_pickup: {}, address_id: {}, lat: {}, lng: {}",
-            indent, self.id, self.scheduled_time, self.communicated_time, self.customer, self.tour, self.request_id, self.passengers, self.wheelchairs, self.luggage, self.is_pickup, self.address_id, self.coordinates.y(), self.coordinates.x()
+            indent, self.id.id(), self.scheduled_time, self.communicated_time, self.customer.id(), self.tour.id(), self.request_id, self.passengers, self.wheelchairs, self.luggage, self.is_pickup, self.address_id.id(), self.coordinates.y(), self.coordinates.x()
         );
     }
 
@@ -451,17 +468,17 @@ impl EventData {
 #[derive(PartialEq, Clone)]
 #[readonly::make]
 pub struct CompanyData {
-    id: i32,
+    id: CompanyIdT,
     central_coordinates: Point,
-    zone: i32,
+    zone: ZoneIdT,
     name: String,
     email: String,
 }
 
 #[async_trait]
 impl PrimaCompany for CompanyData {
-    async fn get_id(&self) -> i32 {
-        self.id
+    async fn get_id(&self) -> &CompanyIdT {
+        &self.id
     }
 
     async fn get_name(&self) -> &str {
@@ -472,15 +489,16 @@ impl PrimaCompany for CompanyData {
 impl CompanyData {
     fn new() -> Self {
         Self {
-            id: -1,
+            id: CompanyIdT::new(-1),
             central_coordinates: Point::new(0.0, 0.0),
-            zone: -1,
+            zone: ZoneIdT::new(-1),
             name: "".to_string(),
             email: "".to_string(),
         }
     }
 
     #[cfg(test)]
+    #[allow(dead_code)]
     fn print(
         &self,
         indent: &str,
@@ -488,10 +506,10 @@ impl CompanyData {
         println!(
             "{}id: {}, lat: {}, lng: {}, zone_id: {}, name: {}, email: {}",
             indent,
-            self.id,
+            self.id.id(),
             self.central_coordinates.y(),
             self.central_coordinates.x(),
-            self.zone,
+            self.zone.id(),
             self.name,
             self.email
         );
@@ -506,6 +524,7 @@ pub struct AddressData {
 
 impl AddressData {
     #[cfg(test)]
+    #[allow(dead_code)]
     fn print(
         &self,
         indent: &str,
@@ -519,23 +538,24 @@ impl AddressData {
 pub struct ZoneData {
     area: MultiPolygon,
     name: String,
-    id: i32,
+    id: ZoneIdT,
 }
 
 impl ZoneData {
     #[cfg(test)]
+    #[allow(dead_code)]
     fn print(
         &self,
         indent: &str,
     ) {
-        println!("{}id: {}, name: {}", indent, self.id, self.name);
+        println!("{}id: {}, name: {}", indent, self.id.id(), self.name);
     }
 }
 
 #[derive(Clone)]
 #[readonly::make]
 pub struct Data {
-    users: HashMap<i32, UserData>,
+    users: HashMap<UserIdT, UserData>,
     zones: Vec<ZoneData>,        //indexed by (id-1)
     companies: Vec<CompanyData>, //indexed by (id-1)
     vehicles: Vec<VehicleData>,  //indexed by (id-1)
@@ -566,7 +586,7 @@ impl PrimaData for Data {
         start_lng: f32,
         target_lat: f32,
         target_lng: f32,
-        customer: i32,
+        customer: UserIdT,
         passengers: i32,
         start_address: &str,
         target_address: &str,
@@ -576,12 +596,7 @@ impl PrimaData for Data {
         //- add buffer based on travel time or duration
         //- compute costs based on distance instead of travel time, when osm provides the distances
         //- manage communicated times and use them to allow more concatenations
-        if customer
-            > match self.users.keys().max() {
-                None => 0,
-                Some(id) => *id,
-            }
-        {
+        if !self.users.contains_key(&customer) {
             return StatusCode::NOT_FOUND;
         }
         if passengers < 1 {
@@ -667,8 +682,7 @@ impl PrimaData for Data {
         {
             let mut was_company_inserted_into_start_many = false;
             let mut was_company_inserted_into_target_many = false;
-            let company_coordinates =
-                &self.companies[id_to_vec_pos(company_id)].central_coordinates;
+            let company_coordinates = &self.companies[company_id.as_idx()].central_coordinates;
             let approach_duration = beeline_duration(company_coordinates, &start);
             let return_duration = beeline_duration(company_coordinates, &target);
             if vehicles.iter().any(|vehicle| {
@@ -799,8 +813,8 @@ impl PrimaData for Data {
                 .cost
                 .cmp(&candidate_assignments[*j].cost)
         });
-        let mut chosen_tour_id: Option<i32> = None;
-        let mut chosen_vehicle_id: Option<i32> = None;
+        let mut chosen_tour_id: Option<TourIdT> = None;
+        let mut chosen_vehicle_id: Option<VehicleIdT> = None;
         for i in cost_permutation.iter() {
             let approach_duration =
                 seconds_to_minutes_duration(distances_to_start[case_idx_to_start_idx[*i]].time);
@@ -829,7 +843,7 @@ impl PrimaData for Data {
                     if chosen_vehicle_id.is_some() {
                         info!(
                             "Request accepted! Case: NewTour for company: {}",
-                            company_id
+                            company_id.id()
                         );
                         break;
                     }
@@ -839,10 +853,10 @@ impl PrimaData for Data {
                     previous_event_time: _,
                 } => {
                     if self.may_vehicle_operate_during::<true, false>(
-                        &self.vehicles[id_to_vec_pos(vehicle_id)],
+                        &self.vehicles[vehicle_id.as_idx()],
                         &travel_interval.expand(approach_duration, return_duration),
                     ) {
-                        chosen_tour_id = self.vehicles[id_to_vec_pos(vehicle_id)]
+                        chosen_tour_id = self.vehicles[vehicle_id.as_idx()]
                             .tours
                             .iter()
                             .filter(|tour| {
@@ -858,8 +872,8 @@ impl PrimaData for Data {
                         chosen_vehicle_id = Some(vehicle_id);
                         info!(
                             "Request accepted! Case: Append for vehicle: {} and tour: {}",
-                            vehicle_id,
-                            chosen_tour_id.unwrap()
+                            vehicle_id.id(),
+                            chosen_tour_id.unwrap().id()
                         );
                         break;
                     }
@@ -869,10 +883,10 @@ impl PrimaData for Data {
                     next_event_time: _,
                 } => {
                     if self.may_vehicle_operate_during::<false, true>(
-                        &self.vehicles[id_to_vec_pos(vehicle_id)],
+                        &self.vehicles[vehicle_id.as_idx()],
                         &travel_interval.expand(approach_duration, return_duration),
                     ) {
-                        chosen_tour_id = self.vehicles[id_to_vec_pos(vehicle_id)]
+                        chosen_tour_id = self.vehicles[vehicle_id.as_idx()]
                             .tours
                             .iter()
                             .filter(|tour| tour.departure > target_time)
@@ -881,8 +895,8 @@ impl PrimaData for Data {
                         chosen_vehicle_id = Some(vehicle_id);
                         info!(
                             "Request accepted! Case: Prepend for vehicle: {} and tour: {}",
-                            vehicle_id,
-                            chosen_tour_id.unwrap()
+                            vehicle_id.id(),
+                            chosen_tour_id.unwrap().id()
                         );
                         break;
                     }
@@ -919,9 +933,9 @@ impl PrimaData for Data {
 
     async fn get_address(
         &self,
-        address_id: i32,
+        address_id: AddressIdT,
     ) -> &str {
-        &self.addresses[id_to_vec_pos(address_id)].address
+        &self.addresses[address_id.as_idx()].address
     }
 
     async fn read_data_from_db(&mut self) {
@@ -948,7 +962,7 @@ impl PrimaData for Data {
                 Ok(mp) => self.zones.push(ZoneData {
                     area: mp,
                     name: zone.name.to_string(),
-                    id: zone.id,
+                    id: ZoneIdT::new(zone.id),
                 }),
             }
         }
@@ -960,14 +974,15 @@ impl PrimaData for Data {
         self.companies
             .resize(company_models.len(), CompanyData::new());
         for company_model in company_models {
-            self.companies[id_to_vec_pos(company_model.id)] = CompanyData {
+            let company_id = CompanyIdT::new(company_model.id);
+            self.companies[company_id.as_idx()] = CompanyData {
                 name: company_model.display_name,
-                zone: company_model.zone,
+                zone: ZoneIdT::new(company_model.zone),
                 central_coordinates: Point::new(
                     company_model.latitude as f64,
                     company_model.longitude as f64,
                 ),
-                id: company_model.id,
+                id: company_id,
                 email: company_model.email,
             };
         }
@@ -981,10 +996,11 @@ impl PrimaData for Data {
             .resize(vehicle_models.len(), VehicleData::new());
         vehicle_models.sort_by_key(|v| v.id);
         for vehicle in vehicle_models.iter() {
-            self.vehicles[id_to_vec_pos(vehicle.id)] = VehicleData {
-                id: vehicle.id,
+            let vehicle_id = VehicleIdT::new(vehicle.id);
+            self.vehicles[vehicle_id.as_idx()] = VehicleData {
+                id: vehicle_id,
                 license_plate: vehicle.license_plate.to_string(),
-                company: vehicle.company,
+                company: CompanyIdT::new(vehicle.company),
                 seats: vehicle.seats,
                 wheelchair_capacity: vehicle.wheelchair_capacity,
                 storage_space: vehicle.storage_space,
@@ -999,7 +1015,7 @@ impl PrimaData for Data {
                 .await
                 .expect("Error while reading from Database.");
         for availability in availability_models.iter() {
-            self.vehicles[id_to_vec_pos(availability.vehicle)]
+            self.vehicles[VehicleIdT::new(availability.vehicle).as_idx()]
                 .add_availability(
                     &self.db_connection,
                     &mut Interval::new(availability.start_time, availability.end_time),
@@ -1013,15 +1029,14 @@ impl PrimaData for Data {
             .await
             .expect("Error while reading from Database.");
         for tour in tour_models {
-            self.vehicles[id_to_vec_pos(tour.vehicle)]
-                .tours
-                .push(TourData {
-                    arrival: tour.arrival,
-                    departure: tour.departure,
-                    id: tour.id,
-                    vehicle: tour.vehicle,
-                    events: Vec::new(),
-                });
+            let vehicle_id = VehicleIdT::new(tour.vehicle);
+            self.vehicles[vehicle_id.as_idx()].tours.push(TourData {
+                arrival: tour.arrival,
+                departure: tour.departure,
+                id: TourIdT::new(tour.id),
+                vehicle: vehicle_id,
+                events: Vec::new(),
+            });
         }
         let event_models: Vec<<event::Entity as sea_orm::EntityTrait>::Model> = Event::find()
             .all(&self.db_connection)
@@ -1034,26 +1049,26 @@ impl PrimaData for Data {
                     .await
                     .expect("Error while reading from Database.")
                     .unwrap();
-            let vehicle_id = self.get_tour(request_m.tour).await.unwrap().vehicle;
-            self.vehicles[id_to_vec_pos(vehicle_id)]
-                .tours
-                .iter_mut()
-                .find(|tour| tour.id == request_m.tour)
+            let tour_id = TourIdT::new(request_m.tour);
+            let vehicle_id = self.get_tour(tour_id).await.unwrap().vehicle;
+            self.vehicles[vehicle_id.as_idx()]
+                .get_tour(&tour_id)
+                .await
                 .unwrap()
                 .events
                 .push(EventData {
-                    id: event_m.id,
+                    id: EventIdT::new(event_m.id),
                     coordinates: Point::new(event_m.longitude as f64, event_m.latitude as f64),
                     scheduled_time: event_m.scheduled_time,
                     communicated_time: event_m.communicated_time,
-                    customer: request_m.customer,
+                    customer: UserIdT::new(request_m.customer),
                     passengers: request_m.passengers,
                     wheelchairs: request_m.wheelchairs,
                     luggage: request_m.luggage,
-                    tour: request_m.tour,
+                    tour: tour_id,
                     request_id: event_m.request,
                     is_pickup: event_m.is_pickup,
-                    address_id: event_m.address,
+                    address_id: AddressIdT::new(event_m.address),
                 });
         }
 
@@ -1062,14 +1077,15 @@ impl PrimaData for Data {
             .await
             .expect("Error while reading from Database.");
         for user_model in user_models {
+            let user_id = UserIdT::new(user_model.id);
             self.users.insert(
-                user_model.id,
+                user_id,
                 UserData {
-                    id: user_model.id,
+                    id: user_id,
                     name: user_model.display_name,
                     is_driver: user_model.is_driver,
                     is_disponent: user_model.is_disponent,
-                    company_id: user_model.company,
+                    company_id: user_model.company.map(CompanyIdT::new),
                     is_admin: user_model.is_admin,
                     email: user_model.email,
                     password: user_model.password,
@@ -1084,9 +1100,9 @@ impl PrimaData for Data {
     async fn create_vehicle(
         &mut self,
         license_plate: &str,
-        company: i32,
+        company: CompanyIdT,
     ) -> StatusCode {
-        if self.companies.len() < company as usize {
+        if self.max_company_id() < company.id() {
             return StatusCode::EXPECTATION_FAILED;
         }
         if self
@@ -1102,7 +1118,7 @@ impl PrimaData for Data {
 
         match Vehicle::insert(vehicle::ActiveModel {
             id: ActiveValue::NotSet,
-            company: ActiveValue::Set(company),
+            company: ActiveValue::Set(company.id()),
             license_plate: ActiveValue::Set(license_plate.to_string()),
             seats: ActiveValue::Set(seats),
             wheelchair_capacity: ActiveValue::Set(wheelchair_capacity),
@@ -1113,7 +1129,7 @@ impl PrimaData for Data {
         {
             Ok(result) => {
                 self.vehicles.push(VehicleData {
-                    id: result.last_insert_id,
+                    id: VehicleIdT::new(result.last_insert_id),
                     license_plate: license_plate.to_string(),
                     company,
                     seats,
@@ -1136,7 +1152,7 @@ impl PrimaData for Data {
         name: &str,
         is_driver: bool,
         is_disponent: bool,
-        company: Option<i32>,
+        company: Option<CompanyIdT>,
         is_admin: bool,
         email: &str,
         password: Option<String>,
@@ -1153,7 +1169,7 @@ impl PrimaData for Data {
         match company {
             None => (),
             Some(c_id) => {
-                if self.companies.len() < c_id as usize {
+                if !c_id.is_in_range(1, self.max_company_id()) {
                     return StatusCode::NOT_FOUND;
                 }
             }
@@ -1168,7 +1184,7 @@ impl PrimaData for Data {
             salt: ActiveValue::Set(salt.to_string()),
             o_auth_id: ActiveValue::Set(o_auth_id.clone()),
             o_auth_provider: ActiveValue::Set(o_auth_provider.clone()),
-            company: ActiveValue::Set(company),
+            company: ActiveValue::Set(company.map(|company_id| company_id.id())),
             is_active: ActiveValue::Set(true),
             is_disponent: ActiveValue::Set(is_disponent),
         })
@@ -1176,7 +1192,7 @@ impl PrimaData for Data {
         .await
         {
             Ok(result) => {
-                let id = result.last_insert_id;
+                let id = UserIdT::new(result.last_insert_id);
                 self.users.insert(
                     id,
                     UserData {
@@ -1206,16 +1222,16 @@ impl PrimaData for Data {
         &mut self,
         start_time: NaiveDateTime,
         end_time: NaiveDateTime,
-        vehicle: i32,
+        vehicle: VehicleIdT,
     ) -> StatusCode {
         let mut interval = Interval::new(start_time, end_time);
         if !is_valid(&interval) {
             return StatusCode::NOT_ACCEPTABLE;
         }
-        if self.vehicles.len() < vehicle as usize {
+        if !vehicle.is_in_range(1, self.max_vehicle_id()) {
             return StatusCode::NOT_FOUND;
         }
-        self.vehicles[id_to_vec_pos(vehicle)]
+        self.vehicles[vehicle.as_idx()]
             .add_availability(&self.db_connection, &mut interval, None)
             .await
     }
@@ -1248,7 +1264,7 @@ impl PrimaData for Data {
             }
             Ok(result) => {
                 self.zones.push(ZoneData {
-                    id: result.last_insert_id,
+                    id: ZoneIdT::new(result.last_insert_id),
                     area,
                     name: name.to_string(),
                 });
@@ -1260,12 +1276,12 @@ impl PrimaData for Data {
     async fn create_company(
         &mut self,
         name: &str,
-        zone: i32,
+        zone: ZoneIdT,
         email: &str,
         lat: f32,
         lng: f32,
     ) -> StatusCode {
-        if self.zones.len() < zone as usize {
+        if self.max_zone_id() < zone.id() {
             return StatusCode::EXPECTATION_FAILED;
         }
         if self.companies.iter().any(|company| company.email == email) {
@@ -1276,7 +1292,7 @@ impl PrimaData for Data {
             longitude: ActiveValue::Set(lng),
             latitude: ActiveValue::Set(lat),
             display_name: ActiveValue::Set(name.to_string()),
-            zone: ActiveValue::Set(zone),
+            zone: ActiveValue::Set(zone.id()),
             email: ActiveValue::Set(email.to_string()),
         })
         .exec(&self.db_connection)
@@ -1284,7 +1300,7 @@ impl PrimaData for Data {
         {
             Ok(result) => {
                 self.companies.push(CompanyData {
-                    id: result.last_insert_id,
+                    id: CompanyIdT::new(result.last_insert_id),
                     central_coordinates: Point::new(lat as f64, lng as f64),
                     zone,
                     name: name.to_string(),
@@ -1303,7 +1319,7 @@ impl PrimaData for Data {
         &mut self,
         start_time: NaiveDateTime,
         end_time: NaiveDateTime,
-        vehicle_id: i32,
+        vehicle_id: VehicleIdT,
     ) -> StatusCode {
         match self.is_vehicle_idle(vehicle_id, start_time, end_time).await {
             Ok(idle) => {
@@ -1319,7 +1335,7 @@ impl PrimaData for Data {
         }
         let mut mark_delete: Vec<i32> = Vec::new();
         let mut to_insert = Vec::<Interval>::new();
-        let vehicle = &mut self.vehicles[id_to_vec_pos(vehicle_id)];
+        let vehicle = &mut self.vehicles[vehicle_id.as_idx()];
         let mut altered = false;
         for (id, existing) in vehicle.availability.iter_mut() {
             if !existing.interval.overlaps(&to_remove_interval) {
@@ -1372,29 +1388,29 @@ impl PrimaData for Data {
 
     async fn change_vehicle_for_tour(
         &mut self,
-        tour_id: i32,
-        new_vehicle_id: i32,
+        tour_id: TourIdT,
+        new_vehicle_id: VehicleIdT,
     ) -> StatusCode {
         //TODO ensure that vehicle also is able to approach and return in time
-        if self.max_vehicle_id() < new_vehicle_id || new_vehicle_id as usize <= 0 {
+        if !new_vehicle_id.is_in_range(1, self.max_vehicle_id()) {
             return StatusCode::NOT_FOUND;
         }
         let old_vehicle_id = match self.get_tour(tour_id).await {
             Ok(tour) => tour.vehicle,
             Err(e) => return e,
         };
-        let tour_idx = self.vehicles[id_to_vec_pos(old_vehicle_id)]
+        let tour_idx = self.vehicles[old_vehicle_id.as_idx()]
             .tours
             .iter()
             .enumerate()
             .find(|(_, tour)| tour.id == tour_id)
             .map(|(pos, _)| pos)
             .unwrap();
-        let tour = &self.vehicles[id_to_vec_pos(old_vehicle_id)].tours[tour_idx];
+        let tour = &self.vehicles[old_vehicle_id.as_idx()].tours[tour_idx];
         let first_event_opt = tour.events.iter().min_by_key(|event| event.scheduled_time);
         let last_event_opt = tour.events.iter().max_by_key(|event| event.scheduled_time);
         let new_vehicle_company_coordinates = Coord::from(
-            self.companies[id_to_vec_pos(self.vehicles[id_to_vec_pos(new_vehicle_id)].company)]
+            self.companies[self.vehicles[new_vehicle_id.as_idx()].company.as_idx()]
                 .central_coordinates,
         );
         let (approach_duration_res, return_duration_res) = match (first_event_opt, last_event_opt) {
@@ -1438,7 +1454,7 @@ impl PrimaData for Data {
                 ),
             };
         if !self.may_vehicle_operate_during::<true, true>(
-            &self.vehicles[id_to_vec_pos(new_vehicle_id)],
+            &self.vehicles[new_vehicle_id.as_idx()],
             &Interval::new(
                 tour.departure - approach_duration,
                 tour.arrival + return_duration,
@@ -1446,26 +1462,28 @@ impl PrimaData for Data {
         ) {
             return StatusCode::NOT_ACCEPTABLE;
         }
-        let mut moved_tour = self.vehicles[id_to_vec_pos(old_vehicle_id)]
+        let mut moved_tour = self.vehicles[old_vehicle_id.as_idx()]
             .tours
             .remove(tour_idx);
         moved_tour.vehicle = new_vehicle_id;
-        self.vehicles[id_to_vec_pos(new_vehicle_id)]
+        self.vehicles[new_vehicle_id.as_idx()]
             .tours
             .push(moved_tour);
 
-        let mut active_m: tour::ActiveModel =
-            match Tour::find_by_id(tour_id).one(&self.db_connection).await {
-                Err(e) => {
-                    error!("{e:?}");
-                    return StatusCode::INTERNAL_SERVER_ERROR;
-                }
-                Ok(m) => match m {
-                    None => return StatusCode::INTERNAL_SERVER_ERROR,
-                    Some(model) => (model as tour::Model).into(),
-                },
-            };
-        active_m.vehicle = ActiveValue::Set(new_vehicle_id);
+        let mut active_m: tour::ActiveModel = match Tour::find_by_id(tour_id.id())
+            .one(&self.db_connection)
+            .await
+        {
+            Err(e) => {
+                error!("{e:?}");
+                return StatusCode::INTERNAL_SERVER_ERROR;
+            }
+            Ok(m) => match m {
+                None => return StatusCode::INTERNAL_SERVER_ERROR,
+                Some(model) => (model as tour::Model).into(),
+            },
+        };
+        active_m.vehicle = ActiveValue::Set(new_vehicle_id.id());
         match active_m.update(&self.db_connection).await {
             Ok(_) => (),
             Err(e) => {
@@ -1478,9 +1496,9 @@ impl PrimaData for Data {
 
     async fn get_company(
         &self,
-        company_id: i32,
+        company_id: CompanyIdT,
     ) -> Result<Box<&dyn PrimaCompany>, StatusCode> {
-        if self.companies.len() <= company_id as usize {
+        if !company_id.is_in_range(1, self.max_company_id()) {
             return Err(StatusCode::NOT_FOUND);
         }
         Ok(Box::new(
@@ -1493,9 +1511,9 @@ impl PrimaData for Data {
 
     async fn get_user(
         &self,
-        user_id: i32,
+        user_id: UserIdT,
     ) -> Result<Box<&dyn PrimaUser>, StatusCode> {
-        if self.users.len() <= user_id as usize {
+        if !self.users.contains_key(&user_id) {
             return Err(StatusCode::NOT_FOUND);
         }
         Ok(Box::new(&self.users[&user_id] as &dyn PrimaUser))
@@ -1503,14 +1521,14 @@ impl PrimaData for Data {
 
     async fn get_tours(
         &self,
-        vehicle_id: i32,
+        vehicle_id: VehicleIdT,
         time_frame_start: NaiveDateTime,
         time_frame_end: NaiveDateTime,
     ) -> Result<Vec<Box<&'_ dyn PrimaTour>>, StatusCode> {
-        if self.max_vehicle_id() < vehicle_id || vehicle_id as usize <= 0 {
+        if !vehicle_id.is_in_range(1, self.max_vehicle_id()) {
             return Err(StatusCode::NOT_FOUND);
         }
-        Ok(self.vehicles[id_to_vec_pos(vehicle_id)]
+        Ok(self.vehicles[vehicle_id.as_idx()]
             .tours
             .iter()
             .filter(|tour| tour.overlaps(&Interval::new(time_frame_start, time_frame_end)))
@@ -1520,15 +1538,15 @@ impl PrimaData for Data {
 
     async fn get_events_for_vehicle(
         &self,
-        vehicle_id: i32,
+        vehicle_id: VehicleIdT,
         time_frame_start: NaiveDateTime,
         time_frame_end: NaiveDateTime,
     ) -> Result<Vec<Box<&'_ dyn PrimaEvent>>, StatusCode> {
-        if self.max_vehicle_id() < vehicle_id || vehicle_id as usize <= 0 {
+        if !vehicle_id.is_in_range(1, self.max_vehicle_id()) {
             return Err(StatusCode::NOT_FOUND);
         }
         let interval = Interval::new(time_frame_start, time_frame_end);
-        Ok(self.vehicles[id_to_vec_pos(vehicle_id)]
+        Ok(self.vehicles[vehicle_id.as_idx()]
             .tours
             .iter()
             .flat_map(|tour| &tour.events)
@@ -1539,9 +1557,9 @@ impl PrimaData for Data {
 
     async fn get_vehicles(
         &self,
-        company_id: i32,
+        company_id: CompanyIdT,
     ) -> Result<Vec<Box<&'_ dyn PrimaVehicle>>, StatusCode> {
-        if self.max_company_id() < company_id || company_id as usize <= 0 {
+        if !company_id.is_in_range(1, self.max_company_id()) {
             return Err(StatusCode::NOT_FOUND);
         }
         Ok(self
@@ -1554,11 +1572,11 @@ impl PrimaData for Data {
 
     async fn get_events_for_user(
         &self,
-        user_id: i32,
+        user_id: UserIdT,
         time_frame_start: NaiveDateTime,
         time_frame_end: NaiveDateTime,
     ) -> Result<Vec<Box<&'_ dyn PrimaEvent>>, StatusCode> {
-        if self.max_user_id() < user_id || user_id as usize <= 0 {
+        if !self.users.contains_key(&user_id) {
             return Err(StatusCode::NOT_FOUND);
         }
         Ok(self
@@ -1575,11 +1593,11 @@ impl PrimaData for Data {
 
     async fn get_idle_vehicles(
         &self,
-        company_id: i32,
-        tour_id: i32,
+        company_id: CompanyIdT,
+        tour_id: TourIdT,
         consider_provided_tour_conflict: bool,
     ) -> Result<Vec<Box<&'_ dyn PrimaVehicle>>, StatusCode> {
-        if self.max_company_id() < company_id || company_id as usize <= 0 {
+        if !company_id.is_in_range(1, self.max_company_id()) {
             return Err(StatusCode::NOT_FOUND);
         }
         let tour_interval = match self.get_tour(tour_id).await {
@@ -1603,18 +1621,18 @@ impl PrimaData for Data {
 
     async fn is_vehicle_idle(
         &self,
-        vehicle_id: i32,
-        tour_id: i32,
+        vehicle_id: VehicleIdT,
+        tour_id: TourIdT,
         consider_provided_tour_conflict: bool,
     ) -> Result<bool, StatusCode> {
-        if self.max_vehicle_id() < vehicle_id || vehicle_id as usize <= 0 {
+        if !vehicle_id.is_in_range(1, self.max_vehicle_id()) {
             return Err(StatusCode::NOT_FOUND);
         }
         let tour_interval = match self.get_tour(tour_id).await {
             Ok(t) => Interval::new(t.departure, t.arrival),
             Err(code) => return Err(code),
         };
-        Ok(!self.vehicles[id_to_vec_pos(vehicle_id)]
+        Ok(!self.vehicles[vehicle_id.as_idx()]
             .tours
             .iter()
             .filter(|tour| (consider_provided_tour_conflict || tour_id != tour.id))
@@ -1625,11 +1643,11 @@ impl PrimaData for Data {
     //does not consider the provided tour_id as a conflict
     async fn get_company_conflicts(
         &self,
-        company_id: i32,
-        tour_id: i32,
+        company_id: CompanyIdT,
+        tour_id: TourIdT,
         consider_provided_tour_conflict: bool,
-    ) -> Result<HashMap<i32, Vec<Box<&'_ dyn PrimaTour>>>, StatusCode> {
-        if self.companies.len() < company_id as usize || company_id as usize <= 0 {
+    ) -> Result<HashMap<VehicleIdT, Vec<Box<&'_ dyn PrimaTour>>>, StatusCode> {
+        if !company_id.is_in_range(1, self.max_company_id()) {
             return Err(StatusCode::NOT_FOUND);
         }
         let provided_tour_interval = match self.get_tour(tour_id).await {
@@ -1637,7 +1655,7 @@ impl PrimaData for Data {
             Err(code) => return Err(code),
         };
 
-        let mut ret = HashMap::<i32, Vec<Box<&dyn PrimaTour>>>::new();
+        let mut ret = HashMap::<VehicleIdT, Vec<Box<&dyn PrimaTour>>>::new();
         self.vehicles
             .iter()
             .filter(|vehicle| vehicle.company == company_id)
@@ -1661,18 +1679,18 @@ impl PrimaData for Data {
     //does not consider the provided tour_id as a conflict
     async fn get_vehicle_conflicts(
         &self,
-        vehicle_id: i32,
-        tour_id: i32,
+        vehicle_id: VehicleIdT,
+        tour_id: TourIdT,
         consider_provided_tour_conflict: bool,
     ) -> Result<Vec<Box<&'_ dyn PrimaTour>>, StatusCode> {
-        if self.max_vehicle_id() < vehicle_id || vehicle_id as usize <= 0 {
+        if !vehicle_id.is_in_range(1, self.max_vehicle_id()) {
             return Err(StatusCode::NOT_FOUND);
         }
         let tour_interval = match self.get_tour(tour_id).await {
             Ok(t) => Interval::new(t.departure, t.arrival),
             Err(code) => return Err(code),
         };
-        Ok(self.vehicles[id_to_vec_pos(vehicle_id)]
+        Ok(self.vehicles[vehicle_id.as_idx()]
             .tours
             .iter()
             .filter(|tour| {
@@ -1685,16 +1703,21 @@ impl PrimaData for Data {
 
     async fn get_tour_conflicts(
         &self,
-        event_id: i32,
-        company_id: Option<i32>,
+        event_id: EventIdT,
+        company_id: Option<CompanyIdT>,
     ) -> Result<Vec<Box<&'_ dyn PrimaTour>>, StatusCode> {
-        if self.max_event_id() < event_id || event_id as usize <= 0 {
+        if self
+            .vehicles
+            .iter()
+            .flat_map(|vehicle| vehicle.tours.iter().flat_map(|tour| &tour.events))
+            .any(|event| event_id == event.id)
+        {
             return Err(StatusCode::NOT_FOUND);
         }
         match company_id {
             None => (),
             Some(id) => {
-                if self.max_company_id() < id || id as usize <= 0 {
+                if !id.is_in_range(1, self.max_company_id()) {
                     return Err(StatusCode::NOT_FOUND);
                 }
             }
@@ -1723,7 +1746,7 @@ impl PrimaData for Data {
 
     async fn get_events_for_tour(
         &self,
-        tour_id: i32,
+        tour_id: TourIdT,
     ) -> Result<Vec<Box<&'_ dyn PrimaEvent>>, StatusCode> {
         match self.get_tour(tour_id).await {
             Err(e) => return Err(e),
@@ -1739,13 +1762,13 @@ impl PrimaData for Data {
 
     async fn is_vehicle_available(
         &self,
-        vehicle_id: i32,
-        tour_id: i32,
+        vehicle_id: VehicleIdT,
+        tour_id: TourIdT,
     ) -> Result<bool, StatusCode> {
-        if self.max_vehicle_id() < vehicle_id || vehicle_id as usize <= 0 {
+        if !vehicle_id.is_in_range(1, self.max_vehicle_id()) {
             return Err(StatusCode::NOT_FOUND);
         }
-        let vehicle = &self.vehicles[id_to_vec_pos(vehicle_id)];
+        let vehicle = &self.vehicles[vehicle_id.as_idx()];
         let tour = match vehicle.tours.iter().find(|tour| tour.id == tour_id) {
             Some(t) => t,
             None => return Err(StatusCode::NOT_FOUND),
@@ -1759,11 +1782,11 @@ impl PrimaData for Data {
 
     async fn get_availability_intervals(
         &self,
-        vehicle_id: i32,
+        vehicle_id: VehicleIdT,
         time_frame_start: NaiveDateTime,
         time_frame_end: NaiveDateTime,
     ) -> Result<Vec<&Interval>, StatusCode> {
-        if self.max_vehicle_id() < vehicle_id || vehicle_id as usize <= 0 {
+        if !vehicle_id.is_in_range(1, self.max_vehicle_id()) {
             return Err(StatusCode::NOT_FOUND);
         }
         Ok(match self
@@ -1790,7 +1813,7 @@ impl Data {
             zones: Vec::<ZoneData>::new(),
             companies: Vec::<CompanyData>::new(),
             vehicles: Vec::<VehicleData>::new(),
-            users: HashMap::<i32, UserData>::new(),
+            users: HashMap::<UserIdT, UserData>::new(),
             addresses: Vec::new(),
             db_connection: db_connection.clone(),
             osrm: OSRM::new(),
@@ -1829,8 +1852,8 @@ impl Data {
         passengers: i32,
         wheelchairs: i32,
         luggage: i32,
-        customer: i32,
-        tour: i32,
+        customer: &UserIdT,
+        tour: &TourIdT,
     ) -> Result<i32, StatusCode> {
         if passengers < 0 || wheelchairs < 0 || luggage < 0 {
             return Err(StatusCode::EXPECTATION_FAILED);
@@ -1840,8 +1863,8 @@ impl Data {
         }
         match Request::insert(request::ActiveModel {
             id: ActiveValue::NotSet,
-            tour: ActiveValue::Set(tour),
-            customer: ActiveValue::Set(customer),
+            tour: ActiveValue::Set(tour.id()),
+            customer: ActiveValue::Set(customer.id()),
             passengers: ActiveValue::Set(passengers),
             wheelchairs: ActiveValue::Set(wheelchairs),
             luggage: ActiveValue::Set(luggage),
@@ -1923,36 +1946,26 @@ impl Data {
         }
     }
 
+    #[cfg(test)]
     fn max_event_id(&self) -> i32 {
         self.vehicles
             .iter()
             .flat_map(|vehicle| vehicle.tours.iter().flat_map(|tour| &tour.events))
-            .map(|event| event.id)
+            .map(|event| event.id.id())
             .max()
             .unwrap_or(0)
     }
 
     fn max_company_id(&self) -> i32 {
-        self.companies
-            .iter()
-            .map(|company| company.id)
-            .max()
-            .unwrap_or(0)
+        self.companies.len() as i32
     }
 
-    fn max_user_id(&self) -> i32 {
-        match self.users.keys().max() {
-            Some(id) => *id,
-            None => 0,
-        }
+    fn max_zone_id(&self) -> i32 {
+        self.zones.len() as i32
     }
 
     fn max_vehicle_id(&self) -> i32 {
-        self.vehicles
-            .iter()
-            .map(|vehicle| vehicle.id)
-            .max()
-            .unwrap_or(0)
+        self.vehicles.len() as i32
     }
 
     #[cfg(test)]
@@ -1963,24 +1976,24 @@ impl Data {
             .count()
     }
 
-    fn get_n_tours(&self) -> usize {
+    fn get_n_tours(&self) -> i32 {
         self.vehicles
             .iter()
             .flat_map(|vehicle| &vehicle.tours)
-            .count()
+            .count() as i32
     }
 
     async fn is_vehicle_idle(
         &self,
-        vehicle_id: i32,
+        vehicle_id: VehicleIdT,
         time_frame_start: NaiveDateTime,
         time_frame_end: NaiveDateTime,
     ) -> Result<bool, StatusCode> {
-        if self.max_vehicle_id() < vehicle_id || vehicle_id as usize <= 0 {
+        if !vehicle_id.is_in_range(1, self.max_vehicle_id()) {
             return Err(StatusCode::NOT_FOUND);
         }
         let interval = Interval::new(time_frame_start, time_frame_end);
-        Ok(!self.vehicles[id_to_vec_pos(vehicle_id)]
+        Ok(!self.vehicles[vehicle_id.as_idx()]
             .tours
             .iter()
             .any(|tour| tour.overlaps(&interval)))
@@ -2057,17 +2070,17 @@ impl Data {
     #[allow(clippy::too_many_arguments)]
     pub async fn insert_or_addto_tour(
         &mut self,
-        tour_id: Option<i32>, // tour_id == None <=> tour already exists
+        tour_id: Option<TourIdT>, // tour_id == None <=> tour already exists
         departure: NaiveDateTime,
         arrival: NaiveDateTime,
-        vehicle: i32,
+        vehicle: VehicleIdT,
         start_address: &str,
         target_address: &str,
         lat_start: f32,
         lng_start: f32,
         sched_t_start: NaiveDateTime,
         comm_t_start: NaiveDateTime,
-        customer: i32,
+        customer: UserIdT,
         passengers: i32,
         wheelchairs: i32,
         luggage: i32,
@@ -2081,101 +2094,99 @@ impl Data {
         {
             return StatusCode::NOT_ACCEPTABLE;
         }
-        if self.users.len() < customer as usize || self.vehicles.len() < vehicle as usize {
+        if !self.users.contains_key(&customer) || self.max_vehicle_id() < vehicle.id() {
             return StatusCode::EXPECTATION_FAILED;
         }
         let id = match tour_id {
             Some(t_id) => {
-                if self.get_n_tours() < t_id as usize {
+                if self.get_n_tours() < t_id.id() {
                     return StatusCode::EXPECTATION_FAILED;
                 }
                 t_id
             }
             None => {
-                let t_id = match Tour::insert(tour::ActiveModel {
-                    id: ActiveValue::NotSet,
-                    departure: ActiveValue::Set(departure),
-                    arrival: ActiveValue::Set(arrival),
-                    vehicle: ActiveValue::Set(vehicle),
-                })
-                .exec(&self.db_connection)
-                .await
-                {
-                    Ok(result) => result.last_insert_id,
-                    Err(e) => {
-                        error!("Error creating tour: {e:?}");
-                        return StatusCode::INTERNAL_SERVER_ERROR;
-                    }
-                };
-                (self.vehicles[id_to_vec_pos(vehicle)])
-                    .tours
-                    .push(TourData {
-                        id: t_id,
-                        departure,
-                        arrival,
-                        vehicle,
-                        events: Vec::new(),
-                    });
+                let t_id = TourIdT::new(
+                    match Tour::insert(tour::ActiveModel {
+                        id: ActiveValue::NotSet,
+                        departure: ActiveValue::Set(departure),
+                        arrival: ActiveValue::Set(arrival),
+                        vehicle: ActiveValue::Set(vehicle.id()),
+                    })
+                    .exec(&self.db_connection)
+                    .await
+                    {
+                        Ok(result) => result.last_insert_id,
+                        Err(e) => {
+                            error!("Error creating tour: {e:?}");
+                            return StatusCode::INTERNAL_SERVER_ERROR;
+                        }
+                    },
+                );
+                (self.vehicles[vehicle.as_idx()]).tours.push(TourData {
+                    id: t_id,
+                    departure,
+                    arrival,
+                    vehicle,
+                    events: Vec::new(),
+                });
                 t_id
             }
         };
         let start_address_id = self.find_or_create_address(start_address).await.unwrap();
         let target_address_id = self.find_or_create_address(target_address).await.unwrap();
         let request_id = match self
-            .insert_request_into_db(passengers, wheelchairs, luggage, customer, id)
+            .insert_request_into_db(passengers, wheelchairs, luggage, &customer, &id)
             .await
         {
             Err(e) => return e,
             Ok(r_id) => r_id,
         };
 
-        let pickup_event_id = match Event::insert(event::ActiveModel {
-            id: ActiveValue::NotSet,
-            longitude: ActiveValue::Set(lng_start),
-            latitude: ActiveValue::Set(lat_start),
-            scheduled_time: ActiveValue::Set(sched_t_start),
-            communicated_time: ActiveValue::Set(comm_t_start),
-            request: ActiveValue::Set(request_id),
-            is_pickup: ActiveValue::Set(true),
-            address: ActiveValue::Set(start_address_id),
-        })
-        .exec(&self.db_connection)
-        .await
-        {
-            Ok(pickup_result) => pickup_result.last_insert_id,
-            Err(e) => {
-                error!("Error creating event: {e:?}");
-                return StatusCode::INTERNAL_SERVER_ERROR;
-            }
-        };
-        let dropoff_event_id = match Event::insert(event::ActiveModel {
-            id: ActiveValue::NotSet,
-            longitude: ActiveValue::Set(lng_target),
-            latitude: ActiveValue::Set(lat_target),
-            scheduled_time: ActiveValue::Set(sched_t_target),
-            communicated_time: ActiveValue::Set(comm_t_target),
-            request: ActiveValue::Set(request_id),
-            is_pickup: ActiveValue::Set(false),
-            address: ActiveValue::Set(target_address_id),
-        })
-        .exec(&self.db_connection)
-        .await
-        {
-            Ok(dropoff_result) => dropoff_result.last_insert_id,
-            Err(e) => {
-                error!("Error creating event: {e:?}");
-                return StatusCode::INTERNAL_SERVER_ERROR;
-            }
-        };
-        let events = &mut match self.vehicles[id_to_vec_pos(vehicle)]
-            .tours
-            .iter_mut()
-            .find(|tour| tour.id == id)
-        {
-            None => return StatusCode::INTERNAL_SERVER_ERROR,
-            Some(t) => t,
-        }
-        .events;
+        let pickup_event_id = EventIdT::new(
+            match Event::insert(event::ActiveModel {
+                id: ActiveValue::NotSet,
+                longitude: ActiveValue::Set(lng_start),
+                latitude: ActiveValue::Set(lat_start),
+                scheduled_time: ActiveValue::Set(sched_t_start),
+                communicated_time: ActiveValue::Set(comm_t_start),
+                request: ActiveValue::Set(request_id),
+                is_pickup: ActiveValue::Set(true),
+                address: ActiveValue::Set(start_address_id),
+            })
+            .exec(&self.db_connection)
+            .await
+            {
+                Ok(pickup_result) => pickup_result.last_insert_id,
+                Err(e) => {
+                    error!("Error creating event: {e:?}");
+                    return StatusCode::INTERNAL_SERVER_ERROR;
+                }
+            },
+        );
+        let dropoff_event_id = EventIdT::new(
+            match Event::insert(event::ActiveModel {
+                id: ActiveValue::NotSet,
+                longitude: ActiveValue::Set(lng_target),
+                latitude: ActiveValue::Set(lat_target),
+                scheduled_time: ActiveValue::Set(sched_t_target),
+                communicated_time: ActiveValue::Set(comm_t_target),
+                request: ActiveValue::Set(request_id),
+                is_pickup: ActiveValue::Set(false),
+                address: ActiveValue::Set(target_address_id),
+            })
+            .exec(&self.db_connection)
+            .await
+            {
+                Ok(dropoff_result) => dropoff_result.last_insert_id,
+                Err(e) => {
+                    error!("Error creating event: {e:?}");
+                    return StatusCode::INTERNAL_SERVER_ERROR;
+                }
+            },
+        );
+        println!("===============________________________________________________________________________________id: {}, tour count: {}", id.id(), self.vehicles.iter().flat_map(|v|&v.tours).count());
+        let tour = &mut self.vehicles[vehicle.as_idx()].get_tour(&id).await.unwrap();
+        let events = &mut tour.events;
         //pickup-event
         events.push(EventData {
             coordinates: Point::new(lng_start as f64, lat_start as f64),
@@ -2189,7 +2200,7 @@ impl Data {
             request_id,
             id: pickup_event_id,
             is_pickup: true,
-            address_id: start_address_id,
+            address_id: AddressIdT::new(start_address_id),
         });
         //dropoff-event
         events.push(EventData {
@@ -2204,65 +2215,10 @@ impl Data {
             request_id,
             id: dropoff_event_id,
             is_pickup: false,
-            address_id: target_address_id,
+            address_id: AddressIdT::new(target_address_id),
         });
         StatusCode::CREATED
     }
-    /*
-       async fn insert_event_pair_into_db(
-           &mut self,
-           start_address_id: i32,
-           target_address_id: i32,
-           lat_start: f32,
-           lng_start: f32,
-           sched_t_start: NaiveDateTime,
-           comm_t_start: NaiveDateTime,
-           request_id: i32,
-           lat_target: f32,
-           lng_target: f32,
-           sched_t_target: NaiveDateTime,
-           comm_t_target: NaiveDateTime,
-       ) -> Result<(i32, i32),StatusCode> {
-           let start_id = match Event::insert(event::ActiveModel {
-               id: ActiveValue::NotSet,
-               longitude: ActiveValue::Set(lng_start),
-               latitude: ActiveValue::Set(lat_start),
-               scheduled_time: ActiveValue::Set(sched_t_start),
-               communicated_time: ActiveValue::Set(comm_t_start),
-               request: ActiveValue::Set(request_id),
-               is_pickup: ActiveValue::Set(true),
-               address: ActiveValue::Set(start_address_id),
-           })
-           .exec(&self.db_connection)
-           .await
-           {
-               Ok(result) => result.last_insert_id,
-               Err(e) => {
-                   error!("Error creating event: {e:?}");
-                   return Err(StatusCode::INTERNAL_SERVER_ERROR);
-               }
-           };
-           match Event::insert(event::ActiveModel {
-               id: ActiveValue::NotSet,
-               longitude: ActiveValue::Set(lng_target),
-               latitude: ActiveValue::Set(lat_target),
-               scheduled_time: ActiveValue::Set(sched_t_target),
-               communicated_time: ActiveValue::Set(comm_t_target),
-               request: ActiveValue::Set(request_id),
-               is_pickup: ActiveValue::Set(false),
-               address: ActiveValue::Set(target_address_id),
-           })
-           .exec(&self.db_connection)
-           .await
-           {
-               Ok(target_result) => Ok((start_id, target_result.last_insert_id)),
-               Err(e) => {
-                   error!("Error creating event: {e:?}");
-                   Err(StatusCode::INTERNAL_SERVER_ERROR)
-               }
-           }
-       }
-    */
 
     async fn get_candidate_vehicles(
         &self,
@@ -2273,17 +2229,17 @@ impl Data {
             .zones
             .iter()
             .filter(|zone| zone.area.contains(start))
-            .map(|zone| zone.id)
+            .map(|zone| &zone.id)
             .collect_vec();
         let mut candidate_vehicles = Vec::<&VehicleData>::new();
         for (company_id, vehicles) in self
             .vehicles
             .iter()
-            .group_by(|vehicle| vehicle.company)
+            .group_by(|vehicle| &vehicle.company)
             .into_iter()
         {
             if !zones_containing_start_point_ids
-                .contains(&self.companies[id_to_vec_pos(company_id)].zone)
+                .contains(&&self.companies[company_id.as_idx()].zone)
             {
                 continue;
             }
@@ -2304,7 +2260,7 @@ impl Data {
         let viable_zone_ids = self.get_zones_containing_point_ids(start).await;
         self.companies
             .iter()
-            .filter(|company| viable_zone_ids.contains(&(company.zone)))
+            .filter(|company| viable_zone_ids.contains(&&company.zone))
             .collect_vec()
     }
 
@@ -2312,29 +2268,17 @@ impl Data {
     async fn get_zones_containing_point_ids(
         &self,
         start: &Point,
-    ) -> Vec<i32> {
+    ) -> Vec<&ZoneIdT> {
         self.zones
             .iter()
             .filter(|zone| zone.area.contains(start))
-            .map(|zone| zone.id)
+            .map(|zone| &zone.id)
             .collect_vec()
     }
 
-    /*
-    async fn get_event(
-        &self,
-        vehicle_id: i32,
-        tour_id: i32,
-        event_id: i32,
-    ) -> &EventData {
-        &self.vehicles[id_to_vec_pos(vehicle_id)].tours[id_to_vec_pos(tour_id)].events
-            [id_to_vec_pos(event_id)]
-    }
-    */
-
     async fn get_tour(
         &self,
-        tour_id: i32,
+        tour_id: TourIdT,
     ) -> Result<&TourData, StatusCode> {
         match self
             .vehicles
@@ -2349,7 +2293,7 @@ impl Data {
 
     async fn find_event(
         &self,
-        event_id: i32,
+        event_id: EventIdT,
     ) -> Option<&EventData> {
         self.vehicles
             .iter()
@@ -2369,6 +2313,7 @@ mod test {
     use crate::{
         backend::{
             data::{beeline_duration, Data},
+            id_types::{CompanyIdT, IdT, TourIdT, UserIdT, VehicleIdT, ZoneIdT},
             lib::PrimaData,
         },
         constants::{geo_points::TestPoints, gorlitz::GORLITZ},
@@ -2384,53 +2329,7 @@ mod test {
     use sea_orm::DbConn;
     use serial_test::serial;
     use tracing_test::traced_test;
-    /*
-       async fn insert_or_addto_test_tour(
-           data: &mut Data,
-           tour_id: Option<i32>,
-           departure: NaiveDateTime,
-           arrival: NaiveDateTime,
-           vehicle: i32,
 
-       ) -> StatusCode {
-           data.insert_or_addto_tour(
-               tour_id,
-               departure,
-               arrival,
-               vehicle,
-               &"karolinenplatz 5".to_string(),
-               &"Lichtwiesenweg 3".to_string(),
-               13.867512,
-               51.22069,
-               NaiveDate::from_ymd_opt(2024, 4, 15)
-                   .unwrap()
-                   .and_hms_opt(9, 15, 0)
-                   .unwrap(),
-               NaiveDate::from_ymd_opt(2024, 4, 15)
-                   .unwrap()
-                   .and_hms_opt(9, 12, 0)
-                   .unwrap(),
-               2,
-               3,
-               0,
-               0,
-               1,
-               false,
-               false,
-               14.025081,
-               51.195075,
-               NaiveDate::from_ymd_opt(2024, 4, 15)
-                   .unwrap()
-                   .and_hms_opt(9, 55, 0)
-                   .unwrap(),
-               NaiveDate::from_ymd_opt(2024, 4, 15)
-                   .unwrap()
-                   .and_hms_opt(9, 18, 0)
-                   .unwrap(),
-           )
-           .await
-       }
-    */
     async fn check_zones_contain_correct_points(
         d: &Data,
         points: &[Point],
@@ -2440,9 +2339,9 @@ mod test {
             let companies_containing_point = d.get_start_point_viable_companies(point).await;
             for company in &d.companies {
                 if companies_containing_point.contains(&company) {
-                    assert!(company.zone == expected_zones);
+                    assert!(company.zone.id() == expected_zones);
                 } else {
-                    assert!(company.zone != expected_zones);
+                    assert!(company.zone.id() != expected_zones);
                 }
             }
         }
@@ -2466,7 +2365,7 @@ mod test {
 
     async fn insert_or_add_test_tour(
         data: &mut Data,
-        vehicle_id: i32,
+        vehicle_id: VehicleIdT,
     ) -> StatusCode {
         data.insert_or_addto_tour(
             None,
@@ -2491,7 +2390,7 @@ mod test {
                 .unwrap()
                 .and_hms_opt(9, 12, 0)
                 .unwrap(),
-            2,
+            UserIdT::new(2),
             3,
             0,
             0,
@@ -2580,7 +2479,7 @@ mod test {
                 "TestDriver1",
                 true,
                 false,
-                Some(1),
+                Some(CompanyIdT::new(1)),
                 false,
                 "test@gmail.com",
                 Some("".to_string()),
@@ -2599,7 +2498,7 @@ mod test {
                 "TestDriver2",
                 true,
                 false,
-                Some(2),
+                Some(CompanyIdT::new(2)),
                 false,
                 "test@aol.com",
                 Some("".to_string()),
@@ -2643,7 +2542,7 @@ mod test {
         assert_eq!(
             d.create_company(
                 "Taxi-Unternehmen Bautzen-1",
-                1,
+                ZoneIdT::new(1),
                 "mustermann@web.de",
                 1.0,
                 1.0
@@ -2654,7 +2553,10 @@ mod test {
 
         //insert vehicle with existing license plate
         let n_vehicles = d.vehicles.len();
-        assert_eq!(d.create_vehicle("TUB1-1", 1).await, StatusCode::CONFLICT);
+        assert_eq!(
+            d.create_vehicle("TUB1-1", CompanyIdT::new(1)).await,
+            StatusCode::CONFLICT
+        );
         assert_eq!(d.vehicles.len(), n_vehicles);
 
         //Validate ForeignKeyViolation handling when creating data (expect StatusCode::EXPECTATION_FAILED)
@@ -2667,27 +2569,39 @@ mod test {
         let n_tours = d.get_n_tours();
         let n_events = d.max_event_id();
         assert_eq!(
-            insert_or_add_test_tour(&mut d, 100).await,
+            insert_or_add_test_tour(&mut d, VehicleIdT::new(100)).await,
             StatusCode::EXPECTATION_FAILED
         );
         assert_eq!(
-            insert_or_add_test_tour(&mut d, 100).await,
+            insert_or_add_test_tour(&mut d, VehicleIdT::new(100)).await,
             StatusCode::EXPECTATION_FAILED
         );
         assert_eq!(n_events, d.max_event_id());
         assert_eq!(n_tours, d.get_n_tours());
         //insert company with non-existing zone
         assert_eq!(
-            d.create_company("some new name", 1 + n_zones as i32, "y@x", 1.0, 1.0)
-                .await,
+            d.create_company(
+                "some new name",
+                ZoneIdT::new(1 + n_zones as i32),
+                "y@x",
+                1.0,
+                1.0
+            )
+            .await,
             StatusCode::EXPECTATION_FAILED
         );
         assert_eq!(d.companies.len(), n_companies + 1);
         n_companies = d.companies.len();
         //insert company with existing zone
         assert_eq!(
-            d.create_company("some new name", n_zones as i32, "x@z", 1.0, 1.0)
-                .await,
+            d.create_company(
+                "some new name",
+                ZoneIdT::new(n_zones as i32),
+                "x@z",
+                1.0,
+                1.0
+            )
+            .await,
             StatusCode::CREATED
         );
         assert_eq!(d.companies.len(), n_companies + 1);
@@ -2695,163 +2609,39 @@ mod test {
 
         //insert company with existing email
         assert_eq!(
-            d.create_company("some new name", n_zones as i32, "a@b", 1.0, 1.0)
-                .await,
+            d.create_company(
+                "some new name",
+                ZoneIdT::new(n_zones as i32),
+                "a@b",
+                1.0,
+                1.0
+            )
+            .await,
             StatusCode::CONFLICT
         );
         //insert vehicle with non-existing company
         assert_eq!(
-            d.create_vehicle("some new license plate", 1 + n_companies as i32)
-                .await,
+            d.create_vehicle(
+                "some new license plate",
+                CompanyIdT::new(1 + n_companies as i32)
+            )
+            .await,
             StatusCode::EXPECTATION_FAILED
         );
         assert_eq!(d.vehicles.len(), n_vehicles);
         //insert vehicle with existing company
         assert_eq!(
-            d.create_vehicle("some new license plate", n_companies as i32)
-                .await,
+            d.create_vehicle(
+                "some new license plate",
+                CompanyIdT::new(n_companies as i32)
+            )
+            .await,
             StatusCode::CREATED
         );
         assert_eq!(d.vehicles.len(), n_vehicles + 1);
 
         check_data_db_synchronized(&d).await;
     }
-    /*
-        #[tokio::test]
-        #[serial]
-        async fn test_invalid_id_parameter_handling() {
-            let db_conn = test_main().await;
-            let mut d = init(&db_conn, true, 5000).await;
-
-            let base_time = NaiveDate::from_ymd_opt(5000, 1, 1)
-                .unwrap()
-                .and_hms_opt(10, 0, 0)
-                .unwrap();
-            let in_2_hours = base_time + Duration::hours(2);
-            let in_3_hours = base_time + Duration::hours(3);
-            let d_copy = d.clone();
-
-            let max_event_id = d.max_event_id();
-            let max_company_id = d.max_company_id();
-            let max_tour_id = d.max_tour_id();
-            let max_user_id = d.max_user_id();
-            //get_assignment_conflicts_for_event
-            assert_eq!(
-                d.get_assignment_conflicts_for_event(0, None).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert!(
-                d.get_assignment_conflicts_for_event(1, None).await.is_ok());
-            assert_eq!(
-                d.get_assignment_conflicts_for_event(max_event_id+1, None).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert!(
-                d.get_assignment_conflicts_for_event(max_event_id, None).await.is_ok());
-
-            assert_eq!(
-                d.get_assignment_conflicts_for_event(1, Some(0)).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert!(
-                d.get_assignment_conflicts_for_event(1, Some(1)).await.is_ok());
-            assert_eq!(
-                d.get_assignment_conflicts_for_event(1, Some(1+max_company_id)).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert!(
-                d.get_assignment_conflicts_for_event(1, Some(max_company_id)).await.is_ok());
-
-            //get_company_conflicts_for_tour
-            assert_eq!(
-                d.get_company_conflicts_for_tour(0, 1, true).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert!(
-                d.get_company_conflicts_for_tour(1, 1, true).await.is_ok());
-            assert_eq!(
-                d.get_company_conflicts_for_tour(max_company_id+1, 1, true).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert!(
-                d.get_company_conflicts_for_tour(max_company_id, 1, true).await.is_ok());
-
-            assert_eq!(
-                d.get_company_conflicts_for_tour(1, 0, true).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert!(
-                d.get_company_conflicts_for_tour(1, 1, true).await.is_ok());
-            assert_eq!(
-                d.get_company_conflicts_for_tour(1, max_tour_id+1, true).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert!(
-                d.get_company_conflicts_for_tour(1, max_tour_id, true).await.is_ok());
-
-            //get_events_for_user
-            assert_eq!(
-                d.get_events_for_user(0, in_2_hours, in_3_hours).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert!(
-                d.get_events_for_user(1, in_2_hours, in_3_hours).await.is_ok());
-            assert_eq!(
-                d.get_events_for_user(max_user_id+1, in_2_hours, in_3_hours).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert!(
-                d.get_events_for_user(max_user_id, in_2_hours, in_3_hours).await.is_ok());
-
-            //get_vehicles
-            assert_eq!(
-                d.get_vehicles(0, None).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert!(
-                d.get_vehicles(1, None).await.is_ok());
-            assert_eq!(
-                d.get_vehicles(max_company_id+1,  None).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert!(
-                d.get_vehicles(max_company_id,  None).await.is_ok());
-
-
-                //TODO
-            assert_eq!(
-                d.get_vehicle_conflicts_for_tour(50, 1, true).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert_eq!(
-                d.get_vehicle_conflicts_for_tour(1, 50, true).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert_eq!(
-                d.get_events_for_tour(50).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert_eq!(
-                d.is_vehicle_available(50, in_2_hours, in_3_hours,).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert_eq!(
-                d.is_vehicle_idle(1, 50, true).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert_eq!(
-                d.is_vehicle_idle(50, 1, true).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert_eq!(
-                d.get_idle_vehicles_for_company(1, 50, true).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert_eq!(
-                d.get_idle_vehicles_for_company(50, 1, true).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert_eq!(
-                d.get_events_for_vehicle(50, in_2_hours, in_3_hours).await,Err(StatusCode::NOT_FOUND)
-            );
-            assert_eq!(
-                d.get_tours_for_vehicle(50, in_2_hours, in_3_hours).await,Err( StatusCode::NOT_FOUND)
-            );
-
-            assert_eq!(d.get_tour(50).await,Err( StatusCode::NOT_FOUND));
-            assert_eq!(
-                d.change_vehicle_for_tour(50, 1).await,StatusCode::NOT_FOUND
-            );
-            assert_eq!(
-                d.change_vehicle_for_tour(1, 50).await,StatusCode::NOT_FOUND
-            );
-            assert_eq!(
-                d.remove_availability(in_2_hours, in_3_hours, 50).await,StatusCode::NOT_FOUND,
-            );
-            assert_eq!(d_copy == d, true);
-            check_data_db_synchronized(&d).await;
-        }
-    */
 
     #[tokio::test]
     #[serial]
@@ -2866,12 +2656,12 @@ mod test {
 
         //interval range not limited
         assert!(d
-            .get_tours(1, NaiveDateTime::MIN, NaiveDateTime::MAX)
+            .get_tours(VehicleIdT::new(1), NaiveDateTime::MIN, NaiveDateTime::MAX)
             .await
             .is_ok());
         //interval range not limited
         assert!(d
-            .get_events_for_user(1, NaiveDateTime::MIN, NaiveDateTime::MAX)
+            .get_events_for_user(UserIdT::new(1), NaiveDateTime::MIN, NaiveDateTime::MAX)
             .await
             .is_ok());
 
@@ -2880,14 +2670,18 @@ mod test {
 
         //interval range not limited
         assert!(d
-            .get_events_for_vehicle(1, NaiveDateTime::MIN, NaiveDateTime::MAX)
+            .get_events_for_vehicle(VehicleIdT::new(1), NaiveDateTime::MIN, NaiveDateTime::MAX)
             .await
             .is_ok());
         let n_availabilities = d.get_n_availabilities();
         //starttime before year 2024
         assert_eq!(
-            d.create_availability(NaiveDateTime::MIN, base_time + Duration::hours(1), 1)
-                .await,
+            d.create_availability(
+                NaiveDateTime::MIN,
+                base_time + Duration::hours(1),
+                VehicleIdT::new(1)
+            )
+            .await,
             StatusCode::NOT_ACCEPTABLE
         );
         assert_eq!(d.get_n_availabilities(), n_availabilities);
@@ -2899,7 +2693,7 @@ mod test {
                     .unwrap()
                     .and_hms_opt(10, 0, 0)
                     .unwrap(),
-                1
+                VehicleIdT::new(1)
             )
             .await,
             StatusCode::NOT_ACCEPTABLE
@@ -2916,7 +2710,7 @@ mod test {
                     .unwrap()
                     .and_hms_opt(10, 0, 0)
                     .unwrap(),
-                1
+                VehicleIdT::new(1)
             )
             .await,
             StatusCode::NOT_ACCEPTABLE
@@ -2932,7 +2726,7 @@ mod test {
                     .unwrap()
                     .and_hms_opt(10, 0, 0)
                     .unwrap(),
-                1
+                VehicleIdT::new(1)
             )
             .await,
             StatusCode::NOT_ACCEPTABLE
@@ -2979,7 +2773,7 @@ mod test {
                     .unwrap()
                     .and_hms_opt(0, 0, 0)
                     .unwrap(),
-                1,
+                VehicleIdT::new(1),
             )
             .await,
             StatusCode::OK
@@ -2987,7 +2781,8 @@ mod test {
         assert_eq!(d.vehicles[0].availability.len(), 0);
         //add non-touching
         assert_eq!(
-            d.create_availability(in_2_hours, in_3_hours, 1).await,
+            d.create_availability(in_2_hours, in_3_hours, VehicleIdT::new(1))
+                .await,
             StatusCode::CREATED
         );
         assert_eq!(d.vehicles[0].availability.len(), 1);
@@ -2996,7 +2791,7 @@ mod test {
             d.create_availability(
                 in_2_hours + Duration::hours(1),
                 in_3_hours + Duration::hours(1),
-                1,
+                VehicleIdT::new(1),
             )
             .await,
             StatusCode::CREATED
@@ -3004,7 +2799,8 @@ mod test {
         assert_eq!(d.vehicles[0].availability.len(), 1);
         //add containing/contained (equal)
         assert_eq!(
-            d.create_availability(in_2_hours, in_3_hours, 1).await,
+            d.create_availability(in_2_hours, in_3_hours, VehicleIdT::new(1))
+                .await,
             StatusCode::OK
         );
         assert_eq!(d.vehicles[0].availability.len(), 1);
@@ -3013,7 +2809,7 @@ mod test {
         d.remove_availability(
             base_time + Duration::weeks(1),
             base_time + Duration::weeks(2),
-            1,
+            VehicleIdT::new(1),
         )
         .await;
         assert_eq!(d.vehicles[0].availability.len(), 1);
@@ -3021,7 +2817,7 @@ mod test {
         d.remove_availability(
             in_2_hours + Duration::minutes(5),
             in_3_hours - Duration::minutes(5),
-            1,
+            VehicleIdT::new(1),
         )
         .await;
         assert_eq!(d.vehicles[0].availability.len(), 2);
@@ -3029,13 +2825,17 @@ mod test {
         d.remove_availability(
             in_2_hours - Duration::minutes(90),
             in_3_hours - Duration::minutes(100),
-            1,
+            VehicleIdT::new(1),
         )
         .await;
         assert_eq!(d.vehicles[0].availability.len(), 2);
         //remove containing
-        d.remove_availability(in_2_hours, in_2_hours + Duration::minutes(5), 1)
-            .await;
+        d.remove_availability(
+            in_2_hours,
+            in_2_hours + Duration::minutes(5),
+            VehicleIdT::new(1),
+        )
+        .await;
         assert_eq!(d.vehicles[0].availability.len(), 1);
     }
 
@@ -3058,7 +2858,7 @@ mod test {
             d.create_availability(
                 base_time,
                 base_time + Duration::hours(1),
-                1 + n_vehicles as i32
+                VehicleIdT::new(1 + n_vehicles as i32)
             )
             .await,
             StatusCode::NOT_FOUND
@@ -3067,8 +2867,12 @@ mod test {
         //insert availability with existing vehicle
         let n_availabilities = d.get_n_availabilities();
         assert_eq!(
-            d.create_availability(base_time, base_time + Duration::hours(1), n_vehicles as i32)
-                .await,
+            d.create_availability(
+                base_time,
+                base_time + Duration::hours(1),
+                VehicleIdT::new(n_vehicles as i32)
+            )
+            .await,
             StatusCode::CREATED
         );
         assert_eq!(d.get_n_availabilities(), n_availabilities + 1);
@@ -3086,7 +2890,7 @@ mod test {
                     .unwrap()
                     .and_hms_opt(10, 0, 0)
                     .unwrap(),
-                1
+                VehicleIdT::new(1)
             )
             .await,
             StatusCode::NO_CONTENT
@@ -3284,7 +3088,7 @@ mod test {
                 test_points.bautzen_ost[0].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
                 test_points.bautzen_ost[1].y() as f32,
-                1 + d.users.len() as i32,
+                UserIdT::new(1 + d.users.len() as i32),
                 1,
                 "start_address",
                 "target_address",
@@ -3302,7 +3106,7 @@ mod test {
                 test_points.bautzen_ost[0].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
                 test_points.bautzen_ost[1].y() as f32,
-                1,
+                UserIdT::new(1),
                 0,
                 "start_address",
                 "target_address",
@@ -3320,7 +3124,7 @@ mod test {
                 test_points.bautzen_ost[0].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
                 test_points.bautzen_ost[1].y() as f32,
-                1,
+                UserIdT::new(1),
                 -1,
                 "start_address",
                 "target_address",
@@ -3338,7 +3142,7 @@ mod test {
                 test_points.bautzen_ost[0].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
                 test_points.bautzen_ost[1].y() as f32,
-                1,
+                UserIdT::new(1),
                 4,
                 "start_address",
                 "target_address",
@@ -3356,7 +3160,7 @@ mod test {
                 test_points.bautzen_ost[0].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
                 test_points.bautzen_ost[1].y() as f32,
-                1,
+                UserIdT::new(1),
                 1,
                 "start_address",
                 "target_address",
@@ -3374,7 +3178,7 @@ mod test {
                 test_points.bautzen_ost[0].x() as f32,
                 test_points.bautzen_ost[1].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
-                1,
+                UserIdT::new(1),
                 1,
                 "start_address",
                 "target_address",
@@ -3392,7 +3196,7 @@ mod test {
                 test_points.bautzen_ost[0].x() as f32,
                 test_points.bautzen_ost[1].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
-                1,
+                UserIdT::new(1),
                 1,
                 "start_address",
                 "target_address",
@@ -3413,7 +3217,7 @@ mod test {
                 test_points.bautzen_ost[0].x() as f32,
                 test_points.bautzen_ost[1].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
-                1,
+                UserIdT::new(1),
                 1,
                 "start_address",
                 "target_address",
@@ -3565,11 +3369,11 @@ mod test {
             .map(|vehicle| vehicle.id)
             .collect_vec();
         for v_id in d.vehicles.iter().map(|vehicle| vehicle.id) {
-            assert_eq!(candidate_ids_bautzen_ost.contains(&v_id), v_id != 5);
+            assert_eq!(candidate_ids_bautzen_ost.contains(&v_id), v_id.id() != 5);
         }
 
         for v_id in d.vehicles.iter().map(|vehicle| vehicle.id) {
-            assert_eq!(candidate_ids_bautzen_west.contains(&v_id), v_id == 5);
+            assert_eq!(candidate_ids_bautzen_west.contains(&v_id), v_id.id() == 5);
         }
 
         for v_id in d.vehicles.iter().map(|vehicle| vehicle.id) {
@@ -3598,7 +3402,7 @@ mod test {
                 test_points.bautzen_ost[0].x() as f32,
                 test_points.bautzen_ost[1].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
-                1,
+                UserIdT::new(1),
                 1,
                 "start_address",
                 "target_address",
@@ -3623,7 +3427,7 @@ mod test {
                 test_points.bautzen_ost[1].x() as f32,
                 test_points.bautzen_ost[0].y() as f32,
                 test_points.bautzen_ost[0].x() as f32,
-                1,
+                UserIdT::new(1),
                 1,
                 "start_address",
                 "target_address",
@@ -3648,7 +3452,7 @@ mod test {
                 test_points.bautzen_ost[0].x() as f32,
                 test_points.bautzen_ost[1].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
-                1,
+                UserIdT::new(1),
                 1,
                 "start_address",
                 "target_address",
@@ -3665,7 +3469,7 @@ mod test {
                 test_points.bautzen_ost[0].x() as f32,
                 test_points.bautzen_ost[1].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
-                1,
+                UserIdT::new(1),
                 1,
                 "start_address",
                 "target_address",
@@ -3683,7 +3487,7 @@ mod test {
                 test_points.bautzen_ost[0].x() as f32,
                 test_points.bautzen_ost[1].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
-                1,
+                UserIdT::new(1),
                 1,
                 "start_address",
                 "target_address",
@@ -3708,7 +3512,7 @@ mod test {
                 test_points.bautzen_ost[0].x() as f32,
                 test_points.bautzen_ost[1].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
-                1,
+                UserIdT::new(1),
                 1,
                 "start_address",
                 "target_address",
@@ -3748,7 +3552,7 @@ mod test {
                 test_points.bautzen_ost[0].x() as f32,
                 test_points.bautzen_ost[1].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
-                1,
+                UserIdT::new(1),
                 1,
                 "start_address",
                 "target_address",
@@ -3773,7 +3577,7 @@ mod test {
                 test_points.bautzen_ost[1].x() as f32,
                 test_points.bautzen_ost[0].y() as f32,
                 test_points.bautzen_ost[0].x() as f32,
-                1,
+                UserIdT::new(1),
                 1,
                 "start_address",
                 "target_address",
@@ -3812,7 +3616,7 @@ mod test {
                 test_points.bautzen_ost[0].x() as f32,
                 test_points.bautzen_ost[1].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
-                1,
+                UserIdT::new(1),
                 1,
                 "start_address",
                 "target_address",
@@ -3837,7 +3641,7 @@ mod test {
                 test_points.bautzen_ost[1].x() as f32,
                 test_points.bautzen_ost[0].y() as f32,
                 test_points.bautzen_ost[0].x() as f32,
-                1,
+                UserIdT::new(1),
                 2,
                 "target_address",
                 "start_address",
@@ -3892,7 +3696,7 @@ mod test {
                 test_points.bautzen_ost[0].x() as f32,
                 test_points.bautzen_ost[1].y() as f32,
                 test_points.bautzen_ost[1].x() as f32,
-                1,
+                UserIdT::new(1),
                 1,
                 "start_address",
                 "target_address",
@@ -3902,14 +3706,23 @@ mod test {
         );
 
         //non-existing vehicle
-        assert_eq!(d.change_vehicle_for_tour(1, 6).await, StatusCode::NOT_FOUND);
+        assert_eq!(
+            d.change_vehicle_for_tour(TourIdT::new(1), VehicleIdT::new(6))
+                .await,
+            StatusCode::NOT_FOUND
+        );
 
         //non-existing tour
-        assert_eq!(d.change_vehicle_for_tour(2, 1).await, StatusCode::NOT_FOUND);
+        assert_eq!(
+            d.change_vehicle_for_tour(TourIdT::new(2), VehicleIdT::new(1))
+                .await,
+            StatusCode::NOT_FOUND
+        );
 
         //vehicle is not available during tour
         assert_eq!(
-            d.change_vehicle_for_tour(1, 5).await,
+            d.change_vehicle_for_tour(TourIdT::new(1), VehicleIdT::new(5))
+                .await,
             StatusCode::NOT_ACCEPTABLE
         );
     }

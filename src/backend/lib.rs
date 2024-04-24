@@ -1,4 +1,7 @@
-use crate::backend::interval::Interval;
+use crate::backend::{
+    id_types::{AddressIdT, CompanyIdT, EventIdT, TourIdT, UserIdT, VehicleIdT, ZoneIdT},
+    interval::Interval,
+};
 use async_trait::async_trait;
 use chrono::NaiveDateTime;
 use hyper::StatusCode;
@@ -24,34 +27,34 @@ pub trait PrimaTour {
 
 #[async_trait]
 pub trait PrimaEvent {
-    async fn get_id(&self) -> i32;
+    async fn get_id(&self) -> &EventIdT;
     async fn get_lat(&self) -> f32;
     async fn get_lng(&self) -> f32;
-    async fn get_customer_id(&self) -> i32;
-    async fn get_address_id(&self) -> i32;
+    async fn get_customer_id(&self) -> UserIdT;
+    async fn get_address_id(&self) -> &AddressIdT;
 }
 
 #[async_trait]
 pub trait PrimaVehicle {
-    async fn get_id(&self) -> i32;
+    async fn get_id(&self) -> &VehicleIdT;
     async fn get_license_plate(&self) -> &str;
-    async fn get_company_id(&self) -> i32;
+    async fn get_company_id(&self) -> &CompanyIdT;
     async fn get_tours(&self) -> Vec<Box<&dyn PrimaTour>>;
 }
 
 #[async_trait]
 pub trait PrimaUser {
-    async fn get_id(&self) -> i32;
+    async fn get_id(&self) -> &UserIdT;
     async fn get_name(&self) -> &str;
     async fn is_driver(&self) -> bool;
     async fn is_disponent(&self) -> bool;
     async fn is_admin(&self) -> bool;
-    async fn get_company_id(&self) -> Option<i32>;
+    async fn get_company_id(&self) -> &Option<CompanyIdT>;
 }
 
 #[async_trait]
 pub trait PrimaCompany {
-    async fn get_id(&self) -> i32;
+    async fn get_id(&self) -> &CompanyIdT;
     async fn get_name(&self) -> &str;
 }
 
@@ -62,7 +65,7 @@ pub trait PrimaData: Send + Sync {
     async fn create_vehicle(
         &mut self,
         license_plate: &str,
-        company: i32,
+        company: CompanyIdT,
     ) -> StatusCode;
 
     #[allow(clippy::too_many_arguments)]
@@ -71,7 +74,7 @@ pub trait PrimaData: Send + Sync {
         name: &str,
         is_driver: bool,
         is_disponent: bool,
-        company: Option<i32>,
+        company: Option<CompanyIdT>,
         is_admin: bool,
         email: &str,
         password: Option<String>,
@@ -84,7 +87,7 @@ pub trait PrimaData: Send + Sync {
         &mut self,
         start_time: NaiveDateTime,
         end_time: NaiveDateTime,
-        vehicle: i32,
+        vehicle: VehicleIdT,
     ) -> StatusCode;
 
     async fn create_zone(
@@ -96,7 +99,7 @@ pub trait PrimaData: Send + Sync {
     async fn create_company(
         &mut self,
         name: &str,
-        zone: i32,
+        zone: ZoneIdT,
         email: &str,
         lat: f32,
         lng: f32,
@@ -106,106 +109,106 @@ pub trait PrimaData: Send + Sync {
         &mut self,
         start_time: NaiveDateTime,
         end_time: NaiveDateTime,
-        vehicle_id: i32,
+        vehicle_id: VehicleIdT,
     ) -> StatusCode;
 
     async fn change_vehicle_for_tour(
         &mut self,
-        tour_id: i32,
-        new_vehicle_id: i32,
+        tour_id: TourIdT,
+        new_vehicle_id: VehicleIdT,
     ) -> StatusCode;
 
     async fn get_company(
         &self,
-        company_id: i32,
+        company_id: CompanyIdT,
     ) -> Result<Box<&dyn PrimaCompany>, StatusCode>;
 
     async fn get_user(
         &self,
-        user_id: i32,
+        user_id: UserIdT,
     ) -> Result<Box<&dyn PrimaUser>, StatusCode>;
 
     async fn get_address(
         &self,
-        address_id: i32,
+        address_id: AddressIdT,
     ) -> &str;
 
     async fn get_tours(
         &self,
-        vehicle_id: i32,
+        vehicle_id: VehicleIdT,
         time_frame_start: NaiveDateTime,
         time_frame_end: NaiveDateTime,
     ) -> Result<Vec<Box<&dyn PrimaTour>>, StatusCode>;
 
     async fn get_vehicles(
         &self,
-        company_id: i32,
+        company_id: CompanyIdT,
     ) -> Result<Vec<Box<&dyn PrimaVehicle>>, StatusCode>;
 
     async fn get_events_for_vehicle(
         &self,
-        vehicle_id: i32,
+        vehicle_id: VehicleIdT,
         time_frame_start: NaiveDateTime,
         time_frame_end: NaiveDateTime,
     ) -> Result<Vec<Box<&dyn PrimaEvent>>, StatusCode>;
 
     async fn get_events_for_user(
         &self,
-        user_id: i32,
+        user_id: UserIdT,
         time_frame_start: NaiveDateTime,
         time_frame_end: NaiveDateTime,
     ) -> Result<Vec<Box<&dyn PrimaEvent>>, StatusCode>;
 
     async fn get_events_for_tour(
         &self,
-        tour_id: i32,
+        tour_id: TourIdT,
     ) -> Result<Vec<Box<&dyn PrimaEvent>>, StatusCode>;
 
     async fn get_idle_vehicles(
         &self,
-        company_id: i32,
-        tour_id: i32,
+        company_id: CompanyIdT,
+        tour_id: TourIdT,
         consider_provided_tour_conflict: bool,
     ) -> Result<Vec<Box<&dyn PrimaVehicle>>, StatusCode>;
 
     async fn is_vehicle_idle(
         &self,
-        vehicle_id: i32,
-        tour_id: i32,
+        vehicle_id: VehicleIdT,
+        tour_id: TourIdT,
         consider_provided_tour_conflict: bool,
     ) -> Result<bool, StatusCode>;
 
     async fn get_company_conflicts(
         &self,
-        company_id: i32,
-        tour_id: i32,
+        company_id: CompanyIdT,
+        tour_id: TourIdT,
         consider_provided_tour_conflict: bool,
-    ) -> Result<HashMap<i32, Vec<Box<&dyn PrimaTour>>>, StatusCode>;
+    ) -> Result<HashMap<VehicleIdT, Vec<Box<&dyn PrimaTour>>>, StatusCode>;
 
     async fn get_vehicle_conflicts(
         &self,
-        vehicle_id: i32,
-        tour_id: i32,
+        vehicle_id: VehicleIdT,
+        tour_id: TourIdT,
         consider_provided_tour_conflict: bool,
     ) -> Result<Vec<Box<&dyn PrimaTour>>, StatusCode>;
 
     async fn get_tour_conflicts(
         &self,
-        event_id: i32,
-        company_id: Option<i32>,
+        event_id: EventIdT,
+        company_id: Option<CompanyIdT>,
     ) -> Result<Vec<Box<&dyn PrimaTour>>, StatusCode>;
 
     async fn get_availability_intervals(
         &self,
-        vehicle_id: i32,
+        vehicle_id: VehicleIdT,
         time_frame_start: NaiveDateTime,
         time_frame_end: NaiveDateTime,
     ) -> Result<Vec<&Interval>, StatusCode>;
 
     async fn is_vehicle_available(
         &self,
-        vehicle: i32,
-        tour_id: i32,
+        vehicle: VehicleIdT,
+        tour_id: TourIdT,
     ) -> Result<bool, StatusCode>;
 
     #[allow(clippy::too_many_arguments)]
@@ -217,7 +220,7 @@ pub trait PrimaData: Send + Sync {
         start_lng: f32,
         target_lat: f32,
         target_lng: f32,
-        customer: i32,
+        customer: UserIdT,
         passengers: i32,
         start_address: &str,
         target_address: &str,

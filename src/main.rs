@@ -6,7 +6,10 @@ use axum::{
     routing::get,
     Router,
 };
-use backend::lib::PrimaData;
+use backend::{
+    id_types::{CompanyIdT, IdT},
+    lib::PrimaData,
+};
 use dotenv::dotenv;
 use itertools::Itertools;
 use log::setup_logging;
@@ -54,7 +57,7 @@ async fn calendar(
     s.data
         .write()
         .await
-        .create_vehicle("test_vehicle_1", 1)
+        .create_vehicle("test_vehicle_1", CompanyIdT::new(1))
         .await;
     s.render("calendar.html", &Context::new())
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
@@ -142,25 +145,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tera,
         data: Arc::new(RwLock::new(data)),
     };
-
-    s.data
-        .write()
-        .await
-        .create_vehicle("test_vehicle_1", 1)
-        .await;
-
-    s.data
-        .write()
-        .await
-        .create_vehicle("test_vehicle_2", 1)
-        .await;
-
-    let mutex_guarded_data3 = s.data.read().await;
-    let company_1_vehicles = mutex_guarded_data3.get_vehicles(1).await;
-    for vehicle in company_1_vehicles.unwrap().iter() {
-        println!("vehicle with id: {} and license-plate: {} belongs to company: {} and has {} currently scheduled tours.",
-            vehicle.get_id().await, vehicle.get_license_plate().await, mutex_guarded_data3.get_company(vehicle.get_company_id().await).await.unwrap().get_name().await, vehicle.get_tours().await.len());
-    }
 
     let app = Router::new();
     let app = app.route("/calendar", get(calendar).with_state(s.clone()));
