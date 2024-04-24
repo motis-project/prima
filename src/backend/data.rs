@@ -2845,6 +2845,12 @@ mod test {
         let db_conn = test_main().await;
         let d = init(&db_conn, true, 5000, InitType::BackendTestWithEvents).await;
 
+        // vehicle       # of events created in init
+        //   1                  4
+        //   2                  2
+        //   3                  0
+        //   4                  0
+
         let not_found_result = d
             .get_events_for_vehicle(
                 VehicleIdT::new(1 + d.vehicles.len() as i32),
@@ -2881,6 +2887,59 @@ mod test {
         for i in 3..d.max_vehicle_id() {
             let result = d
                 .get_events_for_vehicle(VehicleIdT::new(i), NaiveDateTime::MIN, NaiveDateTime::MAX)
+                .await;
+            assert!(result.is_ok());
+            assert!(result.unwrap().is_empty());
+        }
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn get_events_for_user_test() {
+        let db_conn = test_main().await;
+        let d = init(&db_conn, true, 5000, InitType::BackendTestWithEvents).await;
+
+        let not_found_result = d
+            .get_events_for_user(
+                UserIdT::new(1 + d.users.len() as i32),
+                NaiveDateTime::MIN,
+                NaiveDateTime::MAX,
+            )
+            .await;
+        assert!(not_found_result.is_err());
+        assert_eq!(not_found_result.err(), Some(StatusCode::NOT_FOUND));
+
+        // user         # of events created in init
+        //   1                  4
+        //   2                  2
+        //   3                  0
+        //   4                  0
+        let result_v1 = d
+            .get_events_for_user(UserIdT::new(1), NaiveDateTime::MIN, NaiveDateTime::MAX)
+            .await;
+        assert!(result_v1.is_ok());
+        assert_eq!(result_v1.unwrap().len(), 4);
+
+        let result_v2 = d
+            .get_events_for_user(UserIdT::new(2), NaiveDateTime::MIN, NaiveDateTime::MAX)
+            .await;
+        assert!(result_v2.is_ok());
+        assert_eq!(result_v2.unwrap().len(), 2);
+
+        // events are not in requested interval
+        let emtpy_result_v1 = d
+            .get_events_for_user(UserIdT::new(1), NaiveDateTime::MIN, Utc::now().naive_utc())
+            .await;
+        assert!(emtpy_result_v1.is_ok());
+        assert!(emtpy_result_v1.unwrap().is_empty());
+
+        for i in 3..d.users.len() {
+            let result = d
+                .get_events_for_user(
+                    UserIdT::new(i as i32),
+                    NaiveDateTime::MIN,
+                    NaiveDateTime::MAX,
+                )
                 .await;
             assert!(result.is_ok());
             assert!(result.unwrap().is_empty());
