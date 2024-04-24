@@ -131,7 +131,6 @@ pub struct VehicleData {
 impl VehicleData {
     async fn add_availability(
         &mut self,
-        // State(s): State<&AppState>,
         db: &DbConn,
         new_interval: &mut Interval,
         id_or_none: Option<i32>, //None->insert availability into db, this yields the id->create availability in data with this id.  Some->create in data with given id, nothing to do in db
@@ -2324,3 +2323,13 @@ mod test {
     }
 }
 */
+
+// PUBLIC INTERFACE
+
+// pub async fn create_vehicle(
+//     &mut self,
+//     db: &DbConn,
+//     license_plate: String,
+//     company: i32,
+// ) -> StatusCode {
+// }

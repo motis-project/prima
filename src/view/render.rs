@@ -1,39 +1,25 @@
-use std::collections::HashMap;
+use std::sync::Mutex;
 
 use axum::{
-    extract::{Json, State},
+    extract::State,
     http::{StatusCode, Uri},
-    response::{Html, Redirect},
+    response::Html,
+    response::Json,
 };
-use chrono::NaiveDate;
+use chrono::{naive, Local, NaiveDate};
 use sea_orm::{DbConn, EntityTrait};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tera::Context;
-use tracing::{error, info};
+use tracing::error;
 
 use crate::{
-    backend::data::{AssignmentData, Data, VehicleData},
-    entities::prelude::User,
+    backend::data::{self, AssignmentData},
+    entities::{availability, prelude::User},
     init::AppState,
 };
 
 pub async fn get_route_details(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
-    // let user = User::find_by_id(1)
-    //     .one(s.db())
-    //     .await
-    //     .map_err(|e| {
-    //         error!("Database error: {e:?}");
-    //         StatusCode::INTERNAL_SERVER_ERROR
-    //     })?
-    //     .ok_or(StatusCode::NOT_FOUND)?;
-
-    // let username = user.name.to_owned();
-
-    // let mut user: user::ActiveModel = user.into();
-    // user.password = Set(Some("newpwd".to_string()));
-    // let _ = user.update(s.db()).await;
-
     let waypoints = vec![
         WayPoint {
             id: 0,
@@ -172,14 +158,15 @@ struct Tour {
     start_time: String,
     end_time: String,
     plate: String,
-    conflict: bool,
+    conflict: i32,
 }
 
 #[derive(Serialize, Clone)]
-struct Car {
+pub struct RenderVehicle {
     id: i32,
-    plate: String,
-    seats: i32,
+    license_plate: String,
+    availability_start: String,
+    availability_end: String,
 }
 
 #[derive(Serialize)]
@@ -198,11 +185,14 @@ struct WayPoint {
     drop: bool,
 }
 
-pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
-    let data = s.data();
+#[derive(Deserialize)]
+pub struct VehicleAvailabilityParams {
+    id: i32,
+}
 
+pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
     let company_id = 1;
-    //let vehicles: HashMap<i32, Vec<&VehicleData>> = data.get_vehicles(company_id, Some(true)).await;
+    let data = s.data.read().await;
     let vehicles = data.get_vehicles_(company_id, Some(true)).await;
 
     let start_time = NaiveDate::from_ymd_opt(2024, 4, 15)
@@ -214,6 +204,7 @@ pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, Sta
         .and_hms_opt(23, 59, 59)
         .unwrap();
 
+    // All tours for a sepc. company within a spec. day
     let mut tours_all: Vec<&AssignmentData> = Vec::new();
 
     // if vehicles is HashMap
@@ -224,36 +215,30 @@ pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, Sta
     //     tours_all.extend(tours_vehicle);
     // }
 
+    // since Tours are assigned to vehicles, we have to gather them from the comanies vehicles
     for v in vehicles.iter() {
         let tours_vehicle = data
             .get_assignments_for_vehicle(v.id, start_time, end_time)
             .await;
-        // println!("v_id: {}", v.id);
-        // for tv in tours_vehicle.iter() {
-        //     println!("Asignment id: {}", tv.id);
-        // }
         tours_all.extend(tours_vehicle);
     }
 
     let mut tours: Vec<Tour> = Vec::new();
 
     for tour in tours_all.iter() {
-        let conflict = false;
-
-        println!("\nTour {}:", tour.id);
+        let mut conflict = 0;
 
         for v in vehicles.iter() {
             let conflicts = data
                 .get_vehicle_conflicts_for_assignment(v.id, tour.id)
                 .await;
-            println!("vehicle_id: {}, conflicts:", v.id);
-            for confl_asmt in conflicts {
-                println!("{}", confl_asmt.id);
+            if conflicts.len() > 0 {
+                conflict = conflicts[0].id;
             }
         }
 
         tours.push(Tour {
-            id: tour.vehicle,
+            id: tour.id,
             date: tour.departure.date().to_string(),
             start_time: tour.departure.time().to_string(),
             end_time: tour.arrival.time().to_string(),
@@ -278,4 +263,99 @@ pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, Sta
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
     Ok(Html(response))
+}
+
+pub async fn render_availability(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
+    let company_id = 1;
+    let data = s.data.read().await;
+
+    let mut vehicles: Vec<RenderVehicle> = Vec::new();
+    let mut vec_availability: Vec<RenderVehicle> = Vec::new();
+
+    for v in data.get_vehicles_(company_id, Some(true)).await.iter() {
+        let availability = v.availability.clone();
+
+        let ve = RenderVehicle {
+            id: v.id,
+            license_plate: v.license_plate.to_string(),
+            availability_start: "".to_string(),
+            availability_end: "".to_string(),
+        };
+        vehicles.push(ve);
+
+        for (i, ad) in availability {
+            let va = RenderVehicle {
+                id: v.id,
+                license_plate: v.license_plate.to_string(),
+                availability_start: ad.interval.start_time.to_string(),
+                availability_end: ad.interval.end_time.to_string(),
+            };
+            vec_availability.push(va);
+        }
+    }
+
+    let response = s
+        .render(
+            "taxi-center/availability.html",
+            &Context::from_serialize(
+                json!({"vehicles": vehicles, "availability": vec_availability}),
+            )
+            .map_err(|e| {
+                error!("Serialize error: {e:?}");
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?,
+        )
+        .map_err(|e| {
+            error!("Render error: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+    Ok(Html(response))
+}
+
+pub async fn get_availability(
+    State(s): State<AppState>,
+    params: axum::extract::Query<VehicleAvailabilityParams>,
+) -> Json<Vec<RenderVehicle>> {
+    let company_id = 1;
+    let data = s.data.read().await;
+
+    let mut vehicles: Vec<RenderVehicle> = Vec::new();
+
+    // availability
+    for v in data.get_vehicles_(company_id, Some(true)).await.iter() {
+        let availability = v.availability.clone();
+        for (i, ad) in availability {
+            let ve = RenderVehicle {
+                id: v.id,
+                license_plate: v.license_plate.to_string(),
+                availability_start: ad.interval.start_time.to_string(),
+                availability_end: ad.interval.end_time.to_string(),
+            };
+            vehicles.push(ve);
+        }
+    }
+
+    Json(vehicles)
+}
+
+pub async fn get_vehicles(
+    State(s): State<AppState>,
+    // params: axum::extract::Query<VehicleAvailabilityParams>,
+) -> Json<Vec<RenderVehicle>> {
+    let company_id = 1;
+    let data = s.data.read().await;
+
+    let mut vehicles: Vec<RenderVehicle> = Vec::new();
+
+    for v in data.get_vehicles_(company_id, Some(true)).await.iter() {
+        let ve = RenderVehicle {
+            id: v.id,
+            license_plate: v.license_plate.to_string(),
+            availability_start: "".to_string(),
+            availability_end: "".to_string(),
+        };
+        vehicles.push(ve);
+    }
+
+    Json(vehicles)
 }

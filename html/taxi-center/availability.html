@@ -1,37 +1,603 @@
 {% extends "base3.html" %}
 {% block content %}
 
-<div>
-    <h1>Fahrzeuge</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Kennzeichen</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for vehicle in vehicles %}
-            <tr>
-                <td>{{vehicle.id}}</td>
-                <td>{{vehicle.license_plate}}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <input type="button" value="+" onclick="add_vehicle()" />
+<div class="pl-4">
+    <h1 class="leading-tight text-gray-900 text-5xl pb-8">Fahrzeuge und Verfügbarkeit</h1>
+
+    <div class="flex">
+        <div>
+            <input id="prevDay" type="button" value="<"
+                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+        </div>
+        <div class="relative w-60">
+            <input id="dateInput" type="date" onchange="change_date()"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+        </div>
+        <div>
+            <input id="nextDay" type="button" value=">"
+                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+        </div>
+        <!-- <div>
+            <input type="button" value="Als verfügbar markieren" onclick="set_available()"
+                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 mx-8 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+        </div> -->
+    </div>
+    <br>
+
+    <div>
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <td></td>
+                        <td>23:00<br>00 15 30 45</td>
+                        <td>00:00<br>00 15 30 45</td>
+                        <td>01:00<br>00 15 30 45</td>
+                        <td>02:00<br>00 15 30 45</td>
+                        <td>03:00<br>00 15 30 45</td>
+                        <td>04:00<br>00 15 30 45</td>
+                        <td>05:00<br>00 15 30 45</td>
+                        <td>06:00<br>00 15 30 45</td>
+                        <td>07:00<br>00 15 30 45</td>
+                    </tr>
+                </thead>
+                <tbody id="tbody-1">
+                    {% for vehicle in vehicles %}
+                    <tr id="r-{{vehicle.id}}">
+                        <td>{{vehicle.license_plate}}</td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="y-{{vehicle.id}}-23-00" class="border text-white">....</td>
+                                    <td id="y-{{vehicle.id}}-23-15" class="border text-white">....</td>
+                                    <td id="y-{{vehicle.id}}-23-30" class="border text-white">....</td>
+                                    <td id="y-{{vehicle.id}}-23-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-00-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-00-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-00-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-00-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-01-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-01-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-01-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-01-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-02-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-02-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-02-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-02-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-03-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-03-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-03-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-03-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-04-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-04-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-04-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-04-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-05-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-05-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-05-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-05-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-06-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-06-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-06-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-06-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-07-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-07-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-07-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-07-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <br>
+        <br>
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <td></td>
+                        <td>08:00<br>00 15 30 45</td>
+                        <td>09:00<br>00 15 30 45</td>
+                        <td>10:00<br>00 15 30 45</td>
+                        <td>11:00<br>00 15 30 45</td>
+                        <td>12:00<br>00 15 30 45</td>
+                        <td>13:00<br>00 15 30 45</td>
+                        <td>14:00<br>00 15 30 45</td>
+                        <td>15:00<br>00 15 30 45</td>
+                        <td>16:00<br>00 15 30 45</td>
+                    </tr>
+                </thead>
+                <tbody id="tbody-2">
+                    {% for vehicle in vehicles %}
+                    <tr id="r-{{vehicle.id}}">
+                        <td>{{vehicle.license_plate}}</td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-08-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-08-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-08-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-08-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-09-0" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-09-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-09-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-09-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-10-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-10-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-10-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-10-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-11-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-11-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-11-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-11-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-12-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-12-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-12-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-12-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-13-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-13-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-13-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-13-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-14-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-14-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-14-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-14-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-15-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-15-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-15-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-15-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-16-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-16-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-16-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-16-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <br>
+        <br>
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <td></td>
+                        <td>17:00<br>00 15 30 45</td>
+                        <td>18:00<br>00 15 30 45</td>
+                        <td>19:00<br>00 15 30 45</td>
+                        <td>20:00<br>00 15 30 45</td>
+                        <td>21:00<br>00 15 30 45</td>
+                        <td>22:00<br>00 15 30 45</td>
+                        <td>23:00<br>00 15 30 45</td>
+                        <td>00:00<br>00 15 30 45</td>
+                    </tr>
+                </thead>
+                <tbody id="tbody-3">
+                    {% for vehicle in vehicles %}
+                    <tr id="r-{{vehicle.id}}">
+                        <td>{{vehicle.license_plate}}</td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-17-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-17-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-17-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-17-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-18-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-18-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-18-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-18-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-19-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-19-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-19-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-19-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-20-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-20-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-20-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-20-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-21-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-21-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-21-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-21-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-22-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-22-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-22-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-22-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-23-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-23-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-23-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-23-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="t-{{vehicle.id}}-00-00" class="border text-white">....</td>
+                                    <td id="t-{{vehicle.id}}-00-15" class="border text-white">....</td>
+                                    <td id="t-{{vehicle.id}}-00-30" class="border text-white">....</td>
+                                    <td id="t-{{vehicle.id}}-00-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <br>
+    <br>
+    <div>
+        <h2 class="leading-tight text-gray-900 text-2xl pb-4">Fahrzeug hinzufügen</h2>
+        <form action="/vehicle" method="post">
+            <label for="license_plate">Kennzeichen:</label><br>
+            <input type="text" id="license_plate" name="license_plate"
+                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+            <input type="submit" value="+"
+                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+        </form>
+    </div>
 </div>
 
-<div>
-    <form action="/vehicle" method="post">
-        <label for="license_plate">Kennzeichen:</label><br>
-        <input type="text" id="license_plate" name="license_plate"><br>
-        <label for="availability_start">Verfügbar von:</label><br>
-        <input type="text" id="av-start" name="availability_start"><br>
-        <label for="availability_end">Verfügbar bis:</label><br>
-        <input type="text" id="av-end" name="availability_end"><br>
-        <input type="submit" value="Submit">
-    </form>
-</div>
+<script>
+    var map = {};
+
+    var color_available = "#fcf3cf";
+    var color_booked = "#e67e22";
+
+    var mouse_down_id = "";
+    var mouse_up_id = "";
+
+    var current_dt = Date.now();
+
+    function clear() {
+        map = {};
+        rows = new Array('tbody-1', 'tbody-2', 'tbody-3');
+        rows.forEach(tb_id => {
+            let tbody = document.getElementById(tb_id);
+            tbody.querySelectorAll('tr').forEach(row => {
+                row.querySelectorAll('td').forEach(cell => {
+                    if (cell.childNodes.length == 3) {
+                        cell.children[0].querySelectorAll('tr').forEach(r => {
+                            r.querySelectorAll('td').forEach(c => {
+                                c.style.backgroundColor = "white";
+                            });
+                        });
+                    }
+                });
+            });
+        });
+    }
+
+    function init() {
+        clear();
+        rows = new Array('tbody-1', 'tbody-2', 'tbody-3');
+        rows.forEach(tb_id => {
+            let tbody = document.getElementById(tb_id);
+            tbody.querySelectorAll('tr').forEach(row => {
+                row.querySelectorAll('td').forEach(cell => {
+                    if (cell.childNodes.length == 3) {
+                        cell.children[0].querySelectorAll('tr').forEach(r => {
+                            r.querySelectorAll('td').forEach(c => {
+                                // c.addEventListener('click', function () {
+                                //     if (map[c.id] != 2) {
+                                //         if (map[c.id] == 1) {
+                                //             c.style.backgroundColor = "white";
+                                //             map[c.id] = 0;
+                                //         } else {
+                                //             c.style.backgroundColor = color_available;
+                                //             map[c.id] = 1;
+                                //         }
+                                //     }
+                                // });
+                                c.addEventListener('mousedown', () => {
+                                    mouse_down_id = c.id;
+                                });
+                                c.addEventListener('mouseup', () => {
+                                    mouse_up_id = c.id;
+                                    set_available();
+                                });
+                            });
+                        });
+                    }
+                });
+            });
+        });
+        get_availability();
+    }
+
+    function get_cell_id(vehicle_id, date) {
+        h = date.getHours().toString();
+        m = date.getMinutes().toString();
+
+        if (h.length < 2) h = '0' + h;
+        if (m.length < 2) m = '0' + m;
+
+        today_dom = new Date(current_dt).getDate();
+        date_dom = new Date(date).getDate();
+
+        if (date_dom == today_dom - 1 && date.getHours() >= 23) prefix = 'y';
+        else if (date_dom == today_dom + 1 && date.getHours() < 1) { prefix = 't'; }
+        else if (date_dom == today_dom) prefix = 'c';
+        else return null; // datetime out of display range
+
+        id = prefix + '-' + vehicle_id + '-' + h + '-' + m;
+        return id;
+    }
+
+    function mark_cells(vehicle_id, t_start, t_end, status) {
+        console.log(vehicle_id, t_start, t_end, status);
+        let d_start = new Date(Date.parse(t_start.replace(' ', 'T')));
+        let d_end = new Date(Date.parse(t_end.replace(' ', 'T')));
+        let d_next = d_start;
+
+        while (d_next <= d_end) {
+            let c_id = get_cell_id(vehicle_id, d_next);
+            d_next = new Date(d_next.getTime() + 15 * 60000);
+            if (c_id == null) continue;
+            if (status == 1) {
+                document.getElementById(c_id).style.backgroundColor = color_available;
+                map[c_id] = 1;
+            } else if (status == 2) {
+                document.getElementById(c_id).style.backgroundColor = color_booked;
+                map[c_id] = 2;
+            }
+        }
+    }
+
+    function get_cell_info(cell_id) {
+        let tokens = cell_id.split('-');
+        let vehicle_id = tokens[1];
+        let h = tokens[2];
+        let m = tokens[3];
+
+        let start_date = new Date(current_dt);
+
+        if (tokens[0] == 'y') {
+            start_date.setDate(new Date(current_dt).getDate() - 1);
+            start_date.setHours(h);
+            start_date.setMinutes(m);
+        }
+
+        if (tokens[0] == 't') {
+            start_date.setDate(start_date.getDate() + 1);
+            start_date.setHours(h);
+            start_date.setMinutes(m);
+        }
+
+        let time_str = h + ':' + m + ':00';
+        let day = start_date.getDate().toString();
+        let month = (start_date.getMonth() + 1).toString();
+        let year = start_date.getFullYear().toString();
+
+        if (day.length < 2) day = '0' + day;
+        if (month.length < 2) month = '0' + month;
+
+        dt_str = year + '-' + month + '-' + day + ' ' + time_str;
+        return [vehicle_id, dt_str];
+    }
+
+    function set_available() {
+        cell_info_start = get_cell_info(mouse_down_id);
+        cell_info_end = get_cell_info(mouse_up_id);
+        vehicle_id_1 = cell_info_start[0];
+        vehicle_id_2 = cell_info_end[0];
+        date_time_start = cell_info_start[1];
+        date_time_end = cell_info_end[1];
+
+        if (vehicle_id_1 == vehicle_id_2 && date_time_start != date_time_end) {
+            dt_start = new Date(date_time_start);
+            dt_end = new Date(date_time_end);
+            if (dt_start > dt_end) {
+                let tmp = date_time_start;
+                date_time_start = date_time_end;
+                date_time_end = tmp;
+            }
+            mark_cells(vehicle_id_1, date_time_start, date_time_end, 1);
+            set_availability(parseInt(vehicle_id_1), date_time_start, date_time_end);
+        }
+
+        mouse_down_id = "";
+        mouse_up_id = "";
+    }
+
+    function get_availability() {
+        fetch("http://localhost:3030/vehicle_availability?id=1")
+            .then(res =>
+                res.json()).then(availability_lst => {
+                    availability_lst.forEach(e => {
+                        mark_cells(e['id'], e['availability_start'], e['availability_end'], 1);
+                    });
+                })
+    }
+
+    function set_availability(vehicle_id, t_start, t_end) {
+        data = { 'id': vehicle_id, 'availability_start': t_start, 'availability_end': t_end };
+        fetch("http://localhost:3030/availability", {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+
+        })
+            .then(res => console.log(res))
+    }
+
+    function change_date() {
+        current_dt = new Date(dateInput.value);
+        init();
+    }
+
+    init();
+
+    const dateInput = document.getElementById('dateInput');
+    const prevDayBtn = document.getElementById('prevDay');
+    const nextDayBtn = document.getElementById('nextDay');
+
+    const dt = new Date(current_dt);
+    const day = ("0" + dt.getDate()).slice(-2);
+    const month = ("0" + (dt.getMonth() + 1)).slice(-2);
+    const date = dt.getFullYear() + "-" + month + "-" + day;
+    dateInput.value = date;
+
+    // Function to navigate to the previous day
+    prevDayBtn.addEventListener('click', () => {
+        const currentDate = new Date(dateInput.value);
+        currentDate.setDate(currentDate.getDate() - 1);
+        dateInput.value = currentDate.toISOString().slice(0, 10); // Set the input value to the new date
+        current_dt = currentDate;
+        init();
+    });
+
+    // Function to navigate to the next day
+    nextDayBtn.addEventListener('click', () => {
+        const currentDate = new Date(dateInput.value);
+        currentDate.setDate(currentDate.getDate() + 1);
+        dateInput.value = currentDate.toISOString().slice(0, 10); // Set the input value to the new date
+        current_dt = currentDate;
+        init();
+    });
+</script>
 
 {% endblock content %}

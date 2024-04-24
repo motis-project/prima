@@ -23,9 +23,12 @@ use tower_http::{compression::CompressionLayer, services::ServeFile};
 use tower_livereload::LiveReloadLayer;
 use tracing::error;
 
-use view::render::{
-    get_route_details, render_driver_sign_in, render_home, render_login, render_register,
-    render_tours,
+use view::{
+    render::{
+        get_availability, get_route_details, get_vehicles, render_availability,
+        render_driver_sign_in, render_home, render_login, render_register, render_tours,
+    },
+    vehicle_view::{add_vehicle_availability, create_vehicle},
 };
 
 use model::m_user::{
@@ -90,11 +93,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //     "/tc-dashboard",
     //     get(render_tc_dashboard).with_state(s.clone()),
     // );
+    let app = app.route(
+        "/availability",
+        get(render_availability).with_state(s.clone()),
+    );
     let app = app.route("/tours", get(render_tours).with_state(s.clone()));
     let app = app.route(
         "/routes/:route_id",
         get(get_route_details).with_state(s.clone()),
     );
+    let app = app.route(
+        "/vehicle_availability",
+        get(get_availability).with_state(s.clone()),
+    );
+    let app = app.route("/vehicles", get(get_vehicles).with_state(s.clone()));
 
     // GET static files
     let app = app.route_service("/output.css", ServeFile::new("output.css"));
@@ -107,6 +119,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = app.route("/logout", post(logout_user).with_state(s.clone()));
     let app = app.route("/update", post(update_user).with_state(s.clone()));
     let app = app.route("/delete", post(delete_user).with_state(s.clone()));
+    let app = app.route(
+        "/availability",
+        post(add_vehicle_availability).with_state(s.clone()),
+    );
+
+    let app = app.route("/vehicle", post(create_vehicle).with_state(s.clone()));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3030").await?;
     axum::serve(listener, app).await?;
