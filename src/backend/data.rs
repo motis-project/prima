@@ -122,6 +122,7 @@ fn beeline_duration(
     p1: &Point,
     p2: &Point,
 ) -> Duration {
+    // x is longittude and y is latitude!
     Duration::minutes(hrs_to_minutes(
         meter_to_km_f(p1.geodesic_distance(p2)) / BEELINE_KMH,
     ))
@@ -979,8 +980,8 @@ impl PrimaData for Data {
                 name: company_model.display_name,
                 zone: ZoneIdT::new(company_model.zone),
                 central_coordinates: Point::new(
-                    company_model.latitude as f64,
                     company_model.longitude as f64,
+                    company_model.latitude as f64,
                 ),
                 id: company_id,
                 email: company_model.email,
@@ -1301,7 +1302,7 @@ impl PrimaData for Data {
             Ok(result) => {
                 self.companies.push(CompanyData {
                     id: CompanyIdT::new(result.last_insert_id),
-                    central_coordinates: Point::new(lat as f64, lng as f64),
+                    central_coordinates: Point::new(lng as f64, lat as f64),
                     zone,
                     name: name.to_string(),
                     email: email.to_string(),
@@ -1399,6 +1400,9 @@ impl PrimaData for Data {
             Ok(tour) => tour.vehicle,
             Err(e) => return e,
         };
+        if old_vehicle_id == new_vehicle_id {
+            return StatusCode::NO_CONTENT;
+        }
         let tour_idx = self.vehicles[old_vehicle_id.as_idx()]
             .tours
             .iter()
@@ -2963,13 +2967,13 @@ mod test {
         assert!(t2_result.is_ok());
         assert!(t2_result.clone().unwrap().len() == 2);
         let first_event = *(t2_result.unwrap()[0]);
-        assert_eq!(first_event.get_customer_id().await, UserIdT::new(2));
+        assert_eq!(first_event.get_customer_id().await, UserIdT::new(1));
 
         let t3_result = d.get_events_for_tour(TourIdT::new(3)).await;
         assert!(t3_result.is_ok());
         assert!(t3_result.clone().unwrap().len() == 2);
         let first_event = *(t3_result.unwrap()[0]);
-        assert_eq!(first_event.get_customer_id().await, UserIdT::new(1));
+        assert_eq!(first_event.get_customer_id().await, UserIdT::new(2));
 
         let t4_result = d.get_events_for_tour(TourIdT::new(4)).await;
         assert!(t4_result.is_err());
@@ -3398,6 +3402,13 @@ mod test {
             assert!(beeline_duration(p, &test_points.outside[3]) < Duration::hours(1));
         }
         for (p, company) in all_test_points.iter().cartesian_product(d.companies.iter()) {
+            println!(
+                "{}  {}  -  company: {}   {}",
+                p.0.x,
+                p.0.y,
+                company.central_coordinates.x(),
+                company.central_coordinates.y()
+            );
             assert!(beeline_duration(p, &company.central_coordinates) < Duration::hours(1));
         }
     }
@@ -3715,8 +3726,8 @@ mod test {
                 assert!(v.tours.is_empty());
             }
             if !v.tours.is_empty() {
-                assert!(v.tours.len() == 1);
-                assert!(v.tours.iter().flat_map(|t| &t.events).count() == 4);
+                assert_eq!(v.tours.len(), 1);
+                assert_eq!(v.tours.iter().flat_map(|t| &t.events).count(), 4);
                 vehicle_with_tours_found = true;
             }
         }
@@ -3734,10 +3745,44 @@ mod test {
         );
     }
 
+    #[tokio::test]
+    #[serial]
+    async fn test_change_vehicle_concrete() {
+        let db_conn = test_main().await;
+        let mut d = init(&db_conn, true, 5000, InitType::BackendTestWithEvents).await;
+
+        // verify that tour with id 1 is done by vehicle with id 1
+        let tour = d.get_tour(TourIdT::new(1)).await;
+        assert!(tour.is_ok());
+        let tour = tour.unwrap();
+        assert_eq!(tour.vehicle, VehicleIdT::new(1));
+
+        // old and new vehicle are the same
+        assert_eq!(
+            d.change_vehicle_for_tour(TourIdT::new(1), VehicleIdT::new(1))
+                .await,
+            StatusCode::NO_CONTENT
+        );
+
+        // vehicle is not available
+        assert_eq!(
+            d.change_vehicle_for_tour(TourIdT::new(1), VehicleIdT::new(5))
+                .await,
+            StatusCode::NOT_ACCEPTABLE
+        );
+
+        // change possible
+        assert_eq!(
+            d.change_vehicle_for_tour(TourIdT::new(1), VehicleIdT::new(2))
+                .await,
+            StatusCode::OK
+        )
+    }
+
     #[traced_test]
     #[tokio::test]
     #[serial]
-    async fn test_change_vehicle() {
+    async fn test_change_vehicle_statuscodes() {
         let db_conn = test_main().await;
         let mut d = init(&db_conn, true, 5000, InitType::BackendTest).await;
 
@@ -3898,26 +3943,26 @@ mod test {
         let u3 = d.get_customer_for_event(events[2]).await;
         assert!(u3.is_ok());
         let u3 = *u3.unwrap();
-        assert_eq!(u3.get_name().await, "TestUser1");
-        assert_eq!(*u3.get_id().await, UserIdT::new(2));
+        assert_eq!(u3.get_name().await, "TestDriver1");
+        assert_eq!(*u3.get_id().await, UserIdT::new(1));
 
         let u4 = d.get_customer_for_event(events[3]).await;
         assert!(u4.is_ok());
         let u4 = *u4.unwrap();
-        assert_eq!(u4.get_name().await, "TestUser1");
-        assert_eq!(*u4.get_id().await, UserIdT::new(2));
+        assert_eq!(u4.get_name().await, "TestDriver1");
+        assert_eq!(*u4.get_id().await, UserIdT::new(1));
 
         let u5 = d.get_customer_for_event(events[4]).await;
         assert!(u5.is_ok());
         let u5 = *u5.unwrap();
-        assert_eq!(u5.get_name().await, "TestDriver1");
-        assert_eq!(*u5.get_id().await, UserIdT::new(1));
+        assert_eq!(u5.get_name().await, "TestUser1");
+        assert_eq!(*u5.get_id().await, UserIdT::new(2));
 
         let u6 = d.get_customer_for_event(events[5]).await;
         assert!(u6.is_ok());
         let u6 = *u6.unwrap();
-        assert_eq!(u6.get_name().await, "TestDriver1");
-        assert_eq!(*u6.get_id().await, UserIdT::new(1));
+        assert_eq!(u6.get_name().await, "TestUser1");
+        assert_eq!(*u6.get_id().await, UserIdT::new(2));
     }
 
     #[tokio::test]
