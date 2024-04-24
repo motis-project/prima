@@ -26,7 +26,7 @@ pub trait PrimaTour {
 }
 
 #[async_trait]
-pub trait PrimaEvent {
+pub trait PrimaEvent: Send + Sync {
     async fn get_id(&self) -> &EventIdT;
     async fn get_lat(&self) -> f32;
     async fn get_lng(&self) -> f32;
@@ -130,7 +130,7 @@ pub trait PrimaData: Send + Sync {
 
     async fn get_address(
         &self,
-        address_id: AddressIdT,
+        address_id: &AddressIdT,
     ) -> &str;
 
     async fn get_tours(
@@ -241,5 +241,19 @@ pub trait PrimaData: Send + Sync {
         vehicle: &dyn PrimaVehicle,
     ) -> Result<Box<&dyn PrimaCompany>, StatusCode> {
         self.get_company(vehicle.get_company_id().await).await
+    }
+
+    async fn get_customer_for_event(
+        &self,
+        event: &dyn PrimaEvent,
+    ) -> Result<Box<&dyn PrimaUser>, StatusCode> {
+        self.get_user(event.get_customer_id().await).await
+    }
+
+    async fn get_address_for_event(
+        &self,
+        event: &dyn PrimaEvent,
+    ) -> &str {
+        self.get_address(event.get_address_id().await).await
     }
 }

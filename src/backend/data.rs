@@ -933,7 +933,7 @@ impl PrimaData for Data {
 
     async fn get_address(
         &self,
-        address_id: AddressIdT,
+        address_id: &AddressIdT,
     ) -> &str {
         &self.addresses[address_id.as_idx()].address
     }
@@ -3868,5 +3868,76 @@ mod test {
         assert!(c5.is_ok());
         let c5 = *c5.unwrap();
         assert_eq!(c5.get_name().await, "Taxi-Unternehmen Görlitz-1");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn get_customer_for_event_test() {
+        let db_conn = test_main().await;
+        let d = init(&db_conn, true, 5000, InitType::BackendTestWithEvents).await;
+
+        let events = d
+            .vehicles
+            .iter()
+            .flat_map(|v| v.tours.iter().flat_map(|t| &t.events))
+            .sorted_by_key(|event| &event.id)
+            .collect_vec();
+
+        let u1 = d.get_customer_for_event(events[0]).await;
+        assert!(u1.is_ok());
+        let u1 = *u1.unwrap();
+        assert_eq!(u1.get_name().await, "TestDriver1");
+        assert_eq!(*u1.get_id().await, UserIdT::new(1));
+
+        let u2 = d.get_customer_for_event(events[1]).await;
+        assert!(u2.is_ok());
+        let u2 = *u2.unwrap();
+        assert_eq!(u2.get_name().await, "TestDriver1");
+        assert_eq!(*u2.get_id().await, UserIdT::new(1));
+
+        let u3 = d.get_customer_for_event(events[2]).await;
+        assert!(u3.is_ok());
+        let u3 = *u3.unwrap();
+        assert_eq!(u3.get_name().await, "TestUser1");
+        assert_eq!(*u3.get_id().await, UserIdT::new(2));
+
+        let u4 = d.get_customer_for_event(events[3]).await;
+        assert!(u4.is_ok());
+        let u4 = *u4.unwrap();
+        assert_eq!(u4.get_name().await, "TestUser1");
+        assert_eq!(*u4.get_id().await, UserIdT::new(2));
+
+        let u5 = d.get_customer_for_event(events[4]).await;
+        assert!(u5.is_ok());
+        let u5 = *u5.unwrap();
+        assert_eq!(u5.get_name().await, "TestDriver1");
+        assert_eq!(*u5.get_id().await, UserIdT::new(1));
+
+        let u6 = d.get_customer_for_event(events[5]).await;
+        assert!(u6.is_ok());
+        let u6 = *u6.unwrap();
+        assert_eq!(u6.get_name().await, "TestDriver1");
+        assert_eq!(*u6.get_id().await, UserIdT::new(1));
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn get_address_for_event_test() {
+        let db_conn = test_main().await;
+        let d = init(&db_conn, true, 5000, InitType::BackendTestWithEvents).await;
+
+        let events = d
+            .vehicles
+            .iter()
+            .flat_map(|v| v.tours.iter().flat_map(|t| &t.events))
+            .sorted_by_key(|event| &event.id)
+            .collect_vec();
+
+        assert_eq!(d.get_address_for_event(events[0]).await, "start_address");
+        assert_eq!(d.get_address_for_event(events[1]).await, "target_address");
+        assert_eq!(d.get_address_for_event(events[2]).await, "start_address");
+        assert_eq!(d.get_address_for_event(events[3]).await, "target_address");
+        assert_eq!(d.get_address_for_event(events[4]).await, "start_address");
+        assert_eq!(d.get_address_for_event(events[5]).await, "target_address");
     }
 }

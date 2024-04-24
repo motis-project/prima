@@ -39,7 +39,7 @@ pub struct UserIdT {
     id: i32,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, PartialOrd, Ord)]
 pub struct EventIdT {
     id: i32,
 }
