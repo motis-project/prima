@@ -5,19 +5,13 @@ pub trait IdT {
 }
 
 pub trait IndexedIdT: IdT {
-    fn as_idx(&self) -> usize {
-        assert!(self.id() > 0);
-        (self.id() - 1) as usize
-    }
+    fn as_idx(&self) -> usize;
 
     fn is_in_range(
         &self,
         lower_bound: i32,
         upper_bound: i32,
-    ) -> bool {
-        assert!(lower_bound < upper_bound);
-        lower_bound <= self.id() && self.id() <= upper_bound
-    }
+    ) -> bool;
 }
 
 #[derive(PartialEq, Eq, Clone, Hash, Copy)]
@@ -55,80 +49,70 @@ pub struct AddressIdT {
     id: i32,
 }
 
-impl IdT for AddressIdT {
-    fn id(&self) -> i32 {
-        self.id
-    }
+macro_rules! impl_IdT {
+    (for $($t:ty),+) => {
+        $(impl IdT for $t {
+            fn id(&self) -> i32 {
+                self.id
+            }
 
-    fn new(id: i32) -> Self {
-        Self { id }
-    }
-}
-
-impl IdT for EventIdT {
-    fn id(&self) -> i32 {
-        self.id
-    }
-
-    fn new(id: i32) -> Self {
-        Self { id }
+            fn new(id: i32) -> Self {
+                Self { id }
+            }
+        })*
     }
 }
+impl_IdT!(for VehicleIdT, CompanyIdT, ZoneIdT, AddressIdT, UserIdT, TourIdT, EventIdT );
 
-impl IdT for UserIdT {
-    fn id(&self) -> i32 {
-        self.id
-    }
+macro_rules! impl_IndexedIdT {
+    (for $($t:ty),+) => {
+        $(impl IndexedIdT for $t {
+            fn as_idx(&self) -> usize {
+                assert!(self.id > 0);
+                (self.id() - 1) as usize
+            }
 
-    fn new(id: i32) -> Self {
-        Self { id }
-    }
-}
-
-impl IdT for VehicleIdT {
-    fn id(&self) -> i32 {
-        self.id
-    }
-
-    fn new(id: i32) -> Self {
-        Self { id }
-    }
-}
-
-impl IdT for CompanyIdT {
-    fn id(&self) -> i32 {
-        self.id
-    }
-
-    fn new(id: i32) -> Self {
-        Self { id }
+            fn is_in_range(
+                &self,
+                lower_bound: i32,
+                upper_bound: i32,
+            ) -> bool {
+                assert!(lower_bound < upper_bound);
+                lower_bound <= self.id && self.id <= upper_bound
+            }
+        })*
     }
 }
+impl_IndexedIdT!(for VehicleIdT,CompanyIdT,ZoneIdT,AddressIdT);
 
-impl IdT for ZoneIdT {
-    fn id(&self) -> i32 {
-        self.id
+#[cfg(test)]
+mod test {
+    use std::any::Any;
+
+    use crate::backend::id_types::IndexedIdT;
+
+    use super::{CompanyIdT, IdT, VehicleIdT};
+
+    #[test]
+    fn test_id_types_are_different() {
+        assert_ne!(CompanyIdT::new(1).type_id(), VehicleIdT::new(1).type_id());
+        assert_eq!(CompanyIdT::new(1).type_id(), CompanyIdT::new(1).type_id());
     }
 
-    fn new(id: i32) -> Self {
-        Self { id }
+    #[should_panic]
+    #[test]
+    fn test_in_range_panic() {
+        let c_id = CompanyIdT::new(3);
+        assert!(c_id.is_in_range(3, 3));
+    }
+
+    #[test]
+    fn test_in_range() {
+        let c_id = CompanyIdT::new(3);
+        assert!(c_id.is_in_range(3, 4));
+        assert!(c_id.is_in_range(2, 3));
+
+        assert!(!c_id.is_in_range(4, 5));
+        assert!(!c_id.is_in_range(1, 2));
     }
 }
-
-impl IdT for TourIdT {
-    fn id(&self) -> i32 {
-        self.id
-    }
-
-    fn new(id: i32) -> Self {
-        Self { id }
-    }
-}
-
-impl IndexedIdT for VehicleIdT {}
-
-impl IndexedIdT for CompanyIdT {}
-
-impl IndexedIdT for ZoneIdT {}
-
-impl IndexedIdT for AddressIdT {}

@@ -2778,6 +2778,7 @@ mod test {
             .await,
             StatusCode::OK
         );
+
         assert_eq!(d.vehicles[0].availability.len(), 0);
         //add non-touching
         assert_eq!(
@@ -3264,84 +3265,6 @@ mod test {
             assert!(beeline_duration(p, &company.central_coordinates) < Duration::hours(1));
         }
     }
-
-    /*
-       #[tokio::test]
-       #[serial]
-       async fn test_osrm_duration() {
-           let osrm = OSRM::new();
-           let mut test_points = TestPoints::new();
-           let mut all_test_points = Vec::<geo::Coord>::new();
-           all_test_points.append(
-               &mut test_points
-                   .bautzen_ost
-                   .iter_mut()
-                   .map(|p| p.0)
-                   .collect_vec(),
-           );
-           all_test_points.append(
-               &mut test_points
-                   .bautzen_west
-                   .iter_mut()
-                   .map(|p| p.0)
-                   .collect_vec(),
-           );
-           all_test_points.append(&mut test_points.gorlitz.iter_mut().map(|p| p.0).collect_vec());
-           all_test_points.truncate(1);
-
-           for (ii, p) in all_test_points.iter().enumerate() {
-               let dist_times = osrm
-                   .one_to_many(*p, all_test_points.clone(), osrm::Dir::Forward)
-                   .await
-                   .unwrap();
-               for t in dist_times
-                   .iter()
-                   .map(|dt| seconds_to_minutes_duration(dt.time))
-               {
-                   assert!(t < Duration::hours(1));
-               }
-               let dist_times_outside = osrm
-                   .one_to_many(
-                       *p,
-                       test_points.outside.iter().map(|p| p.0).collect_vec(),
-                       osrm::Dir::Forward,
-                   )
-                   .await
-                   .unwrap();
-               // point in lisbon
-               println!(
-                   "{} - lisbon: {}",
-                   ii,
-                   seconds_to_minutes_duration(dist_times_outside[0].time).num_hours()
-               );
-               assert!(seconds_to_minutes_duration(dist_times_outside[0].time) > Duration::days(1));
-               assert!(seconds_to_minutes_duration(dist_times_outside[0].time) < Duration::days(4));
-               // point in USA
-               println!(
-                   "{} - USA: {}",
-                   ii,
-                   seconds_to_minutes_duration(dist_times_outside[1].time).num_hours()
-               );
-               assert!(seconds_to_minutes_duration(dist_times_outside[1].time) > Duration::days(3));
-               assert!(seconds_to_minutes_duration(dist_times_outside[1].time) < Duration::days(7));
-               // point in Frankfurt
-               println!(
-                   "{} - Frankfurt: {}",
-                   ii,
-                   seconds_to_minutes_duration(dist_times_outside[2].time).num_hours()
-               );
-               assert!(seconds_to_minutes_duration(dist_times_outside[2].time) > Duration::hours(3));
-               assert!(seconds_to_minutes_duration(dist_times_outside[2].time) < Duration::hours(15));
-               // point in Görlitz (negative area of multipolygon)
-               println!(
-                   "{} - Görlitz: {}",
-                   ii,
-                   seconds_to_minutes_duration(dist_times_outside[3].time).num_hours()
-               );
-               assert!(seconds_to_minutes_duration(dist_times_outside[3].time) < Duration::hours(1));
-           }
-       }
-    */
 
     #[tokio::test]
     #[serial]
