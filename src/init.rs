@@ -15,9 +15,8 @@ use migration::ConnectionTrait;
 use sea_orm::{DbConn, EntityTrait};
 
 pub enum InitType {
-    #[allow(dead_code)]
     BackendTest,
-    #[allow(dead_code)]
+    BackendTestWithEvents,
     FrontEnd,
     Default,
 }
@@ -137,6 +136,7 @@ pub async fn init(
         InitType::Default => init_default(db_conn, year).await,
         InitType::FrontEnd => init_frontend(db_conn, year).await,
         InitType::BackendTest => init_backend_test(db_conn, year).await,
+        InitType::BackendTestWithEvents => init_backend_test_with_events(db_conn, year).await,
     }
 }
 
@@ -252,6 +252,237 @@ async fn init_backend_test(
             .and_hms_opt(14, 0, 0)
             .unwrap(),
         VehicleIdT::new(3),
+    )
+    .await;
+
+    data
+}
+
+async fn init_backend_test_with_events(
+    db_conn: &DbConn,
+    year: i32,
+) -> Data {
+    let mut data = Data::new(db_conn);
+
+    data.create_zone("Bautzen Ost", BAUTZEN_OST).await;
+    data.create_zone("Bautzen West", BAUTZEN_WEST).await;
+    data.create_zone("Görlitz", GORLITZ).await;
+
+    data.create_company(
+        "Taxi-Unternehmen Bautzen-1",
+        ZoneIdT::new(1),
+        "a@b",
+        13.941692,
+        51.203935,
+    )
+    .await;
+    data.create_company(
+        "Taxi-Unternehmen Bautzen-2",
+        ZoneIdT::new(1),
+        "b@c",
+        14.030458,
+        51.31332,
+    )
+    .await;
+    data.create_company(
+        "Taxi-Unternehmen Görlitz-1",
+        ZoneIdT::new(2),
+        "c@d",
+        14.031458,
+        51.27332,
+    )
+    .await;
+
+    data.create_user(
+        "TestDriver1",
+        true,
+        false,
+        Some(CompanyIdT::new(1)),
+        false,
+        "test@aol.com",
+        Some("".to_string()),
+        "",
+        Some("".to_string()),
+        Some("".to_string()),
+    )
+    .await;
+
+    data.create_user(
+        "TestUser1",
+        false,
+        false,
+        None,
+        false,
+        "test@web.com",
+        Some("".to_string()),
+        "",
+        Some("".to_string()),
+        Some("".to_string()),
+    )
+    .await;
+
+    data.create_vehicle("TUB1-1", CompanyIdT::new(1)).await;
+    data.create_vehicle("TUB1-2", CompanyIdT::new(1)).await;
+    data.create_vehicle("TUB2-1", CompanyIdT::new(2)).await;
+    data.create_vehicle("TUB2-2", CompanyIdT::new(2)).await;
+    data.create_vehicle("TUG1-1", CompanyIdT::new(3)).await;
+
+    data.create_availability(
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(14, 0, 0)
+            .unwrap(),
+        VehicleIdT::new(1),
+    )
+    .await;
+
+    data.create_availability(
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(14, 0, 0)
+            .unwrap(),
+        VehicleIdT::new(2),
+    )
+    .await;
+
+    data.create_availability(
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(14, 0, 0)
+            .unwrap(),
+        VehicleIdT::new(3),
+    )
+    .await;
+
+    data.insert_or_addto_tour(
+        None,
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        VehicleIdT::new(1),
+        "start_address",
+        "target_address",
+        50.0,
+        12.0,
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        UserIdT::new(1),
+        1,
+        0,
+        0,
+        50.1,
+        12.1,
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+    )
+    .await;
+
+    data.insert_or_addto_tour(
+        None,
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        VehicleIdT::new(1),
+        "start_address",
+        "target_address",
+        50.0,
+        12.0,
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        UserIdT::new(2),
+        1,
+        0,
+        0,
+        50.1,
+        12.1,
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+    )
+    .await;
+
+    data.insert_or_addto_tour(
+        None,
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        VehicleIdT::new(2),
+        "start_address",
+        "target_address",
+        50.0,
+        12.0,
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        UserIdT::new(1),
+        1,
+        0,
+        0,
+        50.1,
+        12.1,
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
+        NaiveDate::from_ymd_opt(year, 4, 19)
+            .unwrap()
+            .and_hms_opt(10, 10, 0)
+            .unwrap(),
     )
     .await;
 
