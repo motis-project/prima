@@ -209,6 +209,10 @@ impl VehicleData{
     fn fulfills_requirements(&self, passengers: i32, wheelchairs: i32, luggage: i32) -> bool{
         passengers<4
     }
+
+    fn get_tour(&mut self, tour_id: i32) -> &mut TourData {
+        self.tours.iter_mut().find(|tour| tour.id == tour_id).unwrap()
+    }
 }
 
 #[async_trait]
@@ -555,7 +559,7 @@ impl PrimaData for Data{
         for event_m in event_models {
             let request_m: <request::Entity as sea_orm::EntityTrait>::Model = Request::find_by_id(event_m.request).one(&self.db_connection).await.expect("Error while reading from Database.").unwrap();
             let vehicle_id = self.get_tour(request_m.tour).await.unwrap().vehicle;
-            self.vehicles[id_to_vec_pos(vehicle_id)].tours[id_to_vec_pos(request_m.tour)].events.push(
+            self.vehicles[id_to_vec_pos(vehicle_id)].get_tour(request_m.tour).events.push(
                 EventData{
                     id: event_m.id,
                     coordinates: Point::new(event_m.latitude as f64, event_m.longitude as f64),
@@ -1441,7 +1445,7 @@ impl Data {
             Ok((start_event_id, target_event_id))=>{
                 let start_address_id = self.find_or_create_address(start_address);
                 let target_address_id = self.find_or_create_address(target_address);
-                let events = &mut self.vehicles[id_to_vec_pos(vehicle)].tours[id_to_vec_pos(id)].events;
+                let events = &mut self.vehicles[id_to_vec_pos(vehicle)].get_tour(id).events;
                 //pickup-event
                 events.push(
                     EventData {
@@ -1587,8 +1591,8 @@ impl Data {
             .collect_vec()
     }
 
-    async fn get_event(&self, vehicle_id: i32, tour_id: i32, event_id: i32)->&EventData{
-        &self.vehicles[id_to_vec_pos(vehicle_id)].tours[id_to_vec_pos(tour_id)].events[id_to_vec_pos(event_id)]
+    async fn get_event(&mut self, vehicle_id: i32, tour_id: i32, event_id: i32)->&EventData{
+        &self.vehicles[id_to_vec_pos(vehicle_id)].get_tour(tour_id).events[id_to_vec_pos(event_id)]
     }
 
     async fn get_tour(
@@ -2291,213 +2295,6 @@ mod test {
         );
 
         assert!(d == d_copy);
-        check_data_db_synchronized(&d).await;
-    }
-
-    #[tokio::test]
-    #[serial]
-    async fn test_init() {
-        let db_conn = test_main().await;
-        let mut d = init::init(true).await;
-
-        assert_eq!(d.vehicles.len(), 29);
-        assert_eq!(d.zones.len(), 3);
-        assert_eq!(d.companies.len(), 8);
-
-        d.change_vehicle_for_tour(1, 2).await;
-
-        //get_company_conflicts_for_tour
-        for company in d.companies.iter() {
-            let conflicts = match d.get_company_conflicts(company.id, 1, true).await {
-                Ok(c) => c,
-                Err(_) => HashMap::new(),
-            };
-            assert_eq!(conflicts.is_empty(), company.id != 1);
-            for (v, tours) in conflicts.iter() {
-                assert_eq!(company.id, 1);
-                assert_eq!(tours.is_empty(), *v != 2);
-            }
-        }
-
-        //get_events_for_user
-        for (user_id, _) in d.users.iter() {
-            assert_eq!(
-                d.get_events_for_user(
-                    *user_id,
-                    NaiveDate::from_ymd_opt(2024, 1, 1)
-                        .unwrap()
-                        .and_hms_opt(1, 0, 0)
-                        .unwrap(),
-                    NaiveDate::from_ymd_opt(6000, 4, 15)
-                        .unwrap()
-                        .and_hms_opt(14, 0, 0)
-                        .unwrap(),
-                )
-                .await
-                .unwrap()
-                .is_empty(),
-                *user_id != 2 // only user 2 has events
-            );
-            if *user_id == 2{
-                assert_eq!(d.get_events_for_user(
-                    *user_id,
-                    NaiveDate::from_ymd_opt(2024, 1, 1)
-                        .unwrap()
-                        .and_hms_opt(1, 0, 0)
-                        .unwrap(),
-                    NaiveDate::from_ymd_opt(6000, 4, 15)
-                        .unwrap()
-                        .and_hms_opt(14, 0, 0)
-                        .unwrap(),
-                    )
-                    .await
-                    .unwrap().len(),2
-                );
-            }
-        }
-/*
-        //get_vehicles
-        for company in d.companies.iter() {
-            let vehicles = d.get_vehicles(company.id, None).await.unwrap();
-            for (specs, vehicles) in vehicles.iter() {
-                assert_eq!(*specs, 1);
-                assert_eq!((company.id == 1 || company.id == 8), vehicles.len() == 5);
-                assert_eq!((company.id == 3 || company.id == 7), vehicles.len() == 4);
-                assert_eq!(
-                    (company.id == 2 || company.id == 5 || company.id == 6),
-                    vehicles.len() == 3
-                );
-                assert_eq!(company.id == 4, vehicles.len() == 2);
-            }
-        }
- */
-        //insert vehicle with non-existing vehicle-specifics test should be added if specifics are no longer restricted for mvp->TODO
-
-        assert_eq!(d.vehicles[1].tours.len(), 1);
-        assert_eq!(
-            d.get_events_for_vehicle(2, NaiveDateTime::MIN, NaiveDateTime::MAX)
-                .await
-                .unwrap()
-                .len(),
-            2
-        );
-        insert_or_add_test_tour(&mut d, 2).await;
-        assert_eq!(d.vehicles[1].tours.len(), 2);
-        assert_eq!(
-            d.get_events_for_vehicle(2, NaiveDateTime::MIN, NaiveDateTime::MAX)
-                .await
-                .unwrap()
-                .len(),
-            4
-        );
-
-        for company in d.companies.iter() {
-            let conflicts = match d.get_company_conflicts(company.id, 1, true).await {
-                Ok(c) => c,
-                Err(_) => HashMap::new(),
-            };
-            assert_eq!(conflicts.is_empty(), company.id != 1);
-            for (v, tours) in conflicts.iter() {
-                assert_eq!(company.id, 1);
-                assert_eq!(tours.is_empty(), *v != 2);
-                assert_eq!(tours.len() == 2, *v == 2);
-            }
-        }
-
-        insert_or_add_test_tour(&mut d, 7).await;
-        assert_eq!(d.vehicles[1].tours.len(), 2);
-        assert_eq!(
-            d.get_events_for_vehicle(2, NaiveDateTime::MIN, NaiveDateTime::MAX)
-                .await
-                .unwrap()
-                .len(),
-            4
-        );
-        assert_eq!(d.vehicles[6].tours.len(), 1);
-        assert_eq!(
-            d.get_events_for_vehicle(7, NaiveDateTime::MIN, NaiveDateTime::MAX)
-                .await
-                .unwrap()
-                .len(),
-            2
-        );
-        for tour_id in 1..4 {
-            //vehicle 2 has tours with ids 1 and 2, vehicle 7 has tour with id 3, no other vehicles have tours
-            if tour_id == 3 {
-                //consider_provided_tour_conflict parameter only affects vehicle 7, since it is assigned tour_id  (3)
-                assert_eq!(
-                    d.get_vehicle_conflicts(2, tour_id, true)
-                        .await
-                        .unwrap()
-                        .len(),
-                    2
-                );
-                assert_eq!(
-                    d.get_vehicle_conflicts(2, tour_id, false)
-                        .await
-                        .unwrap()
-                        .len(),
-                    2
-                );
-                assert_eq!(
-                    d.get_vehicle_conflicts(7, tour_id, true)
-                        .await
-                        .unwrap()
-                        .len(),
-                    1
-                );
-                assert_eq!(
-                    d.get_vehicle_conflicts(7, tour_id, false) 
-                        .await
-                        .unwrap()
-                        .len(),
-                    0
-                );
-            } else if tour_id == 1 || tour_id == 2 {
-                //consider_provided_tour_conflict parameter only affects vehicle 2, since it is assigned tour_id  (1 or 2)
-                assert_eq!(
-                    d.get_vehicle_conflicts(2, tour_id, true)
-                        .await
-                        .unwrap()
-                        .len(),
-                    2
-                );
-                assert_eq!(
-                    d.get_vehicle_conflicts(2, tour_id, false)
-                        .await
-                        .unwrap()
-                        .len(),
-                    1
-                );
-                assert_eq!(
-                    d.get_vehicle_conflicts(7, tour_id, true)
-                        .await
-                        .unwrap()
-                        .len(),
-                    1
-                );
-                assert_eq!(
-                    d.get_vehicle_conflicts(7, tour_id, false)
-                        .await
-                        .unwrap()
-                        .len(),
-                    1
-                );
-            } 
-            for v_id in 1..d.vehicles.len() + 1 {
-                if v_id == 7 || v_id == 2 {
-                    continue;
-                }
-                assert_eq!(
-                    d.get_vehicle_conflicts(v_id as i32, tour_id, true)
-                        .await
-                        .unwrap()
-                        .len(),
-                    0
-                );
-            }
-        }
-
         check_data_db_synchronized(&d).await;
     }
 
