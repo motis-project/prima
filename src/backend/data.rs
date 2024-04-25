@@ -165,6 +165,18 @@ impl PrimaTour for TourData {
             .map(|event| Box::new(event as &dyn PrimaEvent))
             .collect_vec()
     }
+
+    async fn get_arrival(&self) -> NaiveDateTime {
+        self.arrival
+    }
+
+    async fn get_departure(&self) -> NaiveDateTime {
+        self.departure
+    }
+
+    async fn get_id(&self) -> TourIdT {
+        self.id
+    }
 }
 
 impl TourData {
