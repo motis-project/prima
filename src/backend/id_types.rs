@@ -4,7 +4,7 @@ pub trait IdT {
     fn new(id: i32) -> Self;
 }
 
-pub trait IndexedIdT: IdT {
+pub trait IndexIdT: IdT {
     fn as_idx(&self) -> usize;
 
     fn is_in_range(
@@ -66,7 +66,7 @@ impl_IdT!(for VehicleIdT, CompanyIdT, ZoneIdT, AddressIdT, UserIdT, TourIdT, Eve
 
 macro_rules! impl_IndexedIdT {
     (for $($t:ty),+) => {
-        $(impl IndexedIdT for $t {
+        $(impl IndexIdT for $t {
             fn as_idx(&self) -> usize {
                 assert!(self.id > 0);
                 (self.id() - 1) as usize
@@ -89,7 +89,7 @@ impl_IndexedIdT!(for VehicleIdT,CompanyIdT,ZoneIdT,AddressIdT);
 mod test {
     use std::any::Any;
 
-    use crate::backend::id_types::IndexedIdT;
+    use crate::backend::id_types::IndexIdT;
 
     use super::{CompanyIdT, IdT, VehicleIdT};
 
