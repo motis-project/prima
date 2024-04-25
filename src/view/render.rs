@@ -205,14 +205,14 @@ pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, Sta
         .and_hms_opt(23, 59, 59)
         .unwrap();
 
-    // All tours for a sepc. company within a spec. day
+    // // All tours for a sepc. company within a spec. day
     let mut tours_all: Vec<Box<&dyn PrimaTour>> = Vec::new();
 
-    // since Tours are assigned to vehicles, we have to gather them from the comanies vehicles
+    // // since Tours are assigned to vehicles, we have to gather them from the comanies vehicles
     for v in vehicles.unwrap().iter() {
-        let v_id = v.get_id().await;
-        let tours_vehicle = data.get_tours(*v_id, start_time, end_time).await;
-        tours_all.extend(tours_vehicle.unwrap());
+        // let v_id = v.get_id().await;
+        // let tours_vehicle = data.get_tours(*v_id, start_time, end_time).await;
+        // tours_all.extend(tours_vehicle.unwrap());
     }
 
     // for vehicle in company_1_vehicles.unwrap().iter() {
