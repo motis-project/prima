@@ -20,6 +20,9 @@ OK                              request processed succesfully
 #[async_trait]
 pub trait PrimaTour: Send + Sync {
     async fn get_events(&self) -> Vec<Box<&dyn PrimaEvent>>;
+    async fn get_departure(&self) -> NaiveDateTime;
+    async fn get_arrival(&self) -> NaiveDateTime;
+    async fn get_id(&self) -> i32;
 }
 
 #[async_trait]
@@ -206,18 +209,4 @@ pub trait PrimaData: Send + Sync {
         vehicle: i32,
         tour_id: i32,
     ) -> Result<bool, StatusCode>;
-
-    async fn handle_routing_request(
-        &mut self,
-        fixed_time: NaiveDateTime,
-        is_start_time_fixed: bool,
-        start_lat: f32,
-        start_lng: f32,
-        target_lat: f32,
-        target_lng: f32,
-        customer: i32,
-        passengers: i32,
-        start_address: &String,
-        target_address: &String,
-    ) -> StatusCode;
 }
