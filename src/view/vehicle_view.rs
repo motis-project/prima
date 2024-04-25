@@ -13,9 +13,9 @@ use tower_http::services::redirect;
 use tracing::error;
 
 use crate::{
-    backend::data::AssignmentData,
     entities::{availability, prelude::User},
-    init::AppState,
+    AppState,
+    // init::AppState,
 };
 use tokio::sync::RwLock;
 
@@ -37,7 +37,7 @@ pub async fn create_vehicle(
 ) -> Redirect {
     let company_id = 1;
     let mut data = s.data.write().await;
-    data.create_vehicle(s.db(), vehicle.license_plate, company_id)
+    data.create_vehicle(&vehicle.license_plate, company_id)
         .await;
 
     let redirect_url = "/availability";
@@ -50,7 +50,6 @@ pub async fn add_vehicle_availability(
 ) -> Redirect {
     let company_id = 1;
     let mut data = s.data.write().await;
-    let db = s.db();
 
     let dt_start =
         NaiveDateTime::parse_from_str(&params.availability_start, "%Y-%m-%d %H:%M:%S").unwrap();
@@ -58,8 +57,7 @@ pub async fn add_vehicle_availability(
     let dt_end =
         NaiveDateTime::parse_from_str(&params.availability_end, "%Y-%m-%d %H:%M:%S").unwrap();
 
-    data.create_availability(db, dt_start, dt_end, params.id)
-        .await;
+    data.create_availability(dt_start, dt_end, params.id).await;
 
     let redirect_url = "/availability";
     Redirect::to(redirect_url)

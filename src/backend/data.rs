@@ -10,16 +10,16 @@ use crate::{
         user, vehicle, zone,
     },
     error,
-    init::AppState,
     osrm::{
         Coordinate,
         Dir::{Backward, Forward},
         DistTime, OSRM,
     },
-    StatusCode,
+    // StatusCode,
 };
 use async_trait::async_trait;
 use sea_orm::DbConn;
+use serde::Serialize;
 use super::geo_from_str::multi_polygon_from_str;
 use ::anyhow::Result;
 use chrono::{Duration, NaiveDateTime, NaiveDate, Utc};
@@ -2004,7 +2004,7 @@ mod test {
     #[serial]
     async fn test_zones() {
         let db_conn = test_main().await;
-        let mut d = init::init(&db_conn, true, 5000).await;
+        let mut d = init::init(true).await;
         let test_points = TestPoints::new();
         //Validate invalid multipolygon handling when creating zone (expect StatusCode::BAD_REQUEST)
         assert_eq!(
@@ -2044,7 +2044,7 @@ mod test {
     #[serial]
     async fn test_synchronization() {
         let db_conn = test_main().await;
-        let d = init::init(&db_conn, true, 5000).await;
+        let d = init::init(true).await;
         //d.create_user("name", false, false, None, true, "email", Some("password".to_string()), "salt", Some("o_auth_id".to_string()), Some("o_auth_provider".to_string())).await;
         check_data_db_synchronized(&d).await;
     }
@@ -2053,7 +2053,7 @@ mod test {
     #[serial]
     async fn test_key_violations() {
         let db_conn = test_main().await;
-        let mut d = init::init(&db_conn,true,5000).await;
+        let mut d = init::init(true).await;
         //validate UniqueKeyViolation handling when creating data (expect StatusCode::CONFLICT)
         //unique keys:  table               keys
         //              user                name, email
@@ -2423,7 +2423,7 @@ mod test {
     #[serial]
     async fn test_invalid_interval_parameter_handling() {
         let db_conn = test_main().await;
-        let mut d = init::init(&db_conn, true, 5000).await;
+        let mut d = init::init(true).await;
         let mut d_copy = Data::new(&db_conn);
         d_copy.read_data_from_db().await;
 
@@ -2528,7 +2528,7 @@ mod test {
     #[serial]
     async fn test_init() {
         let db_conn = test_main().await;
-        let mut d = init::init(&db_conn, true,  5000).await;
+        let mut d = init::init(true).await;
 
         assert_eq!(d.vehicles.len(), 29);
         assert_eq!(d.zones.len(), 3);
@@ -2735,7 +2735,7 @@ mod test {
     #[serial]
     async fn availability_test() {
         let db_conn = test_main().await;
-        let mut d = init::init(&db_conn, true, 5000).await;
+        let mut d = init::init(true).await;
         println!("init done");
         let n_vehicles = d.vehicles.len();
 

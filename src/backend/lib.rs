@@ -18,12 +18,12 @@ OK                              request processed succesfully
 */
 
 #[async_trait]
-pub trait PrimaTour {
+pub trait PrimaTour: Send + Sync {
     async fn get_events(&self) -> Vec<Box<&dyn PrimaEvent>>;
 }
 
 #[async_trait]
-pub trait PrimaEvent {
+pub trait PrimaEvent: Send + Sync {
     async fn get_id(&self) -> i32;
     async fn get_lat(&self) -> f32;
     async fn get_lng(&self) -> f32;
@@ -32,7 +32,7 @@ pub trait PrimaEvent {
 }
 
 #[async_trait]
-pub trait PrimaVehicle {
+pub trait PrimaVehicle: Send + Sync {
     async fn get_id(&self) -> i32;
     async fn get_license_plate(&self) -> &str;
     async fn get_company_id(&self) -> i32;
@@ -40,7 +40,7 @@ pub trait PrimaVehicle {
 }
 
 #[async_trait]
-pub trait PrimaUser {
+pub trait PrimaUser: Send + Sync {
     async fn get_id(&self) -> i32;
     async fn get_name(&self) -> &str;
     async fn is_driver(&self) -> bool;
@@ -50,7 +50,7 @@ pub trait PrimaUser {
 }
 
 #[async_trait]
-pub trait PrimaCompany {
+pub trait PrimaCompany: Send + Sync {
     async fn get_id(&self) -> i32;
     async fn get_name(&self) -> &str;
 }

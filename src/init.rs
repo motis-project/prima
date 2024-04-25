@@ -1,3 +1,5 @@
+use std::env;
+
 use crate::{
     backend::{data::Data, lib::PrimaData},
     constants::{bautzen_ost::BAUTZEN_OST, bautzen_west::BAUTZEN_WEST, gorlitz::GORLITZ},
@@ -7,8 +9,16 @@ use crate::{
     error,
 };
 use chrono::NaiveDate;
-use migration::ConnectionTrait;
-use sea_orm::{DbConn, EntityTrait};
+
+use axum::extract::State;
+use chrono::{Datelike, Duration, Local, NaiveTime, Timelike, Utc};
+use migration::{ConnectionTrait, Migrator, MigratorTrait};
+use sea_orm::{Database, DbConn, EntityTrait};
+use std::{
+    ops::Deref,
+    sync::{Arc, Mutex},
+};
+use tokio::sync::RwLock;
 
 enum InitType {
     BackendTest,
@@ -110,27 +120,34 @@ pub async fn clear(db_conn: &DbConn) {
     println!("clear succesful");
 }
 
-pub async fn init(
-    db_conn: &DbConn,
-    clear_tables: bool,
-    year: i32,
-) -> Data {
+pub async fn init(clear_tables: bool) -> Data {
+    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
+    let db_conn = Database::connect(db_url)
+        .await
+        .expect("Database connection failed");
+    Migrator::up(&db_conn, None).await.unwrap();
+
+    let mut data = Data::new(&db_conn);
+
     if clear_tables {
-        clear(db_conn).await;
+        clear(&db_conn).await;
     } else {
-        match User::find().all(db_conn).await {
+        match User::find().all(&db_conn).await {
             Ok(u) => {
                 if !u.is_empty() {
                     println!("users already exist, not running init() again.");
-                    let mut data = Data::new(db_conn);
                     data.read_data_from_db().await;
+
+                    // return AppState {
+                    //     tera: tera,
+                    //     data: Arc::new(RwLock::new(data)),
+                    // };
                     return data;
                 }
             }
             Err(_) => (),
         }
     }
-    let mut data = Data::new(db_conn);
 
     data.create_zone("Bautzen Ost", BAUTZEN_OST).await;
     data.create_zone("Bautzen West", BAUTZEN_WEST).await;
@@ -273,6 +290,8 @@ pub async fn init(
     data.create_vehicle(&"TUG3-4".to_string(), 8).await;
     data.create_vehicle(&"TUG3-5".to_string(), 8).await;
 
+    let year = 2025;
+
     data.insert_or_addto_tour(
         None,
         NaiveDate::from_ymd_opt(year, 4, 19)
@@ -316,18 +335,20 @@ pub async fn init(
     )
     .await;
 
-    data.create_availability(
-        NaiveDate::from_ymd_opt(year, 4, 19)
-            .unwrap()
-            .and_hms_opt(9, 30, 0)
-            .unwrap(),
-        NaiveDate::from_ymd_opt(year, 4, 19)
-            .unwrap()
-            .and_hms_opt(10, 20, 0)
-            .unwrap(),
-        1,
-    )
-    .await;
+    let status_code = data
+        .create_availability(
+            NaiveDate::from_ymd_opt(year, 4, 19)
+                .unwrap()
+                .and_hms_opt(9, 30, 0)
+                .unwrap(),
+            NaiveDate::from_ymd_opt(year, 4, 19)
+                .unwrap()
+                .and_hms_opt(10, 20, 0)
+                .unwrap(),
+            1,
+        )
+        .await;
+    println!("{}", status_code);
 
     data.create_availability(
         NaiveDate::from_ymd_opt(year, 4, 19)
@@ -354,5 +375,10 @@ pub async fn init(
         2,
     )
     .await;
+
+    // AppState {
+    //     tera: tera,
+    //     data: Arc::new(RwLock::new(data)),
+    // }
     data
 }

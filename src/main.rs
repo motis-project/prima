@@ -1,4 +1,4 @@
-use crate::init::StopFor::TEST1;
+// use crate::init::StopFor::TEST1;
 use axum::{
     extract::State,
     routing::{get, post},
@@ -6,19 +6,23 @@ use axum::{
 };
 
 use backend::data::Data;
-use dotenv::dotenv;
+// use dotenv::dotenv;
 
+use backend::lib::PrimaData;
+use dotenv::dotenv;
 use itertools::Itertools;
 use log::setup_logging;
 use migration::{Migrator, MigratorTrait};
 use notify::Watcher;
-use sea_orm::{Database, DbConn};
+use sea_orm::Database;
+use sea_orm::DbConn;
 use std::{
     env,
     path::Path,
     sync::{Arc, Mutex},
 };
 use tera::{Context, Tera};
+use tokio::sync::RwLock;
 use tower_http::{compression::CompressionLayer, services::ServeFile};
 use tower_livereload::LiveReloadLayer;
 use tracing::error;
@@ -43,6 +47,22 @@ mod log;
 mod model;
 mod osrm;
 mod view;
+
+#[derive(Clone)]
+pub struct AppState {
+    tera: Arc<Mutex<Tera>>,
+    pub data: Arc<RwLock<dyn PrimaData>>,
+}
+
+impl AppState {
+    fn render(
+        &self,
+        template_name: &str,
+        context: &Context,
+    ) -> Result<String, tera::Error> {
+        self.tera.lock().unwrap().render(template_name, context)
+    }
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -77,7 +97,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         notify::RecursiveMode::NonRecursive,
     )?;
 
-    let s = init::init(tera, false, TEST1).await;
+    let data = init::init(true).await;
+
+    let s = AppState {
+        tera,
+        data: Arc::new(RwLock::new(data)),
+    };
 
     let app = Router::new();
     let app = app.layer(livereload);

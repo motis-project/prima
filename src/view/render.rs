@@ -14,9 +14,12 @@ use tera::Context;
 use tracing::error;
 
 use crate::{
-    backend::data::{self, AssignmentData},
+    backend::{
+        data::{self, TourData},
+        lib::PrimaTour,
+    },
     entities::{availability, prelude::User},
-    init::AppState,
+    AppState,
 };
 
 pub async fn get_route_details(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
@@ -75,15 +78,13 @@ pub async fn get_route_details(State(s): State<AppState>) -> Result<Html<String>
     Ok(Html(response))
 }
 
-async fn is_user_logged_in(
-    db: &DbConn,
-    user_id: i32,
-) -> bool {
-    let _user = User::find_by_id(user_id).one(db).await.unwrap_or(None);
-    match _user {
-        Some(_user) => true,
-        None => false,
-    }
+async fn is_user_logged_in(user_id: i32) -> bool {
+    // let _user = User::find_by_id(user_id).one(db).await.unwrap_or(None);
+    // match _user {
+    //     Some(_user) => true,
+    //     None => false,
+    // }
+    true
 }
 
 pub async fn render_login(
@@ -108,7 +109,7 @@ pub async fn render_home(
     _uri: Uri,
     State(s): State<AppState>,
 ) -> Result<Html<String>, StatusCode> {
-    let user_logged_in = is_user_logged_in(s.db(), 1).await;
+    let user_logged_in = is_user_logged_in(1).await;
     let response = s
         .render(
             "home.html",
@@ -193,7 +194,7 @@ pub struct VehicleAvailabilityParams {
 pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
     let company_id = 1;
     let data = s.data.read().await;
-    let vehicles = data.get_vehicles_(company_id, Some(true)).await;
+    let vehicles = data.get_vehicles(company_id).await;
 
     let start_time = NaiveDate::from_ymd_opt(2024, 4, 15)
         .unwrap()
@@ -205,50 +206,47 @@ pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, Sta
         .unwrap();
 
     // All tours for a sepc. company within a spec. day
-    let mut tours_all: Vec<&AssignmentData> = Vec::new();
-
-    // if vehicles is HashMap
-    // for (id, v) in vehicles.iter() {
-    //     let tours_vehicle = data
-    //         .get_assignments_for_vehicle(*id, start_time, end_time)
-    //         .await;
-    //     tours_all.extend(tours_vehicle);
-    // }
+    let mut tours_all: Vec<Box<&dyn PrimaTour>> = Vec::new();
 
     // since Tours are assigned to vehicles, we have to gather them from the comanies vehicles
-    for v in vehicles.iter() {
-        let tours_vehicle = data
-            .get_assignments_for_vehicle(v.id, start_time, end_time)
-            .await;
-        tours_all.extend(tours_vehicle);
+    for v in vehicles.unwrap().iter() {
+        let v_id = v.get_id().await;
+        let tours_vehicle = data.get_tours(v_id, start_time, end_time).await;
+        tours_all.extend(tours_vehicle.unwrap());
     }
+
+    // for vehicle in company_1_vehicles.unwrap().iter() {
+    //     println!("vehicle with id: {} and license-plate: {} belongs to company: {} and has {} currently scheduled tours.",
+    //         vehicle.get_id().await, vehicle.get_license_plate().await, mutex_guarded_data3.get_company(vehicle.get_company_id().await).await.unwrap().get_name().await, vehicle.get_tours().await.len());
+    // }
 
     let mut tours: Vec<Tour> = Vec::new();
+    let mut vehicles: Vec<Tour> = Vec::new();
 
-    for tour in tours_all.iter() {
-        let mut conflict = 0;
+    // for tour in tours_all.iter() {
+    //     let mut conflict = 0;
 
-        for v in vehicles.iter() {
-            let conflicts = data
-                .get_vehicle_conflicts_for_assignment(v.id, tour.id)
-                .await;
-            if conflicts.len() > 0 {
-                conflict = conflicts[0].id;
-            }
-        }
+    //     for v in vehicles.iter() {
+    //         let conflicts = data
+    //             .get_vehicle_conflicts_for_assignment(v.id, tour.id)
+    //             .await;
+    //         if conflicts.len() > 0 {
+    //             conflict = conflicts[0].id;
+    //         }
+    //     }
 
-        tours.push(Tour {
-            id: tour.id,
-            date: tour.departure.date().to_string(),
-            start_time: tour.departure.time().to_string(),
-            end_time: tour.arrival.time().to_string(),
-            plate: data
-                .get_vehicle_by_id(tour.vehicle as usize)
-                .license_plate
-                .to_string(),
-            conflict,
-        });
-    }
+    //     tours.push(Tour {
+    //         id: tour.id,
+    //         date: tour.departure.date().to_string(),
+    //         start_time: tour.departure.time().to_string(),
+    //         end_time: tour.arrival.time().to_string(),
+    //         plate: data
+    //             .get_vehicle_by_id(tour.vehicle as usize)
+    //             .license_plate
+    //             .to_string(),
+    //         conflict,
+    //     });
+    // }
 
     let response = s
         .render(
@@ -272,27 +270,27 @@ pub async fn render_availability(State(s): State<AppState>) -> Result<Html<Strin
     let mut vehicles: Vec<RenderVehicle> = Vec::new();
     let mut vec_availability: Vec<RenderVehicle> = Vec::new();
 
-    for v in data.get_vehicles_(company_id, Some(true)).await.iter() {
-        let availability = v.availability.clone();
+    // for v in data.get_vehicles_(company_id, Some(true)).await.iter() {
+    //     let availability = v.availability.clone();
 
-        let ve = RenderVehicle {
-            id: v.id,
-            license_plate: v.license_plate.to_string(),
-            availability_start: "".to_string(),
-            availability_end: "".to_string(),
-        };
-        vehicles.push(ve);
+    //     let ve = RenderVehicle {
+    //         id: v.id,
+    //         license_plate: v.license_plate.to_string(),
+    //         availability_start: "".to_string(),
+    //         availability_end: "".to_string(),
+    //     };
+    //     vehicles.push(ve);
 
-        for (i, ad) in availability {
-            let va = RenderVehicle {
-                id: v.id,
-                license_plate: v.license_plate.to_string(),
-                availability_start: ad.interval.start_time.to_string(),
-                availability_end: ad.interval.end_time.to_string(),
-            };
-            vec_availability.push(va);
-        }
-    }
+    //     for (i, ad) in availability {
+    //         let va = RenderVehicle {
+    //             id: v.id,
+    //             license_plate: v.license_plate.to_string(),
+    //             availability_start: ad.interval.start_time.to_string(),
+    //             availability_end: ad.interval.end_time.to_string(),
+    //         };
+    //         vec_availability.push(va);
+    //     }
+    // }
 
     let response = s
         .render(
@@ -322,18 +320,18 @@ pub async fn get_availability(
     let mut vehicles: Vec<RenderVehicle> = Vec::new();
 
     // availability
-    for v in data.get_vehicles_(company_id, Some(true)).await.iter() {
-        let availability = v.availability.clone();
-        for (i, ad) in availability {
-            let ve = RenderVehicle {
-                id: v.id,
-                license_plate: v.license_plate.to_string(),
-                availability_start: ad.interval.start_time.to_string(),
-                availability_end: ad.interval.end_time.to_string(),
-            };
-            vehicles.push(ve);
-        }
-    }
+    // for v in data.get_vehicles_(company_id, Some(true)).await.iter() {
+    //     let availability = v.availability.clone();
+    //     for (i, ad) in availability {
+    //         let ve = RenderVehicle {
+    //             id: v.id,
+    //             license_plate: v.license_plate.to_string(),
+    //             availability_start: ad.interval.start_time.to_string(),
+    //             availability_end: ad.interval.end_time.to_string(),
+    //         };
+    //         vehicles.push(ve);
+    //     }
+    // }
 
     Json(vehicles)
 }
@@ -347,15 +345,15 @@ pub async fn get_vehicles(
 
     let mut vehicles: Vec<RenderVehicle> = Vec::new();
 
-    for v in data.get_vehicles_(company_id, Some(true)).await.iter() {
-        let ve = RenderVehicle {
-            id: v.id,
-            license_plate: v.license_plate.to_string(),
-            availability_start: "".to_string(),
-            availability_end: "".to_string(),
-        };
-        vehicles.push(ve);
-    }
+    // for v in data.get_vehicles_(company_id, Some(true)).await.iter() {
+    //     let ve = RenderVehicle {
+    //         id: v.id,
+    //         license_plate: v.license_plate.to_string(),
+    //         availability_start: "".to_string(),
+    //         availability_end: "".to_string(),
+    //     };
+    //     vehicles.push(ve);
+    // }
 
     Json(vehicles)
 }
