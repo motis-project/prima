@@ -1,14 +1,13 @@
-// use crate::init::StopFor::TEST1;
+use crate::init::InitType::Standard;
 use axum::{
     extract::State,
     routing::{get, post},
     Router,
 };
-
-use backend::data::Data;
-// use dotenv::dotenv;
-
-use backend::lib::PrimaData;
+use backend::{
+    id_types::{CompanyIdT, IdT},
+    lib::PrimaData,
+};
 use dotenv::dotenv;
 use itertools::Itertools;
 use log::setup_logging;
@@ -97,7 +96,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         notify::RecursiveMode::NonRecursive,
     )?;
 
-    let data = init::init(true).await;
+    let data = init::init(true, Standard).await;
 
     let s = AppState {
         tera,

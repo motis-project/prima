@@ -23,6 +23,9 @@ pub trait PrimaTour: Send + Sync {
     async fn get_departure(&self) -> NaiveDateTime;
     async fn get_arrival(&self) -> NaiveDateTime;
     async fn get_id(&self) -> i32;
+    async fn get_departure(&self) -> NaiveDateTime;
+    async fn get_arrival(&self) -> NaiveDateTime;
+    async fn get_id(&self) -> i32;
 }
 
 #[async_trait]

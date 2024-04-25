@@ -2,6 +2,7 @@ use crate::{
     backend::{lib::{PrimaData, PrimaEvent, PrimaTour, PrimaUser, PrimaVehicle, PrimaCompany},
     interval::Interval},
     constants::constants::BEELINE_KMH,
+    constants::constants::BEELINE_KMH,
     entities::{
         tour, availability, company, event, request,
         prelude::{
@@ -93,6 +94,18 @@ pub struct TourData {
 impl PrimaTour for TourData {
     async fn get_events(&self) -> Vec<Box<&dyn PrimaEvent>> {
         self.events.iter().map(|event| Box::new(event as &dyn PrimaEvent)).collect_vec()
+    }
+
+    async fn get_arrival(&self) -> NaiveDateTime {
+        self.arrival
+    }
+
+    async fn get_departure(&self) -> NaiveDateTime {
+        self.departure
+    }
+
+    async fn get_id(&self) -> i32 {
+        self.id
     }
 
     async fn get_arrival(&self) -> NaiveDateTime {
@@ -208,6 +221,10 @@ pub struct VehicleData {
 impl VehicleData{
     fn fulfills_requirements(&self, passengers: i32, wheelchairs: i32, luggage: i32) -> bool{
         passengers<4
+    }
+
+    fn get_tour(&mut self, tour_id: i32) -> &mut TourData {
+        self.tours.iter_mut().find(|tour| tour.id == tour_id).unwrap()
     }
 
     fn get_tour(&mut self, tour_id: i32) -> &mut TourData {
@@ -1445,6 +1462,7 @@ impl Data {
             Ok((start_event_id, target_event_id))=>{
                 let start_address_id = self.find_or_create_address(start_address);
                 let target_address_id = self.find_or_create_address(target_address);
+                let events = &mut self.vehicles[id_to_vec_pos(vehicle)].get_tour(id).events;
                 let events = &mut self.vehicles[id_to_vec_pos(vehicle)].get_tour(id).events;
                 //pickup-event
                 events.push(
