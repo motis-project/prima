@@ -18,7 +18,7 @@ pub enum InitType {
     BackendTest,
     BackendTestWithEvents,
     FrontEnd,
-    Default,
+    Standard,
 }
 
 pub async fn clear(db_conn: &DbConn) {
@@ -133,7 +133,7 @@ pub async fn init(
         }
     }
     match t {
-        InitType::Default => init_default(db_conn, year).await,
+        InitType::Standard => init_default(db_conn, year).await,
         InitType::FrontEnd => init_frontend(db_conn, year).await,
         InitType::BackendTest => init_backend_test(db_conn, year).await,
         InitType::BackendTestWithEvents => init_backend_test_with_events(db_conn, year).await,

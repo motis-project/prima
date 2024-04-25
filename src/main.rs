@@ -139,7 +139,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
 
     //let data = Data::new(&conn);
-    let data = init::init(&conn, true, 5000, InitType::Default).await;
+    let data = init::init(&conn, true, 5000, InitType::Standard).await;
 
     let s = AppState {
         tera,
