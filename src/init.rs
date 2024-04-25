@@ -133,7 +133,7 @@ pub async fn init(
     let db_conn = &Database::connect(db_url)
         .await
         .expect("Database connection failed");
-    Migrator::up(&db_conn, None).await.unwrap();
+    Migrator::up(db_conn, None).await.unwrap();
     if clear_tables {
         clear(db_conn).await;
     }
@@ -145,11 +145,12 @@ pub async fn init(
             return data;
         }
     }
+    let next_year = Utc::now().year() + 1;
     match t {
-        InitType::Standard => init_default(db_conn, year).await,
-        InitType::FrontEnd => init_frontend(db_conn, year).await,
-        InitType::BackendTest => init_backend_test(db_conn, year).await,
-        InitType::BackendTestWithEvents => init_backend_test_with_events(db_conn, year).await,
+        InitType::Standard => init_default(db_conn, next_year).await,
+        InitType::FrontEnd => init_frontend(db_conn, next_year).await,
+        InitType::BackendTest => init_backend_test(db_conn, 5000).await,
+        InitType::BackendTestWithEvents => init_backend_test_with_events(db_conn, 5000).await,
     }
 }
 
@@ -406,7 +407,6 @@ async fn init_backend_test_with_events(
         1,
         0,
         0,
-        1,
         51.203935,
         13.941692,
         NaiveDate::from_ymd_opt(year, 4, 19)
@@ -649,8 +649,6 @@ async fn init_default(
     data.create_vehicle("TUG3-3", CompanyIdT::new(8)).await;
     data.create_vehicle("TUG3-4", CompanyIdT::new(8)).await;
     data.create_vehicle("TUG3-5", CompanyIdT::new(8)).await;
-
-    let year = 2025;
 
     data.insert_or_addto_tour(
         None,

@@ -1,5 +1,4 @@
-use std::sync::Mutex;
-
+use crate::backend::id_types::{CompanyIdT, IdT};
 use axum::{
     extract::State,
     http::{StatusCode, Uri},
@@ -10,6 +9,7 @@ use chrono::{naive, Local, NaiveDate};
 use sea_orm::{DbConn, EntityTrait};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::sync::Mutex;
 use tera::Context;
 use tracing::error;
 
@@ -192,7 +192,7 @@ pub struct VehicleAvailabilityParams {
 }
 
 pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
-    let company_id = 1;
+    let company_id = CompanyIdT::new(1);
     let data = s.data.read().await;
     let vehicles = data.get_vehicles(company_id).await;
 
@@ -211,7 +211,7 @@ pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, Sta
     // since Tours are assigned to vehicles, we have to gather them from the comanies vehicles
     for v in vehicles.unwrap().iter() {
         let v_id = v.get_id().await;
-        let tours_vehicle = data.get_tours(v_id, start_time, end_time).await;
+        let tours_vehicle = data.get_tours(*v_id, start_time, end_time).await;
         tours_all.extend(tours_vehicle.unwrap());
     }
 

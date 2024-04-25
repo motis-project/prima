@@ -1,3 +1,4 @@
+use crate::backend::id_types::{CompanyIdT, IdT, VehicleIdT};
 use axum::{
     extract::State,
     http::{StatusCode, Uri},
@@ -35,7 +36,7 @@ pub async fn create_vehicle(
     State(s): State<AppState>,
     Form(vehicle): Form<CreateVehicleForm>,
 ) -> Redirect {
-    let company_id = 1;
+    let company_id = CompanyIdT::new(1);
     let mut data = s.data.write().await;
     data.create_vehicle(&vehicle.license_plate, company_id)
         .await;
@@ -57,7 +58,8 @@ pub async fn add_vehicle_availability(
     let dt_end =
         NaiveDateTime::parse_from_str(&params.availability_end, "%Y-%m-%d %H:%M:%S").unwrap();
 
-    data.create_availability(dt_start, dt_end, params.id).await;
+    data.create_availability(dt_start, dt_end, VehicleIdT::new(params.id))
+        .await;
 
     let redirect_url = "/availability";
     Redirect::to(redirect_url)
