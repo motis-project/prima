@@ -26,7 +26,7 @@ use crate::{
 use ::anyhow::Result;
 use async_trait::async_trait;
 use chrono::{Duration, NaiveDate, NaiveDateTime, Utc};
-use geo::{prelude::*, Coord, MultiPolygon, Point}; // x <-> latitude,  y <-> longitude
+use geo::{prelude::*, Coord, MultiPolygon, Point};
 use itertools::Itertools;
 use sea_orm::DbConn;
 use sea_orm::{ActiveModelTrait, ActiveValue, EntityTrait};
@@ -122,7 +122,7 @@ fn beeline_duration(
     p1: &Point,
     p2: &Point,
 ) -> Duration {
-    // x is longittude and y is latitude!
+    // x is longitude and y is latitude!
     Duration::minutes(hrs_to_minutes(
         meter_to_km_f(p1.geodesic_distance(p2)) / BEELINE_KMH,
     ))
