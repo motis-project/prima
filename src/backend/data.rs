@@ -2,7 +2,7 @@ use super::geo_from_str::multi_polygon_from_str;
 use crate::{
     backend::{
         id_types::{
-            AddressIdT, CompanyIdT, EventIdT, IdT, IndexIdT, TourIdT, UserIdT, VehicleIdT, ZoneIdT,
+            AddressIdT, CompanyIdT, EventIdT, IdAsIdx, IdT, TourIdT, UserIdT, VehicleIdT, ZoneIdT,
         },
         interval::Interval,
         lib::{PrimaCompany, PrimaData, PrimaEvent, PrimaTour, PrimaUser, PrimaVehicle},
