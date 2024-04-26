@@ -186,23 +186,23 @@ mod test {
                 .unwrap(),
         );
 
-        assert_eq!(interval.contains(&overlapping_interval), false);
-        assert_eq!(interval.contains(&overlapping_interval2), false);
-        assert_eq!(interval.contains(&containing_interval), false);
-        assert_eq!(interval.contains(&contained_interval), true);
-        assert_eq!(interval.overlaps(&non_overlapping_interval), false);
+        assert!(!interval.contains(&overlapping_interval));
+        assert!(!interval.contains(&overlapping_interval2));
+        assert!(!interval.contains(&containing_interval));
+        assert!(interval.contains(&contained_interval));
+        assert!(!interval.overlaps(&non_overlapping_interval));
 
-        assert_eq!(overlapping_interval.contains(&interval), false);
-        assert_eq!(overlapping_interval2.contains(&interval), false);
-        assert_eq!(containing_interval.contains(&interval), true);
-        assert_eq!(contained_interval.contains(&interval), false);
-        assert_eq!(non_overlapping_interval.overlaps(&interval), false);
+        assert!(!overlapping_interval.contains(&interval));
+        assert!(!overlapping_interval2.contains(&interval));
+        assert!(containing_interval.contains(&interval));
+        assert!(!contained_interval.contains(&interval));
+        assert!(!non_overlapping_interval.overlaps(&interval));
 
-        assert_eq!(interval.overlaps(&overlapping_interval), true);
-        assert_eq!(interval.overlaps(&overlapping_interval2), true);
-        assert_eq!(interval.overlaps(&containing_interval), true);
-        assert_eq!(interval.overlaps(&contained_interval), true);
-        assert_eq!(interval.overlaps(&non_overlapping_interval), false);
+        assert!(interval.overlaps(&overlapping_interval));
+        assert!(interval.overlaps(&overlapping_interval2));
+        assert!(interval.overlaps(&containing_interval));
+        assert!(interval.overlaps(&contained_interval));
+        assert!(!interval.overlaps(&non_overlapping_interval));
 
         let cut_interval = interval.cut(&overlapping_interval); //cut 9:30 - 10:30 from 9:00 - 10:00 -> expext 9:00 - 9:30
         assert_eq!(cut_interval.start_time.hour(), 9);
@@ -251,7 +251,7 @@ mod test {
                 .and_hms_opt(11, 0, 0)
                 .unwrap(),
         );
-        assert_eq!(interval.start_time < interval.end_time, true);
+        assert!(interval.start_time < interval.end_time);
     }
 
     #[test]
@@ -336,13 +336,13 @@ mod test {
                 .and_hms_opt(9, 15, 0)
                 .unwrap(),
         );
-        assert_eq!(mid_1_point_touch.overlaps(&right_1_point_touch), false);
-        assert_eq!(mid_1_point_touch.contains(&right_1_point_touch), false);
-        assert_eq!(mid_1_point_touch.touches(&right_1_point_touch), true);
+        assert!(!mid_1_point_touch.overlaps(&right_1_point_touch));
+        assert!(!mid_1_point_touch.contains(&right_1_point_touch));
+        assert!(mid_1_point_touch.touches(&right_1_point_touch));
 
-        assert_eq!(mid_1_point_touch.overlaps(&left_1_point_touch), false);
-        assert_eq!(mid_1_point_touch.contains(&left_1_point_touch), false);
-        assert_eq!(mid_1_point_touch.touches(&right_1_point_touch), true);
+        assert!(!mid_1_point_touch.overlaps(&left_1_point_touch));
+        assert!(!mid_1_point_touch.contains(&left_1_point_touch));
+        assert!(mid_1_point_touch.touches(&right_1_point_touch));
 
         let left_merge = mid_1_point_touch.merge(&left_1_point_touch); //merge 9:15 - 9:45 and 9:05 - 9:15 -> expext 9:05 - 9:45
         assert_eq!(left_merge.start_time.hour(), 9);
@@ -359,7 +359,7 @@ mod test {
             .merge(&left_1_point_touch)
             .merge(&right_1_point_touch); //merge 9:05 - 9:15, 9:15 - 9 - 45  and  9:45 - 9:55 expext 9:05 - 9:45 -> expect 9:15 - 9:55
         assert_eq!(merge.start_time.hour(), 9);
-        assert_eq!(merge.start_time.minute(), 05);
+        assert_eq!(merge.start_time.minute(), 5);
         assert_eq!(merge.start_time.second(), 0);
         assert_eq!(merge.end_time.hour(), 9);
         assert_eq!(merge.end_time.minute(), 55);
@@ -460,7 +460,7 @@ mod test {
 
         let expanded_interval = i1.expand(Duration::minutes(13), Duration::minutes(7));
         assert_eq!(expanded_interval.start_time.hour(), 9);
-        assert_eq!(expanded_interval.start_time.minute(), 02);
+        assert_eq!(expanded_interval.start_time.minute(), 2);
         assert_eq!(expanded_interval.start_time.second(), 0);
         assert_eq!(expanded_interval.end_time.hour(), 9);
         assert_eq!(expanded_interval.end_time.minute(), 52);
