@@ -461,7 +461,7 @@ mod test {
 
         let expanded_interval = i1.expand(Duration::minutes(13), Duration::minutes(7));
         assert_eq!(expanded_interval.start_time.hour(), 9);
-        assert_eq!(expanded_interval.start_time.minute(), 02);
+        assert_eq!(expanded_interval.start_time.minute(), 2);
         assert_eq!(expanded_interval.start_time.second(), 0);
         assert_eq!(expanded_interval.end_time.hour(), 9);
         assert_eq!(expanded_interval.end_time.minute(), 52);
