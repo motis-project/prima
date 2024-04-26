@@ -2340,7 +2340,6 @@ mod test {
     use hyper::StatusCode;
     use itertools::Itertools;
     use migration::MigratorTrait;
-    use sea_orm::DbConn;
     use serial_test::serial;
     use tracing_test::traced_test;
 
@@ -2422,20 +2421,19 @@ mod test {
         .await
     }
 
-    async fn test_main() -> DbConn {
+    async fn test_main() {
         dotenv().ok();
         let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
         let conn = Database::connect(db_url)
             .await
             .expect("Database connection failed");
         Migrator::up(&conn, None).await.unwrap();
-        conn
     }
 
     #[tokio::test]
     #[serial]
     async fn test_zones() {
-        let db_conn = test_main().await;
+        test_main().await;
         let mut d = init(true, InitType::BackendTest).await;
         let test_points = TestPoints::new();
         //Validate invalid multipolygon handling when creating zone (expect StatusCode::BAD_REQUEST)
@@ -2470,7 +2468,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn test_synchronization() {
-        let db_conn = test_main().await;
+        test_main().await;
         let d = init(true, InitType::BackendTest).await;
         check_data_db_synchronized(&d).await;
     }
@@ -2478,7 +2476,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn test_key_violations() {
-        let db_conn = test_main().await;
+        test_main().await;
         let mut d = init(true, InitType::BackendTest).await;
         //validate UniqueKeyViolation handling when creating data (expect StatusCode::CONFLICT)
         //unique keys:  table               keys
@@ -2660,7 +2658,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn test_invalid_interval_parameter_handling() {
-        let db_conn = test_main().await;
+        test_main().await;
         let mut d = init(true, InitType::BackendTest).await;
 
         let base_time = NaiveDate::from_ymd_opt(5000, 1, 1)
@@ -2753,7 +2751,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn test_init() {
-        let db_conn = test_main().await;
+        test_main().await;
         let d = init(true, InitType::BackendTest).await;
 
         assert_eq!(d.vehicles.len(), 5);
@@ -2765,7 +2763,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn availability_test() {
-        let db_conn = test_main().await;
+        test_main().await;
         let mut d = init(true, InitType::BackendTest).await;
 
         let base_time = NaiveDate::from_ymd_opt(5000, 4, 15)
@@ -2857,7 +2855,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn get_events_for_vehicle_test() {
-        let db_conn = test_main().await;
+        test_main().await;
         let d = init(true, InitType::BackendTestWithEvents).await;
 
         // vehicle       # of events created in init
@@ -2911,7 +2909,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn get_events_for_user_test() {
-        let db_conn = test_main().await;
+        test_main().await;
         let d = init(true, InitType::BackendTestWithEvents).await;
 
         let not_found_result = d
@@ -2964,7 +2962,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn get_events_for_tour_test() {
-        let db_conn = test_main().await;
+        test_main().await;
         let d = init(true, InitType::BackendTestWithEvents).await;
 
         // Init creates 3 tours with ids 1,2,3. Each has 2 events.
@@ -2994,7 +2992,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn availability_statuscode_test() {
-        let db_conn = test_main().await;
+        test_main().await;
         let mut d = init(true, InitType::BackendTest).await;
 
         let base_time = NaiveDate::from_ymd_opt(5000, 4, 15)
@@ -3053,7 +3051,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn tour_test() {
-        let db_conn = test_main().await;
+        test_main().await;
         let mut d = init(true, InitType::BackendTest).await;
         d.insert_or_addto_tour(
             None,
@@ -3221,7 +3219,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn test_handle_request_statuscodes() {
-        let db_conn = test_main().await;
+        test_main().await;
         let mut d = init(true, InitType::BackendTest).await;
 
         let base_time = NaiveDate::from_ymd_opt(5000, 1, 1)
@@ -3383,7 +3381,7 @@ mod test {
     #[serial]
     async fn test_beeline_duration() {
         //Test may fail, if constant/primitives/BEELINE_KMH is changed.
-        let db_conn = test_main().await;
+        test_main().await;
         let d = init(true, InitType::BackendTest).await;
 
         let mut test_points = TestPoints::new();
@@ -3427,7 +3425,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn test_candidate_vehicles() {
-        let db_conn = test_main().await;
+        test_main().await;
         let d = init(true, InitType::BackendTest).await;
 
         let test_points = TestPoints::new();
@@ -3466,7 +3464,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn test_handle_request_concrete() {
-        let db_conn = test_main().await;
+        test_main().await;
         let mut d = init(true, InitType::BackendTest).await;
 
         let start_time = NaiveDate::from_ymd_opt(5000, 4, 19)
@@ -3616,7 +3614,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn test_handle_request_append() {
-        let db_conn = test_main().await;
+        test_main().await;
         let mut d = init(true, InitType::BackendTest).await;
 
         let start_time = NaiveDate::from_ymd_opt(5000, 4, 19)
@@ -3680,7 +3678,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn test_handle_request_prepend() {
-        let db_conn = test_main().await;
+        test_main().await;
         let mut d = init(true, InitType::BackendTest).await;
 
         let start_time = NaiveDate::from_ymd_opt(5000, 4, 19)
@@ -3759,7 +3757,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn test_change_vehicle_concrete() {
-        let db_conn = test_main().await;
+        test_main().await;
         let mut d = init(true, InitType::BackendTestWithEvents).await;
 
         // verify that tour with id 1 is done by vehicle with id 1
@@ -3794,7 +3792,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn test_change_vehicle_statuscodes() {
-        let db_conn = test_main().await;
+        test_main().await;
         let mut d = init(true, InitType::BackendTest).await;
 
         let start_time = NaiveDate::from_ymd_opt(5000, 4, 19)
@@ -3845,12 +3843,12 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn get_vehicles_test() {
-        let db_conn = test_main().await;
+        test_main().await;
         let d = init(true, InitType::BackendTest).await;
 
-        let c1_license_plates = vec!["TUB1-1", "TUB1-2"];
-        let c2_license_plates = vec!["TUB2-1", "TUB2-2"];
-        let c3_license_plates = vec!["TUG1-1"];
+        let c1_license_plates = ["TUB1-1", "TUB1-2"];
+        let c2_license_plates = ["TUB2-1", "TUB2-2"];
+        let c3_license_plates = ["TUG1-1"];
 
         let c1_res = d.get_vehicles(CompanyIdT::new(1)).await;
         assert!(c1_res.is_ok());
@@ -3880,7 +3878,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn get_company_for_user_test() {
-        let db_conn = test_main().await;
+        test_main().await;
         let d = init(true, InitType::BackendTest).await;
 
         let c1 = d.get_company_for_user(&d.users[&UserIdT::new(1)]).await;
@@ -3897,7 +3895,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn get_company_for_vehicle_test() {
-        let db_conn = test_main().await;
+        test_main().await;
         let d = init(true, InitType::BackendTest).await;
 
         let c1 = d.get_company_for_vehicle(&d.vehicles[0]).await;
@@ -3929,7 +3927,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn get_customer_for_event_test() {
-        let db_conn = test_main().await;
+        test_main().await;
         let d = init(true, InitType::BackendTestWithEvents).await;
 
         let events = d
@@ -3979,7 +3977,7 @@ mod test {
     #[tokio::test]
     #[serial]
     async fn get_address_for_event_test() {
-        let db_conn = test_main().await;
+        test_main().await;
         let d = init(true, InitType::BackendTestWithEvents).await;
 
         let events = d
