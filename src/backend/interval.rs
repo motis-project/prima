@@ -41,6 +41,10 @@ impl Interval {
         ))
     }
 
+    pub fn is_zero_size(&self) -> bool {
+        self.start_time == self.end_time
+    }
+
     pub fn touches(
         &self,
         other: &Interval,
@@ -365,6 +369,9 @@ mod test {
         assert_eq!(merge.end_time.hour(), 9);
         assert_eq!(merge.end_time.minute(), 55);
         assert_eq!(merge.end_time.second(), 0);
+
+        let (l, r) = merge.split(&right_1_point_touch);
+        assert!(r.is_zero_size());
     }
 
     #[should_panic]

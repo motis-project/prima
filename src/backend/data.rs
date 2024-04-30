@@ -1361,8 +1361,12 @@ impl PrimaData for Data {
             if existing.interval.contains(&to_remove_interval) {
                 mark_delete.push(*id);
                 let (left, right) = existing.interval.split(&to_remove_interval);
-                to_insert.push(left);
-                to_insert.push(right);
+                if !left.is_zero_size() {
+                    to_insert.push(left);
+                }
+                if !right.is_zero_size() {
+                    to_insert.push(right);
+                }
                 break;
             }
             if to_remove_interval.overlaps(&existing.interval) {
