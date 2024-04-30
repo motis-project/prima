@@ -525,6 +525,7 @@
             start_date.setMinutes(m);
         }
 
+        console.log(start_date, h, m);
         dt_str = get_time_str(start_date, h, m);
         return [vehicle_id, dt_str];
     }
@@ -586,6 +587,19 @@
     function set_availability(vehicle_id, create, t_start, t_end) {
         data = { 'id': vehicle_id, 'create': create, 'availability_start': t_start, 'availability_end': t_end };
         fetch("http://localhost:3030/availability", {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+
+        });
+    }
+
+    function send_request() {
+        // data = { 'id': vehicle_id, 'create': create, 'availability_start': t_start, 'availability_end': t_end };
+        data = { 'id': 0 };
+        fetch("http://localhost:3030/request", {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json",

@@ -1,5 +1,7 @@
-use std::sync::Mutex;
-
+use crate::{
+    backend::id_types::{CompanyIdT, IdT},
+    entities::vehicle,
+};
 use axum::{
     extract::State,
     http::{StatusCode, Uri},
@@ -10,6 +12,7 @@ use chrono::{naive, Local, NaiveDate};
 use sea_orm::{DbConn, EntityTrait};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::sync::Mutex;
 use tera::Context;
 use tracing::error;
 
@@ -193,7 +196,7 @@ pub struct VehicleAvailabilityParams {
 }
 
 pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
-    let company_id = 1;
+    let company_id = CompanyIdT::new(1);
     let data = s.data.read().await;
     let vehicles = data.get_vehicles(company_id).await;
 
@@ -206,14 +209,14 @@ pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, Sta
         .and_hms_opt(23, 59, 59)
         .unwrap();
 
-    // All tours for a sepc. company within a spec. day
+    // // All tours for a sepc. company within a spec. day
     let mut tours_all: Vec<Box<&dyn PrimaTour>> = Vec::new();
 
-    // since Tours are assigned to vehicles, we have to gather them from the comanies vehicles
+    // // since Tours are assigned to vehicles, we have to gather them from the comanies vehicles
     for v in vehicles.unwrap().iter() {
-        let v_id = v.get_id().await;
-        let tours_vehicle = data.get_tours(v_id, start_time, end_time).await;
-        tours_all.extend(tours_vehicle.unwrap());
+        // let v_id = v.get_id().await;
+        // let tours_vehicle = data.get_tours(*v_id, start_time, end_time).await;
+        // tours_all.extend(tours_vehicle.unwrap());
     }
 
     // for vehicle in company_1_vehicles.unwrap().iter() {
@@ -265,7 +268,7 @@ pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, Sta
 }
 
 pub async fn render_availability(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
-    let company_id = 1;
+    let company_id = CompanyIdT::new(1);
     let data = s.data.read().await;
 
     let mut vehicles: Vec<RenderVehicle> = Vec::new();
@@ -274,7 +277,7 @@ pub async fn render_availability(State(s): State<AppState>) -> Result<Html<Strin
     for dv in data.get_vehicles(company_id).await.unwrap().iter() {
         let availability = data
             .get_availability_intervals(
-                dv.get_id().await,
+                dv.get_id().await.to_owned(),
                 NaiveDate::from_ymd_opt(2024, 4, 30)
                     .unwrap()
                     .and_hms_opt(0, 0, 0)
@@ -289,17 +292,17 @@ pub async fn render_availability(State(s): State<AppState>) -> Result<Html<Strin
 
         let vehicle_id = dv.get_id().await;
         let ve = RenderVehicle {
-            id: vehicle_id,
+            id: vehicle_id.id(),
             license_plate: dv.get_license_plate().await.to_string(),
             availability_start: "".to_string(),
             availability_end: "".to_string(),
         };
         vehicles.push(ve);
 
-        println!("Availability of vehicle ID {}", vehicle_id);
+        println!("Availability of vehicle ID {}", vehicle_id.id());
         for ad in availability {
             let va = RenderVehicle {
-                id: vehicle_id,
+                id: vehicle_id.id(),
                 license_plate: dv.get_license_plate().await.to_string(),
                 availability_start: ad.start_time.to_string(),
                 availability_end: ad.end_time.to_string(),
@@ -331,7 +334,7 @@ pub async fn get_availability(
     State(s): State<AppState>,
     params: axum::extract::Query<VehicleAvailabilityParams>, // time interval (day) ?
 ) -> Json<Vec<RenderVehicle>> {
-    let company_id = params.id;
+    let company_id = CompanyIdT::new(params.id);
     let parsed_date = NaiveDate::parse_from_str(&params.date, "%Y-%m-%d");
 
     let data = s.data.read().await;
@@ -339,9 +342,11 @@ pub async fn get_availability(
     let mut vehicles: Vec<RenderVehicle> = Vec::new();
 
     for dv in data.get_vehicles(company_id).await.unwrap().iter() {
+        let vehicle_idt = dv.get_id().await;
+        let vehicle_id = dv.get_id().await.id();
         let availability = data
             .get_availability_intervals(
-                dv.get_id().await,
+                vehicle_idt.to_owned(),
                 parsed_date.unwrap().and_hms_opt(0, 0, 0).unwrap(),
                 parsed_date.unwrap().and_hms_opt(23, 59, 59).unwrap(),
             )
@@ -350,7 +355,7 @@ pub async fn get_availability(
 
         for ad in availability {
             let va = RenderVehicle {
-                id: dv.get_id().await,
+                id: vehicle_id,
                 license_plate: dv.get_license_plate().await.to_string(),
                 availability_start: ad.start_time.to_string(),
                 availability_end: ad.end_time.to_string(),
@@ -366,14 +371,14 @@ pub async fn get_vehicles(
     State(s): State<AppState>,
     // params: axum::extract::Query<VehicleAvailabilityParams>,
 ) -> Json<Vec<RenderVehicle>> {
-    let company_id = 1;
+    let company_id = CompanyIdT::new(1);
     let data = s.data.read().await;
 
     let mut vehicles: Vec<RenderVehicle> = Vec::new();
 
     for dv in data.get_vehicles(company_id).await.unwrap().iter() {
         let ve = RenderVehicle {
-            id: dv.get_id().await,
+            id: dv.get_id().await.id(),
             license_plate: dv.get_license_plate().await.to_string(),
             availability_start: "".to_string(),
             availability_end: "".to_string(),

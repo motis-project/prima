@@ -1,14 +1,13 @@
-// use crate::init::StopFor::TEST1;
+use crate::init::InitType::Standard;
 use axum::{
     extract::State,
     routing::{get, post},
     Router,
 };
-
-use backend::data::Data;
-// use dotenv::dotenv;
-
-use backend::lib::PrimaData;
+use backend::{
+    id_types::{CompanyIdT, IdT},
+    lib::PrimaData,
+};
 use dotenv::dotenv;
 use itertools::Itertools;
 use log::setup_logging;
@@ -32,6 +31,7 @@ use view::{
         get_availability, get_route_details, get_vehicles, render_availability,
         render_driver_sign_in, render_home, render_login, render_register, render_tours,
     },
+    tours::create_request,
     vehicle_view::{add_vehicle_availability, create_vehicle},
 };
 
@@ -97,8 +97,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         notify::RecursiveMode::NonRecursive,
     )?;
 
-    // let data = init::init(false).await;
-    let data = init::init(true).await;
+    // let data = init::init(false, init::InitType::Standard).await;
+    let data = init::init(true, init::InitType::Standard).await;
 
     let s = AppState {
         tera,
@@ -149,6 +149,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "/availability",
         post(add_vehicle_availability).with_state(s.clone()),
     );
+    let app = app.route("/request", post(create_request).with_state(s.clone()));
 
     let app = app.route("/vehicle", post(create_vehicle).with_state(s.clone()));
 
