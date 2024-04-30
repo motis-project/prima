@@ -2,7 +2,7 @@
 {% block content %}
 
 <div class="pl-4">
-    <h1 class="leading-tight text-gray-900 text-5xl pb-8">Fahrzeuge und Verfügbarkeit</h1>
+    <h1 class="leading-tight text-gray-900 text-5xl pb-8">Verfügbarkeit von Fahrzeugen</h1>
 
     <div class="flex">
         <div>
@@ -17,10 +17,6 @@
             <input id="nextDay" type="button" value=">"
                 class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
         </div>
-        <!-- <div>
-            <input type="button" value="Als verfügbar markieren" onclick="set_available()"
-                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 mx-8 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
-        </div> -->
     </div>
     <br>
 
@@ -175,7 +171,7 @@
                         <td>
                             <table class="w-full h-full">
                                 <tr>
-                                    <td id="c-{{vehicle.id}}-09-0" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-09-00" class="border text-white">....</td>
                                     <td id="c-{{vehicle.id}}-09-15" class="border text-white">....</td>
                                     <td id="c-{{vehicle.id}}-09-30" class="border text-white">....</td>
                                     <td id="c-{{vehicle.id}}-09-45" class="border text-white">....</td>
@@ -435,7 +431,7 @@
                                 });
                                 c.addEventListener('mouseup', () => {
                                     mouse_up_id = c.id;
-                                    set_available();
+                                    toggle_available(c.id);
                                 });
                             });
                         });
@@ -443,7 +439,7 @@
                 });
             });
         });
-        get_availability();
+        get_availability(); // TODO: set time interval (day)
     }
 
     function get_cell_id(vehicle_id, date) {
@@ -466,7 +462,6 @@
     }
 
     function mark_cells(vehicle_id, t_start, t_end, status) {
-        console.log(vehicle_id, t_start, t_end, status);
         let d_start = new Date(Date.parse(t_start.replace(' ', 'T')));
         let d_end = new Date(Date.parse(t_end.replace(' ', 'T')));
         let d_next = d_start;
@@ -483,6 +478,25 @@
                 map[c_id] = 2;
             }
         }
+    }
+
+    function get_time_str(date, h, m) {
+        h_str = h.toString();
+        m_str = m.toString();
+
+        if (h_str.length < 2) h_str = '0' + h_str;
+        if (m_str.length < 2) m_str = '0' + m_str;
+
+        let time_str = h_str + ':' + m_str + ':00';
+        let day = date.getDate().toString();
+        let month = (date.getMonth() + 1).toString();
+        let year = date.getFullYear().toString();
+
+        if (day.length < 2) day = '0' + day;
+        if (month.length < 2) month = '0' + month;
+
+        dt_str = year + '-' + month + '-' + day + ' ' + time_str;
+        return dt_str;
     }
 
     function get_cell_info(cell_id) {
@@ -505,19 +519,11 @@
             start_date.setMinutes(m);
         }
 
-        let time_str = h + ':' + m + ':00';
-        let day = start_date.getDate().toString();
-        let month = (start_date.getMonth() + 1).toString();
-        let year = start_date.getFullYear().toString();
-
-        if (day.length < 2) day = '0' + day;
-        if (month.length < 2) month = '0' + month;
-
-        dt_str = year + '-' + month + '-' + day + ' ' + time_str;
+        dt_str = get_time_str(start_date, h, m);
         return [vehicle_id, dt_str];
     }
 
-    function set_available() {
+    function toggle_available(cell_id) {
         cell_info_start = get_cell_info(mouse_down_id);
         cell_info_end = get_cell_info(mouse_up_id);
         vehicle_id_1 = cell_info_start[0];
@@ -525,16 +531,32 @@
         date_time_start = cell_info_start[1];
         date_time_end = cell_info_end[1];
 
-        if (vehicle_id_1 == vehicle_id_2 && date_time_start != date_time_end) {
-            dt_start = new Date(date_time_start);
-            dt_end = new Date(date_time_end);
-            if (dt_start > dt_end) {
-                let tmp = date_time_start;
-                date_time_start = date_time_end;
-                date_time_end = tmp;
+        state = map[cell_id]
+        console.log('Toggle ', cell_id, state);
+        if (state == 1) { // cell is marked available
+            if (mouse_down_id == mouse_up_id) { // single cell clicked
+                cell = document.getElementById(cell_id);
+                cell.style.backgroundColor = 'white';
+                map[cell_id] = 0;
+                // cut out 15 min
+                cut_start = new Date(date_time_start).getTime() - 15 * 60000;
+                date_cut_start = new Date(cut_start);
+                dt_start_str = get_time_str(date_cut_start, date_cut_start.getHours(), date_cut_start.getMinutes());
+                set_availability(parseInt(vehicle_id_1), false, dt_start_str, date_time_end);
+                console.log('Remove interval: ', dt_start_str, date_time_end);
             }
-            mark_cells(vehicle_id_1, date_time_start, date_time_end, 1);
-            set_availability(parseInt(vehicle_id_1), date_time_start, date_time_end);
+        } else {
+            if (vehicle_id_1 == vehicle_id_2 && date_time_start != date_time_end) {
+                dt_start = new Date(date_time_start);
+                dt_end = new Date(date_time_end);
+                if (dt_start > dt_end) {
+                    let tmp = date_time_start;
+                    date_time_start = date_time_end;
+                    date_time_end = tmp;
+                }
+                mark_cells(vehicle_id_1, date_time_start, date_time_end, 1);
+                set_availability(parseInt(vehicle_id_1), true, date_time_start, date_time_end);
+            }
         }
 
         mouse_down_id = "";
@@ -542,7 +564,11 @@
     }
 
     function get_availability() {
-        fetch("http://localhost:3030/vehicle_availability?id=1")
+        let dt = new Date(current_dt);
+        let day = ("0" + dt.getDate()).slice(-2);
+        let month = ("0" + (dt.getMonth() + 1)).slice(-2);
+        let date = dt.getFullYear() + "-" + month + "-" + day;
+        fetch("http://localhost:3030/vehicle_availability?id=1&date=" + date)
             .then(res =>
                 res.json()).then(availability_lst => {
                     availability_lst.forEach(e => {
@@ -551,8 +577,8 @@
                 })
     }
 
-    function set_availability(vehicle_id, t_start, t_end) {
-        data = { 'id': vehicle_id, 'availability_start': t_start, 'availability_end': t_end };
+    function set_availability(vehicle_id, create, t_start, t_end) {
+        data = { 'id': vehicle_id, 'create': create, 'availability_start': t_start, 'availability_end': t_end };
         fetch("http://localhost:3030/availability", {
             method: 'POST',
             headers: {
@@ -560,8 +586,7 @@
             },
             body: JSON.stringify(data),
 
-        })
-            .then(res => console.log(res))
+        });
     }
 
     function change_date() {
@@ -585,7 +610,7 @@
     prevDayBtn.addEventListener('click', () => {
         const currentDate = new Date(dateInput.value);
         currentDate.setDate(currentDate.getDate() - 1);
-        dateInput.value = currentDate.toISOString().slice(0, 10); // Set the input value to the new date
+        dateInput.value = currentDate.toISOString().slice(0, 10);
         current_dt = currentDate;
         init();
     });
@@ -594,7 +619,7 @@
     nextDayBtn.addEventListener('click', () => {
         const currentDate = new Date(dateInput.value);
         currentDate.setDate(currentDate.getDate() + 1);
-        dateInput.value = currentDate.toISOString().slice(0, 10); // Set the input value to the new date
+        dateInput.value = currentDate.toISOString().slice(0, 10);
         current_dt = currentDate;
         init();
     });

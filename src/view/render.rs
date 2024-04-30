@@ -189,6 +189,7 @@ struct WayPoint {
 #[derive(Deserialize)]
 pub struct VehicleAvailabilityParams {
     id: i32,
+    date: String,
 }
 
 pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
@@ -270,27 +271,43 @@ pub async fn render_availability(State(s): State<AppState>) -> Result<Html<Strin
     let mut vehicles: Vec<RenderVehicle> = Vec::new();
     let mut vec_availability: Vec<RenderVehicle> = Vec::new();
 
-    // for v in data.get_vehicles_(company_id, Some(true)).await.iter() {
-    //     let availability = v.availability.clone();
+    for dv in data.get_vehicles(company_id).await.unwrap().iter() {
+        let availability = data
+            .get_availability_intervals(
+                dv.get_id().await,
+                NaiveDate::from_ymd_opt(2024, 4, 30)
+                    .unwrap()
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap(),
+                NaiveDate::from_ymd_opt(2024, 4, 30)
+                    .unwrap()
+                    .and_hms_opt(23, 59, 59)
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
 
-    //     let ve = RenderVehicle {
-    //         id: v.id,
-    //         license_plate: v.license_plate.to_string(),
-    //         availability_start: "".to_string(),
-    //         availability_end: "".to_string(),
-    //     };
-    //     vehicles.push(ve);
+        let vehicle_id = dv.get_id().await;
+        let ve = RenderVehicle {
+            id: vehicle_id,
+            license_plate: dv.get_license_plate().await.to_string(),
+            availability_start: "".to_string(),
+            availability_end: "".to_string(),
+        };
+        vehicles.push(ve);
 
-    //     for (i, ad) in availability {
-    //         let va = RenderVehicle {
-    //             id: v.id,
-    //             license_plate: v.license_plate.to_string(),
-    //             availability_start: ad.interval.start_time.to_string(),
-    //             availability_end: ad.interval.end_time.to_string(),
-    //         };
-    //         vec_availability.push(va);
-    //     }
-    // }
+        println!("Availability of vehicle ID {}", vehicle_id);
+        for ad in availability {
+            let va = RenderVehicle {
+                id: vehicle_id,
+                license_plate: dv.get_license_plate().await.to_string(),
+                availability_start: ad.start_time.to_string(),
+                availability_end: ad.end_time.to_string(),
+            };
+            println!("{}", va.availability_start);
+            vec_availability.push(va);
+        }
+    }
 
     let response = s
         .render(
@@ -312,26 +329,35 @@ pub async fn render_availability(State(s): State<AppState>) -> Result<Html<Strin
 
 pub async fn get_availability(
     State(s): State<AppState>,
-    params: axum::extract::Query<VehicleAvailabilityParams>,
+    params: axum::extract::Query<VehicleAvailabilityParams>, // time interval (day) ?
 ) -> Json<Vec<RenderVehicle>> {
-    let company_id = 1;
+    let company_id = params.id;
+    let parsed_date = NaiveDate::parse_from_str(&params.date, "%Y-%m-%d");
+
     let data = s.data.read().await;
 
     let mut vehicles: Vec<RenderVehicle> = Vec::new();
 
-    // availability
-    // for v in data.get_vehicles_(company_id, Some(true)).await.iter() {
-    //     let availability = v.availability.clone();
-    //     for (i, ad) in availability {
-    //         let ve = RenderVehicle {
-    //             id: v.id,
-    //             license_plate: v.license_plate.to_string(),
-    //             availability_start: ad.interval.start_time.to_string(),
-    //             availability_end: ad.interval.end_time.to_string(),
-    //         };
-    //         vehicles.push(ve);
-    //     }
-    // }
+    for dv in data.get_vehicles(company_id).await.unwrap().iter() {
+        let availability = data
+            .get_availability_intervals(
+                dv.get_id().await,
+                parsed_date.unwrap().and_hms_opt(0, 0, 0).unwrap(),
+                parsed_date.unwrap().and_hms_opt(23, 59, 59).unwrap(),
+            )
+            .await
+            .unwrap();
+
+        for ad in availability {
+            let va = RenderVehicle {
+                id: dv.get_id().await,
+                license_plate: dv.get_license_plate().await.to_string(),
+                availability_start: ad.start_time.to_string(),
+                availability_end: ad.end_time.to_string(),
+            };
+            vehicles.push(va);
+        }
+    }
 
     Json(vehicles)
 }
@@ -345,15 +371,15 @@ pub async fn get_vehicles(
 
     let mut vehicles: Vec<RenderVehicle> = Vec::new();
 
-    // for v in data.get_vehicles_(company_id, Some(true)).await.iter() {
-    //     let ve = RenderVehicle {
-    //         id: v.id,
-    //         license_plate: v.license_plate.to_string(),
-    //         availability_start: "".to_string(),
-    //         availability_end: "".to_string(),
-    //     };
-    //     vehicles.push(ve);
-    // }
+    for dv in data.get_vehicles(company_id).await.unwrap().iter() {
+        let ve = RenderVehicle {
+            id: dv.get_id().await,
+            license_plate: dv.get_license_plate().await.to_string(),
+            availability_start: "".to_string(),
+            availability_end: "".to_string(),
+        };
+        vehicles.push(ve);
+    }
 
     Json(vehicles)
 }

@@ -97,6 +97,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         notify::RecursiveMode::NonRecursive,
     )?;
 
+    // let data = init::init(false).await;
     let data = init::init(true).await;
 
     let s = AppState {

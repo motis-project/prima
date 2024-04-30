@@ -27,6 +27,7 @@ pub struct CreateVehicleForm {
 #[derive(Deserialize)]
 pub struct AddVehicleAvailabilityForm {
     id: i32,
+    create: bool,
     availability_start: String,
     availability_end: String,
 }
@@ -48,7 +49,6 @@ pub async fn add_vehicle_availability(
     State(s): State<AppState>,
     Json(params): Json<AddVehicleAvailabilityForm>,
 ) -> Redirect {
-    let company_id = 1;
     let mut data = s.data.write().await;
 
     let dt_start =
@@ -57,7 +57,11 @@ pub async fn add_vehicle_availability(
     let dt_end =
         NaiveDateTime::parse_from_str(&params.availability_end, "%Y-%m-%d %H:%M:%S").unwrap();
 
-    data.create_availability(dt_start, dt_end, params.id).await;
+    if params.create {
+        data.create_availability(dt_start, dt_end, params.id).await;
+    } else {
+        data.remove_availability(dt_start, dt_end, params.id).await;
+    }
 
     let redirect_url = "/availability";
     Redirect::to(redirect_url)
