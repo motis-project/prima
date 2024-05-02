@@ -368,12 +368,17 @@
     </div>
 
     <br>
-    <br>
     <div>
         <h2 class="leading-tight text-gray-900 text-2xl pb-4">Fahrzeug hinzufügen</h2>
         <form action="/vehicle" method="post">
             <label for="license_plate">Kennzeichen:</label><br>
-            <input type="text" id="license_plate" name="license_plate"
+            <input type="text" id="license_plate" name="license_plate" placeholder="BZ-TU-00"
+                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+            <br><label for="seats">Sitzplätze:</label><br>
+            <input type="text" id="seats" name="seats" value="3"
+                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+            <br><label for="wheelchair_capacity">Rollstuhlplätze:</label><br>
+            <input type="text" id="wheelchair_capacity" name="wheelchair_capacity" value="0"
                 class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
             <input type="submit" value="+"
                 class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
@@ -433,6 +438,7 @@
                                     ['state', 0],
                                     ['tour', 0],
                                 ]);
+                                c.style.color = 'white';
                             });
                         });
                     }
@@ -483,6 +489,7 @@
     }
 
     function mark_cells(vehicle_id, t_start, t_end, target_state, tour_id) {
+        console.log(vehicle_id, t_start, t_end, target_state, tour_id);
         let d_start = new Date(Date.parse(t_start.replace(' ', 'T')));
         let d_end = new Date(Date.parse(t_end.replace(' ', 'T')));
         let d_next = d_start;
@@ -493,26 +500,25 @@
             d_next = new Date(d_next.getTime() + 15 * 60000);
             if (c_id == null) continue;
 
-            if (map[c_id].get('state') == 2) continue;
+            // if (map[c_id].get('state') == 2) continue;
 
             if (target_state == 1) {
                 cell = document.getElementById(c_id);
                 cell.style.backgroundColor = color_available;
                 cell.style.color = color_available;
-                map[c_id].set('state', 1);
+                map[c_id].set('tour', 0);
             } else if (target_state == 2) {
                 cell = document.getElementById(c_id);
                 cell.style.backgroundColor = color_booked;
                 cell.style.color = color_booked;
-                map[c_id].set('state', 2);
                 map[c_id].set('tour', tour_id);
             } else if (target_state == 0) {
                 cell = document.getElementById(c_id);
                 cell.style.backgroundColor = 'white';
                 cell.style.color = 'white';
-                map[c_id].set('state', 0);
                 map[c_id].set('tour', 0);
             }
+            map[c_id].set('state', target_state);
         }
     }
 
@@ -669,21 +675,22 @@
     var tours = {};
 
     function get_tours() {
-        let vehicle_id = 1;
         let time_frame_start = "2024-05-02T00-00-00";
         let time_frame_end = "2024-05-02T23-59-59";
-        // let time_frame_start = "none";
-        // let time_frame_end = "none";
-        fetch("http://localhost:3030/vehicle_tours?vehicle_id=" + vehicle_id
-            + '&time_frame_start=' + time_frame_start
-            + '&time_frame_end=' + time_frame_end)
-            .then(res =>
-                res.json()).then(data => {
-                    data.forEach(e => {
-                        mark_cells(2, e['departure'], e['arrival'], 2, e['id']);
-                        tours[e['id']] = e;
+        vehicles = [{ id: 1 }, { id: 2 }];
+
+        vehicles.forEach(v => {
+            fetch("http://localhost:3030/vehicle_tours?vehicle_id=" + v['id']
+                + '&time_frame_start=' + time_frame_start
+                + '&time_frame_end=' + time_frame_end)
+                .then(res =>
+                    res.json()).then(data => {
+                        data.forEach(e => {
+                            mark_cells(v['id'], e['departure'], e['arrival'], 2, e['id']);
+                            tours[e['id']] = e;
+                        });
                     });
-                });
+        });
     }
 
     function check_tour_realloc(tour_id, v_id_dst) {
@@ -698,7 +705,7 @@
         console.log(move_possible);
         if (move_possible) {
             mark_cells(v_id_dst, tour.departure, tour.arrival, 2, tour_id);
-            mark_cells(v_id_src, tour.departure, tour.arrival, 0, tour_id);
+            mark_cells(v_id_src, tour.departure, tour.arrival, 1, tour_id);
         }
     }
 

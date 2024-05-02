@@ -50,14 +50,14 @@ pub async fn get_route_details(
         lat: 51.179940,
         lng: 14.000301,
         customer: "Erika Mustermann".to_string(),
-        adress: "Addresse 1".to_string(),
+        adress: "Am Eierberg 3, 01896 Pulsnitz".to_string(),
     });
     events.push(Event {
         id: 2,
-        lat: 51.027205,
-        lng: 13.750426,
+        lat: 51.066523,
+        lng: 13.741096,
         customer: "Erika Mustermann".to_string(),
-        adress: "Addresse 2".to_string(),
+        adress: "Bhf Dresden-Neustadt".to_string(),
     });
 
     let mut events2: Vec<Event> = Vec::new();
@@ -66,35 +66,35 @@ pub async fn get_route_details(
         lat: 51.179940,
         lng: 14.000301,
         customer: "Max Mustermann".to_string(),
-        adress: "Addresse 1".to_string(),
+        adress: "Am Eierberg 3, 01896 Pulsnitz".to_string(),
     });
     events2.push(Event {
         id: 2,
-        lat: 51.027205,
-        lng: 13.750426,
-        customer: "Max Mustermann".to_string(),
-        adress: "Addresse 2".to_string(),
+        lat: 51.169424,
+        lng: 13.824418,
+        customer: "Erika Mustermann".to_string(),
+        adress: "Nordstraße 17, 01458 Ottendorf-Okrilla".to_string(),
     });
     events2.push(Event {
-        id: 2,
-        lat: 51.027205,
-        lng: 13.750426,
+        id: 3,
+        lat: 51.066523,
+        lng: 13.741096,
         customer: "Max Mustermann".to_string(),
-        adress: "Addresse 3".to_string(),
+        adress: "Bhf Dresden-Neustadt".to_string(),
     });
 
     let tour1 = Tour {
         id: 1,
-        departure: "2024-04-30 19:15:00".to_string(),
-        arrival: "2024-04-30 19:45:00".to_string(),
+        departure: "2024-05-02 20:15:00".to_string(),
+        arrival: "2024-05-02 20:45:00".to_string(),
         events: events,
     };
     tours.push(tour1);
 
     let tour2 = Tour {
         id: 2,
-        departure: "2024-05-01 11:00:00".to_string(),
-        arrival: "2024-05-01 11:45:00".to_string(),
+        departure: "2024-05-03 11:15:00".to_string(),
+        arrival: "2024-05-03 12:00:00".to_string(),
         events: events2,
     };
     tours.push(tour2);
@@ -333,7 +333,6 @@ pub async fn render_availability(State(s): State<AppState>) -> Result<Html<Strin
         };
         vehicles.push(ve);
 
-        println!("Availability of vehicle ID {}", vehicle_id.id());
         for ad in availability {
             let va = RenderVehicle {
                 id: vehicle_id.id(),

@@ -111,14 +111,14 @@ pub async fn get_tours(
         lat: 51.179940,
         lng: 14.000301,
         customer: "Erika Mustermann".to_string(),
-        adress: "Start adress".to_string(),
+        adress: "Am Eierberg 3, 01896 Pulsnitz".to_string(),
     });
     events.push(Event {
         id: 2,
         lat: 51.027205,
         lng: 13.750426,
         customer: "Erika Mustermann".to_string(),
-        adress: "Destination adress".to_string(),
+        adress: "Pestitzer Weg 14, 01217 Dresden".to_string(),
     });
 
     let mut events2: Vec<Event> = Vec::new();
@@ -146,19 +146,24 @@ pub async fn get_tours(
 
     let tour1 = Tour {
         id: 1,
-        departure: "2024-04-30 19:15:00".to_string(),
-        arrival: "2024-04-30 19:45:00".to_string(),
+        departure: "2024-05-02 20:15:00".to_string(),
+        arrival: "2024-05-02 20:45:00".to_string(),
         events: events,
     };
-    tours.push(tour1);
 
     let tour2 = Tour {
         id: 2,
-        departure: "2024-05-01 11:00:00".to_string(),
-        arrival: "2024-05-01 11:45:00".to_string(),
+        departure: "2024-05-03 10:15:00".to_string(),
+        arrival: "2024-05-03 11:00:00".to_string(),
         events: events2,
     };
-    tours.push(tour2);
+
+    if params.vehicle_id == 1 {
+        tours.push(tour1);
+    }
+    if params.vehicle_id == 2 {
+        tours.push(tour2);
+    }
 
     Json(tours)
 }
