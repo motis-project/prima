@@ -77,8 +77,8 @@ pub async fn get_route_details(
     });
     events2.push(Event {
         id: 2,
-        lat: 51.027205,
-        lng: 13.750426,
+        lat: 51.1805717991834,
+        lng: 14.430872351819595,
         customer: "Max Mustermann".to_string(),
         adress: "Addresse 3".to_string(),
     });

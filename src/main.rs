@@ -135,6 +135,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // GET static files
     let app = app.route_service("/output.css", ServeFile::new("output.css"));
     let app = app.route_service("/static/js/main.js", ServeFile::new("static/js/main.js"));
+    let app = app.route_service("/static/js/style.js", ServeFile::new("static/js/style.js"));
 
     // POST json / form data
     let app = app.route("/test", post(post_json_test));
