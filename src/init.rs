@@ -517,8 +517,8 @@ async fn init_default(
         "Taxi-Unternehmen Bautzen-1",
         ZoneIdT::new(2),
         "a@b",
-        51.220826,
-        13.895984,
+        51.179940,
+        14.000301,
     )
     .await;
     data.create_company(
@@ -620,11 +620,11 @@ async fn init_default(
     )
     .await;
 
-    data.create_vehicle("TUB1-1", CompanyIdT::new(1)).await;
-    data.create_vehicle("TUB1-2", CompanyIdT::new(1)).await;
-    data.create_vehicle("TUB1-3", CompanyIdT::new(1)).await;
-    data.create_vehicle("TUB1-4", CompanyIdT::new(1)).await;
-    data.create_vehicle("TUB1-5", CompanyIdT::new(1)).await;
+    data.create_vehicle("BZ-TU-11", CompanyIdT::new(1)).await;
+    data.create_vehicle("BZ-TU-12", CompanyIdT::new(1)).await;
+    data.create_vehicle("BZ-TU-13", CompanyIdT::new(1)).await;
+    data.create_vehicle("BZ-TU-14", CompanyIdT::new(1)).await;
+    data.create_vehicle("BZ-TU-15", CompanyIdT::new(1)).await;
     data.create_vehicle("TUB2-1", CompanyIdT::new(2)).await;
     data.create_vehicle("TUB2-2", CompanyIdT::new(2)).await;
     data.create_vehicle("TUB2-3", CompanyIdT::new(2)).await;
@@ -637,9 +637,9 @@ async fn init_default(
     data.create_vehicle("TUB5-1", CompanyIdT::new(5)).await;
     data.create_vehicle("TUB5-2", CompanyIdT::new(5)).await;
     data.create_vehicle("TUB5-3", CompanyIdT::new(5)).await;
-    data.create_vehicle("TUG1-1", CompanyIdT::new(6)).await;
-    data.create_vehicle("TUG1-2", CompanyIdT::new(6)).await;
-    data.create_vehicle("TUG1-3", CompanyIdT::new(6)).await;
+    data.create_vehicle("GR-TU-11", CompanyIdT::new(6)).await;
+    data.create_vehicle("GR-TU-12", CompanyIdT::new(6)).await;
+    data.create_vehicle("GR-TU-13", CompanyIdT::new(6)).await;
     data.create_vehicle("TUG2-1", CompanyIdT::new(7)).await;
     data.create_vehicle("TUG2-2", CompanyIdT::new(7)).await;
     data.create_vehicle("TUG2-3", CompanyIdT::new(7)).await;

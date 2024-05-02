@@ -31,7 +31,7 @@ use view::{
         get_availability, get_route_details, get_vehicles, render_availability,
         render_driver_sign_in, render_home, render_login, render_register, render_tours,
     },
-    tours::create_request,
+    tours::{create_request, get_tours},
     vehicle_view::{add_vehicle_availability, create_vehicle},
 };
 
@@ -124,14 +124,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         get(render_availability).with_state(s.clone()),
     );
     let app = app.route("/tours", get(render_tours).with_state(s.clone()));
-    let app = app.route(
-        "/routes/:route_id",
-        get(get_route_details).with_state(s.clone()),
-    );
+    let app = app.route("/routes", get(get_route_details).with_state(s.clone()));
     let app = app.route(
         "/vehicle_availability",
         get(get_availability).with_state(s.clone()),
     );
+    let app = app.route("/vehicle_tours", get(get_tours).with_state(s.clone()));
     let app = app.route("/vehicles", get(get_vehicles).with_state(s.clone()));
 
     // GET static files

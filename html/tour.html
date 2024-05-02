@@ -8,36 +8,56 @@
         </div>
     </div>
 
-    <div class="space-y-4">
-        <div class="rounded-md border">
-            <div class="relative w-full overflow-auto">
-                {% for wp in route.waypoints %}
-                <table>
+    <div class="fex space-y-4">
+        <div class="w-2/5 rounded-md border p-8">
+            <div>
+                <table class="table-auto">
                     <tbody>
-                        <tr>
-                            <td>Datum</td>
-                            <td>{{ wp.date }}</td>
+                        <tr class="max-width">
+                            <td class="pr-16">Tour ID:</td>
+                            <td>{{tour.id}}</td>
                         </tr>
                         <tr>
-                            <td>Zeit</td>
-                            <td>{{ wp.time }}</td>
+                            <td class="pr-16">Beginn</td>
+                            <td>{{tour.departure}}</td>
                         </tr>
                         <tr>
-                            <td>Koordinaten</td>
-                            <td>{{ wp.coordinates }}</td>
-                        </tr>
-                        <tr>
-                            <td>Pickup</td>
-                            <td>{{ wp.pickup }}</td>
-                        </tr>
-                        <tr>
-                            <td>Drop</td>
-                            <td>{{ wp.drop }}</td>
+                            <td class="pr-16">Ende</td>
+                            <td>{{tour.arrival}}</td>
                         </tr>
                     </tbody>
                 </table>
-                <br>
-                {% endfor %}
+
+                <div class="py-8">
+                    <h2 class="leading-tight text-gray-900 text-2xl pb-4">Stops</h2>
+                    {% for event in tour.events %}
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td class="pr-12">Id</td>
+                                <td>{{ event.id }}</td>
+                            </tr>
+                            <tr>
+                                <td class="pr-12">Latitude</td>
+                                <td>{{ event.lat }}</td>
+                            </tr>
+                            <tr>
+                                <td class="pr-12">Longitude</td>
+                                <td>{{ event.lng }}</td>
+                            </tr>
+                            <tr>
+                                <td class="pr-12">Fahrgast</td>
+                                <td>{{ event.customer }}</td>
+                            </tr>
+                            <tr>
+                                <td class="pr-12">Adresse</td>
+                                <td>{{ event.adress }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <br>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
