@@ -108,17 +108,17 @@ pub async fn get_tours(
     let mut events: Vec<Event> = Vec::new();
     events.push(Event {
         id: 1,
-        lat: 51.179940,
-        lng: 14.000301,
+        lat: 51.17052591968958,
+        lng: 14.75467407061821,
         customer: "Erika Mustermann".to_string(),
-        adress: "Am Eierberg 3, 01896 Pulsnitz".to_string(),
+        adress: "Hauptstraße 34, 02894 Reichenbach/Oberlausitz".to_string(),
     });
     events.push(Event {
         id: 2,
-        lat: 51.027205,
-        lng: 13.750426,
+        lat: 51.135427545160844,
+        lng: 14.796664570615112,
         customer: "Erika Mustermann".to_string(),
-        adress: "Pestitzer Weg 14, 01217 Dresden".to_string(),
+        adress: "Bhf Reichenbach".to_string(),
     });
 
     let mut events2: Vec<Event> = Vec::new();
@@ -137,7 +137,7 @@ pub async fn get_tours(
         adress: "Destination adress".to_string(),
     });
     events2.push(Event {
-        id: 2,
+        id: 3,
         lat: 51.027205,
         lng: 13.750426,
         customer: "Max Mustermann".to_string(),
@@ -146,8 +146,8 @@ pub async fn get_tours(
 
     let tour1 = Tour {
         id: 1,
-        departure: "2024-05-02 20:15:00".to_string(),
-        arrival: "2024-05-02 20:45:00".to_string(),
+        departure: "2024-05-04 10:15:00".to_string(),
+        arrival: "2024-05-04 10:45:00".to_string(),
         events: events,
     };
 
@@ -158,11 +158,11 @@ pub async fn get_tours(
         events: events2,
     };
 
-    if params.vehicle_id == 1 {
+    if params.vehicle_id == 18 {
         tours.push(tour1);
     }
     if params.vehicle_id == 2 {
-        tours.push(tour2);
+        // tours.push(tour2);
     }
 
     Json(tours)

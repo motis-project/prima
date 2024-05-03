@@ -30,6 +30,7 @@ use view::{
     render::{
         get_availability, get_route_details, get_vehicles, render_availability,
         render_driver_sign_in, render_home, render_login, render_register, render_tours,
+        view_add_vehicle,
     },
     tours::{create_request, get_tours},
     vehicle_view::{add_vehicle_availability, create_vehicle},
@@ -97,8 +98,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         notify::RecursiveMode::NonRecursive,
     )?;
 
-    // let data = init::init(false, init::InitType::Standard).await;
-    let data = init::init(true, init::InitType::Standard).await;
+    let data = init::init(false, init::InitType::Standard).await;
+    // let data = init::init(true, init::InitType::Standard).await;
 
     let s = AppState {
         tera,
@@ -135,6 +136,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // GET static files
     let app = app.route_service("/output.css", ServeFile::new("output.css"));
     let app = app.route_service("/static/js/main.js", ServeFile::new("static/js/main.js"));
+    let app = app.route_service("/static/js/style.js", ServeFile::new("static/js/style.js"));
 
     // POST json / form data
     let app = app.route("/test", post(post_json_test));
@@ -150,6 +152,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = app.route("/request", post(create_request).with_state(s.clone()));
 
     let app = app.route("/vehicle", post(create_vehicle).with_state(s.clone()));
+    let app = app.route("/vehicle", get(view_add_vehicle).with_state(s.clone()));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3030").await?;
     axum::serve(listener, app).await?;

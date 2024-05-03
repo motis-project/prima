@@ -37,7 +37,7 @@ pub async fn create_vehicle(
     State(s): State<AppState>,
     Form(vehicle): Form<CreateVehicleForm>,
 ) -> Redirect {
-    let company_id = CompanyIdT::new(1);
+    let company_id = CompanyIdT::new(6);
     let mut data = s.data.write().await;
     data.create_vehicle(&vehicle.license_plate, company_id)
         .await;

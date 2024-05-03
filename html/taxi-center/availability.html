@@ -34,6 +34,9 @@
                     <tr>
                         <td></td>
                         <td>23:00<br>00 15 30 45</td>
+                        <!-- <td>23:00<br>
+                            <div class="text-xs">00 . 15 . 30 . 45</div>
+                        </td> -->
                         <td>00:00<br>00 15 30 45</td>
                         <td>01:00<br>00 15 30 45</td>
                         <td>02:00<br>00 15 30 45</td>
@@ -370,7 +373,14 @@
     {% endif %}
 
     <br>
+
     <div>
+        <input type="button" value="Fahrzeug hinzufügen"
+            onclick="window.open('http://localhost:3030/vehicle', '_blank').focus();"
+            class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+    </div>
+
+    <!-- <div>
         <h2 class="leading-tight text-gray-900 text-2xl pb-4">Fahrzeug hinzufügen</h2>
         <form action="/vehicle" method="post">
             <label for="license_plate">Kennzeichen:</label><br>
@@ -385,7 +395,19 @@
             <input type="submit" value="+" onclick="reload()"
                 class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
         </form>
+    </div> -->
+
+    <!-- <div id="context-menu">
+        <ul>
+            <li id="menu-item-1">Menu Item 1</li>
+            <li id="menu-item-2">Menu Item 2</li>
+            <li id="menu-item-3">Menu Item 3</li>
+        </ul>
     </div>
+
+    <div id="content">
+        Right-click here to show context menu.
+    </div> -->
 </div>
 
 <script>
@@ -399,6 +421,47 @@
 
     var current_dt = Date.now();
     var empty = false;
+
+    // document.addEventListener("DOMContentLoaded", function () {
+    //     var contextMenu = document.getElementById("context-menu");
+    //     var content = document.getElementById("content");
+
+    //     // Show context menu
+    //     function showContextMenu(x, y) {
+    //         contextMenu.style.display = "block";
+    //         contextMenu.style.left = x + "px";
+    //         contextMenu.style.top = y + "px";
+    //     }
+
+    //     // Hide context menu
+    //     function hideContextMenu() {
+    //         contextMenu.style.display = "none";
+    //     }
+
+    //     // Handle right-click event
+    //     content.addEventListener("contextmenu", function (event) {
+    //         event.preventDefault(); // Prevent default browser context menu
+    //         showContextMenu(event.clientX, event.clientY);
+    //     });
+
+    //     // Hide context menu when clicking outside
+    //     document.addEventListener("click", function (event) {
+    //         hideContextMenu();
+    //     });
+
+    //     // Add click event listeners for each menu item
+    //     document.getElementById("menu-item-1").addEventListener("click", function () {
+    //         alert("Menu Item 1 clicked");
+    //     });
+
+    //     document.getElementById("menu-item-2").addEventListener("click", function () {
+    //         alert("Menu Item 2 clicked");
+    //     });
+
+    //     document.getElementById("menu-item-3").addEventListener("click", function () {
+    //         alert("Menu Item 3 clicked");
+    //     });
+    // });
 
     function sleep(milliseconds) {
         return new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -453,11 +516,26 @@
                                 if (reload) {
                                     c.addEventListener('mousedown', () => {
                                         mouse_down_id = c.id;
+                                        if (map[c.id].get('tour') == 0) {
+                                            c.style.backgroundColor = 'lightgrey';
+                                            c.style.color = 'lightgrey';
+                                        }
                                     });
                                     c.addEventListener('mouseup', () => {
                                         mouse_up_id = c.id;
                                         toggle_available(c.id);
+                                        mouse_up_id = '';
+                                        mouse_down_id = '';
                                     });
+                                    c.addEventListener('mouseover', () => {
+                                        let md_v_id = mouse_down_id.split('-')[1];
+                                        let v_id = c.id.split('-')[1];
+                                        if (mouse_down_id != '' && md_v_id == v_id && map[c.id].get('tour') == 0) {
+                                            c.style.backgroundColor = 'lightgrey';
+                                            c.style.color = 'lightgrey';
+                                        }
+                                    });
+                                    // addEventListener("contextmenu", (event) => { console.log('contextmenu') });
                                 }
                                 // init map data
                                 map[c.id] = new Map([
@@ -681,7 +759,7 @@
         let day = ("0" + dt.getDate()).slice(-2);
         let month = ("0" + (dt.getMonth() + 1)).slice(-2);
         let date = dt.getFullYear() + "-" + month + "-" + day;
-        fetch("http://localhost:3030/vehicle_availability?id=1&date=" + date)
+        fetch("http://localhost:3030/vehicle_availability?id=6&date=" + date)
             .then(res =>
                 res.json()).then(availability_lst => {
                     availability_lst.forEach(e => {
@@ -707,7 +785,7 @@
     function get_tours() {
         let time_frame_start = "2024-05-02T00-00-00";
         let time_frame_end = "2024-05-02T23-59-59";
-        vehicles = [{ id: 1 }, { id: 2 }];
+        vehicles = [{ id: 18 }, { id: 2 }];
 
         vehicles.forEach(v => {
             fetch("http://localhost:3030/vehicle_tours?vehicle_id=" + v['id']
@@ -735,7 +813,7 @@
         console.log(move_possible);
         if (move_possible) {
             mark_cells(v_id_dst, tour.departure, tour.arrival, 2, tour_id, false);
-            mark_cells(v_id_src, tour.departure, tour.arrival, 1, tour_id, true);
+            mark_cells(v_id_src, tour.departure, tour.arrival, 0, tour_id, true);
         }
     }
 

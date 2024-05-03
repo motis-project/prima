@@ -1,6 +1,33 @@
-{% extends "base2.html" %}
+{% extends "base.html" %}
 {% block content %}
 
-
+<div class="bg-white p-8 rounded shadow-md max-w-md">
+    <h2 class="text-2xl mb-4 text-center font-bold">Fahrzeug hinzufügen</h2>
+    <div class="preview flex min-h-[350px] w-full justify-center p-10 items-center">
+        <form action="/vehicle" method="post">
+            <label for="license_plate">Kennzeichen:</label><br>
+            <input type="text" id="license_plate" name="license_plate" placeholder="BZ-TU-00"
+                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+            <br><label for="seats">Sitzplätze:</label><br>
+            <select id="seats" name="seats" value="3"
+                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+                <option>4</option>
+                <option>6</option>
+                <option>8</option>
+            </select>
+            <br><label for="wheelchair_capacity">Kinderwagen:</label><br>
+            <input type="number" min="0" id="wheelchair_capacity" name="wheelchair_capacity" value="0"
+                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+            <br><label for="wheelchair_capacity">Rollstuhl umsetzbar:</label><br>
+            <input type="number" min="0" id="wheelchair_capacity" name="wheelchair_capacity" value="0"
+                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+            <br><label for="wheelchair_capacity">Rollstuhl nicht umsetzbar:</label><br>
+            <input type="number" min="0" id="wheelchair_capacity" name="wheelchair_capacity" value="0"
+                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+            <br><br><input type="submit" value="Hinzufügen"
+                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+        </form>
+    </div>
+</div>
 
 {% endblock content %}

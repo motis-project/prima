@@ -47,17 +47,17 @@ pub async fn get_route_details(
     let mut events: Vec<Event> = Vec::new();
     events.push(Event {
         id: 1,
-        lat: 51.179940,
-        lng: 14.000301,
+        lat: 51.17052591968958,
+        lng: 14.75467407061821,
         customer: "Erika Mustermann".to_string(),
-        adress: "Am Eierberg 3, 01896 Pulsnitz".to_string(),
+        adress: "Hauptstraße 34, 02894 Reichenbach/Oberlausitz".to_string(),
     });
     events.push(Event {
         id: 2,
-        lat: 51.066523,
-        lng: 13.741096,
+        lat: 51.135427545160844,
+        lng: 14.796664570615112,
         customer: "Erika Mustermann".to_string(),
-        adress: "Bhf Dresden-Neustadt".to_string(),
+        adress: "Bhf Reichenbach".to_string(),
     });
 
     let mut events2: Vec<Event> = Vec::new();
@@ -76,17 +76,17 @@ pub async fn get_route_details(
         adress: "Nordstraße 17, 01458 Ottendorf-Okrilla".to_string(),
     });
     events2.push(Event {
-        id: 3,
-        lat: 51.066523,
-        lng: 13.741096,
+        id: 2,
+        lat: 51.1805717991834,
+        lng: 14.430872351819595,
         customer: "Max Mustermann".to_string(),
         adress: "Bhf Dresden-Neustadt".to_string(),
     });
 
     let tour1 = Tour {
         id: 1,
-        departure: "2024-05-02 20:15:00".to_string(),
-        arrival: "2024-05-02 20:45:00".to_string(),
+        departure: "04.05.2024,  10:15".to_string(),
+        arrival: "04.05.2024,  10:45".to_string(),
         events: events,
     };
     tours.push(tour1);
@@ -188,6 +188,15 @@ pub async fn render_tc_tours_(
     State(s): State<AppState>,
 ) -> Result<Html<String>, StatusCode> {
     s.render("taxi-center/tc_tours-1.html", &Context::new())
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+        .map(|x| Html(x))
+}
+
+pub async fn view_add_vehicle(
+    _uri: Uri,
+    State(s): State<AppState>,
+) -> Result<Html<String>, StatusCode> {
+    s.render("taxi-center/vehicle.html", &Context::new())
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
         .map(|x| Html(x))
 }
@@ -302,7 +311,7 @@ pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, Sta
 }
 
 pub async fn render_availability(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
-    let company_id = CompanyIdT::new(1);
+    let company_id = CompanyIdT::new(6);
     let data = s.data.read().await;
 
     let mut vehicles: Vec<RenderVehicle> = Vec::new();
