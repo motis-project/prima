@@ -42,7 +42,11 @@ pub trait PrimaVehicle: Send + Sync {
     async fn get_id(&self) -> &VehicleIdT;
     async fn get_license_plate(&self) -> &str;
     async fn get_company_id(&self) -> &CompanyIdT;
-    async fn get_tours(&self) -> Vec<Box<&dyn PrimaTour>>;
+    async fn get_tours(
+        &self,
+        time_frame_start: NaiveDateTime,
+        time_frame_end: NaiveDateTime,
+    ) -> Vec<Box<&dyn PrimaTour>>;
 }
 
 #[async_trait]
@@ -136,17 +140,17 @@ pub trait PrimaData: Send + Sync {
         address_id: &AddressIdT,
     ) -> &str;
 
-    async fn get_tours(
-        &self,
-        vehicle_id: VehicleIdT,
-        time_frame_start: NaiveDateTime,
-        time_frame_end: NaiveDateTime,
-    ) -> Result<Vec<Box<&dyn PrimaTour>>, StatusCode>;
-
     async fn get_vehicles(
         &self,
         company_id: CompanyIdT,
     ) -> Result<Vec<Box<&dyn PrimaVehicle>>, StatusCode>;
+
+    async fn get_tours_for_company(
+        &self,
+        company_id: CompanyIdT,
+        time_frame_start: NaiveDateTime,
+        time_frame_end: NaiveDateTime,
+    ) -> Result<Vec<Box<&dyn PrimaTour>>, StatusCode>;
 
     async fn get_events_for_vehicle(
         &self,
