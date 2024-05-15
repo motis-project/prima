@@ -25,6 +25,7 @@ pub trait PrimaTour {
     async fn get_events(&self) -> Vec<Box<&dyn PrimaEvent>>;
     async fn get_arrival(&self) -> NaiveDateTime;
     async fn get_departure(&self) -> NaiveDateTime;
+    async fn get_vehicle_id(&self) -> VehicleIdT;
     async fn get_id(&self) -> TourIdT;
 }
 

@@ -173,6 +173,10 @@ impl PrimaTour for TourData {
         self.departure
     }
 
+    async fn get_vehicle_id(&self) -> VehicleIdT {
+        self.vehicle
+    }
+
     async fn get_id(&self) -> TourIdT {
         self.id
     }
