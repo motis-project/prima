@@ -113,21 +113,18 @@ pub async fn get_tours(
 
     let v1 = vehicles.unwrap().clone();
 
-    for v in v1.iter() {
-        let vid = v.get_id().await;
-        let tours_data = data
-            .get_tours(*vid, time_frame_start, time_frame_end)
-            .await
-            .unwrap();
-        for tour in tours_data.iter() {
-            println!("{}", tour.get_id().await.id().clone());
-            tours.push(Tour {
-                id: tour.get_id().await.id(),
-                departure: tour.get_departure().await.to_string(),
-                arrival: tour.get_arrival().await.to_string(),
-                vehicle_id: vid.id(),
-            })
-        }
+    let tours_data = data
+        .get_tours_for_company(company_id, time_frame_start, time_frame_end)
+        .await
+        .unwrap();
+    for tour in tours_data.iter() {
+        println!("{}", tour.get_id().await.id().clone());
+        tours.push(Tour {
+            id: tour.get_id().await.id(),
+            departure: tour.get_departure().await.to_string(),
+            arrival: tour.get_arrival().await.to_string(),
+            vehicle_id: 0, // tour.get_vehicle_id(),
+        })
     }
 
     Json(tours)
