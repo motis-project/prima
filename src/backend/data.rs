@@ -311,9 +311,14 @@ impl PrimaVehicle for VehicleData {
         &self.company
     }
 
-    async fn get_tours(&self) -> Vec<Box<&dyn PrimaTour>> {
+    async fn get_tours(
+        &self,
+        time_frame_start: NaiveDateTime,
+        time_frame_end: NaiveDateTime,
+    ) -> Vec<Box<&'_ dyn PrimaTour>> {
         self.tours
             .iter()
+            .filter(|tour| tour.overlaps(&Interval::new(time_frame_start, time_frame_end)))
             .map(|tour| Box::new(tour as &dyn PrimaTour))
             .collect_vec()
     }
@@ -1489,21 +1494,24 @@ impl PrimaData for Data {
         Ok(Box::new(&self.users[&user_id] as &dyn PrimaUser))
     }
 
-    async fn get_tours(
+    async fn get_tours_for_company(
         &self,
-        vehicle_id: VehicleIdT,
+        company_id: CompanyIdT,
         time_frame_start: NaiveDateTime,
         time_frame_end: NaiveDateTime,
-    ) -> Result<Vec<Box<&'_ dyn PrimaTour>>, StatusCode> {
-        if !vehicle_id.is_in_range(1, self.max_vehicle_id()) {
+    ) -> Result<Vec<Box<&dyn PrimaTour>>, StatusCode> {
+        if !company_id.is_in_range(1, self.max_company_id()) {
             return Err(StatusCode::NOT_FOUND);
         }
-        Ok(self.vehicles[vehicle_id.as_idx()]
-            .tours
+        let interval = Interval::new(time_frame_start, time_frame_end);
+        Ok(self
+            .vehicles
             .iter()
-            .filter(|tour| tour.overlaps(&Interval::new(time_frame_start, time_frame_end)))
-            .map(|tour| Box::new(tour as &dyn PrimaTour))
-            .collect_vec())
+            .filter(|vehicle| vehicle.company == company_id)
+            .flat_map(|vehicle| &vehicle.tours)
+            .filter(|tour| tour.overlaps(&interval))
+            .map(|tour| Box::new(tour as &'_ dyn PrimaTour))
+            .collect())
     }
 
     async fn get_events_for_vehicle(
@@ -2621,11 +2629,6 @@ mod test {
             .and_hms_opt(10, 0, 0)
             .unwrap();
 
-        //interval range not limited
-        assert!(d
-            .get_tours(VehicleIdT::new(1), NaiveDateTime::MIN, NaiveDateTime::MAX)
-            .await
-            .is_ok());
         //interval range not limited
         assert!(d
             .get_events_for_user(UserIdT::new(1), NaiveDateTime::MIN, NaiveDateTime::MAX)
