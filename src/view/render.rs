@@ -27,97 +27,6 @@ use crate::{
 
 use super::tours::{Event, Tour};
 
-#[derive(Deserialize)]
-pub struct TourDetailParams {
-    id: usize,
-}
-
-pub async fn get_route_details(
-    State(s): State<AppState>,
-    params: axum::extract::Query<TourDetailParams>,
-) -> Result<Html<String>, StatusCode> {
-    let mut tours: Vec<Tour> = Vec::new();
-
-    // let vehicle_id = VehicleIdT::new(params.vehicle_id);
-    // let time_frame_start =
-    //     NaiveDateTime::parse_from_str(&params.time_frame_start, "%Y-%m-%dT%H-%M-%S").unwrap();
-    // let time_frame_end =
-    //     NaiveDateTime::parse_from_str(&params.time_frame_end, "%Y-%m-%dT%H-%M-%S").unwrap();
-
-    let mut events: Vec<Event> = Vec::new();
-    events.push(Event {
-        id: 1,
-        lat: 51.17052591968958,
-        lng: 14.75467407061821,
-        customer: "Erika Mustermann".to_string(),
-        adress: "Hauptstraße 34, 02894 Reichenbach/Oberlausitz".to_string(),
-    });
-    events.push(Event {
-        id: 2,
-        lat: 51.135427545160844,
-        lng: 14.796664570615112,
-        customer: "Erika Mustermann".to_string(),
-        adress: "Bhf Reichenbach".to_string(),
-    });
-
-    let mut events2: Vec<Event> = Vec::new();
-    events2.push(Event {
-        id: 1,
-        lat: 51.179940,
-        lng: 14.000301,
-        customer: "Max Mustermann".to_string(),
-        adress: "Am Eierberg 3, 01896 Pulsnitz".to_string(),
-    });
-    events2.push(Event {
-        id: 2,
-        lat: 51.169424,
-        lng: 13.824418,
-        customer: "Erika Mustermann".to_string(),
-        adress: "Nordstraße 17, 01458 Ottendorf-Okrilla".to_string(),
-    });
-    events2.push(Event {
-        id: 2,
-        lat: 51.1805717991834,
-        lng: 14.430872351819595,
-        customer: "Max Mustermann".to_string(),
-        adress: "Bhf Dresden-Neustadt".to_string(),
-    });
-
-    let tour1 = Tour {
-        id: 1,
-        departure: "04.05.2024,  10:15".to_string(),
-        arrival: "04.05.2024,  10:45".to_string(),
-        events: events,
-    };
-    tours.push(tour1);
-
-    let tour2 = Tour {
-        id: 2,
-        departure: "2024-05-03 11:15:00".to_string(),
-        arrival: "2024-05-03 12:00:00".to_string(),
-        events: events2,
-    };
-    tours.push(tour2);
-
-    // select tour by param
-    println!("{}", params.id);
-    let tour = &tours[params.id - 1];
-
-    let response = s
-        .render(
-            "tour.html",
-            &Context::from_serialize(json!({"tour": tour})).map_err(|e| {
-                error!("Serialize error: {e:?}");
-                StatusCode::INTERNAL_SERVER_ERROR
-            })?,
-        )
-        .map_err(|e| {
-            error!("Render error: {e:?}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
-    Ok(Html(response))
-}
-
 async fn is_user_logged_in(user_id: i32) -> bool {
     // let _user = User::find_by_id(user_id).one(db).await.unwrap_or(None);
     // match _user {
@@ -201,16 +110,6 @@ pub async fn view_add_vehicle(
         .map(|x| Html(x))
 }
 
-// #[derive(Serialize)]
-// struct Tour {
-//     id: i32,
-//     date: String,
-//     start_time: String,
-//     end_time: String,
-//     plate: String,
-//     conflict: i32,
-// }
-
 #[derive(Serialize, Clone)]
 pub struct RenderVehicle {
     id: i32,
@@ -261,10 +160,10 @@ pub async fn render_tours(State(s): State<AppState>) -> Result<Html<String>, Sta
     let v1 = vehicles.unwrap().clone();
 
     for v in v1.iter() {
-        let tmp = v.get_tours();
-        // for tour in v.get_tours().await.clone().iter() {
-        //     println!("{}", tour.get_id().await.id().clone());
-        // }
+        let tours = v.get_tours().await;
+        for tour in tours.iter() {
+            println!("{}", tour.get_id().await.id().clone());
+        }
     }
 
     let mut tours: Vec<Tour> = Vec::new();
@@ -404,28 +303,6 @@ pub async fn get_availability(
             };
             vehicles.push(va);
         }
-    }
-
-    Json(vehicles)
-}
-
-pub async fn get_vehicles(
-    State(s): State<AppState>,
-    // params: axum::extract::Query<VehicleAvailabilityParams>,
-) -> Json<Vec<RenderVehicle>> {
-    let company_id = CompanyIdT::new(1);
-    let data = s.data.read().await;
-
-    let mut vehicles: Vec<RenderVehicle> = Vec::new();
-
-    for dv in data.get_vehicles(company_id).await.unwrap().iter() {
-        let ve = RenderVehicle {
-            id: dv.get_id().await.id(),
-            license_plate: dv.get_license_plate().await.to_string(),
-            availability_start: "".to_string(),
-            availability_end: "".to_string(),
-        };
-        vehicles.push(ve);
     }
 
     Json(vehicles)

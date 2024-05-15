@@ -379,39 +379,11 @@
             onclick="window.open('http://localhost:3030/vehicle', '_blank').focus();"
             class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
     </div>
-
-    <!-- <div>
-        <h2 class="leading-tight text-gray-900 text-2xl pb-4">Fahrzeug hinzufügen</h2>
-        <form action="/vehicle" method="post">
-            <label for="license_plate">Kennzeichen:</label><br>
-            <input type="text" id="license_plate" name="license_plate" placeholder="BZ-TU-00"
-                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
-            <br><label for="seats">Sitzplätze:</label><br>
-            <input type="text" id="seats" name="seats" value="3"
-                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
-            <br><label for="wheelchair_capacity">Rollstuhlplätze:</label><br>
-            <input type="text" id="wheelchair_capacity" name="wheelchair_capacity" value="0"
-                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
-            <input type="submit" value="+" onclick="reload()"
-                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
-        </form>
-    </div> -->
-
-    <!-- <div id="context-menu">
-        <ul>
-            <li id="menu-item-1">Menu Item 1</li>
-            <li id="menu-item-2">Menu Item 2</li>
-            <li id="menu-item-3">Menu Item 3</li>
-        </ul>
-    </div>
-
-    <div id="content">
-        Right-click here to show context menu.
-    </div> -->
 </div>
 
 <script>
     var map = {};
+    var tours = {};
 
     var color_available = "#fcf3cf";
     var color_booked = "#e67e22";
@@ -420,63 +392,9 @@
     var mouse_up_id = "";
 
     var current_dt = Date.now();
-    var empty = false;
-
-    // document.addEventListener("DOMContentLoaded", function () {
-    //     var contextMenu = document.getElementById("context-menu");
-    //     var content = document.getElementById("content");
-
-    //     // Show context menu
-    //     function showContextMenu(x, y) {
-    //         contextMenu.style.display = "block";
-    //         contextMenu.style.left = x + "px";
-    //         contextMenu.style.top = y + "px";
-    //     }
-
-    //     // Hide context menu
-    //     function hideContextMenu() {
-    //         contextMenu.style.display = "none";
-    //     }
-
-    //     // Handle right-click event
-    //     content.addEventListener("contextmenu", function (event) {
-    //         event.preventDefault(); // Prevent default browser context menu
-    //         showContextMenu(event.clientX, event.clientY);
-    //     });
-
-    //     // Hide context menu when clicking outside
-    //     document.addEventListener("click", function (event) {
-    //         hideContextMenu();
-    //     });
-
-    //     // Add click event listeners for each menu item
-    //     document.getElementById("menu-item-1").addEventListener("click", function () {
-    //         alert("Menu Item 1 clicked");
-    //     });
-
-    //     document.getElementById("menu-item-2").addEventListener("click", function () {
-    //         alert("Menu Item 2 clicked");
-    //     });
-
-    //     document.getElementById("menu-item-3").addEventListener("click", function () {
-    //         alert("Menu Item 3 clicked");
-    //     });
-    // });
 
     function sleep(milliseconds) {
         return new Promise(resolve => setTimeout(resolve, milliseconds));
-    }
-
-    function reload() {
-        if (empty) {
-            console.log('first entry');
-            sleep(2000);
-            init(true);
-            empty = false;
-        } else {
-            init(false);
-            console.log('no relad');
-        }
     }
 
     function clear() {
@@ -499,11 +417,9 @@
     }
 
     function init(reload) {
-        // if (document.getElementById('availability-table') == null) {
-        //     empty = true;
-        //     console.log('No vehicles, exiting init()');
-        //     return;
-        // }
+        if (document.getElementById('availability-table') == null) {
+            return;
+        }
         clear();
         rows = new Array('tbody-1', 'tbody-2', 'tbody-3');
         rows.forEach(tb_id => {
@@ -535,9 +451,7 @@
                                             c.style.color = 'lightgrey';
                                         }
                                     });
-                                    // addEventListener("contextmenu", (event) => { console.log('contextmenu') });
                                 }
-                                // init map data
                                 map[c.id] = new Map([
                                     ['state', 0],
                                     ['tour', 0],
@@ -583,7 +497,6 @@
             let c_id = get_cell_id(vehicle_id, d_next);
             d_next = new Date(d_next.getTime() + 15 * 60000);
             if (c_id == null) continue;
-            console.log(map[c_id]['state']);
             if (map[c_id].get('state') != 1) {
                 alert('Verschiebung nicht möglich.');
                 return false;
@@ -604,7 +517,6 @@
             d_next = new Date(d_next.getTime() + 15 * 60000);
             if (c_id == null) continue;
 
-            console.log(move);
             if (map[c_id].get('state') == 2 && !move) continue;
 
             if (target_state == 1) {
@@ -647,7 +559,6 @@
     }
 
     function get_cell_info(cell_id) {
-        console.log('cell_id', cell_id);
         let tokens = cell_id.split('-');
         let vehicle_id = tokens[1];
         let h = tokens[2];
@@ -672,12 +583,8 @@
     }
 
     function toggle_available(cell_id) {
-        console.log('mouse_down_id:', mouse_down_id);
-        console.log('mouse_up_id:', mouse_up_id);
         let cell_info_start = get_cell_info(mouse_down_id);
         let cell_info_end = get_cell_info(mouse_up_id);
-        console.log('mouse_down_id:', mouse_down_id);
-        console.log('mouse_up_id:', mouse_up_id);
         let vehicle_id_1 = cell_info_start[0];
         let vehicle_id_2 = cell_info_end[0];
         let date_time_start = cell_info_start[1];
@@ -712,44 +619,6 @@
             switch_vehicle_for_tour(map[mouse_down_id].get('tour'), mouse_down_id.split('-')[1], mouse_up_id.split('-')[1]);
         }
 
-        // if (mouse_down_id == mouse_up_id) { // single cell clicked
-        //     if (state == 1) {
-        //         // available
-        //         cell = document.getElementById(cell_id);
-        //         cell.style.backgroundColor = 'white';
-        //         map[cell_id]['state'] = 0;
-        //         // cut out 15 min
-        //         cut_start = new Date(date_time_start).getTime() - 15 * 60000;
-        //         date_cut_start = new Date(cut_start);
-        //         dt_start_str = get_time_str(date_cut_start, date_cut_start.getHours(), date_cut_start.getMinutes());
-        //         set_availability(parseInt(vehicle_id_1), false, dt_start_str, date_time_end);
-        //         // console.log('Remove availability for interval: ', dt_start_str, date_time_end);
-        //     } else if (state == 2) {
-        //         // booked
-        //         document.getElementById('tour-id').value = map[cell_id]['tour'];
-        //     }
-        // } else {
-        //     if (vehicle_id_1 == vehicle_id_2 && date_time_start != date_time_end) {
-        //         // mouse-up and mouse-down in same row -> same vehicle ID
-        //         dt_start = new Date(date_time_start);
-        //         dt_end = new Date(date_time_end);
-        //         if (dt_start > dt_end) {
-        //             let tmp = date_time_start;
-        //             date_time_start = date_time_end;
-        //             date_time_end = tmp;
-        //         }
-        //         mark_cells(vehicle_id_1, date_time_start, date_time_end, 1, 0);
-        //         set_availability(parseInt(vehicle_id_1), true, date_time_start, date_time_end);
-        //     } else {
-        //         // mouse-up and mouse-down in different rows
-        //         console.log('down: ',);
-        //         console.log('up: ', mouse_up_id.split('-')[1]);
-        //         console.log('tour',);
-        //         switch_vehicle_for_tour(map[mouse_down_id]['tour'], mouse_down_id.split('-')[1], mouse_up_id.split('-')[1])
-        //     }
-        // }
-
-        console.log('reseting IDs')
         mouse_down_id = "";
         mouse_up_id = "";
     }
@@ -780,25 +649,55 @@
         });
     }
 
-    var tours = {};
-
     function get_tours() {
-        let time_frame_start = "2024-05-02T00-00-00";
-        let time_frame_end = "2024-05-02T23-59-59";
-        vehicles = [{ id: 18 }, { id: 2 }];
-
-        vehicles.forEach(v => {
-            fetch("http://localhost:3030/vehicle_tours?vehicle_id=" + v['id']
-                + '&time_frame_start=' + time_frame_start
-                + '&time_frame_end=' + time_frame_end)
-                .then(res =>
-                    res.json()).then(data => {
-                        data.forEach(e => {
-                            mark_cells(v['id'], e['departure'], e['arrival'], 2, e['id'], false);
-                            tours[e['id']] = e;
-                        });
+        today = new Date(current_dt);
+        let time_frame_start = get_time_str(today, 0, 0).replace(' ', 'T');
+        let time_frame_end = get_time_str(today, 23, 59).replace(' ', 'T');
+        fetch("http://localhost:3030/vehicle_tours?vehicle_id=1"
+            + '&time_frame_start=' + time_frame_start
+            + '&time_frame_end=' + time_frame_end)
+            .then(res =>
+                res.json()).then(data => {
+                    data.forEach(e => {
+                        start_rounded = round_to_quarter(e['departure'], true);
+                        end_rounded = round_to_quarter(e['arrival'], false);
+                        d_start_str = get_time_str(start_rounded, start_rounded.getHours(), start_rounded.getMinutes());
+                        d_end_str = get_time_str(end_rounded, end_rounded.getHours(), end_rounded.getMinutes());
+                        mark_cells(e['vehicle_id'], d_start_str, d_end_str, 2, e['id'], false);
+                        tours[e['id']] = e;
                     });
-        });
+                });
+    }
+
+    function round_to_quarter(time, is_departure) {
+        let dt = new Date(Date.parse(time.replace(' ', 'T')));
+        let minutes = dt.getMinutes();
+        if (minutes < 15) {
+            if (is_departure) {
+                dt.setMinutes(0);
+            } else dt.setMinutes(15);
+        }
+        if (minutes > 15 && minutes < 30) {
+            if (is_departure) {
+                dt.setMinutes(15);
+            } else dt.setMinutes(30);
+        }
+        if (minutes > 30 && minutes < 45) {
+            if (is_departure) {
+                dt.setMinutes(30);
+            } else dt.setMinutes(45);
+        }
+        if (minutes > 45) {
+            if (is_departure) {
+                dt.setMinutes(45);
+            } else {
+                // set to next full hour
+                dt = new Date(dt.getTime() + 60 * 60000);
+                dt.setMinutes(0);
+            }
+        }
+
+        return dt;
     }
 
     function check_tour_realloc(tour_id, v_id_dst) {
@@ -810,7 +709,6 @@
     function switch_vehicle_for_tour(tour_id, v_id_src, v_id_dst) {
         let tour = tours[tour_id];
         let move_possible = check_availability(v_id_dst, tour_id);
-        console.log(move_possible);
         if (move_possible) {
             mark_cells(v_id_dst, tour.departure, tour.arrival, 2, tour_id, false);
             mark_cells(v_id_src, tour.departure, tour.arrival, 0, tour_id, true);
@@ -818,7 +716,6 @@
     }
 
     function send_request() {
-        // data = { 'id': vehicle_id, 'create': create, 'availability_start': t_start, 'availability_end': t_end };
         data = { 'id': 0 };
         fetch("http://localhost:3030/request", {
             method: 'POST',
@@ -832,9 +729,11 @@
 
     function change_date() {
         current_dt = new Date(dateInput.value);
+        console.log('date changed');
         init(false);
     }
 
+    console.log('init');
     init(true);
 
     const dateInput = document.getElementById('dateInput');

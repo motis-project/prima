@@ -232,14 +232,6 @@ pub async fn update_user(State(s): State<AppState>) -> Result<Html<String>, Stat
     Ok(Html(response))
 }
 
-// TEST
-
-pub async fn post_json_test(Json(payload): Json<SignUpForm>) {
-    println!("name: {}", payload.username);
-    println!("email: {}", payload.email);
-    println!("password: {}", payload.password);
-}
-
 pub async fn users(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
     // let username = User::find_by_id(1)
     //     .one(s.db())

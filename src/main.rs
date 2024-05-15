@@ -28,17 +28,14 @@ use tracing::error;
 
 use view::{
     render::{
-        get_availability, get_route_details, get_vehicles, render_availability,
-        render_driver_sign_in, render_home, render_login, render_register, render_tours,
-        view_add_vehicle,
+        get_availability, render_availability, render_driver_sign_in, render_home, render_login,
+        render_register, view_add_vehicle,
     },
-    tours::{create_request, get_tours},
+    tours::{create_request, get_tour_details, get_tours},
     vehicle_view::{add_vehicle_availability, create_vehicle},
 };
 
-use model::m_user::{
-    create_user, delete_user, login_user, logout_user, post_json_test, update_user, users,
-};
+use model::m_user::{create_user, delete_user, login_user, logout_user, update_user, users};
 
 mod backend;
 mod constants;
@@ -98,8 +95,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         notify::RecursiveMode::NonRecursive,
     )?;
 
-    let data = init::init(false, init::InitType::Standard).await;
-    // let data = init::init(true, init::InitType::Standard).await;
+    // let data = init::init(false, init::InitType::Standard).await;
+    let data = init::init(true, init::InitType::Standard).await;
 
     let s = AppState {
         tera,
@@ -110,49 +107,48 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = app.layer(livereload);
     let app = app.layer(CompressionLayer::new());
 
-    // GET render and deliver views
+    // CRUD user
+    let app = app.route("/", get(render_home).with_state(s.clone()));
     let app = app.route("/register", get(render_register).with_state(s.clone()));
     let app = app.route("/login", get(render_login).with_state(s.clone()));
     let app = app.route("/users", get(users).with_state(s.clone()));
-    let app = app.route("/", get(render_home).with_state(s.clone()));
     let app = app.route("/driver", get(render_driver_sign_in).with_state(s.clone()));
-    // let app = app.route(
-    //     "/tc-dashboard",
-    //     get(render_tc_dashboard).with_state(s.clone()),
-    // );
-    let app = app.route(
-        "/availability",
-        get(render_availability).with_state(s.clone()),
-    );
-    let app = app.route("/tours", get(render_tours).with_state(s.clone()));
-    let app = app.route("/routes", get(get_route_details).with_state(s.clone()));
-    let app = app.route(
-        "/vehicle_availability",
-        get(get_availability).with_state(s.clone()),
-    );
-    let app = app.route("/vehicle_tours", get(get_tours).with_state(s.clone()));
-    let app = app.route("/vehicles", get(get_vehicles).with_state(s.clone()));
-
-    // GET static files
-    let app = app.route_service("/output.css", ServeFile::new("output.css"));
-    let app = app.route_service("/static/js/main.js", ServeFile::new("static/js/main.js"));
-    let app = app.route_service("/static/js/style.js", ServeFile::new("static/js/style.js"));
-
-    // POST json / form data
-    let app = app.route("/test", post(post_json_test));
     let app = app.route("/register", post(create_user).with_state(s.clone()));
     let app = app.route("/login", post(login_user).with_state(s.clone()));
     let app = app.route("/logout", post(logout_user).with_state(s.clone()));
     let app = app.route("/update", post(update_user).with_state(s.clone()));
     let app = app.route("/delete", post(delete_user).with_state(s.clone()));
+
+    // add vehicle view
+    let app = app.route("/vehicle", post(create_vehicle).with_state(s.clone()));
+    let app = app.route("/vehicle", get(view_add_vehicle).with_state(s.clone()));
+
+    // vehicle availability view
+    let app = app.route(
+        "/availability",
+        get(render_availability).with_state(s.clone()),
+    );
     let app = app.route(
         "/availability",
         post(add_vehicle_availability).with_state(s.clone()),
     );
-    let app = app.route("/request", post(create_request).with_state(s.clone()));
+    let app = app.route("/routes", get(get_tour_details).with_state(s.clone()));
+    let app = app.route(
+        "/vehicle_availability",
+        get(get_availability).with_state(s.clone()),
+    );
+    let app = app.route("/vehicle_tours", get(get_tours).with_state(s.clone()));
 
-    let app = app.route("/vehicle", post(create_vehicle).with_state(s.clone()));
-    let app = app.route("/vehicle", get(view_add_vehicle).with_state(s.clone()));
+    // TEST routing reuquest
+    let app = app.route(
+        "/routing_request",
+        post(create_request).with_state(s.clone()),
+    );
+
+    // GET static files
+    let app = app.route_service("/output.css", ServeFile::new("output.css"));
+    let app = app.route_service("/static/js/main.js", ServeFile::new("static/js/main.js"));
+    let app = app.route_service("/static/js/style.js", ServeFile::new("static/js/style.js"));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3030").await?;
     axum::serve(listener, app).await?;

@@ -21,7 +21,7 @@ OK                              request processed succesfully
 */
 
 #[async_trait]
-pub trait PrimaTour {
+pub trait PrimaTour: Send + Sync {
     async fn get_events(&self) -> Vec<Box<&dyn PrimaEvent>>;
     async fn get_arrival(&self) -> NaiveDateTime;
     async fn get_departure(&self) -> NaiveDateTime;

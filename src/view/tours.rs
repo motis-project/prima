@@ -1,6 +1,7 @@
 use crate::backend::{
     data,
     id_types::{CompanyIdT, IdT, UserIdT, VehicleIdT},
+    lib::PrimaTour,
 };
 use axum::{
     extract::State,
@@ -46,7 +47,7 @@ pub struct Tour {
     pub id: i32,
     pub departure: String,
     pub arrival: String,
-    pub events: Vec<Event>,
+    pub vehicle_id: i32,
 }
 
 #[derive(Serialize)]
@@ -56,6 +57,11 @@ pub struct Event {
     pub lng: f32,
     pub customer: String,
     pub adress: String,
+}
+
+#[derive(Deserialize)]
+pub struct TourDetailParams {
+    id: usize,
 }
 
 pub async fn create_request(
@@ -96,14 +102,42 @@ pub async fn get_tours(
     params: axum::extract::Query<ToursForVehicleParams>,
 ) -> Json<Vec<Tour>> {
     let data = s.data.read().await;
-
+    let company_id = CompanyIdT::new(6);
+    let vehicles = data.get_vehicles(company_id).await;
     let mut tours: Vec<Tour> = Vec::new();
 
-    // let vehicle_id = VehicleIdT::new(params.vehicle_id);
-    // let time_frame_start =
-    //     NaiveDateTime::parse_from_str(&params.time_frame_start, "%Y-%m-%dT%H-%M-%S").unwrap();
-    // let time_frame_end =
-    //     NaiveDateTime::parse_from_str(&params.time_frame_end, "%Y-%m-%dT%H-%M-%S").unwrap();
+    let time_frame_start =
+        NaiveDateTime::parse_from_str(&params.time_frame_start, "%Y-%m-%dT%H:%M:%S").unwrap();
+    let time_frame_end =
+        NaiveDateTime::parse_from_str(&params.time_frame_end, "%Y-%m-%dT%H:%M:%S").unwrap();
+
+    let v1 = vehicles.unwrap().clone();
+
+    for v in v1.iter() {
+        let vid = v.get_id().await;
+        let tours_data = data
+            .get_tours(*vid, time_frame_start, time_frame_end)
+            .await
+            .unwrap();
+        for tour in tours_data.iter() {
+            println!("{}", tour.get_id().await.id().clone());
+            tours.push(Tour {
+                id: tour.get_id().await.id(),
+                departure: tour.get_departure().await.to_string(),
+                arrival: tour.get_arrival().await.to_string(),
+                vehicle_id: vid.id(),
+            })
+        }
+    }
+
+    Json(tours)
+}
+
+pub async fn get_tour_details(
+    State(s): State<AppState>,
+    params: axum::extract::Query<TourDetailParams>,
+) -> Result<Html<String>, StatusCode> {
+    let mut tours: Vec<Tour> = Vec::new();
 
     let mut events: Vec<Event> = Vec::new();
     events.push(Event {
@@ -127,43 +161,54 @@ pub async fn get_tours(
         lat: 51.179940,
         lng: 14.000301,
         customer: "Max Mustermann".to_string(),
-        adress: "Start adress".to_string(),
+        adress: "Am Eierberg 3, 01896 Pulsnitz".to_string(),
     });
     events2.push(Event {
         id: 2,
-        lat: 51.027205,
-        lng: 13.750426,
-        customer: "Max Mustermann".to_string(),
-        adress: "Destination adress".to_string(),
+        lat: 51.169424,
+        lng: 13.824418,
+        customer: "Erika Mustermann".to_string(),
+        adress: "Nordstraße 17, 01458 Ottendorf-Okrilla".to_string(),
     });
     events2.push(Event {
-        id: 3,
-        lat: 51.027205,
-        lng: 13.750426,
+        id: 2,
+        lat: 51.1805717991834,
+        lng: 14.430872351819595,
         customer: "Max Mustermann".to_string(),
-        adress: "Destination adress".to_string(),
+        adress: "Bhf Dresden-Neustadt".to_string(),
     });
 
     let tour1 = Tour {
         id: 1,
-        departure: "2024-05-04 10:15:00".to_string(),
-        arrival: "2024-05-04 10:45:00".to_string(),
-        events: events,
+        departure: "04.05.2024,  10:15".to_string(),
+        arrival: "04.05.2024,  10:45".to_string(),
+        vehicle_id: 18,
     };
+    tours.push(tour1);
 
     let tour2 = Tour {
         id: 2,
-        departure: "2024-05-03 10:15:00".to_string(),
-        arrival: "2024-05-03 11:00:00".to_string(),
-        events: events2,
+        departure: "2024-05-03 11:15:00".to_string(),
+        arrival: "2024-05-03 12:00:00".to_string(),
+        vehicle_id: 18,
     };
+    tours.push(tour2);
 
-    if params.vehicle_id == 18 {
-        tours.push(tour1);
-    }
-    if params.vehicle_id == 2 {
-        // tours.push(tour2);
-    }
+    // select tour by param
+    println!("{}", params.id);
+    let tour = &tours[params.id - 1];
 
-    Json(tours)
+    let response = s
+        .render(
+            "tour.html",
+            &Context::from_serialize(json!({"tour": tour})).map_err(|e| {
+                error!("Serialize error: {e:?}");
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?,
+        )
+        .map_err(|e| {
+            error!("Render error: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+    Ok(Html(response))
 }
