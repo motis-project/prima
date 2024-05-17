@@ -1,3 +1,3 @@
-pub mod render;
+pub mod availability;
 pub mod tours;
-pub mod vehicle_view;
+pub mod users;

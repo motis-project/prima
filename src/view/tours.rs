@@ -1,11 +1,11 @@
 use crate::backend::{
     data,
-    id_types::{CompanyIdT, IdT, UserIdT, VehicleIdT},
+    id_types::{CompanyIdT, IdT, TourIdT, UserIdT, VehicleIdT},
     lib::PrimaTour,
 };
 use axum::{
     extract::State,
-    http::{StatusCode, Uri},
+    http::{response, StatusCode, Uri},
     response::{Html, Redirect},
     Form, Json,
 };
@@ -27,7 +27,13 @@ use tokio::sync::RwLock;
 
 #[derive(Deserialize)]
 pub struct CreateRequestForm {
-    id: i32,
+    start_lat: f32,
+    start_lng: f32,
+    dst_lat: f32,
+    dst_lng: f32,
+    departure_time: String,
+    start_adress: String,
+    dst_adress: String,
 }
 
 #[derive(Serialize)]
@@ -52,16 +58,28 @@ pub struct Tour {
 
 #[derive(Serialize)]
 pub struct Event {
-    pub id: i32,
-    pub lat: f32,
-    pub lng: f32,
     pub customer: String,
     pub adress: String,
+    pub lat: f32,
+    pub lng: f32,
+}
+
+#[derive(Serialize)]
+pub struct TourDetail {
+    pub departure: String,
+    pub arrival: String,
+    pub events: Vec<Event>,
 }
 
 #[derive(Deserialize)]
 pub struct TourDetailParams {
-    id: usize,
+    id: i32,
+}
+
+#[derive(Serialize)]
+pub struct Response<T> {
+    status: i32,
+    payload: T,
 }
 
 pub async fn create_request(
@@ -74,7 +92,7 @@ pub async fn create_request(
 
     let status = data
         .handle_routing_request(
-            NaiveDate::from_ymd_opt(2024, 4, 30)
+            NaiveDate::from_ymd_opt(2024, 5, 20)
                 .unwrap()
                 .and_hms_opt(19, 10, 0)
                 .unwrap(),
@@ -90,7 +108,7 @@ pub async fn create_request(
         )
         .await;
 
-    println!("{}", status);
+    println!("Request status: {}", status);
 
     Json(CreateRequestResponse {
         status: "Ok".to_string(),
@@ -100,100 +118,89 @@ pub async fn create_request(
 pub async fn get_tours(
     State(s): State<AppState>,
     params: axum::extract::Query<ToursForVehicleParams>,
-) -> Json<Vec<Tour>> {
+) -> Json<Response<Vec<Tour>>> {
     let data = s.data.read().await;
     let company_id = CompanyIdT::new(6);
-    let vehicles = data.get_vehicles(company_id).await;
     let mut tours: Vec<Tour> = Vec::new();
 
-    let time_frame_start =
-        NaiveDateTime::parse_from_str(&params.time_frame_start, "%Y-%m-%dT%H:%M:%S").unwrap();
-    let time_frame_end =
-        NaiveDateTime::parse_from_str(&params.time_frame_end, "%Y-%m-%dT%H:%M:%S").unwrap();
+    let t_start_result =
+        NaiveDateTime::parse_from_str(&params.time_frame_start, "%Y-%m-%dT%H:%M:%S");
+    let t_start = match t_start_result {
+        Ok(time) => time,
+        Err(error) => {
+            return Json(Response {
+                status: 400,
+                payload: tours,
+            })
+        }
+    };
 
-    let v1 = vehicles.unwrap().clone();
+    let t_end_result = NaiveDateTime::parse_from_str(&params.time_frame_end, "%Y-%m-%dT%H:%M:%S");
+    let t_end = match t_end_result {
+        Ok(time) => time,
+        Err(error) => {
+            return Json(Response {
+                status: 400,
+                payload: tours,
+            })
+        }
+    };
 
-    let tours_data = data
-        .get_tours_for_company(company_id, time_frame_start, time_frame_end)
-        .await
-        .unwrap();
+    let tours_data_result = data.get_tours_for_company(company_id, t_start, t_end).await;
+    let tours_data = match tours_data_result {
+        Ok(tours) => tours,
+        Err(error) => {
+            return Json(Response {
+                status: 500,
+                payload: tours,
+            })
+        }
+    };
+
     for tour in tours_data.iter() {
-        println!("{}", tour.get_id().await.id().clone());
         tours.push(Tour {
             id: tour.get_id().await.id(),
             departure: tour.get_departure().await.to_string(),
             arrival: tour.get_arrival().await.to_string(),
-            vehicle_id: 0, // tour.get_vehicle_id(),
+            vehicle_id: tour.get_vehicle_id().await.id(),
         })
     }
 
-    Json(tours)
+    Json(Response {
+        status: 200,
+        payload: tours,
+    })
 }
 
 pub async fn get_tour_details(
     State(s): State<AppState>,
     params: axum::extract::Query<TourDetailParams>,
 ) -> Result<Html<String>, StatusCode> {
-    let mut tours: Vec<Tour> = Vec::new();
-
+    let data = s.data.read().await;
     let mut events: Vec<Event> = Vec::new();
-    events.push(Event {
-        id: 1,
-        lat: 51.17052591968958,
-        lng: 14.75467407061821,
-        customer: "Erika Mustermann".to_string(),
-        adress: "Hauptstraße 34, 02894 Reichenbach/Oberlausitz".to_string(),
-    });
-    events.push(Event {
-        id: 2,
-        lat: 51.135427545160844,
-        lng: 14.796664570615112,
-        customer: "Erika Mustermann".to_string(),
-        adress: "Bhf Reichenbach".to_string(),
-    });
 
-    let mut events2: Vec<Event> = Vec::new();
-    events2.push(Event {
-        id: 1,
-        lat: 51.179940,
-        lng: 14.000301,
-        customer: "Max Mustermann".to_string(),
-        adress: "Am Eierberg 3, 01896 Pulsnitz".to_string(),
-    });
-    events2.push(Event {
-        id: 2,
-        lat: 51.169424,
-        lng: 13.824418,
-        customer: "Erika Mustermann".to_string(),
-        adress: "Nordstraße 17, 01458 Ottendorf-Okrilla".to_string(),
-    });
-    events2.push(Event {
-        id: 2,
-        lat: 51.1805717991834,
-        lng: 14.430872351819595,
-        customer: "Max Mustermann".to_string(),
-        adress: "Bhf Dresden-Neustadt".to_string(),
-    });
+    let data_events_result = data.get_events_for_tour(TourIdT::new(params.id)).await;
 
-    let tour1 = Tour {
-        id: 1,
-        departure: "04.05.2024,  10:15".to_string(),
-        arrival: "04.05.2024,  10:45".to_string(),
-        vehicle_id: 18,
+    let data_events = match data_events_result {
+        Ok(events) => events,
+        Err(error) => return Err(error),
     };
-    tours.push(tour1);
 
-    let tour2 = Tour {
-        id: 2,
-        departure: "2024-05-03 11:15:00".to_string(),
-        arrival: "2024-05-03 12:00:00".to_string(),
-        vehicle_id: 18,
+    for event in data_events.iter() {
+        println!("{}", event.get_id().await.id());
+        events.push(Event {
+            customer: "".to_string(),
+            adress: "".to_string(),
+            lat: event.get_lat().await,
+            lng: event.get_lng().await,
+        });
+    }
+
+    let tour = TourDetail {
+        departure: "".to_string(),
+        arrival: "".to_string(),
+        events: events,
     };
-    tours.push(tour2);
-
-    // select tour by param
-    println!("{}", params.id);
-    let tour = &tours[params.id - 1];
 
     let response = s
         .render(

@@ -690,46 +690,6 @@ async fn init_default(
     )
     .await;
 
-    data.insert_or_addto_tour(
-        None,
-        NaiveDate::from_ymd_opt(2024, 5, 15)
-            .unwrap()
-            .and_hms_opt(22, 40, 0)
-            .unwrap(),
-        NaiveDate::from_ymd_opt(2024, 5, 15)
-            .unwrap()
-            .and_hms_opt(23, 50, 0)
-            .unwrap(),
-        VehicleIdT::new(18),
-        "karolinenplatz 5",
-        "Lichtwiesenweg 3",
-        13.867512,
-        51.22069,
-        NaiveDate::from_ymd_opt(2024, 5, 15)
-            .unwrap()
-            .and_hms_opt(22, 40, 0)
-            .unwrap(),
-        NaiveDate::from_ymd_opt(2024, 5, 15)
-            .unwrap()
-            .and_hms_opt(22, 35, 0)
-            .unwrap(),
-        UserIdT::new(2),
-        3,
-        0,
-        0,
-        14.025081,
-        51.195075,
-        NaiveDate::from_ymd_opt(2024, 5, 15)
-            .unwrap()
-            .and_hms_opt(23, 50, 0)
-            .unwrap(),
-        NaiveDate::from_ymd_opt(2024, 5, 15)
-            .unwrap()
-            .and_hms_opt(23, 55, 0)
-            .unwrap(),
-    )
-    .await;
-
     data.create_availability(
         NaiveDate::from_ymd_opt(year, 4, 19)
             .unwrap()

@@ -1,0 +1,27 @@
+<html>
+
+<body>
+    <script>
+        function send_request() {
+            data = {
+                'start_lat': 51.179940,
+                'start_lng': 14.000301,
+                'dst_lat': 51.027205,
+                'dst_lng': 13.750426,
+                'departure_time': '2024-05-18T10:00';
+                'start_adress': 'here',
+                'dst_adress': 'there',
+            };
+            fetch("http://localhost:3030/routing_request", {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+
+            });
+        }
+    </script>
+</body>
+
+</html>

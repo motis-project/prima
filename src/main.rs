@@ -1,22 +1,13 @@
-use crate::init::InitType::Standard;
 use axum::{
-    extract::State,
     routing::{get, post},
     Router,
 };
-use backend::{
-    id_types::{CompanyIdT, IdT},
-    lib::PrimaData,
-};
+use backend::lib::PrimaData;
 use dotenv::dotenv;
 use itertools::Itertools;
 use log::setup_logging;
-use migration::{Migrator, MigratorTrait};
 use notify::Watcher;
-use sea_orm::Database;
-use sea_orm::DbConn;
 use std::{
-    env,
     path::Path,
     sync::{Arc, Mutex},
 };
@@ -27,22 +18,21 @@ use tower_livereload::LiveReloadLayer;
 use tracing::error;
 
 use view::{
-    render::{
-        get_availability, render_availability, render_driver_sign_in, render_home, render_login,
-        render_register, view_add_vehicle,
+    availability::{
+        add_vehicle_availability, create_vehicle, get_availability, render_add_vehicle,
+        render_availability,
     },
     tours::{create_request, get_tour_details, get_tours},
-    vehicle_view::{add_vehicle_availability, create_vehicle},
+    users::{render_login, render_register},
 };
 
-use model::m_user::{create_user, delete_user, login_user, logout_user, update_user, users};
+use view::users::{create_user, delete_user, login_user, logout_user, update_user, users};
 
 mod backend;
 mod constants;
 mod entities;
 mod init;
 mod log;
-mod model;
 mod osrm;
 mod view;
 
@@ -108,20 +98,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = app.layer(CompressionLayer::new());
 
     // CRUD user
-    let app = app.route("/", get(render_home).with_state(s.clone()));
     let app = app.route("/register", get(render_register).with_state(s.clone()));
-    let app = app.route("/login", get(render_login).with_state(s.clone()));
-    let app = app.route("/users", get(users).with_state(s.clone()));
-    let app = app.route("/driver", get(render_driver_sign_in).with_state(s.clone()));
     let app = app.route("/register", post(create_user).with_state(s.clone()));
+    let app = app.route("/login", get(render_login).with_state(s.clone()));
     let app = app.route("/login", post(login_user).with_state(s.clone()));
     let app = app.route("/logout", post(logout_user).with_state(s.clone()));
+    let app = app.route("/users", get(users).with_state(s.clone()));
     let app = app.route("/update", post(update_user).with_state(s.clone()));
     let app = app.route("/delete", post(delete_user).with_state(s.clone()));
 
     // add vehicle view
+    let app = app.route("/vehicle", get(render_add_vehicle).with_state(s.clone()));
     let app = app.route("/vehicle", post(create_vehicle).with_state(s.clone()));
-    let app = app.route("/vehicle", get(view_add_vehicle).with_state(s.clone()));
 
     // vehicle availability view
     let app = app.route(
@@ -132,12 +120,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "/availability",
         post(add_vehicle_availability).with_state(s.clone()),
     );
-    let app = app.route("/routes", get(get_tour_details).with_state(s.clone()));
     let app = app.route(
         "/vehicle_availability",
         get(get_availability).with_state(s.clone()),
     );
     let app = app.route("/vehicle_tours", get(get_tours).with_state(s.clone()));
+
+    // route details view
+    let app = app.route("/tour_details", get(get_tour_details).with_state(s.clone()));
 
     // TEST routing reuquest
     let app = app.route(
@@ -145,9 +135,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         post(create_request).with_state(s.clone()),
     );
 
-    // GET static files
+    // static files
     let app = app.route_service("/output.css", ServeFile::new("output.css"));
-    let app = app.route_service("/static/js/main.js", ServeFile::new("static/js/main.js"));
+    let app = app.route_service(
+        "/static/js/availability.js",
+        ServeFile::new("static/js/availability.js"),
+    );
     let app = app.route_service("/static/js/style.js", ServeFile::new("static/js/style.js"));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3030").await?;
