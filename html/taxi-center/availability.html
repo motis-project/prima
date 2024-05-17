@@ -1,0 +1,191 @@
+{% extends "base3.html" %}
+{% block content %}
+
+<div class="hidden h-full flex-1 flex-col space-y-8 p-8 md:flex">
+    <div class="flex items-center justify-between space-y-2">
+        <div>
+            <h2 class="text-2xl font-bold tracking-tight">Verfügbarkeit von Fahrzeugen</h2>
+        </div>
+    </div>
+
+    <div class="flex">
+        <div>
+            <input id="prevDay" type="button" value="<"
+                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+        </div>
+        <div class="relative w-60">
+            <input id="dateInput" type="date" onchange="change_date()"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+        </div>
+        <div>
+            <input id="nextDay" type="button" value=">"
+                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+        </div>
+    </div>
+    <br>
+
+    {% if vehicles %}
+    <div id="availability-table" class="select-none">
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <td></td>
+                        {% for h in h_morning %}
+                        <td>{{h}}:00
+                            <table>
+                                <tr class="text-xs">
+                                    <td>00</td>
+                                    <td class="pl-1">15</td>
+                                    <td class="pl-1">30</td>
+                                    <td class="pl-1">45</td>
+                                </tr>
+                            </table>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody id="tbody-1">
+                    {% for vehicle in vehicles %}
+                    <tr id="r-{{vehicle.id}}">
+                        <td class="pr-2">{{vehicle.license_plate}}</td>
+                        {% for h in h_morning %}
+                        {% if h == "23" %}
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="y-{{vehicle.id}}-{{h}}-00" class="border text-white">....</td>
+                                    <td id="y-{{vehicle.id}}-{{h}}-15" class="border text-white">....</td>
+                                    <td id="y-{{vehicle.id}}-{{h}}-30" class="border text-white">....</td>
+                                    <td id="y-{{vehicle.id}}-{{h}}-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        {% else %}
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-{{h}}-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-{{h}}-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-{{h}}-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-{{h}}-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        {% endif %}
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <br>
+        <br>
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <td></td>
+                        {% for h in h_midday %}
+                        <td>{{h}}:00
+                            <table>
+                                <tr class="text-xs">
+                                    <td>00</td>
+                                    <td class="pl-1">15</td>
+                                    <td class="pl-1">30</td>
+                                    <td class="pl-1">45</td>
+                                </tr>
+                            </table>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody id="tbody-2">
+                    {% for vehicle in vehicles %}
+                    <tr id="r-{{vehicle.id}}">
+                        <td class="pr-2">{{vehicle.license_plate}}</td>
+                        {% for h in h_midday %}
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-{{h}}-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-{{h}}-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-{{h}}-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-{{h}}-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <br>
+        <br>
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <td></td>
+                        {% for h in h_evening %}
+                        <td>{{h}}:00
+                            <table>
+                                <tr class="text-xs">
+                                    <td>00</td>
+                                    <td class="pl-1">15</td>
+                                    <td class="pl-1">30</td>
+                                    <td class="pl-1">45</td>
+                                </tr>
+                            </table>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody id="tbody-3">
+                    {% for vehicle in vehicles %}
+                    <tr id="r-{{vehicle.id}}">
+                        <td class="pr-2">{{vehicle.license_plate}}</td>
+                        {% for h in h_evening %}
+                        {% if h == "00" %}
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="t-{{vehicle.id}}-{{h}}-00" class="border text-white">....</td>
+                                    <td id="t-{{vehicle.id}}-{{h}}-15" class="border text-white">....</td>
+                                    <td id="t-{{vehicle.id}}-{{h}}-30" class="border text-white">....</td>
+                                    <td id="t-{{vehicle.id}}-{{h}}-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        {% else %}
+                        <td>
+                            <table class="w-full h-full">
+                                <tr>
+                                    <td id="c-{{vehicle.id}}-{{h}}-00" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-{{h}}-15" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-{{h}}-30" class="border text-white">....</td>
+                                    <td id="c-{{vehicle.id}}-{{h}}-45" class="border text-white">....</td>
+                                </tr>
+                            </table>
+                        </td>
+                        {% endif %}
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <br>
+
+    <div>
+        <input type="button" value="Fahrzeug hinzufügen"
+            onclick="window.open('http://localhost:3030/vehicle', '_blank').focus();"
+            class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+    </div>
+</div>
+
+{% endblock content %}

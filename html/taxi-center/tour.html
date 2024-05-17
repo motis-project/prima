@@ -1,0 +1,173 @@
+{% extends "base2.html" %}
+{% block content %}
+
+
+<link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css' />
+<script src='https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js'></script>
+
+<div class="h-full flex-1 flex-col space-y-8 p-8 md:flex">
+    <div class="flex items-center justify-between space-y-2">
+        <div>
+            <h2 class="text-2xl font-bold tracking-tight">Tour Details</h2>
+        </div>
+    </div>
+
+    <div class="grid grid-rows-1 grid-cols-2 gap-8">
+        <div class="rounded-md border p-8">
+            <div>
+                <table class="table-auto">
+                    <tbody>
+                        <tr>
+                            <td class="pr-16">Beginn</td>
+                            <td>{{tour.departure}}</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-16">Ende</td>
+                            <td>{{tour.arrival}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="py-8">
+                    <h2 class="leading-tight text-gray-900 text-2xl pb-4">Stops</h2>
+                    {% for event in tour.events %}
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td class="pr-12">Fahrgast</td>
+                                <td>{{ event.customer }}</td>
+                            </tr>
+                            <tr>
+                                <td class="pr-12">Adresse</td>
+                                <td>{{ event.adress }}</td>
+                            </tr>
+                            <tr>
+                                <td class="pr-12">Latitude</td>
+                                <td>{{ event.lat }}</td>
+                            </tr>
+                            <tr>
+                                <td class="pr-12">Longitude</td>
+                                <td>{{ event.lng }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <br>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="border rounded-md" id="map">
+            Test
+        </div>
+
+        <script type="module">
+            import { style } from "/static/js/style.js";
+            // const start = [13.83606401674835, 51.09754266544841];
+            const start = [14.847170858868388, 51.150101659230124];
+            const map = new maplibregl.Map({
+                container: 'map',
+                center: start,
+                style: {
+                    version: 8,
+                    sources: {},
+                    layers: [],
+                },
+                zoom: 9,
+                transformRequest: (url, resourceType) => {
+                    if (url.startsWith('/')) {
+                        return { url: `https://europe.motis-project.de/tiles${url}` }
+                    }
+                }
+            });
+
+
+            const routeSegment = async (from, to) => {
+                console.log(from, to);
+                const response = await fetch(`https://osr.motis-project.de/api/route`, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        start: {
+                            lat: from[1],
+                            lng: from[0]
+                        },
+                        destination: {
+                            lat: to[1],
+                            lng: to[0]
+                        },
+                        profile: 'car',
+                        direction: 'forward'
+                    })
+                });
+                return await response.json();
+            };
+
+            const via = [{% for event in tour.events %}[{{ event.lng }}, {{ event.lat }}], {% endfor %} ];
+            const getRoute = async () => {
+                let geojson = {
+                    "type": "FeatureCollection",
+                    "features": []
+                };
+                for (let i = 0; i != via.length - 1; ++i) {
+                    let segment = await routeSegment(via[i], via[i + 1]);
+                    geojson.features = geojson.features.concat(segment.features);
+                }
+                return geojson;
+            };
+
+            const addRouting = async () => {
+                map.addSource('path', {
+                    type: 'geojson',
+                    data: await getRoute()
+                });
+                map.addLayer({
+                    'id': 'path-outline',
+                    'type': 'line',
+                    'source': 'path',
+                    'layout': {
+                        'line-join': 'round',
+                        'line-cap': 'round',
+                    },
+                    'paint': {
+                        'line-color': '#1966a4',
+                        'line-width': 7.5,
+                        'line-opacity': 0.8
+                    }
+                });
+                map.addLayer({
+                    'id': 'path',
+                    'type': 'line',
+                    'source': 'path',
+                    'layout': {
+                        'line-join': 'round',
+                        'line-cap': 'round',
+                    },
+                    'paint': {
+                        'line-color': '#42a5f5',
+                        'line-width': 5,
+                        'line-opacity': 0.8
+                    }
+                });
+            }
+
+            map.on('load', async () => {
+                style(map, 0);
+
+                via.forEach(p => {
+                    new maplibregl.Marker()
+                        .setLngLat(p)
+                        .addTo(map);
+                });
+
+                addRouting();
+            });
+        </script>
+    </div>
+</div>
+
+{% endblock content %}

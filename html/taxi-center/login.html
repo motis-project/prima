@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="bg-white p-8 rounded shadow-md max-w-md">
+    <h2 class="text-2xl mb-4 text-center font-bold">Sign in</h2>
+    <div class="preview flex min-h-[350px] w-full justify-center p-10 items-center">
+        <form class="w-2/3 space-y-6" action="#" method="post">
+            <div class="space-y-2"><label
+                    class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    for="username">Username</label><input
+                    class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="shadcn" id="username" aria-describedby="username-description" aria-invalid="false"
+                    value="" name="username">
+            </div>
+            <div class="space-y-2"><label
+                    class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    for="password">Password</label><input type="password"
+                    class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="shadcn" id="password" aria-describedby="password-description" aria-invalid="false"
+                    value="" name="password">
+            </div>
+            <button
+                class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2"
+                type="submit">Submit
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock content %}
