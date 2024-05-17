@@ -19,5 +19,20 @@ services:
     ports:
       - 6501:8080
 
+  osr:
+    image: ghcr.io/motis-project/osr:master
+    restart: always
+    ports:
+      - 6502:8000
+    volumes:
+      - type: bind
+        source: ./osm
+        target: /input
+        read_only: true
+      - type: volume
+        source: data-osr
+        target: /data
+
 volumes:
  data-volume:
+ data-osr:
