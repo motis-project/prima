@@ -24,6 +24,7 @@ use tower_http::{compression::CompressionLayer, services::ServeFile};
 use tower_livereload::LiveReloadLayer;
 use tracing::{error, info};
 
+mod backend;
 mod entities;
 mod log;
 mod osrm;
