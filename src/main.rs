@@ -27,6 +27,7 @@ use tracing::{error, info};
 mod entities;
 mod log;
 mod osrm;
+mod backend;
 
 #[derive(Clone)]
 struct AppState {
