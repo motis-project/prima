@@ -10,5 +10,4 @@ pub mod request;
 pub mod tour;
 pub mod user;
 pub mod vehicle;
-pub mod vehicle_specifics;
 pub mod zone;

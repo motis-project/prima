@@ -15,6 +15,7 @@ pub struct Model {
     #[sea_orm(unique)]
     pub email: String,
     pub zone: i32,
+    pub community_area: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -30,7 +31,15 @@ pub enum Relation {
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    Zone,
+    Zone2,
+    #[sea_orm(
+        belongs_to = "super::zone::Entity",
+        from = "Column::CommunityArea",
+        to = "super::zone::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Zone1,
 }
 
 impl Related<super::user::Entity> for Entity {
@@ -42,12 +51,6 @@ impl Related<super::user::Entity> for Entity {
 impl Related<super::vehicle::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Vehicle.def()
-    }
-}
-
-impl Related<super::zone::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Zone.def()
     }
 }
 

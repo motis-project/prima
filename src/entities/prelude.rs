@@ -8,5 +8,4 @@ pub use super::request::Entity as Request;
 pub use super::tour::Entity as Tour;
 pub use super::user::Entity as User;
 pub use super::vehicle::Entity as Vehicle;
-pub use super::vehicle_specifics::Entity as VehicleSpecifics;
 pub use super::zone::Entity as Zone;

@@ -55,6 +55,13 @@ impl MigrationTrait for Migration {
                             .from(Company::Table, Company::Zone)
                             .to(Zone::Table, Zone::Id),
                     )
+                    .col(ColumnDef::new(Company::CommunityArea).integer().not_null())
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk-company_community_id")
+                            .from(Company::Table, Company::CommunityArea)
+                            .to(Zone::Table, Zone::Id),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -76,20 +83,9 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(User::IsDriver).boolean().not_null())
                     .col(ColumnDef::new(User::IsDisponent).boolean().not_null())
                     .col(ColumnDef::new(User::IsAdmin).boolean().not_null())
-                    .col(
-                        ColumnDef::new(User::Email)
-                            .string()
-                            .not_null()
-                            .unique_key()
-                            .default("root@localhost"),
-                    )
+                    .col(ColumnDef::new(User::Email).string().not_null().unique_key())
                     .col(ColumnDef::new(User::Password).string())
-                    .col(
-                        ColumnDef::new(User::Salt)
-                            .string()
-                            .not_null()
-                            .default("salt"),
-                    )
+                    .col(ColumnDef::new(User::Salt).string().not_null())
                     .col(ColumnDef::new(User::OAuthId).string())
                     .col(ColumnDef::new(User::OAuthProvider).string())
                     .col(
@@ -369,6 +365,7 @@ enum Company {
     Longitude,
     Latitude,
     Zone,
+    CommunityArea,
     Email,
 }
 

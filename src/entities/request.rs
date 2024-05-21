@@ -9,7 +9,9 @@ pub struct Model {
     pub id: i32,
     pub tour: i32,
     pub customer: i32,
-    pub required_vehicle_specifics: i32,
+    pub passengers: i32,
+    pub wheelchairs: i32,
+    pub luggage: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -32,14 +34,6 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     User,
-    #[sea_orm(
-        belongs_to = "super::vehicle_specifics::Entity",
-        from = "Column::RequiredVehicleSpecifics",
-        to = "super::vehicle_specifics::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
-    VehicleSpecifics,
 }
 
 impl Related<super::event::Entity> for Entity {
@@ -57,12 +51,6 @@ impl Related<super::tour::Entity> for Entity {
 impl Related<super::user::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::User.def()
-    }
-}
-
-impl Related<super::vehicle_specifics::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::VehicleSpecifics.def()
     }
 }
 
