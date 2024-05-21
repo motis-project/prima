@@ -29,6 +29,7 @@ mod constants;
 mod entities;
 mod log;
 mod osrm;
+mod backend;
 
 #[derive(Clone)]
 struct AppState {
@@ -70,15 +71,18 @@ async fn register(
 
 async fn users(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
     let result = User::insert(user::ActiveModel {
-        name: ActiveValue::Set("Test".to_string()),
+        display_name: ActiveValue::Set("Test".to_string()),
         id: ActiveValue::NotSet,
         is_driver: ActiveValue::Set(true),
+        is_disponent: ActiveValue::Set(false),
         is_admin: ActiveValue::Set(true),
         email: ActiveValue::Set("".to_string()),
         password: ActiveValue::Set(Some("".to_string())),
         salt: ActiveValue::Set("".to_string()),
         o_auth_id: ActiveValue::Set(Some("".to_string())),
         o_auth_provider: ActiveValue::Set(Some("".to_string())),
+        active: ActiveValue::NotSet,
+        company: ActiveValue::NotSet,
     })
     .exec(s.db())
     .await;
@@ -96,7 +100,7 @@ async fn users(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
             StatusCode::INTERNAL_SERVER_ERROR
         })?
         .ok_or(StatusCode::NOT_FOUND)?
-        .name
+        .display_name
         .clone();
     let response = s
         .render(
