@@ -1,98 +1,63 @@
-#[derive(Debug, PartialEq, Eq, Clone, Hash, Copy)]
-pub struct VehicleIdT {
-    id: i32,
+trait Id {
+    fn id(&self) -> i32;
+    fn as_idx(&self) -> usize;
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Hash, Copy)]
-pub struct CompanyIdT {
-    id: i32,
-}
+#[macro_export]
+macro_rules! define_id {
+    ($t:ident) => {
+        #[derive(Debug, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, Copy)]
+        pub struct $t(pub i32);
 
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct ZoneIdT {
-    id: i32,
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub struct TourIdT {
-    id: i32,
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-pub struct UserIdT {
-    id: i32,
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, PartialOrd, Ord)]
-pub struct EventIdT {
-    id: i32,
-}
-
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct AddressIdT {
-    id: i32,
-}
-
-macro_rules! impl_IdT {
-    (for $($t:ty),+) => {
-        $(impl $t {
+        impl Id for $t {
             fn id(&self) -> i32 {
                 self.id
             }
 
-            fn new(id: i32) -> Self {
-                Self { id }
-            }
-        })*
-    }
-}
-impl_IdT!(for VehicleIdT, CompanyIdT, ZoneIdT, AddressIdT, UserIdT, TourIdT, EventIdT );
-
-macro_rules! impl_IndexedIdT {
-    (for $($t:ty),+) => {
-        $(impl $t {
             fn as_idx(&self) -> usize {
                 assert!(self.id > 0);
                 (self.id() - 1) as usize
             }
+        }
 
-            fn is_in_range(
-                &self,
-                lower_bound: i32,
-                upper_bound: i32,
-            ) -> bool {
-                assert!(lower_bound < upper_bound);
-                lower_bound <= self.id && self.id < upper_bound
+        impl $t {
+            #[allow(dead_code)]
+            fn new(id: i32) -> Self {
+                Self { id }
             }
-        })*
-    }
+        }
+
+        impl std::fmt::Display for $t {
+            fn fmt(
+                &self,
+                f: &mut std::fmt::Formatter<'_>,
+            ) -> std::fmt::Result {
+                write!(f, "{}", self.0)
+            }
+        }
+
+        impl PartialEq<i32> for $t {
+            fn eq(
+                &self,
+                other: &i32,
+            ) -> bool {
+                self.0 == *other
+            }
+        }
+    };
 }
-impl_IndexedIdT!(for VehicleIdT,CompanyIdT,ZoneIdT,AddressIdT);
 
-#[cfg(test)]
-mod test {
-    use std::any::Any;
+define_id!(for VehicleId, CompanyId, ZoneId, AddressId, UserId, TourId, EventId );
 
-    use super::{CompanyIdT, VehicleIdT};
+struct VecMap<K: Id, V> {
+    vec: Vec<V>,
+}
 
-    #[test]
-    fn test_id_types_are_different() {
-        assert_ne!(CompanyIdT::new(1).type_id(), VehicleIdT::new(1).type_id());
-        assert_eq!(CompanyIdT::new(1).type_id(), CompanyIdT::new(1).type_id());
-    }
-
-    #[should_panic]
-    #[test]
-    fn test_in_range_panic() {
-        CompanyIdT::new(3).is_in_range(3, 3);
-    }
-
-    #[test]
-    fn test_in_range() {
-        let c_id = CompanyIdT::new(3);
-        assert!(c_id.is_in_range(3, 4));
-        assert!(!c_id.is_in_range(2, 3));
-
-        assert!(!c_id.is_in_range(4, 5));
+impl<K, V> VecMap<K, V> {
+    fn get(
+        &self,
+        key: K,
+    ) -> &V {
+        self.vec[key]
     }
 }
