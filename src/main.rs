@@ -29,7 +29,6 @@ mod constants;
 mod entities;
 mod log;
 mod osrm;
-mod backend;
 
 #[derive(Clone)]
 struct AppState {
@@ -49,72 +48,6 @@ impl AppState {
     fn db(&self) -> &DbConn {
         &*self.db
     }
-}
-
-async fn calendar(
-    _uri: Uri,
-    State(s): State<AppState>,
-) -> Result<Html<String>, StatusCode> {
-    s.render("calendar.html", &Context::new())
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
-        .map(|x| Html(x))
-}
-
-async fn register(
-    _uri: Uri,
-    State(s): State<AppState>,
-) -> Result<Html<String>, StatusCode> {
-    s.render("register.html", &Context::new())
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
-        .map(|x| Html(x))
-}
-
-async fn users(State(s): State<AppState>) -> Result<Html<String>, StatusCode> {
-    let result = User::insert(user::ActiveModel {
-        display_name: ActiveValue::Set("Test".to_string()),
-        id: ActiveValue::NotSet,
-        is_driver: ActiveValue::Set(true),
-        is_disponent: ActiveValue::Set(false),
-        is_admin: ActiveValue::Set(true),
-        email: ActiveValue::Set("".to_string()),
-        password: ActiveValue::Set(Some("".to_string())),
-        salt: ActiveValue::Set("".to_string()),
-        o_auth_id: ActiveValue::Set(Some("".to_string())),
-        o_auth_provider: ActiveValue::Set(Some("".to_string())),
-        active: ActiveValue::NotSet,
-        company: ActiveValue::NotSet,
-    })
-    .exec(s.db())
-    .await;
-
-    match result {
-        Ok(_) => info!("User added"),
-        Err(e) => error!("Error adding user: {e:?}"),
-    }
-
-    let username = User::find_by_id(1)
-        .one(s.db())
-        .await
-        .map_err(|e| {
-            error!("Database error: {e:?}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?
-        .ok_or(StatusCode::NOT_FOUND)?
-        .display_name
-        .clone();
-    let response = s
-        .render(
-            "user.html",
-            &Context::from_serialize(json!({"user": username})).map_err(|e| {
-                error!("Serialize error: {e:?}");
-                StatusCode::INTERNAL_SERVER_ERROR
-            })?,
-        )
-        .map_err(|e| {
-            error!("Render error: {e:?}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
-    Ok(Html(response))
 }
 
 #[tokio::main]
@@ -162,9 +95,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let app = Router::new();
-    let app = app.route("/calendar", get(calendar).with_state(s.clone()));
-    let app = app.route("/register", get(register).with_state(s.clone()));
-    let app = app.route("/users", get(users).with_state(s.clone()));
     let app = app.route_service("/output.css", ServeFile::new("output.css"));
     let app = app.layer(livereload);
     let app = app.layer(CompressionLayer::new());
