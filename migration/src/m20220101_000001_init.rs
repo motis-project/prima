@@ -206,7 +206,7 @@ impl MigrationTrait for Migration {
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(Address::Address).string().not_null())
+                    .col(ColumnDef::new(Address::AddressString).string().not_null())
                     .to_owned(),
             )
             .await?;
@@ -402,7 +402,7 @@ enum Request {
 enum Address {
     Table,
     Id,
-    Address,
+    AddressString,
 }
 
 #[derive(DeriveIden)]
