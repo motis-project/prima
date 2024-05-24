@@ -7,7 +7,9 @@ trait Id {
 macro_rules! define_id {
     ($t:ident) => {
         #[derive(Debug, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, Copy)]
-        pub struct $t(pub i32);
+        pub struct $t {
+            id: i32,
+        }
 
         impl Id for $t {
             fn id(&self) -> i32 {
@@ -32,7 +34,7 @@ macro_rules! define_id {
                 &self,
                 f: &mut std::fmt::Formatter<'_>,
             ) -> std::fmt::Result {
-                write!(f, "{}", self.0)
+                write!(f, "{}", self.id)
             }
         }
 
@@ -41,23 +43,31 @@ macro_rules! define_id {
                 &self,
                 other: &i32,
             ) -> bool {
-                self.0 == *other
+                self.id == *other
             }
         }
     };
 }
+define_id!(VehicleId);
+define_id!(CompanyId);
+define_id!(ZoneId);
+define_id!(AddressId);
+define_id!(UserId);
+define_id!(TourId);
+define_id!(EventId);
 
-define_id!(for VehicleId, CompanyId, ZoneId, AddressId, UserId, TourId, EventId );
-
+#[allow(dead_code)]
 struct VecMap<K: Id, V> {
     vec: Vec<V>,
+    id: K,
 }
 
-impl<K, V> VecMap<K, V> {
+impl<K: Id, V> VecMap<K, V> {
+    #[allow(dead_code)]
     fn get(
         &self,
         key: K,
     ) -> &V {
-        self.vec[key]
+        &self.vec[key.as_idx()]
     }
 }
