@@ -1,19 +1,10 @@
-use crate::entities::prelude::User;
-use axum::{
-    extract::State,
-    http::{StatusCode, Uri},
-    response::Html,
-    routing::get,
-    Router,
-};
+use axum::Router;
 use dotenv::dotenv;
-use entities::user;
 use itertools::Itertools;
 use log::setup_logging;
 use migration::{Migrator, MigratorTrait};
 use notify::Watcher;
-use sea_orm::{ActiveValue, Database, DbConn, EntityTrait};
-use serde_json::json;
+use sea_orm::{Database, DbConn};
 use std::{
     env,
     path::Path,
@@ -22,7 +13,6 @@ use std::{
 use tera::{Context, Tera};
 use tower_http::{compression::CompressionLayer, services::ServeFile};
 use tower_livereload::LiveReloadLayer;
-use tracing::{error, info};
 
 mod backend;
 mod constants;
@@ -46,7 +36,7 @@ impl AppState {
     }
 
     fn db(&self) -> &DbConn {
-        &*self.db
+        &self.db
     }
 }
 
@@ -90,7 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
 
     let s = AppState {
-        tera: tera,
+        tera,
         db: Arc::new(conn),
     };
 
