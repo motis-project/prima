@@ -1,5 +1,12 @@
-<script>
+<script lang="ts">
+	import CalendarIcon from "lucide-svelte/icons/calendar";
+	import { Calendar } from "$lib/components/ui/calendar/index.js";
+	import * as Popover from "$lib/components/ui/popover/index.js";
+
 	import { Date as ReactiveDate, Map } from 'svelte/reactivity';
+	import { Button } from "$lib/components/ui/button";
+	import * as Card from "$lib/components/ui/card";
+	import { Plus } from 'lucide-svelte';
 
 	let vehicles = new Map([
 		[
@@ -47,9 +54,15 @@
 		}
 	];
 
+	let day = new ReactiveDate();
+	day.setHours(0, 0, 0, 0);
+
 	// 11 pm local time day before
-	let base = new ReactiveDate();
-	base.setHours(0, -60, 0, 0);
+	let base = $derived.by(() => {
+		let copy = new Date(day);
+		copy.setHours(day.getHours() - 1);
+		return copy;
+	});
 
 	let base_string = $derived(base.toJSON().slice(0, 10));
 
@@ -144,7 +157,7 @@
 						>{('0' + x.from.getHours()).slice(-2)}:00
 						<table>
 							<tbody>
-								<tr class="text-xs">
+								<tr class="text-sm">
 									<td>00</td>
 									<td class="pl-1">15</td>
 									<td class="pl-1">30</td>
@@ -159,23 +172,20 @@
 		<tbody>
 			{#each vehicles.entries() as [id, v]}
 				<tr>
-					<td class="pr-2">{v.license_plate}</td>
+					<td class="pr-2 tracking-tight leading-none">{v.license_plate}</td>
 					{#each split(range, 60) as x}
 						<td>
-							<table class="w-full h-6">
+							<table class="w-full">
 								<tbody>
 									<tr>
 										{#each split(x, 15) as cell}
-											<td
-												class="border"
+											<td class="border w-8 h-8"
 												class:bg-gray-400={is_selected(id, cell)}
 												class:bg-orange-400={has_tour(id, cell) && !is_selected(id, cell)}
-												class:bg-yellow-100={is_available(v, cell) &&
-													!has_tour(id, cell) &&
-													!is_selected(id, cell)}
+												class:bg-yellow-100={is_available(v, cell) && !has_tour(id, cell) && !is_selected(id, cell)}
 												onmousedown={() => selectionStart(id, v, cell)}
 												onmouseover={() => selectContinue(cell)}
-											>
+												onfocus={() => {}}>
 											</td>
 										{/each}
 									</tr>
@@ -189,26 +199,54 @@
 	</table>
 {/snippet}
 
-<div class="flex">
-	<div>
-		<input
-			type="button"
-			value="<"
-			onclick={() => base.setHours(base.getHours() - 24)}
-			class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700"
-		/>
-	</div>
-	<input type="date" value={base_string} disabled />
-	<div>
-		<input
-			type="button"
-			value=">"
-			onclick={() => base.setHours(base.getHours() + 24)}
-			class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700"
-		/>
-	</div>
+<div class="flex h-screen">
+	<Card.Root class="w-fit m-auto">
+		<div class="flex justify-between">
+			<Card.Header>
+				<Card.Title>Fahrzeuge und Touren</Card.Title>
+				<Card.Description>
+					Verwaltung der Fahrzeugverfügbarkeit für das ÖPNV-Taxi
+				</Card.Description>
+			</Card.Header>
+			<div class="font-semibold leading-none tracking-tight p-6 flex gap-4">
+				<div class="flex gap-1">
+					<Button variant="outline" size="icon" onclick={() => day.setHours(day.getHours() - 24)}>&lt;</Button>
+					<Popover.Root>
+						<Popover.Trigger asChild let:builder>
+						  <Button
+							variant="outline"
+							class="w-fit justify-start text-left font-normal"
+							builders={[builder]}
+						  >
+							<CalendarIcon class="mr-2 h-4 w-4" />
+							{day.toLocaleDateString()}
+						  </Button>
+						</Popover.Trigger>
+						<Popover.Content class="absolute z-10 w-auto p-0">
+						  <Calendar/>
+						</Popover.Content>
+					</Popover.Root>
+					<Button variant="outline" size="icon" onclick={() => day.setHours(day.getHours() + 24)}>&gt;</Button>
+				</div>
+				<div>
+					<Popover.Root>
+						<Popover.Trigger>
+							<Button variant="outline">
+								<Plus class="text-black mr-2 h-4 w-4" />
+								Fahrzeug hinzufügen
+							</Button>
+						</Popover.Trigger>
+						<Popover.Content class="absolute z-10">
+							Place content for the popover here.
+						</Popover.Content>
+					  </Popover.Root>
+				</div>
+			</div>
+		</div>
+		<Card.Content>
+			{@render availability_table({ from: base, to: today_morning })}
+			{@render availability_table({ from: today_morning, to: today_day })}
+			{@render availability_table({ from: today_day, to: tomorrow_night })}
+		</Card.Content>
+	</Card.Root>
 </div>
-
-{@render availability_table({ from: base, to: today_morning })}
-{@render availability_table({ from: today_morning, to: today_day })}
-{@render availability_table({ from: today_day, to: tomorrow_night })}
