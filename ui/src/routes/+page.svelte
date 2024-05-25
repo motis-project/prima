@@ -212,7 +212,7 @@
 		<tbody>
 			{#each vehicles.entries() as [id, v]}
 				<tr>
-					<td class="pr-2 tracking-tight leading-none">{v.license_plate}</td>
+					<td class="pr-4 text-sm tracking-tight leading-none">{v.license_plate}</td>
 					{#each split(range, 60) as x}
 						<td>
 							<table class="w-full">
