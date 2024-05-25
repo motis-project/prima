@@ -10,6 +10,9 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Plus, ChevronRight, ChevronLeft } from 'lucide-svelte';
 
+	import Sun from 'lucide-svelte/icons/sun';
+	import Moon from 'lucide-svelte/icons/moon';
+
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
 	class Range {
@@ -166,6 +169,20 @@
 			selection = null;
 		}
 	};
+
+	const toggleMode = () => {
+		document.documentElement.classList.toggle('dark');
+	};
+
+	const cellColor = (id: number, v: Vehicle, cell: Range) => {
+		if (hasTour(id, cell)) {
+			return 'bg-orange-400';
+		} else if (selection !== null && isSelected(id, cell)) {
+			return selection.available ? 'bg-yellow-100' : '';
+		} else if (isAvailable(v, cell)) {
+			return 'bg-yellow-100';
+		}
+	};
 </script>
 
 <svelte:window onmouseup={() => selectionFinish()} />
@@ -203,16 +220,19 @@
 									<tr>
 										{#each split(x, 15) as cell}
 											<td
-												class="border w-8 h-8"
-												class:bg-gray-400={isSelected(id, cell)}
-												class:bg-orange-400={hasTour(id, cell) && !isSelected(id, cell)}
-												class:bg-yellow-100={isAvailable(v, cell) &&
-													!hasTour(id, cell) &&
-													!isSelected(id, cell)}
 												onmousedown={() => selectionStart(id, v, cell)}
 												onmouseover={() => selectionContinue(cell)}
 												onfocus={() => {}}
 											>
+												<div
+													class={[
+														'w-8',
+														'h-8',
+														'border',
+														'rounded-md',
+														cellColor(id, v, cell)
+													].join(' ')}
+												></div>
 											</td>
 										{/each}
 									</tr>
@@ -261,7 +281,7 @@
 					<Popover.Root>
 						<Popover.Trigger>
 							<Button variant="outline">
-								<Plus class="text-black mr-2 h-4 w-4" />
+								<Plus class="mr-2 h-4 w-4" />
 								Fahrzeug hinzufügen
 							</Button>
 						</Popover.Trigger>
@@ -270,6 +290,15 @@
 						</Popover.Content>
 					</Popover.Root>
 				</div>
+				<Button on:click={toggleMode} variant="outline" size="icon">
+					<Sun
+						class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
+					/>
+					<Moon
+						class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
+					/>
+					<span class="sr-only">Toggle theme</span>
+				</Button>
 			</div>
 		</div>
 		<Card.Content class="mt-8">
