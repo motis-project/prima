@@ -1,0 +1,26 @@
+name: UI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build_site:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: cd ui && npm install
+
+      - name: Code Lint
+        run: cd ui && npm run lint
+
+      - name: Svelte Check
+        run: cd ui && npm run check
+
+      - name: Unit Test
+        run: cd ui && npm run test:unit

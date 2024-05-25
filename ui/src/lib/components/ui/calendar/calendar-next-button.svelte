@@ -5,7 +5,6 @@
 	import { ChevronRight } from 'lucide-svelte';
 
 	type $$Props = CalendarPrimitive.NextButtonProps;
-	type $$Events = CalendarPrimitive.NextButtonEvents;
 
 	let className: $$Props['class'] = undefined;
 	export { className as class };

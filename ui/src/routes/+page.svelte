@@ -18,7 +18,7 @@
 	}
 
 	class Vehicle {
-		license_plate!: String;
+		license_plate!: string;
 		availability!: Array<Range>;
 	}
 
@@ -122,7 +122,7 @@
 	};
 
 	class Selection {
-		id!: Number;
+		id!: number;
 		vehicle!: Vehicle;
 		start!: Range;
 		end!: Range;
@@ -140,11 +140,11 @@
 				};
 	};
 
-	const isSelected = (id: Number, cell: Range) => {
+	const isSelected = (id: number, cell: Range) => {
 		return selection != null && selection.id == id && overlaps(getSelection()!, cell);
 	};
 
-	const selectionStart = (id: Number, vehicle: Vehicle, cell: Range) => {
+	const selectionStart = (id: number, vehicle: Vehicle, cell: Range) => {
 		selection = {
 			id,
 			vehicle,
