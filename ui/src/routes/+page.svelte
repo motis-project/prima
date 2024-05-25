@@ -166,13 +166,13 @@
 		}
 	}
 
-	const selectContinue = (cell : Range) => {
+	const selectionContinue = (cell : Range) => {
 		if (selection !== null) {
 			selection = { ... selection, end: cell }
 		}
 	}
 
-	const finishSelection = () => {
+	const selectionFinish = () => {
 		if (selection !== null) {
 			console.log(selection.available, getSelection());
 			selection = null;
@@ -180,7 +180,7 @@
 	}
 </script>
 
-<svelte:window onmouseup={() => finishSelection()} />
+<svelte:window onmouseup={() => selectionFinish()} />
 
 {#snippet availability_table(range)}
 	<table class="mb-16 select-none">
@@ -218,7 +218,7 @@
 												class:bg-orange-400={hasTour(id, cell) && !isSelected(id, cell)}
 												class:bg-yellow-100={isAvailable(v, cell) && !hasTour(id, cell) && !isSelected(id, cell)}
 												onmousedown={() => selectionStart(id, v, cell)}
-												onmouseover={() => selectContinue(cell)}
+												onmouseover={() => selectionContinue(cell)}
 												onfocus={() => {}}>
 											</td>
 										{/each}
