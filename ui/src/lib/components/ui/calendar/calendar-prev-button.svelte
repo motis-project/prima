@@ -2,6 +2,7 @@
 	import { Calendar as CalendarPrimitive } from "bits-ui";
 	import { buttonVariants } from "$lib/components/ui/button/index.js";
 	import { cn } from "$lib/utils.js";
+	import { ChevronLeft } from 'lucide-svelte';
 
 	type $$Props = CalendarPrimitive.PrevButtonProps;
 	type $$Events = CalendarPrimitive.PrevButtonEvents;
@@ -21,6 +22,8 @@
 	let:builder
 >
 	<slot {builder}>
-		<span class="h-4 w-4">&lt;</span>
+		<span class="h-4 w-4">
+			<ChevronLeft class="h-4 w-4" />
+		</span>
 	</slot>
 </CalendarPrimitive.PrevButton>

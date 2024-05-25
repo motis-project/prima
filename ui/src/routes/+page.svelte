@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { DateFormatter, today, getLocalTimeZone } from "@internationalized/date";
+
 	import CalendarIcon from "lucide-svelte/icons/calendar";
 	import { Calendar } from "$lib/components/ui/calendar/index.js";
 	import * as Popover from "$lib/components/ui/popover/index.js";
@@ -6,9 +8,21 @@
 	import { Date as ReactiveDate, Map } from 'svelte/reactivity';
 	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
-	import { Plus } from 'lucide-svelte';
+	import { Plus, ChevronRight, ChevronLeft } from 'lucide-svelte';
 
-	let vehicles = new Map([
+	const df = new DateFormatter("de-DE", { dateStyle: "long" });
+
+	class Range {
+		from!: Date;
+		to!: Date;
+	}
+
+	class Vehicle {
+		license_plate!: String
+		availability!: Array<Range>
+	}
+
+	let vehicles = new Map<number, Vehicle>([
 		[
 			0,
 			{
@@ -54,8 +68,10 @@
 		}
 	];
 
-	let day = new ReactiveDate();
-	day.setHours(0, 0, 0, 0);
+
+	let value = $state(today("CET"));
+
+	let day = $derived(new ReactiveDate(value));
 
 	// 11 pm local time day before
 	let base = $derived.by(() => {
@@ -87,17 +103,17 @@
 		return copy;
 	});
 
-	const overlaps = (a, b) => a.from < b.to && a.to > b.from;
+	const overlaps = (a : Range, b : Range) => a.from < b.to && a.to > b.from;
 
-	const has_tour = (vehicle_id, cell) => {
+	const hasTour = (vehicle_id : number, cell : Range) => {
 		return tours.some((t) => vehicle_id == t.vehicle_id && overlaps(t, cell));
-	};
+	}
 
-	const is_available = (v, cell) => {
+	const isAvailable = (v : Vehicle, cell : Range) => {
 		return v.availability.some((a) => overlaps(a, cell));
-	};
+	}
 
-	const split = (range, size) => {
+	const split = (range : Range, size : number) => {
 		let cells = [];
 		let prev = new Date(range.from);
 		let t = new Date(range.from);
@@ -107,61 +123,79 @@
 			prev = new Date(t);
 		}
 		return cells;
-	};
+	}
 
-	const selection = $state({ active: false });
+	class Selection {
+		id!: Number
+		vehicle!: Vehicle
+		start!: Range
+		end!: Range
+		available!: boolean
+	}
+
+	let selection = $state.frozen<Selection | null>(null);
 
 	const getSelection = () => {
-		return {
-			from: new Date(Math.min(selection.start.from, selection.end.from)),
-			to: new Date(Math.max(selection.start.to, selection.end.to))
-		};
-	};
-
-	const is_selected = (id, cell) => {
-		return selection.active && selection.id == id && overlaps(getSelection(), cell);
-	};
-
-	const selectionStart = (id, vehicle, cell) => {
-		selection.active = true;
-		selection.id = id;
-		selection.vehicle = vehicle;
-		selection.start = cell;
-		selection.end = cell;
-		selection.available = !is_available(vehicle, cell);
-	};
-
-	const selectContinue = (cell) => {
-		if (selection.active) {
-			selection.end = cell;
+		return selection == null ? null : {
+			from: new Date(
+				Math.min(
+					selection.start.from.getTime(),
+					selection.end.from.getTime()
+				)
+			),
+			to: new Date(
+				Math.max(
+					selection.start.to.getTime(),
+					selection.end.to.getTime()
+				)
+			)
 		}
-	};
+	}
+
+	const isSelected = (id : Number, cell : Range) => {
+		return selection != null && selection.id == id && overlaps(getSelection()!, cell);
+	}
+
+	const selectionStart = (id : Number, vehicle : Vehicle, cell : Range) => {
+		selection = {
+			id,
+			vehicle,
+			start: cell,
+			end: cell,
+			available: !isAvailable(vehicle, cell)
+		}
+	}
+
+	const selectContinue = (cell : Range) => {
+		if (selection !== null) {
+			selection = { ... selection, end: cell }
+		}
+	}
 
 	const finishSelection = () => {
-		if (selection.active) {
+		if (selection !== null) {
 			console.log(selection.available, getSelection());
-			selection.active = false;
+			selection = null;
 		}
-	};
+	}
 </script>
 
 <svelte:window onmouseup={() => finishSelection()} />
 
 {#snippet availability_table(range)}
-	<table class="mb-8 select-none">
+	<table class="mb-16 select-none">
 		<thead>
 			<tr>
 				<td><!--Fahrzeug--></td>
 				{#each split(range, 60) as x}
-					<td
-						>{('0' + x.from.getHours()).slice(-2)}:00
+					<td>{('0' + x.from.getHours()).slice(-2)}:00
 						<table>
 							<tbody>
-								<tr class="text-sm">
-									<td>00</td>
-									<td class="pl-1">15</td>
-									<td class="pl-1">30</td>
-									<td class="pl-1">45</td>
+								<tr class="text-sm text-muted-foreground">
+									<td class="w-8">00</td>
+									<td class="pl-1 w-8">15</td>
+									<td class="pl-1 w-8">30</td>
+									<td class="pl-1 w-8">45</td>
 								</tr>
 							</tbody>
 						</table>
@@ -180,9 +214,9 @@
 									<tr>
 										{#each split(x, 15) as cell}
 											<td class="border w-8 h-8"
-												class:bg-gray-400={is_selected(id, cell)}
-												class:bg-orange-400={has_tour(id, cell) && !is_selected(id, cell)}
-												class:bg-yellow-100={is_available(v, cell) && !has_tour(id, cell) && !is_selected(id, cell)}
+												class:bg-gray-400={isSelected(id, cell)}
+												class:bg-orange-400={hasTour(id, cell) && !isSelected(id, cell)}
+												class:bg-yellow-100={isAvailable(v, cell) && !hasTour(id, cell) && !isSelected(id, cell)}
 												onmousedown={() => selectionStart(id, v, cell)}
 												onmouseover={() => selectContinue(cell)}
 												onfocus={() => {}}>
@@ -199,18 +233,20 @@
 	</table>
 {/snippet}
 
-<div class="flex h-screen">
+<div class="flex min-h-screen">
 	<Card.Root class="w-fit m-auto">
 		<div class="flex justify-between">
 			<Card.Header>
 				<Card.Title>Fahrzeuge und Touren</Card.Title>
 				<Card.Description>
-					Verwaltung der Fahrzeugverfügbarkeit für das ÖPNV-Taxi
+					Fahrzeugverfügbarkeit- und Tourenverwaltung
 				</Card.Description>
 			</Card.Header>
 			<div class="font-semibold leading-none tracking-tight p-6 flex gap-4">
 				<div class="flex gap-1">
-					<Button variant="outline" size="icon" onclick={() => day.setHours(day.getHours() - 24)}>&lt;</Button>
+					<Button variant="outline" size="icon" on:click={() => value = value.add({days: -1})}>
+						<ChevronLeft class="h-4 w-4" />
+					</Button>
 					<Popover.Root>
 						<Popover.Trigger asChild let:builder>
 						  <Button
@@ -219,14 +255,16 @@
 							builders={[builder]}
 						  >
 							<CalendarIcon class="mr-2 h-4 w-4" />
-							{day.toLocaleDateString()}
+							{df.format(value.toDate(getLocalTimeZone()))}
 						  </Button>
 						</Popover.Trigger>
 						<Popover.Content class="absolute z-10 w-auto p-0">
-						  <Calendar/>
+							<Calendar bind:value={value} />
 						</Popover.Content>
 					</Popover.Root>
-					<Button variant="outline" size="icon" onclick={() => day.setHours(day.getHours() + 24)}>&gt;</Button>
+					<Button variant="outline" size="icon" on:click={() => value = value.add({days: 1})}>
+						<ChevronRight class="h-4 w-4" />
+					</Button>
 				</div>
 				<div>
 					<Popover.Root>
@@ -243,7 +281,7 @@
 				</div>
 			</div>
 		</div>
-		<Card.Content>
+		<Card.Content class="mt-8">
 			{@render availability_table({ from: base, to: today_morning })}
 			{@render availability_table({ from: today_morning, to: today_day })}
 			{@render availability_table({ from: today_day, to: tomorrow_night })}
