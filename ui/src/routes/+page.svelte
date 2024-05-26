@@ -75,6 +75,12 @@
 			from: new Date('2024-05-24T11:13:00'),
 			to: new Date('2024-05-24T11:46:00'),
 			vehicle_id: 1
+		},
+		{
+			id: 2,
+			from: new Date('2024-05-24T11:22:00'),
+			to: new Date('2024-05-24T11:40:00'),
+			vehicle_id: 0
 		}
 	]);
 
@@ -196,7 +202,13 @@
 		vehicle_id!: number;
 	}
 
-	let draggedTours: Drag | null = null;
+	let draggedTours = $state<Drag | null>(null);
+
+	const hasOverlap = () => {
+		return draggedTours?.tours.some((d) =>
+			tours.some((t) => t.vehicle_id == draggedTours?.vehicle_id && overlaps(d, t))
+		);
+	};
 
 	const dragStart = (vehicle_id: number, cell: Range) => {
 		if (cell === undefined) return;
@@ -211,12 +223,24 @@
 	};
 
 	const onDrop = () => {
-		draggedTours!.tours.forEach((t) => (t.vehicle_id = draggedTours!.vehicle_id));
+		if (!hasOverlap()) {
+			draggedTours!.tours.forEach((t) => (t.vehicle_id = draggedTours!.vehicle_id));
+		}
 		draggedTours = null;
 	};
 
+	const hasDraggedTour = (vehicle_id: number, cell: Range) => {
+		return (
+			!draggedTours?.tours.some((t) => t.vehicle_id == vehicle_id) &&
+			draggedTours?.vehicle_id == vehicle_id &&
+			draggedTours?.tours.some((t) => overlaps(t, cell))
+		);
+	};
+
 	const cellColor = (id: number, v: Vehicle, cell: Range) => {
-		if (hasTour(id, cell)) {
+		if (hasDraggedTour(id, cell)) {
+			return hasOverlap() ? 'bg-red-500' : 'bg-orange-200';
+		} else if (hasTour(id, cell)) {
 			return 'bg-orange-400';
 		} else if (selection !== null && isSelected(id, cell)) {
 			return selection.available ? 'bg-yellow-100' : '';
