@@ -25,38 +25,45 @@
 		availability!: Array<Range>;
 	}
 
-	let vehicles = new Map<number, Vehicle>([
-		[
-			0,
-			{
-				license_plate: 'AB-XY-123',
-				availability: [
-					{
-						from: new Date('2024-05-24T05:30:00'),
-						to: new Date('2024-05-24T08:45:00')
-					},
-					{
-						from: new Date('2024-05-24T13:30:00'),
-						to: new Date('2024-05-24T17:45:00')
-					}
-				]
-			}
-		],
-		[
-			1,
-			{
-				license_plate: 'AB-XY-321',
-				availability: [
-					{
-						from: new Date('2024-05-24T09:30:00'),
-						to: new Date('2024-05-24T12:45:00')
-					}
-				]
-			}
-		]
-	]);
+	class Tour extends Range {
+		id!: number;
+		vehicle_id!: number;
+	}
 
-	let tours = [
+	let vehicles = $state<Map<number, Vehicle>>(
+		new Map<number, Vehicle>([
+			[
+				0,
+				{
+					license_plate: 'AB-XY-123',
+					availability: [
+						{
+							from: new Date('2024-05-24T05:30:00'),
+							to: new Date('2024-05-24T08:45:00')
+						},
+						{
+							from: new Date('2024-05-24T13:30:00'),
+							to: new Date('2024-05-24T17:45:00')
+						}
+					]
+				}
+			],
+			[
+				1,
+				{
+					license_plate: 'AB-XY-321',
+					availability: [
+						{
+							from: new Date('2024-05-24T09:30:00'),
+							to: new Date('2024-05-24T12:45:00')
+						}
+					]
+				}
+			]
+		])
+	);
+
+	let tours = $state<Array<Tour>>([
 		{
 			id: 0,
 			from: new Date('2024-05-24T14:33:00'),
@@ -69,7 +76,7 @@
 			to: new Date('2024-05-24T11:46:00'),
 			vehicle_id: 1
 		}
-	];
+	]);
 
 	let value = $state(today('CET'));
 	let day = $derived(new ReactiveDate(value));
@@ -108,6 +115,10 @@
 		return tours.some((t) => vehicle_id == t.vehicle_id && overlaps(t, cell));
 	};
 
+	const getTours = (vehicle_id: number, cell: Range) => {
+		return tours.filter((t) => vehicle_id == t.vehicle_id && overlaps(t, cell));
+	};
+
 	const isAvailable = (v: Vehicle, cell: Range) => {
 		return v.availability.some((a) => overlaps(a, cell));
 	};
@@ -124,6 +135,9 @@
 		return cells;
 	};
 
+	// =========
+	// Selection
+	// ---------
 	class Selection {
 		id!: number;
 		vehicle!: Vehicle;
@@ -174,6 +188,33 @@
 		document.documentElement.classList.toggle('dark');
 	};
 
+	// ===========
+	// Drag & Drop
+	// -----------
+	class Drag {
+		tours!: Array<Tour>;
+		vehicle_id!: number;
+	}
+
+	let draggedTours: Drag | null = null;
+
+	const dragStart = (vehicle_id: number, cell: Range) => {
+		if (cell === undefined) return;
+		let tours = getTours(vehicle_id, cell);
+		if (tours.length !== 0) {
+			draggedTours = { tours, vehicle_id };
+		}
+	};
+
+	const dragOver = (vehicle_id: number) => {
+		draggedTours!.vehicle_id = vehicle_id;
+	};
+
+	const onDrop = () => {
+		draggedTours!.tours.forEach((t) => (t.vehicle_id = draggedTours!.vehicle_id));
+		draggedTours = null;
+	};
+
 	const cellColor = (id: number, v: Vehicle, cell: Range) => {
 		if (hasTour(id, cell)) {
 			return 'bg-orange-400';
@@ -220,7 +261,11 @@
 									<tr>
 										{#each split(x, 15) as cell}
 											<td
-												onmousedown={() => selectionStart(id, v, cell)}
+												draggable={hasTour(id, cell)}
+												ondragstart={() => dragStart(id, cell)}
+												ondragover={() => dragOver(id)}
+												ondragend={() => onDrop()}
+												onmousedown={() => !hasTour(id, cell) && selectionStart(id, v, cell)}
 												onmouseover={() => selectionContinue(cell)}
 												onfocus={() => {}}
 											>
@@ -269,7 +314,7 @@
 								{df.format(value.toDate(getLocalTimeZone()))}
 							</Button>
 						</Popover.Trigger>
-						<Popover.Content class="absolute z-10 w-auto p-0">
+						<Popover.Content class="absolute z-10 w-auto">
 							<Calendar bind:value />
 						</Popover.Content>
 					</Popover.Root>
