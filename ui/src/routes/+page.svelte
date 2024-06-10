@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { getCompany } from '$lib/api';
+	import type { Company } from '$lib/types';
+
 	import { DateFormatter, today, getLocalTimeZone } from '@internationalized/date';
 
 	import CalendarIcon from 'lucide-svelte/icons/calendar';
@@ -12,6 +15,7 @@
 
 	import Sun from 'lucide-svelte/icons/sun';
 	import Moon from 'lucide-svelte/icons/moon';
+	import { onMount } from 'svelte';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
@@ -248,6 +252,11 @@
 			return 'bg-yellow-100';
 		}
 	};
+
+	let company = $state<Company | null>(null);
+	onMount(async () => {
+		company = await getCompany(1);
+	});
 </script>
 
 <svelte:window onmouseup={() => selectionFinish()} />
@@ -351,7 +360,7 @@
 						<Popover.Trigger>
 							<Button variant="outline">
 								<Plus class="mr-2 h-4 w-4" />
-								Fahrzeug hinzufügen
+								{company?.display_name ?? 'Not known'}
 							</Button>
 						</Popover.Trigger>
 						<Popover.Content class="absolute z-10">
