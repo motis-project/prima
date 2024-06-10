@@ -89,7 +89,7 @@
 	]);
 
 	let value = $state(today('CET'));
-	let day = $derived(new ReactiveDate(value));
+	let day = $derived(new ReactiveDate(value.toDate('CET')));
 
 	// 11 pm local time day before
 	let base = $derived.by(() => {
