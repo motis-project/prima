@@ -179,6 +179,7 @@
 	};
 
 	const selectionFinish = () => {
+		console.log('Selection FIN');
 		if (selection !== null) {
 			console.log(selection.available, getSelection());
 			selection = null;
@@ -214,12 +215,14 @@
 	};
 
 	const dragOver = (vehicle_id: number) => {
-		draggedTours!.vehicle_id = vehicle_id;
+		if (draggedTours !== null) {
+			draggedTours!.vehicle_id = vehicle_id;
+		}
 	};
 
 	const onDrop = () => {
-		if (!hasOverlap()) {
-			draggedTours!.tours.forEach((t) => (t.vehicle_id = draggedTours!.vehicle_id));
+		if (draggedTours !== null && !hasOverlap()) {
+			draggedTours.tours.forEach((t) => (t.vehicle_id = draggedTours!.vehicle_id));
 		}
 		draggedTours = null;
 	};
@@ -285,6 +288,7 @@
 									<tr>
 										{#each split(x, 15) as cell}
 											<td
+												class="cell"
 												draggable={hasTour(id, cell)}
 												ondragstart={() => dragStart(id, cell)}
 												ondragover={() => dragOver(id)}
@@ -377,3 +381,6 @@
 		</Card.Content>
 	</Card.Root>
 </div>
+
+<style>
+</style>
