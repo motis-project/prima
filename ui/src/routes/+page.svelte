@@ -1,8 +1,8 @@
 <script lang="ts">
+	const { data } = $props();
+
 	import { getCompany } from '$lib/api';
 	import type { Company } from '$lib/types';
-
-	import { getVehicles } from '$lib/api';
 
 	import { DateFormatter, today, getLocalTimeZone } from '@internationalized/date';
 
@@ -39,7 +39,7 @@
 	let vehicles = $state<Map<number, Vehicle>>(new Map<number, Vehicle>());
 	onMount(async () => {
 		vehicles = new Map<number, Vehicle>(
-			(await getVehicles(1)).map((v) => [
+			data.vehicles.map((v) => [
 				v.id,
 				{
 					license_plate: v.license_plate,
