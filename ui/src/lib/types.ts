@@ -3,6 +3,7 @@ import { type Generated, type Insertable, type Selectable, type Updateable } fro
 export interface Database {
 	zone: ZoneTable;
 	company: CompanyTable;
+	vehicle: VehicleTable;
 }
 
 export interface ZoneTable {
@@ -27,3 +28,16 @@ export interface CompanyTable {
 export type Company = Selectable<CompanyTable>;
 export type NewCompany = Insertable<CompanyTable>;
 export type CompanyUpdate = Updateable<CompanyTable>;
+
+export interface VehicleTable {
+	id: Generated<number>;
+	license_plate: string;
+	company: number;
+	seats: number;
+	wheelchair_capacity: number;
+	storage_space: number;
+}
+
+export type Vehicle = Selectable<VehicleTable>;
+export type NewVehicle = Insertable<VehicleTable>;
+export type VehicleUpdate = Updateable<VehicleTable>;

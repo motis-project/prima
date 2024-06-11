@@ -2,6 +2,8 @@
 	import { getCompany } from '$lib/api';
 	import type { Company } from '$lib/types';
 
+	import { getVehicles } from '$lib/api';
+
 	import { DateFormatter, today, getLocalTimeZone } from '@internationalized/date';
 
 	import CalendarIcon from 'lucide-svelte/icons/calendar';
@@ -34,12 +36,13 @@
 		vehicle_id!: number;
 	}
 
-	let vehicles = $state<Map<number, Vehicle>>(
-		new Map<number, Vehicle>([
-			[
-				0,
+	let vehicles = $state<Map<number, Vehicle>>(new Map<number, Vehicle>());
+	onMount(async () => {
+		vehicles = new Map<number, Vehicle>(
+			(await getVehicles(1)).map((v) => [
+				v.id,
 				{
-					license_plate: 'AB-XY-123',
+					license_plate: v.license_plate,
 					availability: [
 						{
 							from: new Date('2024-05-24T05:30:00'),
@@ -51,21 +54,9 @@
 						}
 					]
 				}
-			],
-			[
-				1,
-				{
-					license_plate: 'AB-XY-321',
-					availability: [
-						{
-							from: new Date('2024-05-24T09:30:00'),
-							to: new Date('2024-05-24T12:45:00')
-						}
-					]
-				}
-			]
-		])
-	);
+			])
+		);
+	});
 
 	let tours = $state<Array<Tour>>([
 		{
