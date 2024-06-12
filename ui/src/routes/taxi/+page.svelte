@@ -18,6 +18,7 @@
 	import Sun from 'lucide-svelte/icons/sun';
 	import Moon from 'lucide-svelte/icons/moon';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
@@ -70,6 +71,11 @@
 
 	let value = $state(today('CET'));
 	let day = $derived(new ReactiveDate(value));
+
+	$effect(() => {
+		const date = value.toDate('UTC').toISOString().slice(0, 10);
+		goto(`/taxi?date=${date}`);
+	});
 
 	// 11 pm local time day before
 	let base = $derived.by(() => {
@@ -168,7 +174,6 @@
 	};
 
 	const selectionFinish = () => {
-		console.log('Selection FIN');
 		if (selection !== null) {
 			console.log(selection.available, getSelection());
 			selection = null;
