@@ -58,26 +58,15 @@
 		);
 	});
 
-	let tours = $state<Array<Tour>>([
-		{
-			id: 0,
-			from: new Date('2024-05-24T14:33:00'),
-			to: new Date('2024-05-24T14:46:00'),
-			vehicle_id: 0
-		},
-		{
-			id: 1,
-			from: new Date('2024-05-24T11:13:00'),
-			to: new Date('2024-05-24T11:46:00'),
-			vehicle_id: 1
-		},
-		{
-			id: 2,
-			from: new Date('2024-05-24T11:22:00'),
-			to: new Date('2024-05-24T11:40:00'),
-			vehicle_id: 0
-		}
-	]);
+	let tours = $state<Array<Tour>>([]);
+	onMount(async () => {
+		tours = data.tours.map((t) => ({
+			id: t.id,
+			from: t.departure,
+			to: t.arrival,
+			vehicle_id: t.vehicle
+		}));
+	});
 
 	let value = $state(today('CET'));
 	let day = $derived(new ReactiveDate(value));
