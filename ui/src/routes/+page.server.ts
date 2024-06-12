@@ -1,7 +1,7 @@
 import { db } from '$lib/database';
 
 export async function load() {
-	let company_id = 2;
+	let company_id = 1;
 	const vehicles = await db.selectFrom('vehicle').where('company', '=', company_id).selectAll().execute();
 	const tours = await db
 		.selectFrom('vehicle')
