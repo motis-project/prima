@@ -4,7 +4,12 @@
 	import { getCompany } from '$lib/api';
 	import type { Company } from '$lib/types';
 
-	import { DateFormatter, today, getLocalTimeZone } from '@internationalized/date';
+	import {
+		DateFormatter,
+		fromDate,
+		toCalendarDate,
+		getLocalTimeZone
+	} from '@internationalized/date';
 
 	import CalendarIcon from 'lucide-svelte/icons/calendar';
 	import { Calendar } from '$lib/components/ui/calendar/index.js';
@@ -17,7 +22,7 @@
 
 	import Sun from 'lucide-svelte/icons/sun';
 	import Moon from 'lucide-svelte/icons/moon';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
@@ -37,9 +42,8 @@
 		vehicle_id!: number;
 	}
 
-	let vehicles = $state<Map<number, Vehicle>>(new Map<number, Vehicle>());
-	onMount(async () => {
-		vehicles = new Map<number, Vehicle>(
+	let vehicles = $state<Map<number, Vehicle>>(
+		new Map<number, Vehicle>(
 			data.vehicles.map((v) => [
 				v.id,
 				{
@@ -56,20 +60,18 @@
 					]
 				}
 			])
-		);
-	});
-
-	let tours = $state<Array<Tour>>([]);
-	onMount(async () => {
-		tours = data.tours.map((t) => ({
+		)
+	);
+	let tours = $state<Array<Tour>>(
+		data.tours.map((t) => ({
 			id: t.id,
 			from: t.departure,
 			to: t.arrival,
 			vehicle_id: t.vehicle
-		}));
-	});
+		}))
+	);
 
-	let value = $state(today('CET'));
+	let value = $state(toCalendarDate(fromDate(data.day, 'CET')));
 	let day = $derived(new ReactiveDate(value));
 
 	$effect(() => {
