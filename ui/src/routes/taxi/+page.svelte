@@ -2,7 +2,7 @@
 	const { data } = $props();
 
 	import { getCompany } from '$lib/api';
-	import type { Company } from '$lib/types';
+	import type { Availability, Company } from '$lib/types';
 
 	import {
 		DateFormatter,
@@ -42,34 +42,9 @@
 		vehicle_id!: number;
 	}
 
-	let vehicles = $state<Map<number, Vehicle>>(
-		new Map<number, Vehicle>(
-			data.vehicles.map((v) => [
-				v.id,
-				{
-					license_plate: v.license_plate,
-					availability: [
-						{
-							from: new Date('2024-05-24T05:30:00'),
-							to: new Date('2024-05-24T08:45:00')
-						},
-						{
-							from: new Date('2024-05-24T13:30:00'),
-							to: new Date('2024-05-24T17:45:00')
-						}
-					]
-				}
-			])
-		)
-	);
-	let tours = $state<Array<Tour>>(
-		data.tours.map((t) => ({
-			id: t.id,
-			from: t.departure,
-			to: t.arrival,
-			vehicle_id: t.vehicle
-		}))
-	);
+	let vehicles = $state<Map<number, Vehicle>>(new Map());
+
+	let tours = $state<Array<Tour>>([]);
 
 	let value = $state(toCalendarDate(fromDate(data.day, 'CET')));
 	let day = $derived(new ReactiveDate(value));
@@ -77,6 +52,24 @@
 	$effect(() => {
 		const date = value.toDate('UTC').toISOString().slice(0, 10);
 		goto(`/taxi?date=${date}`);
+		vehicles = new Map<number, Vehicle>(
+			data.vehicles.map((v) => [
+				v.id,
+				{
+					license_plate: v.license_plate,
+					availability: data.availabilities
+						.filter((a) => a.vehicle == v.id)
+						.map((a) => ({ from: a.start_time, to: a.end_time }))
+				}
+			])
+		);
+
+		tours = data.tours.map((t) => ({
+			id: t.id,
+			from: t.departure,
+			to: t.arrival,
+			vehicle_id: t.vehicle
+		}));
 	});
 
 	// 11 pm local time day before
@@ -178,6 +171,15 @@
 	const selectionFinish = () => {
 		if (selection !== null) {
 			console.log(selection.available, getSelection());
+			const selectedRange = {
+				from: new Date(Math.min(selection.start.from.getTime(), selection.end.from.getTime())),
+				to: new Date(Math.max(selection.start.to.getTime(), selection.end.to.getTime()))
+			};
+			if (selection.available) {
+				selection.vehicle.availability.push(selectedRange);
+			} else {
+				//TODO
+			}
 			selection = null;
 		}
 	};
@@ -351,7 +353,7 @@
 						<Popover.Trigger>
 							<Button variant="outline">
 								<Plus class="mr-2 h-4 w-4" />
-								{company?.display_name ?? 'Not known'}
+								{'Fahrzeug hinzuügen'}
 							</Button>
 						</Popover.Trigger>
 						<Popover.Content class="absolute z-10">
