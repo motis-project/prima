@@ -16,16 +16,10 @@ export async function load({ url }) {
 		.selectFrom('vehicle')
 		.where('company', '=', company_id)
 		.innerJoin('tour', 'vehicle', 'vehicle.id')
-		.where(({ or, and, eb }) =>
-			or([
-				and([
-					eb('tour.departure', '>=', earliest_displayed_time),
-					eb('tour.departure', '<', latest_displayed_time)
-				]),
-				and([
-					eb('tour.arrival', '>', earliest_displayed_time),
-					eb('tour.arrival', '<=', latest_displayed_time)
-				])
+		.where((eb) =>
+			eb.and([
+				eb('tour.departure', '<', latest_displayed_time),
+				eb('tour.arrival', '>', earliest_displayed_time)
 			])
 		)
 		.select(['tour.arrival', 'tour.departure', 'tour.vehicle', 'tour.id'])
@@ -34,16 +28,10 @@ export async function load({ url }) {
 		.selectFrom('vehicle')
 		.where('company', '=', company_id)
 		.innerJoin('availability', 'vehicle', 'vehicle.id')
-		.where(({ or, and, eb }) =>
-			or([
-				and([
-					eb('availability.start_time', '>=', earliest_displayed_time),
-					eb('availability.start_time', '<', latest_displayed_time)
-				]),
-				and([
-					eb('availability.end_time', '>', earliest_displayed_time),
-					eb('availability.end_time', '<=', latest_displayed_time)
-				])
+		.where((eb) =>
+			eb.and([
+				eb('availability.start_time', '<', latest_displayed_time),
+				eb('availability.end_time', '>', earliest_displayed_time)
 			])
 		)
 		.select([
