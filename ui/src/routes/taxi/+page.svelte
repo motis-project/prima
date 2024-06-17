@@ -351,7 +351,7 @@
 						<Popover.Trigger>
 							<Button variant="outline">
 								<Plus class="mr-2 h-4 w-4" />
-								{'Fahrzeug hinzuügen'}
+								{'Fahrzeug hinzufügen'}
 							</Button>
 						</Popover.Trigger>
 						<Popover.Content class="absolute z-10">
