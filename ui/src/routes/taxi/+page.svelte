@@ -2,7 +2,7 @@
 	const { data } = $props();
 
 	import { getCompany } from '$lib/api';
-	import type { Availability, Company } from '$lib/types';
+	import type { Company } from '$lib/types';
 
 	import {
 		DateFormatter,
@@ -248,11 +248,6 @@
 			return 'bg-yellow-100';
 		}
 	};
-
-	let company = $state<Company | null>(null);
-	onMount(async () => {
-		company = await getCompany(1);
-	});
 </script>
 
 <svelte:window onmouseup={() => selectionFinish()} />

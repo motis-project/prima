@@ -1,12 +1,11 @@
 import { db } from '$lib/database';
-import { sql } from 'kysely';
 
 export async function load({ url }) {
 	const company_id = 1;
 	const day = new Date(url.searchParams.get('date') ?? new Date().toISOString().slice(0, 10));
-	let earliest_displayed_time = new Date(day);
+	const earliest_displayed_time = new Date(day);
 	earliest_displayed_time.setHours(day.getHours() - 1);
-	let latest_displayed_time = new Date(day);
+	const latest_displayed_time = new Date(day);
 	latest_displayed_time.setHours(day.getHours() + 25);
 	const vehicles = await db
 		.selectFrom('vehicle')
