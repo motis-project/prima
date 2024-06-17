@@ -42,17 +42,8 @@
 		vehicle_id!: number;
 	}
 
-	let vehicles = $state<Map<number, Vehicle>>(new Map());
-
-	let tours = $state<Array<Tour>>([]);
-
-	let value = $state(toCalendarDate(fromDate(data.day, 'CET')));
-	let day = $derived(new ReactiveDate(value));
-
-	$effect(() => {
-		const date = value.toDate('UTC').toISOString().slice(0, 10);
-		goto(`/taxi?date=${date}`);
-		vehicles = new Map<number, Vehicle>(
+	const loadVehicles = (): Map<number, Vehicle> => {
+		return new Map<number, Vehicle>(
 			data.vehicles.map((v) => [
 				v.id,
 				{
@@ -63,6 +54,19 @@
 				}
 			])
 		);
+	};
+
+	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
+
+	let tours = $state<Array<Tour>>([]);
+
+	let value = $state(toCalendarDate(fromDate(data.day, 'CET')));
+	let day = $derived(new ReactiveDate(value));
+
+	$effect(() => {
+		const date = value.toDate('UTC').toISOString().slice(0, 10);
+		goto(`/taxi?date=${date}`);
+		vehicles = loadVehicles();
 
 		tours = data.tours.map((t) => ({
 			id: t.id,

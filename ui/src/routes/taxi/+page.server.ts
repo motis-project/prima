@@ -2,9 +2,13 @@ import { db } from '$lib/database';
 import { sql } from 'kysely';
 
 export async function load({ url }) {
-	const day = new Date(url.searchParams.get('date') ?? new Date().toISOString().slice(0, 10));
-	const day_string = day.toISOString().slice(0, 10);
 	const company_id = 1;
+	const day = new Date(url.searchParams.get('date') ?? new Date().toISOString().slice(0, 10));
+	let earliest_displayed_time = new Date(day);
+	earliest_displayed_time.setHours(day.getHours() - 1);
+	let latest_displayed_time = new Date(day);
+	latest_displayed_time.setHours(day.getHours() + 25);
+	const day_string = day.toISOString().slice(0, 10);
 	const vehicles = await db
 		.selectFrom('vehicle')
 		.where('company', '=', company_id)
@@ -14,10 +18,16 @@ export async function load({ url }) {
 		.selectFrom('vehicle')
 		.where('company', '=', company_id)
 		.innerJoin('tour', 'vehicle', 'vehicle.id')
-		.where((eb) =>
-			eb.or([
-				eb(sql<string>`TO_CHAR(tour.arrival, 'YYYY-MM-DD')`, '=', day_string),
-				eb(sql<string>`TO_CHAR(tour.departure, 'YYYY-MM-DD')`, '=', day_string)
+		.where(({or, and, eb}) =>
+			or([
+				and([
+					eb('tour.departure', '>=', earliest_displayed_time),
+					eb('tour.departure', '<', latest_displayed_time)
+				]),
+				and([
+					eb('tour.arrival', '>', earliest_displayed_time),
+					eb('tour.arrival', '<=', latest_displayed_time)
+				])
 			])
 		)
 		.select(['tour.arrival', 'tour.departure', 'tour.vehicle', 'tour.id'])
@@ -26,10 +36,16 @@ export async function load({ url }) {
 		.selectFrom('vehicle')
 		.where('company', '=', company_id)
 		.innerJoin('availability', 'vehicle', 'vehicle.id')
-		.where((eb) =>
-			eb.or([
-				eb(sql<string>`TO_CHAR(availability.start_time, 'YYYY-MM-DD')`, '=', day_string),
-				eb(sql<string>`TO_CHAR(availability.end_time, 'YYYY-MM-DD')`, '=', day_string)
+		.where(({or, and, eb}) =>
+			or([
+				and([
+					eb('availability.start_time', '>=', earliest_displayed_time),
+					eb('availability.start_time', '<', latest_displayed_time)
+				]),
+				and([
+					eb('availability.end_time', '>', earliest_displayed_time),
+					eb('availability.end_time', '<=', latest_displayed_time)
+				])
 			])
 		)
 		.select([
