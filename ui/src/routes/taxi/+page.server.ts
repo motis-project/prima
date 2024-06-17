@@ -8,7 +8,6 @@ export async function load({ url }) {
 	earliest_displayed_time.setHours(day.getHours() - 1);
 	let latest_displayed_time = new Date(day);
 	latest_displayed_time.setHours(day.getHours() + 25);
-	const day_string = day.toISOString().slice(0, 10);
 	const vehicles = await db
 		.selectFrom('vehicle')
 		.where('company', '=', company_id)
@@ -18,7 +17,7 @@ export async function load({ url }) {
 		.selectFrom('vehicle')
 		.where('company', '=', company_id)
 		.innerJoin('tour', 'vehicle', 'vehicle.id')
-		.where(({or, and, eb}) =>
+		.where(({ or, and, eb }) =>
 			or([
 				and([
 					eb('tour.departure', '>=', earliest_displayed_time),
@@ -36,7 +35,7 @@ export async function load({ url }) {
 		.selectFrom('vehicle')
 		.where('company', '=', company_id)
 		.innerJoin('availability', 'vehicle', 'vehicle.id')
-		.where(({or, and, eb}) =>
+		.where(({ or, and, eb }) =>
 			or([
 				and([
 					eb('availability.start_time', '>=', earliest_displayed_time),
