@@ -56,9 +56,18 @@
 		);
 	};
 
+	const loadTours = (): Array<Tour> => {
+		return data.tours.map((t) => ({
+			id: t.id,
+			from: t.departure,
+			to: t.arrival,
+			vehicle_id: t.vehicle
+		}));
+	};
+
 	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
 
-	let tours = $state<Array<Tour>>([]);
+	let tours = $state<Array<Tour>>(loadTours());
 
 	let value = $state(toCalendarDate(fromDate(data.day, 'CET')));
 	let day = $derived(new ReactiveDate(value));
@@ -68,12 +77,7 @@
 		goto(`/taxi?date=${date}`);
 		vehicles = loadVehicles();
 
-		tours = data.tours.map((t) => ({
-			id: t.id,
-			from: t.departure,
-			to: t.arrival,
-			vehicle_id: t.vehicle
-		}));
+		tours = loadTours();
 	});
 
 	// 11 pm local time day before
