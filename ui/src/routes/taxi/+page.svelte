@@ -72,7 +72,6 @@
 		const date = value.toDate('UTC').toISOString().slice(0, 10);
 		goto(`/taxi?date=${date}`);
 		vehicles = loadVehicles();
-
 		tours = loadTours();
 	});
 
