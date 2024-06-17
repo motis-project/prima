@@ -1,9 +1,6 @@
 <script lang="ts">
 	const { data } = $props();
 
-	import { getCompany } from '$lib/api';
-	import type { Company } from '$lib/types';
-
 	import {
 		DateFormatter,
 		fromDate,
@@ -22,7 +19,6 @@
 
 	import Sun from 'lucide-svelte/icons/sun';
 	import Moon from 'lucide-svelte/icons/moon';
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
