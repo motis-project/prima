@@ -1,18 +1,22 @@
+import { TZ } from '$lib/constants.js';
 import { db } from '$lib/database';
 
 export async function load({ url }) {
 	const company_id = 1;
-	const day = new Date(url.searchParams.get('date') ?? new Date().toISOString().slice(0, 10));
-	const earliest_displayed_time = new Date(day);
-	earliest_displayed_time.setHours(day.getHours() - 1);
-	const latest_displayed_time = new Date(day);
-	latest_displayed_time.setHours(day.getHours() + 25);
-	const vehicles = await db
+	const localDateParam = url.searchParams.get('date');
+	const localDate = localDateParam ? new Date(localDateParam) : new Date();
+	const utcDate = new Date(localDate.toLocaleString('en', {timeZone: TZ}));
+	utcDate.setHours(0, 0, 0, 0);
+	const earliest_displayed_time = new Date(utcDate);
+	earliest_displayed_time.setHours(utcDate.getHours() - 1);
+	const latest_displayed_time = new Date(utcDate);
+	latest_displayed_time.setHours(utcDate.getHours() + 25);
+	const vehicles = db
 		.selectFrom('vehicle')
 		.where('company', '=', company_id)
 		.selectAll()
 		.execute();
-	const tours = await db
+	const tours = db
 		.selectFrom('vehicle')
 		.where('company', '=', company_id)
 		.innerJoin('tour', 'vehicle', 'vehicle.id')
@@ -24,7 +28,7 @@ export async function load({ url }) {
 		)
 		.select(['tour.arrival', 'tour.departure', 'tour.vehicle', 'tour.id'])
 		.execute();
-	const availabilities = await db
+	const availabilities = db
 		.selectFrom('vehicle')
 		.where('company', '=', company_id)
 		.innerJoin('availability', 'vehicle', 'vehicle.id')
@@ -42,9 +46,9 @@ export async function load({ url }) {
 		])
 		.execute();
 	return {
-		vehicles,
-		tours,
-		day,
-		availabilities
+		vehicles: await vehicles,
+		tours: await tours,
+		availabilities: await availabilities,
+		utcDate
 	};
 }

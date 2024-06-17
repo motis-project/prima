@@ -20,6 +20,7 @@
 	import Sun from 'lucide-svelte/icons/sun';
 	import Moon from 'lucide-svelte/icons/moon';
 	import { goto } from '$app/navigation';
+	import { TZ } from '$lib/constants.js';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
@@ -62,10 +63,9 @@
 	};
 
 	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
-
 	let tours = $state<Array<Tour>>(loadTours());
 
-	let value = $state(toCalendarDate(fromDate(data.day, 'CET')));
+	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
 	let day = $derived(new ReactiveDate(value));
 
 	$effect(() => {
@@ -78,7 +78,7 @@
 	// 11 pm local time day before
 	let base = $derived.by(() => {
 		let copy = new Date(day);
-		copy.setHours(day.getHours() - 1);
+		copy.setMinutes(copy.getMinutes() + value.toDate(TZ).getTimezoneOffset() - 60);
 		return copy;
 	});
 
