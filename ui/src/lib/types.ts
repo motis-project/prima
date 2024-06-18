@@ -5,6 +5,7 @@ export interface Database {
 	company: CompanyTable;
 	vehicle: VehicleTable;
 	tour: TourTable;
+	availability: AvailabilityTable;
 }
 
 export interface ZoneTable {
@@ -53,3 +54,14 @@ export interface TourTable {
 export type Tour = Selectable<TourTable>;
 export type NewTour = Insertable<TourTable>;
 export type TourUpdate = Updateable<TourTable>;
+
+export interface AvailabilityTable {
+	id: Generated<number>;
+	start_time: Date;
+	end_time: Date;
+	vehicle: number;
+}
+
+export type Availability = Selectable<AvailabilityTable>;
+export type NewAvailability = Insertable<AvailabilityTable>;
+export type AvailabilityUpdate = Updateable<AvailabilityTable>;

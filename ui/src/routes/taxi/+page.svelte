@@ -1,9 +1,6 @@
 <script lang="ts">
 	const { data } = $props();
 
-	import { getCompany } from '$lib/api';
-	import type { Company } from '$lib/types';
-
 	import {
 		DateFormatter,
 		fromDate,
@@ -22,8 +19,8 @@
 
 	import Sun from 'lucide-svelte/icons/sun';
 	import Moon from 'lucide-svelte/icons/moon';
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { TZ } from '$lib/constants.js';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
@@ -42,47 +39,46 @@
 		vehicle_id!: number;
 	}
 
-	let vehicles = $state<Map<number, Vehicle>>(
-		new Map<number, Vehicle>(
+	const loadVehicles = (): Map<number, Vehicle> => {
+		return new Map<number, Vehicle>(
 			data.vehicles.map((v) => [
 				v.id,
 				{
 					license_plate: v.license_plate,
-					availability: [
-						{
-							from: new Date('2024-05-24T05:30:00'),
-							to: new Date('2024-05-24T08:45:00')
-						},
-						{
-							from: new Date('2024-05-24T13:30:00'),
-							to: new Date('2024-05-24T17:45:00')
-						}
-					]
+					availability: data.availabilities
+						.filter((a) => a.vehicle == v.id)
+						.map((a) => ({ from: a.start_time, to: a.end_time }))
 				}
 			])
-		)
-	);
-	let tours = $state<Array<Tour>>(
-		data.tours.map((t) => ({
+		);
+	};
+
+	const loadTours = (): Array<Tour> => {
+		return data.tours.map((t) => ({
 			id: t.id,
 			from: t.departure,
 			to: t.arrival,
 			vehicle_id: t.vehicle
-		}))
-	);
+		}));
+	};
 
-	let value = $state(toCalendarDate(fromDate(data.day, 'CET')));
+	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
+	let tours = $state<Array<Tour>>(loadTours());
+
+	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
 	let day = $derived(new ReactiveDate(value));
 
 	$effect(() => {
 		const date = value.toDate('UTC').toISOString().slice(0, 10);
 		goto(`/taxi?date=${date}`);
+		vehicles = loadVehicles();
+		tours = loadTours();
 	});
 
 	// 11 pm local time day before
 	let base = $derived.by(() => {
 		let copy = new Date(day);
-		copy.setHours(day.getHours() - 1);
+		copy.setMinutes(copy.getMinutes() + value.toDate(TZ).getTimezoneOffset() - 60);
 		return copy;
 	});
 
@@ -178,6 +174,15 @@
 	const selectionFinish = () => {
 		if (selection !== null) {
 			console.log(selection.available, getSelection());
+			const selectedRange = {
+				from: new Date(Math.min(selection.start.from.getTime(), selection.end.from.getTime())),
+				to: new Date(Math.max(selection.start.to.getTime(), selection.end.to.getTime()))
+			};
+			if (selection.available) {
+				selection.vehicle.availability.push(selectedRange);
+			} else {
+				//TODO
+			}
 			selection = null;
 		}
 	};
@@ -242,11 +247,6 @@
 			return 'bg-yellow-100';
 		}
 	};
-
-	let company = $state<Company | null>(null);
-	onMount(async () => {
-		company = await getCompany(1);
-	});
 </script>
 
 <svelte:window onmouseup={() => selectionFinish()} />
@@ -351,7 +351,7 @@
 						<Popover.Trigger>
 							<Button variant="outline">
 								<Plus class="mr-2 h-4 w-4" />
-								{company?.display_name ?? 'Not known'}
+								{'Fahrzeug hinzufügen'}
 							</Button>
 						</Popover.Trigger>
 						<Popover.Content class="absolute z-10">
