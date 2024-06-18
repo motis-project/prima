@@ -5,17 +5,13 @@ export async function load({ url }) {
 	const company_id = 1;
 	const localDateParam = url.searchParams.get('date');
 	const localDate = localDateParam ? new Date(localDateParam) : new Date();
-	const utcDate = new Date(localDate.toLocaleString('en', {timeZone: TZ}));
+	const utcDate = new Date(localDate.toLocaleString('en', { timeZone: TZ }));
 	utcDate.setHours(0, 0, 0, 0);
 	const earliest_displayed_time = new Date(utcDate);
 	earliest_displayed_time.setHours(utcDate.getHours() - 1);
 	const latest_displayed_time = new Date(utcDate);
 	latest_displayed_time.setHours(utcDate.getHours() + 25);
-	const vehicles = db
-		.selectFrom('vehicle')
-		.where('company', '=', company_id)
-		.selectAll()
-		.execute();
+	const vehicles = db.selectFrom('vehicle').where('company', '=', company_id).selectAll().execute();
 	const tours = db
 		.selectFrom('vehicle')
 		.where('company', '=', company_id)
