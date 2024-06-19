@@ -10,10 +10,7 @@ export const getVehicles = async (company_id: number): Promise<Vehicle[]> => {
 	return await response.json();
 };
 
-export const updateTour = async (
-	tour_id: number,
-	vehicle_id: number,
-): Promise<Response> => {
+export const updateTour = async (tour_id: number, vehicle_id: number): Promise<Response> => {
 	const response = await fetch('/api/tour/', {
 		method: 'POST',
 		body: JSON.stringify({
