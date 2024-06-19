@@ -19,8 +19,9 @@
 
 	import Sun from 'lucide-svelte/icons/sun';
 	import Moon from 'lucide-svelte/icons/moon';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { TZ } from '$lib/constants.js';
+	import { updateTour } from '$lib/api.js';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
@@ -221,9 +222,13 @@
 		}
 	};
 
-	const onDrop = () => {
-		if (draggedTours !== null && !hasOverlap()) {
-			draggedTours.tours.forEach((t) => (t.vehicle_id = draggedTours!.vehicle_id));
+	const onDrop = async () => {
+		if (draggedTours !== null) {
+			draggedTours.tours.forEach(async (t) => {
+				t.vehicle_id = draggedTours!.vehicle_id;
+			});
+			await Promise.all(draggedTours.tours.map((t) => updateTour(t.id, t.vehicle_id)));
+			invalidateAll();
 		}
 		draggedTours = null;
 	};
