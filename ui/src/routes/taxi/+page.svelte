@@ -223,7 +223,7 @@
 	};
 
 	const onDrop = async () => {
-		if (draggedTours !== null) {
+		if (draggedTours !== null && !hasOverlap()) {
 			draggedTours.tours.forEach(async (t) => {
 				t.vehicle_id = draggedTours!.vehicle_id;
 			});
