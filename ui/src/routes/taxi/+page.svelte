@@ -360,7 +360,12 @@
 							</Button>
 						</Popover.Trigger>
 						<Popover.Content class="absolute z-10">
-							Place content for the popover here.
+							<Button variant="outline" size="icon">
+								Ok
+							</Button>
+							<Button variant="outline">
+								Abbrechen
+							</Button>
 						</Popover.Content>
 					</Popover.Root>
 				</div>
