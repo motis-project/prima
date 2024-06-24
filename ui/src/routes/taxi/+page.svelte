@@ -14,6 +14,7 @@
 
 	import { Date as ReactiveDate, Map } from 'svelte/reactivity';
 	import { Button } from '$lib/components/ui/button';
+	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 	import * as Card from '$lib/components/ui/card';
 	import { Plus, ChevronRight, ChevronLeft } from 'lucide-svelte';
 
@@ -22,6 +23,7 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { TZ } from '$lib/constants.js';
 	import { updateTour } from '$lib/api.js';
+	import Label from '$lib/components/ui/label/label.svelte';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
@@ -360,12 +362,39 @@
 							</Button>
 						</Popover.Trigger>
 						<Popover.Content class="absolute z-10">
-							<Button variant="outline" size="icon">
-								Ok
-							</Button>
-							<Button variant="outline">
-								Abbrechen
-							</Button>
+							<div class="grid gap-4">
+								<div class="space-y-2">
+								  <h4 class="font-medium leading-none">Fahrzeug</h4>
+								</div>
+								<div class="grid gap-2">
+									<div class="flex items-center space-x-2">
+										<Checkbox id="fahrrad" aria-labelledby="fahrrad-label" />
+										<Label
+										  id="fahrrad-label"
+										  for="fahrrad"
+										  class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+										  	Fahrradmitnahme
+										</Label>
+									</div>
+									<div class="flex items-center space-x-2">
+										<Checkbox id="rollstuhl" aria-labelledby="rollstuhl-label" />
+										<Label
+										  id="rollstuhl-label"
+										  for="rollstuhl"
+										  class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+										  	Für Rollstuhlfahrer geeignet
+										</Label>
+									</div>
+								  	<div class="grid grid-cols-2 items-center gap-4">
+										<Button variant="outline" size="icon">
+											Ok
+										</Button>
+										<Button variant="outline">
+											Abbrechen
+										</Button>
+									</div>
+								</div>
+							  </div>
 						</Popover.Content>
 					</Popover.Root>
 				</div>
