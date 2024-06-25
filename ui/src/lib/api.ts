@@ -20,3 +20,27 @@ export const updateTour = async (tour_id: number, vehicle_id: number): Promise<R
 	});
 	return await response.json();
 };
+
+export const removeAvailability = async (vehicle_id: number, from: Date, to: Date) => {
+	const response = await fetch('/api/availability/', {
+		method: 'DELETE',
+		body: JSON.stringify({
+			vehicle_id,
+			from,
+			to
+		})
+	});
+	return await response.json();
+};
+
+export const addAvailability = async (vehicle_id: number, from: Date, to: Date) => {
+	const response = await fetch('/api/availability/', {
+		method: 'POST',
+		body: JSON.stringify({
+			vehicle_id,
+			from,
+			to
+		})
+	});
+	return await response.json();
+};
