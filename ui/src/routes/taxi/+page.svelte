@@ -24,8 +24,8 @@
 	import Moon from 'lucide-svelte/icons/moon';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { TZ } from '$lib/constants.js';
-	import { updateTour } from '$lib/api.js';
 	import Label from '$lib/components/ui/label/label.svelte';
+	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
@@ -176,19 +176,43 @@
 		}
 	};
 
-	const selectionFinish = () => {
+	const selectionFinish = async () => {
 		if (selection !== null) {
-			console.log(selection.available, getSelection());
 			const selectedRange = {
 				from: new Date(Math.min(selection.start.from.getTime(), selection.end.from.getTime())),
 				to: new Date(Math.max(selection.start.to.getTime(), selection.end.to.getTime()))
 			};
-			if (selection.available) {
-				selection.vehicle.availability.push(selectedRange);
+			const vehicle = selection.vehicle;
+			const vehicle_id = selection.id;
+			const available = selection.available;
+			if (available) {
+				vehicle.availability.push(selectedRange);
 			} else {
-				//TODO
+				const to_remove = Array<Range>();
+				vehicle.availability.forEach((a) => {
+					if (selectedRange.from <= a.from && selectedRange.to >= a.to) {
+						to_remove.push(a);
+					} else if (selectedRange.from > a.from && selectedRange.to < a.to) {
+						to_remove.push(a);
+						vehicle.availability.push({ from: a.from, to: selectedRange.from });
+						vehicle.availability.push({ from: selectedRange.to, to: a.to });
+					} else if (selectedRange.from <= a.from && selectedRange.to >= a.from) {
+						a.from = selectedRange.to;
+					} else if (selectedRange.to >= a.to && selectedRange.from <= a.to) {
+						a.to = selectedRange.from;
+					}
+				});
+				to_remove.forEach((r) => {
+					vehicle.availability.splice(vehicle.availability.indexOf(r), 1);
+				});
 			}
 			selection = null;
+			if (available) {
+				await addAvailability(vehicle_id, selectedRange.from, selectedRange.to);
+			} else {
+				await removeAvailability(vehicle_id, selectedRange.from, selectedRange.to);
+			}
+			invalidateAll();
 		}
 	};
 
