@@ -3,7 +3,7 @@
 </script>
 
 <Sonner
-	theme={globalThis.$mode}
+	theme={'light'}
 	class="toaster group"
 	toastOptions={{
 		classes: {
