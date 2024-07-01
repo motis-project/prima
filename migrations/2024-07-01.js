@@ -1,4 +1,3 @@
-import { sql } from 'kysely';
 export async function up(db) {
     await db.schema
         .createTable('zone')
