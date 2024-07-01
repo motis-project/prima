@@ -14,6 +14,9 @@
 
 	import { Date as ReactiveDate, Map } from 'svelte/reactivity';
 	import { Button } from '$lib/components/ui/button';
+	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
+	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
 	import * as Card from '$lib/components/ui/card';
 	import { Plus, ChevronRight, ChevronLeft } from 'lucide-svelte';
 
@@ -21,6 +24,7 @@
 	import Moon from 'lucide-svelte/icons/moon';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { TZ } from '$lib/constants.js';
+	import Label from '$lib/components/ui/label/label.svelte';
 	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
@@ -384,7 +388,58 @@
 							</Button>
 						</Popover.Trigger>
 						<Popover.Content class="absolute z-10">
-							Place content for the popover here.
+							<div class="grid gap-4">
+								<div class="space-y-2">
+									<h2 class="font-medium leading-none">Fahrzeug:</h2>
+								</div>
+								<div class="grid w-full max-w-sm items-center gap-1.5">
+									<Label for="nummernschild">Nummernschild des Fahrzeugs:</Label>
+									<Input type="nummernschild" id="nummernschild" placeholder="DA-AB-1234" />
+								</div>
+								<div>
+									<h6>Maximale Passagieranzahl:</h6>
+									<RadioGroup.Root value="three">
+										<div class="flex items-center space-x-2">
+											<RadioGroup.Item value="three" id="r1" />
+											<Label for="r1">3 Passagiere</Label>
+										</div>
+										<div class="flex items-center space-x-2">
+											<RadioGroup.Item value="five" id="r2" />
+											<Label for="r2">5 Passagiere</Label>
+										</div>
+										<div class="flex items-center space-x-2">
+											<RadioGroup.Item value="seven" id="r3" />
+											<Label for="r3">7 Passagiere</Label>
+										</div>
+										<RadioGroup.Input name="spacing" />
+									</RadioGroup.Root>
+								</div>
+								<div class="grid gap-2">
+									<div class="flex items-center space-x-2">
+										<Checkbox id="fahrrad" aria-labelledby="fahrrad-label" />
+										<Label
+											id="fahrrad-label"
+											for="fahrrad"
+											class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+										>
+											Fahrradmitnahme
+										</Label>
+									</div>
+									<div class="flex items-center space-x-2">
+										<Checkbox id="rollstuhl" aria-labelledby="rollstuhl-label" />
+										<Label
+											id="rollstuhl-label"
+											for="rollstuhl"
+											class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+										>
+											Für Rollstuhlfahrer geeignet
+										</Label>
+									</div>
+									<div class="grid grid-cols-1 items-center gap-4">
+										<Button variant="outline">Fahrzeug hinzufügen</Button>
+									</div>
+								</div>
+							</div>
 						</Popover.Content>
 					</Popover.Root>
 				</div>
