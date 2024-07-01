@@ -18,7 +18,7 @@ export const updateTour = async (tour_id: number, vehicle_id: number): Promise<R
 			vehicle_id
 		})
 	});
-	return await response.json();
+	return response;
 };
 
 export const removeAvailability = async (vehicle_id: number, from: Date, to: Date) => {
@@ -30,7 +30,7 @@ export const removeAvailability = async (vehicle_id: number, from: Date, to: Dat
 			to
 		})
 	});
-	return await response.json();
+	return response;
 };
 
 export const addAvailability = async (vehicle_id: number, from: Date, to: Date) => {
@@ -42,5 +42,5 @@ export const addAvailability = async (vehicle_id: number, from: Date, to: Date) 
 			to
 		})
 	});
-	return await response.json();
+	return response;
 };
