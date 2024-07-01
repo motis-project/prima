@@ -411,9 +411,8 @@
 											Für Rollstuhlfahrer geeignet
 										</Label>
 									</div>
-									<div class="grid grid-cols-2 items-center gap-4">
-										<Button variant="outline">Ok</Button>
-										<Button variant="outline">Abbrechen</Button>
+									<div class="grid grid-cols-1 items-center gap-4">
+										<Button variant="outline">Fahrzeug hinzufügen</Button>
 									</div>
 								</div>
 							</div>
