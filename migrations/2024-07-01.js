@@ -2,6 +2,8 @@ export async function up(db) {
     await db.schema
         .createTable('zone')
         .addColumn('id', 'serial', (col) => col.primaryKey())
+        .addColumn('area', 'varchar', (col) => col.notNull())
+        .addColumn('name', 'varchar', (col) => col.notNull())
         .execute();
 
     await db.schema
