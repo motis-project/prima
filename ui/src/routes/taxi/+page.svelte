@@ -209,10 +209,15 @@
 			}
 			selection = null;
 			let response;
-			if (available) {
-				response = await addAvailability(vehicle_id, selectedRange.from, selectedRange.to);
-			} else {
-				response = await removeAvailability(vehicle_id, selectedRange.from, selectedRange.to);
+			try {
+				if (available) {
+					response = await addAvailability(vehicle_id, selectedRange.from, selectedRange.to);
+				} else {
+					response = await removeAvailability(vehicle_id, selectedRange.from, selectedRange.to);
+				}
+			} catch {
+				toast('Der Server konnte nicht erreicht werden.');
+				return;
 			}
 			if (!response || !response.ok) {
 				toast('Verfügbarkeits Update nicht erfolgreich.');
@@ -260,9 +265,15 @@
 			draggedTours.tours.forEach(async (t) => {
 				t.vehicle_id = draggedTours!.vehicle_id;
 			});
-			const responses = await Promise.all(
-				draggedTours.tours.map((t) => updateTour(t.id, t.vehicle_id))
-			);
+			let responses;
+			try {
+				responses = await Promise.all(
+					draggedTours.tours.map((t) => updateTour(t.id, t.vehicle_id))
+				);
+			} catch {
+				toast('Der Server konnte nicht erreicht werden.');
+				return;
+			}
 			if (responses.some((r) => !r.ok)) {
 				toast('Tour Update nicht erfolgreich.');
 			}
