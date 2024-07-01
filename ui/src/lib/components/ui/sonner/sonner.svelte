@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { Toaster as Sonner } from "svelte-sonner";
-	import { mode } from "mode-watcher";
 </script>
 
 <Sonner
-	theme={$mode}
+	theme={globalThis.$mode}
 	class="toaster group"
 	toastOptions={{
 		classes: {
