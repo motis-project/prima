@@ -2,11 +2,13 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/database';
 import { sql } from 'kysely';
 import type { NewAvailability, Availability } from '$lib/types.js';
+import { Interval } from '$lib/interval.js';
 
 export const DELETE = async ({ request }) => {
 	const { vehicle_id, from, to } = await request.json();
 	const start = new Date(from);
 	const end = new Date(to);
+	const availability_to_remove = new Interval(start, end);
 	await db.transaction().execute(async (trx) => {
 		sql`LOCK TABLE availability IN ACCESS EXCLUSIVE MODE;`.execute(trx);
 		const overlapping = await trx
@@ -24,16 +26,22 @@ export const DELETE = async ({ request }) => {
 		const cut = Array<Availability>();
 		const create = Array<NewAvailability>();
 		overlapping.forEach((a) => {
-			if (a.start_time >= start && a.end_time <= end) {
+			const existing_availability = new Interval(a.start_time, a.end_time);
+			if (availability_to_remove.contains(existing_availability)) {
 				remove.push(a.id);
-			} else if (a.start_time >= start) {
-				cut.push({ id: a.id, start_time: end, end_time: a.end_time, vehicle: vehicle_id });
-			} else if (a.end_time <= end) {
-				cut.push({ id: a.id, start_time: a.start_time, end_time: start, vehicle: vehicle_id });
-			} else if (a.start_time < start && a.end_time > end) {
+			} else if (
+				existing_availability.contains(availability_to_remove) &&
+				existing_availability.start_time.getTime() != availability_to_remove.start_time.getTime() &&
+				existing_availability.end_time.getTime() != availability_to_remove.end_time.getTime()
+			) {
 				remove.push(a.id);
-				create.push({ start_time: a.start_time, end_time: start, vehicle: vehicle_id });
-				create.push({ start_time: end, end_time: a.end_time, vehicle: vehicle_id });
+				const split_result = existing_availability.split(availability_to_remove);
+				create.push(split_result[0].to_new_availability(a.vehicle));
+				create.push(split_result[1].to_new_availability(a.vehicle));
+			} else {
+				cut.push(
+					existing_availability.cut(availability_to_remove).to_availability(a.id, a.vehicle)
+				);
 			}
 		});
 		const promises = [];
@@ -64,8 +72,9 @@ export const DELETE = async ({ request }) => {
 
 export const POST = async ({ request }) => {
 	const { vehicle_id, from, to } = await request.json();
-	let start = new Date(from);
-	let end = new Date(to);
+	const start = new Date(from);
+	const end = new Date(to);
+	let availability_to_add = new Interval(start, end);
 	await db.transaction().execute(async (trx) => {
 		sql`LOCK TABLE availability IN ACCESS EXCLUSIVE MODE;`.execute(trx);
 		const overlapping = await trx
@@ -82,16 +91,14 @@ export const POST = async ({ request }) => {
 		const remove = Array<number>();
 		let contained = false;
 		overlapping.forEach((a) => {
-			if (a.start_time >= start && a.end_time <= end) {
+			const existing_availability = new Interval(a.start_time, a.end_time);
+			if (availability_to_add.contains(existing_availability)) {
 				remove.push(a.id);
-			} else if (a.start_time <= start) {
-				remove.push(a.id);
-				start = a.start_time;
-			} else if (a.end_time >= end) {
-				remove.push(a.id);
-				end = a.end_time;
-			} else if (a.start_time < start && a.end_time > end) {
+			} else if (existing_availability.contains(availability_to_add)) {
 				contained = true;
+			} else {
+				remove.push(a.id);
+				availability_to_add = availability_to_add.merge(existing_availability);
 			}
 		});
 		const promises = [];
@@ -99,7 +106,11 @@ export const POST = async ({ request }) => {
 			promises.push(
 				trx
 					.insertInto('availability')
-					.values({ start_time: start, end_time: end, vehicle: vehicle_id })
+					.values({
+						start_time: availability_to_add.start_time,
+						end_time: availability_to_add.end_time,
+						vehicle: vehicle_id
+					})
 					.execute()
 			);
 		}
