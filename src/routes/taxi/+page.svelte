@@ -28,6 +28,8 @@
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
 
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
 	class Range {
@@ -108,6 +110,14 @@
 		copy.setHours(today_day.getHours() + 8);
 		return copy;
 	});
+
+	const onMouseDown = (id: number, vehicle: Vehicle, cell: Range) => {
+		if (!hasTour(id, cell)) {
+			selectionStart(id, vehicle, cell);
+		} else {
+			console.log('This is a Tour!', getTours(id, cell)[0].id);
+		}
+	};
 
 	const overlaps = (a: Range, b: Range) => a.from < b.to && a.to > b.from;
 
@@ -345,19 +355,50 @@
 												ondragstart={() => dragStart(id, cell)}
 												ondragover={() => dragOver(id)}
 												ondragend={() => onDrop()}
-												onmousedown={() => !hasTour(id, cell) && selectionStart(id, v, cell)}
+												onmousedown={() => onMouseDown(id, v, cell)}
 												onmouseover={() => selectionContinue(cell)}
 												onfocus={() => {}}
 											>
-												<div
-													class={[
-														'w-8',
-														'h-8',
-														'border',
-														'rounded-md',
-														cellColor(id, v, cell)
-													].join(' ')}
-												></div>
+												{#if hasTour(id, cell)}
+													<DropdownMenu.Root>
+														<DropdownMenu.Trigger>
+															<div
+																class={[
+																	'w-8',
+																	'h-8',
+																	'border',
+																	'rounded-md',
+																	cellColor(id, v, cell)
+																].join(' ')}
+															></div>
+														</DropdownMenu.Trigger>
+														<DropdownMenu.Content>
+															<DropdownMenu.Group>
+																<DropdownMenu.Label>Touren</DropdownMenu.Label>
+																<DropdownMenu.Separator />
+																{#each getTours(id, cell) as tour}
+																	<DropdownMenu.Item
+																		on:click={() =>
+																			window.open(
+																				'http://localhost:5173/api/tour?id=' + tour.id,
+																				'_blank'
+																			)}>{tour.id}</DropdownMenu.Item
+																	>
+																{/each}
+															</DropdownMenu.Group>
+														</DropdownMenu.Content>
+													</DropdownMenu.Root>
+												{:else}
+													<div
+														class={[
+															'w-8',
+															'h-8',
+															'border',
+															'rounded-md',
+															cellColor(id, v, cell)
+														].join(' ')}
+													></div>
+												{/if}
 											</td>
 										{/each}
 									</tr>
