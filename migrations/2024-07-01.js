@@ -53,4 +53,7 @@ export async function up(db) {
 export async function down(db) {
     await db.schema.dropTable('zone').execute();
     await db.schema.dropTable('company').execute();
+    await db.schema.dropTable('vehicle').execute();
+    await db.schema.dropTable('availability').execute();
+    await db.schema.dropTable('tour').execute();
 }
