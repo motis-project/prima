@@ -2,12 +2,6 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/database';
 import { sql } from 'kysely';
 
-export async function GET({ url }) {
-	const id = Number(url.searchParams.get('id')!);
-	const companies = await db.selectFrom('tour').where('id', '=', id).selectAll().execute();
-	return json(companies[0]);
-}
-
 export const POST = async ({ request }) => {
 	const { tour_id, vehicle_id } = await request.json();
 	await db.transaction().execute(async (trx) => {

@@ -30,7 +30,6 @@
 
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import * as Collapsible from '$lib/components/ui/collapsible/index.js';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
