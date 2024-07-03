@@ -28,7 +28,9 @@
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
 
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Table from '$lib/components/ui/table/index.js';
+	import * as Collapsible from '$lib/components/ui/collapsible/index.js';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
@@ -110,14 +112,6 @@
 		copy.setHours(today_day.getHours() + 8);
 		return copy;
 	});
-
-	const onMouseDown = (id: number, vehicle: Vehicle, cell: Range) => {
-		if (!hasTour(id, cell)) {
-			selectionStart(id, vehicle, cell);
-		} else {
-			console.log('This is a Tour!', getTours(id, cell)[0].id);
-		}
-	};
 
 	const overlaps = (a: Range, b: Range) => a.from < b.to && a.to > b.from;
 
@@ -355,39 +349,55 @@
 												ondragstart={() => dragStart(id, cell)}
 												ondragover={() => dragOver(id)}
 												ondragend={() => onDrop()}
-												onmousedown={() => onMouseDown(id, v, cell)}
+												onmousedown={() => !hasTour(id, cell) && selectionStart(id, v, cell)}
 												onmouseover={() => selectionContinue(cell)}
 												onfocus={() => {}}
 											>
 												{#if hasTour(id, cell)}
-													<DropdownMenu.Root>
-														<DropdownMenu.Trigger>
-															<div
+													<Dialog.Root>
+														<Dialog.Trigger>
+															<Button
 																class={[
 																	'w-8',
 																	'h-8',
 																	'border',
 																	'rounded-md',
+																	'hover:bg-orange-400',
 																	cellColor(id, v, cell)
 																].join(' ')}
-															></div>
-														</DropdownMenu.Trigger>
-														<DropdownMenu.Content>
-															<DropdownMenu.Group>
-																<DropdownMenu.Label>Touren</DropdownMenu.Label>
-																<DropdownMenu.Separator />
-																{#each getTours(id, cell) as tour}
-																	<DropdownMenu.Item
-																		on:click={() =>
-																			window.open(
-																				'http://localhost:5173/api/tour?id=' + tour.id,
-																				'_blank'
-																			)}>{tour.id}</DropdownMenu.Item
-																	>
-																{/each}
-															</DropdownMenu.Group>
-														</DropdownMenu.Content>
-													</DropdownMenu.Root>
+															></Button>
+														</Dialog.Trigger>
+														<Dialog.Content>
+															<Dialog.Header>
+																<Dialog.Title>Touren</Dialog.Title>
+																<Dialog.Description>
+																	<Table.Root>
+																		<Table.Caption>Liste der Touren in diesem Slot</Table.Caption>
+																		<Table.Header>
+																			<Table.Row>
+																				<Table.Head class="w-[100px]">Tour ID</Table.Head>
+																				<Table.Head class="w-[100px]">Start</Table.Head>
+																				<Table.Head class="w-[100px]">Ende</Table.Head>
+																				<Table.Head class="text-right">Fahrzeug</Table.Head>
+																			</Table.Row>
+																		</Table.Header>
+																		<Table.Body>
+																			{#each getTours(id, cell) as tour}
+																				<Table.Row>
+																					<Table.Cell class="font-medium">{tour.id}</Table.Cell>
+																					<Table.Cell>{tour.from.toLocaleString()}</Table.Cell>
+																					<Table.Cell>{tour.to.toLocaleString()}</Table.Cell>
+																					<Table.Cell class="text-right"
+																						>{tour.vehicle_id}</Table.Cell
+																					>
+																				</Table.Row>
+																			{/each}
+																		</Table.Body>
+																	</Table.Root>
+																</Dialog.Description>
+															</Dialog.Header>
+														</Dialog.Content>
+													</Dialog.Root>
 												{:else}
 													<div
 														class={[
