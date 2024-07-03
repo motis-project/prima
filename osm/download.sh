@@ -1,0 +1,1 @@
+wget https://download.geofabrik.de/europe/germany/sachsen-latest.osm.pbf -O osm.pbf
