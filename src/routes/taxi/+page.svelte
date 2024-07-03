@@ -28,6 +28,9 @@
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
 
+	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Table from '$lib/components/ui/table/index.js';
+
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
 	class Range {
@@ -349,15 +352,62 @@
 												onmouseover={() => selectionContinue(cell)}
 												onfocus={() => {}}
 											>
-												<div
-													class={[
-														'w-8',
-														'h-8',
-														'border',
-														'rounded-md',
-														cellColor(id, v, cell)
-													].join(' ')}
-												></div>
+												{#if hasTour(id, cell)}
+													<Dialog.Root>
+														<Dialog.Trigger>
+															<Button
+																class={[
+																	'w-8',
+																	'h-8',
+																	'border',
+																	'rounded-md',
+																	'hover:bg-orange-400',
+																	cellColor(id, v, cell)
+																].join(' ')}
+															></Button>
+														</Dialog.Trigger>
+														<Dialog.Content>
+															<Dialog.Header>
+																<Dialog.Title>Touren</Dialog.Title>
+																<Dialog.Description>
+																	<Table.Root>
+																		<Table.Caption>Liste der Touren in diesem Slot</Table.Caption>
+																		<Table.Header>
+																			<Table.Row>
+																				<Table.Head class="w-[100px]">Tour ID</Table.Head>
+																				<Table.Head class="w-[100px]">Start</Table.Head>
+																				<Table.Head class="w-[100px]">Ende</Table.Head>
+																				<Table.Head class="text-right">Fahrzeug</Table.Head>
+																			</Table.Row>
+																		</Table.Header>
+																		<Table.Body>
+																			{#each getTours(id, cell) as tour}
+																				<Table.Row>
+																					<Table.Cell class="font-medium">{tour.id}</Table.Cell>
+																					<Table.Cell>{tour.from.toLocaleString()}</Table.Cell>
+																					<Table.Cell>{tour.to.toLocaleString()}</Table.Cell>
+																					<Table.Cell class="text-right"
+																						>{tour.vehicle_id}</Table.Cell
+																					>
+																				</Table.Row>
+																			{/each}
+																		</Table.Body>
+																	</Table.Root>
+																</Dialog.Description>
+															</Dialog.Header>
+														</Dialog.Content>
+													</Dialog.Root>
+												{:else}
+													<div
+														class={[
+															'w-8',
+															'h-8',
+															'border',
+															'rounded-md',
+															cellColor(id, v, cell)
+														].join(' ')}
+													></div>
+												{/if}
 											</td>
 										{/each}
 									</tr>

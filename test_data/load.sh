@@ -10,6 +10,7 @@ if [ $# -eq 0 ]
 fi
 
 
+
 PGPASSWORD=pw psql postgresql://localhost:6500/prima --user postgres < $BASEDIR/$SCENARIO/clear.sql
 PGPASSWORD=pw psql postgresql://localhost:6500/prima --user postgres < $BASEDIR/$SCENARIO/zone.sql
 PGPASSWORD=pw psql postgresql://localhost:6500/prima --user postgres < $BASEDIR/$SCENARIO/company.sql
