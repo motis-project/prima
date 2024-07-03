@@ -86,8 +86,8 @@ export const POST = async ({ request }) => {
 	await db
 		.insertInto('availability')
 		.values({
-			start_time: from,
-			end_time: to,
+			start_time: new Date(from),
+			end_time: new Date(to),
 			vehicle: vehicle_id
 		})
 		.execute();
