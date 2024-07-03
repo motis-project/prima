@@ -33,20 +33,10 @@ export class Interval {
 		);
 	}
 
-	to_availability(id: number, vehicle: number) {
-		return {
-			start_time: this.start_time,
-			end_time: this.end_time,
-			vehicle: vehicle,
-			id: id
-		};
-	}
-
-	to_new_availability(vehicle: number) {
-		return {
-			start_time: this.start_time,
-			end_time: this.end_time,
-			vehicle: vehicle
-		};
+	equals(other: Interval) {
+		return (
+			this.start_time.getTime() == other.start_time.getTime() &&
+			this.end_time.getTime() == other.end_time.getTime()
+		);
 	}
 }
