@@ -74,6 +74,8 @@
 	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
 	let tours = $state<Array<Tour>>(loadTours());
 
+	let selected_tours = $state<Array<Tour>>([]);
+
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
 	let day = $derived(new ReactiveDate(value));
 
@@ -165,6 +167,9 @@
 	};
 
 	const selectionStart = (id: number, vehicle: Vehicle, cell: Range) => {
+		if (hasTour(id, cell)) {
+			// selected_tours = getTours(id, cell);
+		}
 		selection = {
 			id,
 			vehicle,
@@ -348,7 +353,7 @@
 												ondragstart={() => dragStart(id, cell)}
 												ondragover={() => dragOver(id)}
 												ondragend={() => onDrop()}
-												onmousedown={() => !hasTour(id, cell) && selectionStart(id, v, cell)}
+												onmousedown={() => selectionStart(id, v, cell)}
 												onmouseover={() => selectionContinue(cell)}
 												onfocus={() => {}}
 											>
@@ -534,6 +539,17 @@
 		</Card.Content>
 	</Card.Root>
 </div>
+
+<Dialog.Root open={selected_tours}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+			<Dialog.Description>
+				{selected_tours}
+			</Dialog.Description>
+		</Dialog.Header>
+	</Dialog.Content>
+</Dialog.Root>
 
 <style>
 </style>
