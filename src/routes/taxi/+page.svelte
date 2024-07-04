@@ -533,10 +533,9 @@
 >
 	<Dialog.Content>
 		<Dialog.Header>
-			<Dialog.Title>Touren</Dialog.Title>
+			<Dialog.Title>Tour Details</Dialog.Title>
 			<Dialog.Description>
 				<Table.Root>
-					<Table.Caption>Liste der Touren in diesem Slot</Table.Caption>
 					<Table.Header>
 						<Table.Row>
 							<Table.Head class="w-[100px]">Tour ID</Table.Head>
