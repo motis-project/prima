@@ -4,7 +4,7 @@ import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import { formSchema } from './schema.js';
 import { db } from '$lib/database';
-import { geoMotis } from '$lib/api.js';
+import { geoCode } from '$lib/api.js';
 import type { Company } from '$lib/types.js';
 
 const company_id: number | undefined = undefined;
@@ -52,7 +52,7 @@ export const actions: Actions = {
 		const community = form.data.community;
 		const email = form.data.email;
 		const address = form.data.address;
-		const addressJson = await geoMotis(address);
+		const addressJson = await geoCode(address);
 		if (addressJson.length == 0) {
 			return fail(400, {
 				form
@@ -75,24 +75,24 @@ export const actions: Actions = {
 			db.insertInto('company')
 				.values({
 					display_name: name,
-					email: email,
+					email,
 					zone: zone_id!.id,
 					community_area: community_id!.id,
-					address: address,
-					latitude: latitude,
-					longitude: longitude
+					address,
+					latitude,
+					longitude
 				})
 				.execute();
 		} else {
 			db.updateTable('company')
 				.set({
 					display_name: name,
-					email: email,
+					email,
 					zone: zone_id!.id,
 					community_area: community_id!.id,
-					address: address,
-					latitude: latitude,
-					longitude: longitude
+					address,
+					latitude,
+					longitude
 				})
 				.where('id', '=', company_id)
 				.execute();
