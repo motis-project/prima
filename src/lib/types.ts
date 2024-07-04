@@ -12,6 +12,7 @@ export interface ZoneTable {
 	id: Generated<number>;
 	area: string;
 	name: string;
+	is_community: boolean;
 }
 
 export type Zone = Selectable<ZoneTable>;
@@ -24,7 +25,9 @@ export interface CompanyTable {
 	longitude: number;
 	display_name: string;
 	email: string;
+	address: string;
 	zone: number;
+	community_area: number;
 }
 
 export type Company = Selectable<CompanyTable>;

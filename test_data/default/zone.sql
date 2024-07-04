@@ -1,4 +1,4 @@
-INSERT INTO "zone" ("id", "area", "name") VALUES
+INSERT INTO "zone" ("id", "area", "name", "is_community") VALUES
 (1,	'{
   "type": "MultiPolygon",
   "coordinates": [
@@ -31,7 +31,7 @@ INSERT INTO "zone" ("id", "area", "name") VALUES
       ]
     ]
   ]
-}',	'Bautzen Ost'),
+}',	'Bautzen Ost', false),
 (2,	'{
   "type": "MultiPolygon",
   "coordinates": [
@@ -64,7 +64,7 @@ INSERT INTO "zone" ("id", "area", "name") VALUES
       ]
     ]
   ]
-}',	'Bautzen West'),
+}',	'Bautzen West', false),
 (3,	'{
   "type": "MultiPolygon",
   "coordinates": [
@@ -147,4 +147,97 @@ INSERT INTO "zone" ("id", "area", "name") VALUES
       ]
     ]
   ]
-}',	'Görlitz');
+}',	'Görlitz', false),
+(4, '{
+      "type": "Feature",
+      "properties": {},
+      "geometry": {
+        "coordinates": [
+          [
+            [
+              14.063040408891766,
+              51.2970693414062
+            ],
+            [
+              14.063040408891766,
+              51.2423930859116
+            ],
+            [
+              14.161727865964139,
+              51.2423930859116
+            ],
+            [
+              14.161727865964139,
+              51.2970693414062
+            ],
+            [
+              14.063040408891766,
+              51.2970693414062
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      }
+    }', 'Gemeinde Kamenz', true),
+    (5, '{
+      "type": "Feature",
+      "properties": {},
+      "geometry": {
+        "coordinates": [
+          [
+            [
+              14.41852686946035,
+              51.19483483705511
+            ],
+            [
+              14.41852686946035,
+              51.17045301966786
+            ],
+            [
+              14.459606654050276,
+              51.17045301966786
+            ],
+            [
+              14.459606654050276,
+              51.19483483705511
+            ],
+            [
+              14.41852686946035,
+              51.19483483705511
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      }
+    }', 'Gemeinde Bautzen', true),
+    (6, '{
+      "type": "Feature",
+      "properties": {},
+      "geometry": {
+        "coordinates": [
+          [
+            [
+              14.814172299400838,
+              51.300042201681975
+            ],
+            [
+              14.814172299400838,
+              51.284799140576126
+            ],
+            [
+              14.852287952853885,
+              51.284799140576126
+            ],
+            [
+              14.852287952853885,
+              51.300042201681975
+            ],
+            [
+              14.814172299400838,
+              51.300042201681975
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      }
+    }', 'Gemeinde Niesky', true);

@@ -4,6 +4,7 @@ export async function up(db) {
         .addColumn('id', 'serial', (col) => col.primaryKey())
         .addColumn('area', 'varchar', (col) => col.notNull())
         .addColumn('name', 'varchar', (col) => col.notNull())
+        .addColumn('is_community', 'boolean', (col) => col.notNull())
         .execute();
 
     await db.schema
@@ -13,7 +14,11 @@ export async function up(db) {
         .addColumn('longitude', 'real', (col) => col.notNull())
         .addColumn('display_name', 'varchar', (col) => col.notNull())
         .addColumn('email', 'varchar', (col) => col.notNull().unique())
+        .addColumn('address', 'varchar', (col) => col.notNull())
         .addColumn('zone', 'integer', (col) =>
+            col.references('zone.id').onDelete('cascade').notNull(),
+        )
+        .addColumn('community_area', 'integer', (col) =>
             col.references('zone.id').onDelete('cascade').notNull(),
         )
         .execute();
