@@ -545,12 +545,14 @@
 						</Table.Row>
 					</Table.Header>
 					<Table.Body>
-						<Table.Row>
-							<Table.Cell class="font-medium">{selected_tour.id}</Table.Cell>
-							<Table.Cell>{selected_tour.from.toLocaleString()}</Table.Cell>
-							<Table.Cell>{selected_tour.to.toLocaleString()}</Table.Cell>
-							<Table.Cell class="text-right">{selected_tour.vehicle_id}</Table.Cell>
-						</Table.Row>
+						{#if selected_tour != null}
+							<Table.Row>
+								<Table.Cell class="font-medium">{selected_tour.id}</Table.Cell>
+								<Table.Cell>{selected_tour.from.toLocaleString()}</Table.Cell>
+								<Table.Cell>{selected_tour.to.toLocaleString()}</Table.Cell>
+								<Table.Cell class="text-right">{selected_tour.vehicle_id}</Table.Cell>
+							</Table.Row>
+						{/if}
 					</Table.Body>
 				</Table.Root>
 			</Dialog.Description>
