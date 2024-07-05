@@ -32,7 +32,7 @@ export interface CompanyTable {
 	latitude: number;
 	longitude: number;
 	name: string;
-	address: string,
+	address: string;
 	zone: number;
 	community_area: number;
 }
