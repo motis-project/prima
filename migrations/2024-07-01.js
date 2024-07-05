@@ -12,7 +12,6 @@ export async function up(db) {
         .addColumn('latitude', 'real', (col) => col.notNull())
         .addColumn('longitude', 'real', (col) => col.notNull())
         .addColumn('display_name', 'varchar', (col) => col.notNull())
-        .addColumn('email', 'varchar', (col) => col.notNull().unique())
         .addColumn('zone', 'integer', (col) =>
             col.references('zone.id').onDelete('cascade').notNull(),
         )
@@ -49,11 +48,30 @@ export async function up(db) {
             col.references('vehicle.id').onDelete('cascade').notNull(),
         )
         .execute();
+
+    await db.schema
+        .createTable('auth_user')
+        .addColumn('id', 'varchar', (col) => col.primaryKey())
+        .addColumn('email', 'varchar', (col) => col.unique())
+        .addColumn('password_hash', 'varchar')
+        .execute();
+
+    await db.schema
+        .createTable('user_session')
+        .addColumn('id', 'varchar', (col) => col.primaryKey())
+        .addColumn('expires_at', 'timestamp', (col) => col.notNull())
+        .addColumn('user_id', 'varchar', (col) =>
+            col.references('auth_user.id').onDelete('cascade').notNull(),
+        )
+        .execute();
 }
+
 export async function down(db) {
     await db.schema.dropTable('zone').execute();
     await db.schema.dropTable('company').execute();
     await db.schema.dropTable('vehicle').execute();
     await db.schema.dropTable('availability').execute();
     await db.schema.dropTable('tour').execute();
+    await db.schema.dropTable('auth_user').execute();
+    await db.schema.dropTable('user_session').execute();
 }
