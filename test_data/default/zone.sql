@@ -1,5 +1,5 @@
-INSERT INTO "zone" ("id", "area", "name") VALUES
-(1,	'{
+INSERT INTO "zone" ("area", "name") VALUES
+('{
   "type": "MultiPolygon",
   "coordinates": [
     [
@@ -32,7 +32,7 @@ INSERT INTO "zone" ("id", "area", "name") VALUES
     ]
   ]
 }',	'Bautzen Ost'),
-(2,	'{
+('{
   "type": "MultiPolygon",
   "coordinates": [
     [
@@ -65,7 +65,7 @@ INSERT INTO "zone" ("id", "area", "name") VALUES
     ]
   ]
 }',	'Bautzen West'),
-(3,	'{
+('{
   "type": "MultiPolygon",
   "coordinates": [
     [
