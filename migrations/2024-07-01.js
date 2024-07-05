@@ -4,6 +4,7 @@ export async function up(db) {
         .addColumn('id', 'serial', (col) => col.primaryKey())
         .addColumn('area', 'varchar', (col) => col.notNull())
         .addColumn('name', 'varchar', (col) => col.notNull())
+        .addColumn('is_community', 'boolean', (col) => col.notNull())
         .execute();
 
     await db.schema
@@ -11,8 +12,12 @@ export async function up(db) {
         .addColumn('id', 'serial', (col) => col.primaryKey())
         .addColumn('latitude', 'real', (col) => col.notNull())
         .addColumn('longitude', 'real', (col) => col.notNull())
-        .addColumn('display_name', 'varchar', (col) => col.notNull())
+        .addColumn('name', 'varchar', (col) => col.notNull())
+        .addColumn('address', 'varchar', (col) => col.notNull())
         .addColumn('zone', 'integer', (col) =>
+            col.references('zone.id').onDelete('cascade').notNull(),
+        )
+        .addColumn('community_area', 'integer', (col) =>
             col.references('zone.id').onDelete('cascade').notNull(),
         )
         .execute();
@@ -26,6 +31,7 @@ export async function up(db) {
         )
         .addColumn('seats', 'integer', (col) => col.notNull())
         .addColumn('wheelchair_capacity', 'integer', (col) => col.notNull())
+        .addColumn('bike_capacity', 'integer', (col) => col.notNull())
         .addColumn('storage_space', 'integer', (col) => col.notNull())
         .execute();
 

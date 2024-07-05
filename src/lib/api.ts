@@ -44,3 +44,25 @@ export const addAvailability = async (vehicle_id: number, from: Date, to: Date) 
 	});
 	return response;
 };
+
+export async function geoCode(address: string) {
+	const response = await fetch('https://europe.motis-project.de/?elm=AddressSuggestions', {
+		credentials: 'omit',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		referrer: 'https://europe.motis-project.de/',
+		body: JSON.stringify({
+			destination: { type: 'Module', target: '/address' },
+			content_type: 'AddressRequest',
+			content: { input: address }
+		}),
+		method: 'POST',
+		mode: 'cors'
+	}).then((res) => res.json());
+	const guesses = response.content.guesses;
+	if (guesses.length == 0) {
+		throw new Error('There were no address guesses.');
+	}
+	return guesses[0];
+}
