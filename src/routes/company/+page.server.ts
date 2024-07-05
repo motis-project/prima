@@ -23,8 +23,8 @@ export const load: PageServerLoad = async () => {
 	if (company) {
 		form.data.companyname = company.name;
 		form.data.address = company.address;
-		form.data.community = communities.find((c) => (c.id! = company!.community_area))!.name;
-		form.data.zone = zones.find((z) => (z.id! = company!.zone))!.name;
+		form.data.community = communities.find((c) => c.id! === company!.community_area)!.name;
+		form.data.zone = zones.find((z) => z.id! === company!.zone)!.name;
 	}
 	return {
 		form,
