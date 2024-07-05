@@ -2,11 +2,30 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/database';
 import { sql } from 'kysely';
 import type { NewAvailability, Availability } from '$lib/types.js';
+import { Interval } from '$lib/interval.js';
+
+const to_availability = (interval: Interval, id: number, vehicle: number): Availability => {
+	return {
+		start_time: interval.start_time,
+		end_time: interval.end_time,
+		vehicle: vehicle,
+		id: id
+	};
+};
+
+const to_new_availability = (interval: Interval, vehicle: number): NewAvailability => {
+	return {
+		start_time: interval.start_time,
+		end_time: interval.end_time,
+		vehicle: vehicle
+	};
+};
 
 export const DELETE = async ({ request }) => {
 	const { vehicle_id, from, to } = await request.json();
 	const start = new Date(from);
 	const end = new Date(to);
+	const to_remove = new Interval(start, end);
 	await db.transaction().execute(async (trx) => {
 		sql`LOCK TABLE availability IN ACCESS EXCLUSIVE MODE;`.execute(trx);
 		const overlapping = await trx
@@ -20,25 +39,25 @@ export const DELETE = async ({ request }) => {
 			)
 			.selectAll()
 			.execute();
-		const remove = Array<number>();
+		const to_remove_ids = Array<number>();
 		const cut = Array<Availability>();
 		const create = Array<NewAvailability>();
 		overlapping.forEach((a) => {
-			if (a.start_time >= start && a.end_time <= end) {
-				remove.push(a.id);
-			} else if (a.start_time >= start) {
-				cut.push({ id: a.id, start_time: end, end_time: a.end_time, vehicle: vehicle_id });
-			} else if (a.end_time <= end) {
-				cut.push({ id: a.id, start_time: a.start_time, end_time: start, vehicle: vehicle_id });
-			} else if (a.start_time < start && a.end_time > end) {
-				remove.push(a.id);
-				create.push({ start_time: a.start_time, end_time: start, vehicle: vehicle_id });
-				create.push({ start_time: end, end_time: a.end_time, vehicle: vehicle_id });
+			const availability = new Interval(a.start_time, a.end_time);
+			if (to_remove.contains(availability)) {
+				to_remove_ids.push(a.id);
+			} else if (availability.contains(to_remove) && !availability.equals(to_remove)) {
+				to_remove_ids.push(a.id);
+				const [left, right] = availability.split(to_remove);
+				create.push(to_new_availability(left, a.vehicle));
+				create.push(to_new_availability(right, a.vehicle));
+			} else {
+				cut.push(to_availability(availability.cut(to_remove), a.id, a.vehicle));
 			}
 		});
 		const promises = [];
-		if (remove.length > 0) {
-			promises.push(trx.deleteFrom('availability').where('id', 'in', remove).execute());
+		if (to_remove_ids.length > 0) {
+			promises.push(trx.deleteFrom('availability').where('id', 'in', to_remove_ids).execute());
 		}
 		if (create.length > 0) {
 			promises.push(trx.insertInto('availability').values(create).execute());
@@ -64,49 +83,13 @@ export const DELETE = async ({ request }) => {
 
 export const POST = async ({ request }) => {
 	const { vehicle_id, from, to } = await request.json();
-	let start = new Date(from);
-	let end = new Date(to);
-	await db.transaction().execute(async (trx) => {
-		sql`LOCK TABLE availability IN ACCESS EXCLUSIVE MODE;`.execute(trx);
-		const overlapping = await trx
-			.selectFrom('availability')
-			.where(({ eb }) =>
-				eb.and([
-					eb('vehicle', '=', vehicle_id),
-					eb('availability.start_time', '<=', end),
-					eb('availability.end_time', '>=', start)
-				])
-			)
-			.selectAll()
-			.execute();
-		const remove = Array<number>();
-		let contained = false;
-		overlapping.forEach((a) => {
-			if (a.start_time >= start && a.end_time <= end) {
-				remove.push(a.id);
-			} else if (a.start_time <= start) {
-				remove.push(a.id);
-				start = a.start_time;
-			} else if (a.end_time >= end) {
-				remove.push(a.id);
-				end = a.end_time;
-			} else if (a.start_time < start && a.end_time > end) {
-				contained = true;
-			}
-		});
-		const promises = [];
-		if (!contained) {
-			promises.push(
-				trx
-					.insertInto('availability')
-					.values({ start_time: start, end_time: end, vehicle: vehicle_id })
-					.execute()
-			);
-		}
-		if (remove.length > 0) {
-			promises.push(trx.deleteFrom('availability').where('id', 'in', remove).execute());
-		}
-		await Promise.all(promises);
-	});
+	await db
+		.insertInto('availability')
+		.values({
+			start_time: new Date(from),
+			end_time: new Date(to),
+			vehicle: vehicle_id
+		})
+		.execute();
 	return json({});
 };

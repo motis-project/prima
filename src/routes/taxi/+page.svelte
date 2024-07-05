@@ -28,21 +28,17 @@
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
 
-	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 
-	class Range {
-		from!: Date;
-		to!: Date;
-	}
+	import { Tour } from './Tour';
+	import { Range } from './Range';
+	import TourDialog from './TourDialog.svelte';
+
+	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
 	class Vehicle {
 		license_plate!: string;
 		availability!: Array<Range>;
-	}
-
-	class Tour extends Range {
-		id!: number;
-		vehicle_id!: number;
 	}
 
 	const loadVehicles = (): Map<number, Vehicle> => {
@@ -70,6 +66,9 @@
 
 	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
 	let tours = $state<Array<Tour>>(loadTours());
+
+	let selectedTour = $state.frozen<Tour | null>(null);
+	let showTour = $state<{ open: boolean }>({ open: false });
 
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
 	let day = $derived(new ReactiveDate(value));
@@ -349,15 +348,46 @@
 												onmouseover={() => selectionContinue(cell)}
 												onfocus={() => {}}
 											>
-												<div
-													class={[
-														'w-8',
-														'h-8',
-														'border',
-														'rounded-md',
-														cellColor(id, v, cell)
-													].join(' ')}
-												></div>
+												{#if hasTour(id, cell)}
+													<DropdownMenu.Root>
+														<DropdownMenu.Trigger>
+															<Button
+																class={[
+																	'w-8',
+																	'h-8',
+																	'border',
+																	'rounded-md',
+																	'hover:bg-orange-400',
+																	cellColor(id, v, cell)
+																].join(' ')}
+															></Button>
+														</DropdownMenu.Trigger>
+														<DropdownMenu.Content class="absolute z-10">
+															<DropdownMenu.Group>
+																<DropdownMenu.Label>Touren</DropdownMenu.Label>
+																<DropdownMenu.Separator />
+																{#each getTours(id, cell) as tour}
+																	<DropdownMenu.Item
+																		onclick={() => {
+																			selectedTour = tour;
+																			showTour.open = true;
+																		}}>{tour.id}</DropdownMenu.Item
+																	>
+																{/each}
+															</DropdownMenu.Group>
+														</DropdownMenu.Content>
+													</DropdownMenu.Root>
+												{:else}
+													<div
+														class={[
+															'w-8',
+															'h-8',
+															'border',
+															'rounded-md',
+															cellColor(id, v, cell)
+														].join(' ')}
+													></div>
+												{/if}
 											</td>
 										{/each}
 									</tr>
@@ -485,5 +515,4 @@
 	</Card.Root>
 </div>
 
-<style>
-</style>
+<TourDialog {selectedTour} bind:open={showTour}></TourDialog>

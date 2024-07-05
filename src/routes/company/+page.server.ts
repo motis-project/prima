@@ -22,7 +22,6 @@ export const load: PageServerLoad = async () => {
 	const form = await superValidate(zod(formSchema));
 	if (company) {
 		form.data.companyname = company.name;
-		form.data.email = company.email;
 		form.data.address = company.address;
 		form.data.community = communities.find((c) => (c.id! = company!.community_area))!.name;
 		form.data.zone = zones.find((z) => (z.id! = company!.zone))!.name;
@@ -48,7 +47,6 @@ export const actions: Actions = {
 			db.updateTable('company')
 				.set({
 					name: form.data.companyname,
-					email: form.data.email,
 					zone: (await db
 						.selectFrom('zone')
 						.where('name', '=', form.data.zone)

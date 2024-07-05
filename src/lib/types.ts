@@ -6,8 +6,13 @@ export interface Database {
 	vehicle: VehicleTable;
 	tour: TourTable;
 	availability: AvailabilityTable;
+	auth_user: UserAuthTable;
+	user_session: UserSessionTable;
 }
 
+// ====
+// ZONE
+// ----
 export interface ZoneTable {
 	id: Generated<number>;
 	area: string;
@@ -19,13 +24,15 @@ export type Zone = Selectable<ZoneTable>;
 export type NewZone = Insertable<ZoneTable>;
 export type ZoneUpdate = Updateable<ZoneTable>;
 
+// =======
+// COMPANY
+// -------
 export interface CompanyTable {
 	id: Generated<number>;
 	latitude: number;
 	longitude: number;
 	name: string;
-	email: string;
-	address: string;
+	address: string,
 	zone: number;
 	community_area: number;
 }
@@ -34,12 +41,16 @@ export type Company = Selectable<CompanyTable>;
 export type NewCompany = Insertable<CompanyTable>;
 export type CompanyUpdate = Updateable<CompanyTable>;
 
+// =======
+// VEHICLE
+// -------
 export interface VehicleTable {
 	id: Generated<number>;
 	license_plate: string;
 	company: number;
 	seats: number;
 	wheelchair_capacity: number;
+	bike_capacity: number;
 	storage_space: number;
 }
 
@@ -47,6 +58,9 @@ export type Vehicle = Selectable<VehicleTable>;
 export type NewVehicle = Insertable<VehicleTable>;
 export type VehicleUpdate = Updateable<VehicleTable>;
 
+// ====
+// TOUR
+// ----
 export interface TourTable {
 	id: Generated<number>;
 	departure: Date;
@@ -58,6 +72,9 @@ export type Tour = Selectable<TourTable>;
 export type NewTour = Insertable<TourTable>;
 export type TourUpdate = Updateable<TourTable>;
 
+// ============
+// AVAILABILITY
+// ------------
 export interface AvailabilityTable {
 	id: Generated<number>;
 	start_time: Date;
@@ -68,3 +85,29 @@ export interface AvailabilityTable {
 export type Availability = Selectable<AvailabilityTable>;
 export type NewAvailability = Insertable<AvailabilityTable>;
 export type AvailabilityUpdate = Updateable<AvailabilityTable>;
+
+// =========
+// USER_AUTH
+// ---------
+export interface UserAuthTable {
+	id: string;
+	email: string;
+	password_hash: string;
+}
+
+export type UserAuth = Selectable<UserAuthTable>;
+export type NewUserAuth = Insertable<UserAuthTable>;
+export type UserAuthUpdate = Updateable<UserAuthTable>;
+
+// ============
+// USER_SESSION
+// ------------
+export interface UserSessionTable {
+	id: string;
+	expires_at: Date;
+	user_id: string;
+}
+
+export type UserSession = Selectable<UserSessionTable>;
+export type NewUserSession = Insertable<UserSessionTable>;
+export type UserSessionUpdate = Updateable<UserAuthTable>;

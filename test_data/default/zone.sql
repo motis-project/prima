@@ -1,5 +1,5 @@
-INSERT INTO "zone" ("id", "area", "name", "is_community") VALUES
-(1,	'{
+INSERT INTO "zone" ("area", "name", "is_community") VALUES
+('{
   "type": "MultiPolygon",
   "coordinates": [
     [
@@ -32,7 +32,7 @@ INSERT INTO "zone" ("id", "area", "name", "is_community") VALUES
     ]
   ]
 }',	'Bautzen Ost', false),
-(2,	'{
+('{
   "type": "MultiPolygon",
   "coordinates": [
     [
@@ -65,7 +65,7 @@ INSERT INTO "zone" ("id", "area", "name", "is_community") VALUES
     ]
   ]
 }',	'Bautzen West', false),
-(3,	'{
+('{
   "type": "MultiPolygon",
   "coordinates": [
     [
@@ -148,7 +148,7 @@ INSERT INTO "zone" ("id", "area", "name", "is_community") VALUES
     ]
   ]
 }',	'Görlitz', false),
-(4, '{
+('{
       "type": "Feature",
       "properties": {},
       "geometry": {
@@ -179,7 +179,7 @@ INSERT INTO "zone" ("id", "area", "name", "is_community") VALUES
         "type": "Polygon"
       }
     }', 'Gemeinde Kamenz', true),
-    (5, '{
+    ('{
       "type": "Feature",
       "properties": {},
       "geometry": {
@@ -210,7 +210,7 @@ INSERT INTO "zone" ("id", "area", "name", "is_community") VALUES
         "type": "Polygon"
       }
     }', 'Gemeinde Bautzen', true),
-    (6, '{
+    ('{
       "type": "Feature",
       "properties": {},
       "geometry": {
