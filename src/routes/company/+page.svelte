@@ -30,10 +30,6 @@
 		value: $formData.community,
 		label: $formData.community
 	});
-	selectedZone = { value: $formData.zone, label: $formData.zone };
-	selectedCommunity = { value: $formData.community, label: $formData.community };
-
-	$effect(() => {});
 </script>
 
 <Toaster />
@@ -51,19 +47,12 @@
 				};
 			}}
 		>
-			<div class="grid w-full grid-rows-5 grid-cols-2 gap-4">
+			<div class="grid w-full grid-rows-3 grid-cols-2 gap-4">
 				<Form.Field {form} name="companyname">
 					<Form.Control let:attrs>
 						<Form.Label>Name</Form.Label>
 						<Form.FieldErrors />
 						<Input {...attrs} bind:value={$formData.companyname} />
-					</Form.Control>
-				</Form.Field>
-				<Form.Field {form} name="email">
-					<Form.Control let:attrs>
-						<Form.Label>Email</Form.Label>
-						<Form.FieldErrors />
-						<Input {...attrs} bind:value={$formData.email} />
 					</Form.Control>
 				</Form.Field>
 				<Form.Field {form} name="address">
@@ -123,7 +112,7 @@
 						<input hidden bind:value={$formData.community} name={attrs.name} />
 					</Form.Control>
 				</Form.Field>
-				<div class="row-start-4">
+				<div class="mt-6 row-start-3 col-span-2 text-right">
 					<Form.Button
 						onclick={async () => {
 							toast(`Die Daten wurden übernommen.`);
