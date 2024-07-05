@@ -28,24 +28,17 @@
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
 
-	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Table from '$lib/components/ui/table/index.js';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+
+	import { Tour } from './Tour';
+	import { Range } from './Range';
+	import TourDialog from './TourDialog.svelte';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
-
-	class Range {
-		from!: Date;
-		to!: Date;
-	}
 
 	class Vehicle {
 		license_plate!: string;
 		availability!: Array<Range>;
-	}
-
-	class Tour extends Range {
-		id!: number;
-		vehicle_id!: number;
 	}
 
 	const loadVehicles = (): Map<number, Vehicle> => {
@@ -73,6 +66,9 @@
 
 	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
 	let tours = $state<Array<Tour>>(loadTours());
+
+	let selectedTour = $state.frozen<Tour | null>(null);
+	let showTour = $state<{ open: boolean }>({ open: false });
 
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
 	let day = $derived(new ReactiveDate(value));
@@ -353,8 +349,8 @@
 												onfocus={() => {}}
 											>
 												{#if hasTour(id, cell)}
-													<Dialog.Root>
-														<Dialog.Trigger>
+													<DropdownMenu.Root>
+														<DropdownMenu.Trigger>
 															<Button
 																class={[
 																	'w-8',
@@ -365,38 +361,22 @@
 																	cellColor(id, v, cell)
 																].join(' ')}
 															></Button>
-														</Dialog.Trigger>
-														<Dialog.Content>
-															<Dialog.Header>
-																<Dialog.Title>Touren</Dialog.Title>
-																<Dialog.Description>
-																	<Table.Root>
-																		<Table.Caption>Liste der Touren in diesem Slot</Table.Caption>
-																		<Table.Header>
-																			<Table.Row>
-																				<Table.Head class="w-[100px]">Tour ID</Table.Head>
-																				<Table.Head class="w-[100px]">Start</Table.Head>
-																				<Table.Head class="w-[100px]">Ende</Table.Head>
-																				<Table.Head class="text-right">Fahrzeug</Table.Head>
-																			</Table.Row>
-																		</Table.Header>
-																		<Table.Body>
-																			{#each getTours(id, cell) as tour}
-																				<Table.Row>
-																					<Table.Cell class="font-medium">{tour.id}</Table.Cell>
-																					<Table.Cell>{tour.from.toLocaleString()}</Table.Cell>
-																					<Table.Cell>{tour.to.toLocaleString()}</Table.Cell>
-																					<Table.Cell class="text-right"
-																						>{tour.vehicle_id}</Table.Cell
-																					>
-																				</Table.Row>
-																			{/each}
-																		</Table.Body>
-																	</Table.Root>
-																</Dialog.Description>
-															</Dialog.Header>
-														</Dialog.Content>
-													</Dialog.Root>
+														</DropdownMenu.Trigger>
+														<DropdownMenu.Content class="absolute z-10">
+															<DropdownMenu.Group>
+																<DropdownMenu.Label>Touren</DropdownMenu.Label>
+																<DropdownMenu.Separator />
+																{#each getTours(id, cell) as tour}
+																	<DropdownMenu.Item
+																		onclick={() => {
+																			selectedTour = tour;
+																			showTour.open = true;
+																		}}>{tour.id}</DropdownMenu.Item
+																	>
+																{/each}
+															</DropdownMenu.Group>
+														</DropdownMenu.Content>
+													</DropdownMenu.Root>
 												{:else}
 													<div
 														class={[
@@ -535,5 +515,4 @@
 	</Card.Root>
 </div>
 
-<style>
-</style>
+<TourDialog {selectedTour} bind:open={showTour}></TourDialog>
