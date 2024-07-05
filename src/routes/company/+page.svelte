@@ -30,10 +30,8 @@
 		value: $formData.community,
 		label: $formData.community
 	});
-	if (data.company) {
-		selectedZone = { value: $formData.zone, label: $formData.zone };
-		selectedCommunity = { value: $formData.community, label: $formData.community };
-	}
+	selectedZone = { value: $formData.zone, label: $formData.zone };
+	selectedCommunity = { value: $formData.community, label: $formData.community };
 
 	$effect(() => {});
 </script>

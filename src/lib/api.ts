@@ -52,13 +52,17 @@ export async function geoCode(address: string) {
 			'Content-Type': 'application/json'
 		},
 		referrer: 'https://europe.motis-project.de/',
-		body: `{"destination":{"type":"Module","target":"/address"},"content_type":"AddressRequest","content":{"input":"${address}"}}`,
+		body: JSON.stringify({
+			destination: { type: 'Module', target: '/address' },
+			content_type: 'AddressRequest',
+			content: { input: address }
+		}),
 		method: 'POST',
 		mode: 'cors'
 	}).then((res) => res.json());
 	const guesses = response.content.guesses;
 	if (guesses.length == 0) {
-		return new Response();
+		throw new Error('There were no address guesses.');
 	}
-	return guesses;
+	return guesses[0];
 }

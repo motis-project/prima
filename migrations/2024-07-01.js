@@ -12,7 +12,7 @@ export async function up(db) {
         .addColumn('id', 'serial', (col) => col.primaryKey())
         .addColumn('latitude', 'real', (col) => col.notNull())
         .addColumn('longitude', 'real', (col) => col.notNull())
-        .addColumn('display_name', 'varchar', (col) => col.notNull())
+        .addColumn('name', 'varchar', (col) => col.notNull())
         .addColumn('email', 'varchar', (col) => col.notNull().unique())
         .addColumn('address', 'varchar', (col) => col.notNull())
         .addColumn('zone', 'integer', (col) =>
@@ -55,6 +55,7 @@ export async function up(db) {
         )
         .execute();
 }
+
 export async function down(db) {
     await db.schema.dropTable('zone').execute();
     await db.schema.dropTable('company').execute();

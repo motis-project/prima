@@ -23,7 +23,7 @@ export interface CompanyTable {
 	id: Generated<number>;
 	latitude: number;
 	longitude: number;
-	display_name: string;
+	name: string;
 	email: string;
 	address: string;
 	zone: number;
