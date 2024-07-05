@@ -28,25 +28,17 @@
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
 
-	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Table from '$lib/components/ui/table/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 
-	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
+	import { Tour } from './Tour';
+	import { Range } from './Range';
+	import TourDialog from './TourDialog.svelte';
 
-	class Range {
-		from!: Date;
-		to!: Date;
-	}
+	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
 	class Vehicle {
 		license_plate!: string;
 		availability!: Array<Range>;
-	}
-
-	class Tour extends Range {
-		id!: number;
-		vehicle_id!: number;
 	}
 
 	const loadVehicles = (): Map<number, Vehicle> => {
@@ -75,7 +67,8 @@
 	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
 	let tours = $state<Array<Tour>>(loadTours());
 
-	let selected_tour = $state.frozen<Tour | null>(null);
+	let selectedTour = $state.frozen<Tour | null>(null);
+	let showTour = $state<{ open: boolean }>({ open: false });
 
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
 	let day = $derived(new ReactiveDate(value));
@@ -168,10 +161,6 @@
 	};
 
 	const selectionStart = (id: number, vehicle: Vehicle, cell: Range) => {
-		// if (hasTour(id, cell)) {
-		// 	selected_tours = getTours(id, cell);
-		// 	return;
-		// }
 		selection = {
 			id,
 			vehicle,
@@ -378,8 +367,11 @@
 																<DropdownMenu.Label>Touren</DropdownMenu.Label>
 																<DropdownMenu.Separator />
 																{#each getTours(id, cell) as tour}
-																	<DropdownMenu.Item onclick={() => (selected_tour = tour)}
-																		>{tour.id}</DropdownMenu.Item
+																	<DropdownMenu.Item
+																		onclick={() => {
+																			selectedTour = tour;
+																			showTour.open = true;
+																		}}>{tour.id}</DropdownMenu.Item
 																	>
 																{/each}
 															</DropdownMenu.Group>
@@ -523,42 +515,4 @@
 	</Card.Root>
 </div>
 
-<Dialog.Root
-	open={selected_tour !== null}
-	onOpenChange={(open) => {
-		if (!open) {
-			selected_tour = null;
-		}
-	}}
->
-	<Dialog.Content>
-		<Dialog.Header>
-			<Dialog.Title>Tour Details</Dialog.Title>
-			<Dialog.Description>
-				<Table.Root>
-					<Table.Header>
-						<Table.Row>
-							<Table.Head class="w-[100px]">Tour ID</Table.Head>
-							<Table.Head class="w-[100px]">Start</Table.Head>
-							<Table.Head class="w-[100px]">Ende</Table.Head>
-							<Table.Head class="text-right">Fahrzeug</Table.Head>
-						</Table.Row>
-					</Table.Header>
-					<Table.Body>
-						{#if selected_tour != null}
-							<Table.Row>
-								<Table.Cell class="font-medium">{selected_tour.id}</Table.Cell>
-								<Table.Cell>{selected_tour.from.toLocaleString()}</Table.Cell>
-								<Table.Cell>{selected_tour.to.toLocaleString()}</Table.Cell>
-								<Table.Cell class="text-right">{selected_tour.vehicle_id}</Table.Cell>
-							</Table.Row>
-						{/if}
-					</Table.Body>
-				</Table.Root>
-			</Dialog.Description>
-		</Dialog.Header>
-	</Dialog.Content>
-</Dialog.Root>
-
-<style>
-</style>
+<TourDialog {selectedTour} bind:open={showTour}></TourDialog>
