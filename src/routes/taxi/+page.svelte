@@ -75,7 +75,7 @@
 	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
 	let tours = $state<Array<Tour>>(loadTours());
 
-	let selected_tour = $state.frozen<Array<Tour> | null>(null);
+	let selected_tour = $state.frozen<Tour | null>(null);
 
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
 	let day = $derived(new ReactiveDate(value));
