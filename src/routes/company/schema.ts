@@ -5,7 +5,6 @@ export const formSchema = z.object({
 		.string()
 		.min(2, { message: 'Die Eingabe muss mindestens 2 Zeichen enthalten.' })
 		.max(50, { message: 'Die Eingabe darf höchstens 50 Zeichen enthalen.' }),
-	email: z.string().email('Die Eingabe ist keine gülite Email-Adresse.'),
 	address: z.string().min(2, { message: 'Die Eingabe muss mindestens 2 Zeichen enthalten.' }),
 	zone: z.string().min(2, { message: 'Es wurde kein Gebiet ausgewählt.' }),
 	community: z.string().min(2, { message: 'Es wurde keine Gemeinde ausgewählt.' })
