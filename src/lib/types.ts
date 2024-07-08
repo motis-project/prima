@@ -120,11 +120,11 @@ export type UserSessionUpdate = Updateable<UserAuthTable>;
 export interface EventTable {
 	id: Generated<number>;
 	is_pickup: boolean;
-    latitude: number;
-    longitude: number;
-    scheduled_time: Date;
-    communicated_time: Date;
-    address: number;
+	latitude: number;
+	longitude: number;
+	scheduled_time: Date;
+	communicated_time: Date;
+	address: number;
 	tour: number;
 }
 
@@ -135,7 +135,10 @@ export type Event = Selectable<EventTable>;
 // ------------
 export interface AdressTable {
 	id: Generated<number>;
-	address_str: string;
+	street: string;
+	house_number: string;
+	postal_code: string;
+	city: string;
 }
 
 export type Adress = Selectable<AdressTable>;

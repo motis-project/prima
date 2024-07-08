@@ -75,7 +75,7 @@ export async function up(db) {
         .createTable('address')
         .addColumn('id', 'serial', (col) => col.primaryKey())
         .addColumn('street', 'varchar', (col) => col.notNull())
-        .addColumn('house_numer', 'varchar', (col) => col.notNull())
+        .addColumn('house_number', 'varchar', (col) => col.notNull())
         .addColumn('postal_code', 'varchar', (col) => col.notNull())
         .addColumn('city', 'varchar', (col) => col.notNull())
         .execute();
