@@ -32,6 +32,7 @@
 
 	import { Tour } from './Tour';
 	import { Range } from './Range';
+	import { Event } from './Event';
 	import TourDialog from './TourDialog.svelte';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
@@ -68,6 +69,8 @@
 	let tours = $state<Array<Tour>>(loadTours());
 
 	let selectedTour = $state.frozen<Tour | null>(null);
+	let selectedTourEvents = $state.frozen<Array<Event> | null>(null);
+
 	let showTour = $state<{ open: boolean }>({ open: false });
 
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
@@ -116,6 +119,10 @@
 
 	const getTours = (vehicle_id: number, cell: Range) => {
 		return tours.filter((t) => vehicle_id == t.vehicle_id && overlaps(t, cell));
+	};
+
+	const getEvents = (tour_id: number) => {
+		return data.events.filter((t) => tour_id == t.tour);
 	};
 
 	const isAvailable = (v: Vehicle, cell: Range) => {
@@ -370,6 +377,7 @@
 																	<DropdownMenu.Item
 																		onclick={() => {
 																			selectedTour = tour;
+																			selectedTourEvents = getEvents(tour.id);
 																			showTour.open = true;
 																		}}>{tour.id}</DropdownMenu.Item
 																	>
@@ -515,4 +523,4 @@
 	</Card.Root>
 </div>
 
-<TourDialog {selectedTour} bind:open={showTour}></TourDialog>
+<TourDialog {selectedTour} {selectedTourEvents} bind:open={showTour}></TourDialog>
