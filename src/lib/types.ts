@@ -8,6 +8,8 @@ export interface Database {
 	availability: AvailabilityTable;
 	auth_user: UserAuthTable;
 	user_session: UserSessionTable;
+	event: EventTable;
+	address: AdressTable;
 }
 
 // ====
@@ -111,3 +113,32 @@ export interface UserSessionTable {
 export type UserSession = Selectable<UserSessionTable>;
 export type NewUserSession = Insertable<UserSessionTable>;
 export type UserSessionUpdate = Updateable<UserAuthTable>;
+
+// ============
+// EVENTS
+// ------------
+export interface EventTable {
+	id: Generated<number>;
+	is_pickup: boolean;
+	latitude: number;
+	longitude: number;
+	scheduled_time: Date;
+	communicated_time: Date;
+	address: number;
+	tour: number;
+}
+
+export type Event = Selectable<EventTable>;
+
+// ============
+// ADDRESS
+// ------------
+export interface AdressTable {
+	id: Generated<number>;
+	street: string;
+	house_number: string;
+	postal_code: string;
+	city: string;
+}
+
+export type Adress = Selectable<AdressTable>;
