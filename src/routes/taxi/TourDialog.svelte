@@ -44,12 +44,14 @@
 						{/if}
 					</Table.Body>
 				</Table.Root>
-				{#each selectedTourEvents as event}
-					<p>{event.street}</p>
-					<p>{event.house_number}</p>
-					<p>{event.postal_code}</p>
-					<p>{event.city}</p>
-				{/each}
+				{#if selectedTourEvents != null}
+					{#each selectedTourEvents as event}
+						<p>{event.street}</p>
+						<p>{event.house_number}</p>
+						<p>{event.postal_code}</p>
+						<p>{event.city}</p>
+					{/each}
+				{/if}
 			</Dialog.Description>
 		</Dialog.Header>
 	</Dialog.Content>
