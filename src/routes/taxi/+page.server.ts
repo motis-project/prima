@@ -45,6 +45,7 @@ export async function load({ url }) {
 		vehicles: await vehicles,
 		tours: await tours,
 		availabilities: await availabilities,
-		utcDate
+		utcDate,
+		company_id
 	};
 }

@@ -26,7 +26,7 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { TZ } from '$lib/constants.js';
 	import Label from '$lib/components/ui/label/label.svelte';
-	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
+	import { addAvailability, addVehicle, removeAvailability, updateTour } from '$lib/api.js';
 
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 
@@ -300,6 +300,41 @@
 			return 'bg-yellow-100';
 		}
 	};
+
+	// ===================
+	// Fahrzeug hinzufügen
+	// -------------------
+	let nummernschild = $state('');
+	let passagiere = $state('0');
+	let fahrrad = $state(false);
+	let rollstuhl = $state(false);
+	let storageSpace = $state('540');
+	const pattern =
+		/([A-ZÄÖÜ][A-ZÄÖÜ]|[A-ZÄÖÜ][A-ZÄÖÜ][A-ZÄÖÜ])[-]([A-ZÄÖÜ]|[A-ZÄÖÜ][A-ZÄÖÜ])[-]([0-9]|[0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9][0-9][0-9])/;
+
+	const add_vehicle = () => {
+		if (passagiere !== '3' && passagiere !== '5' && passagiere !== '7') {
+			toast.warning('Bitte die maximale Passagieranzahl auswählen.');
+		}
+		if (!pattern.test(nummernschild)) {
+			toast.warning('Das Nummernschild ist ungültig!');
+		}
+		if (isNaN(+storageSpace)) {
+			toast.warning('Das Gepäckraumvolumen muss eine Zahl sein.');
+		} else {
+			let newVehicle = addVehicle(
+				nummernschild,
+				data.company_id,
+				Number(passagiere),
+				+rollstuhl,
+				+fahrrad,
+				Number(storageSpace)
+			);
+			// TODO: 	Nachricht wenn geklappt
+			// 			Nachricht wenn nicht geklappt
+			//			Popover schließen
+		}
+	};
 </script>
 
 <Toaster />
@@ -445,29 +480,34 @@
 						</div>
 						<div class="grid w-full max-w-sm items-center gap-1.5">
 							<Label for="nummernschild">Nummernschild des Fahrzeugs:</Label>
-							<Input type="nummernschild" id="nummernschild" placeholder="DA-AB-1234" />
+							<Input
+								bind:value={nummernschild}
+								type="string"
+								id="nummernschild"
+								placeholder="DA-AB-1234"
+							/>
 						</div>
 						<div>
 							<h6>Maximale Passagieranzahl:</h6>
-							<RadioGroup.Root value="three">
+							<RadioGroup.Root bind:value={passagiere}>
 								<div class="flex items-center space-x-2">
-									<RadioGroup.Item value="three" id="r1" />
+									<RadioGroup.Item value="3" id="r1" />
 									<Label for="r1">3 Passagiere</Label>
 								</div>
 								<div class="flex items-center space-x-2">
-									<RadioGroup.Item value="five" id="r2" />
+									<RadioGroup.Item value="5" id="r2" />
 									<Label for="r2">5 Passagiere</Label>
 								</div>
 								<div class="flex items-center space-x-2">
-									<RadioGroup.Item value="seven" id="r3" />
+									<RadioGroup.Item value="7" id="r3" />
 									<Label for="r3">7 Passagiere</Label>
 								</div>
-								<RadioGroup.Input name="spacing" />
+								<RadioGroup.Input />
 							</RadioGroup.Root>
 						</div>
 						<div class="grid gap-2">
 							<div class="flex items-center space-x-2">
-								<Checkbox id="fahrrad" aria-labelledby="fahrrad-label" />
+								<Checkbox bind:checked={fahrrad} id="fahrrad" aria-labelledby="fahrrad-label" />
 								<Label
 									id="fahrrad-label"
 									for="fahrrad"
@@ -477,7 +517,11 @@
 								</Label>
 							</div>
 							<div class="flex items-center space-x-2">
-								<Checkbox id="rollstuhl" aria-labelledby="rollstuhl-label" />
+								<Checkbox
+									bind:checked={rollstuhl}
+									id="rollstuhl"
+									aria-labelledby="rollstuhl-label"
+								/>
 								<Label
 									id="rollstuhl-label"
 									for="rollstuhl"
@@ -486,8 +530,12 @@
 									Für Rollstuhlfahrer geeignet
 								</Label>
 							</div>
+							<div class="grid w-full max-w-sm items-center gap-1.5">
+								<Label for="gepäckraum">Gepäckraumvolumen (in Liter):</Label>
+								<Input bind:value={storageSpace} type="string" id="gepäckraum" placeholder="540" />
+							</div>
 							<div class="grid grid-cols-1 items-center gap-4">
-								<Button variant="outline">Fahrzeug hinzufügen</Button>
+								<Button on:click={add_vehicle} variant="outline">Fahrzeug hinzufügen</Button>
 							</div>
 						</div>
 					</div>

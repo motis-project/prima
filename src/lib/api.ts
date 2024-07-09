@@ -10,6 +10,28 @@ export const getVehicles = async (company_id: number): Promise<Vehicle[]> => {
 	return await response.json();
 };
 
+export const addVehicle = async (
+	license_plate: string,
+	company: number,
+	seats: number,
+	wheelchair_capacity: number,
+	bike_capacity: number,
+	storage_space: number
+): Promise<Response> => {
+	const response = await fetch('/api/vehicle/', {
+		method: 'POST',
+		body: JSON.stringify({
+			license_plate,
+			company,
+			seats,
+			wheelchair_capacity,
+			bike_capacity,
+			storage_space
+		})
+	});
+	return response;
+};
+
 export const updateTour = async (tour_id: number, vehicle_id: number): Promise<Response> => {
 	const response = await fetch('/api/tour/', {
 		method: 'POST',
