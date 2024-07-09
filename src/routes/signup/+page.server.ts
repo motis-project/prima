@@ -49,6 +49,6 @@ export const actions: Actions = {
 				message: 'An unknown error occurred'
 			});
 		}
-		return redirect(302, '/');
+		return redirect(302, '/taxi');
 	}
 };
