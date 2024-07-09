@@ -9,6 +9,16 @@ export async function load({ url }) {
 		};
 	}
 
+	const tour = db
+		.selectFrom('tour')
+		.where(
+			'tour.id',
+			'=',
+			parseInt(tourID)
+		)
+		.selectAll()
+		.execute()
+
 	const events = db
 		.selectFrom('tour')
 		.where(
@@ -23,6 +33,7 @@ export async function load({ url }) {
 		.execute();
 
 	return {
+		tour: await tour,
 		events: await events,
 	};
 }

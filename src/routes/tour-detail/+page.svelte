@@ -12,10 +12,6 @@
 	let selectedTourEvents = data.events;
 	let vehicle = selectedTourEvents[0].vehicle;
 
-	let map = $state<null | maplibregl.Map>(null);
-
-	let level = $state(0);
-
 	let route = getRoute({
 		start: {
 			lat: 50.106847864,
@@ -32,7 +28,7 @@
 	});
 </script>
 
-<Card.Root class="w-fit m-auto min-w-[1280px]">
+<Card.Root class="max-w-screen-lg">
 	<Card.Header>
 		<Card.Title>Übersicht</Card.Title>
 	</Card.Header>

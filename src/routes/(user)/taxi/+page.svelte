@@ -23,7 +23,7 @@
 
 	import Sun from 'lucide-svelte/icons/sun';
 	import Moon from 'lucide-svelte/icons/moon';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { goto, invalidateAll, preloadData, pushState } from '$app/navigation';
 	import { TZ } from '$lib/constants.js';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
@@ -61,7 +61,9 @@
 			id: t.id,
 			from: t.departure,
 			to: t.arrival,
-			vehicle_id: t.vehicle
+			vehicle_id: t.vehicle,
+			arrival: t.arrival,
+			departure: t.departure
 		}));
 	};
 
@@ -355,10 +357,20 @@
 																<DropdownMenu.Separator />
 																{#each getTours(id, cell) as tour}
 																	<DropdownMenu.Item
-																		onclick={() => {
-																			selectedTour = tour;
-																			selectedTourEvents = getEvents(tour.id);
-																			showTour.open = true;
+																		on:click={async (e) => {
+																			console.log('das klappt!');
+
+																			const href = 'http://localhost:5173/tour-detail?tour=3';
+																			const result = await preloadData(href);
+
+																			if (result.type === 'loaded' && result.status === 200) {
+																				selectedTour = result.data.tour[0];
+																				selectedTourEvents = result.data.events;
+																				showTour.open = true;
+																			} else {
+																				// something bad happened! try navigating
+																				goto(href);
+																			}
 																		}}>{tour.id}</DropdownMenu.Item
 																	>
 																{/each}
@@ -499,4 +511,4 @@
 	{@render availability_table({ from: today_day, to: tomorrow_night })}
 </Card.Content>
 
-<TourDialog {selectedTour} {selectedTourEvents} bind:open={showTour}></TourDialog>
+<TourDialog {selectedTourEvents} {selectedTour} bind:open={showTour}></TourDialog>
