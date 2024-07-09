@@ -24,7 +24,7 @@
 		if (src) {
 			console.log('UPDATE DATA', id);
 
-			// @ts-expect-error
+			// @ts-expect-error: setData exists and does what it should
 			src.setData(data);
 		} else {
 			console.log('ADD SOURCE', id);

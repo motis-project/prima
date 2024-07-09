@@ -44,17 +44,20 @@ export async function load({ url }) {
 		])
 		.execute();
 
-	const events = db
-		.selectFrom('tour')
-		.where(
-			'tour.id',
-			'in',
-			tours.map((t) => t.id)
-		)
-		.innerJoin('event', 'event.tour', 'tour.id')
-		.innerJoin('address', 'address.id', 'event.address')
-		.selectAll()
-		.execute();
+	const events =
+		tours.length === 0
+			? []
+			: db
+					.selectFrom('tour')
+					.where(
+						'tour.id',
+						'in',
+						tours.map((t) => t.id)
+					)
+					.innerJoin('event', 'event.tour', 'tour.id')
+					.innerJoin('address', 'address.id', 'event.address')
+					.selectAll()
+					.execute();
 
 	return {
 		vehicles: await vehicles,
