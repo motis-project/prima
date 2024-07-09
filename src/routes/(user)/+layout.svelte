@@ -1,6 +1,6 @@
 <script>
 	import '../../app.css';
-	import Nav from '$lib/components/ui/nav.svelte';
+	import Nav from '$lib/nav.svelte';
 </script>
 
 <div class="flex min-h-screen">
