@@ -4,7 +4,7 @@
 </script>
 
 <div class="flex min-h-screen">
-	<div class="container min-w-[1440px] relative pb-10 mt-[5%]">
+	<div class="container min-w-[1440px] relative mt-28">
 		<section>
 			<Nav />
 			<div class="overflow-hidden rounded-[0.5rem] border bg-background shadow-xl">
