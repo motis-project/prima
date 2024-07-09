@@ -2,12 +2,14 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { Tour } from './Tour';
+	import { Event } from './Event';
 
 	class Props {
 		open!: { open: boolean };
 		selectedTour!: Tour | null;
+		selectedTourEvents!: Array<Event> | null;
 	}
-	const { open = $bindable(), selectedTour }: Props = $props();
+	const { open = $bindable(), selectedTour, selectedTourEvents }: Props = $props();
 </script>
 
 <Dialog.Root
@@ -42,6 +44,14 @@
 						{/if}
 					</Table.Body>
 				</Table.Root>
+				{#if selectedTourEvents != null}
+					{#each selectedTourEvents as event}
+						<p>{event.street}</p>
+						<p>{event.house_number}</p>
+						<p>{event.postal_code}</p>
+						<p>{event.city}</p>
+					{/each}
+				{/if}
 			</Dialog.Description>
 		</Dialog.Header>
 	</Dialog.Content>
