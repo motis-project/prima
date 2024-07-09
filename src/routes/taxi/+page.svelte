@@ -161,13 +161,15 @@
 	};
 
 	const selectionStart = (id: number, vehicle: Vehicle, cell: Range) => {
-		selection = {
-			id,
-			vehicle,
-			start: cell,
-			end: cell,
-			available: !isAvailable(vehicle, cell)
-		};
+		if (selection === null) {
+			selection = {
+				id,
+				vehicle,
+				start: cell,
+				end: cell,
+				available: !isAvailable(vehicle, cell)
+			};
+		}
 	};
 
 	const selectionContinue = (cell: Range) => {
@@ -182,31 +184,8 @@
 				from: new Date(Math.min(selection.start.from.getTime(), selection.end.from.getTime())),
 				to: new Date(Math.max(selection.start.to.getTime(), selection.end.to.getTime()))
 			};
-			const vehicle = selection.vehicle;
 			const vehicle_id = selection.id;
 			const available = selection.available;
-			if (available) {
-				vehicle.availability.push(selectedRange);
-			} else {
-				const to_remove = Array<Range>();
-				vehicle.availability.forEach((a) => {
-					if (selectedRange.from <= a.from && selectedRange.to >= a.to) {
-						to_remove.push(a);
-					} else if (selectedRange.from > a.from && selectedRange.to < a.to) {
-						to_remove.push(a);
-						vehicle.availability.push({ from: a.from, to: selectedRange.from });
-						vehicle.availability.push({ from: selectedRange.to, to: a.to });
-					} else if (selectedRange.from <= a.from && selectedRange.to >= a.from) {
-						a.from = selectedRange.to;
-					} else if (selectedRange.to >= a.to && selectedRange.from <= a.to) {
-						a.to = selectedRange.from;
-					}
-				});
-				to_remove.forEach((r) => {
-					vehicle.availability.splice(vehicle.availability.indexOf(r), 1);
-				});
-			}
-			selection = null;
 			let response;
 			try {
 				if (available) {
@@ -221,7 +200,8 @@
 			if (!response || !response.ok) {
 				toast('Verfügbarkeits Update nicht erfolgreich.');
 			}
-			invalidateAll();
+			await invalidateAll();
+			selection = null;
 		}
 	};
 
