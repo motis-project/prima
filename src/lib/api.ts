@@ -66,3 +66,29 @@ export async function geoCode(address: string) {
 	}
 	return guesses[0];
 }
+
+export class RoutingQuery {
+	start!: Location;
+	destination!: Location;
+	profile!: string;
+	direction!: string;
+}
+
+export class Location {
+	lat!: number;
+	lng!: number;
+	level!: number;
+}
+
+export const getRoute = async (query: RoutingQuery) => {
+	const response = await fetch(`https://osr.motis-project.de/api/route`, {
+		method: 'POST',
+		mode: 'cors',
+		headers: {
+			'Access-Control-Allow-Origin': '*',
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(query)
+	});
+	return await response.json();
+};
