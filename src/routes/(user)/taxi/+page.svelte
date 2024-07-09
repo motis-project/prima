@@ -69,7 +69,11 @@
 	let tours = $state<Array<Tour>>(loadTours());
 
 	let selectedTour = $state.frozen<Tour | null>(null);
+<<<<<<< HEAD
 	let selectedTourEvents = $state<Array<Event> | null>(null);
+=======
+	let selectedTourEvents = $state.frozen<Array<Event> | null>(null);
+>>>>>>> b70a6b2 (show list of events in tour detail view, wip)
 
 	let showTour = $state<{ open: boolean }>({ open: false });
 
