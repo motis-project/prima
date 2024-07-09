@@ -18,6 +18,7 @@ export async function load({ url }) {
 		)
 		.innerJoin('event', 'event.tour', 'tour.id')
 		.innerJoin('address', 'address.id', 'event.address')
+		.orderBy('event.scheduled_time')
 		.selectAll()
 		.execute();
 
