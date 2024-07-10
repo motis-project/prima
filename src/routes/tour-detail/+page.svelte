@@ -28,11 +28,11 @@
 	});
 </script>
 
-<Card.Root class="max-w-screen-lg">
+<Card.Root class="">
 	<Card.Header>
 		<Card.Title>Übersicht</Card.Title>
 	</Card.Header>
-	<Card.Content class="max-w-screen-lg">
+	<Card.Content class="">
 		<Table.Root>
 			<Table.Header>
 				<Table.Row>
@@ -54,11 +54,11 @@
 	</Card.Content>
 </Card.Root>
 
-<Card.Root class="max-w-screen-lg">
+<Card.Root class="">
 	<Card.Header>
 		<Card.Title>Route</Card.Title>
 	</Card.Header>
-	<Card.Content class="max-w-screen-lg">
+	<Card.Content class="">
 		<Map
 			transformRequest={(url) => {
 				if (url.startsWith('/')) {
@@ -108,12 +108,12 @@
 	</Card.Content>
 </Card.Root>
 
-<Card.Root class="max-w-screen-lg">
+<Card.Root class="">
 	<Card.Header>
 		<Card.Title>Tour Details</Card.Title>
 		<Card.Description>Wegpunkte und Abfahrtszeiten und Route</Card.Description>
 	</Card.Header>
-	<Card.Content class="max-w-screen-lg">
+	<Card.Content class="">
 		<Table.Root>
 			<Table.Header>
 				<Table.Row>
