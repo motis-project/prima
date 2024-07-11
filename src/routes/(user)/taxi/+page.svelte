@@ -358,9 +358,7 @@
 																{#each getTours(id, cell) as tour}
 																	<DropdownMenu.Item
 																		on:click={async (e) => {
-																			console.log('das klappt!');
-
-																			const href = 'http://localhost:5173/tour-detail?tour=3';
+																			const href = `http://localhost:5173/tour-detail?tour=${tour.id}`;
 																			const result = await preloadData(href);
 
 																			if (result.type === 'loaded' && result.status === 200) {

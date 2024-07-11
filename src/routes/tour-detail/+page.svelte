@@ -13,20 +13,48 @@
 	let selectedTourEvents = data.events;
 	let vehicle = selectedTourEvents[0].vehicle;
 
-	let route = getRoute({
-		start: {
-			lat: 50.106847864,
-			lng: 8.6632053122,
-			level: 0
-		},
-		destination: {
-			lat: 49.872584079,
-			lng: 8.6312708899,
-			level: 0
-		},
-		profile: 'car',
-		direction: 'forward'
-	});
+	const getRoutes = () => {
+		let routes = [];
+
+		for (let e = 0; e < selectedTourEvents.length - 1; e++) {
+			let e1 = selectedTourEvents[e];
+			let e2 = selectedTourEvents[e + 1];
+
+			let route = getRoute({
+				start: {
+					lat: e1.latitude,
+					lng: e1.longitude,
+					level: 0
+				},
+				destination: {
+					lat: e2.latitude,
+					lng: e2.longitude,
+					level: 0
+				},
+				profile: 'car',
+				direction: 'forward'
+			});
+			routes.push(route);
+		}
+		// Promise.all(routes).then((values) => {
+		// 	return values;
+		// });
+		console.log(routes);
+		return routes;
+	};
+
+	const getCenter = () => {
+		let nEvents = selectedTourEvents.length;
+		if (nEvents == 0) return;
+		return {
+			lat: selectedTourEvents.map((e) => e.latitude).reduce((e, c) => e + c, 0) / nEvents,
+			lng: selectedTourEvents.map((e) => e.longitude).reduce((e, c) => e + c, 0) / nEvents
+		};
+	};
+
+	let center = getCenter();
+	let routes = getRoutes();
+	console.log(routes);
 </script>
 
 <div class="grid grid-cols-2 grid-rows-1">
@@ -64,8 +92,8 @@
 					<Card.Title>Tour Details</Card.Title>
 					<Card.Description>Wegpunkte und Abfahrtszeiten</Card.Description>
 				</Card.Header>
-				<Card.Content class="max-h-80">
-					<ScrollArea class="w-[640px] h-[250px] rounded-md border p-4">
+				<Card.Content class="h-[634px]">
+					<ScrollArea class="w-[640px] h-[610px] rounded-md border p-4">
 						<Table.Root>
 							<Table.Header>
 								<Table.Row>
@@ -107,44 +135,46 @@
 						}
 					}}
 					style={getStyle(0)}
-					center={[8.563351200419433, 50]}
+					center={[center!.lng, center!.lat]}
 					zoom={10}
 					className="h-[800px] w-auto"
 				>
-					{#await route then r}
-						{#if r.type == 'FeatureCollection'}
-							<GeoJSON id="route" data={r}>
-								<Layer
-									id="path-outline"
-									type="line"
-									layout={{
-										'line-join': 'round',
-										'line-cap': 'round'
-									}}
-									filter={true}
-									paint={{
-										'line-color': '#1966a4',
-										'line-width': 7.5,
-										'line-opacity': 0.8
-									}}
-								/>
-								<Layer
-									id="path"
-									type="line"
-									layout={{
-										'line-join': 'round',
-										'line-cap': 'round'
-									}}
-									filter={true}
-									paint={{
-										'line-color': '#42a5f5',
-										'line-width': 5,
-										'line-opacity': 0.8
-									}}
-								/>
-							</GeoJSON>
-						{/if}
-					{/await}
+					{#each routes as route, i}
+						{#await route then r}
+							{#if r.type == 'FeatureCollection'}
+								<GeoJSON id={i.toString()} data={r}>
+									<Layer
+										id="path-outline"
+										type="line"
+										layout={{
+											'line-join': 'round',
+											'line-cap': 'round'
+										}}
+										filter={true}
+										paint={{
+											'line-color': '#1966a4',
+											'line-width': 7.5,
+											'line-opacity': 0.8
+										}}
+									/>
+									<Layer
+										id="path"
+										type="line"
+										layout={{
+											'line-join': 'round',
+											'line-cap': 'round'
+										}}
+										filter={true}
+										paint={{
+											'line-color': '#42a5f5',
+											'line-width': 5,
+											'line-opacity': 0.8
+										}}
+									/>
+								</GeoJSON>
+							{/if}
+						{/await}
+					{/each}
 				</Map>
 			</Card.Content>
 		</Card.Root>

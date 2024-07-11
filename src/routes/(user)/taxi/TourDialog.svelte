@@ -48,7 +48,7 @@
 		<Dialog.Header>
 			<Dialog.Title>Tour Details</Dialog.Title>
 			<Dialog.Description>
-				<div class="grid grid-cols-2 grid-rows-1">
+				<div class="grid grid-cols-2 grid-rows-1 py-3">
 					<div class="inline-flex flex-col">
 						<div>
 							<Card.Root>
@@ -83,8 +83,8 @@
 									<Card.Title>Tour Details</Card.Title>
 									<Card.Description>Wegpunkte und Abfahrtszeiten</Card.Description>
 								</Card.Header>
-								<Card.Content class="max-h-80">
-									<ScrollArea class="w-[640px] h-[250px] rounded-md border p-4">
+								<Card.Content class="h-[634px]">
+									<ScrollArea class="w-[640px] h-[610px] rounded-md border p-4">
 										<Table.Root>
 											<Table.Header>
 												<Table.Row>
