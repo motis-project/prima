@@ -16,23 +16,10 @@
 		open!: { open: boolean };
 		selectedTour!: Tour | null;
 		selectedTourEvents!: Array<Event> | null;
+		routes!: Array<Promise<any>>;
+		center!: Location | null;
 	}
-	const { open = $bindable(), selectedTourEvents, selectedTour }: Props = $props();
-
-	let route = getRoute({
-		start: {
-			lat: 50.106847864,
-			lng: 8.6632053122,
-			level: 0
-		},
-		destination: {
-			lat: 49.872584079,
-			lng: 8.6312708899,
-			level: 0
-		},
-		profile: 'car',
-		direction: 'forward'
-	});
+	const { open = $bindable(), selectedTourEvents, selectedTour, routes, center }: Props = $props();
 </script>
 
 <Dialog.Root
@@ -130,44 +117,48 @@
 										}
 									}}
 									style={getStyle(0)}
-									center={[8.563351200419433, 50]}
+									center={[center!.lng, center!.lat]}
 									zoom={10}
 									className="h-[800px] w-auto"
 								>
-									{#await route then r}
-										{#if r.type == 'FeatureCollection'}
-											<GeoJSON id="route" data={r}>
-												<Layer
-													id="path-outline"
-													type="line"
-													layout={{
-														'line-join': 'round',
-														'line-cap': 'round'
-													}}
-													filter={true}
-													paint={{
-														'line-color': '#1966a4',
-														'line-width': 7.5,
-														'line-opacity': 0.8
-													}}
-												/>
-												<Layer
-													id="path"
-													type="line"
-													layout={{
-														'line-join': 'round',
-														'line-cap': 'round'
-													}}
-													filter={true}
-													paint={{
-														'line-color': '#42a5f5',
-														'line-width': 5,
-														'line-opacity': 0.8
-													}}
-												/>
-											</GeoJSON>
-										{/if}
-									{/await}
+									{#if routes != null}
+										{#each routes as segment, i}
+											{#await segment then r}
+												{#if r.type == 'FeatureCollection'}
+													<GeoJSON id={'r_ ' + i} data={r}>
+														<Layer
+															id={'path-outline_ ' + i}
+															type="line"
+															layout={{
+																'line-join': 'round',
+																'line-cap': 'round'
+															}}
+															filter={true}
+															paint={{
+																'line-color': '#1966a4',
+																'line-width': 7.5,
+																'line-opacity': 0.8
+															}}
+														/>
+														<Layer
+															id={'path_ ' + i}
+															type="line"
+															layout={{
+																'line-join': 'round',
+																'line-cap': 'round'
+															}}
+															filter={true}
+															paint={{
+																'line-color': '#42a5f5',
+																'line-width': 5,
+																'line-opacity': 0.8
+															}}
+														/>
+													</GeoJSON>
+												{/if}
+											{/await}
+										{/each}
+									{/if}
 								</Map>
 							</Card.Content>
 						</Card.Root>

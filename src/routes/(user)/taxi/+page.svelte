@@ -34,12 +34,18 @@
 	import { Range } from './Range';
 	import { Event } from './Event';
 	import TourDialog from './TourDialog.svelte';
+	import { getRoute } from '$lib/api';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
 	class Vehicle {
 		license_plate!: string;
 		availability!: Array<Range>;
+	}
+
+	class Location {
+		lat!: number;
+		lng!: number;
 	}
 
 	const loadVehicles = (): Map<number, Vehicle> => {
@@ -72,6 +78,8 @@
 
 	let selectedTour = $state.frozen<Tour | null>(null);
 	let selectedTourEvents = $state<Array<Event> | null>(null);
+	let routes = $state<Array<Promise<any>> | null>(null);
+	let center = $state<Object | null>(null);
 
 	let showTour = $state<{ open: boolean }>({ open: false });
 
@@ -289,6 +297,43 @@
 			return 'bg-yellow-100';
 		}
 	};
+
+	// TEST
+	const getRoutes = () => {
+		if (selectedTourEvents == null || selectedTourEvents!.length == 0) return;
+		let routes: Array<Promise<any>> = [];
+
+		for (let e = 0; e < selectedTourEvents!.length - 1; e++) {
+			let e1 = selectedTourEvents![e];
+			let e2 = selectedTourEvents![e + 1];
+
+			let route = getRoute({
+				start: {
+					lat: e1.latitude,
+					lng: e1.longitude,
+					level: 0
+				},
+				destination: {
+					lat: e2.latitude,
+					lng: e2.longitude,
+					level: 0
+				},
+				profile: 'car',
+				direction: 'forward'
+			});
+			routes.push(route);
+		}
+		return routes;
+	};
+
+	const getCenter = () => {
+		if (selectedTourEvents == null || selectedTourEvents!.length == 0) return;
+		let nEvents = selectedTourEvents!.length;
+		return {
+			lat: selectedTourEvents!.map((e) => e.latitude).reduce((e, c) => e + c, 0) / nEvents,
+			lng: selectedTourEvents!.map((e) => e.longitude).reduce((e, c) => e + c, 0) / nEvents
+		};
+	};
 </script>
 
 <Toaster />
@@ -360,10 +405,11 @@
 																		on:click={async (e) => {
 																			const href = `http://localhost:5173/tour-detail?tour=${tour.id}`;
 																			const result = await preloadData(href);
-
 																			if (result.type === 'loaded' && result.status === 200) {
 																				selectedTour = result.data.tour[0];
 																				selectedTourEvents = result.data.events;
+																				routes = getRoutes();
+																				center = getCenter();
 																				showTour.open = true;
 																			} else {
 																				// something bad happened! try navigating
@@ -509,4 +555,4 @@
 	{@render availability_table({ from: today_day, to: tomorrow_night })}
 </Card.Content>
 
-<TourDialog {selectedTourEvents} {selectedTour} bind:open={showTour}></TourDialog>
+<TourDialog {selectedTourEvents} {selectedTour} {routes} {center} bind:open={showTour}></TourDialog>

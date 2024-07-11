@@ -36,10 +36,6 @@
 			});
 			routes.push(route);
 		}
-		// Promise.all(routes).then((values) => {
-		// 	return values;
-		// });
-		console.log(routes);
 		return routes;
 	};
 
@@ -53,8 +49,7 @@
 	};
 
 	let center = getCenter();
-	let routes = getRoutes();
-	console.log(routes);
+	let routeSegments = getRoutes();
 </script>
 
 <div class="grid grid-cols-2 grid-rows-1">
@@ -139,12 +134,12 @@
 					zoom={10}
 					className="h-[800px] w-auto"
 				>
-					{#each routes as route, i}
-						{#await route then r}
+					{#each routeSegments as segment, i}
+						{#await segment then r}
 							{#if r.type == 'FeatureCollection'}
-								<GeoJSON id={i.toString()} data={r}>
+								<GeoJSON id={'r_ ' + i} data={r}>
 									<Layer
-										id="path-outline"
+										id={'path-outline_ ' + i}
 										type="line"
 										layout={{
 											'line-join': 'round',
@@ -158,7 +153,7 @@
 										}}
 									/>
 									<Layer
-										id="path"
+										id={'path_ ' + i}
 										type="line"
 										layout={{
 											'line-join': 'round',
