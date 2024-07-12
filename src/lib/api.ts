@@ -1,4 +1,5 @@
 import type { Company, Vehicle } from './types';
+import { Coordinates } from './coordinates';
 
 export const getCompany = async (id: number): Promise<Company> => {
 	const response = await fetch(`/api/company?id=${id}`);
@@ -22,7 +23,7 @@ export const updateTour = async (tour_id: number, vehicle_id: number): Promise<R
 };
 
 export const removeAvailability = async (vehicle_id: number, from: Date, to: Date) => {
-	const response = await fetch('/api/availability/', {
+	return await fetch('/api/availability/', {
 		method: 'DELETE',
 		body: JSON.stringify({
 			vehicle_id,
@@ -30,11 +31,10 @@ export const removeAvailability = async (vehicle_id: number, from: Date, to: Dat
 			to
 		})
 	});
-	return response;
 };
 
 export const addAvailability = async (vehicle_id: number, from: Date, to: Date) => {
-	const response = await fetch('/api/availability/', {
+	return await fetch('/api/availability/', {
 		method: 'POST',
 		body: JSON.stringify({
 			vehicle_id,
@@ -42,16 +42,38 @@ export const addAvailability = async (vehicle_id: number, from: Date, to: Date) 
 			to
 		})
 	});
-	return response;
+};
+
+export const booking = async (
+	from: Coordinates,
+	to: Coordinates,
+	startFixed: boolean,
+	timeStamp: Date,
+	numPassengers: number,
+	numWheelchairs: number,
+	numBikes: number,
+	luggage: number
+) => {
+	return await fetch('/api/booking/', {
+		method: 'POST',
+		body: JSON.stringify({
+			from,
+			to,
+			startFixed,
+			timeStamp,
+			numPassengers,
+			numWheelchairs,
+			numBikes,
+			luggage
+		})
+	});
 };
 
 export async function geoCode(address: string) {
 	const response = await fetch('https://europe.motis-project.de/?elm=AddressSuggestions', {
-		credentials: 'omit',
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		referrer: 'https://europe.motis-project.de/',
 		body: JSON.stringify({
 			destination: { type: 'Module', target: '/address' },
 			content_type: 'AddressRequest',
@@ -62,7 +84,7 @@ export async function geoCode(address: string) {
 	}).then((res) => res.json());
 	const guesses = response.content.guesses;
 	if (guesses.length == 0) {
-		throw new Error('There were no address guesses.');
+		throw new Error('geoCode did not return any address guesses.');
 	}
 	return guesses[0];
 }
@@ -91,4 +113,50 @@ export const getRoute = async (query: RoutingQuery) => {
 		body: JSON.stringify(query)
 	});
 	return await response.json();
+};
+
+export enum Direction {
+	Forward,
+	Backward
+}
+
+export type oneToManyResult = {
+	duration: number;
+	distance: number;
+};
+
+export const oneToMany = async (
+	one: Coordinates,
+	many: Coordinates[],
+	direction: Direction
+): Promise<oneToManyResult[]> => {
+	const dir = direction == Direction.Forward ? 'Forward' : 'Backward';
+	const response = await fetch('https://europe.motis-project.de/', {
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({
+			destination: {
+				type: 'Module',
+				target: '/osrm/one_to_many'
+			},
+			content_type: 'OSRMOneToManyRequest',
+			content: {
+				profile: 'car',
+				direction: dir,
+				one: {
+					lat: one.lat,
+					lng: one.lng
+				},
+				many: many
+			}
+		}),
+		method: 'POST',
+		mode: 'cors'
+	}).then((res) => res.json());
+	const result = response.content.costs;
+	if (result.length == 0) {
+		throw new Error('oneToMany api did not return any distTime-object.');
+	}
+	return result;
 };
