@@ -1,6 +1,8 @@
 <script lang="ts">
 	const { data } = $props();
 
+	import { base as basePath } from '$app/paths';
+
 	import {
 		DateFormatter,
 		fromDate,
@@ -23,7 +25,7 @@
 
 	import Sun from 'lucide-svelte/icons/sun';
 	import Moon from 'lucide-svelte/icons/moon';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { goto, invalidateAll, preloadData } from '$app/navigation';
 	import { TZ } from '$lib/constants.js';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
@@ -61,7 +63,10 @@
 			id: t.id,
 			from: t.departure,
 			to: t.arrival,
-			vehicle_id: t.vehicle
+			vehicle_id: t.vehicle,
+			arrival: t.arrival,
+			departure: t.departure,
+			license_plate: ''
 		}));
 	};
 
@@ -70,7 +75,6 @@
 
 	let selectedTour = $state.frozen<Tour | null>(null);
 	let selectedTourEvents = $state<Array<Event> | null>(null);
-
 	let showTour = $state<{ open: boolean }>({ open: false });
 
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
@@ -119,10 +123,6 @@
 
 	const getTours = (vehicle_id: number, cell: Range) => {
 		return tours.filter((t) => vehicle_id == t.vehicle_id && overlaps(t, cell));
-	};
-
-	const getEvents = (tour_id: number) => {
-		return data.events.filter((t) => tour_id == t.tour);
 	};
 
 	const isAvailable = (v: Vehicle, cell: Range) => {
@@ -355,12 +355,18 @@
 																<DropdownMenu.Separator />
 																{#each getTours(id, cell) as tour}
 																	<DropdownMenu.Item
-																		onclick={() => {
-																			selectedTour = tour;
-																			selectedTourEvents = getEvents(tour.id);
-																			showTour.open = true;
-																		}}>{tour.id}</DropdownMenu.Item
+																		on:click={async () => {
+																			const href = `${basePath}/tour-detail?tour=${tour.id}`;
+																			const result = await preloadData(href);
+																			if (result.type === 'loaded' && result.status === 200) {
+																				selectedTour = result.data.tour[0];
+																				selectedTourEvents = result.data.events;
+																				showTour.open = true;
+																			}
+																		}}
 																	>
+																		{tour.id}
+																	</DropdownMenu.Item>
 																{/each}
 															</DropdownMenu.Group>
 														</DropdownMenu.Content>
@@ -499,4 +505,4 @@
 	{@render availability_table({ from: today_day, to: tomorrow_night })}
 </Card.Content>
 
-<TourDialog {selectedTour} {selectedTourEvents} bind:open={showTour}></TourDialog>
+<TourDialog {selectedTourEvents} {selectedTour} bind:open={showTour} />
