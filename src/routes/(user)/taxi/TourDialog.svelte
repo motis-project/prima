@@ -4,7 +4,6 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Tour } from './Tour';
 	import { Event } from './Event';
-	import { Location } from '$lib/Location';
 
 	import { getStyle } from '$lib/style';
 	import Map from '$lib/Map.svelte';
@@ -52,9 +51,8 @@
 	};
 
 	const getCenter = (tourEvents: Array<Event> | null) => {
-		let center = new Location();
 		if (tourEvents == null || tourEvents!.length == 0) {
-			return center;
+			return { lat: 0, lng: 0 };
 		}
 		let nEvents = tourEvents!.length;
 		return {

@@ -35,9 +35,7 @@
 	import { Tour } from './Tour';
 	import { Range } from './Range';
 	import { Event } from './Event';
-	import { Location } from '$lib/Location';
 	import TourDialog from './TourDialog.svelte';
-	import { getRoute } from '$lib/api';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
