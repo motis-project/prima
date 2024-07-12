@@ -9,10 +9,12 @@ export async function load({ url }) {
 		};
 	}
 
-	const tour = db.selectFrom('tour').where('tour.id', '=', parseInt(tourID))
-	.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
-	.selectAll()
-	.execute();
+	const tour = db
+		.selectFrom('tour')
+		.where('tour.id', '=', parseInt(tourID))
+		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
+		.selectAll()
+		.execute();
 
 	const events = db
 		.selectFrom('tour')
