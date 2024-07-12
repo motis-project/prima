@@ -1,6 +1,8 @@
 <script lang="ts">
 	const { data } = $props();
 
+	import { base as basePath } from '$app/paths';
+
 	import {
 		DateFormatter,
 		fromDate,
@@ -75,10 +77,6 @@
 
 	let selectedTour = $state.frozen<Tour | null>(null);
 	let selectedTourEvents = $state<Array<Event> | null>(null);
-	// eslint-disable-next-line
-	let routes = $state<Array<Promise<any>> | null>(null);
-	let center = $state<Location | null>(null);
-
 	let showTour = $state<{ open: boolean }>({ open: false });
 
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
@@ -291,44 +289,6 @@
 			return 'bg-yellow-100';
 		}
 	};
-
-	const getRoutes = () => {
-		// eslint-disable-next-line
-		let routes: Array<Promise<any>> = [];
-		if (selectedTourEvents == null || selectedTourEvents!.length == 0) return routes;
-
-		for (let e = 0; e < selectedTourEvents!.length - 1; e++) {
-			let e1 = selectedTourEvents![e];
-			let e2 = selectedTourEvents![e + 1];
-
-			let route = getRoute({
-				start: {
-					lat: e1.latitude,
-					lng: e1.longitude,
-					level: 0
-				},
-				destination: {
-					lat: e2.latitude,
-					lng: e2.longitude,
-					level: 0
-				},
-				profile: 'car',
-				direction: 'forward'
-			});
-			routes.push(route);
-		}
-		return routes;
-	};
-
-	const getCenter = () => {
-		let center = new Location();
-		if (selectedTourEvents == null || selectedTourEvents!.length == 0) return center;
-		let nEvents = selectedTourEvents!.length;
-		return {
-			lat: selectedTourEvents!.map((e) => e.latitude).reduce((e, c) => e + c, 0) / nEvents,
-			lng: selectedTourEvents!.map((e) => e.longitude).reduce((e, c) => e + c, 0) / nEvents
-		};
-	};
 </script>
 
 <Toaster />
@@ -398,17 +358,17 @@
 																{#each getTours(id, cell) as tour}
 																	<DropdownMenu.Item
 																		on:click={async () => {
-																			const href = `http://localhost:5173/tour-detail?tour=${tour.id}`;
+																			const href = `${basePath}/tour-detail?tour=${tour.id}`;
 																			const result = await preloadData(href);
 																			if (result.type === 'loaded' && result.status === 200) {
 																				selectedTour = result.data.tour[0];
 																				selectedTourEvents = result.data.events;
-																				routes = getRoutes();
-																				center = getCenter();
 																				showTour.open = true;
 																			}
-																		}}>{tour.id}</DropdownMenu.Item
+																		}}
 																	>
+																		{tour.id}
+																	</DropdownMenu.Item>
 																{/each}
 															</DropdownMenu.Group>
 														</DropdownMenu.Content>
@@ -547,4 +507,4 @@
 	{@render availability_table({ from: today_day, to: tomorrow_night })}
 </Card.Content>
 
-<TourDialog {selectedTourEvents} {selectedTour} {routes} {center} bind:open={showTour}></TourDialog>
+<TourDialog {selectedTourEvents} {selectedTour} bind:open={showTour} />

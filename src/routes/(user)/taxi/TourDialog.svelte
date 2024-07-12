@@ -11,16 +11,60 @@
 	import GeoJSON from '$lib/GeoJSON.svelte';
 	import Layer from '$lib/Layer.svelte';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
+	import { getRoute } from '$lib/api';
 
 	class Props {
 		open!: { open: boolean };
 		selectedTour!: Tour | null;
 		selectedTourEvents!: Array<Event> | null;
-		// eslint-disable-next-line
-		routes!: Array<Promise<any>> | null;
-		center!: Location | null;
 	}
-	const { open = $bindable(), selectedTourEvents, selectedTour, routes, center }: Props = $props();
+
+	const { open = $bindable(), selectedTourEvents, selectedTour }: Props = $props();
+
+	const getRoutes = (tourEvents: Array<Event> | null) => {
+		// eslint-disable-next-line
+		let routes: Array<Promise<any>> = [];
+		if (tourEvents == null || tourEvents!.length == 0) {
+			return routes;
+		}
+
+		for (let e = 0; e < tourEvents!.length - 1; e++) {
+			let e1 = tourEvents![e];
+			let e2 = tourEvents![e + 1];
+			routes.push(
+				getRoute({
+					start: {
+						lat: e1.latitude,
+						lng: e1.longitude,
+						level: 0
+					},
+					destination: {
+						lat: e2.latitude,
+						lng: e2.longitude,
+						level: 0
+					},
+					profile: 'car',
+					direction: 'forward'
+				})
+			);
+		}
+		return routes;
+	};
+
+	const getCenter = (tourEvents: Array<Event> | null) => {
+		let center = new Location();
+		if (tourEvents == null || tourEvents!.length == 0) {
+			return center;
+		}
+		let nEvents = tourEvents!.length;
+		return {
+			lat: tourEvents!.map((e) => e.latitude).reduce((e, c) => e + c, 0) / nEvents,
+			lng: tourEvents!.map((e) => e.longitude).reduce((e, c) => e + c, 0) / nEvents
+		};
+	};
+
+	const routes = $derived(getRoutes(selectedTourEvents));
+	const center = $derived(getCenter(selectedTourEvents));
 </script>
 
 <Dialog.Root
@@ -55,8 +99,12 @@
 										<Table.Body>
 											{#if selectedTourEvents != null}
 												<Table.Row>
-													<Table.Cell>{selectedTour!.departure.toLocaleString('de-DE')}</Table.Cell>
-													<Table.Cell>{selectedTour!.arrival.toLocaleString('de-DE')}</Table.Cell>
+													<Table.Cell>
+														{selectedTour!.departure.toLocaleString('de-DE') .slice(0, -3)}
+													</Table.Cell>
+													<Table.Cell>
+														{selectedTour!.arrival.toLocaleString('de-DE') .slice(0, -3)}
+													</Table.Cell>
 													<Table.Cell>{selectedTour!.license_plate}</Table.Cell>
 												</Table.Row>
 											{/if}
@@ -92,7 +140,8 @@
 															<Table.Cell
 																>{event.scheduled_time
 																	.toLocaleString('de-DE')
-																	.slice(0, -3)}</Table.Cell
+																	.slice(0, -3)
+																	.replace(',', ' ')}</Table.Cell
 															>
 															<Table.Cell>{event.street}</Table.Cell>
 															<Table.Cell>{event.house_number}</Table.Cell>
@@ -123,7 +172,7 @@
 									}}
 									style={getStyle(0)}
 									center={[center!.lng, center!.lat]}
-									zoom={10}
+									zoom={11}
 									className="h-[800px] w-auto"
 								>
 									{#if routes != null}
