@@ -5,4 +5,5 @@ export class Tour extends Range {
 	vehicle_id!: number;
 	departure!: Date;
 	arrival!: Date;
+	license_plate!: string;
 }

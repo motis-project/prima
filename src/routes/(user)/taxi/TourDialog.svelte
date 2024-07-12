@@ -4,7 +4,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Tour } from './Tour';
 	import { Event } from './Event';
-	import { Location } from './Location';
+	import { Location } from '$lib/Location';
 
 	import { getStyle } from '$lib/style';
 	import Map from '$lib/Map.svelte';
@@ -57,7 +57,7 @@
 												<Table.Row>
 													<Table.Cell>{selectedTour!.departure.toLocaleString('de-DE')}</Table.Cell>
 													<Table.Cell>{selectedTour!.arrival.toLocaleString('de-DE')}</Table.Cell>
-													<Table.Cell>{selectedTour!.vehicle_id}</Table.Cell>
+													<Table.Cell>{selectedTour!.license_plate}</Table.Cell>
 												</Table.Row>
 											{/if}
 										</Table.Body>

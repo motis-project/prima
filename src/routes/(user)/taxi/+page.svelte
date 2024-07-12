@@ -33,7 +33,7 @@
 	import { Tour } from './Tour';
 	import { Range } from './Range';
 	import { Event } from './Event';
-	import { Location } from './Location';
+	import { Location } from '$lib/Location';
 	import TourDialog from './TourDialog.svelte';
 	import { getRoute } from '$lib/api';
 
@@ -65,7 +65,8 @@
 			to: t.arrival,
 			vehicle_id: t.vehicle,
 			arrival: t.arrival,
-			departure: t.departure
+			departure: t.departure,
+			license_plate: ''
 		}));
 	};
 
