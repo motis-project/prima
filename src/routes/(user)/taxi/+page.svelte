@@ -33,6 +33,7 @@
 	import { Tour } from './Tour';
 	import { Range } from './Range';
 	import { Event } from './Event';
+	import { Location } from './Location';
 	import TourDialog from './TourDialog.svelte';
 	import { getRoute } from '$lib/api';
 
@@ -41,11 +42,6 @@
 	class Vehicle {
 		license_plate!: string;
 		availability!: Array<Range>;
-	}
-
-	class Location {
-		lat!: number;
-		lng!: number;
 	}
 
 	const loadVehicles = (): Map<number, Vehicle> => {
@@ -79,7 +75,7 @@
 	let selectedTour = $state.frozen<Tour | null>(null);
 	let selectedTourEvents = $state<Array<Event> | null>(null);
 	let routes = $state<Array<Promise<any>> | null>(null);
-	let center = $state<Object | null>(null);
+	let center = $state<Location | null>(null);
 
 	let showTour = $state<{ open: boolean }>({ open: false });
 
@@ -298,10 +294,9 @@
 		}
 	};
 
-	// TEST
 	const getRoutes = () => {
-		if (selectedTourEvents == null || selectedTourEvents!.length == 0) return;
 		let routes: Array<Promise<any>> = [];
+		if (selectedTourEvents == null || selectedTourEvents!.length == 0) return routes;
 
 		for (let e = 0; e < selectedTourEvents!.length - 1; e++) {
 			let e1 = selectedTourEvents![e];
@@ -327,12 +322,14 @@
 	};
 
 	const getCenter = () => {
-		if (selectedTourEvents == null || selectedTourEvents!.length == 0) return;
+		let center = new Location();
+		if (selectedTourEvents == null || selectedTourEvents!.length == 0) return center;
 		let nEvents = selectedTourEvents!.length;
-		return {
+		center = {
 			lat: selectedTourEvents!.map((e) => e.latitude).reduce((e, c) => e + c, 0) / nEvents,
 			lng: selectedTourEvents!.map((e) => e.longitude).reduce((e, c) => e + c, 0) / nEvents
 		};
+		return center;
 	};
 </script>
 

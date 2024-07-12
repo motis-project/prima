@@ -4,19 +4,19 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Tour } from './Tour';
 	import { Event } from './Event';
+	import { Location } from './Location';
 
 	import { getStyle } from '$lib/style';
 	import Map from '$lib/Map.svelte';
 	import GeoJSON from '$lib/GeoJSON.svelte';
 	import Layer from '$lib/Layer.svelte';
-	import { getRoute } from '$lib/api';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 
 	class Props {
 		open!: { open: boolean };
 		selectedTour!: Tour | null;
 		selectedTourEvents!: Array<Event> | null;
-		routes!: Array<Promise<any>>;
+		routes!: Array<Promise<any>> | null;
 		center!: Location | null;
 	}
 	const { open = $bindable(), selectedTourEvents, selectedTour, routes, center }: Props = $props();
