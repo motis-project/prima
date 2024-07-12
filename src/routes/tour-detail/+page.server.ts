@@ -5,27 +5,15 @@ export async function load({ url }) {
 
 	if (tourID == null) {
 		return {
-			events: [],
+			events: []
 		};
 	}
 
-	const tour = db
-		.selectFrom('tour')
-		.where(
-			'tour.id',
-			'=',
-			parseInt(tourID)
-		)
-		.selectAll()
-		.execute()
+	const tour = db.selectFrom('tour').where('tour.id', '=', parseInt(tourID)).selectAll().execute();
 
 	const events = db
 		.selectFrom('tour')
-		.where(
-			'tour.id',
-			'=',
-			parseInt(tourID)
-		)
+		.where('tour.id', '=', parseInt(tourID))
 		.innerJoin('event', 'event.tour', 'tour.id')
 		.innerJoin('address', 'address.id', 'event.address')
 		.orderBy('event.scheduled_time')
@@ -34,6 +22,6 @@ export async function load({ url }) {
 
 	return {
 		tour: await tour,
-		events: await events,
+		events: await events
 	};
 }

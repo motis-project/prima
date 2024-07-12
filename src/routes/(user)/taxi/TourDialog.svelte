@@ -16,6 +16,7 @@
 		open!: { open: boolean };
 		selectedTour!: Tour | null;
 		selectedTourEvents!: Array<Event> | null;
+		// eslint-disable-next-line
 		routes!: Array<Promise<any>> | null;
 		center!: Location | null;
 	}
@@ -35,8 +36,8 @@
 		<Dialog.Header>
 			<Dialog.Title>Tour Details</Dialog.Title>
 			<Dialog.Description>
-				<div class="grid grid-cols-2 grid-rows-1 py-3">
-					<div class="inline-flex flex-col">
+				<div class="grid grid-cols-2 grid-rows-1 gap-2 py-3">
+					<div class="inline-flex flex-col gap-2">
 						<div>
 							<Card.Root>
 								<Card.Header>
@@ -70,8 +71,8 @@
 									<Card.Title>Tour Details</Card.Title>
 									<Card.Description>Wegpunkte und Abfahrtszeiten</Card.Description>
 								</Card.Header>
-								<Card.Content class="h-[634px]">
-									<ScrollArea class="w-[640px] h-[610px] rounded-md border p-4">
+								<Card.Content class="h-[626px]">
+									<ScrollArea class="w-[640px] h-[604px] rounded-md border p-4">
 										<Table.Root>
 											<Table.Header>
 												<Table.Row>
@@ -79,6 +80,8 @@
 													<Table.Head class="w-[500px]">Straße</Table.Head>
 													<Table.Head class="w-[20px]">Hausnummer</Table.Head>
 													<Table.Head class="w-[220px]">Ort</Table.Head>
+													<Table.Head class="w-[220px]">Kunde</Table.Head>
+													<Table.Head class="w-[220px]">Fahrpreis</Table.Head>
 												</Table.Row>
 											</Table.Header>
 
@@ -94,6 +97,8 @@
 															<Table.Cell>{event.street}</Table.Cell>
 															<Table.Cell>{event.house_number}</Table.Cell>
 															<Table.Cell>{event.postal_code} {event.city}</Table.Cell>
+															<Table.Cell></Table.Cell>
+															<Table.Cell></Table.Cell>
 														</Table.Row>
 													{/each}
 												{/if}

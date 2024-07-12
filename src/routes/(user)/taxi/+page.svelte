@@ -23,7 +23,7 @@
 
 	import Sun from 'lucide-svelte/icons/sun';
 	import Moon from 'lucide-svelte/icons/moon';
-	import { goto, invalidateAll, preloadData, pushState } from '$app/navigation';
+	import { goto, invalidateAll, preloadData } from '$app/navigation';
 	import { TZ } from '$lib/constants.js';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
@@ -74,6 +74,7 @@
 
 	let selectedTour = $state.frozen<Tour | null>(null);
 	let selectedTourEvents = $state<Array<Event> | null>(null);
+	// eslint-disable-next-line
 	let routes = $state<Array<Promise<any>> | null>(null);
 	let center = $state<Location | null>(null);
 
@@ -125,10 +126,6 @@
 
 	const getTours = (vehicle_id: number, cell: Range) => {
 		return tours.filter((t) => vehicle_id == t.vehicle_id && overlaps(t, cell));
-	};
-
-	const getEvents = (tour_id: number) => {
-		return data.events.filter((t) => tour_id == t.tour);
 	};
 
 	const isAvailable = (v: Vehicle, cell: Range) => {
@@ -295,6 +292,7 @@
 	};
 
 	const getRoutes = () => {
+		// eslint-disable-next-line
 		let routes: Array<Promise<any>> = [];
 		if (selectedTourEvents == null || selectedTourEvents!.length == 0) return routes;
 
@@ -325,11 +323,10 @@
 		let center = new Location();
 		if (selectedTourEvents == null || selectedTourEvents!.length == 0) return center;
 		let nEvents = selectedTourEvents!.length;
-		center = {
+		return {
 			lat: selectedTourEvents!.map((e) => e.latitude).reduce((e, c) => e + c, 0) / nEvents,
 			lng: selectedTourEvents!.map((e) => e.longitude).reduce((e, c) => e + c, 0) / nEvents
 		};
-		return center;
 	};
 </script>
 
@@ -399,7 +396,7 @@
 																<DropdownMenu.Separator />
 																{#each getTours(id, cell) as tour}
 																	<DropdownMenu.Item
-																		on:click={async (e) => {
+																		on:click={async () => {
 																			const href = `http://localhost:5173/tour-detail?tour=${tour.id}`;
 																			const result = await preloadData(href);
 																			if (result.type === 'loaded' && result.status === 200) {
@@ -408,9 +405,6 @@
 																				routes = getRoutes();
 																				center = getCenter();
 																				showTour.open = true;
-																			} else {
-																				// something bad happened! try navigating
-																				goto(href);
 																			}
 																		}}>{tour.id}</DropdownMenu.Item
 																	>
