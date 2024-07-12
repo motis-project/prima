@@ -184,7 +184,7 @@ export const POST = async ({ request }) => {
 		return json({});
 	}
 
-	let tour_id: number|undefined = undefined;
+	let tour_id: number | undefined = undefined;
 
 	await db.transaction().execute(async (trx) => {
 		sql`LOCK TABLE tour, request, event IN ACCESS EXCLUSIVE MODE;`.execute(trx);
@@ -270,8 +270,8 @@ export const POST = async ({ request }) => {
 					latitude: from.lat,
 					longitude: from.lng,
 					scheduled_time: startTime,
-					communicated_time: startTime,			// TODO
-					address: 1,								// TODO
+					communicated_time: startTime, // TODO
+					address: 1, // TODO
 					request: requestId!,
 					tour: tour_id!
 				},
@@ -280,17 +280,17 @@ export const POST = async ({ request }) => {
 					latitude: to.lat,
 					longitude: to.lng,
 					scheduled_time: targetTime,
-					communicated_time: targetTime,			// TODO
-					address: 1,								// TODO
+					communicated_time: targetTime, // TODO
+					address: 1, // TODO
 					request: requestId!,
 					tour: tour_id!
 				}
 			])
 			.execute();
 	});
-	if(tour_id){
-		console.log("Booking request was assigned.");
-		return json({tour_id});
+	if (tour_id) {
+		console.log('Booking request was assigned.');
+		return json({ tour_id });
 	}
 	return json({});
 };
