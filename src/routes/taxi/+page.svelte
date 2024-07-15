@@ -17,7 +17,6 @@
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import * as Alert from '$lib/components/ui/alert/index.js';
-	import { ExclamationTriangle } from 'svelte-radix';
 	import { Check } from 'svelte-radix';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Toaster, toast } from 'svelte-sonner';
@@ -307,32 +306,37 @@
 	// ===================
 	// Fahrzeug hinzufügen
 	// -------------------
-	let nummernschild = $state('');
-	let passagiere = $state('0');
-	let fahrrad = $state(false);
-	let rollstuhl = $state(false);
+	let licensePlate = $state('');
+	let passengers = $state('0');
+	let bike = $state(false);
+	let wheelchair = $state(false);
 	let storageSpace = $state(4);
-	let newVehicle = $state<Promise<Response>>();
+	let newVehicle = $state<Response>();
 	const pattern =
 		/([A-ZÄÖÜ]|[A-ZÄÖÜ][A-ZÄÖÜ]|[A-ZÄÖÜ][A-ZÄÖÜ][A-ZÄÖÜ])[-]([A-ZÄÖÜ]|[A-ZÄÖÜ][A-ZÄÖÜ])[-]([0-9]|[0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9][0-9][0-9])/;
 
-	const add_vehicle = () => {
-		if (passagiere !== '3' && passagiere !== '5' && passagiere !== '7') {
+	const add_vehicle = async () => {
+		if (passengers !== '3' && passengers !== '5' && passengers !== '7') {
 			toast.warning('Bitte die maximale Passagieranzahl auswählen.');
-		} else if (!pattern.test(nummernschild)) {
+		} else if (!pattern.test(licensePlate)) {
 			toast.warning('Das Nummernschild ist ungültig!');
 		} else if (isNaN(+storageSpace) || storageSpace <= 0 || storageSpace >= 11) {
 			toast.warning('Die Anzahl Gepäckstücke muss eine Zahl zwischen 0 und 11 sein.');
 		} else {
-			newVehicle = addVehicle(
-				nummernschild,
-				data.company_id,
-				Number(passagiere),
-				+rollstuhl,
-				+fahrrad,
-				Number(storageSpace)
-			);
+			try {
+				newVehicle = await addVehicle(
+					licensePlate,
+					data.company_id,
+					Number(passengers),
+					+wheelchair,
+					+bike,
+					Number(storageSpace)
+				);
+			} catch {
+				toast('Der Server konnte nicht erreicht werden.');
+			}
 		}
+		invalidateAll();
 	};
 </script>
 
@@ -467,7 +471,7 @@
 		<div>
 			<Popover.Root>
 				<Popover.Trigger>
-					<Button variant="outline">
+					<Button on:click={() => (newVehicle = undefined)} variant="outline">
 						<Plus class="mr-2 h-4 w-4" />
 						{'Fahrzeug hinzufügen'}
 					</Button>
@@ -478,17 +482,17 @@
 							<h2 class="font-medium leading-none">Fahrzeug:</h2>
 						</div>
 						<div class="grid w-full max-w-sm items-center gap-1.5">
-							<Label for="nummernschild">Nummernschild des Fahrzeugs:</Label>
+							<Label for="licensePlate">Nummernschild des Fahrzeugs:</Label>
 							<Input
-								bind:value={nummernschild}
+								bind:value={licensePlate}
 								type="string"
-								id="nummernschild"
+								id="licensePlate"
 								placeholder="DA-AB-1234"
 							/>
 						</div>
 						<div>
 							<h6>Maximale Passagieranzahl:</h6>
-							<RadioGroup.Root bind:value={passagiere}>
+							<RadioGroup.Root bind:value={passengers}>
 								<div class="flex items-center space-x-2">
 									<RadioGroup.Item value="3" id="r1" />
 									<Label for="r1">3 Passagiere</Label>
@@ -506,10 +510,10 @@
 						</div>
 						<div class="grid gap-2">
 							<div class="flex items-center space-x-2">
-								<Checkbox bind:checked={fahrrad} id="fahrrad" aria-labelledby="fahrrad-label" />
+								<Checkbox bind:checked={bike} id="bike" aria-labelledby="bike-label" />
 								<Label
-									id="fahrrad-label"
-									for="fahrrad"
+									id="bike-label"
+									for="bike"
 									class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 								>
 									Fahrradmitnahme
@@ -517,13 +521,13 @@
 							</div>
 							<div class="flex items-center space-x-2">
 								<Checkbox
-									bind:checked={rollstuhl}
-									id="rollstuhl"
-									aria-labelledby="rollstuhl-label"
+									bind:checked={wheelchair}
+									id="wheelchair"
+									aria-labelledby="wheelchair-label"
 								/>
 								<Label
-									id="rollstuhl-label"
-									for="rollstuhl"
+									id="wheelchair-label"
+									for="wheelchair"
 									class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 								>
 									Für Rollstuhlfahrer geeignet
@@ -539,24 +543,12 @@
 						</div>
 					</div>
 					<div>
-						{#await newVehicle}
-							<Alert.Root>
-								<Alert.Title>Lädt</Alert.Title>
-								<Alert.Description>...bitte warten...</Alert.Description>
-							</Alert.Root>
-						{:then value}
+						{#if newVehicle}
 							<Alert.Root>
 								<Check class="h-4 w-4" />
 								<Alert.Title>Fahrzeug hinzugefügt!</Alert.Title>
-								<Alert.Description>Status: {value?.statusText}</Alert.Description>
 							</Alert.Root>
-						{:catch error}
-							<Alert.Root>
-								<ExclamationTriangle class="h-4 w-4" />
-								<Alert.Title>Etwas ist schief gelaufen.</Alert.Title>
-								<Alert.Description>{error.message}</Alert.Description>
-							</Alert.Root>
-						{/await}
+						{/if}
 					</div>
 				</Popover.Content>
 			</Popover.Root>
