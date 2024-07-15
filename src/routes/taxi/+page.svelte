@@ -17,7 +17,8 @@
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import * as Alert from '$lib/components/ui/alert/index.js';
-	import ExclamationTriangle from "svelte-radix/ExclamationTriangle.svelte";
+	import { ExclamationTriangle } from 'svelte-radix';
+	import { Check } from 'svelte-radix';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Toaster, toast } from 'svelte-sonner';
 	import * as Card from '$lib/components/ui/card';
@@ -311,7 +312,8 @@
 	let fahrrad = $state(false);
 	let rollstuhl = $state(false);
 	let storageSpace = $state(4);
-	let newVehicle = Promise<Response>;  
+	//let newVehicle:Promise<Response>;
+	let newVehicle = $state<Promise<Response>>();
 	const pattern =
 		/([A-ZÄÖÜ][A-ZÄÖÜ]|[A-ZÄÖÜ][A-ZÄÖÜ][A-ZÄÖÜ])[-]([A-ZÄÖÜ]|[A-ZÄÖÜ][A-ZÄÖÜ])[-]([0-9]|[0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9][0-9][0-9])/;
 
@@ -319,10 +321,10 @@
 		if (passagiere !== '3' && passagiere !== '5' && passagiere !== '7') {
 			toast.warning('Bitte die maximale Passagieranzahl auswählen.');
 		}
-		if (!pattern.test(nummernschild)) {
+		else if (!pattern.test(nummernschild)) {
 			toast.warning('Das Nummernschild ist ungültig!');
 		}
-		if (isNaN(+storageSpace) || storageSpace <= 0 || storageSpace >= 11) {
+		else if (isNaN(+storageSpace) || storageSpace <= 0 || storageSpace >= 11) {
 			toast.warning('Die Anzahl Gepäckstücke muss eine Zahl zwischen 0 und 11 sein.');
 		} else {
 			newVehicle = addVehicle(
@@ -333,9 +335,6 @@
 				+fahrrad,
 				Number(storageSpace)
 			);
-			// TODO: 	Nachricht wenn geklappt
-			// 			Nachricht wenn nicht geklappt
-			//			Popover schließen
 		}
 	};
 </script>
@@ -535,30 +534,36 @@
 							</div>
 							<div class="grid w-full max-w-sm items-center gap-1.5">
 								<Label for="gepäckraum">Gepäckstücke:</Label>
-								<Input bind:value={storageSpace} type="string" id="gepäckraum" placeholder="4" />
+								<Input bind:value={storageSpace} type="number" id="gepäckraum" placeholder="4" />
 							</div>
 							<div class="grid grid-cols-1 items-center gap-4">
 								<Button on:click={add_vehicle} variant="outline">Fahrzeug hinzufügen</Button>
 							</div>
 						</div>
 					</div>
+					<div>
+						{#await newVehicle}
+							<Alert.Root>
+								<Alert.Title>Lädt</Alert.Title>
+								<Alert.Description>...bitte warten...</Alert.Description>
+							</Alert.Root>
+						{:then response}
+							<Alert.Root>
+								<Check class="h-4 w-4" />
+								<Alert.Title>Fahrzeug hinzugefügt!</Alert.Title>
+							</Alert.Root>
+						{:catch error}
+							<Alert.Root>
+								<ExclamationTriangle class="h-4 w-4" />
+								<Alert.Title>Etwas ist schief gelaufen.</Alert.Title>
+								<Alert.Description
+								>{error.message}</Alert.Description
+								>
+							</Alert.Root>
+						{/await}
+					</div>
 				</Popover.Content>
 			</Popover.Root>
-		</div>
-		<div>
-			{#await newVehicle}
-				<p>...waiting</p>
-			{:then response}
-				<p>The number is {response}</p> <!--Do something with response-->
-			{:catch error}
-			<Alert.Root>
-				<ExclamationTriangle class="h-4 w-4" />
-				<Alert.Title>Etwas ist schief gelaufen.</Alert.Title>
-				<Alert.Description
-				  >{error.message}</Alert.Description
-				>
-			  </Alert.Root>
-			{/await}
 		</div>
 		<Button on:click={toggleMode} variant="outline" size="icon">
 			<Sun
