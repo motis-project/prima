@@ -312,19 +312,16 @@
 	let fahrrad = $state(false);
 	let rollstuhl = $state(false);
 	let storageSpace = $state(4);
-	//let newVehicle:Promise<Response>;
 	let newVehicle = $state<Promise<Response>>();
 	const pattern =
-		/([A-ZÄÖÜ][A-ZÄÖÜ]|[A-ZÄÖÜ][A-ZÄÖÜ][A-ZÄÖÜ])[-]([A-ZÄÖÜ]|[A-ZÄÖÜ][A-ZÄÖÜ])[-]([0-9]|[0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9][0-9][0-9])/;
+		/([A-ZÄÖÜ]|[A-ZÄÖÜ][A-ZÄÖÜ]|[A-ZÄÖÜ][A-ZÄÖÜ][A-ZÄÖÜ])[-]([A-ZÄÖÜ]|[A-ZÄÖÜ][A-ZÄÖÜ])[-]([0-9]|[0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9][0-9][0-9])/;
 
 	const add_vehicle = () => {
 		if (passagiere !== '3' && passagiere !== '5' && passagiere !== '7') {
 			toast.warning('Bitte die maximale Passagieranzahl auswählen.');
-		}
-		else if (!pattern.test(nummernschild)) {
+		} else if (!pattern.test(nummernschild)) {
 			toast.warning('Das Nummernschild ist ungültig!');
-		}
-		else if (isNaN(+storageSpace) || storageSpace <= 0 || storageSpace >= 11) {
+		} else if (isNaN(+storageSpace) || storageSpace <= 0 || storageSpace >= 11) {
 			toast.warning('Die Anzahl Gepäckstücke muss eine Zahl zwischen 0 und 11 sein.');
 		} else {
 			newVehicle = addVehicle(
@@ -547,18 +544,17 @@
 								<Alert.Title>Lädt</Alert.Title>
 								<Alert.Description>...bitte warten...</Alert.Description>
 							</Alert.Root>
-						{:then response}
+						{:then value}
 							<Alert.Root>
 								<Check class="h-4 w-4" />
 								<Alert.Title>Fahrzeug hinzugefügt!</Alert.Title>
+								<Alert.Description>Status: {value?.statusText}</Alert.Description>
 							</Alert.Root>
 						{:catch error}
 							<Alert.Root>
 								<ExclamationTriangle class="h-4 w-4" />
 								<Alert.Title>Etwas ist schief gelaufen.</Alert.Title>
-								<Alert.Description
-								>{error.message}</Alert.Description
-								>
+								<Alert.Description>{error.message}</Alert.Description>
 							</Alert.Root>
 						{/await}
 					</div>
