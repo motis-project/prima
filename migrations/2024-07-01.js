@@ -70,6 +70,46 @@ export async function up(db) {
             col.references('auth_user.id').onDelete('cascade').notNull(),
         )
         .execute();
+
+    await db.schema
+        .createTable('address')
+        .addColumn('id', 'serial', (col) => col.primaryKey())
+        .addColumn('street', 'varchar', (col) => col.notNull())
+        .addColumn('house_number', 'varchar', (col) => col.notNull())
+        .addColumn('postal_code', 'varchar', (col) => col.notNull())
+        .addColumn('city', 'varchar', (col) => col.notNull())
+        .execute();
+
+    await db.schema
+        .createTable('request')
+        .addColumn('id', 'serial', (col) => col.primaryKey())
+        .addColumn('passengers', 'integer', (col) => col.notNull())
+        .addColumn('wheelchairs', 'integer', (col) => col.notNull())
+        .addColumn('bikes', 'integer', (col) => col.notNull())
+        .addColumn('luggage', 'integer', (col) => col.notNull())
+        .addColumn('tour', 'integer', (col) =>
+            col.references('tour.id').onDelete('cascade').notNull(),
+        )
+        .execute();
+
+    await db.schema
+        .createTable('event')
+        .addColumn('id', 'serial', (col) => col.primaryKey())
+        .addColumn('is_pickup', 'boolean', (col) => col.notNull())
+        .addColumn('latitude', 'real', (col) => col.notNull())
+        .addColumn('longitude', 'real', (col) => col.notNull())
+        .addColumn('scheduled_time', 'timestamp', (col) => col.notNull())
+        .addColumn('communicated_time', 'timestamp', (col) => col.notNull())
+        .addColumn('request', 'integer', (col) =>
+            col.references('request.id').onDelete('cascade'),
+        )
+        .addColumn('address', 'integer', (col) =>
+            col.references('address.id').onDelete('cascade').notNull(),
+        )
+        .addColumn('tour', 'integer', (col) =>
+            col.references('tour.id').onDelete('cascade').notNull(),
+        )
+        .execute();
 }
 
 export async function down(db) {
@@ -80,4 +120,6 @@ export async function down(db) {
     await db.schema.dropTable('tour').execute();
     await db.schema.dropTable('auth_user').execute();
     await db.schema.dropTable('user_session').execute();
+    await db.schema.dropTable('request').execute();
+    await db.schema.dropTable('event').execute();
 }
