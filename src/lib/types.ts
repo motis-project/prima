@@ -129,6 +129,7 @@ export interface EventTable {
 	address: number;
 	tour: number;
 	customer: number;
+	request: number;
 }
 
 export type Event = Selectable<EventTable>;

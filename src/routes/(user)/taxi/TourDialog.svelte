@@ -4,7 +4,6 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Tour } from './Tour';
 	import { Event } from './Event';
-
 	import { getStyle } from '$lib/style';
 	import Map from '$lib/Map.svelte';
 	import GeoJSON from '$lib/GeoJSON.svelte';
@@ -72,6 +71,7 @@
 			open.open = false;
 		}
 	}}
+	on:close={() => history.back()}
 	on:close={() => history.back()}
 >
 	<Dialog.Content class="w-fit m-auto min-w-[1280px] h-auto">

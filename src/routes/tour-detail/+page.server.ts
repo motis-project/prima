@@ -26,8 +26,6 @@ export async function load({ url }) {
 		.selectAll()
 		.execute();
 
-	console.log(await events);
-
 	return {
 		tour: await tour,
 		events: await events
