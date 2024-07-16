@@ -11,6 +11,7 @@ export interface Database {
 	event: EventTable;
 	address: AddressTable;
 	request: RequestTable;
+	user: UserTable
 }
 
 // ====
@@ -127,7 +128,7 @@ export interface EventTable {
 	communicated_time: Date;
 	address: number;
 	tour: number;
-	request: number;
+	customer: number;
 }
 
 export type Event = Selectable<EventTable>;
@@ -164,3 +165,13 @@ export interface RequestTable {
 export type Request = Selectable<RequestTable>;
 export type NewRequest = Insertable<RequestTable>;
 export type RequestUpdate = Updateable<RequestTable>;
+
+// ============
+// USER
+// ------------
+export interface UserTable {
+	id: string;
+	first_name: string;
+	last_name: string;
+	phone: string;
+}

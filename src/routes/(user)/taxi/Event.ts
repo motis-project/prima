@@ -10,4 +10,7 @@ export class Event {
 	postal_code!: string;
 	city!: string;
 	tour!: number;
+	first_name!: string;
+    last_name!: string;
+    phone!: string;
 }

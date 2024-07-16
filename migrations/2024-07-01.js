@@ -81,6 +81,14 @@ export async function up(db) {
         .execute();
 
     await db.schema
+        .createTable('user')
+        .addColumn('id', 'serial', (col) => col.primaryKey())
+        .addColumn('first_name', 'varchar', (col) => col.notNull())
+        .addColumn('last_name', 'varchar', (col) => col.notNull())
+        .addColumn('phone', 'varchar', (col) => col.notNull())
+        .execute();
+
+    await db.schema
         .createTable('request')
         .addColumn('id', 'serial', (col) => col.primaryKey())
         .addColumn('passengers', 'integer', (col) => col.notNull())
@@ -108,6 +116,9 @@ export async function up(db) {
         )
         .addColumn('tour', 'integer', (col) =>
             col.references('tour.id').onDelete('cascade').notNull(),
+        )
+        .addColumn('customer', 'integer', (col) =>
+            col.references('user.id').onDelete('cascade').notNull(),
         )
         .execute();
 }
