@@ -16,7 +16,7 @@
 	let wheelchair = $state(false);
 	let storageSpace = $state(4);
 	const pattern = /([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})/;
-	const add_vehicle = async () => {
+	const add = async () => {
 		if (passengers !== '3' && passengers !== '5' && passengers !== '7') {
 			toast.warning('Bitte die maximale Passagieranzahl auswählen.');
 		} else if (!pattern.test(licensePlate)) {
@@ -113,7 +113,7 @@
 						<Input bind:value={storageSpace} type="number" id="gepäckraum" placeholder="4" />
 					</div>
 					<div class="grid grid-cols-1 items-center gap-4">
-						<Button on:click={add_vehicle} variant="outline">Fahrzeug hinzufügen</Button>
+						<Button on:click={add} variant="outline">Fahrzeug hinzufügen</Button>
 					</div>
 				</div>
 			</div>
