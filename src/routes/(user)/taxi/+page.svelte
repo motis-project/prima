@@ -72,8 +72,7 @@
 	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
 	let tours = $state<Array<Tour>>(loadTours());
 
-	// let selectedTourId = $state<number | null>(null);
-	let showTour = $state<{ open: boolean }>({ open: false });
+	let showTour = $state<{ tourId: number | undefined }>({ tourId: undefined });
 
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
 	let day = $derived(new ReactiveDate(value));
@@ -83,7 +82,11 @@
 	};
 
 	$effect(() => {
-		// goto(`/taxi?date=${getDate()}`);
+		let url = `/taxi?date=${getDate()}`;
+		if (showTour.tourId) {
+			url += `&tour=${showTour.tourId}`;
+		}
+		goto(url);
 		vehicles = loadVehicles();
 		tours = loadTours();
 	});
@@ -290,19 +293,7 @@
 	};
 
 	let onClickTour = async (id: number) => {
-		const url = `/taxi?date=${getDate()}&tour=${id}`;
-		console.log('GOTO', url);
-		goto(url)
-			.then(() => {
-				console.log('RESOLVED GOOD');
-			})
-			.catch(() => {
-				console.log('RESOLVE BAD');
-			})
-			.finally(() => {
-				console.log('FIN');
-			});
-		showTour.open = true;
+		showTour.tourId = id;
 	};
 </script>
 
