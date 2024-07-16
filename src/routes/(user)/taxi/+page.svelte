@@ -58,20 +58,7 @@
 		);
 	};
 
-	const loadTours = (): Array<Tour> => {
-		return data.tours.map((t) => ({
-			id: t.id,
-			from: t.departure,
-			to: t.arrival,
-			vehicle_id: t.vehicle,
-			arrival: t.arrival,
-			departure: t.departure,
-			license_plate: ''
-		}));
-	};
-
 	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
-	let tours = $state<Array<Tour>>(loadTours());
 
 	let selectedTour = $state.frozen<Tour | null>(null);
 	let selectedTourEvents = $state<Array<Event> | null>(null);
@@ -84,7 +71,6 @@
 		const date = value.toDate('UTC').toISOString().slice(0, 10);
 		goto(`/taxi?date=${date}`);
 		vehicles = loadVehicles();
-		tours = loadTours();
 	});
 
 	// 11 pm local time day before
@@ -118,11 +104,11 @@
 	const overlaps = (a: Range, b: Range) => a.from < b.to && a.to > b.from;
 
 	const hasTour = (vehicle_id: number, cell: Range) => {
-		return tours.some((t) => vehicle_id == t.vehicle_id && overlaps(t, cell));
+		return data.tours.some((t) => vehicle_id == t.vehicle_id && overlaps(t, cell));
 	};
 
 	const getTours = (vehicle_id: number, cell: Range) => {
-		return tours.filter((t) => vehicle_id == t.vehicle_id && overlaps(t, cell));
+		return data.tours.filter((t) => vehicle_id == t.vehicle_id && overlaps(t, cell));
 	};
 
 	const isAvailable = (v: Vehicle, cell: Range) => {
@@ -228,7 +214,7 @@
 
 	const hasOverlap = () => {
 		return draggedTours?.tours.some((d) =>
-			tours.some((t) => t.vehicle_id == draggedTours?.vehicle_id && overlaps(d, t))
+			data.tours.some((t) => t.vehicle_id == draggedTours?.vehicle_id && overlaps(d, t))
 		);
 	};
 

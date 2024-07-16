@@ -1,3 +1,4 @@
+import { groupBy } from '$lib/collection_utils.js';
 import { TZ } from '$lib/constants.js';
 import { db } from '$lib/database';
 
@@ -13,18 +14,29 @@ export async function load({ url }) {
 	latest_displayed_time.setHours(utcDate.getHours() + 25);
 	const vehicles = db.selectFrom('vehicle').where('company', '=', company_id).selectAll().execute();
 
-	const tours = await db
-		.selectFrom('vehicle')
-		.where('company', '=', company_id)
-		.innerJoin('tour', 'vehicle', 'vehicle.id')
+	const events = await db
+		.selectFrom('event')
+		.innerJoin('tour', 'tour.id', 'event.tour')
 		.where((eb) =>
 			eb.and([
 				eb('tour.departure', '<', latest_displayed_time),
 				eb('tour.arrival', '>', earliest_displayed_time)
 			])
 		)
-		.select(['tour.arrival', 'tour.departure', 'tour.vehicle', 'tour.id'])
+		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
+		.where('company', '=', company_id)
+		.selectAll()
 		.execute();
+
+	const toursMap = groupBy(events, (e) => {
+		return {
+			tour_id: e.tour,
+			from: e.departure,
+			to: e.arrival,
+			vehicle_id: e.vehicle
+		}
+	}, (e) => { address: e.address });
+	const tours = [...toursMap].map(([tour, events]) => { return { ...tour, events } });
 
 	const availabilities = db
 		.selectFrom('vehicle')
@@ -44,26 +56,10 @@ export async function load({ url }) {
 		])
 		.execute();
 
-	const events =
-		tours.length === 0
-			? []
-			: db
-					.selectFrom('tour')
-					.where(
-						'tour.id',
-						'in',
-						tours.map((t) => t.id)
-					)
-					.innerJoin('event', 'event.tour', 'tour.id')
-					.innerJoin('address', 'address.id', 'event.address')
-					.selectAll()
-					.execute();
-
 	return {
+		tours,
 		vehicles: await vehicles,
-		tours: tours,
 		availabilities: await availabilities,
-		events: await events,
 		utcDate
 	};
 }
