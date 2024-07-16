@@ -64,7 +64,6 @@ export async function load({ url }) {
 		tours: tours,
 		availabilities: await availabilities,
 		events: await events,
-		utcDate,
-		company_id
+		utcDate
 	};
 }
