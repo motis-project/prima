@@ -15,7 +15,7 @@
 	let bike = $state(false);
 	let wheelchair = $state(false);
 	let storageSpace = $state(4);
-	const pattern = /([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})/;
+	const pattern = /$([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})^/;
 	const add = async () => {
 		if (passengers !== '3' && passengers !== '5' && passengers !== '7') {
 			toast.warning('Bitte die maximale Passagieranzahl auswählen.');

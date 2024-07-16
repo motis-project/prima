@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/database';
 
 export const POST = async ({ request }) => {
@@ -30,4 +30,5 @@ export const POST = async ({ request }) => {
 			message: 'An unknown error occurred'
 		});
 	}
+	return json({});
 };
