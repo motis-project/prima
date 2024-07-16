@@ -14,6 +14,7 @@ fi
 
 git submodule update --init --recursive
 cd kysely-ctl
+npm install -f
 npm run build
 
 echo "DROP DATABASE prima;" | PGPASSWORD=pw psql postgresql://localhost:6500 --user postgres
