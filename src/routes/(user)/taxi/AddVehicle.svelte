@@ -25,15 +25,15 @@
 			toast.warning('Die Anzahl Gepäckstücke muss eine Zahl zwischen 0 und 11 sein.');
 		} else {
 			try {
-				const newVehicle = await addVehicle(
+				const [ok, response] = await addVehicle(
 					licensePlate,
 					Number(passengers),
 					+wheelchair,
 					+bike,
 					Number(storageSpace)
 				);
-				if (!newVehicle.ok) {
-					toast('Server Fehler! Fahrzeug konnte nicht hinzugefügt werden.');
+				if (!ok) {
+					toast(`Server Fehler! Fahrzeug konnte nicht hinzugefügt werden. (${response.message})`);
 				}
 			} catch {
 				toast('Der Server konnte nicht erreicht werden.');
