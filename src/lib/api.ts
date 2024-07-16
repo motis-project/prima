@@ -11,15 +11,38 @@ export const getVehicles = async (company_id: number): Promise<Vehicle[]> => {
 	return await response.json();
 };
 
-export const updateTour = async (tour_id: number, vehicle_id: number): Promise<Response> => {
-	const response = await fetch('/api/tour/', {
+interface Message {
+	message: string;
+}
+
+export const addVehicle = async (
+	license_plate: string,
+	seats: number,
+	wheelchair_capacity: number,
+	bike_capacity: number,
+	storage_space: number
+): Promise<[boolean, Message]> => {
+	const response = await fetch('/api/vehicle/', {
+		method: 'POST',
+		body: JSON.stringify({
+			license_plate,
+			seats,
+			wheelchair_capacity,
+			bike_capacity,
+			storage_space
+		})
+	});
+	return [response.ok, await response.json()];
+};
+
+export const updateTour = async (tour_id: number, vehicle_id: number) => {
+	return await fetch('/api/tour/', {
 		method: 'POST',
 		body: JSON.stringify({
 			tour_id,
 			vehicle_id
 		})
 	});
-	return response;
 };
 
 export const removeAvailability = async (vehicle_id: number, from: Date, to: Date) => {
