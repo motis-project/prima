@@ -21,7 +21,7 @@ export async function load({ url }) {
 		.where('tour.id', '=', parseInt(tourID))
 		.innerJoin('event', 'event.tour', 'tour.id')
 		.innerJoin('address', 'address.id', 'event.address')
-		.innerJoin('user', 'user.id', 'event.customer')
+		.innerJoin('auth_user', 'auth_user.id', 'event.customer')
 		.orderBy('event.scheduled_time')
 		.selectAll()
 		.execute();

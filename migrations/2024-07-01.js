@@ -60,6 +60,9 @@ export async function up(db) {
         .addColumn('id', 'varchar', (col) => col.primaryKey())
         .addColumn('email', 'varchar', (col) => col.unique())
         .addColumn('password_hash', 'varchar')
+        .addColumn('first_name', 'varchar')
+        .addColumn('last_name', 'varchar')
+        .addColumn('phone', 'varchar')
         .execute();
 
     await db.schema
@@ -78,14 +81,6 @@ export async function up(db) {
         .addColumn('house_number', 'varchar', (col) => col.notNull())
         .addColumn('postal_code', 'varchar', (col) => col.notNull())
         .addColumn('city', 'varchar', (col) => col.notNull())
-        .execute();
-
-    await db.schema
-        .createTable('user')
-        .addColumn('id', 'serial', (col) => col.primaryKey())
-        .addColumn('first_name', 'varchar', (col) => col.notNull())
-        .addColumn('last_name', 'varchar', (col) => col.notNull())
-        .addColumn('phone', 'varchar', (col) => col.notNull())
         .execute();
 
     await db.schema
@@ -117,8 +112,8 @@ export async function up(db) {
         .addColumn('tour', 'integer', (col) =>
             col.references('tour.id').onDelete('cascade').notNull(),
         )
-        .addColumn('customer', 'integer', (col) =>
-            col.references('user.id').onDelete('cascade').notNull(),
+        .addColumn('customer', 'varchar', (col) =>
+            col.references('auth_user.id').onDelete('cascade').notNull(),
         )
         .execute();
 }

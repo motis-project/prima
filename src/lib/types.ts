@@ -11,7 +11,6 @@ export interface Database {
 	event: EventTable;
 	address: AddressTable;
 	request: RequestTable;
-	user: UserTable;
 }
 
 // ====
@@ -97,6 +96,8 @@ export interface UserAuthTable {
 	id: string;
 	email: string;
 	password_hash: string;
+	test: string
+
 }
 
 export type UserAuth = Selectable<UserAuthTable>;
@@ -166,13 +167,3 @@ export interface RequestTable {
 export type Request = Selectable<RequestTable>;
 export type NewRequest = Insertable<RequestTable>;
 export type RequestUpdate = Updateable<RequestTable>;
-
-// ============
-// USER
-// ------------
-export interface UserTable {
-	id: string;
-	first_name: string;
-	last_name: string;
-	phone: string;
-}
