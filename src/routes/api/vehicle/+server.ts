@@ -2,13 +2,16 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/database';
 
 export const POST = async ({ request }) => {
-	const { license_plate, company, seats, wheelchair_capacity, bike_capacity, storage_space } =
+	// TODO: derive from logged in user or deny access if no login / no company
+	const company = 1;
+
+	const { license_plate, seats, wheelchair_capacity, bike_capacity, storage_space } =
 		await request.json();
 	await db
 		.insertInto('vehicle')
 		.values({
 			license_plate: license_plate,
-			company: Number(company),
+			company,
 			seats: Number(seats),
 			wheelchair_capacity: Number(wheelchair_capacity),
 			bike_capacity: Number(bike_capacity),

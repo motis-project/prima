@@ -13,7 +13,6 @@ export const getVehicles = async (company_id: number): Promise<Vehicle[]> => {
 
 export const addVehicle = async (
 	license_plate: string,
-	company: number,
 	seats: number,
 	wheelchair_capacity: number,
 	bike_capacity: number,
@@ -23,7 +22,6 @@ export const addVehicle = async (
 		method: 'POST',
 		body: JSON.stringify({
 			license_plate,
-			company,
 			seats,
 			wheelchair_capacity,
 			bike_capacity,
