@@ -9,7 +9,6 @@ export class Event {
 	house_number!: string;
 	postal_code!: string;
 	city!: string;
-	tour!: number;
 	first_name!: string;
 	last_name!: string;
 	phone!: string;

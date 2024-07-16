@@ -9,7 +9,7 @@ export async function load({ url }) {
 		};
 	}
 
-	const tour = db
+	const tours = db
 		.selectFrom('tour')
 		.where('tour.id', '=', parseInt(tourID))
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
@@ -27,7 +27,7 @@ export async function load({ url }) {
 		.execute();
 
 	return {
-		tour: await tour,
+		tour: (await tours)[0],
 		events: await events
 	};
 }

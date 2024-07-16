@@ -99,6 +99,7 @@ export interface UserAuthTable {
 	first_name: string;
 	last_name: string;
 	phone: string;
+	company_id: number;
 }
 
 export type UserAuth = Selectable<UserAuthTable>;
@@ -130,7 +131,7 @@ export interface EventTable {
 	communicated_time: Date;
 	address: number;
 	tour: number;
-	customer: number;
+	customer: string;
 	request: number;
 }
 

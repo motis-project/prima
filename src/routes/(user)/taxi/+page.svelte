@@ -359,7 +359,7 @@
 																			const href = `${basePath}/tour-detail?tour=${tour.id}`;
 																			const result = await preloadData(href);
 																			if (result.type === 'loaded' && result.status === 200) {
-																				selectedTour = result.data.tour[0];
+																				selectedTour = result.data.tour;
 																				selectedTourEvents = result.data.events;
 																				showTour.open = true;
 																			}
