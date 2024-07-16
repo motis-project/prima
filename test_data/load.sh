@@ -1,4 +1,7 @@
-#!/bin/sh
+#!/bin/bash
+
+set -euo pipefail
+set -o xtrace
 
 BASEDIR=$(dirname $0)
 SCENARIO=$1
@@ -9,12 +12,26 @@ if [ $# -eq 0 ]
     exit 1
 fi
 
+git submodule update --init --recursive
+cd kysely-ctl
+npm run build
 
-PGPASSWORD=pw psql postgresql://localhost:6500/prima --user postgres < $BASEDIR/$SCENARIO/clear.sql
-PGPASSWORD=pw psql postgresql://localhost:6500/prima --user postgres < $BASEDIR/$SCENARIO/address.sql
-PGPASSWORD=pw psql postgresql://localhost:6500/prima --user postgres < $BASEDIR/$SCENARIO/zone.sql
-PGPASSWORD=pw psql postgresql://localhost:6500/prima --user postgres < $BASEDIR/$SCENARIO/company.sql
-PGPASSWORD=pw psql postgresql://localhost:6500/prima --user postgres < $BASEDIR/$SCENARIO/vehicle.sql
-PGPASSWORD=pw psql postgresql://localhost:6500/prima --user postgres < $BASEDIR/$SCENARIO/availability.sql
-PGPASSWORD=pw psql postgresql://localhost:6500/prima --user postgres < $BASEDIR/$SCENARIO/tour.sql
-PGPASSWORD=pw psql postgresql://localhost:6500/prima --user postgres < $BASEDIR/$SCENARIO/event.sql
+echo "DROP DATABASE prima;" | PGPASSWORD=pw psql postgresql://localhost:6500 --user postgres
+echo "CREATE DATABASE prima;" | PGPASSWORD=pw psql postgresql://localhost:6500 --user postgres
+
+cd -
+node ./kysely-ctl/dist/bin.js migrate:latest
+
+echo "cd $BASEDIR"
+cd $BASEDIR
+
+export PGPASSWORD=pw
+
+psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/clear.sql
+psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/address.sql
+psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/zone.sql
+psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/company.sql
+psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/vehicle.sql
+psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/availability.sql
+psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/tour.sql
+psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/event.sql
