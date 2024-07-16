@@ -3,6 +3,7 @@ import { db } from '$lib/database';
 
 export async function load({ url }) {
 	const company_id = 1;
+	const tourID = url.searchParams.get('tour');
 	const localDateParam = url.searchParams.get('date');
 	const localDate = localDateParam ? new Date(localDateParam) : new Date();
 	const utcDate = new Date(localDate.toLocaleString('en', { timeZone: TZ }));
@@ -13,7 +14,7 @@ export async function load({ url }) {
 	latest_displayed_time.setHours(utcDate.getHours() + 25);
 	const vehicles = db.selectFrom('vehicle').where('company', '=', company_id).selectAll().execute();
 
-	const tours = await db
+	const tours = db
 		.selectFrom('vehicle')
 		.where('company', '=', company_id)
 		.innerJoin('tour', 'vehicle', 'vehicle.id')
@@ -44,26 +45,28 @@ export async function load({ url }) {
 		])
 		.execute();
 
-	const events =
-		tours.length === 0
-			? []
-			: db
+	return {
+		selectedTour: tourID
+			? await db
 					.selectFrom('tour')
-					.where(
-						'tour.id',
-						'in',
-						tours.map((t) => t.id)
-					)
+					.where('tour.id', '=', parseInt(tourID))
+					.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
+					.selectAll()
+					.executeTakeFirst()
+			: undefined,
+		selectedEvents: tourID
+			? await db
+					.selectFrom('tour')
+					.where('tour.id', '=', parseInt(tourID))
 					.innerJoin('event', 'event.tour', 'tour.id')
 					.innerJoin('address', 'address.id', 'event.address')
+					.orderBy('event.scheduled_time')
 					.selectAll()
-					.execute();
-
-	return {
+					.execute()
+			: [],
 		vehicles: await vehicles,
-		tours: tours,
+		tours: await tours,
 		availabilities: await availabilities,
-		events: await events,
 		utcDate
 	};
 }

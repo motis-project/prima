@@ -35,6 +35,7 @@
 		}
 	});
 
+	let currentCenter = center;
 	const createMap = (container: HTMLElement) => {
 		map = new maplibregl.Map({ container, zoom, center, style, transformRequest });
 
@@ -64,6 +65,13 @@
 			}
 		};
 	};
+
+	$effect(() => {
+		if (center != currentCenter) {
+			map?.setCenter(center);
+			currentCenter = center;
+		}
+	});
 </script>
 
 <div use:createMap class={className}>
