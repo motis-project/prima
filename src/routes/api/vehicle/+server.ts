@@ -10,12 +10,12 @@ export const POST = async ({ request }) => {
 	await db
 		.insertInto('vehicle')
 		.values({
-			license_plate: license_plate,
+			license_plate,
 			company,
-			seats: Number(seats),
-			wheelchair_capacity: Number(wheelchair_capacity),
-			bike_capacity: Number(bike_capacity),
-			storage_space: Number(storage_space)
+			seats,
+			wheelchair_capacity,
+			bike_capacity,
+			storage_space
 		})
 		.execute();
 	return json({});
