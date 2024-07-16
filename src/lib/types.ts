@@ -11,7 +11,7 @@ export interface Database {
 	event: EventTable;
 	address: AddressTable;
 	request: RequestTable;
-	user: UserTable
+	user: UserTable;
 }
 
 // ====
