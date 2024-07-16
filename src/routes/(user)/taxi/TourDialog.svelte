@@ -2,7 +2,6 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Card from '$lib/components/ui/card';
-	import { Tour } from './Tour';
 	import { Event } from './Event';
 
 	import { getStyle } from '$lib/style';
@@ -12,9 +11,17 @@
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import { getRoute } from '$lib/api';
 
+	type Tour = {
+		id: number;
+		vehicle: number;
+		departure: Date;
+		arrival: Date;
+		license_plate: string;
+	};
+
 	class Props {
 		open!: { open: boolean };
-		selectedTour!: Tour | null;
+		selectedTour!: Tour | undefined;
 		selectedTourEvents!: Array<Event> | null;
 	}
 

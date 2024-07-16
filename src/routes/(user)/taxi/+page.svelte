@@ -1,8 +1,6 @@
 <script lang="ts">
 	const { data } = $props();
 
-	import { base as basePath } from '$app/paths';
-
 	import {
 		DateFormatter,
 		fromDate,
@@ -22,19 +20,26 @@
 
 	import Sun from 'lucide-svelte/icons/sun';
 	import Moon from 'lucide-svelte/icons/moon';
-	import { goto, invalidateAll, preloadData } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { TZ } from '$lib/constants.js';
 	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
 
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 
-	import { Tour } from './Tour';
-	import { Range } from './Range';
-	import { Event } from './Event';
 	import TourDialog from './TourDialog.svelte';
 	import AddVehicle from './AddVehicle.svelte';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
+
+	class Range {
+		from!: Date;
+		to!: Date;
+	}
+
+	class Tour extends Range {
+		id!: number;
+		vehicle_id!: number;
+	}
 
 	class Vehicle {
 		license_plate!: string;
@@ -60,26 +65,25 @@
 			id: t.id,
 			from: t.departure,
 			to: t.arrival,
-			vehicle_id: t.vehicle,
-			arrival: t.arrival,
-			departure: t.departure,
-			license_plate: ''
+			vehicle_id: t.vehicle
 		}));
 	};
 
 	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
 	let tours = $state<Array<Tour>>(loadTours());
 
-	let selectedTour = $state.frozen<Tour | null>(null);
-	let selectedTourEvents = $state<Array<Event> | null>(null);
+	// let selectedTourId = $state<number | null>(null);
 	let showTour = $state<{ open: boolean }>({ open: false });
 
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
 	let day = $derived(new ReactiveDate(value));
 
+	const getDate = () => {
+		return value.toDate('UTC').toISOString().slice(0, 10);
+	};
+
 	$effect(() => {
-		const date = value.toDate('UTC').toISOString().slice(0, 10);
-		goto(`/taxi?date=${date}`);
+		// goto(`/taxi?date=${getDate()}`);
 		vehicles = loadVehicles();
 		tours = loadTours();
 	});
@@ -284,6 +288,22 @@
 			return 'bg-yellow-100';
 		}
 	};
+
+	let onClickTour = async (id: number) => {
+		const url = `/taxi?date=${getDate()}&tour=${id}`;
+		console.log('GOTO', url);
+		goto(url)
+			.then(() => {
+				console.log('RESOLVED GOOD');
+			})
+			.catch(() => {
+				console.log('RESOLVE BAD');
+			})
+			.finally(() => {
+				console.log('FIN');
+			});
+		showTour.open = true;
+	};
 </script>
 
 <Toaster />
@@ -353,13 +373,7 @@
 																{#each getTours(id, cell) as tour}
 																	<DropdownMenu.Item
 																		on:click={async () => {
-																			const href = `${basePath}/tour-detail?tour=${tour.id}`;
-																			const result = await preloadData(href);
-																			if (result.type === 'loaded' && result.status === 200) {
-																				selectedTour = result.data.tour[0];
-																				selectedTourEvents = result.data.events;
-																				showTour.open = true;
-																			}
+																			onClickTour(tour.id);
 																		}}
 																	>
 																		{tour.id}
@@ -439,4 +453,8 @@
 	{@render availability_table({ from: today_day, to: tomorrow_night })}
 </Card.Content>
 
-<TourDialog {selectedTourEvents} {selectedTour} bind:open={showTour} />
+<TourDialog
+	selectedTourEvents={data.selectedEvents}
+	selectedTour={data.selectedTour}
+	bind:open={showTour}
+/>
