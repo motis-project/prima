@@ -1,8 +1,6 @@
 <script lang="ts">
 	const { data } = $props();
 
-	import { base as basePath } from '$app/paths';
-
 	import {
 		DateFormatter,
 		fromDate,
@@ -16,28 +14,32 @@
 
 	import { Date as ReactiveDate, Map } from 'svelte/reactivity';
 	import { Button } from '$lib/components/ui/button';
-	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
-	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
 	import { Toaster, toast } from 'svelte-sonner';
 	import * as Card from '$lib/components/ui/card';
-	import { Plus, ChevronRight, ChevronLeft } from 'lucide-svelte';
+	import { ChevronRight, ChevronLeft } from 'lucide-svelte';
 
 	import Sun from 'lucide-svelte/icons/sun';
 	import Moon from 'lucide-svelte/icons/moon';
-	import { goto, invalidateAll, preloadData } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { TZ } from '$lib/constants.js';
-	import Label from '$lib/components/ui/label/label.svelte';
 	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
 
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 
-	import { Tour } from './Tour';
-	import { Range } from './Range';
-	import { Event } from './Event';
 	import TourDialog from './TourDialog.svelte';
+	import AddVehicle from './AddVehicle.svelte';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
+
+	class Range {
+		from!: Date;
+		to!: Date;
+	}
+
+	class Tour extends Range {
+		id!: number;
+		vehicle_id!: number;
+	}
 
 	class Vehicle {
 		license_plate!: string;
@@ -60,16 +62,21 @@
 
 	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
 
-	let selectedTour = $state.frozen<Tour | null>(null);
-	let selectedTourEvents = $state<Array<Event> | null>(null);
-	let showTour = $state<{ open: boolean }>({ open: false });
+	let showTour = $state<{ tourId: number | undefined }>({ tourId: undefined });
 
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
 	let day = $derived(new ReactiveDate(value));
 
+	const getDate = () => {
+		return value.toDate('UTC').toISOString().slice(0, 10);
+	};
+
 	$effect(() => {
-		const date = value.toDate('UTC').toISOString().slice(0, 10);
-		goto(`/taxi?date=${date}`);
+		let url = `/taxi?date=${getDate()}`;
+		if (showTour.tourId) {
+			url += `&tour=${showTour.tourId}`;
+		}
+		goto(url);
 		vehicles = loadVehicles();
 	});
 
@@ -273,6 +280,10 @@
 			return 'bg-yellow-100';
 		}
 	};
+
+	let onClickTour = async (id: number) => {
+		showTour.tourId = id;
+	};
 </script>
 
 <Toaster />
@@ -342,13 +353,7 @@
 																{#each getTours(id, cell) as tour}
 																	<DropdownMenu.Item
 																		on:click={async () => {
-																			const href = `${basePath}/tour-detail?tour=${tour.id}`;
-																			const result = await preloadData(href);
-																			if (result.type === 'loaded' && result.status === 200) {
-																				selectedTour = result.data.tour;
-																				selectedTourEvents = result.data.events;
-																				showTour.open = true;
-																			}
+																			onClickTour(tour.id);
 																		}}
 																	>
 																		{tour.id}
@@ -410,70 +415,7 @@
 				<ChevronRight class="h-4 w-4" />
 			</Button>
 		</div>
-		<div>
-			<Popover.Root>
-				<Popover.Trigger>
-					<Button variant="outline">
-						<Plus class="mr-2 h-4 w-4" />
-						{'Fahrzeug hinzufügen'}
-					</Button>
-				</Popover.Trigger>
-				<Popover.Content class="absolute z-10">
-					<div class="grid gap-4">
-						<div class="space-y-2">
-							<h2 class="font-medium leading-none">Fahrzeug:</h2>
-						</div>
-						<div class="grid w-full max-w-sm items-center gap-1.5">
-							<Label for="nummernschild">Nummernschild des Fahrzeugs:</Label>
-							<Input type="nummernschild" id="nummernschild" placeholder="DA-AB-1234" />
-						</div>
-						<div>
-							<h6>Maximale Passagieranzahl:</h6>
-							<RadioGroup.Root value="three">
-								<div class="flex items-center space-x-2">
-									<RadioGroup.Item value="three" id="r1" />
-									<Label for="r1">3 Passagiere</Label>
-								</div>
-								<div class="flex items-center space-x-2">
-									<RadioGroup.Item value="five" id="r2" />
-									<Label for="r2">5 Passagiere</Label>
-								</div>
-								<div class="flex items-center space-x-2">
-									<RadioGroup.Item value="seven" id="r3" />
-									<Label for="r3">7 Passagiere</Label>
-								</div>
-								<RadioGroup.Input name="spacing" />
-							</RadioGroup.Root>
-						</div>
-						<div class="grid gap-2">
-							<div class="flex items-center space-x-2">
-								<Checkbox id="fahrrad" aria-labelledby="fahrrad-label" />
-								<Label
-									id="fahrrad-label"
-									for="fahrrad"
-									class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-								>
-									Fahrradmitnahme
-								</Label>
-							</div>
-							<div class="flex items-center space-x-2">
-								<Checkbox id="rollstuhl" aria-labelledby="rollstuhl-label" />
-								<Label
-									id="rollstuhl-label"
-									for="rollstuhl"
-									class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-								>
-									Für Rollstuhlfahrer geeignet
-								</Label>
-							</div>
-							<div class="grid grid-cols-1 items-center gap-4">
-								<Button variant="outline">Fahrzeug hinzufügen</Button>
-							</div>
-						</div>
-					</div>
-				</Popover.Content>
-			</Popover.Root>
-		</div>
+		<AddVehicle />
 		<Button on:click={toggleMode} variant="outline" size="icon">
 			<Sun
 				class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
@@ -491,4 +433,8 @@
 	{@render availability_table({ from: today_day, to: tomorrow_night })}
 </Card.Content>
 
-<TourDialog {selectedTourEvents} {selectedTour} bind:open={showTour} />
+<TourDialog
+	selectedTourEvents={data.selectedEvents}
+	selectedTour={data.selectedTour}
+	bind:open={showTour}
+/>

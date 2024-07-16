@@ -4,6 +4,7 @@ import { db } from '$lib/database';
 
 export async function load({ url }) {
 	const company_id = 1;
+	const tourID = url.searchParams.get('tour');
 	const localDateParam = url.searchParams.get('date');
 	const localDate = localDateParam ? new Date(localDateParam) : new Date();
 	const utcDate = new Date(localDate.toLocaleString('en', { timeZone: TZ }));

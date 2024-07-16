@@ -2,7 +2,6 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Card from '$lib/components/ui/card';
-	import { Tour } from './Tour';
 	import { Event } from './Event';
 	import { getStyle } from '$lib/style';
 	import Map from '$lib/Map.svelte';
@@ -11,9 +10,17 @@
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import { getRoute } from '$lib/api';
 
+	type Tour = {
+		id: number;
+		vehicle: number;
+		departure: Date;
+		arrival: Date;
+		license_plate: string;
+	};
+
 	class Props {
-		open!: { open: boolean };
-		selectedTour!: Tour | null;
+		open!: { tourId: number | undefined };
+		selectedTour!: Tour | undefined;
 		selectedTourEvents!: Array<Event> | null;
 	}
 
@@ -49,15 +56,15 @@
 		return routes;
 	};
 
-	const getCenter = (tourEvents: Array<Event> | null) => {
+	const getCenter = (tourEvents: Array<Event> | null): [number, number] => {
 		if (tourEvents == null || tourEvents!.length == 0) {
-			return { lat: 0, lng: 0 };
+			return [0, 0];
 		}
 		let nEvents = tourEvents!.length;
-		return {
-			lat: tourEvents!.map((e) => e.latitude).reduce((e, c) => e + c, 0) / nEvents,
-			lng: tourEvents!.map((e) => e.longitude).reduce((e, c) => e + c, 0) / nEvents
-		};
+		return [
+			tourEvents!.map((e) => e.longitude).reduce((e, c) => e + c, 0) / nEvents,
+			tourEvents!.map((e) => e.latitude).reduce((e, c) => e + c, 0) / nEvents
+		];
 	};
 
 	const routes = $derived(getRoutes(selectedTourEvents));
@@ -65,10 +72,10 @@
 </script>
 
 <Dialog.Root
-	open={open.open}
+	open={open.tourId !== undefined}
 	onOpenChange={(x) => {
 		if (!x) {
-			open.open = false;
+			open.tourId = undefined;
 		}
 	}}
 	on:close={() => history.back()}
@@ -94,7 +101,7 @@
 											</Table.Row>
 										</Table.Header>
 										<Table.Body>
-											{#if selectedTourEvents != null}
+											{#if selectedTour && selectedTourEvents}
 												<Table.Row>
 													<Table.Cell>
 														{selectedTour!.departure.toLocaleString('de-DE') .slice(0, -3)}

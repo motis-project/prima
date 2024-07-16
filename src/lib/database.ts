@@ -11,7 +11,7 @@ export const pool = new pg.Pool({
 	max: 10
 });
 
-const dialect = new PostgresDialect({
+export const dialect = new PostgresDialect({
 	pool
 });
 

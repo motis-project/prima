@@ -25,7 +25,7 @@ export async function up(db) {
     await db.schema
         .createTable('vehicle')
         .addColumn('id', 'serial', (col) => col.primaryKey())
-        .addColumn('license_plate', 'varchar', (col) => col.notNull())
+        .addColumn('license_plate', 'varchar', (col) => col.notNull().unique())
         .addColumn('company', 'integer', (col) =>
             col.references('company.id').onDelete('cascade').notNull(),
         )
