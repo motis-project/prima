@@ -2,7 +2,6 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Card from '$lib/components/ui/card';
-	import { Event } from './Event';
 	import { getStyle } from '$lib/style';
 	import Map from '$lib/Map.svelte';
 	import GeoJSON from '$lib/GeoJSON.svelte';
@@ -11,22 +10,38 @@
 	import { getRoute } from '$lib/api';
 
 	type Tour = {
-		id: number;
-		vehicle: number;
-		departure: Date;
-		arrival: Date;
+		tour_id: number;
+		from: Date;
+		to: Date;
+		vehicle_id: number;
 		license_plate: string;
+		events: Array<Event>;
+	};
+
+	type Event = {
+		address: number;
+		latitude: number;
+		longitude: number;
+		street: string;
+		postal_code: string;
+		city: string;
+		scheduled_time: Date;
+		house_number: string;
+		first_name: string;
+		last_name: string;
+		phone: string;
+		is_pickup: boolean;
 	};
 
 	class Props {
-		open!: { tourId: number | undefined };
-		selectedTour!: Tour | undefined;
-		selectedTourEvents!: Array<Event> | null;
+		open!: {
+			tour: Tour | undefined;
+		};
 	}
 
-	const { open = $bindable(), selectedTourEvents, selectedTour }: Props = $props();
+	const { open = $bindable() }: Props = $props();
 
-	const getRoutes = (tourEvents: Array<Event> | null) => {
+	const getRoutes = (tourEvents: Array<Event> | null | undefined) => {
 		// eslint-disable-next-line
 		let routes: Array<Promise<any>> = [];
 		if (tourEvents == null || tourEvents!.length == 0) {
@@ -67,15 +82,15 @@
 		];
 	};
 
-	const routes = $derived(getRoutes(selectedTourEvents));
-	const center = $derived(getCenter(selectedTourEvents));
+	const routes = $derived(getRoutes(open.tour!.events));
+	const center = $derived(getCenter(open.tour!.events));
 </script>
 
 <Dialog.Root
-	open={open.tourId !== undefined}
+	open={open.tour !== undefined}
 	onOpenChange={(x) => {
 		if (!x) {
-			open.tourId = undefined;
+			open.tour = undefined;
 		}
 	}}
 	on:close={() => history.back()}
@@ -101,21 +116,21 @@
 											</Table.Row>
 										</Table.Header>
 										<Table.Body>
-											{#if selectedTour && selectedTourEvents}
+											{#if open.tour}
 												<Table.Row>
 													<Table.Cell>
-														{selectedTour!.departure.toLocaleString('de-DE') .slice(0, -3)}
-														<br />{selectedTourEvents[0].street}<br />
-														{selectedTourEvents[0].postal_code}
-														{selectedTourEvents[0].city}
+														{open.tour!.from.toLocaleString('de-DE') .slice(0, -3)}
+														<br />{open.tour.events[0].street}<br />
+														{open.tour.events[0].postal_code}
+														{open.tour.events[0].city}
 													</Table.Cell>
 													<Table.Cell>
-														{selectedTour!.arrival.toLocaleString('de-DE') .slice(0, -3)}
-														<br />{selectedTourEvents[selectedTourEvents.length - 1].street}<br />
-														{selectedTourEvents[selectedTourEvents.length - 1].postal_code}
-														{selectedTourEvents[selectedTourEvents.length - 1].city}
+														{open.tour!.to.toLocaleString('de-DE') .slice(0, -3)}
+														<br />{open.tour.events[open.tour.events.length - 1].street}<br />
+														{open.tour.events[open.tour.events.length - 1].postal_code}
+														{open.tour.events[open.tour.events.length - 1].city}
 													</Table.Cell>
-													<Table.Cell>{selectedTour!.license_plate}</Table.Cell>
+													<Table.Cell>{open.tour!.license_plate}</Table.Cell>
 												</Table.Row>
 											{/if}
 										</Table.Body>
@@ -136,7 +151,7 @@
 											}
 										}}
 										style={getStyle(0)}
-										center={[center!.lng, center!.lat]}
+										{center}
 										zoom={10}
 										className="h-[500px] w-[500px]"
 									>
@@ -208,8 +223,8 @@
 										</Table.Header>
 
 										<Table.Body>
-											{#if selectedTourEvents != null}
-												{#each selectedTourEvents as event}
+											{#if open.tour!.events != null}
+												{#each open.tour!.events as event}
 													<Table.Row>
 														<Table.Cell
 															>{event.scheduled_time

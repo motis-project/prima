@@ -37,7 +37,7 @@
 	}
 
 	class Tour extends Range {
-		id!: number;
+		tour_id!: number;
 		vehicle_id!: number;
 	}
 
@@ -62,7 +62,32 @@
 
 	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
 
-	let showTour = $state<{ tourId: number | undefined }>({ tourId: undefined });
+	// let showTour = $state<{ tourId: number | undefined }>({ tourId: undefined });
+	let selectedTour = $state<{
+		tour:
+			| {
+					tour_id: number;
+					vehicle_id: number;
+					from: Date;
+					to: Date;
+					license_plate: string;
+					events: Array<{
+						address: number;
+						latitude: number;
+						longitude: number;
+						street: string;
+						postal_code: string;
+						city: string;
+						scheduled_time: Date;
+						house_number: string;
+						first_name: string;
+						last_name: string;
+						phone: string;
+						is_pickup: boolean;
+					}>;
+			  }
+			| undefined;
+	}>({ tour: undefined });
 
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
 	let day = $derived(new ReactiveDate(value));
@@ -73,8 +98,8 @@
 
 	$effect(() => {
 		let url = `/taxi?date=${getDate()}`;
-		if (showTour.tourId) {
-			url += `&tour=${showTour.tourId}`;
+		if (selectedTour.tour!.tour_id) {
+			url += `&tour=${selectedTour.tour!.tour_id}`;
 		}
 		goto(url);
 		vehicles = loadVehicles();
@@ -247,7 +272,7 @@
 			let responses;
 			try {
 				responses = await Promise.all(
-					draggedTours.tours.map((t) => updateTour(t.id, t.vehicle_id))
+					draggedTours.tours.map((t) => updateTour(t.tour_id, t.vehicle_id))
 				);
 			} catch {
 				toast('Der Server konnte nicht erreicht werden.');
@@ -281,9 +306,9 @@
 		}
 	};
 
-	let onClickTour = async (id: number) => {
-		showTour.tourId = id;
-	};
+	// let onClickTour = async (id: number) => {
+	// 	showTour.tourId = id;
+	// };
 </script>
 
 <Toaster />
@@ -352,11 +377,11 @@
 																<DropdownMenu.Separator />
 																{#each getTours(id, cell) as tour}
 																	<DropdownMenu.Item
-																		on:click={async () => {
-																			onClickTour(tour.id);
+																		on:click={() => {
+																			selectedTour = { tour: tour };
 																		}}
 																	>
-																		{tour.id}
+																		{tour.tour_id}
 																	</DropdownMenu.Item>
 																{/each}
 															</DropdownMenu.Group>
@@ -433,8 +458,4 @@
 	{@render availability_table({ from: today_day, to: tomorrow_night })}
 </Card.Content>
 
-<TourDialog
-	selectedTourEvents={data.selectedEvents}
-	selectedTour={data.selectedTour}
-	bind:open={showTour}
-/>
+<TourDialog bind:open={selectedTour} />

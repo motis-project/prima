@@ -34,9 +34,25 @@ export async function load({ url }) {
 			tour_id: e.tour,
 			from: e.departure,
 			to: e.arrival,
-			vehicle_id: e.vehicle
+			vehicle_id: e.vehicle,
+			license_plate: e.license_plate
 		}
-	}, (e) => { address: e.address });
+	}, (e) => {
+		return {
+			address: e.address,
+			latitude: e.latitude,
+			longitude: e.longitude,
+			street: 'Eine Straße',
+			postal_code: '424242',
+			city: 'Beispielstadt',
+			scheduled_time: e.scheduled_time,
+			house_number: 'string',
+			first_name: 'string',
+			last_name: 'string',
+			phone: 'string',
+			is_pickup: e.is_pickup
+		}
+	});
 	const tours = [...toursMap].map(([tour, events]) => { return { ...tour, events } });
 
 	const availabilities = db
