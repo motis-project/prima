@@ -30,7 +30,10 @@ export const actions: Actions = {
 		const id = generateId(15);
 
 		try {
-			await db.insertInto('auth_user').values({ id, email, password_hash }).executeTakeFirst();
+			await db
+				.insertInto('auth_user')
+				.values({ id, email, password_hash, is_entrepreneur: false })
+				.executeTakeFirst();
 
 			const session = await lucia.createSession(id, {});
 			const sessionCookie = lucia.createSessionCookie(session.id);

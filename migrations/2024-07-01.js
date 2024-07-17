@@ -59,6 +59,7 @@ export async function up(db) {
         .createTable('auth_user')
         .addColumn('id', 'varchar', (col) => col.primaryKey())
         .addColumn('email', 'varchar', (col) => col.unique())
+        .addColumn('is_entrepreneur', 'boolean', (col) => col.notNull())
         .addColumn('password_hash', 'varchar')
         .execute();
 
