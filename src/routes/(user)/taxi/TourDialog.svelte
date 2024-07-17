@@ -27,9 +27,9 @@
 		city: string;
 		scheduled_time: Date;
 		house_number: string;
-		first_name: string;
-		last_name: string;
-		phone: string;
+		first_name: string | null;
+		last_name: string | null;
+		phone: string | null;
 		is_pickup: boolean;
 	};
 
