@@ -2,7 +2,7 @@
 	import '../../app.css';
 	import Nav from '$lib/nav.svelte';
 
-	const { data } = $props();
+	const { children, data } = $props();
 	const routeLinks = data.user.is_maintainer
 		? [
 				{
@@ -33,7 +33,7 @@
 		<section>
 			<Nav {routeLinks} />
 			<div class="overflow-hidden rounded-[0.5rem] border bg-background shadow-xl">
-				<slot />
+				{@render children()}
 			</div>
 		</section>
 	</div>
