@@ -4,7 +4,6 @@ import { db } from '$lib/database';
 
 export async function load({ url }) {
 	const company_id = 1;
-	const tourID = url.searchParams.get('tour');
 	const localDateParam = url.searchParams.get('date');
 	const localDate = localDateParam ? new Date(localDateParam) : new Date();
 	const utcDate = new Date(localDate.toLocaleString('en', { timeZone: TZ }));
@@ -29,31 +28,37 @@ export async function load({ url }) {
 		.selectAll()
 		.execute();
 
-	const toursMap = groupBy(events, (e) => {
-		return {
-			tour_id: e.tour,
-			from: e.departure,
-			to: e.arrival,
-			vehicle_id: e.vehicle,
-			license_plate: e.license_plate
+	const toursMap = groupBy(
+		events,
+		(e) => {
+			return {
+				tour_id: e.tour,
+				from: e.departure,
+				to: e.arrival,
+				vehicle_id: e.vehicle,
+				license_plate: e.license_plate
+			};
+		},
+		(e) => {
+			return {
+				address: e.address,
+				latitude: e.latitude,
+				longitude: e.longitude,
+				street: 'Eine Straße',
+				postal_code: '424242',
+				city: 'Beispielstadt',
+				scheduled_time: e.scheduled_time,
+				house_number: 'string',
+				first_name: 'string',
+				last_name: 'string',
+				phone: 'string',
+				is_pickup: e.is_pickup
+			};
 		}
-	}, (e) => {
-		return {
-			address: e.address,
-			latitude: e.latitude,
-			longitude: e.longitude,
-			street: 'Eine Straße',
-			postal_code: '424242',
-			city: 'Beispielstadt',
-			scheduled_time: e.scheduled_time,
-			house_number: 'string',
-			first_name: 'string',
-			last_name: 'string',
-			phone: 'string',
-			is_pickup: e.is_pickup
-		}
+	);
+	const tours = [...toursMap].map(([tour, events]) => {
+		return { ...tour, events };
 	});
-	const tours = [...toursMap].map(([tour, events]) => { return { ...tour, events } });
 
 	const availabilities = db
 		.selectFrom('vehicle')
