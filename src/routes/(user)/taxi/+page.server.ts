@@ -57,13 +57,12 @@ export async function load({ url }) {
 	);
 	const tours = [...toursMap].map(([tour, events]) => {
 		const first = events[0]!;
-		const last = events[events.length - 1]!;
 		return {
 			tour_id: tour,
 			departure: first.departure,
-			arrival: last.arrival,
+			arrival: first.arrival,
 			from: first.departure,
-			to: last.arrival,
+			to: first.arrival,
 			vehicle: first.vehicle,
 			vehicle_id: first.vehicle,
 			license_plate: first.license_plate,
