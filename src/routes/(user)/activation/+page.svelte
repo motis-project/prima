@@ -15,8 +15,8 @@
 	<Card.Content class="w-full h-full">
 		<form method="POST">
 			<div class="grid w-full grid-rows-2 grid-cols-2 gap-4">
-				<Label
-					>Email
+				<Label>
+					Email
 					{#if form?.missing}
 						<div class="text-[0.8rem] font-medium text-destructive mt-1">
 							Das Email Feld muss ausgefüllt werden.

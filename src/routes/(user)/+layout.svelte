@@ -10,7 +10,7 @@
 					href: '/activation'
 				},
 				{
-					name: 'Tourenliste',
+					name: 'abgeschlossene Fahrten',
 					href: '/completed'
 				}
 			]

@@ -9,17 +9,14 @@ export const actions = {
 			return fail(400, { email, missing: true });
 		}
 		try {
-			if (
-				(
-					await db
-						.updateTable('auth_user')
-						.set({
-							is_entrepreneur: true
-						})
-						.where('email', '=', email)
-						.executeTakeFirstOrThrow()
-				).numUpdatedRows == 0n
-			) {
+			const updateResult = await db
+				.updateTable('auth_user')
+				.set({
+					is_entrepreneur: true
+				})
+				.where('email', '=', email)
+				.executeTakeFirstOrThrow();
+			if (updateResult.numUpdatedRows == 0n) {
 				return fail(400, { email, incorrect: true });
 			}
 		} catch {
