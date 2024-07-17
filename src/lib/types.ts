@@ -97,6 +97,7 @@ export interface UserAuthTable {
 	email: string;
 	password_hash: string;
 	is_entrepreneur: boolean;
+	is_maintainer: boolean;
 }
 
 export type UserAuth = Selectable<UserAuthTable>;

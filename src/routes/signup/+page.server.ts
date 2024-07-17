@@ -32,7 +32,7 @@ export const actions: Actions = {
 		try {
 			await db
 				.insertInto('auth_user')
-				.values({ id, email, password_hash, is_entrepreneur: false })
+				.values({ id, email, password_hash, is_entrepreneur: false, is_maintainer: false })
 				.executeTakeFirst();
 
 			const session = await lucia.createSession(id, {});

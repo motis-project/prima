@@ -12,6 +12,8 @@ declare module 'lucia' {
 
 interface DatabaseUserAttributes {
 	email: string;
+	is_entrepreneur: boolean;
+	is_maintainer: boolean;
 }
 
 const adapter = new NodePostgresAdapter(pool, {
@@ -27,7 +29,9 @@ export const lucia = new Lucia(adapter, {
 	},
 	getUserAttributes: (attributes) => {
 		return {
-			email: attributes.email
+			email: attributes.email,
+			is_entrepreneur: attributes.is_entrepreneur,
+			is_maintainer: attributes.is_maintainer
 		};
 	}
 });
