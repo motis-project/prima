@@ -77,13 +77,13 @@
 		}
 		let nEvents = tourEvents!.length;
 		return [
-			tourEvents!.map((e) => e.longitude).reduce((e, c) => e + c, 0) / nEvents,
-			tourEvents!.map((e) => e.latitude).reduce((e, c) => e + c, 0) / nEvents
+			tourEvents.map((e) => e.longitude).reduce((e, c) => e + c, 0) / nEvents,
+			tourEvents.map((e) => e.latitude).reduce((e, c) => e + c, 0) / nEvents
 		];
 	};
 
-	const routes = $derived(getRoutes(open.tour!.events));
-	const center = $derived(getCenter(open.tour!.events));
+	const routes = $derived(open.tour && getRoutes(open.tour.events));
+	const center = $derived(open.tour && getCenter(open.tour.events));
 </script>
 
 <Dialog.Root
@@ -98,167 +98,173 @@
 	<Dialog.Content class="w-fit m-auto min-w-[1280px] h-auto">
 		<Dialog.Header>
 			<Dialog.Title>Tour Details</Dialog.Title>
-			<Dialog.Description>
-				<div class="grid grid-cols-1 grid-rows-2 gap-2 py-3">
-					<div class="inline-flex flex-row gap-2">
-						<div>
-							<Card.Root>
-								<Card.Header>
-									<Card.Title>Übersicht</Card.Title>
-								</Card.Header>
-								<Card.Content class="w-[670px] h-[524px]">
-									<Table.Root>
-										<Table.Header>
-											<Table.Row>
-												<Table.Head>Abfahrt</Table.Head>
-												<Table.Head>Ankunft</Table.Head>
-												<Table.Head>Fahrzeug</Table.Head>
-											</Table.Row>
-										</Table.Header>
-										<Table.Body>
-											{#if open.tour}
-												<Table.Row>
-													<Table.Cell>
-														{open.tour!.from.toLocaleString('de-DE') .slice(0, -3)}
-														<br />{open.tour.events[0].street}<br />
-														{open.tour.events[0].postal_code}
-														{open.tour.events[0].city}
-													</Table.Cell>
-													<Table.Cell>
-														{open.tour!.to.toLocaleString('de-DE') .slice(0, -3)}
-														<br />{open.tour.events[open.tour.events.length - 1].street}<br />
-														{open.tour.events[open.tour.events.length - 1].postal_code}
-														{open.tour.events[open.tour.events.length - 1].city}
-													</Table.Cell>
-													<Table.Cell>{open.tour!.license_plate}</Table.Cell>
-												</Table.Row>
-											{/if}
-										</Table.Body>
-									</Table.Root>
-								</Card.Content>
-							</Card.Root>
-						</div>
-						<div>
-							<Card.Root>
-								<Card.Header>
-									<Card.Title>Route</Card.Title>
-								</Card.Header>
-								<Card.Content>
-									<Map
-										transformRequest={(url) => {
-											if (url.startsWith('/')) {
-												return { url: `https://europe.motis-project.de/tiles${url}` };
-											}
-										}}
-										style={getStyle(0)}
-										{center}
-										zoom={10}
-										className="h-[500px] w-[500px]"
-									>
-										{#if routes != null}
-											{#each routes as segment, i}
-												{#await segment then r}
-													{#if r.type == 'FeatureCollection'}
-														<GeoJSON id={'r_ ' + i} data={r}>
-															<Layer
-																id={'path-outline_ ' + i}
-																type="line"
-																layout={{
-																	'line-join': 'round',
-																	'line-cap': 'round'
-																}}
-																filter={true}
-																paint={{
-																	'line-color': '#1966a4',
-																	'line-width': 7.5,
-																	'line-opacity': 0.8
-																}}
-															/>
-															<Layer
-																id={'path_ ' + i}
-																type="line"
-																layout={{
-																	'line-join': 'round',
-																	'line-cap': 'round'
-																}}
-																filter={true}
-																paint={{
-																	'line-color': '#42a5f5',
-																	'line-width': 5,
-																	'line-opacity': 0.8
-																}}
-															/>
-														</GeoJSON>
-													{/if}
-												{/await}
-											{/each}
-										{/if}
-									</Map>
-								</Card.Content>
-							</Card.Root>
-						</div>
-					</div>
-					<div class="inline-flex flex-row gap-2">
-						<Card.Root>
-							<Card.Header>
-								<Card.Title>Tour Details</Card.Title>
-								<Card.Description
-									>Wegpunkte, Abfahrtszeiten und Kundeninformationen</Card.Description
-								>
-							</Card.Header>
-							<Card.Content class="h-[426px]">
-								<ScrollArea class="w-[1180px] h-[404px] rounded-md p-4">
-									<Table.Root>
-										<Table.Header>
-											<Table.Row>
-												<Table.Head>Abfahrt</Table.Head>
-												<Table.Head>Straße</Table.Head>
-												<Table.Head>Hausnr.</Table.Head>
-												<Table.Head>Ort</Table.Head>
-												<Table.Head>Kunde</Table.Head>
-												<Table.Head>Tel. Kunde</Table.Head>
-												<Table.Head></Table.Head>
-												<Table.Head class="text-right">Fahrpreis</Table.Head>
-											</Table.Row>
-										</Table.Header>
-
-										<Table.Body>
-											{#if open.tour!.events != null}
-												{#each open.tour!.events as event}
-													<Table.Row>
-														<Table.Cell
-															>{event.scheduled_time
-																.toLocaleString('de-DE')
-																.slice(0, -3)
-																.replace(',', ' ')}</Table.Cell
-														>
-														<Table.Cell>{event.street}</Table.Cell>
-														<Table.Cell>{event.house_number}</Table.Cell>
-														<Table.Cell>{event.postal_code} {event.city}</Table.Cell>
-														<Table.Cell>
-															{event.last_name},
-															{event.first_name}
-														</Table.Cell>
-														<Table.Cell>
-															{event.phone}
-														</Table.Cell>
-														{#if event.is_pickup}
-															<Table.Cell class="text-green-500 text-2xl">&#x21E6</Table.Cell>
-														{:else}
-															<Table.Cell class="text-red-500 text-2xl">&#x21E8</Table.Cell>
-														{/if}
-														<Table.Cell class="text-right">42,42</Table.Cell>
-													</Table.Row>
-												{/each}
-											{/if}
-										</Table.Body>
-									</Table.Root>
-								</ScrollArea>
-							</Card.Content>
-						</Card.Root>
-					</div>
-				</div>
-			</Dialog.Description>
 		</Dialog.Header>
+		<Dialog.Description>
+			<div class="grid grid-cols-1 grid-rows-2 gap-2 py-3">
+				<div class="inline-flex flex-row gap-2">
+					<div>{@render overview()}</div>
+					<div>{@render map()}</div>
+				</div>
+				<div class="inline-flex flex-row gap-2">
+					<div>{@render details()}</div>
+				</div>
+			</div>
+		</Dialog.Description>
 	</Dialog.Content>
 </Dialog.Root>
+
+{#snippet overview()}
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>Übersicht</Card.Title>
+		</Card.Header>
+		<Card.Content class="w-[670px] h-[524px]">
+			<Table.Root>
+				<Table.Header>
+					<Table.Row>
+						<Table.Head>Abfahrt</Table.Head>
+						<Table.Head>Ankunft</Table.Head>
+						<Table.Head>Fahrzeug</Table.Head>
+					</Table.Row>
+				</Table.Header>
+				<Table.Body>
+					{#if open.tour}
+						<Table.Row>
+							<Table.Cell>
+								{open.tour!.from.toLocaleString('de-DE') .slice(0, -3)}
+								<br />{open.tour.events[0].street}<br />
+								{open.tour.events[0].postal_code}
+								{open.tour.events[0].city}
+							</Table.Cell>
+							<Table.Cell>
+								{open.tour!.to.toLocaleString('de-DE') .slice(0, -3)}
+								<br />{open.tour.events[open.tour.events.length - 1].street}<br />
+								{open.tour.events[open.tour.events.length - 1].postal_code}
+								{open.tour.events[open.tour.events.length - 1].city}
+							</Table.Cell>
+							<Table.Cell>{open.tour!.license_plate}</Table.Cell>
+						</Table.Row>
+					{/if}
+				</Table.Body>
+			</Table.Root>
+		</Card.Content>
+	</Card.Root>
+{/snippet}
+
+{#snippet map()}
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>Route</Card.Title>
+		</Card.Header>
+		<Card.Content>
+			{#if center && routes != null}
+				<Map
+					transformRequest={(url) => {
+						if (url.startsWith('/')) {
+							return { url: `https://europe.motis-project.de/tiles${url}` };
+						}
+					}}
+					style={getStyle(0)}
+					{center}
+					zoom={11}
+					className="h-[500px] w-[500px]"
+				>
+					{#each routes as segment, i}
+						{#await segment then r}
+							{#if r.type == 'FeatureCollection'}
+								<GeoJSON id={'r_ ' + i} data={r}>
+									<Layer
+										id={'path-outline_ ' + i}
+										type="line"
+										layout={{
+											'line-join': 'round',
+											'line-cap': 'round'
+										}}
+										filter={true}
+										paint={{
+											'line-color': '#1966a4',
+											'line-width': 7.5,
+											'line-opacity': 0.8
+										}}
+									/>
+									<Layer
+										id={'path_ ' + i}
+										type="line"
+										layout={{
+											'line-join': 'round',
+											'line-cap': 'round'
+										}}
+										filter={true}
+										paint={{
+											'line-color': '#42a5f5',
+											'line-width': 5,
+											'line-opacity': 0.8
+										}}
+									/>
+								</GeoJSON>
+							{/if}
+						{/await}
+					{/each}
+				</Map>
+			{/if}
+		</Card.Content>
+	</Card.Root>
+{/snippet}
+
+{#snippet details()}
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>Tour Details</Card.Title>
+			<Card.Description>Wegpunkte, Abfahrtszeiten und Kundeninformationen</Card.Description>
+		</Card.Header>
+		<Card.Content class="h-[426px]">
+			<ScrollArea class="w-[1180px] h-[404px] rounded-md p-4">
+				<Table.Root>
+					<Table.Header>
+						<Table.Row>
+							<Table.Head>Abfahrt</Table.Head>
+							<Table.Head>Straße</Table.Head>
+							<Table.Head>Hausnr.</Table.Head>
+							<Table.Head>Ort</Table.Head>
+							<Table.Head>Kunde</Table.Head>
+							<Table.Head>Tel. Kunde</Table.Head>
+							<Table.Head></Table.Head>
+							<Table.Head class="text-right">Fahrpreis</Table.Head>
+						</Table.Row>
+					</Table.Header>
+
+					<Table.Body>
+						{#if open.tour!.events != null}
+							{#each open.tour!.events as event}
+								<Table.Row>
+									<Table.Cell
+										>{event.scheduled_time
+											.toLocaleString('de-DE')
+											.slice(0, -3)
+											.replace(',', ' ')}</Table.Cell
+									>
+									<Table.Cell>{event.street}</Table.Cell>
+									<Table.Cell>{event.house_number}</Table.Cell>
+									<Table.Cell>{event.postal_code} {event.city}</Table.Cell>
+									<Table.Cell>
+										{event.last_name},
+										{event.first_name}
+									</Table.Cell>
+									<Table.Cell>
+										{event.phone}
+									</Table.Cell>
+									{#if event.is_pickup}
+										<Table.Cell class="text-green-500 text-2xl">&#x21E6</Table.Cell>
+									{:else}
+										<Table.Cell class="text-red-500 text-2xl">&#x21E8</Table.Cell>
+									{/if}
+									<Table.Cell class="text-right">42,42</Table.Cell>
+								</Table.Row>
+							{/each}
+						{/if}
+					</Table.Body>
+				</Table.Root>
+			</ScrollArea>
+		</Card.Content>
+	</Card.Root>
+{/snippet}

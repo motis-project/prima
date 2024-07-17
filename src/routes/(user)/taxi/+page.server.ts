@@ -12,53 +12,8 @@ export async function load({ url }) {
 	earliest_displayed_time.setHours(utcDate.getHours() - 1);
 	const latest_displayed_time = new Date(utcDate);
 	latest_displayed_time.setHours(utcDate.getHours() + 25);
+
 	const vehicles = db.selectFrom('vehicle').where('company', '=', company_id).selectAll().execute();
-
-	const events = await db
-		.selectFrom('event')
-		.innerJoin('tour', 'tour.id', 'event.tour')
-		.where((eb) =>
-			eb.and([
-				eb('tour.departure', '<', latest_displayed_time),
-				eb('tour.arrival', '>', earliest_displayed_time)
-			])
-		)
-		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
-		.where('company', '=', company_id)
-		.selectAll()
-		.execute();
-
-	const toursMap = groupBy(
-		events,
-		(e) => {
-			return {
-				tour_id: e.tour,
-				from: e.departure,
-				to: e.arrival,
-				vehicle_id: e.vehicle,
-				license_plate: e.license_plate
-			};
-		},
-		(e) => {
-			return {
-				address: e.address,
-				latitude: e.latitude,
-				longitude: e.longitude,
-				street: 'Eine Straße',
-				postal_code: '424242',
-				city: 'Beispielstadt',
-				scheduled_time: e.scheduled_time,
-				house_number: 'string',
-				first_name: 'string',
-				last_name: 'string',
-				phone: 'string',
-				is_pickup: e.is_pickup
-			};
-		}
-	);
-	const tours = [...toursMap].map(([tour, events]) => {
-		return { ...tour, events };
-	});
 
 	const availabilities = db
 		.selectFrom('vehicle')
@@ -77,6 +32,59 @@ export async function load({ url }) {
 			'availability.vehicle'
 		])
 		.execute();
+
+	const events = await db
+		.selectFrom('event')
+		.innerJoin('address', 'address.id', 'event.address')
+		.innerJoin('auth_user', 'auth_user.id', 'event.customer')
+		.innerJoin('tour', 'tour.id', 'event.tour')
+		.where((eb) =>
+			eb.and([
+				eb('tour.departure', '<', latest_displayed_time),
+				eb('tour.arrival', '>', earliest_displayed_time)
+			])
+		)
+		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
+		.where('company', '=', company_id)
+		.orderBy('event.scheduled_time')
+		.selectAll()
+		.execute();
+
+	const toursMap = groupBy(
+		events,
+		(e) => e.tour,
+		(e) => e
+	);
+	const tours = [...toursMap].map(([tour, events]) => {
+		const first = events[0]!;
+		const last = events[events.length - 1]!;
+		return {
+			tour_id: tour,
+			departure: first.departure,
+			arrival: last.arrival,
+			from: first.departure,
+			to: last.arrival,
+			vehicle: first.vehicle,
+			vehicle_id: first.vehicle,
+			license_plate: first.license_plate,
+			events: events.map((e) => {
+				return {
+					address: e.address,
+					latitude: e.latitude,
+					longitude: e.longitude,
+					street: e.street,
+					postal_code: e.postal_code,
+					city: e.city,
+					scheduled_time: e.scheduled_time,
+					house_number: e.house_number,
+					first_name: e.first_name,
+					last_name: e.last_name,
+					phone: e.phone,
+					is_pickup: e.is_pickup
+				};
+			})
+		};
+	});
 
 	return {
 		tours,

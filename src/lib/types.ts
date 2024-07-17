@@ -96,10 +96,10 @@ export interface UserAuthTable {
 	id: string;
 	email: string;
 	password_hash: string;
-	first_name: string;
-	last_name: string;
-	phone: string;
-	company_id: number;
+	first_name: string | null;
+	last_name: string | null;
+	phone: string | null;
+	company_id: number | null;
 }
 
 export type UserAuth = Selectable<UserAuthTable>;

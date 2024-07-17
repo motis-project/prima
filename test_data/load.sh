@@ -35,4 +35,5 @@ psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/company.sql
 psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/vehicle.sql
 psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/availability.sql
 psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/tour.sql
+psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/auth_user.sql
 psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/event.sql

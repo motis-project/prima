@@ -62,31 +62,32 @@
 
 	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
 
-	// let showTour = $state<{ tourId: number | undefined }>({ tourId: undefined });
+	type TourDetails = {
+		tour_id: number;
+		from: Date;
+		to: Date;
+		vehicle_id: number;
+		license_plate: string;
+		events: Array<Event>;
+	};
+
+	type Event = {
+		address: number;
+		latitude: number;
+		longitude: number;
+		street: string;
+		postal_code: string;
+		city: string;
+		scheduled_time: Date;
+		house_number: string;
+		first_name: string;
+		last_name: string;
+		phone: string;
+		is_pickup: boolean;
+	};
+
 	let selectedTour = $state<{
-		tour:
-			| {
-					tour_id: number;
-					vehicle_id: number;
-					from: Date;
-					to: Date;
-					license_plate: string;
-					events: Array<{
-						address: number;
-						latitude: number;
-						longitude: number;
-						street: string;
-						postal_code: string;
-						city: string;
-						scheduled_time: Date;
-						house_number: string;
-						first_name: string;
-						last_name: string;
-						phone: string;
-						is_pickup: boolean;
-					}>;
-			  }
-			| undefined;
+		tour: TourDetails | undefined;
 	}>({ tour: undefined });
 
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
@@ -98,9 +99,6 @@
 
 	$effect(() => {
 		let url = `/taxi?date=${getDate()}`;
-		if (selectedTour.tour!.tour_id) {
-			url += `&tour=${selectedTour.tour!.tour_id}`;
-		}
 		goto(url);
 		vehicles = loadVehicles();
 	});
@@ -306,9 +304,16 @@
 		}
 	};
 
-	// let onClickTour = async (id: number) => {
-	// 	showTour.tourId = id;
-	// };
+	const getTourInfoShort = (tour: TourDetails) => {
+		let l1 = tour.events[0];
+		let l2 = tour.events[tour.events.length - 1];
+
+		if (l1.city == l2.city) {
+			return l1.city + ': ' + l1.street + ' - ' + l2.street;
+		} else {
+			return l1.city + ' - ' + l2.city;
+		}
+	};
 </script>
 
 <Toaster />
@@ -381,7 +386,7 @@
 																			selectedTour = { tour: tour };
 																		}}
 																	>
-																		{tour.tour_id}
+																		{getTourInfoShort(tour)}
 																	</DropdownMenu.Item>
 																{/each}
 															</DropdownMenu.Group>
