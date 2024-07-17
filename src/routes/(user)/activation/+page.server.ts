@@ -5,7 +5,7 @@ import { fail } from '@sveltejs/kit';
 export const actions = {
 	default: async ({ request }) => {
 		const email = (await request.formData()).get('email')!.toString();
-		if(!email){
+		if (!email) {
 			return fail(400, { email, missing: true });
 		}
 		try {
@@ -25,5 +25,5 @@ export const actions = {
 		} catch {
 			return fail(400, { email, incorrect: true });
 		}
-	},
+	}
 } satisfies Actions;

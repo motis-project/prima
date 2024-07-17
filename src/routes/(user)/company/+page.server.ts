@@ -64,7 +64,7 @@ export const actions: Actions = {
 				.where('id', '=', company_id)
 				.execute();
 		} catch {
-			form.errors.address = ["Die Addresse konnte nicht zugeordent werden."]
+			form.errors.address = ['Die Addresse konnte nicht zugeordent werden.'];
 			return fail(400, {
 				form
 			});
