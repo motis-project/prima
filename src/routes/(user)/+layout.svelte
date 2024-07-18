@@ -2,7 +2,7 @@
 	import '../../app.css';
 	import Nav from '$lib/nav.svelte';
 
-	const { children, data } = $props();
+	const { children } = $props();
 	const routeLinks = [
 		{
 			name: 'Taxi',

@@ -1,69 +1,23 @@
 <script lang="ts">
-	import Map from '$lib/Map.svelte';
-	import GeoJSON from '$lib/GeoJSON.svelte';
-	import Layer from '$lib/Layer.svelte';
-	import { getStyle } from '$lib/style.js';
-	import { getRoute } from '$lib/api';
-
-	let route = getRoute({
-		start: {
-			lat: 50.106847864,
-			lng: 8.6632053122,
-			level: 0
-		},
-		destination: {
-			lat: 49.872584079,
-			lng: 8.6312708899,
-			level: 0
-		},
-		profile: 'car',
-		direction: 'forward'
-	});
+	import * as Card from '$lib/components/ui/card';
 </script>
 
-<Map
-	transformRequest={(url) => {
-		if (url.startsWith('/')) {
-			return { url: `https://europe.motis-project.de/tiles${url}` };
-		}
-	}}
-	style={getStyle(0)}
-	center={[8.563351200419433, 50]}
-	zoom={10}
-	className="h-screen w-screen"
->
-	{#await route then r}
-		{#if r.type == 'FeatureCollection'}
-			<GeoJSON id="route" data={r}>
-				<Layer
-					id="path-outline"
-					type="line"
-					layout={{
-						'line-join': 'round',
-						'line-cap': 'round'
-					}}
-					filter={true}
-					paint={{
-						'line-color': '#1966a4',
-						'line-width': 7.5,
-						'line-opacity': 0.8
-					}}
-				/>
-				<Layer
-					id="path"
-					type="line"
-					layout={{
-						'line-join': 'round',
-						'line-cap': 'round'
-					}}
-					filter={true}
-					paint={{
-						'line-color': '#42a5f5',
-						'line-width': 5,
-						'line-opacity': 0.8
-					}}
-				/>
-			</GeoJSON>
-		{/if}
-	{/await}
-</Map>
+<div class="flex min-h-screen">
+	<div class="container min-w-[1440px] relative mt-28">
+		<section>
+			<div class="overflow-hidden rounded-[0.5rem] border bg-background shadow-xl">
+				<Card.Header>
+					<Card.Title>Willkommen beim Projekt PrimaÖV!</Card.Title>
+				</Card.Header>
+				<Card.Content class="w-full h-full">
+					<textarea rows="7" cols="200">
+						Sie sind auf dieser Seite gelandet, da Ihr neu angelegter Account noch nicht
+						freigeschaltet wurde. Falls Sie als Taxiunternehmer an dem Projekt teilnehmen möchten,
+						warten Sie bitte bis Sie mitgeteilt bekommen, dass Ihr Account freigeschaltet wurde.
+						Sollte dies bereits geschehen sein, können Sie die Seite neu laden.
+					</textarea>
+				</Card.Content>
+			</div>
+		</section>
+	</div>
+</div>
