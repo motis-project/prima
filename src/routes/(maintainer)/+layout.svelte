@@ -5,12 +5,12 @@
 	const { children, data } = $props();
 	const routeLinks = [
 		{
-			name: 'Taxi',
-			href: '/taxi'
+			name: 'Freischaltung',
+			href: '/activation'
 		},
 		{
-			name: 'Stammdaten',
-			href: '/company'
+			name: 'abgeschlossene Fahrten',
+			href: '/completed_tours'
 		}
 	];
 </script>
