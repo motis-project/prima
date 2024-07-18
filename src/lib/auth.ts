@@ -14,6 +14,7 @@ interface DatabaseUserAttributes {
 	email: string;
 	is_entrepreneur: boolean;
 	is_maintainer: boolean;
+	company_id: number | undefined;
 }
 
 const adapter = new NodePostgresAdapter(pool, {
@@ -31,7 +32,8 @@ export const lucia = new Lucia(adapter, {
 		return {
 			email: attributes.email,
 			is_entrepreneur: attributes.is_entrepreneur,
-			is_maintainer: attributes.is_maintainer
+			is_maintainer: attributes.is_maintainer,
+			company: attributes.company_id
 		};
 	}
 });

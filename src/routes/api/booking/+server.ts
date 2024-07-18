@@ -50,6 +50,16 @@ export const POST = async ({ request }) => {
 		.selectFrom('zone')
 		.where('zone.id', 'in', start_zone_ids)
 		.innerJoin('company', 'company.zone', 'zone.id')
+		.where((eb) =>
+			eb.and([
+				eb('latitude', '!=', null),
+				eb('longitude', '!=', null),
+				eb('address', '!=', null),
+				eb('name', '!=', null),
+				eb('zone', '!=', null),
+				eb('community_area', '!=', null)
+			])
+		)
 		.innerJoin(
 			(eb) =>
 				eb
@@ -137,7 +147,7 @@ export const POST = async ({ request }) => {
 	const companies = buffer.map(([company, _]) => company.company);
 	const vehicles = buffer.map(([_, vehicles]) => vehicles);
 	const centralCoordinates = buffer.map(
-		([company, _]) => new Coordinates(company.latitude, company.longitude)
+		([company, _]) => new Coordinates(company.latitude!, company.longitude!)
 	);
 
 	// Motis-one_to_many requests

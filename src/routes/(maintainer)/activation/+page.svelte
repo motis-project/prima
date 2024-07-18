@@ -27,6 +27,16 @@
 							Es existiert kein Benutzer mit der angegebenen Emailadresse.
 						</div>
 					{/if}
+					{#if form?.updated}
+						<div class="text-[0.8rem] font-medium text-green-600 mt-1">
+							Freischalten erfolgreich!
+						</div>
+					{/if}
+					{#if form?.existed}
+						<div class="text-[0.8rem] font-medium text-yellow-700 mt-1">
+							Nutzer bereits freigeschaltet
+						</div>
+					{/if}
 					<Input class="mt-2" name="email" type="text" />
 				</Label>
 				<div class="mt-6 row-start-2 col-span-2 text-right">

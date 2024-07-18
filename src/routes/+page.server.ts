@@ -9,7 +9,7 @@ export const load: PageServerLoad = async (event) => {
 		return redirect(302, '/activation');
 	}
 	if (event.locals.user.is_entrepreneur) {
-		return redirect(302, '/taxi');
+		return redirect(302, '/company');
 	}
 	return {
 		user: event.locals.user
