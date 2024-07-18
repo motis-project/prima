@@ -28,11 +28,16 @@ export const actions: Actions = {
 			parallelism: 1
 		});
 		const id = generateId(15);
+		const first_name = null;
+		const last_name = null;
+		const phone = null;
+		const company_id = null;
 
 		try {
 			await db
 				.insertInto('auth_user')
 				.values({ id, email, password_hash, is_entrepreneur: false, is_maintainer: false })
+				.values({ id, email, password_hash, first_name, last_name, phone, company_id, is_entrepreneur: false, is_maintainer: false })
 				.executeTakeFirst();
 
 			const session = await lucia.createSession(id, {});

@@ -62,6 +62,10 @@ export async function up(db) {
         .addColumn('is_entrepreneur', 'boolean', (col) => col.notNull())
         .addColumn('is_maintainer', 'boolean', (col) => col.notNull())
         .addColumn('password_hash', 'varchar')
+        .addColumn('first_name', 'varchar')
+        .addColumn('last_name', 'varchar')
+        .addColumn('phone', 'varchar')
+        .addColumn('company_id', 'integer')
         .execute();
 
     await db.schema
@@ -110,6 +114,9 @@ export async function up(db) {
         )
         .addColumn('tour', 'integer', (col) =>
             col.references('tour.id').onDelete('cascade').notNull(),
+        )
+        .addColumn('customer', 'varchar', (col) =>
+            col.references('auth_user.id').onDelete('cascade').notNull(),
         )
         .execute();
 }

@@ -273,7 +273,8 @@ export const POST = async ({ request }) => {
 					communicated_time: startTime, // TODO
 					address: 1, // TODO
 					request: requestId!,
-					tour: tour_id!
+					tour: tour_id!,
+					customer: '' // TODO
 				},
 				{
 					is_pickup: false,
@@ -283,7 +284,8 @@ export const POST = async ({ request }) => {
 					communicated_time: targetTime, // TODO
 					address: 1, // TODO
 					request: requestId!,
-					tour: tour_id!
+					tour: tour_id!,
+					customer: '' // TODO
 				}
 			])
 			.execute();
