@@ -4,7 +4,7 @@ import { db } from '$lib/database';
 import { Interval } from '../../../lib/interval.js';
 import { groupBy, updateValues } from '$lib/collection_utils.js';
 import { json } from '@sveltejs/kit';
-import { } from '$lib/utils.js';
+import {} from '$lib/utils.js';
 import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
@@ -103,7 +103,7 @@ export const POST = async ({ request }) => {
 
 	console.assert(
 		Math.max(...[...mergedAvailabilites.values()].map((availabilities) => availabilities.length)) <=
-		1
+			1
 	);
 
 	const availableVehicles = [...mergedAvailabilites.entries()]
@@ -285,7 +285,7 @@ export const POST = async ({ request }) => {
 					address: 1, // TODO
 					request: requestId!,
 					tour: tour_id!,
-					customer: ''// TODO
+					customer: '' // TODO
 				}
 			])
 			.execute();
