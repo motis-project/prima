@@ -74,14 +74,14 @@
 	}}
 	on:close={() => history.back()}
 >
-	<Dialog.Content class="container">
+	<Dialog.Content class="container max-h-screen">
 		<Dialog.Header>
 			<Dialog.Title>Tour Details</Dialog.Title>
 		</Dialog.Header>
 		<Dialog.Description>
 			<div class="grid grid-rows-2 grid-cols-2 gap-4">
-				<div>{@render overview()}</div>
-				<div>{@render map()}</div>
+				{@render overview()}
+				{@render map()}
 				<div class="col-span-2">{@render details()}</div>
 			</div>
 		</Dialog.Description>
@@ -137,7 +137,7 @@
 			style={getStyle(0)}
 			{center}
 			zoom={11}
-			className="h-full w-full min-h-96 rounded-lg border shadow"
+			className="h-full w-full rounded-lg border shadow"
 		>
 			{#each routes as segment, i}
 				{#await segment then r}
@@ -180,12 +180,12 @@
 {/snippet}
 
 {#snippet details()}
-	<Card.Root class="h-full">
+	<Card.Root class="max-h-80 overflow-y-auto">
 		<Card.Header>
 			<Card.Title>Tour Details</Card.Title>
 			<Card.Description>Wegpunkte, Abfahrtszeiten und Kundeninformationen</Card.Description>
 		</Card.Header>
-		<Card.Content class="max-h-96 overflow-y-auto mx-4 mb-6">
+		<Card.Content class="mx-4 mb-6">
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
