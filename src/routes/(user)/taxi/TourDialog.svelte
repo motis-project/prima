@@ -2,14 +2,14 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Card from '$lib/components/ui/card';
+	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import { getStyle } from '$lib/style';
+	import { getRoute } from '$lib/api';
 	import Map from '$lib/Map.svelte';
 	import GeoJSON from '$lib/GeoJSON.svelte';
 	import Layer from '$lib/Layer.svelte';
-	import { ScrollArea } from '$lib/components/ui/scroll-area';
-	import { getRoute } from '$lib/api';
 
-	type Tour = {
+	type TourDetails = {
 		tour_id: number;
 		from: Date;
 		to: Date;
@@ -35,7 +35,7 @@
 
 	class Props {
 		open!: {
-			tour: Tour | undefined;
+			tour: TourDetails | undefined;
 		};
 	}
 
@@ -95,7 +95,7 @@
 	}}
 	on:close={() => history.back()}
 >
-	<Dialog.Content class="w-fit m-auto min-w-[1280px] h-auto">
+	<Dialog.Content class="w-fit m-auto min-w-[1280px] h-[1220px]">
 		<Dialog.Header>
 			<Dialog.Title>Tour Details</Dialog.Title>
 		</Dialog.Header>
@@ -118,7 +118,7 @@
 		<Card.Header>
 			<Card.Title>Übersicht</Card.Title>
 		</Card.Header>
-		<Card.Content class="w-[670px] h-[524px]">
+		<Card.Content class="w-[480px] h-[623px]">
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
@@ -167,7 +167,7 @@
 					style={getStyle(0)}
 					{center}
 					zoom={11}
-					className="h-[500px] w-[500px]"
+					className="h-[600px] w-[689px]"
 				>
 					{#each routes as segment, i}
 						{#await segment then r}
@@ -217,8 +217,8 @@
 			<Card.Title>Tour Details</Card.Title>
 			<Card.Description>Wegpunkte, Abfahrtszeiten und Kundeninformationen</Card.Description>
 		</Card.Header>
-		<Card.Content class="h-[426px]">
-			<ScrollArea class="w-[1180px] h-[404px] rounded-md p-4">
+		<Card.Content class="h-[340px]">
+			<ScrollArea class="w-[1180px] h-[320px] rounded-md p-4">
 				<Table.Root>
 					<Table.Header>
 						<Table.Row>

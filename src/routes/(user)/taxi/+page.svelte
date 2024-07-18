@@ -41,27 +41,6 @@
 		vehicle_id!: number;
 	}
 
-	class Vehicle {
-		license_plate!: string;
-		availability!: Array<Range>;
-	}
-
-	const loadVehicles = (): Map<number, Vehicle> => {
-		return new Map<number, Vehicle>(
-			data.vehicles.map((v) => [
-				v.id,
-				{
-					license_plate: v.license_plate,
-					availability: data.availabilities
-						.filter((a) => a.vehicle == v.id)
-						.map((a) => ({ from: a.start_time, to: a.end_time }))
-				}
-			])
-		);
-	};
-
-	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
-
 	type TourDetails = {
 		tour_id: number;
 		from: Date;
@@ -85,6 +64,27 @@
 		phone: string | null;
 		is_pickup: boolean;
 	};
+
+	class Vehicle {
+		license_plate!: string;
+		availability!: Array<Range>;
+	}
+
+	const loadVehicles = (): Map<number, Vehicle> => {
+		return new Map<number, Vehicle>(
+			data.vehicles.map((v) => [
+				v.id,
+				{
+					license_plate: v.license_plate,
+					availability: data.availabilities
+						.filter((a) => a.vehicle == v.id)
+						.map((a) => ({ from: a.start_time, to: a.end_time }))
+				}
+			])
+		);
+	};
+
+	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
 
 	let selectedTour = $state<{
 		tour: TourDetails | undefined;

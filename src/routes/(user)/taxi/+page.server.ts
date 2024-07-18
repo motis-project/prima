@@ -59,11 +59,8 @@ export async function load({ url }) {
 		const first = events[0]!;
 		return {
 			tour_id: tour,
-			departure: first.departure,
-			arrival: first.arrival,
 			from: first.departure,
 			to: first.arrival,
-			vehicle: first.vehicle,
 			vehicle_id: first.vehicle,
 			license_plate: first.license_plate,
 			events: events.map((e) => {
