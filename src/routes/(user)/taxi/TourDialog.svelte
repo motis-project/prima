@@ -2,7 +2,6 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Card from '$lib/components/ui/card';
-	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import { getStyle } from '$lib/style';
 	import { getRoute } from '$lib/api';
 	import Map from '$lib/Map.svelte';
