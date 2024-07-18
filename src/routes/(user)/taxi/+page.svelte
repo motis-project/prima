@@ -28,6 +28,7 @@
 
 	import TourDialog from './TourDialog.svelte';
 	import AddVehicle from './AddVehicle.svelte';
+	import type { TourDetails } from './TourDetails';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
@@ -40,30 +41,6 @@
 		tour_id!: number;
 		vehicle_id!: number;
 	}
-
-	type TourDetails = {
-		tour_id: number;
-		from: Date;
-		to: Date;
-		vehicle_id: number;
-		license_plate: string;
-		events: Array<Event>;
-	};
-
-	type Event = {
-		address: number;
-		latitude: number;
-		longitude: number;
-		street: string;
-		postal_code: string;
-		city: string;
-		scheduled_time: Date;
-		house_number: string;
-		first_name: string | null;
-		last_name: string | null;
-		phone: string | null;
-		is_pickup: boolean;
-	};
 
 	class Vehicle {
 		license_plate!: string;

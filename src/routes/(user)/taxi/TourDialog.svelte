@@ -8,30 +8,9 @@
 	import Map from '$lib/Map.svelte';
 	import GeoJSON from '$lib/GeoJSON.svelte';
 	import Layer from '$lib/Layer.svelte';
-
-	type TourDetails = {
-		tour_id: number;
-		from: Date;
-		to: Date;
-		vehicle_id: number;
-		license_plate: string;
-		events: Array<Event>;
-	};
-
-	type Event = {
-		address: number;
-		latitude: number;
-		longitude: number;
-		street: string;
-		postal_code: string;
-		city: string;
-		scheduled_time: Date;
-		house_number: string;
-		first_name: string | null;
-		last_name: string | null;
-		phone: string | null;
-		is_pickup: boolean;
-	};
+	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
+	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import type { TourDetails, Event } from './TourDetails';
 
 	class Props {
 		open!: {
@@ -167,7 +146,7 @@
 					style={getStyle(0)}
 					{center}
 					zoom={11}
-					className="h-[600px] w-[689px]"
+					className="h-[600px] w-[689px] rounded-lg border shadow-sm"
 				>
 					{#each routes as segment, i}
 						{#await segment then r}
@@ -228,7 +207,7 @@
 							<Table.Head>Ort</Table.Head>
 							<Table.Head>Kunde</Table.Head>
 							<Table.Head>Tel. Kunde</Table.Head>
-							<Table.Head></Table.Head>
+							<Table.Head>Ein-/Ausstieg</Table.Head>
 							<Table.Head class="text-right">Fahrpreis</Table.Head>
 						</Table.Row>
 					</Table.Header>
@@ -254,9 +233,13 @@
 										{event.phone}
 									</Table.Cell>
 									{#if event.is_pickup}
-										<Table.Cell class="text-green-500 text-2xl">&#x21E6</Table.Cell>
+										<Table.Cell class="text-green-500">
+											<ArrowRight class="h-4 w-4" />
+										</Table.Cell>
 									{:else}
-										<Table.Cell class="text-red-500 text-2xl">&#x21E8</Table.Cell>
+										<Table.Cell class="text-red-500">
+											<ArrowLeft class="h-4 w-4" />
+										</Table.Cell>
 									{/if}
 									<Table.Cell class="text-right">42,42</Table.Cell>
 								</Table.Row>
