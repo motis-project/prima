@@ -1,2 +1,0 @@
-DROP DATABASE prima;
-CREATE DATABASE prima;
