@@ -96,6 +96,10 @@ export interface UserAuthTable {
 	id: string;
 	email: string;
 	password_hash: string;
+	first_name: string | null;
+	last_name: string | null;
+	phone: string | null;
+	company_id: number | null;
 }
 
 export type UserAuth = Selectable<UserAuthTable>;
@@ -127,6 +131,7 @@ export interface EventTable {
 	communicated_time: Date;
 	address: number;
 	tour: number;
+	customer: string;
 	request: number;
 }
 

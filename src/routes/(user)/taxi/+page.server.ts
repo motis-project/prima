@@ -1,9 +1,9 @@
+import { groupBy } from '$lib/collection_utils.js';
 import { TZ } from '$lib/constants.js';
 import { db } from '$lib/database';
 
 export async function load({ url }) {
 	const company_id = 1;
-	const tourID = url.searchParams.get('tour');
 	const localDateParam = url.searchParams.get('date');
 	const localDate = localDateParam ? new Date(localDateParam) : new Date();
 	const utcDate = new Date(localDate.toLocaleString('en', { timeZone: TZ }));
@@ -12,20 +12,8 @@ export async function load({ url }) {
 	earliest_displayed_time.setHours(utcDate.getHours() - 1);
 	const latest_displayed_time = new Date(utcDate);
 	latest_displayed_time.setHours(utcDate.getHours() + 25);
-	const vehicles = db.selectFrom('vehicle').where('company', '=', company_id).selectAll().execute();
 
-	const tours = db
-		.selectFrom('vehicle')
-		.where('company', '=', company_id)
-		.innerJoin('tour', 'vehicle', 'vehicle.id')
-		.where((eb) =>
-			eb.and([
-				eb('tour.departure', '<', latest_displayed_time),
-				eb('tour.arrival', '>', earliest_displayed_time)
-			])
-		)
-		.select(['tour.arrival', 'tour.departure', 'tour.vehicle', 'tour.id'])
-		.execute();
+	const vehicles = db.selectFrom('vehicle').where('company', '=', company_id).selectAll().execute();
 
 	const availabilities = db
 		.selectFrom('vehicle')
@@ -45,27 +33,58 @@ export async function load({ url }) {
 		])
 		.execute();
 
+	const events = await db
+		.selectFrom('event')
+		.innerJoin('address', 'address.id', 'event.address')
+		.innerJoin('auth_user', 'auth_user.id', 'event.customer')
+		.innerJoin('tour', 'tour.id', 'event.tour')
+		.where((eb) =>
+			eb.and([
+				eb('tour.departure', '<', latest_displayed_time),
+				eb('tour.arrival', '>', earliest_displayed_time)
+			])
+		)
+		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
+		.where('company', '=', company_id)
+		.orderBy('event.scheduled_time')
+		.selectAll()
+		.execute();
+
+	const toursMap = groupBy(
+		events,
+		(e) => e.tour,
+		(e) => e
+	);
+	const tours = [...toursMap].map(([tour, events]) => {
+		const first = events[0]!;
+		return {
+			tour_id: tour,
+			from: first.departure,
+			to: first.arrival,
+			vehicle_id: first.vehicle,
+			license_plate: first.license_plate,
+			events: events.map((e) => {
+				return {
+					address: e.address,
+					latitude: e.latitude,
+					longitude: e.longitude,
+					street: e.street,
+					postal_code: e.postal_code,
+					city: e.city,
+					scheduled_time: e.scheduled_time,
+					house_number: e.house_number,
+					first_name: e.first_name,
+					last_name: e.last_name,
+					phone: e.phone,
+					is_pickup: e.is_pickup
+				};
+			})
+		};
+	});
+
 	return {
-		selectedTour: tourID
-			? await db
-					.selectFrom('tour')
-					.where('tour.id', '=', parseInt(tourID))
-					.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
-					.selectAll()
-					.executeTakeFirst()
-			: undefined,
-		selectedEvents: tourID
-			? await db
-					.selectFrom('tour')
-					.where('tour.id', '=', parseInt(tourID))
-					.innerJoin('event', 'event.tour', 'tour.id')
-					.innerJoin('address', 'address.id', 'event.address')
-					.orderBy('event.scheduled_time')
-					.selectAll()
-					.execute()
-			: [],
+		tours,
 		vehicles: await vehicles,
-		tours: await tours,
 		availabilities: await availabilities,
 		utcDate
 	};

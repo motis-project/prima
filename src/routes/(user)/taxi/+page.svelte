@@ -28,6 +28,7 @@
 
 	import TourDialog from './TourDialog.svelte';
 	import AddVehicle from './AddVehicle.svelte';
+	import type { TourDetails } from './TourDetails';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
@@ -37,7 +38,7 @@
 	}
 
 	class Tour extends Range {
-		id!: number;
+		tour_id!: number;
 		vehicle_id!: number;
 	}
 
@@ -60,19 +61,11 @@
 		);
 	};
 
-	const loadTours = (): Array<Tour> => {
-		return data.tours.map((t) => ({
-			id: t.id,
-			from: t.departure,
-			to: t.arrival,
-			vehicle_id: t.vehicle
-		}));
-	};
-
 	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
-	let tours = $state<Array<Tour>>(loadTours());
 
-	let showTour = $state<{ tourId: number | undefined }>({ tourId: undefined });
+	let selectedTour = $state<{
+		tour: TourDetails | undefined;
+	}>({ tour: undefined });
 
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
 	let day = $derived(new ReactiveDate(value));
@@ -83,12 +76,8 @@
 
 	$effect(() => {
 		let url = `/taxi?date=${getDate()}`;
-		if (showTour.tourId) {
-			url += `&tour=${showTour.tourId}`;
-		}
 		goto(url);
 		vehicles = loadVehicles();
-		tours = loadTours();
 	});
 
 	// 11 pm local time day before
@@ -122,11 +111,11 @@
 	const overlaps = (a: Range, b: Range) => a.from < b.to && a.to > b.from;
 
 	const hasTour = (vehicle_id: number, cell: Range) => {
-		return tours.some((t) => vehicle_id == t.vehicle_id && overlaps(t, cell));
+		return data.tours.some((t) => vehicle_id == t.vehicle_id && overlaps(t, cell));
 	};
 
 	const getTours = (vehicle_id: number, cell: Range) => {
-		return tours.filter((t) => vehicle_id == t.vehicle_id && overlaps(t, cell));
+		return data.tours.filter((t) => vehicle_id == t.vehicle_id && overlaps(t, cell));
 	};
 
 	const isAvailable = (v: Vehicle, cell: Range) => {
@@ -232,7 +221,7 @@
 
 	const hasOverlap = () => {
 		return draggedTours?.tours.some((d) =>
-			tours.some((t) => t.vehicle_id == draggedTours?.vehicle_id && overlaps(d, t))
+			data.tours.some((t) => t.vehicle_id == draggedTours?.vehicle_id && overlaps(d, t))
 		);
 	};
 
@@ -258,7 +247,7 @@
 			let responses;
 			try {
 				responses = await Promise.all(
-					draggedTours.tours.map((t) => updateTour(t.id, t.vehicle_id))
+					draggedTours.tours.map((t) => updateTour(t.tour_id, t.vehicle_id))
 				);
 			} catch {
 				toast('Der Server konnte nicht erreicht werden.');
@@ -292,8 +281,15 @@
 		}
 	};
 
-	let onClickTour = async (id: number) => {
-		showTour.tourId = id;
+	const getTourInfoShort = (tour: TourDetails) => {
+		let l1 = tour.events[0];
+		let l2 = tour.events[tour.events.length - 1];
+
+		if (l1.city == l2.city) {
+			return l1.city + ': ' + l1.street + ' - ' + l2.street;
+		} else {
+			return l1.city + ' - ' + l2.city;
+		}
 	};
 </script>
 
@@ -363,11 +359,11 @@
 																<DropdownMenu.Separator />
 																{#each getTours(id, cell) as tour}
 																	<DropdownMenu.Item
-																		on:click={async () => {
-																			onClickTour(tour.id);
+																		on:click={() => {
+																			selectedTour = { tour: tour };
 																		}}
 																	>
-																		{tour.id}
+																		{getTourInfoShort(tour)}
 																	</DropdownMenu.Item>
 																{/each}
 															</DropdownMenu.Group>
@@ -444,8 +440,4 @@
 	{@render availability_table({ from: today_day, to: tomorrow_night })}
 </Card.Content>
 
-<TourDialog
-	selectedTourEvents={data.selectedEvents}
-	selectedTour={data.selectedTour}
-	bind:open={showTour}
-/>
+<TourDialog bind:open={selectedTour} />
