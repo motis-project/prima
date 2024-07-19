@@ -3,8 +3,24 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Toaster } from 'svelte-sonner';
 	import * as Table from '$lib/components/ui/table/index.js';
+	import type { TourDetails } from '../taxi/TourDetails.js';
+	import TourDialog from '../taxi/TourDialog.svelte';
 
 	console.log(data.tours);
+
+	const view = 'maintainer';
+	// const view = 'company';
+
+	const getTourInfoShort = (tour: TourDetails) => {
+		let l1 = tour.events[0];
+		let l2 = tour.events[tour.events.length - 1];
+
+		return [l1.city + ': ' + l1.street, l2.city + ': ' + l2.street];
+	};
+
+	let selectedTour = $state<{
+		tour: TourDetails | undefined;
+	}>({ tour: undefined });
 </script>
 
 <Toaster />
@@ -17,18 +33,44 @@
 		<Table.Root>
 			<Table.Header>
 				<Table.Row>
+					{#if view == 'maintainer'}
+						<Table.Head>Unternehmen</Table.Head>
+					{:else}
+						<Table.Head>Fahrzeug</Table.Head>
+					{/if}
+					<Table.Head>Von</Table.Head>
+					<Table.Head>Nach</Table.Head>
 					<Table.Head>Abfahrt</Table.Head>
-					<Table.Head>Straße</Table.Head>
-					<Table.Head>Hausnr.</Table.Head>
-					<Table.Head>Ort</Table.Head>
-					<Table.Head>Kunde</Table.Head>
-					<Table.Head>Tel. Kunde</Table.Head>
-					<Table.Head>Ein-/Ausstieg</Table.Head>
-					<Table.Head class="text-right">Fahrpreis</Table.Head>
+					<Table.Head>Ankunft</Table.Head>
+					<Table.Head>Anzahl Kunden</Table.Head>
+					<Table.Head>Anzahl Stationen</Table.Head>
+					<Table.Head>Gesamtfahrpreis</Table.Head>
 				</Table.Row>
 			</Table.Header>
-
-			<Table.Body></Table.Body>
+			<Table.Body>
+				{#each data.tours as tour}
+					<Table.Row
+						on:click={() => {
+							selectedTour = { tour: tour };
+						}}
+					>
+						{#if view == 'maintainer'}
+							<Table.Cell>{tour.vehicle_id}</Table.Cell>
+						{:else}
+							<Table.Cell>{tour.vehicle_id}</Table.Cell>
+						{/if}
+						<Table.Cell>{getTourInfoShort(tour)[0]}</Table.Cell>
+						<Table.Cell>{getTourInfoShort(tour)[1]}</Table.Cell>
+						<Table.Cell>{tour.from.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
+						<Table.Cell>{tour.to.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
+						<Table.Cell>{tour.vehicle_id}</Table.Cell>
+						<Table.Cell>{tour.events.length}</Table.Cell>
+						<Table.Cell>{tour.vehicle_id}</Table.Cell>
+					</Table.Row>
+				{/each}
+			</Table.Body>
 		</Table.Root>
 	</Card.Content>
 </div>
+
+<TourDialog bind:open={selectedTour} />
