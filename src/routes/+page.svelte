@@ -10,12 +10,12 @@
 					<Card.Title>Willkommen beim Projekt PrimaÖV!</Card.Title>
 				</Card.Header>
 				<Card.Content class="w-full h-full">
-					<textarea rows="7" cols="200">
+					<p>
 						Sie sind auf dieser Seite gelandet, da Ihr neu angelegter Account noch nicht
 						freigeschaltet wurde. Falls Sie als Taxiunternehmer an dem Projekt teilnehmen möchten,
 						warten Sie bitte bis Sie mitgeteilt bekommen, dass Ihr Account freigeschaltet wurde.
 						Sollte dies bereits geschehen sein, können Sie die Seite neu laden.
-					</textarea>
+					</p>
 				</Card.Content>
 			</div>
 		</section>

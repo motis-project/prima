@@ -2,8 +2,8 @@ import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/database';
 
 export const POST = async (event) => {
-	const company = event.locals.user!.company!;
-	const request = event.request;;
+	const company = event.locals.user?.company!;
+	const request = event.request;
 
 	try {
 		const { license_plate, seats, wheelchair_capacity, bike_capacity, storage_space } =

@@ -7,7 +7,7 @@ import { db } from '$lib/database';
 import { geoCode } from '$lib/api.js';
 
 export const load: PageServerLoad = async (event) => {
-	const companyId = event.locals.user!.company!;
+	const companyId = event.locals.user?.company!;
 	const zones = await db.selectFrom('zone').where('is_community', '=', false).selectAll().execute();
 	const communities = await db
 		.selectFrom('zone')
