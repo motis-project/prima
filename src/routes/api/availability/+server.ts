@@ -1,4 +1,4 @@
-import { json } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/database';
 import { sql } from 'kysely';
 import type { NewAvailability, Availability } from '$lib/types.js';
@@ -22,7 +22,12 @@ const toNewAvailability = (interval: Interval, vehicle: number): NewAvailability
 };
 
 export const DELETE = async (event) => {
-	const companyId = event.locals.user?.company!;
+	const companyId = event.locals.user?.company;
+	if (!companyId) {
+		error(400, {
+			message: 'not allowed without write access to company'
+		});
+	}
 	const request = event.request;
 	const { vehicleId, from, to } = await request.json();
 	const start = new Date(from);
@@ -92,7 +97,12 @@ export const DELETE = async (event) => {
 };
 
 export const POST = async (event) => {
-	const companyId = event.locals.user?.company!;
+	const companyId = event.locals.user?.company;
+	if (!companyId) {
+		error(400, {
+			message: 'not allowed without write access to company'
+		});
+	}
 	const request = event.request;
 	const { vehicleId, from, to } = await request.json();
 	await db

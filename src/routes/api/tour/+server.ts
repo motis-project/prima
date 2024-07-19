@@ -1,9 +1,14 @@
-import { json } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/database';
 import { sql } from 'kysely';
 
 export const POST = async (event) => {
-	const companyId = event.locals.user?.company!;
+	const companyId = event.locals.user?.company;
+	if (!companyId) {
+		error(400, {
+			message: 'not allowed without write access to company'
+		});
+	}
 	const request = event.request;
 	const { tour_id: tourId, vehicle_id: vehicleId } = await request.json();
 	await db.transaction().execute(async (trx) => {

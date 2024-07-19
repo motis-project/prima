@@ -3,12 +3,20 @@ import { TZ } from '$lib/constants.js';
 import { db } from '$lib/database';
 
 export async function load(event) {
-	const companyId = event.locals.user?.company!;
+	const companyId = event.locals.user?.company;
 	const url = event.url;
 	const localDateParam = url.searchParams.get('date');
 	const localDate = localDateParam ? new Date(localDateParam) : new Date();
 	const utcDate = new Date(localDate.toLocaleString('en', { timeZone: TZ }));
 	utcDate.setHours(0, 0, 0, 0);
+	if (!companyId) {
+		return {
+			tours: null,
+			vehicles: null,
+			availabilities: null,
+			utcDate
+		};
+	}
 	const earliest_displayed_time = new Date(utcDate);
 	earliest_displayed_time.setHours(utcDate.getHours() - 1);
 	const latest_displayed_time = new Date(utcDate);

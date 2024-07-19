@@ -7,7 +7,7 @@ import { db } from '$lib/database';
 import { geoCode } from '$lib/api.js';
 
 export const load: PageServerLoad = async (event) => {
-	const companyId = event.locals.user?.company!;
+	const companyId = event.locals.user?.company;
 	const zones = await db.selectFrom('zone').where('is_community', '=', false).selectAll().execute();
 	const communities = await db
 		.selectFrom('zone')
@@ -15,16 +15,18 @@ export const load: PageServerLoad = async (event) => {
 		.selectAll()
 		.execute();
 	const form = await superValidate(zod(formSchema));
-	const company = await db
-		.selectFrom('company')
-		.where('id', '=', companyId)
-		.selectAll()
-		.executeTakeFirst();
-	if (company!.name != null) {
-		form.data.companyname = company!.name;
-		form.data.address = company!.address!;
-		form.data.zone = zones.find((z) => z.id! === company!.zone!)!.name;
-		form.data.community = zones.find((z) => z.id! === company!.zone!)!.name;
+	if (companyId) {
+		const company = await db
+			.selectFrom('company')
+			.where('id', '=', companyId)
+			.selectAll()
+			.executeTakeFirst();
+		if (company!.name != null) {
+			form.data.companyname = company!.name;
+			form.data.address = company!.address!;
+			form.data.zone = zones.find((z) => z.id! === company!.zone!)!.name;
+			form.data.community = zones.find((z) => z.id! === company!.zone!)!.name;
+		}
 	}
 	return {
 		form,

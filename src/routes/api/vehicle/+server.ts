@@ -2,7 +2,12 @@ import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/database';
 
 export const POST = async (event) => {
-	const company = event.locals.user?.company!;
+	const company = event.locals.user?.company;
+	if (!company) {
+		error(400, {
+			message: 'not allowed without write access to company'
+		});
+	}
 	const request = event.request;
 
 	try {
