@@ -1,11 +1,10 @@
 <script lang="ts">
 	const { data } = $props();
 	import * as Card from '$lib/components/ui/card';
-	import { Toaster, toast } from 'svelte-sonner';
+	import { Toaster } from 'svelte-sonner';
 	import * as Table from '$lib/components/ui/table/index.js';
 
-	let tourDetails = data.tours;
-	// console.log(tourDetails);
+	console.log(data.tours);
 </script>
 
 <Toaster />

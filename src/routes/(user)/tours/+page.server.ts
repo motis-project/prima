@@ -1,9 +1,8 @@
-import type { PageServerLoad, Actions } from './$types.js';
+import type { PageServerLoad } from './$types.js';
 import { db } from '$lib/database';
 import { groupBy } from '$lib/collection_utils.js';
 
 const company_id = 1;
-const timeNow = new Date();
 
 export const load: PageServerLoad = async () => {
 	const events = await db
@@ -59,4 +58,4 @@ export const load: PageServerLoad = async () => {
 	return {
 		tours
 	};
-}
+};
