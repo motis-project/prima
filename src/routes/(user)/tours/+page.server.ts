@@ -13,11 +13,7 @@ export const load: PageServerLoad = async () => {
 		.innerJoin('address', 'address.id', 'event.address')
 		.innerJoin('auth_user', 'auth_user.id', 'event.customer')
 		.innerJoin('tour', 'tour.id', 'event.tour')
-		.where((eb) =>
-			eb.and([
-				eb('tour.arrival', '<', utcDate)
-			])
-		)
+		.where((eb) => eb.and([eb('tour.arrival', '<', utcDate)]))
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 		.where('company', '=', company_id)
 		.orderBy('event.scheduled_time')
