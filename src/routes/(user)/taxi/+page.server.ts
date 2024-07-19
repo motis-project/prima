@@ -63,6 +63,7 @@ export async function load({ url }) {
 			to: first.arrival,
 			vehicle_id: first.vehicle,
 			license_plate: first.license_plate,
+			company_id: first.company_id,
 			events: events.map((e) => {
 				return {
 					address: e.address,
@@ -76,7 +77,8 @@ export async function load({ url }) {
 					first_name: e.first_name,
 					last_name: e.last_name,
 					phone: e.phone,
-					is_pickup: e.is_pickup
+					is_pickup: e.is_pickup,
+					customer_id: e.customer
 				};
 			})
 		};

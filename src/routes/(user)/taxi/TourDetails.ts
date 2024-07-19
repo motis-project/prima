@@ -4,6 +4,7 @@ export type TourDetails = {
 	to: Date;
 	vehicle_id: number;
 	license_plate: string;
+	company_id: number | null;
 	events: Array<Event>;
 };
 
@@ -20,4 +21,5 @@ export type Event = {
 	last_name: string | null;
 	phone: string | null;
 	is_pickup: boolean;
+	customer_id: string | null;
 };

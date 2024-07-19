@@ -6,10 +6,7 @@
 	import type { TourDetails } from '../taxi/TourDetails.js';
 	import TourDialog from '../taxi/TourDialog.svelte';
 
-	console.log(data.tours);
-
-	const view = 'maintainer';
-	// const view = 'company';
+	const maintainer = false;
 
 	const getTourInfoShort = (tour: TourDetails) => {
 		let l1 = tour.events[0];
@@ -21,6 +18,14 @@
 	let selectedTour = $state<{
 		tour: TourDetails | undefined;
 	}>({ tour: undefined });
+
+	const getCustomerCount = (tour: TourDetails) => {
+		let customers: Set<string> = new Set<string>();
+		tour.events.forEach((e) => {
+			customers.add(e.customer_id!);
+		});
+		return customers.size;
+	};
 </script>
 
 <Toaster />
@@ -33,7 +38,7 @@
 		<Table.Root>
 			<Table.Header>
 				<Table.Row>
-					{#if view == 'maintainer'}
+					{#if maintainer}
 						<Table.Head>Unternehmen</Table.Head>
 					{:else}
 						<Table.Head>Fahrzeug</Table.Head>
@@ -53,19 +58,20 @@
 						on:click={() => {
 							selectedTour = { tour: tour };
 						}}
+						class="cursor-pointer"
 					>
-						{#if view == 'maintainer'}
-							<Table.Cell>{tour.vehicle_id}</Table.Cell>
+						{#if maintainer}
+							<Table.Cell>{tour.company_id}</Table.Cell>
 						{:else}
-							<Table.Cell>{tour.vehicle_id}</Table.Cell>
+							<Table.Cell>{tour.license_plate}</Table.Cell>
 						{/if}
 						<Table.Cell>{getTourInfoShort(tour)[0]}</Table.Cell>
 						<Table.Cell>{getTourInfoShort(tour)[1]}</Table.Cell>
 						<Table.Cell>{tour.from.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
 						<Table.Cell>{tour.to.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
-						<Table.Cell>{tour.vehicle_id}</Table.Cell>
+						<Table.Cell>{getCustomerCount(tour)}</Table.Cell>
 						<Table.Cell>{tour.events.length}</Table.Cell>
-						<Table.Cell>{tour.vehicle_id}</Table.Cell>
+						<Table.Cell>TODO</Table.Cell>
 					</Table.Row>
 				{/each}
 			</Table.Body>
