@@ -11,9 +11,9 @@ export async function load(event) {
 	utcDate.setHours(0, 0, 0, 0);
 	if (!companyId) {
 		return {
-			tours: null,
-			vehicles: null,
-			availabilities: null,
+			tours: [],
+			vehicles: [],
+			availabilities: [],
 			utcDate
 		};
 	}
