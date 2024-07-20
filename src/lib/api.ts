@@ -1,5 +1,5 @@
 import type { Company, Vehicle } from './types';
-import { Coordinates, Loc } from './coordinates';
+import { Coordinates, CoordinatesWithLevel, Location } from './location';
 
 export const getCompany = async (id: number): Promise<Company> => {
 	const response = await fetch(`/api/company?id=${id}`);
@@ -68,8 +68,8 @@ export const addAvailability = async (vehicleId: number, from: Date, to: Date) =
 };
 
 export const booking = async (
-	from: Loc,
-	to: Loc,
+	from: Location,
+	to: Location,
 	startFixed: boolean,
 	timeStamp: Date,
 	numPassengers: number,
@@ -113,16 +113,10 @@ export async function geoCode(address: string) {
 }
 
 export class RoutingQuery {
-	start!: Location;
-	destination!: Location;
+	start!: CoordinatesWithLevel;
+	destination!: CoordinatesWithLevel;
 	profile!: string;
 	direction!: string;
-}
-
-export class Location {
-	lat!: number;
-	lng!: number;
-	level!: number;
 }
 
 export const getRoute = async (query: RoutingQuery) => {
@@ -135,7 +129,6 @@ export const getRoute = async (query: RoutingQuery) => {
 		},
 		body: JSON.stringify(query)
 	});
-	console.log("getroute: ", (await response.json()).features[0]);
 	return await response.json();
 };
 

@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { oneToMany, Direction, getRoute } from '../../../lib/api.js';
-import { Coordinates } from '../../../lib/coordinates.js';
+import { Coordinates } from '../../../lib/location.js';
 import { db } from '$lib/database';
 import { Interval } from '../../../lib/interval.js';
 import { groupBy, updateValues } from '$lib/collection_utils.js';
