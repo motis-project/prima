@@ -1,3 +1,4 @@
+import { error } from '@sveltejs/kit';
 import { oneToMany, Direction, getRoute } from '../../../lib/api.js';
 import { Coordinates } from '../../../lib/coordinates.js';
 import { db } from '$lib/database';
@@ -10,19 +11,27 @@ import { MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
 
 export const POST = async (event) => {
-	const request = event.request;
 	const customer = event.locals.user;
 	if(!customer){
-		return error();
+		return error(403);
 	}
+	const request = event.request;
 	const customerId = customer.id;
 	const { from, to, startFixed, timeStamp, numPassengers, numWheelchairs, numBikes, luggage } =
 		await request.json();
 	const time = new Date(timeStamp);
+	const r = (
+		await getRoute({
+			start: { lat: from.coordinates.lat, lng: from.coordinates.lng, level: 0 },
+			destination: { lat: to.coordinates.lat, lng: to.coordinates.lng, level: 0 },
+			profile: 'car',
+			direction: 'forward'
+		})
+	);
 	const travelDuration = (
 		await getRoute({
-			start: { lat: from.lat, lng: from.lng, level: 0 },
-			destination: { lat: to.lat, lng: to.lng, level: 0 },
+			start: { lat: from.coordinates.lat, lng: from.coordinates.lng, level: 0 },
+			destination: { lat: to.coordinates.lat, lng: to.coordinates.lng, level: 0 },
 			profile: 'car',
 			direction: 'forward'
 		})
@@ -266,7 +275,45 @@ export const POST = async (event) => {
 
 		const bestCompany = viable_vehicles[0];
 
-		// Write tour, request and 2 events in db.
+		// Write tour, request, 2 events and if not existant address in db.
+		let startAddress = await trx.selectFrom('address').where(({eb}) => eb.and([
+			eb('address.city', '=', from.address.city),
+			eb('address.house_number', '=', from.address.house_number),
+			eb('address.postal_code', '=', from.address.postal_code),
+			eb('address.street', '=', from.address.street)
+		]))
+		.select(['id'])
+		.executeTakeFirst();
+		if(!startAddress){
+		startAddress = (await trx
+			.insertInto('address')
+			.values({
+				street: from.address.street,
+				house_number: from.address.house_number,
+				postal_code: from.address.postal_code,
+				city: from.address.city
+			}).returning('id')
+			.executeTakeFirst())!;
+		}
+		let targetAddress = await trx.selectFrom('address').where(({eb}) => eb.and([
+			eb('address.city', '=', to.address.city),
+			eb('address.house_number', '=', to.address.house_number),
+			eb('address.postal_code', '=', to.address.postal_code),
+			eb('address.street', '=', to.address.street)
+		]))
+		.select(['id'])
+		.executeTakeFirst();
+		if(!targetAddress){
+		targetAddress = (await trx
+			.insertInto('address')
+			.values({
+				street: from.address.street,
+				house_number: from.address.house_number,
+				postal_code: from.address.postal_code,
+				city: from.address.city
+			}).returning('id')
+			.executeTakeFirst())!;
+		}
 		tour_id = (await trx
 			.insertInto('tour')
 			.values({
@@ -296,7 +343,7 @@ export const POST = async (event) => {
 					longitude: from.lng,
 					scheduled_time: startTime,
 					communicated_time: startTime, // TODO
-					address: 1, // TODO
+					address: startAddress.id,
 					request: requestId!,
 					tour: tour_id!,
 					customer: customerId
@@ -307,7 +354,7 @@ export const POST = async (event) => {
 					longitude: to.lng,
 					scheduled_time: targetTime,
 					communicated_time: targetTime, // TODO
-					address: 1, // TODO
+					address: targetAddress.id,
 					request: requestId!,
 					tour: tour_id!,
 					customer: customerId

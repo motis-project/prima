@@ -1,5 +1,5 @@
 import type { Company, Vehicle } from './types';
-import { Coordinates } from './coordinates';
+import { Coordinates, Loc } from './coordinates';
 
 export const getCompany = async (id: number): Promise<Company> => {
 	const response = await fetch(`/api/company?id=${id}`);
@@ -68,8 +68,8 @@ export const addAvailability = async (vehicleId: number, from: Date, to: Date) =
 };
 
 export const booking = async (
-	from: Coordinates,
-	to: Coordinates,
+	from: Loc,
+	to: Loc,
 	startFixed: boolean,
 	timeStamp: Date,
 	numPassengers: number,
@@ -135,6 +135,7 @@ export const getRoute = async (query: RoutingQuery) => {
 		},
 		body: JSON.stringify(query)
 	});
+	console.log("getroute: ", (await response.json()).features[0]);
 	return await response.json();
 };
 
