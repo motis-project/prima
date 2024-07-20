@@ -9,7 +9,13 @@ import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
 
-export const POST = async ({ request }) => {
+export const POST = async (event) => {
+	const request = event.request;
+	const customer = event.locals.user;
+	if(!customer){
+		return error();
+	}
+	const customerId = customer.id;
 	const { from, to, startFixed, timeStamp, numPassengers, numWheelchairs, numBikes, luggage } =
 		await request.json();
 	const time = new Date(timeStamp);
@@ -42,7 +48,7 @@ export const POST = async ({ request }) => {
 		return json({});
 	}
 
-	// Get (unmerged) availabilities which overlap the expanded travel interval, for vehicles which satisfy the zone constraints(TODO) and the capacity constraints.
+	// Get (unmerged) availabilities which overlap the expanded travel interval, for vehicles which satisfy the zone constraints and the capacity constraints.
 	// Also get some other data to reduce number of select calls to db.
 	// Use expanded travel interval, to ensure that, if a vehicle is available for the full travel interval (taxicentral-start-target-taxicentral) the corresponding
 	// availbilities are already fetched in this select statement.
@@ -293,7 +299,7 @@ export const POST = async ({ request }) => {
 					address: 1, // TODO
 					request: requestId!,
 					tour: tour_id!,
-					customer: '' // TODO
+					customer: customerId
 				},
 				{
 					is_pickup: false,
@@ -304,7 +310,7 @@ export const POST = async ({ request }) => {
 					address: 1, // TODO
 					request: requestId!,
 					tour: tour_id!,
-					customer: '' // TODO
+					customer: customerId
 				}
 			])
 			.execute();
