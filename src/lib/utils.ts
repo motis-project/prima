@@ -113,4 +113,4 @@ export const mapTourEvents = (events: Array<Event>) => {
 		};
 	});
 	return tours;
-}
+};
