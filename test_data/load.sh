@@ -12,18 +12,11 @@ if [ $# -eq 0 ]
     exit 1
 fi
 
-git submodule update --init --recursive
-cd kysely-ctl
-npm install -f
-npm run build
-
 echo "DROP DATABASE prima;" | PGPASSWORD=pw psql postgresql://localhost:6500 --user postgres
 echo "CREATE DATABASE prima;" | PGPASSWORD=pw psql postgresql://localhost:6500 --user postgres
 
-cd -
-node ./kysely-ctl/dist/bin.js migrate:latest
+npm run kysely migrate:latest
 
-echo "cd $BASEDIR"
 cd $BASEDIR
 
 export PGPASSWORD=pw
