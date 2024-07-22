@@ -32,4 +32,8 @@ jobs:
         run: npm run test:unit
 
       - name: Integration Tests
-        run: npm run test:integration
+        run: |
+          docker compose up -d
+          ./test_data/load.sh default
+          npm run test:integration
+          docker compose down
