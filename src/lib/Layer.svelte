@@ -23,9 +23,9 @@
 	let source: { id: string | null } = getContext('source'); // from GeoJSON component
 
 	let initialized = false;
-	let currFilter = filter;
-	let currLayout = layout;
-	let currPaint = paint;
+	let currFilter = $state.snapshot(filter);
+	let currLayout = $state.snapshot(layout);
+	let currPaint = $state.snapshot(paint);
 
 	let updateLayer = () => {
 		const l = ctx.map?.getLayer(id);
