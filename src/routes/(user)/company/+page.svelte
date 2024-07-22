@@ -36,7 +36,7 @@
 
 <div class="w-full h-full">
 	<Card.Header>
-		<Card.Title>Stammdaten ihres Unternehmen</Card.Title>
+		<Card.Title>Stammdaten ihres Unternehmens</Card.Title>
 	</Card.Header>
 	<Card.Content class="w-full h-full">
 		<form

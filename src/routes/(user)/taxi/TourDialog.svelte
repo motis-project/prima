@@ -19,7 +19,7 @@
 
 	const { open = $bindable() }: Props = $props();
 
-	const getRoutes = (tourEvents: Array<Event> | null | undefined) => {
+	const getRoutes = (tourEvents: Array<Event> | null) => {
 		// eslint-disable-next-line
 		let routes: Array<Promise<any>> = [];
 		if (tourEvents == null || tourEvents!.length == 0) {
@@ -203,12 +203,9 @@
 					{#if open.tour!.events != null}
 						{#each open.tour!.events as event}
 							<Table.Row>
-								<Table.Cell
-									>{event.scheduled_time
-										.toLocaleString('de-DE')
-										.slice(0, -3)
-										.replace(',', ' ')}</Table.Cell
-								>
+								<Table.Cell>
+									{event.scheduled_time.toLocaleString('de-DE').slice(0, -3).replace(',', ' ')}
+								</Table.Cell>
 								<Table.Cell>{event.street}</Table.Cell>
 								<Table.Cell>{event.house_number}</Table.Cell>
 								<Table.Cell>{event.postal_code} {event.city}</Table.Cell>

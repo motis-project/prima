@@ -11,6 +11,10 @@
 		{
 			name: 'Stammdaten',
 			href: '/company'
+		},
+		{
+			name: 'Abgeschlossene Fahrten',
+			href: '/tours'
 		}
 	];
 </script>
