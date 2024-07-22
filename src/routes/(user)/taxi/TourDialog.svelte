@@ -105,13 +105,13 @@
 					{#if open.tour}
 						<Table.Row>
 							<Table.Cell>
-								{open.tour!.from.toLocaleString('de-DE') .slice(0, -3)}
+								{open.tour!.from.toLocaleString('de-DE').slice(0, -3)}
 								<br />{open.tour.events[0].street}<br />
 								{open.tour.events[0].postal_code}
 								{open.tour.events[0].city}
 							</Table.Cell>
 							<Table.Cell>
-								{open.tour!.to.toLocaleString('de-DE') .slice(0, -3)}
+								{open.tour!.to.toLocaleString('de-DE').slice(0, -3)}
 								<br />{open.tour.events[open.tour.events.length - 1].street}<br />
 								{open.tour.events[open.tour.events.length - 1].postal_code}
 								{open.tour.events[open.tour.events.length - 1].city}

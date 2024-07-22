@@ -5,3 +5,4 @@ yarn.lock
 src/lib/components/*
 .github/*
 migrations/*
+kysely-ctl/*
