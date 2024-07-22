@@ -2,22 +2,31 @@ import { TZ } from '$lib/constants.js';
 import { db } from '$lib/database';
 import { mapTourEvents } from '$lib/utils';
 
-export async function load({ url }) {
-	const company_id = 1;
+export async function load(event) {
+	const companyId = event.locals.user?.company;
+	const url = event.url;
 	const localDateParam = url.searchParams.get('date');
 	const localDate = localDateParam ? new Date(localDateParam) : new Date();
 	const utcDate = new Date(localDate.toLocaleString('en', { timeZone: TZ }));
 	utcDate.setHours(0, 0, 0, 0);
+	if (!companyId) {
+		return {
+			tours: [],
+			vehicles: [],
+			availabilities: [],
+			utcDate
+		};
+	}
 	const earliest_displayed_time = new Date(utcDate);
 	earliest_displayed_time.setHours(utcDate.getHours() - 1);
 	const latest_displayed_time = new Date(utcDate);
 	latest_displayed_time.setHours(utcDate.getHours() + 25);
 
-	const vehicles = db.selectFrom('vehicle').where('company', '=', company_id).selectAll().execute();
+	const vehicles = db.selectFrom('vehicle').where('company', '=', companyId).selectAll().execute();
 
 	const availabilities = db
 		.selectFrom('vehicle')
-		.where('company', '=', company_id)
+		.where('company', '=', companyId)
 		.innerJoin('availability', 'vehicle', 'vehicle.id')
 		.where((eb) =>
 			eb.and([
@@ -46,7 +55,7 @@ export async function load({ url }) {
 				])
 			)
 			.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
-			.where('company', '=', company_id)
+			.where('company', '=', companyId)
 			.orderBy('event.scheduled_time')
 			.selectAll()
 			.execute()

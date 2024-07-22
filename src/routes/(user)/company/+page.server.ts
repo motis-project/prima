@@ -6,25 +6,27 @@ import { formSchema } from './schema.js';
 import { db } from '$lib/database';
 import { geoCode } from '$lib/api.js';
 
-const company_id = 1;
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async (event) => {
+	const companyId = event.locals.user?.company;
 	const zones = await db.selectFrom('zone').where('is_community', '=', false).selectAll().execute();
 	const communities = await db
 		.selectFrom('zone')
 		.where('is_community', '=', true)
 		.selectAll()
 		.execute();
-	const company = await db
-		.selectFrom('company')
-		.where('id', '=', company_id)
-		.selectAll()
-		.executeTakeFirst();
 	const form = await superValidate(zod(formSchema));
-	if (company) {
-		form.data.companyname = company.name;
-		form.data.address = company.address;
-		form.data.community = communities.find((c) => c.id! === company!.community_area)!.name;
-		form.data.zone = zones.find((z) => z.id! === company!.zone)!.name;
+	if (companyId) {
+		const company = await db
+			.selectFrom('company')
+			.where('id', '=', companyId)
+			.selectAll()
+			.executeTakeFirst();
+		if (company!.name != null) {
+			form.data.companyname = company!.name;
+			form.data.address = company!.address!;
+			form.data.zone = zones.find((z) => z.id! === company!.zone!)!.name;
+			form.data.community = zones.find((z) => z.id! === company!.zone!)!.name;
+		}
 	}
 	return {
 		form,
@@ -35,6 +37,7 @@ export const load: PageServerLoad = async () => {
 
 export const actions: Actions = {
 	default: async (event) => {
+		const companyId = event.locals.user!.company!;
 		const form = await superValidate(event, zod(formSchema));
 		if (!form.valid) {
 			return fail(400, {
@@ -61,9 +64,10 @@ export const actions: Actions = {
 					latitude: best_address_guess.pos.lat,
 					longitude: best_address_guess.pos.lng
 				})
-				.where('id', '=', company_id)
+				.where('id', '=', companyId)
 				.execute();
 		} catch {
+			form.errors.address = ['Die Addresse konnte nicht zugeordent werden.'];
 			return fail(400, {
 				form
 			});

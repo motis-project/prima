@@ -51,21 +51,20 @@
 				<Form.Field {form} name="companyname">
 					<Form.Control let:attrs>
 						<Form.Label>Name</Form.Label>
-						<Form.FieldErrors />
 						<Input {...attrs} bind:value={$formData.companyname} />
+						<Form.FieldErrors />
 					</Form.Control>
 				</Form.Field>
 				<Form.Field {form} name="address">
 					<Form.Control let:attrs>
 						<Form.Label>Unternehmenssitz</Form.Label>
-						<Form.FieldErrors />
 						<Input {...attrs} bind:value={$formData.address} />
+						<Form.FieldErrors />
 					</Form.Control>
 				</Form.Field>
 				<Form.Field {form} name="zone">
 					<Form.Control let:attrs>
 						<Form.Label>Pflichtfahrgebiet</Form.Label>
-						<Form.FieldErrors />
 						<Select.Root
 							selected={selectedZone}
 							onSelectedChange={(s) =>
@@ -84,13 +83,13 @@
 								{/each}
 							</Select.Content>
 						</Select.Root>
+						<Form.FieldErrors />
 						<input hidden bind:value={$formData.zone} name={attrs.name} />
 					</Form.Control>
 				</Form.Field>
 				<Form.Field {form} name="community">
 					<Form.Control let:attrs>
 						<Form.Label>Gemeinde</Form.Label>
-						<Form.FieldErrors />
 						<Select.Root
 							selected={selectedCommunity}
 							onSelectedChange={(s) =>
@@ -109,6 +108,7 @@
 								{/each}
 							</Select.Content>
 						</Select.Root>
+						<Form.FieldErrors />
 						<input hidden bind:value={$formData.community} name={attrs.name} />
 					</Form.Control>
 				</Form.Field>

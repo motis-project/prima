@@ -10,15 +10,15 @@ export async function up(db) {
     await db.schema
         .createTable('company')
         .addColumn('id', 'serial', (col) => col.primaryKey())
-        .addColumn('latitude', 'real', (col) => col.notNull())
-        .addColumn('longitude', 'real', (col) => col.notNull())
-        .addColumn('name', 'varchar', (col) => col.notNull())
-        .addColumn('address', 'varchar', (col) => col.notNull())
+        .addColumn('latitude', 'real')
+        .addColumn('longitude', 'real')
+        .addColumn('name', 'varchar')
+        .addColumn('address', 'varchar')
         .addColumn('zone', 'integer', (col) =>
-            col.references('zone.id').onDelete('cascade').notNull(),
+            col.references('zone.id').onDelete('cascade'),
         )
         .addColumn('community_area', 'integer', (col) =>
-            col.references('zone.id').onDelete('cascade').notNull(),
+            col.references('zone.id').onDelete('cascade'),
         )
         .execute();
 
@@ -59,6 +59,8 @@ export async function up(db) {
         .createTable('auth_user')
         .addColumn('id', 'varchar', (col) => col.primaryKey())
         .addColumn('email', 'varchar', (col) => col.unique())
+        .addColumn('is_entrepreneur', 'boolean', (col) => col.notNull())
+        .addColumn('is_maintainer', 'boolean', (col) => col.notNull())
         .addColumn('password_hash', 'varchar')
         .addColumn('first_name', 'varchar')
         .addColumn('last_name', 'varchar')
