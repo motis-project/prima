@@ -17,7 +17,6 @@ echo "CREATE DATABASE prima;" | PGPASSWORD=pw psql postgresql://localhost:6500 -
 
 npm run kysely migrate:latest
 
-echo "cd $BASEDIR"
 cd $BASEDIR
 
 export PGPASSWORD=pw
