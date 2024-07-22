@@ -1,3 +1,0 @@
-[submodule "kysely-ctl"]
-	path = kysely-ctl
-	url = git@github.com:motis-project/kysely-ctl.git
