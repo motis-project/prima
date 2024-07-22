@@ -1,6 +1,6 @@
 import { TZ } from '$lib/constants.js';
 import { db } from '$lib/database';
-import { mapTourEvents } from '$lib/utils';
+import { mapTourEvents } from './TourDetails';
 
 export async function load(event) {
 	const companyId = event.locals.user?.company;
