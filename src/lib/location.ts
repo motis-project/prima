@@ -1,4 +1,4 @@
-import type { NewAddress } from "./types";
+import type { NewAddress } from './types';
 
 export class Coordinates {
 	constructor(lat: number, lng: number) {
@@ -15,7 +15,7 @@ export class CoordinatesWithLevel extends Coordinates {
 }
 
 export class Location {
-	constructor(coordinates: Coordinates, address: NewAddress){
+	constructor(coordinates: Coordinates, address: NewAddress) {
 		this.coordinates = coordinates;
 		this.address = address;
 	}

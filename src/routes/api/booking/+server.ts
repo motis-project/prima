@@ -12,7 +12,7 @@ import { sql } from 'kysely';
 
 export const POST = async (event) => {
 	const customer = event.locals.user;
-	if(!customer){
+	if (!customer) {
 		return error(403);
 	}
 	const request = event.request;
@@ -20,14 +20,6 @@ export const POST = async (event) => {
 	const { from, to, startFixed, timeStamp, numPassengers, numWheelchairs, numBikes, luggage } =
 		await request.json();
 	const time = new Date(timeStamp);
-	const r = (
-		await getRoute({
-			start: { lat: from.coordinates.lat, lng: from.coordinates.lng, level: 0 },
-			destination: { lat: to.coordinates.lat, lng: to.coordinates.lng, level: 0 },
-			profile: 'car',
-			direction: 'forward'
-		})
-	);
 	const travelDuration = (
 		await getRoute({
 			start: { lat: from.coordinates.lat, lng: from.coordinates.lng, level: 0 },
@@ -149,30 +141,25 @@ export const POST = async (event) => {
 	const availableVehiclesByCompany = groupBy(
 		availableVehicles,
 		(element) => {
-			return  element.company;
+			return element.company;
 		},
 		(element) => {
 			return {
 				availability: element.availability,
 				vehicle: element.vehicle,
 				latitude: element.latitude,
-				longitude: element.longitude 
+				longitude: element.longitude
 			};
 		}
 	);
 	const buffer = [...availableVehiclesByCompany];
 	const companies = buffer.map(([company, _]) => company);
 	const vehicles = buffer.map(([_, vehicles]) => vehicles);
-	const centralCoordinates = buffer.map(
-		([company, _]) => {
-			const vehicles = availableVehiclesByCompany.get(company);
-			console.assert(vehicles && vehicles.length != 0);
-		return new Coordinates(
-			vehicles![0].latitude!,
-			vehicles![0].longitude!
-		);
-		}
-	);
+	const centralCoordinates = buffer.map(([company, _]) => {
+		const vehicles = availableVehiclesByCompany.get(company);
+		console.assert(vehicles && vehicles.length != 0);
+		return new Coordinates(vehicles![0].latitude!, vehicles![0].longitude!);
+	});
 
 	// Motis-one_to_many requests
 	const durationToStart = (await oneToMany(from, centralCoordinates, Direction.Backward)).map(
@@ -276,43 +263,53 @@ export const POST = async (event) => {
 		const bestCompany = viable_vehicles[0];
 
 		// Write tour, request, 2 events and if not existant address in db.
-		let startAddress = await trx.selectFrom('address').where(({eb}) => eb.and([
-			eb('address.city', '=', from.address.city),
-			eb('address.house_number', '=', from.address.house_number),
-			eb('address.postal_code', '=', from.address.postal_code),
-			eb('address.street', '=', from.address.street)
-		]))
-		.select(['id'])
-		.executeTakeFirst();
-		if(!startAddress){
-		startAddress = (await trx
-			.insertInto('address')
-			.values({
-				street: from.address.street,
-				house_number: from.address.house_number,
-				postal_code: from.address.postal_code,
-				city: from.address.city
-			}).returning('id')
-			.executeTakeFirst())!;
+		let startAddress = await trx
+			.selectFrom('address')
+			.where(({ eb }) =>
+				eb.and([
+					eb('address.city', '=', from.address.city),
+					eb('address.house_number', '=', from.address.house_number),
+					eb('address.postal_code', '=', from.address.postal_code),
+					eb('address.street', '=', from.address.street)
+				])
+			)
+			.select(['id'])
+			.executeTakeFirst();
+		if (!startAddress) {
+			startAddress = (await trx
+				.insertInto('address')
+				.values({
+					street: from.address.street,
+					house_number: from.address.house_number,
+					postal_code: from.address.postal_code,
+					city: from.address.city
+				})
+				.returning('id')
+				.executeTakeFirst())!;
 		}
-		let targetAddress = await trx.selectFrom('address').where(({eb}) => eb.and([
-			eb('address.city', '=', to.address.city),
-			eb('address.house_number', '=', to.address.house_number),
-			eb('address.postal_code', '=', to.address.postal_code),
-			eb('address.street', '=', to.address.street)
-		]))
-		.select(['id'])
-		.executeTakeFirst();
-		if(!targetAddress){
-		targetAddress = (await trx
-			.insertInto('address')
-			.values({
-				street: from.address.street,
-				house_number: from.address.house_number,
-				postal_code: from.address.postal_code,
-				city: from.address.city
-			}).returning('id')
-			.executeTakeFirst())!;
+		let targetAddress = await trx
+			.selectFrom('address')
+			.where(({ eb }) =>
+				eb.and([
+					eb('address.city', '=', to.address.city),
+					eb('address.house_number', '=', to.address.house_number),
+					eb('address.postal_code', '=', to.address.postal_code),
+					eb('address.street', '=', to.address.street)
+				])
+			)
+			.select(['id'])
+			.executeTakeFirst();
+		if (!targetAddress) {
+			targetAddress = (await trx
+				.insertInto('address')
+				.values({
+					street: from.address.street,
+					house_number: from.address.house_number,
+					postal_code: from.address.postal_code,
+					city: from.address.city
+				})
+				.returning('id')
+				.executeTakeFirst())!;
 		}
 		tour_id = (await trx
 			.insertInto('tour')
