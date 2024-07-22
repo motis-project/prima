@@ -67,8 +67,7 @@
 						<Form.Label>Pflichtfahrgebiet</Form.Label>
 						<Select.Root
 							selected={selectedZone}
-							onSelectedChange={(s) =>
-							{
+							onSelectedChange={(s) => {
 								s && s.label && ($formData.zone = s.label!);
 							}}
 						>
@@ -92,10 +91,9 @@
 						<Form.Label>Gemeinde</Form.Label>
 						<Select.Root
 							selected={selectedCommunity}
-							onSelectedChange={(s) =>
-										{
-											s && s.label && ($formData.community = s.label!);
-										}}
+							onSelectedChange={(s) => {
+								s && s.label && ($formData.community = s.label!);
+							}}
 						>
 							<Select.Trigger id="community">
 								<Select.Value placeholder="Bitte auswählen" />
