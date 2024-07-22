@@ -134,20 +134,29 @@ export const POST = async ({ request }) => {
 	const availableVehiclesByCompany = groupBy(
 		availableVehicles,
 		(element) => {
-			return { company: element.company, latitude: element.latitude, longitude: element.longitude };
+			return  element.company;
 		},
 		(element) => {
 			return {
 				availability: element.availability,
-				vehicle: element.vehicle
+				vehicle: element.vehicle,
+				latitude: element.latitude,
+				longitude: element.longitude 
 			};
 		}
 	);
 	const buffer = [...availableVehiclesByCompany];
-	const companies = buffer.map(([company, _]) => company.company);
+	const companies = buffer.map(([company, _]) => company);
 	const vehicles = buffer.map(([_, vehicles]) => vehicles);
 	const centralCoordinates = buffer.map(
-		([company, _]) => new Coordinates(company.latitude!, company.longitude!)
+		([company, _]) => {
+			const vehicles = availableVehiclesByCompany.get(company);
+			console.assert(vehicles && vehicles.length != 0);
+		return new Coordinates(
+			vehicles![0].latitude!,
+			vehicles![0].longitude!
+		);
+		}
 	);
 
 	// Motis-one_to_many requests
