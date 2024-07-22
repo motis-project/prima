@@ -36,7 +36,18 @@ export const actions: Actions = {
 		try {
 			await db
 				.insertInto('auth_user')
-				.values({ id, email, password_hash, first_name, last_name, phone, company_id })
+				.values({ id, email, password_hash, is_entrepreneur: false, is_maintainer: false })
+				.values({
+					id,
+					email,
+					password_hash,
+					first_name,
+					last_name,
+					phone,
+					company_id,
+					is_entrepreneur: false,
+					is_maintainer: false
+				})
 				.executeTakeFirst();
 
 			const session = await lucia.createSession(id, {});
@@ -56,6 +67,6 @@ export const actions: Actions = {
 				message: 'An unknown error occurred'
 			});
 		}
-		return redirect(302, '/taxi');
+		return redirect(302, '/');
 	}
 };

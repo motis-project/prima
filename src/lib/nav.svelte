@@ -15,16 +15,8 @@
 		name: string;
 		href: string;
 	};
-	const routeLinks: RouteLink[] = [
-		{
-			name: 'Taxi',
-			href: '/taxi'
-		},
-		{
-			name: 'Stammdaten',
-			href: '/company'
-		}
-	];
+
+	export let routeLinks: RouteLink[];
 </script>
 
 <div class="relative">

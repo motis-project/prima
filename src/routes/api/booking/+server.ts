@@ -50,6 +50,16 @@ export const POST = async ({ request }) => {
 		.selectFrom('zone')
 		.where('zone.id', 'in', start_zone_ids)
 		.innerJoin('company', 'company.zone', 'zone.id')
+		.where((eb) =>
+			eb.and([
+				eb('latitude', '!=', null),
+				eb('longitude', '!=', null),
+				eb('address', '!=', null),
+				eb('name', '!=', null),
+				eb('zone', '!=', null),
+				eb('community_area', '!=', null)
+			])
+		)
 		.innerJoin(
 			(eb) =>
 				eb
@@ -73,8 +83,8 @@ export const POST = async ({ request }) => {
 					.selectAll()
 					.where((eb) =>
 						eb.and([
-							eb('availability.start_time', '<=', expandedTravelInterval.end_time),
-							eb('availability.end_time', '>=', expandedTravelInterval.start_time)
+							eb('availability.start_time', '<=', expandedTravelInterval.endTime),
+							eb('availability.end_time', '>=', expandedTravelInterval.startTime)
 						])
 					)
 					.as('availability'),
@@ -137,7 +147,7 @@ export const POST = async ({ request }) => {
 	const companies = buffer.map(([company, _]) => company.company);
 	const vehicles = buffer.map(([_, vehicles]) => vehicles);
 	const centralCoordinates = buffer.map(
-		([company, _]) => new Coordinates(company.latitude, company.longitude)
+		([company, _]) => new Coordinates(company.latitude!, company.longitude!)
 	);
 
 	// Motis-one_to_many requests
@@ -205,12 +215,12 @@ export const POST = async ({ request }) => {
 										eb(
 											'tour.departure',
 											'<',
-											fullTravelIntervals.at(eb.ref('vehicle.company').expressionType!)!.end_time
+											fullTravelIntervals.at(eb.ref('vehicle.company').expressionType!)!.endTime
 										),
 										eb(
 											'tour.arrival',
 											'>',
-											fullTravelIntervals.at(eb.ref('vehicle.company').expressionType!)!.start_time
+											fullTravelIntervals.at(eb.ref('vehicle.company').expressionType!)!.startTime
 										)
 									])
 								)
@@ -223,8 +233,8 @@ export const POST = async ({ request }) => {
 			const companyIdx = companies.indexOf(v.company);
 			return {
 				vehicleId: v.vehicle,
-				departure: fullTravelIntervals[companyIdx].start_time,
-				arrival: fullTravelIntervals[companyIdx].end_time,
+				departure: fullTravelIntervals[companyIdx].startTime,
+				arrival: fullTravelIntervals[companyIdx].endTime,
 				distance: durationToStart[companyIdx] + durationFromTarget[companyIdx]
 			};
 		});

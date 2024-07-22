@@ -1,63 +1,77 @@
-import { json } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/database';
 import { sql } from 'kysely';
 import type { NewAvailability, Availability } from '$lib/types.js';
 import { Interval } from '$lib/interval.js';
 
-const to_availability = (interval: Interval, id: number, vehicle: number): Availability => {
+const toAvailability = (interval: Interval, id: number, vehicle: number): Availability => {
 	return {
-		start_time: interval.start_time,
-		end_time: interval.end_time,
+		start_time: interval.startTime,
+		end_time: interval.endTime,
 		vehicle: vehicle,
 		id: id
 	};
 };
 
-const to_new_availability = (interval: Interval, vehicle: number): NewAvailability => {
+const toNewAvailability = (interval: Interval, vehicle: number): NewAvailability => {
 	return {
-		start_time: interval.start_time,
-		end_time: interval.end_time,
+		start_time: interval.startTime,
+		end_time: interval.endTime,
 		vehicle: vehicle
 	};
 };
 
-export const DELETE = async ({ request }) => {
-	const { vehicle_id, from, to } = await request.json();
+export const DELETE = async (event) => {
+	const companyId = event.locals.user?.company;
+	if (!companyId) {
+		error(400, {
+			message: 'not allowed without write access to company'
+		});
+	}
+	const request = event.request;
+	const { vehicleId, from, to } = await request.json();
 	const start = new Date(from);
 	const end = new Date(to);
-	const to_remove = new Interval(start, end);
+	const toRemove = new Interval(start, end);
 	await db.transaction().execute(async (trx) => {
 		sql`LOCK TABLE availability IN ACCESS EXCLUSIVE MODE;`.execute(trx);
 		const overlapping = await trx
 			.selectFrom('availability')
 			.where(({ eb }) =>
 				eb.and([
-					eb('vehicle', '=', vehicle_id),
+					eb('vehicle', '=', vehicleId),
 					eb('availability.start_time', '<', end),
-					eb('availability.end_time', '>', start)
+					eb('availability.end_time', '>', start),
+					eb.exists(
+						eb
+							.selectFrom('vehicle')
+							.where(({ eb }) =>
+								eb.and([eb('vehicle.id', '=', vehicleId), eb('vehicle.company', '=', companyId)])
+							)
+					)
 				])
 			)
 			.selectAll()
 			.execute();
-		const to_remove_ids = Array<number>();
+		const toRemoveIds = Array<number>();
 		const cut = Array<Availability>();
 		const create = Array<NewAvailability>();
 		overlapping.forEach((a) => {
 			const availability = new Interval(a.start_time, a.end_time);
-			if (to_remove.contains(availability)) {
-				to_remove_ids.push(a.id);
-			} else if (availability.contains(to_remove) && !availability.equals(to_remove)) {
-				to_remove_ids.push(a.id);
-				const [left, right] = availability.split(to_remove);
-				create.push(to_new_availability(left, a.vehicle));
-				create.push(to_new_availability(right, a.vehicle));
+			if (toRemove.contains(availability)) {
+				toRemoveIds.push(a.id);
+			} else if (availability.contains(toRemove) && !availability.eitherEndIsEqual(toRemove)) {
+				toRemoveIds.push(a.id);
+				const [left, right] = availability.split(toRemove);
+				create.push(toNewAvailability(left, a.vehicle));
+				create.push(toNewAvailability(right, a.vehicle));
 			} else {
-				cut.push(to_availability(availability.cut(to_remove), a.id, a.vehicle));
+				cut.push(toAvailability(availability.cut(toRemove), a.id, a.vehicle));
 			}
 		});
 		const promises = [];
-		if (to_remove_ids.length > 0) {
-			promises.push(trx.deleteFrom('availability').where('id', 'in', to_remove_ids).execute());
+		if (toRemoveIds.length > 0) {
+			promises.push(trx.deleteFrom('availability').where('id', 'in', toRemoveIds).execute());
 		}
 		if (create.length > 0) {
 			promises.push(trx.insertInto('availability').values(create).execute());
@@ -70,7 +84,8 @@ export const DELETE = async ({ request }) => {
 					.onConflict((oc) =>
 						oc.column('id').doUpdateSet((eb) => ({
 							start_time: eb.ref('excluded.start_time'),
-							end_time: eb.ref('excluded.end_time')
+							end_time: eb.ref('excluded.end_time'),
+							vehicle: vehicleId
 						}))
 					)
 					.execute()
@@ -81,15 +96,30 @@ export const DELETE = async ({ request }) => {
 	return json({});
 };
 
-export const POST = async ({ request }) => {
-	const { vehicle_id, from, to } = await request.json();
+export const POST = async (event) => {
+	const companyId = event.locals.user?.company;
+	if (!companyId) {
+		error(400, {
+			message: 'not allowed without write access to company'
+		});
+	}
+	const request = event.request;
+	const { vehicleId, from, to } = await request.json();
 	await db
 		.insertInto('availability')
-		.values({
-			start_time: new Date(from),
-			end_time: new Date(to),
-			vehicle: vehicle_id
-		})
+		.columns(['start_time', 'end_time', 'vehicle'])
+		.expression((eb) =>
+			eb
+				.selectFrom('vehicle')
+				.select((eb) => [
+					eb.val(new Date(from)).as('start_time'),
+					eb.val(new Date(to)).as('end_time'),
+					'vehicle.id as vehicle'
+				])
+				.where(({ eb }) =>
+					eb.and([eb('vehicle.company', '=', companyId), eb('vehicle.id', '=', vehicleId)])
+				)
+		)
 		.execute();
 	return json({});
 };

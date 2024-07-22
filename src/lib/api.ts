@@ -35,32 +35,32 @@ export const addVehicle = async (
 	return [response.ok, await response.json()];
 };
 
-export const updateTour = async (tour_id: number, vehicle_id: number) => {
+export const updateTour = async (tourId: number, vehicleId: number) => {
 	return await fetch('/api/tour/', {
 		method: 'POST',
 		body: JSON.stringify({
-			tour_id,
-			vehicle_id
+			tour_id: tourId,
+			vehicle_id: vehicleId
 		})
 	});
 };
 
-export const removeAvailability = async (vehicle_id: number, from: Date, to: Date) => {
+export const removeAvailability = async (vehicleId: number, from: Date, to: Date) => {
 	return await fetch('/api/availability/', {
 		method: 'DELETE',
 		body: JSON.stringify({
-			vehicle_id,
+			vehicleId,
 			from,
 			to
 		})
 	});
 };
 
-export const addAvailability = async (vehicle_id: number, from: Date, to: Date) => {
+export const addAvailability = async (vehicleId: number, from: Date, to: Date) => {
 	return await fetch('/api/availability/', {
 		method: 'POST',
 		body: JSON.stringify({
-			vehicle_id,
+			vehicleId,
 			from,
 			to
 		})

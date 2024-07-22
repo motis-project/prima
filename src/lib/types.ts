@@ -32,12 +32,12 @@ export type ZoneUpdate = Updateable<ZoneTable>;
 // -------
 export interface CompanyTable {
 	id: Generated<number>;
-	latitude: number;
-	longitude: number;
-	name: string;
-	address: string;
-	zone: number;
-	community_area: number;
+	latitude: number | null;
+	longitude: number | null;
+	name: string | null;
+	address: string | null;
+	zone: number | null;
+	community_area: number | null;
 }
 
 export type Company = Selectable<CompanyTable>;
@@ -96,6 +96,8 @@ export interface UserAuthTable {
 	id: string;
 	email: string;
 	password_hash: string;
+	is_entrepreneur: boolean;
+	is_maintainer: boolean;
 	first_name: string | null;
 	last_name: string | null;
 	phone: string | null;
