@@ -25,7 +25,7 @@ export const load: PageServerLoad = async (event) => {
 			form.data.companyname = company!.name;
 			form.data.address = company!.address!;
 			form.data.zone = zones.find((z) => z.id! === company!.zone!)!.name;
-			form.data.community = zones.find((z) => z.id! === company!.zone!)!.name;
+			form.data.community = communities.find((z) => z.id! === company!.community_area!)!.name;
 		}
 	}
 	return {

@@ -12,7 +12,7 @@
 	import { Calendar } from '$lib/components/ui/calendar/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 
-	import { Date as ReactiveDate, Map } from 'svelte/reactivity';
+	import { SvelteDate as ReactiveDate, SvelteMap as Map } from 'svelte/reactivity';
 	import { Button } from '$lib/components/ui/button';
 	import { Toaster, toast } from 'svelte-sonner';
 	import * as Card from '$lib/components/ui/card';
