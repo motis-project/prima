@@ -12,6 +12,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright Dependencies
+        run: npx playwright install --with-deps
 
       - name: Install Dependencies
         run: npm install -f
@@ -22,5 +28,8 @@ jobs:
       - name: Svelte Check
         run: npm run check
 
-      - name: Unit Test
+      - name: Unit Tests
         run: npm run test:unit
+
+      - name: Integration Tests
+        run: npm run test:integration
