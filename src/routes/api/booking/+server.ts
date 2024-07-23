@@ -1,5 +1,6 @@
+import { error } from '@sveltejs/kit';
 import { oneToMany, Direction, getRoute } from '../../../lib/api.js';
-import { Coordinates } from '../../../lib/coordinates.js';
+import { Coordinates } from '../../../lib/location.js';
 import { db } from '$lib/database';
 import { Interval } from '../../../lib/interval.js';
 import { groupBy, updateValues } from '$lib/collection_utils.js';
@@ -9,20 +10,26 @@ import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
 
-export const POST = async ({ request }) => {
+export const POST = async (event) => {
+	const customer = event.locals.user;
+	if (!customer) {
+		return error(403);
+	}
+	const request = event.request;
+	const customerId = customer.id;
 	const { from, to, startFixed, timeStamp, numPassengers, numWheelchairs, numBikes, luggage } =
 		await request.json();
 	const time = new Date(timeStamp);
 	const travelDuration = (
 		await getRoute({
-			start: { lat: from.lat, lng: from.lng, level: 0 },
-			destination: { lat: to.lat, lng: to.lng, level: 0 },
+			start: { lat: from.coordinates.lat, lng: from.coordinates.lng, level: 0 },
+			destination: { lat: to.coordinates.lat, lng: to.coordinates.lng, level: 0 },
 			profile: 'car',
 			direction: 'forward'
 		})
 	).metadata.duration;
-	const startTime = startFixed ? time : new Date(time.getTime() - travelDuration);
-	const targetTime = startFixed ? new Date(time.getTime() + travelDuration) : time;
+	const startTime = startFixed ? time : new Date(time.getTime() - secondsToMs(travelDuration));
+	const targetTime = startFixed ? new Date(time.getTime() + secondsToMs(travelDuration)) : time;
 	const travelInterval = new Interval(startTime, targetTime);
 	if (new Date(Date.now() + minutesToMs(MIN_PREP_MINUTES)) > startTime) {
 		console.log('Insufficient preparation time.');
@@ -30,7 +37,7 @@ export const POST = async ({ request }) => {
 	}
 	const expandedTravelInterval = travelInterval.expand(hoursToMs(24), hoursToMs(24));
 
-	// Get (unmerged) availabilities which overlap the expanded travel interval, for vehicles which satisfy the zone constraints(TODO) and the capacity constraints.
+	// Get (unmerged) availabilities which overlap the expanded travel interval, for vehicles which satisfy the zone constraints and the capacity constraints.
 	// Also get some other data to reduce number of select calls to db.
 	// Use expanded travel interval, to ensure that, if a vehicle is available for the full travel interval (taxicentral-start-target-taxicentral) the corresponding
 	// availbilities are already fetched in this select statement.
@@ -46,12 +53,12 @@ export const POST = async ({ request }) => {
 		.innerJoin('company', 'company.zone', 'zone.id')
 		.where((eb) =>
 			eb.and([
-				eb('latitude', '!=', null),
-				eb('longitude', '!=', null),
-				eb('address', '!=', null),
-				eb('name', '!=', null),
-				eb('zone', '!=', null),
-				eb('community_area', '!=', null)
+				eb('company.latitude', 'is not', null),
+				eb('company.longitude', 'is not', null),
+				eb('company.address', 'is not', null),
+				eb('company.name', 'is not', null),
+				eb('company.zone', 'is not', null),
+				eb('company.community_area', 'is not', null)
 			])
 		)
 		.innerJoin(
@@ -94,6 +101,11 @@ export const POST = async ({ request }) => {
 		])
 		.execute();
 
+	if (db_results.length == 0) {
+		console.log('There is no vehicle which is able to do the tour.');
+		return json({});
+	}
+
 	// Group availabilities by vehicle, merge availabilities corresponding to the same vehicle, filter out availabilities which don't contain the
 	// travel-interval (start-target), filter out vehicles which don't have any availabilities left.
 	const mergedAvailabilites = groupBy(
@@ -128,29 +140,33 @@ export const POST = async ({ request }) => {
 	const availableVehiclesByCompany = groupBy(
 		availableVehicles,
 		(element) => {
-			return { company: element.company, latitude: element.latitude, longitude: element.longitude };
+			return element.company;
 		},
 		(element) => {
 			return {
 				availability: element.availability,
-				vehicle: element.vehicle
+				vehicle: element.vehicle,
+				latitude: element.latitude,
+				longitude: element.longitude
 			};
 		}
 	);
 	const buffer = [...availableVehiclesByCompany];
-	const companies = buffer.map(([company, _]) => company.company);
+	const companies = buffer.map(([company, _]) => company);
 	const vehicles = buffer.map(([_, vehicles]) => vehicles);
-	const centralCoordinates = buffer.map(
-		([company, _]) => new Coordinates(company.latitude!, company.longitude!)
-	);
+	const centralCoordinates = buffer.map(([company, _]) => {
+		const vehicles = availableVehiclesByCompany.get(company);
+		console.assert(vehicles && vehicles.length != 0);
+		return new Coordinates(vehicles![0].latitude!, vehicles![0].longitude!);
+	});
 
 	// Motis-one_to_many requests
-	const durationToStart = (await oneToMany(from, centralCoordinates, Direction.Backward)).map(
-		(res) => secondsToMs(res.duration)
-	);
-	const durationFromTarget = (await oneToMany(to, centralCoordinates, Direction.Forward)).map(
-		(res) => secondsToMs(res.duration)
-	);
+	const durationToStart = (
+		await oneToMany(from.coordinates, centralCoordinates, Direction.Backward)
+	).map((res) => secondsToMs(res.duration));
+	const durationFromTarget = (
+		await oneToMany(to.coordinates, centralCoordinates, Direction.Forward)
+	).map((res) => secondsToMs(res.duration));
 
 	const fullTravelIntervals = companies.map((_, index) =>
 		travelInterval.expand(durationToStart[index], durationFromTarget[index])
@@ -245,7 +261,55 @@ export const POST = async ({ request }) => {
 
 		const bestCompany = viable_vehicles[0];
 
-		// Write tour, request and 2 events in db.
+		// Write tour, request, 2 events and if not existant address in db.
+		let startAddress = await trx
+			.selectFrom('address')
+			.where(({ eb }) =>
+				eb.and([
+					eb('address.city', '=', from.address.city),
+					eb('address.house_number', '=', from.address.house_number),
+					eb('address.postal_code', '=', from.address.postal_code),
+					eb('address.street', '=', from.address.street)
+				])
+			)
+			.select(['id'])
+			.executeTakeFirst();
+		if (!startAddress) {
+			startAddress = (await trx
+				.insertInto('address')
+				.values({
+					street: from.address.street,
+					house_number: from.address.house_number,
+					postal_code: from.address.postal_code,
+					city: from.address.city
+				})
+				.returning('id')
+				.executeTakeFirst())!;
+		}
+		let targetAddress = await trx
+			.selectFrom('address')
+			.where(({ eb }) =>
+				eb.and([
+					eb('address.city', '=', to.address.city),
+					eb('address.house_number', '=', to.address.house_number),
+					eb('address.postal_code', '=', to.address.postal_code),
+					eb('address.street', '=', to.address.street)
+				])
+			)
+			.select(['id'])
+			.executeTakeFirst();
+		if (!targetAddress) {
+			targetAddress = (await trx
+				.insertInto('address')
+				.values({
+					street: from.address.street,
+					house_number: from.address.house_number,
+					postal_code: from.address.postal_code,
+					city: from.address.city
+				})
+				.returning('id')
+				.executeTakeFirst())!;
+		}
 		tour_id = (await trx
 			.insertInto('tour')
 			.values({
@@ -271,25 +335,25 @@ export const POST = async ({ request }) => {
 			.values([
 				{
 					is_pickup: true,
-					latitude: from.lat,
-					longitude: from.lng,
+					latitude: from.coordinates.lat,
+					longitude: from.coordinates.lng,
 					scheduled_time: startTime,
 					communicated_time: startTime, // TODO
-					address: 1, // TODO
+					address: startAddress.id,
 					request: requestId!,
 					tour: tour_id!,
-					customer: '' // TODO
+					customer: customerId
 				},
 				{
 					is_pickup: false,
-					latitude: to.lat,
-					longitude: to.lng,
+					latitude: to.coordinates.lat,
+					longitude: to.coordinates.lng,
 					scheduled_time: targetTime,
 					communicated_time: targetTime, // TODO
-					address: 1, // TODO
+					address: targetAddress.id,
 					request: requestId!,
 					tour: tour_id!,
-					customer: '' // TODO
+					customer: customerId
 				}
 			])
 			.execute();

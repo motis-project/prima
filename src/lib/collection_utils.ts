@@ -7,7 +7,7 @@ function getOrCreate<K, V>(map: Map<K, V>, key: K, valueFn: (key: K) => V): V {
 	return value;
 }
 
-export function groupBy<T, K, V>(
+export function groupBy<T, K extends string | number | boolean, V>(
 	array: T[],
 	keyFn: (element: T) => K,
 	valueFn: (element: T) => V
@@ -21,6 +21,9 @@ export function groupBy<T, K, V>(
 	return m;
 }
 
-export function updateValues<K, V>(map: Map<K, V>, updateFn: (v: V, k: K) => V): void {
+export function updateValues<K extends string | number | boolean, V>(
+	map: Map<K, V>,
+	updateFn: (v: V, k: K) => V
+): void {
 	[...map.entries()].forEach(([k, entry]) => map.set(k, updateFn(entry, k)));
 }
