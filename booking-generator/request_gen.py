@@ -27,9 +27,6 @@ def generate_random_datetime(start_date, end_date):
     
     return random_time
 
-def random_stop(stops):
-    return stops[random.randint(0, len(stops) - 1)]
-
 
 def generate_booking_requests(data, url, start_date, end_date,  max_passengers, nreq, delay):
     stops = []
@@ -42,8 +39,8 @@ def generate_booking_requests(data, url, start_date, end_date,  max_passengers, 
     try:
         n = 1
         while True:
-            stop_from = random_stop(stops)
-            stop_to = random_stop(stops)
+            stop_from = stops[random.randint(0, len(stops) - 1)]
+            stop_to = stops[random.randint(0, len(stops) - 1)]
             random_datetime = generate_random_datetime(start_date, end_date)
 
             req = {
