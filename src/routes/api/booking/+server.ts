@@ -1,11 +1,10 @@
-import { error } from '@sveltejs/kit';
 import { oneToMany, Direction, getRoute } from '../../../lib/api.js';
 import { Coordinates } from '../../../lib/location.js';
 import { db } from '$lib/database';
 import { Interval } from '../../../lib/interval.js';
 import { groupBy, updateValues } from '$lib/collection_utils.js';
-import { json } from '@sveltejs/kit';
-import {} from '$lib/utils.js';
+import { error, json } from '@sveltejs/kit';
+import { } from '$lib/utils.js';
 import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
@@ -15,19 +14,32 @@ export const POST = async (event) => {
 	if (!customer) {
 		return error(403);
 	}
-	const request = event.request;
 	const customerId = customer.id;
+
+	const request = event.request;
 	const { from, to, startFixed, timeStamp, numPassengers, numWheelchairs, numBikes, luggage } =
 		await request.json();
+	console.log(from, to, startFixed, timeStamp, numPassengers, numWheelchairs, numBikes, luggage);
 	const time = new Date(timeStamp);
-	const travelDuration = (
-		await getRoute({
-			start: { lat: from.coordinates.lat, lng: from.coordinates.lng, level: 0 },
-			destination: { lat: to.coordinates.lat, lng: to.coordinates.lng, level: 0 },
-			profile: 'car',
-			direction: 'forward'
-		})
-	).metadata.duration;
+
+	let travelDuration = 0;
+	try {
+		travelDuration = (
+			await getRoute({
+				start: { lat: from.coordinates.lat, lng: from.coordinates.lng, level: 0 },
+				destination: { lat: to.coordinates.lat, lng: to.coordinates.lng, level: 0 },
+				profile: 'car',
+				direction: 'forward'
+			})
+		).metadata.duration;
+	} catch (e) {
+		return json({});
+	}
+
+	if (travelDuration == 0) {
+		return json({});
+	}
+
 	const startTime = startFixed ? time : new Date(time.getTime() - secondsToMs(travelDuration));
 	const targetTime = startFixed ? new Date(time.getTime() + secondsToMs(travelDuration)) : time;
 	const travelInterval = new Interval(startTime, targetTime);
@@ -107,6 +119,7 @@ export const POST = async (event) => {
 		])
 		.execute();
 
+	console.log(db_results);
 	if (db_results.length == 0) {
 		console.log('There is no vehicle which is able to do the tour.');
 		return json({});
@@ -125,7 +138,7 @@ export const POST = async (event) => {
 
 	console.assert(
 		Math.max(...[...mergedAvailabilites.values()].map((availabilities) => availabilities.length)) <=
-			1
+		1
 	);
 
 	const availableVehicles = [...mergedAvailabilites.entries()]

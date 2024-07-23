@@ -38,45 +38,69 @@ def generate_booking_requests(data, url, start_date, end_date,  max_passengers, 
 
     try:
         n = 1
+        nreq_valid = 0
         while True:
             stop_from = stops[random.randint(0, len(stops) - 1)]
             stop_to = stops[random.randint(0, len(stops) - 1)]
             random_datetime = generate_random_datetime(start_date, end_date)
 
+            from_lat = float(stop_from[2])
+            from_lng = float(stop_from[3])
+            to_lat = float(stop_to[2])
+            to_lng = float(stop_to[3])
+
+            # lat_min = 14.077585327508132
+            # lat_max = 14.592268628077534
+            # lng_min = 51.04407811914251
+            # lng_max = 51.27917854861832
+
+            # if not (
+            #     from_lat > lat_min and from_lat < lat_max
+            #     and to_lat > lat_min and to_lat < lat_max
+            #     and from_lng > lng_min and from_lng < lng_max
+            #     and to_lng > lng_min and to_lng < lng_max):
+            #     print('abort')
+            #     continue
+            
             req = {
                 'from': {
-                    'coordinates':{'lat':stop_from[2], 'lng':stop_from[3]},
+                    'coordinates':{'lat': from_lat, 'lng': from_lng},
                     'address': {
-                        'street': stop_from[1]
+                        'street': stop_from[1],
+                        'house_number': '',
+                        'city': '',
+                        'postal_code': '',
                     }
                 },
                 'to': {
-                    'coordinates':{'lat':stop_to[2], 'lng':stop_to[3]},
+                    'coordinates':{'lat': to_lat, 'lng': to_lng},
                     'address': {
-                        'street': stop_to[1]
+                        'street': stop_to[1],
+                        'house_number': '',
+                        'city': '',
+                        'postal_code': '',
                     }
                 },
                 'startFixed': True,
                 'timeStamp': random_datetime.strftime('%Y-%m-%d, %H:%M:%S'),
                 'numPassengers': random.randint(1, max_passengers),
-                'numWheelchairs': random.randint(0, 1),
+                'numWheelchairs': 0, # random.randint(0, 1),
                 'numBikes': 0,
-                'luggage': random.randint(1, max_passengers),
+                'luggage': 0 # random.randint(1, max_passengers),
             }
 
             try:
-                resp = requests.post(url=url, json=req)
+                headers = {"Cookie": "auth_session=zkuv54pijgb2ztkuladbgw2f22mknll23x6kjmex"}
+                resp = requests.post(url=url, headers=headers, json=req)
                 res = resp.json()
                 print(res)
+                # if valid: nreq_valid += 1
             except:
                 print('Connection to server failed')
                 break
             
             time.sleep(delay)
-
-            print(nreq)
-            print(n)
-            if n == nreq:
+            if nreq_valid == nreq:
                 break
             n += 1
     except KeyboardInterrupt:
