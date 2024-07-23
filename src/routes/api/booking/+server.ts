@@ -19,11 +19,13 @@ export const POST = async (event) => {
 	const customerId = customer.id;
 	const { from, to, startFixed, timeStamp, numPassengers, numWheelchairs, numBikes, luggage } =
 		await request.json();
+		const fromCoordinates: Coordinates = from.coordinates;
+		const toCoordinates: Coordinates = to.coordinates;
 	const time = new Date(timeStamp);
 	const travelDuration = (
 		await getRoute({
-			start: { lat: from.coordinates.lat, lng: from.coordinates.lng, level: 0 },
-			destination: { lat: to.coordinates.lat, lng: to.coordinates.lng, level: 0 },
+			start: { lat: fromCoordinates.lat, lng: fromCoordinates.lng, level: 0 },
+			destination: { lat: toCoordinates.lat, lng: toCoordinates.lng, level: 0 },
 			profile: 'car',
 			direction: 'forward'
 		})
@@ -41,13 +43,13 @@ export const POST = async (event) => {
 	// Also get some other data to reduce number of select calls to db.
 	// Use expanded travel interval, to ensure that, if a vehicle is available for the full travel interval (taxicentral-start-target-taxicentral) the corresponding
 	// availbilities are already fetched in this select statement.
-	const db_results = await db
+	const dbResults = await db
 		.selectFrom('zone')
 		.where((eb) =>
 			eb.and([
 				eb('zone.is_community', '=', false),
-				sql<boolean>`ST_Covers(zone.area, ST_GeogFromText(\'SRID=4326;POINT(14.350868185368682 51.14029524927102)\'))'`,
-				sql<boolean>`ST_Covers(zone.area, ST_GeogFromText(\'SRID=4326;POINT(14.350868185368682 51.14029524927102)\'))'`
+				sql<boolean>`ST_Covers(zone.area, ST_GeogFromText(\'SRID=4326;POINT(${fromCoordinates.lng} ${fromCoordinates.lat})\'))'`,
+				sql<boolean>`ST_Covers(zone.area, ST_GeogFromText(\'SRID=4326;POINT(${toCoordinates.lng} ${toCoordinates.lat})\'))'`
 			])
 		)
 		.innerJoin('company', 'company.zone', 'zone.id')
@@ -101,7 +103,7 @@ export const POST = async (event) => {
 		])
 		.execute();
 
-	if (db_results.length == 0) {
+	if (dbResults.length == 0) {
 		console.log('There is no vehicle which is able to do the tour.');
 		return json({});
 	}
@@ -109,7 +111,7 @@ export const POST = async (event) => {
 	// Group availabilities by vehicle, merge availabilities corresponding to the same vehicle, filter out availabilities which don't contain the
 	// travel-interval (start-target), filter out vehicles which don't have any availabilities left.
 	const mergedAvailabilites = groupBy(
-		db_results,
+		dbResults,
 		(element) => element.vehicle,
 		(element) => new Interval(element.start_time, element.end_time)
 	);
@@ -125,7 +127,7 @@ export const POST = async (event) => {
 	const availableVehicles = [...mergedAvailabilites.entries()]
 		.filter(([_, availabilities]) => availabilities.length > 0)
 		.map(([vehicle, availabilities]) => {
-			const db_result = db_results.find((db_r) => db_r.vehicle == vehicle);
+			const db_result = dbResults.find((db_r) => db_r.vehicle == vehicle);
 			return {
 				latitude: db_result!.latitude,
 				longitude: db_result!.longitude,
@@ -162,10 +164,10 @@ export const POST = async (event) => {
 
 	// Motis-one_to_many requests
 	const durationToStart = (
-		await oneToMany(from.coordinates, centralCoordinates, Direction.Backward)
+		await oneToMany(fromCoordinates, centralCoordinates, Direction.Backward)
 	).map((res) => secondsToMs(res.duration));
 	const durationFromTarget = (
-		await oneToMany(to.coordinates, centralCoordinates, Direction.Forward)
+		await oneToMany(toCoordinates, centralCoordinates, Direction.Forward)
 	).map((res) => secondsToMs(res.duration));
 
 	const fullTravelIntervals = companies.map((_, index) =>
@@ -335,8 +337,8 @@ export const POST = async (event) => {
 			.values([
 				{
 					is_pickup: true,
-					latitude: from.coordinates.lat,
-					longitude: from.coordinates.lng,
+					latitude: fromCoordinates.lat,
+					longitude: fromCoordinates.lng,
 					scheduled_time: startTime,
 					communicated_time: startTime, // TODO
 					address: startAddress.id,
@@ -346,8 +348,8 @@ export const POST = async (event) => {
 				},
 				{
 					is_pickup: false,
-					latitude: to.coordinates.lat,
-					longitude: to.coordinates.lng,
+					latitude: toCoordinates.lat,
+					longitude: toCoordinates.lng,
 					scheduled_time: targetTime,
 					communicated_time: targetTime, // TODO
 					address: targetAddress.id,
