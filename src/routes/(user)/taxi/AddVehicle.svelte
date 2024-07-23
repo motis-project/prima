@@ -45,7 +45,7 @@
 
 <div>
 	<Popover.Root>
-		<Popover.Trigger>
+		<Popover.Trigger asChild>
 			<Button variant="outline">
 				<Plus class="mr-2 h-4 w-4" />
 				{'Fahrzeug hinzufügen'}
