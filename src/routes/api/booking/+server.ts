@@ -28,8 +28,8 @@ export const POST = async (event) => {
 			direction: 'forward'
 		})
 	).metadata.duration;
-	const startTime = startFixed ? time : new Date(time.getTime() - travelDuration);
-	const targetTime = startFixed ? new Date(time.getTime() + travelDuration) : time;
+	const startTime = startFixed ? time : new Date(time.getTime() - secondsToMs(travelDuration));
+	const targetTime = startFixed ? new Date(time.getTime() + secondsToMs(travelDuration)) : time;
 	const travelInterval = new Interval(startTime, targetTime);
 	if (new Date(Date.now() + minutesToMs(MIN_PREP_MINUTES)) > startTime) {
 		console.log('Insufficient preparation time.');
