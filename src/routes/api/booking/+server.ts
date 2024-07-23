@@ -48,8 +48,8 @@ export const POST = async (event) => {
 		.where((eb) =>
 			eb.and([
 				eb('zone.is_community', '=', false),
-				sql<boolean>`ST_Covers(zone.area, ST_GeogFromText(\'SRID=4326;POINT(${fromCoordinates.lng} ${fromCoordinates.lat})\'))'`,
-				sql<boolean>`ST_Covers(zone.area, ST_GeogFromText(\'SRID=4326;POINT(${toCoordinates.lng} ${toCoordinates.lat})\'))'`
+				sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${fromCoordinates.lng}, ${fromCoordinates.lat}),4326))`,
+				sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${toCoordinates.lng}, ${toCoordinates.lat}),4326))`
 			])
 		)
 		.innerJoin('company', 'company.zone', 'zone.id')
