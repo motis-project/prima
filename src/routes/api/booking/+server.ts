@@ -59,12 +59,12 @@ export const POST = async (event) => {
 		.innerJoin('company', 'company.zone', 'zone.id')
 		.where((eb) =>
 			eb.and([
-				eb('latitude', '!=', null),
-				eb('longitude', '!=', null),
-				eb('address', '!=', null),
-				eb('name', '!=', null),
-				eb('zone', '!=', null),
-				eb('community_area', '!=', null)
+				eb('company.latitude', 'is not', null),
+				eb('company.longitude', 'is not', null),
+				eb('company.address', 'is not', null),
+				eb('company.name', 'is not', null),
+				eb('company.zone', 'is not', null),
+				eb('company.community_area', 'is not', null)
 			])
 		)
 		.innerJoin(
@@ -106,6 +106,11 @@ export const POST = async (event) => {
 			'company.id as company'
 		])
 		.execute();
+
+	if (db_results.length == 0) {
+		console.log('There is no vehicle which is able to do the tour.');
+		return json({});
+	}
 
 	// Group availabilities by vehicle, merge availabilities corresponding to the same vehicle, filter out availabilities which don't contain the
 	// travel-interval (start-target), filter out vehicles which don't have any availabilities left.
@@ -162,12 +167,12 @@ export const POST = async (event) => {
 	});
 
 	// Motis-one_to_many requests
-	const durationToStart = (await oneToMany(from, centralCoordinates, Direction.Backward)).map(
-		(res) => secondsToMs(res.duration)
-	);
-	const durationFromTarget = (await oneToMany(to, centralCoordinates, Direction.Forward)).map(
-		(res) => secondsToMs(res.duration)
-	);
+	const durationToStart = (
+		await oneToMany(from.coordinates, centralCoordinates, Direction.Backward)
+	).map((res) => secondsToMs(res.duration));
+	const durationFromTarget = (
+		await oneToMany(to.coordinates, centralCoordinates, Direction.Forward)
+	).map((res) => secondsToMs(res.duration));
 
 	const fullTravelIntervals = companies.map((_, index) =>
 		travelInterval.expand(durationToStart[index], durationFromTarget[index])
@@ -336,8 +341,8 @@ export const POST = async (event) => {
 			.values([
 				{
 					is_pickup: true,
-					latitude: from.lat,
-					longitude: from.lng,
+					latitude: from.coordinates.lat,
+					longitude: from.coordinates.lng,
 					scheduled_time: startTime,
 					communicated_time: startTime, // TODO
 					address: startAddress.id,
@@ -347,8 +352,8 @@ export const POST = async (event) => {
 				},
 				{
 					is_pickup: false,
-					latitude: to.lat,
-					longitude: to.lng,
+					latitude: to.coordinates.lat,
+					longitude: to.coordinates.lng,
 					scheduled_time: targetTime,
 					communicated_time: targetTime, // TODO
 					address: targetAddress.id,
