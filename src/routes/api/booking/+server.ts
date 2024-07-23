@@ -19,8 +19,8 @@ export const POST = async (event) => {
 	const customerId = customer.id;
 	const { from, to, startFixed, timeStamp, numPassengers, numWheelchairs, numBikes, luggage } =
 		await request.json();
-		const fromCoordinates: Coordinates = from.coordinates;
-		const toCoordinates: Coordinates = to.coordinates;
+	const fromCoordinates: Coordinates = from.coordinates;
+	const toCoordinates: Coordinates = to.coordinates;
 	const time = new Date(timeStamp);
 	const travelDuration = (
 		await getRoute({
