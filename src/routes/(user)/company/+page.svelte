@@ -74,7 +74,7 @@
 							<Select.Trigger id="zone">
 								<Select.Value placeholder="Bitte auswählen" />
 							</Select.Trigger>
-							<Select.Content class="absolute z-10">
+							<Select.Content class="overflow-y-auto max-h-1/3 absolute z-10">
 								{#each data.zones as zone}
 									<Select.Item value={zone} label={zone.name.toString()}>
 										{zone.name.toString()}
@@ -98,7 +98,7 @@
 							<Select.Trigger id="community">
 								<Select.Value placeholder="Bitte auswählen" />
 							</Select.Trigger>
-							<Select.Content class="absolute z-10">
+							<Select.Content class="overflow-y-auto max-h-1/3 absolute z-10">
 								{#each data.communities as community}
 									<Select.Item value={community} label={community.name.toString()}>
 										{community.name.toString()}

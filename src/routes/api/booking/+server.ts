@@ -30,25 +30,19 @@ export const POST = async ({ request }) => {
 	}
 	const expandedTravelInterval = travelInterval.expand(hoursToMs(24), hoursToMs(24));
 
-	const zones = await db
-		.selectFrom('zone')
-		.where('is_community', '=', false)
-		.select(['id', 'area'])
-		.execute();
-	const start_zone_ids = zones.map((z) => z.id); //zones which contain the start and target coordinates, TODO
-
-	if (start_zone_ids.length == 0) {
-		console.log('There is no zone containing both the start and target coordinates.');
-		return json({});
-	}
-
 	// Get (unmerged) availabilities which overlap the expanded travel interval, for vehicles which satisfy the zone constraints(TODO) and the capacity constraints.
 	// Also get some other data to reduce number of select calls to db.
 	// Use expanded travel interval, to ensure that, if a vehicle is available for the full travel interval (taxicentral-start-target-taxicentral) the corresponding
 	// availbilities are already fetched in this select statement.
 	const db_results = await db
 		.selectFrom('zone')
-		.where('zone.id', 'in', start_zone_ids)
+		.where((eb) =>
+			eb.and([
+				eb('zone.is_community', '=', false),
+				sql<boolean>`ST_Covers(zone.area, ST_GeogFromText(\'SRID=4326;POINT(14.350868185368682 51.14029524927102)\'))'`,
+				sql<boolean>`ST_Covers(zone.area, ST_GeogFromText(\'SRID=4326;POINT(14.350868185368682 51.14029524927102)\'))'`
+			])
+		)
 		.innerJoin('company', 'company.zone', 'zone.id')
 		.where((eb) =>
 			eb.and([
