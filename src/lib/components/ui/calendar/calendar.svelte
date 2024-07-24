@@ -1,6 +1,19 @@
 <script lang="ts">
 	import { Calendar as CalendarPrimitive } from 'bits-ui';
-	import * as Calendar from './index.js';
+	import {
+		Day,
+		Cell,
+		Grid,
+		Header,
+		Months,
+		GridRow,
+		Heading,
+		GridBody,
+		GridHead,
+		HeadCell,
+		NextButton,
+		PrevButton
+	} from './index.js';
 	import { cn } from '$lib/utils.js';
 
 	type $$Props = CalendarPrimitive.Props;
@@ -23,35 +36,35 @@
 	let:months
 	let:weekdays
 >
-	<Calendar.Header>
-		<Calendar.PrevButton />
-		<Calendar.Heading />
-		<Calendar.NextButton />
-	</Calendar.Header>
-	<Calendar.Months>
+	<Header>
+		<PrevButton />
+		<Heading />
+		<NextButton />
+	</Header>
+	<Months>
 		{#each months as month}
-			<Calendar.Grid>
-				<Calendar.GridHead>
-					<Calendar.GridRow class="flex">
+			<Grid>
+				<GridHead>
+					<GridRow class="flex">
 						{#each weekdays as weekday}
-							<Calendar.HeadCell>
+							<HeadCell>
 								{weekday.slice(0, 2)}
-							</Calendar.HeadCell>
+							</HeadCell>
 						{/each}
-					</Calendar.GridRow>
-				</Calendar.GridHead>
-				<Calendar.GridBody>
+					</GridRow>
+				</GridHead>
+				<GridBody>
 					{#each month.weeks as weekDates}
-						<Calendar.GridRow class="mt-2 w-full">
+						<GridRow class="mt-2 w-full">
 							{#each weekDates as date}
-								<Calendar.Cell {date}>
-									<Calendar.Day {date} month={month.value} />
-								</Calendar.Cell>
+								<Cell {date}>
+									<Day {date} month={month.value} />
+								</Cell>
 							{/each}
-						</Calendar.GridRow>
+						</GridRow>
 					{/each}
-				</Calendar.GridBody>
-			</Calendar.Grid>
+				</GridBody>
+			</Grid>
 		{/each}
-	</Calendar.Months>
+	</Months>
 </CalendarPrimitive.Root>
