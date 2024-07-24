@@ -7,7 +7,7 @@
 	import Logout from 'lucide-svelte/icons/log-out';
 
 	type Props = {
-		className: string | undefined | null;
+		className?: string;
 		routeLinks: RouteLink[];
 	};
 	let { routeLinks, className, ...restProps }: Props = $props();
