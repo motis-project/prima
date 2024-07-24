@@ -29,6 +29,7 @@
 	import TourDialog from './TourDialog.svelte';
 	import AddVehicle from './AddVehicle.svelte';
 	import type { TourDetails } from './TourDetails';
+	import { onMount } from 'svelte';
 	import type { Range, Tour, Vehicle } from './types';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
@@ -42,6 +43,15 @@
 
 	$effect(() => {
 		goto(`/taxi?date=${value.toDate('UTC').toISOString().slice(0, 10)}`);
+	});
+
+	onMount(() => {
+		const interval = setInterval(async () => {
+			if (selection == null && draggedTours == null) {
+				await invalidateAll();
+			}
+		}, 5000);
+		return () => clearInterval(interval);
 	});
 
 	// 11 pm local time day before
