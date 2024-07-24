@@ -67,17 +67,11 @@ def generate_booking_requests(data, url, start_date, end_date,  max_passengers, 
                 'numBikes': 0,
                 'luggage': 0 # random.randint(1, max_passengers),
             }
+            print(req)
 
-            try:
-                headers = {"Cookie": "auth_session=blhfzffcmfhv5ur2w32ujfwcffxt6iozlylafnxj"}
-                resp = requests.post(url=url, headers=headers, json=req)
-                res = resp.json()
-                print(res)
-                if res['status'] == 0:
-                    nreq_valid += 1
-            except:
-                print('Connection to server failed')
-                break
+            res = send_request(req)
+            if res['status'] == 0:
+                nreq_valid += 1
             
             time.sleep(delay)
             if nreq_valid == nreq:
@@ -86,16 +80,22 @@ def generate_booking_requests(data, url, start_date, end_date,  max_passengers, 
         pass  # be quiet
 
 
-def filter(data):
-    # lng_min = 14.077585327508132
-    # lng_max = 14.592268628077534
-    # lat_min = 51.04407811914251
-    # lat_max = 51.27917854861832
+def send_request(url, req):
+    try:
+        headers = {"Cookie": "auth_session=blhfzffcmfhv5ur2w32ujfwcffxt6iozlylafnxj"}
+        resp = requests.post(url=url, headers=headers, json=req)
+        res = resp.json()
+        print(res)
+        return res
+    except:
+        print('Connection to server failed')
 
-    lng_min = 14.28558906880724
-    lng_max = 14.563185831220778
-    lat_min = 51.08430122499979
-    lat_max = 51.30071292818033
+
+def filter(data):
+    lng_min = 14.317146232647332
+    lng_max = 14.543065204654113
+    lat_min = 51.102234656112046
+    lat_max = 51.23982499106336
 
     filtered = []
     for e in data:
@@ -119,18 +119,36 @@ if __name__ == '__main__':
     parser.add_argument('--delay', type=int, required=False, default=1, help='Delay between requests in seconds')
     args = parser.parse_args()
 
-    now = datetime.now()
-    start_date = now.date()
-    end_date = (now + timedelta(days=args.days)).date()
+    # now = datetime.now()
+    # start_date = now.date()
+    # end_date = (now + timedelta(days=args.days)).date()
 
-    data = []
-    with open(args.data) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        for row in csv_reader:
-            data.append(row)
+    # data = []
+    # with open(args.data) as csv_file:
+    #     csv_reader = csv.reader(csv_file, delimiter=',')
+    #     for row in csv_reader:
+    #         data.append(row)
 
-    fdata = filter(data)
-    print('Used number of locations: ', len(fdata))
-    generate_booking_requests(fdata, args.url, start_date, end_date, args.max_passengers, args.nreq, args.delay)
+    # fdata = filter(data)
+    # print('Used number of locations: ', len(fdata))
+    # generate_booking_requests(fdata, args.url, start_date, end_date, args.max_passengers, args.nreq, args.delay)
+
+    test_req = {
+        'from': {
+            'coordinates': {'lat': 51.2276466699279, 'lng': 14.5064713170819},
+            'address': {'street': 'Pließkowitz Bautzener Straße', 'house_number': '', 'city': '', 'postal_code': ''}
+        },
+        'to': {
+            'coordinates': {'lat': 51.1749956645351, 'lng': 14.4446402760674},
+            'address': {'street': 'Bautzen Goethestraße/Autohof', 'house_number': '', 'city': '', 'postal_code': ''}
+        },
+        'startFixed': True,
+        'timeStamp': '2024-07-24, 21:40:34',
+        'numPassengers': 3,
+        'numWheelchairs': 0,
+        'numBikes': 0,
+        'luggage': 0
+    }
+    send_request(args.url, test_req)
 
     # use: python3 request_gen.py --url='http://localhost:5173/api/booking' --data=stops_test.txt

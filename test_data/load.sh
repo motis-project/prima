@@ -21,11 +21,6 @@ cd $BASEDIR
 
 export PGPASSWORD=pw
 
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/address.sql
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/zone.sql
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/company.sql
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/vehicle.sql
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/availability.sql
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/tour.sql
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/auth_user.sql
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/event.sql
+for filename in $SCENARIO/*.sql; do
+  psql postgresql://localhost:6500/prima --user postgres < $filename
+done

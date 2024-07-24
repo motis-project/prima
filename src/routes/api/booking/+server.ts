@@ -172,14 +172,24 @@ export const POST = async (event) => {
 		return new Coordinates(vehicles![0].latitude!, vehicles![0].longitude!);
 	});
 
-	// Motis-one_to_many requests
-	const durationToStart = (
-		await oneToMany(fromCoordinates, centralCoordinates, Direction.Backward)
-	).map((res) => secondsToMs(res.duration));
-	const durationFromTarget = (
-		await oneToMany(toCoordinates, centralCoordinates, Direction.Forward)
-	).map((res) => secondsToMs(res.duration));
+	if (centralCoordinates.length == 0) {
+		console.log('centralCoordinates array was empty');
+		return json({ status: 1 });
+	}
 
+	let durationToStart: Array<number> = [];
+	let durationFromTarget: Array<number> = [];
+	try {
+		// Motis-one_to_many requests
+		const durationToStart = (
+			await oneToMany(fromCoordinates, centralCoordinates, Direction.Backward)
+		).map((res) => secondsToMs(res.duration));
+		const durationFromTarget = (
+			await oneToMany(toCoordinates, centralCoordinates, Direction.Forward)
+		).map((res) => secondsToMs(res.duration));
+	} catch (e) {
+		return json({ status: 1 });
+	}
 	const fullTravelIntervals = companies.map((_, index) =>
 		travelInterval.expand(durationToStart[index], durationFromTarget[index])
 	);
@@ -211,6 +221,7 @@ export const POST = async (event) => {
 
 	if (vehicleIds.length == 0) {
 		console.log(
+			'vehicleIds.length == 0\n',
 			'No one can handle this booking request, there are no available vehicles which fulfill the zone and capacity requirements.'
 		);
 		return json({ status: 1 });
@@ -263,6 +274,7 @@ export const POST = async (event) => {
 
 		if (viable_vehicles.length == 0) {
 			console.log(
+				'viable_vehicles.length == 0\n',
 				'No one can handle this booking request, all available vehicles which fulfill the zone and capacity requirements are busy.'
 			);
 			return json({ status: 1 });
