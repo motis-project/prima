@@ -81,13 +81,14 @@
 		vehicles = loadVehicles();
 	});
 
-	onMount(() =>
-		setInterval(async () => {
-			if (selection !== null && draggedTours !== null) {
+	onMount(() => {
+		const interval = setInterval(async () => {
+			if (selection == null && draggedTours == null) {
 				await invalidateAll();
 			}
-		}, 5000)
-	);
+		}, 5000);
+		return () => clearInterval(interval);
+	});
 
 	// 11 pm local time day before
 	let base = $derived.by(() => {
