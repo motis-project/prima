@@ -322,7 +322,11 @@
 		<tbody>
 			{#each vehicles.entries() as [id, v]}
 				<tr>
-					<td class="pr-4 text-sm tracking-tight leading-none">{v.license_plate}</td>
+					<td
+						class="pr-2 h-full align-middle text-sm font-semibold font-mono tracking-tight leading-none"
+					>
+						{v.license_plate}
+					</td>
 					{#each split(range, 60) as x}
 						<td>
 							<table class="w-full">
@@ -398,6 +402,7 @@
 		<Card.Title>Fahrzeuge und Touren</Card.Title>
 		<Card.Description>Fahrzeugverfügbarkeit- und Tourenverwaltung</Card.Description>
 	</Card.Header>
+
 	<div class="font-semibold leading-none tracking-tight p-6 flex gap-4">
 		<div class="flex gap-1">
 			<Button variant="outline" size="icon" on:click={() => (value = value.add({ days: -1 }))}>
@@ -434,10 +439,31 @@
 		</Button>
 	</div>
 </div>
+
 <Card.Content class="mt-8">
-	{@render availability_table({ from: base, to: today_morning })}
-	{@render availability_table({ from: today_morning, to: today_day })}
-	{@render availability_table({ from: today_day, to: tomorrow_night })}
+	{#if !data.companyDataComplete}
+		<div class="w-full flex flex-col min-h-[45vh] items-center justify-center">
+			<h2 class="text-xl font-semibold leading-none tracking-tight mb-4">
+				Stammdaten unvollständig.
+			</h2>
+			<p class="text-muted-foreground">
+				Fahrzeuge können erst angelegt werden, wenn die Unternehmens-Stammdaten vollständig sind.
+			</p>
+		</div>
+	{:else if vehicles.size === 0}
+		<div class="w-full flex flex-col min-h-[45vh] items-center justify-center">
+			<h2 class="text-xl font-semibold leading-none tracking-tight mb-4">
+				Kein Fahrzeug vorhanden.
+			</h2>
+			<p class="text-muted-foreground">
+				Es muss mindestens ein Fahrzeug angelegt sein, um Verfügbarkeiten angeben zu können.
+			</p>
+		</div>
+	{:else}
+		{@render availability_table({ from: base, to: today_morning })}
+		{@render availability_table({ from: today_morning, to: today_day })}
+		{@render availability_table({ from: today_day, to: tomorrow_night })}
+	{/if}
 </Card.Content>
 
 <TourDialog bind:open={selectedTour} />

@@ -61,10 +61,24 @@ export async function load(event) {
 			.execute()
 	);
 
+	const company = await db
+		.selectFrom('company')
+		.where('id', '=', companyId)
+		.selectAll()
+		.executeTakeFirstOrThrow();
+	const companyDataComplete =
+		company.name !== null &&
+		company.address !== null &&
+		company.zone !== null &&
+		company.community_area !== null &&
+		company.latitude !== null &&
+		company.longitude !== null;
+
 	return {
 		tours,
 		vehicles: await vehicles,
 		availabilities: await availabilities,
-		utcDate
+		utcDate,
+		companyDataComplete
 	};
 }
