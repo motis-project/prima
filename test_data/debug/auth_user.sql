@@ -1,3 +1,0 @@
-INSERT INTO "auth_user" ("id", "email", "is_entrepreneur", "is_maintainer", "password_hash", "first_name", "last_name", "phone", "company_id") VALUES
-('riq3ruqcrm3ggln',	'maintainer@zvon.de',	'f',	't',	'$argon2id$v=19$m=19456,t=2,p=1$A8blXdbQ9sw37BKlmvp8CA$XXaIs11CbHjN+t8q7UZ9L+hsS2ifdkbf4krYRwxaO+8',	NULL,	NULL,	NULL,	NULL),
-('afhga3w24lucmhd',	'foo@bar.com',	'f',	'f',	'$argon2id$v=19$m=19456,t=2,p=1$krhDtf03BexX09v+y6x1ig$/Tplh0WXDwtmpnn8ib+2kk2F/hkoTLDLhMBrGbca+b0',	NULL,	NULL,	NULL,	NULL);
