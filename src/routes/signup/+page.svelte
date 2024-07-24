@@ -37,7 +37,7 @@
 				</div>
 			</Card.Content>
 			<Card.Footer>
-				<Button type="submit" class="w-full">Login</Button>
+				<Button type="submit" class="w-full">Account erstellen</Button>
 			</Card.Footer>
 		</form>
 	</Card.Root>
