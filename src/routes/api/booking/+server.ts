@@ -1,10 +1,9 @@
-import { error } from '@sveltejs/kit';
 import { oneToMany, Direction, getRoute } from '../../../lib/api.js';
 import { Coordinates } from '../../../lib/location.js';
 import { db } from '$lib/database';
 import { Interval } from '../../../lib/interval.js';
 import { groupBy, updateValues } from '$lib/collection_utils.js';
-import { json } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 import {} from '$lib/utils.js';
 import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { MIN_PREP_MINUTES } from '$lib/constants.js';
@@ -15,27 +14,39 @@ export const POST = async (event) => {
 	if (!customer) {
 		return error(403);
 	}
-	const request = event.request;
 	const customerId = customer.id;
+	const request = event.request;
 	const { from, to, startFixed, timeStamp, numPassengers, numWheelchairs, numBikes, luggage } =
 		await request.json();
 	const fromCoordinates: Coordinates = from.coordinates;
 	const toCoordinates: Coordinates = to.coordinates;
 	const time = new Date(timeStamp);
-	const travelDuration = (
-		await getRoute({
-			start: { lat: fromCoordinates.lat, lng: fromCoordinates.lng, level: 0 },
-			destination: { lat: toCoordinates.lat, lng: toCoordinates.lng, level: 0 },
-			profile: 'car',
-			direction: 'forward'
-		})
-	).metadata.duration;
+	console.log(time);
+
+	let travelDuration = 0;
+	try {
+		travelDuration = (
+			await getRoute({
+				start: { lat: from.coordinates.lat, lng: from.coordinates.lng, level: 0 },
+				destination: { lat: to.coordinates.lat, lng: to.coordinates.lng, level: 0 },
+				profile: 'car',
+				direction: 'forward'
+			})
+		).metadata.duration;
+	} catch (e) {
+		return json({ status: 1 });
+	}
+
+	if (travelDuration == 0) {
+		return json({ status: 1 });
+	}
+
 	const startTime = startFixed ? time : new Date(time.getTime() - secondsToMs(travelDuration));
 	const targetTime = startFixed ? new Date(time.getTime() + secondsToMs(travelDuration)) : time;
 	const travelInterval = new Interval(startTime, targetTime);
 	if (new Date(Date.now() + minutesToMs(MIN_PREP_MINUTES)) > startTime) {
 		console.log('Insufficient preparation time.');
-		return json({});
+		return json({ status: 1 });
 	}
 	const expandedTravelInterval = travelInterval.expand(hoursToMs(24), hoursToMs(24));
 
@@ -105,7 +116,7 @@ export const POST = async (event) => {
 
 	if (dbResults.length == 0) {
 		console.log('There is no vehicle which is able to do the tour.');
-		return json({});
+		return json({ status: 1 });
 	}
 
 	// Group availabilities by vehicle, merge availabilities corresponding to the same vehicle, filter out availabilities which don't contain the
@@ -162,14 +173,24 @@ export const POST = async (event) => {
 		return new Coordinates(vehicles![0].latitude!, vehicles![0].longitude!);
 	});
 
-	// Motis-one_to_many requests
-	const durationToStart = (
-		await oneToMany(fromCoordinates, centralCoordinates, Direction.Backward)
-	).map((res) => secondsToMs(res.duration));
-	const durationFromTarget = (
-		await oneToMany(toCoordinates, centralCoordinates, Direction.Forward)
-	).map((res) => secondsToMs(res.duration));
+	if (centralCoordinates.length == 0) {
+		console.log('centralCoordinates array was empty');
+		return json({ status: 1 });
+	}
 
+	let durationToStart: Array<number> = [];
+	let durationFromTarget: Array<number> = [];
+	try {
+		// Motis-one_to_many requests
+		durationToStart = (
+			await oneToMany(fromCoordinates, centralCoordinates, Direction.Backward)
+		).map((res) => secondsToMs(res.duration));
+		durationFromTarget = (
+			await oneToMany(toCoordinates, centralCoordinates, Direction.Forward)
+		).map((res) => secondsToMs(res.duration));
+	} catch (e) {
+		return json({ status: 1 });
+	}
 	const fullTravelIntervals = companies.map((_, index) =>
 		travelInterval.expand(durationToStart[index], durationFromTarget[index])
 	);
@@ -201,9 +222,10 @@ export const POST = async (event) => {
 
 	if (vehicleIds.length == 0) {
 		console.log(
-			'Noone can handle this booking request, there are no available vehicles which fulfill the zone and capacity requirements.'
+			'vehicleIds.length == 0\n',
+			'No one can handle this booking request, there are no available vehicles which fulfill the zone and capacity requirements.'
 		);
-		return json({});
+		return json({ status: 1 });
 	}
 
 	let tour_id: number | undefined = undefined;
@@ -253,9 +275,10 @@ export const POST = async (event) => {
 
 		if (viable_vehicles.length == 0) {
 			console.log(
-				'Noone can handle this booking request, all available vehicles which fulfill the zone and capacity requirements are busy.'
+				'viable_vehicles.length == 0\n',
+				'No one can handle this booking request, all available vehicles which fulfill the zone and capacity requirements are busy.'
 			);
-			return json({});
+			return json({ status: 1 });
 		}
 
 		// Sort companies by the distance of their taxi-central to start + target
@@ -304,10 +327,10 @@ export const POST = async (event) => {
 			targetAddress = (await trx
 				.insertInto('address')
 				.values({
-					street: from.address.street,
-					house_number: from.address.house_number,
-					postal_code: from.address.postal_code,
-					city: from.address.city
+					street: to.address.street,
+					house_number: to.address.house_number,
+					postal_code: to.address.postal_code,
+					city: to.address.city
 				})
 				.returning('id')
 				.executeTakeFirst())!;
@@ -362,7 +385,7 @@ export const POST = async (event) => {
 	});
 	if (tour_id) {
 		console.log('Booking request was assigned.');
-		return json({ tour_id });
+		return json({ status: 0, tour_id: tour_id });
 	}
-	return json({});
+	return json({ status: 1 });
 };
