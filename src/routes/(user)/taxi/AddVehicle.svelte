@@ -45,8 +45,8 @@
 
 <div>
 	<Popover.Root>
-		<Popover.Trigger>
-			<Button variant="outline">
+		<Popover.Trigger asChild let:builder>
+			<Button variant="outline" builders={[builder]}>
 				<Plus class="mr-2 h-4 w-4" />
 				{'Fahrzeug hinzufügen'}
 			</Button>
