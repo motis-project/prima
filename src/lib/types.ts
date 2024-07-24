@@ -18,7 +18,6 @@ export interface Database {
 // ----
 export interface ZoneTable {
 	id: Generated<number>;
-	area: string;
 	name: string;
 	is_community: boolean;
 }
