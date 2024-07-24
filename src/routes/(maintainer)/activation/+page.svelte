@@ -29,7 +29,7 @@
 					{/if}
 					{#if form?.updated}
 						<div class="text-[0.8rem] font-medium text-green-600 mt-1">
-							Freischaltung erfolgreich!
+							Freischalten erfolgreich!
 						</div>
 					{/if}
 					{#if form?.existed}

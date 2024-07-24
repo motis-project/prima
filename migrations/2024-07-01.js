@@ -1,11 +1,8 @@
+import { sql } from 'kysely';
+
 export async function up(db) {
-    await db.schema
-        .createTable('zone')
-        .addColumn('id', 'serial', (col) => col.primaryKey())
-        .addColumn('area', 'varchar', (col) => col.notNull())
-        .addColumn('name', 'varchar', (col) => col.notNull())
-        .addColumn('is_community', 'boolean', (col) => col.notNull())
-        .execute();
+    await sql`CREATE EXTENSION postgis`.execute(db);
+    await sql`CREATE TABLE zone(id SERIAL PRIMARY KEY, area geography(MULTIPOLYGON,4326) NOT NULL, name varchar NOT NULL, is_community bool NOT NULL)`.execute(db);
 
     await db.schema
         .createTable('company')
