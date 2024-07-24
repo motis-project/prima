@@ -29,6 +29,7 @@
 	import TourDialog from './TourDialog.svelte';
 	import AddVehicle from './AddVehicle.svelte';
 	import type { TourDetails } from './TourDetails';
+	import { onMount } from 'svelte';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
@@ -79,6 +80,14 @@
 		goto(url);
 		vehicles = loadVehicles();
 	});
+
+	onMount(() =>
+		setInterval(async () => {
+			if (selection !== null && draggedTours !== null) {
+				await invalidateAll();
+			}
+		}, 5000)
+	);
 
 	// 11 pm local time day before
 	let base = $derived.by(() => {
