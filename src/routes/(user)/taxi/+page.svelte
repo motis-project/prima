@@ -12,7 +12,7 @@
 	import { Calendar } from '$lib/components/ui/calendar/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 
-	import { SvelteDate as ReactiveDate, SvelteMap as Map } from 'svelte/reactivity';
+	import { SvelteDate as ReactiveDate } from 'svelte/reactivity';
 	import { Button } from '$lib/components/ui/button';
 	import { Toaster, toast } from 'svelte-sonner';
 	import * as Card from '$lib/components/ui/card';
@@ -29,39 +29,10 @@
 	import TourDialog from './TourDialog.svelte';
 	import AddVehicle from './AddVehicle.svelte';
 	import type { TourDetails } from './TourDetails';
+	import { onMount } from 'svelte';
+	import type { Range, Tour, Vehicle } from './types';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
-
-	class Range {
-		from!: Date;
-		to!: Date;
-	}
-
-	class Tour extends Range {
-		tour_id!: number;
-		vehicle_id!: number;
-	}
-
-	class Vehicle {
-		license_plate!: string;
-		availability!: Array<Range>;
-	}
-
-	const loadVehicles = (): Map<number, Vehicle> => {
-		return new Map<number, Vehicle>(
-			data.vehicles.map((v) => [
-				v.id,
-				{
-					license_plate: v.license_plate,
-					availability: data.availabilities
-						.filter((a) => a.vehicle == v.id)
-						.map((a) => ({ from: a.start_time, to: a.end_time }))
-				}
-			])
-		);
-	};
-
-	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
 
 	let selectedTour = $state<{
 		tour: TourDetails | undefined;
@@ -70,14 +41,17 @@
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
 	let day = $derived(new ReactiveDate(value));
 
-	const getDate = () => {
-		return value.toDate('UTC').toISOString().slice(0, 10);
-	};
-
 	$effect(() => {
-		let url = `/taxi?date=${getDate()}`;
-		goto(url);
-		vehicles = loadVehicles();
+		goto(`/taxi?date=${value.toDate('UTC').toISOString().slice(0, 10)}`);
+	});
+
+	onMount(() => {
+		const interval = setInterval(async () => {
+			if (selection == null && draggedTours == null) {
+				await invalidateAll();
+			}
+		}, 5000);
+		return () => clearInterval(interval);
 	});
 
 	// 11 pm local time day before
@@ -320,9 +294,13 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each vehicles.entries() as [id, v]}
+			{#each data.vehicles.entries() as [id, v]}
 				<tr>
-					<td class="pr-4 text-sm tracking-tight leading-none">{v.license_plate}</td>
+					<td
+						class="pr-2 h-full align-middle text-sm font-semibold font-mono tracking-tight leading-none"
+					>
+						{v.license_plate}
+					</td>
 					{#each split(range, 60) as x}
 						<td>
 							<table class="w-full">
@@ -341,8 +319,9 @@
 											>
 												{#if hasTour(id, cell)}
 													<DropdownMenu.Root>
-														<DropdownMenu.Trigger>
+														<DropdownMenu.Trigger asChild let:builder>
 															<Button
+																builders={[builder]}
 																class={[
 																	'w-8',
 																	'h-8',
@@ -398,6 +377,7 @@
 		<Card.Title>Fahrzeuge und Touren</Card.Title>
 		<Card.Description>Fahrzeugverfügbarkeit- und Tourenverwaltung</Card.Description>
 	</Card.Header>
+
 	<div class="font-semibold leading-none tracking-tight p-6 flex gap-4">
 		<div class="flex gap-1">
 			<Button variant="outline" size="icon" on:click={() => (value = value.add({ days: -1 }))}>
@@ -434,10 +414,31 @@
 		</Button>
 	</div>
 </div>
+
 <Card.Content class="mt-8">
-	{@render availability_table({ from: base, to: today_morning })}
-	{@render availability_table({ from: today_morning, to: today_day })}
-	{@render availability_table({ from: today_day, to: tomorrow_night })}
+	{#if !data.companyDataComplete}
+		<div class="w-full flex flex-col min-h-[45vh] items-center justify-center">
+			<h2 class="text-xl font-semibold leading-none tracking-tight mb-4">
+				Stammdaten unvollständig.
+			</h2>
+			<p class="text-muted-foreground">
+				Fahrzeuge können erst angelegt werden, wenn die Unternehmens-Stammdaten vollständig sind.
+			</p>
+		</div>
+	{:else if data.vehicles.size === 0}
+		<div class="w-full flex flex-col min-h-[45vh] items-center justify-center">
+			<h2 class="text-xl font-semibold leading-none tracking-tight mb-4">
+				Kein Fahrzeug vorhanden.
+			</h2>
+			<p class="text-muted-foreground">
+				Es muss mindestens ein Fahrzeug angelegt sein, um Verfügbarkeiten angeben zu können.
+			</p>
+		</div>
+	{:else}
+		{@render availability_table({ from: base, to: today_morning })}
+		{@render availability_table({ from: today_morning, to: today_day })}
+		{@render availability_table({ from: today_day, to: tomorrow_night })}
+	{/if}
 </Card.Content>
 
 <TourDialog bind:open={selectedTour} />

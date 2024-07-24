@@ -1,6 +1,7 @@
 import { TZ } from '$lib/constants.js';
 import { db } from '$lib/database';
 import { mapTourEvents } from './TourDetails';
+import type { Vehicle } from './types';
 
 export async function load(event) {
 	const companyId = event.locals.user?.company;
@@ -24,7 +25,7 @@ export async function load(event) {
 
 	const vehicles = db.selectFrom('vehicle').where('company', '=', companyId).selectAll().execute();
 
-	const availabilities = db
+	const availabilitiesPromise = db
 		.selectFrom('vehicle')
 		.where('company', '=', companyId)
 		.innerJoin('availability', 'vehicle', 'vehicle.id')
@@ -61,10 +62,36 @@ export async function load(event) {
 			.execute()
 	);
 
+	const company = await db
+		.selectFrom('company')
+		.where('id', '=', companyId)
+		.selectAll()
+		.executeTakeFirstOrThrow();
+	const companyDataComplete =
+		company.name !== null &&
+		company.address !== null &&
+		company.zone !== null &&
+		company.community_area !== null &&
+		company.latitude !== null &&
+		company.longitude !== null;
+
+	const availabilities = await availabilitiesPromise;
+
 	return {
 		tours,
-		vehicles: await vehicles,
-		availabilities: await availabilities,
-		utcDate
+		vehicles: new Map<number, Vehicle>(
+			(await vehicles).map((v) => [
+				v.id,
+				{
+					license_plate: v.license_plate,
+					availability: availabilities
+						.filter((a) => a.vehicle == v.id)
+						.map((a) => ({ from: a.start_time, to: a.end_time }))
+				}
+			])
+		),
+		availabilities,
+		utcDate,
+		companyDataComplete
 	};
 }
