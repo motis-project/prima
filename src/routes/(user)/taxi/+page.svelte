@@ -29,39 +29,9 @@
 	import TourDialog from './TourDialog.svelte';
 	import AddVehicle from './AddVehicle.svelte';
 	import type { TourDetails } from './TourDetails';
+	import type { Range, Tour, Vehicle } from './types';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
-
-	class Range {
-		from!: Date;
-		to!: Date;
-	}
-
-	class Tour extends Range {
-		tour_id!: number;
-		vehicle_id!: number;
-	}
-
-	class Vehicle {
-		license_plate!: string;
-		availability!: Array<Range>;
-	}
-
-	const loadVehicles = (): Map<number, Vehicle> => {
-		return new Map<number, Vehicle>(
-			data.vehicles.map((v) => [
-				v.id,
-				{
-					license_plate: v.license_plate,
-					availability: data.availabilities
-						.filter((a) => a.vehicle == v.id)
-						.map((a) => ({ from: a.start_time, to: a.end_time }))
-				}
-			])
-		);
-	};
-
-	let vehicles = $state<Map<number, Vehicle>>(loadVehicles());
 
 	let selectedTour = $state<{
 		tour: TourDetails | undefined;
@@ -70,14 +40,8 @@
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
 	let day = $derived(new ReactiveDate(value));
 
-	const getDate = () => {
-		return value.toDate('UTC').toISOString().slice(0, 10);
-	};
-
 	$effect(() => {
-		let url = `/taxi?date=${getDate()}`;
-		goto(url);
-		vehicles = loadVehicles();
+		goto(`/taxi?date=${value.toDate('UTC').toISOString().slice(0, 10)}`);
 	});
 
 	// 11 pm local time day before
@@ -320,7 +284,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each vehicles.entries() as [id, v]}
+			{#each data.vehicles.entries() as [id, v]}
 				<tr>
 					<td
 						class="pr-2 h-full align-middle text-sm font-semibold font-mono tracking-tight leading-none"
@@ -450,7 +414,7 @@
 				Fahrzeuge können erst angelegt werden, wenn die Unternehmens-Stammdaten vollständig sind.
 			</p>
 		</div>
-	{:else if vehicles.size === 0}
+	{:else if data.vehicles.size === 0}
 		<div class="w-full flex flex-col min-h-[45vh] items-center justify-center">
 			<h2 class="text-xl font-semibold leading-none tracking-tight mb-4">
 				Kein Fahrzeug vorhanden.
