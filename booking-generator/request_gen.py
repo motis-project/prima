@@ -69,7 +69,7 @@ def generate_booking_requests(data, url, start_date, end_date,  max_passengers, 
             }
 
             try:
-                headers = {"Cookie": "auth_session=zkuv54pijgb2ztkuladbgw2f22mknll23x6kjmex"}
+                headers = {"Cookie": "auth_session=blhfzffcmfhv5ur2w32ujfwcffxt6iozlylafnxj"}
                 resp = requests.post(url=url, headers=headers, json=req)
                 res = resp.json()
                 print(res)
@@ -87,10 +87,15 @@ def generate_booking_requests(data, url, start_date, end_date,  max_passengers, 
 
 
 def filter(data):
-    lng_min = 14.077585327508132
-    lng_max = 14.592268628077534
-    lat_min = 51.04407811914251
-    lat_max = 51.27917854861832
+    # lng_min = 14.077585327508132
+    # lng_max = 14.592268628077534
+    # lat_min = 51.04407811914251
+    # lat_max = 51.27917854861832
+
+    lng_min = 14.28558906880724
+    lng_max = 14.563185831220778
+    lat_min = 51.08430122499979
+    lat_max = 51.30071292818033
 
     filtered = []
     for e in data:
@@ -125,6 +130,7 @@ if __name__ == '__main__':
             data.append(row)
 
     fdata = filter(data)
+    print('Used number of locations: ', len(fdata))
     generate_booking_requests(fdata, args.url, start_date, end_date, args.max_passengers, args.nreq, args.delay)
 
     # use: python3 request_gen.py --url='http://localhost:5173/api/booking' --data=stops_test.txt

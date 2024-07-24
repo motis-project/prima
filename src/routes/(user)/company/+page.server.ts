@@ -8,11 +8,17 @@ import { geoCode } from '$lib/api.js';
 
 export const load: PageServerLoad = async (event) => {
 	const companyId = event.locals.user?.company;
-	const zones = await db.selectFrom('zone').where('is_community', '=', false).selectAll().execute();
+	const zones = await db
+		.selectFrom('zone')
+		.where('is_community', '=', false)
+		.select(['id', 'name'])
+		.orderBy('name')
+		.execute();
 	const communities = await db
 		.selectFrom('zone')
 		.where('is_community', '=', true)
-		.selectAll()
+		.select(['id', 'name'])
+		.orderBy('name')
 		.execute();
 	const form = await superValidate(zod(formSchema));
 	if (companyId) {

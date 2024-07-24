@@ -4,7 +4,7 @@ import { db } from '$lib/database';
 import { Interval } from '../../../lib/interval.js';
 import { groupBy, updateValues } from '$lib/collection_utils.js';
 import { error, json } from '@sveltejs/kit';
-import {} from '$lib/utils.js';
+import { } from '$lib/utils.js';
 import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
@@ -18,6 +18,8 @@ export const POST = async (event) => {
 	const request = event.request;
 	const { from, to, startFixed, timeStamp, numPassengers, numWheelchairs, numBikes, luggage } =
 		await request.json();
+	const fromCoordinates: Coordinates = from.coordinates;
+	const toCoordinates: Coordinates = to.coordinates;
 	const time = new Date(timeStamp);
 
 	let travelDuration = 0;
@@ -47,25 +49,19 @@ export const POST = async (event) => {
 	}
 	const expandedTravelInterval = travelInterval.expand(hoursToMs(24), hoursToMs(24));
 
-	const zones = await db
-		.selectFrom('zone')
-		.where('is_community', '=', false)
-		.select(['id', 'area'])
-		.execute();
-	const start_zone_ids = zones.map((z) => z.id); //zones which contain the start and target coordinates, TODO
-
-	if (start_zone_ids.length == 0) {
-		console.log('There is no zone containing both the start and target coordinates.');
-		return json({ status: 1 });
-	}
-
 	// Get (unmerged) availabilities which overlap the expanded travel interval, for vehicles which satisfy the zone constraints and the capacity constraints.
 	// Also get some other data to reduce number of select calls to db.
 	// Use expanded travel interval, to ensure that, if a vehicle is available for the full travel interval (taxicentral-start-target-taxicentral) the corresponding
 	// availbilities are already fetched in this select statement.
-	const db_results = await db
+	const dbResults = await db
 		.selectFrom('zone')
-		.where('zone.id', 'in', start_zone_ids)
+		.where((eb) =>
+			eb.and([
+				eb('zone.is_community', '=', false),
+				sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${fromCoordinates.lng}, ${fromCoordinates.lat}),4326))`,
+				sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${toCoordinates.lng}, ${toCoordinates.lat}),4326))`
+			])
+		)
 		.innerJoin('company', 'company.zone', 'zone.id')
 		.where((eb) =>
 			eb.and([
@@ -117,7 +113,7 @@ export const POST = async (event) => {
 		])
 		.execute();
 
-	if (db_results.length == 0) {
+	if (dbResults.length == 0) {
 		console.log('There is no vehicle which is able to do the tour.');
 		return json({ status: 1 });
 	}
@@ -125,7 +121,7 @@ export const POST = async (event) => {
 	// Group availabilities by vehicle, merge availabilities corresponding to the same vehicle, filter out availabilities which don't contain the
 	// travel-interval (start-target), filter out vehicles which don't have any availabilities left.
 	const mergedAvailabilites = groupBy(
-		db_results,
+		dbResults,
 		(element) => element.vehicle,
 		(element) => new Interval(element.start_time, element.end_time)
 	);
@@ -135,13 +131,13 @@ export const POST = async (event) => {
 
 	console.assert(
 		Math.max(...[...mergedAvailabilites.values()].map((availabilities) => availabilities.length)) <=
-			1
+		1
 	);
 
 	const availableVehicles = [...mergedAvailabilites.entries()]
 		.filter(([_, availabilities]) => availabilities.length > 0)
 		.map(([vehicle, availabilities]) => {
-			const db_result = db_results.find((db_r) => db_r.vehicle == vehicle);
+			const db_result = dbResults.find((db_r) => db_r.vehicle == vehicle);
 			return {
 				latitude: db_result!.latitude,
 				longitude: db_result!.longitude,
@@ -178,10 +174,10 @@ export const POST = async (event) => {
 
 	// Motis-one_to_many requests
 	const durationToStart = (
-		await oneToMany(from.coordinates, centralCoordinates, Direction.Backward)
+		await oneToMany(fromCoordinates, centralCoordinates, Direction.Backward)
 	).map((res) => secondsToMs(res.duration));
 	const durationFromTarget = (
-		await oneToMany(to.coordinates, centralCoordinates, Direction.Forward)
+		await oneToMany(toCoordinates, centralCoordinates, Direction.Forward)
 	).map((res) => secondsToMs(res.duration));
 
 	const fullTravelIntervals = companies.map((_, index) =>
@@ -351,8 +347,8 @@ export const POST = async (event) => {
 			.values([
 				{
 					is_pickup: true,
-					latitude: from.coordinates.lat,
-					longitude: from.coordinates.lng,
+					latitude: fromCoordinates.lat,
+					longitude: fromCoordinates.lng,
 					scheduled_time: startTime,
 					communicated_time: startTime, // TODO
 					address: startAddress.id,
@@ -362,8 +358,8 @@ export const POST = async (event) => {
 				},
 				{
 					is_pickup: false,
-					latitude: to.coordinates.lat,
-					longitude: to.coordinates.lng,
+					latitude: toCoordinates.lat,
+					longitude: toCoordinates.lng,
 					scheduled_time: targetTime,
 					communicated_time: targetTime, // TODO
 					address: targetAddress.id,
