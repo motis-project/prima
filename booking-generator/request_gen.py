@@ -80,9 +80,9 @@ def generate_booking_requests(data, url, start_date, end_date,  max_passengers, 
         pass  # be quiet
 
 
-def send_request(url, req):
+def send_request(url, req, auth_session):
     try:
-        headers = {"Cookie": "auth_session=43f2kg55y6tfvtuaifxbiwpaxxaopnpsikyhqfr3"}
+        headers = {'Cookie': 'auth_session=' + auth_session}
         resp = requests.post(url=url, headers=headers, json=req)
         res = resp.json()
         print(res)
@@ -113,6 +113,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--url', required=True, help='URL of service endpoint')
     parser.add_argument('--data', required=True, help='Path to data file (stops)')
+    parser.add_argument('--auth', required=True, help='Session Id of test user')
     parser.add_argument('--days', type=int, required=False, default=5, help='Range is NOW + days')
     parser.add_argument('--max-passengers', type=int, required=False, default=3)
     parser.add_argument('--nreq', type=int, required=False, help='Maximum number of requests')
@@ -149,6 +150,6 @@ if __name__ == '__main__':
         'numBikes': 0,
         'luggage': 0
     }
-    send_request(args.url, test_req)
+    send_request(args.url, test_req, args.auth)
 
     # use: python3 request_gen.py --url='http://localhost:5173/api/booking' --data=stops_test.txt
