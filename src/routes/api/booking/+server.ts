@@ -4,7 +4,7 @@ import { db } from '$lib/database';
 import { Interval } from '../../../lib/interval.js';
 import { groupBy, updateValues } from '$lib/collection_utils.js';
 import { error, json } from '@sveltejs/kit';
-import { } from '$lib/utils.js';
+import {} from '$lib/utils.js';
 import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
@@ -15,11 +15,9 @@ export const POST = async (event) => {
 		return error(403);
 	}
 	const customerId = customer.id;
-
 	const request = event.request;
 	const { from, to, startFixed, timeStamp, numPassengers, numWheelchairs, numBikes, luggage } =
 		await request.json();
-	console.log(from, to, startFixed, timeStamp, numPassengers, numWheelchairs, numBikes, luggage);
 	const time = new Date(timeStamp);
 
 	let travelDuration = 0;
@@ -33,11 +31,11 @@ export const POST = async (event) => {
 			})
 		).metadata.duration;
 	} catch (e) {
-		return json({});
+		return json({ status: 1 });
 	}
 
 	if (travelDuration == 0) {
-		return json({});
+		return json({ status: 1 });
 	}
 
 	const startTime = startFixed ? time : new Date(time.getTime() - secondsToMs(travelDuration));
@@ -45,7 +43,7 @@ export const POST = async (event) => {
 	const travelInterval = new Interval(startTime, targetTime);
 	if (new Date(Date.now() + minutesToMs(MIN_PREP_MINUTES)) > startTime) {
 		console.log('Insufficient preparation time.');
-		return json({});
+		return json({ status: 1 });
 	}
 	const expandedTravelInterval = travelInterval.expand(hoursToMs(24), hoursToMs(24));
 
@@ -58,7 +56,7 @@ export const POST = async (event) => {
 
 	if (start_zone_ids.length == 0) {
 		console.log('There is no zone containing both the start and target coordinates.');
-		return json({});
+		return json({ status: 1 });
 	}
 
 	// Get (unmerged) availabilities which overlap the expanded travel interval, for vehicles which satisfy the zone constraints and the capacity constraints.
@@ -119,10 +117,9 @@ export const POST = async (event) => {
 		])
 		.execute();
 
-	console.log(db_results);
 	if (db_results.length == 0) {
 		console.log('There is no vehicle which is able to do the tour.');
-		return json({});
+		return json({ status: 1 });
 	}
 
 	// Group availabilities by vehicle, merge availabilities corresponding to the same vehicle, filter out availabilities which don't contain the
@@ -138,7 +135,7 @@ export const POST = async (event) => {
 
 	console.assert(
 		Math.max(...[...mergedAvailabilites.values()].map((availabilities) => availabilities.length)) <=
-		1
+			1
 	);
 
 	const availableVehicles = [...mergedAvailabilites.entries()]
@@ -218,9 +215,9 @@ export const POST = async (event) => {
 
 	if (vehicleIds.length == 0) {
 		console.log(
-			'Noone can handle this booking request, there are no available vehicles which fulfill the zone and capacity requirements.'
+			'No one can handle this booking request, there are no available vehicles which fulfill the zone and capacity requirements.'
 		);
-		return json({});
+		return json({ status: 1 });
 	}
 
 	let tour_id: number | undefined = undefined;
@@ -270,9 +267,9 @@ export const POST = async (event) => {
 
 		if (viable_vehicles.length == 0) {
 			console.log(
-				'Noone can handle this booking request, all available vehicles which fulfill the zone and capacity requirements are busy.'
+				'No one can handle this booking request, all available vehicles which fulfill the zone and capacity requirements are busy.'
 			);
-			return json({});
+			return json({ status: 1 });
 		}
 
 		// Sort companies by the distance of their taxi-central to start + target
@@ -379,7 +376,7 @@ export const POST = async (event) => {
 	});
 	if (tour_id) {
 		console.log('Booking request was assigned.');
-		return json({ tour_id });
+		return json({ status: 0, tour_id: tour_id });
 	}
-	return json({});
+	return json({ status: 1 });
 };

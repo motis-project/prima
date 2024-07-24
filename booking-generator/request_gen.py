@@ -29,38 +29,17 @@ def generate_random_datetime(start_date, end_date):
 
 
 def generate_booking_requests(data, url, start_date, end_date,  max_passengers, nreq, delay):
-    stops = []
-    
-    with open(data) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        for row in csv_reader:
-            stops.append(row)
-
     try:
-        n = 1
         nreq_valid = 0
         while True:
-            stop_from = stops[random.randint(0, len(stops) - 1)]
-            stop_to = stops[random.randint(0, len(stops) - 1)]
+            stop_from = data[random.randint(0, len(data) - 1)]
+            stop_to = data[random.randint(0, len(data) - 1)]
             random_datetime = generate_random_datetime(start_date, end_date)
 
             from_lat = float(stop_from[2])
             from_lng = float(stop_from[3])
             to_lat = float(stop_to[2])
             to_lng = float(stop_to[3])
-
-            # lat_min = 14.077585327508132
-            # lat_max = 14.592268628077534
-            # lng_min = 51.04407811914251
-            # lng_max = 51.27917854861832
-
-            # if not (
-            #     from_lat > lat_min and from_lat < lat_max
-            #     and to_lat > lat_min and to_lat < lat_max
-            #     and from_lng > lng_min and from_lng < lng_max
-            #     and to_lng > lng_min and to_lng < lng_max):
-            #     print('abort')
-            #     continue
             
             req = {
                 'from': {
@@ -94,7 +73,8 @@ def generate_booking_requests(data, url, start_date, end_date,  max_passengers, 
                 resp = requests.post(url=url, headers=headers, json=req)
                 res = resp.json()
                 print(res)
-                # if valid: nreq_valid += 1
+                if res['status'] == 0:
+                    nreq_valid += 1
             except:
                 print('Connection to server failed')
                 break
@@ -102,9 +82,26 @@ def generate_booking_requests(data, url, start_date, end_date,  max_passengers, 
             time.sleep(delay)
             if nreq_valid == nreq:
                 break
-            n += 1
     except KeyboardInterrupt:
         pass  # be quiet
+
+
+def filter(data):
+    lng_min = 14.077585327508132
+    lng_max = 14.592268628077534
+    lat_min = 51.04407811914251
+    lat_max = 51.27917854861832
+
+    filtered = []
+    for e in data:
+        lat = float(e[2])
+        lng = float(e[3])
+        if not (
+            lat > lat_min and lat < lat_max
+            and lng > lng_min and lng < lng_max):
+                continue
+        filtered.append(e)
+    return filtered
 
 
 if __name__ == '__main__':
@@ -121,9 +118,13 @@ if __name__ == '__main__':
     start_date = now.date()
     end_date = (now + timedelta(days=args.days)).date()
 
-    print(start_date)
-    print(end_date)
-    print(args.nreq)
-    generate_booking_requests(args.data, args.url, start_date, end_date, args.max_passengers, args.nreq, args.delay)
+    data = []
+    with open(args.data) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        for row in csv_reader:
+            data.append(row)
+
+    fdata = filter(data)
+    generate_booking_requests(fdata, args.url, start_date, end_date, args.max_passengers, args.nreq, args.delay)
 
     # use: python3 request_gen.py --url='http://localhost:5173/api/booking' --data=stops_test.txt
