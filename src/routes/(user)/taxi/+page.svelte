@@ -309,8 +309,9 @@
 											>
 												{#if hasTour(id, cell)}
 													<DropdownMenu.Root>
-														<DropdownMenu.Trigger>
+														<DropdownMenu.Trigger asChild let:builder>
 															<Button
+																builders={[builder]}
 																class={[
 																	'w-8',
 																	'h-8',
