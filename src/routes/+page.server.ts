@@ -3,7 +3,7 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
 	if (!event.locals.user) {
-		return redirect(302, '/signup');
+		return redirect(302, '/login');
 	}
 	if (event.locals.user.is_maintainer) {
 		return redirect(302, '/activation');
