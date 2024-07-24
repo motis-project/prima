@@ -21,6 +21,7 @@ export const POST = async (event) => {
 	const fromCoordinates: Coordinates = from.coordinates;
 	const toCoordinates: Coordinates = to.coordinates;
 	const time = new Date(timeStamp);
+	console.log(time);
 
 	let travelDuration = 0;
 	try {
@@ -181,10 +182,10 @@ export const POST = async (event) => {
 	let durationFromTarget: Array<number> = [];
 	try {
 		// Motis-one_to_many requests
-		const durationToStart = (
+		durationToStart = (
 			await oneToMany(fromCoordinates, centralCoordinates, Direction.Backward)
 		).map((res) => secondsToMs(res.duration));
-		const durationFromTarget = (
+		durationFromTarget = (
 			await oneToMany(toCoordinates, centralCoordinates, Direction.Forward)
 		).map((res) => secondsToMs(res.duration));
 	} catch (e) {
@@ -326,10 +327,10 @@ export const POST = async (event) => {
 			targetAddress = (await trx
 				.insertInto('address')
 				.values({
-					street: from.address.street,
-					house_number: from.address.house_number,
-					postal_code: from.address.postal_code,
-					city: from.address.city
+					street: to.address.street,
+					house_number: to.address.house_number,
+					postal_code: to.address.postal_code,
+					city: to.address.city
 				})
 				.returning('id')
 				.executeTakeFirst())!;

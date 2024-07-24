@@ -61,7 +61,7 @@ def generate_booking_requests(data, url, start_date, end_date,  max_passengers, 
                     }
                 },
                 'startFixed': True,
-                'timeStamp': random_datetime.strftime('%Y-%m-%d, %H:%M:%S'),
+                'timeStamp': random_datetime.strftime('%Y-%m-%d %H:%M:%S'),
                 'numPassengers': random.randint(1, max_passengers),
                 'numWheelchairs': 0, # random.randint(0, 1),
                 'numBikes': 0,
@@ -82,7 +82,7 @@ def generate_booking_requests(data, url, start_date, end_date,  max_passengers, 
 
 def send_request(url, req):
     try:
-        headers = {"Cookie": "auth_session=blhfzffcmfhv5ur2w32ujfwcffxt6iozlylafnxj"}
+        headers = {"Cookie": "auth_session=43f2kg55y6tfvtuaifxbiwpaxxaopnpsikyhqfr3"}
         resp = requests.post(url=url, headers=headers, json=req)
         res = resp.json()
         print(res)
@@ -139,12 +139,12 @@ if __name__ == '__main__':
             'address': {'street': 'Pließkowitz Bautzener Straße', 'house_number': '', 'city': '', 'postal_code': ''}
         },
         'to': {
-            'coordinates': {'lat': 51.1749956645351, 'lng': 14.4446402760674},
-            'address': {'street': 'Bautzen Goethestraße/Autohof', 'house_number': '', 'city': '', 'postal_code': ''}
+            'coordinates': {'lat': 51.1737509906473, 'lng': 14.4297462086546},
+            'address': {'street': 'Bautzen Bahnhof/Taucherstraße', 'house_number': '', 'city': '', 'postal_code': ''}
         },
         'startFixed': True,
-        'timeStamp': '2024-07-24, 21:40:34',
-        'numPassengers': 3,
+        'timeStamp': '2024-07-25 14:40:34',
+        'numPassengers': 2,
         'numWheelchairs': 0,
         'numBikes': 0,
         'luggage': 0

@@ -225,7 +225,7 @@
 										<ArrowLeft class="h-4 w-4" />
 									</Table.Cell>
 								{/if}
-								<Table.Cell class="text-right">42,42</Table.Cell>
+								<Table.Cell class="text-right">19,80</Table.Cell>
 							</Table.Row>
 						{/each}
 					{/if}
