@@ -39,6 +39,7 @@ def generate_booking_requests(data, conf):
     try:
         n_req = 0
         n_valid = 0
+        
         while True:
             stop_from = data[random.randint(0, len(data) - 1)]
             stop_to = data[random.randint(0, len(data) - 1)]
@@ -116,10 +117,6 @@ def single_request(url, auth_session):
     except:
         print('Cannot load configuration')
         exit(1)
-
-    print(url)
-    print(auth_session)
-    print(req)
     send_request(req, url, auth_session)
 
 
