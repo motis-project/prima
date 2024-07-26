@@ -5,7 +5,7 @@
     "data":             path to input .txt file that contains the stops
     "days":             number of days from today the requests should be within
     "max_passengers":   maximum number of passengers for one request, a number between 1 and max_passengers will be generated randomly
-    "max_requests":     (Optional: null) Maximum nunber of requests.
+    "max_requests":     optional, maximum number of requests
                         The script will stop when that number is reached.
     "max_bookings":     (Optional: null) Maximum nunber of successful requests (bookings).
                         The script will stop when that number is reached.
