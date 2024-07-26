@@ -7,7 +7,7 @@
     "max_passengers":   maximum number of passengers for one request, a number between 1 and max_passengers will be generated randomly
     "max_requests":     optional, maximum number of requests
                         The script will stop when that number is reached.
-    "max_bookings":     (Optional: null) Maximum nunber of successful requests (bookings).
+    "max_bookings":     optional, maximum number of successful requests (bookings)
                         The script will stop when that number is reached.
     "delay":            Delay between requests in seconds.
     "single_request":   true: send only one predefinded request (./data/single.json).
