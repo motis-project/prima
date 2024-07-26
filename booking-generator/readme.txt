@@ -2,7 +2,7 @@
 ./generator.conf
 ----------------
 
-    "data":             Input .txt file that contains the stops.
+    "data":             path to input .txt file that contains the stops
     "days":             Range of days the requests should be within. Start day is today.
     "max_passengers":   Maximum nunber of passengers for one request.
     "max_requests":     (Optional: null) Maximum nunber of requests.
