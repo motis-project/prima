@@ -37,3 +37,16 @@ Random request loop
 
 - don't forget to set "auth" to a valid session id
 - run python3 request_gen.py
+
+
+------
+Filter
+------
+
+Select a range of geo-coordinates for the requests.
+
+- edit ./filter.json
+For each filter a file <name>.txt will be placed in ./data
+The output file can then be used as data file for request_gen.py (configure in generator.conf, "data")
+
+run python3 filter.py --src=<source_data_file>
