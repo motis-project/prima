@@ -12,6 +12,9 @@
 		let l1 = tour.events[0];
 		let l2 = tour.events[tour.events.length - 1];
 
+		if (!(l1.city && l2.city)) {
+			return [l1.street, l2.street];
+		}
 		return [l1.city + ': ' + l1.street, l2.city + ': ' + l2.street];
 	};
 

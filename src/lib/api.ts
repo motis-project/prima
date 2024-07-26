@@ -22,7 +22,7 @@ export const addVehicle = async (
 	bike_capacity: number,
 	storage_space: number
 ): Promise<[boolean, Message]> => {
-	const response = await fetch('/api/vehicle/', {
+	const response = await fetch('/api/vehicle', {
 		method: 'POST',
 		body: JSON.stringify({
 			license_plate,
@@ -36,7 +36,7 @@ export const addVehicle = async (
 };
 
 export const updateTour = async (tourId: number, vehicleId: number) => {
-	return await fetch('/api/tour/', {
+	return await fetch('/api/tour', {
 		method: 'POST',
 		body: JSON.stringify({
 			tour_id: tourId,
@@ -46,7 +46,7 @@ export const updateTour = async (tourId: number, vehicleId: number) => {
 };
 
 export const removeAvailability = async (vehicleId: number, from: Date, to: Date) => {
-	return await fetch('/api/availability/', {
+	return await fetch('/api/availability', {
 		method: 'DELETE',
 		body: JSON.stringify({
 			vehicleId,
@@ -57,7 +57,7 @@ export const removeAvailability = async (vehicleId: number, from: Date, to: Date
 };
 
 export const addAvailability = async (vehicleId: number, from: Date, to: Date) => {
-	return await fetch('/api/availability/', {
+	return await fetch('/api/availability', {
 		method: 'POST',
 		body: JSON.stringify({
 			vehicleId,
@@ -77,7 +77,7 @@ export const booking = async (
 	numBikes: number,
 	luggage: number
 ) => {
-	return await fetch('/api/booking/', {
+	return await fetch('/api/booking', {
 		method: 'POST',
 		body: JSON.stringify({
 			from,
