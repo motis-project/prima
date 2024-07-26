@@ -11,20 +11,20 @@ You can run the scripts from any path and specify absolute or relative paths as 
 
 Configuration file for the script `request_gen.py`
 
-    - `data`: path to input .txt file that contains the stops
-    - `days`: number of days from today the requests should be within
-    - `max_passengers`: maximum number of passengers for one request,
-       a number between 1 and max_passengers will be generated randomly
-    - `max_requests`: optional, maximum number of requests
-       The script will stop when that number is reached.
-    - `max_bookings`: optional, maximum number of successful requests (bookings)
-       The script will stop when that number is reached.
-    - `delay`: delay between requests in seconds
-    - `single_request`
-        - `true`: send only one predefinded request (./data/single.json).
-        - `false`: continue picking random requests using stops from input file (data).
-    - `url`: host:port/api/booking
-    - `auth`: Session ID of a user to send the requests with
+- `data`: path to input .txt file that contains the stops
+- `days`: number of days from today the requests should be within
+- `max_passengers`: maximum number of passengers for one request,
+   a number between 1 and max_passengers will be generated randomly
+- `max_requests`: optional, maximum number of requests
+   The script will stop when that number is reached.
+- `max_bookings`: optional, maximum number of successful requests (bookings)
+   The script will stop when that number is reached.
+- `delay`: delay between requests in seconds
+- `single_request`
+    - `true`: send only one predefinded request (./data/single.json).
+    - `false`: continue picking random requests using stops from input file (data).
+- `url`: host:port/api/booking
+- `auth`: Session ID of a user to send the requests with
 
 `max_requests` and `max_bookings` can be null.
 
