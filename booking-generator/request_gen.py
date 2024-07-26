@@ -4,6 +4,8 @@ import random
 import time
 from datetime import datetime, timedelta
 import json
+import argparse
+import os
 
 
 def generate_random_datetime(start_date, end_date):
@@ -110,31 +112,52 @@ def send_request(req, url, auth_session):
         print('Connection to server failed')
 
 
-def single_request(url, auth_session):
+def single_request(conf):
+    data = conf['data']
     try:
-        with open('request.json') as f:
+        with open(data) as f:
             req = json.load(f)
     except:
-        print('Cannot load configuration')
+        print('Cannot load data')
         exit(1)
-    send_request(req, url, auth_session)
+    res = send_request(req, conf['url'], conf['auth'])
+    status = 1
+    try:
+        status = res['status']
+    except:
+        print('API not reachable. Invalid session id?')
+    if status == 0:
+        print(res['tour_id'])
+    else:
+        print('status =', status)
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--conf', required=True, help='Path to configuration file')
+    args = parser.parse_args()
+
     data = None
     conf = None
 
+    cwd = os.getcwd()
+    conf_path = os.path.join(cwd, args.conf)
+
     try:
-        with open('generator.conf') as f:
+        with open(conf_path) as f:
             conf = json.load(f)
     except:
         print('Cannot load configuration')
         exit(1)
 
+    if conf['single_request']:
+        single_request(conf)
+        exit(0)
+
     try:
-        data_file = conf['data']
+        data_path = os.path.join(cwd, conf['data'])
         data = []
-        with open(data_file) as csv_file:
+        with open(data_path) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
             for row in csv_reader:
                 data.append(row)
@@ -142,9 +165,5 @@ if __name__ == '__main__':
     except:
         print('Cannot load data')
         exit(1)
-
-    if conf['single_request']:
-        single_request(conf['url'], conf['auth'])
-        exit(0)
 
     generate_booking_requests(data, conf)

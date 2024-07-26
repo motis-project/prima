@@ -1,6 +1,7 @@
 import argparse
 import csv
 import json
+import os
 
 
 def read_data(path):
@@ -37,25 +38,33 @@ def filter(data, lat_min, lat_max, lng_min, lng_max):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--src', required=True, help='Path to data file (stops)')
+    parser.add_argument('--src', required=True, help='Input file (stops.txt)')
+    parser.add_argument('--filters', required=True, help='Path to filter definitions (filters.json)')
+    parser.add_argument('--out', required=True, help='Path, where the output file should be placed')
     args = parser.parse_args()
 
-    conf = None
+    cwd = os.getcwd()
+    path_in = os.path.join(cwd, args.src)
+    path_filter = os.path.join(cwd, args.filters)
+    path_out = os.path.join(cwd, args.out)
+
+    filter_defs = None
 
     try:
-        with open('filter.json') as f:
-            conf = json.load(f)
+        with open(path_filter) as f:
+            filters_defs = json.load(f)
     except:
         print('Cannot load configuration')
         exit(1)
 
-    data = read_data(args.src)
+    data = read_data(path_in)
     
-    for e in conf['filters']:
+    for e in filters_defs['filters']:
         filtered = filter(
             data,
             e['lat_min'],
             e['lat_max'],
             e['lng_min'],
             e['lng_max'])
-        write_data('./data/' + e['name'] + '.txt', filtered)
+        path_data = os.path.join(cwd, path_out, e['name'] + '.txt')
+        write_data(path_data, filtered)
