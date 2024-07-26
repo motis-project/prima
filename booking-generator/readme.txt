@@ -9,7 +9,7 @@
                         The script will stop when that number is reached.
     "max_bookings":     optional, maximum number of successful requests (bookings)
                         The script will stop when that number is reached.
-    "delay":            Delay between requests in seconds.
+    "delay":            delay between requests in seconds
     "single_request":   true: send only one predefinded request (./data/single.json).
                         false: continue picking random requests using stops from input file (data).
     "url":              host:port/api/booking
