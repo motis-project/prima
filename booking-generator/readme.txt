@@ -2,14 +2,14 @@
 ./generator.conf
 ----------------
 
-    "data":             Input .txt file that contains the stops.
-    "days":             Range of days the requests should be within. Start day is today.
-    "max_passengers":   Maximum nunber of passengers for one request.
-    "max_requests":     (Optional: null) Maximum nunber of requests.
+    "data":             path to input .txt file that contains the stops
+    "days":             number of days from today the requests should be within
+    "max_passengers":   maximum number of passengers for one request, a number between 1 and max_passengers will be generated randomly
+    "max_requests":     optional, maximum number of requests
                         The script will stop when that number is reached.
-    "max_bookings":     (Optional: null) Maximum nunber of successful requests (bookings).
+    "max_bookings":     optional, maximum number of successful requests (bookings)
                         The script will stop when that number is reached.
-    "delay":            Delay between requests in seconds.
+    "delay":            delay between requests in seconds
     "single_request":   true: send only one predefinded request (./data/single.json).
                         false: continue picking random requests using stops from input file (data).
     "url":              host:port/api/booking
