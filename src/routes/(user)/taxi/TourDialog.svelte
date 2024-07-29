@@ -10,6 +10,8 @@
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import type { TourDetails, Event } from './TourDetails';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import ConfirmationDialog from './ConfirmationDialog.svelte';
 
 	class Props {
 		open!: {
@@ -62,6 +64,16 @@
 
 	const routes = $derived(open.tour && getRoutes(open.tour.events));
 	const center = $derived(open.tour && getCenter(open.tour.events));
+
+	let showConfirmationDialog = $state<boolean>(false);
+
+	function handleConfirm() {
+		showConfirmationDialog = false;
+	}
+
+	function handleCancel() {
+		showConfirmationDialog = false;
+	}
 </script>
 
 <Dialog.Root
@@ -121,6 +133,21 @@
 					{/if}
 				</Table.Body>
 			</Table.Root>
+			<ConfirmationDialog />
+			<Dialog.Root>
+				<Dialog.Trigger><Button>Tour redisponieren</Button></Dialog.Trigger>
+				<Dialog.Content>
+					<Dialog.Header>
+						<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+						<Dialog.Description>
+							This action cannot be undone. This will permanently delete your account and remove
+							your data from our servers.
+						</Dialog.Description>
+					</Dialog.Header>
+					<Button on:click={handleConfirm}>Ok</Button>
+					<Button on:click={handleCancel}>Cancel</Button>
+				</Dialog.Content>
+			</Dialog.Root>
 		</Card.Content>
 	</Card.Root>
 {/snippet}
