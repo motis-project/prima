@@ -10,7 +10,6 @@
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import type { TourDetails, Event } from './TourDetails';
-	import Button from '$lib/components/ui/button/button.svelte';
 	import ConfirmationDialog from './ConfirmationDialog.svelte';
 
 	class Props {
@@ -66,14 +65,6 @@
 	const center = $derived(open.tour && getCenter(open.tour.events));
 
 	let showConfirmationDialog = $state<boolean>(false);
-
-	function handleConfirm() {
-		showConfirmationDialog = false;
-	}
-
-	function handleCancel() {
-		showConfirmationDialog = false;
-	}
 </script>
 
 <Dialog.Root
@@ -105,49 +96,41 @@
 			<Card.Title>Übersicht</Card.Title>
 		</Card.Header>
 		<Card.Content class="h-full w-full">
-			<Table.Root>
-				<Table.Header>
-					<Table.Row>
-						<Table.Head>Abfahrt</Table.Head>
-						<Table.Head>Ankunft</Table.Head>
-						<Table.Head>Fahrzeug</Table.Head>
-					</Table.Row>
-				</Table.Header>
-				<Table.Body>
-					{#if open.tour}
-						<Table.Row>
-							<Table.Cell>
-								{open.tour!.from.toLocaleString('de-DE').slice(0, -3)}
-								<br />{open.tour.events[0].street}<br />
-								{open.tour.events[0].postal_code}
-								{open.tour.events[0].city}
-							</Table.Cell>
-							<Table.Cell>
-								{open.tour!.to.toLocaleString('de-DE').slice(0, -3)}
-								<br />{open.tour.events[open.tour.events.length - 1].street}<br />
-								{open.tour.events[open.tour.events.length - 1].postal_code}
-								{open.tour.events[open.tour.events.length - 1].city}
-							</Table.Cell>
-							<Table.Cell>{open.tour!.license_plate}</Table.Cell>
-						</Table.Row>
-					{/if}
-				</Table.Body>
-			</Table.Root>
-			<ConfirmationDialog />
-			<Dialog.Root>
-				<Dialog.Trigger><Button>Tour redisponieren</Button></Dialog.Trigger>
-				<Dialog.Content>
-					<Dialog.Header>
-						<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
-						<Dialog.Description>
-							This action cannot be undone. This will permanently delete your account and remove
-							your data from our servers.
-						</Dialog.Description>
-					</Dialog.Header>
-					<Button on:click={handleConfirm}>Ok</Button>
-					<Button on:click={handleCancel}>Cancel</Button>
-				</Dialog.Content>
-			</Dialog.Root>
+			<div class="grid grid-rows-2 gap-12">
+				<div>
+					<Table.Root>
+						<Table.Header>
+							<Table.Row>
+								<Table.Head>Abfahrt</Table.Head>
+								<Table.Head>Ankunft</Table.Head>
+								<Table.Head>Fahrzeug</Table.Head>
+							</Table.Row>
+						</Table.Header>
+						<Table.Body>
+							{#if open.tour}
+								<Table.Row>
+									<Table.Cell>
+										{open.tour!.from.toLocaleString('de-DE').slice(0, -3)}
+										<br />{open.tour.events[0].street}<br />
+										{open.tour.events[0].postal_code}
+										{open.tour.events[0].city}
+									</Table.Cell>
+									<Table.Cell>
+										{open.tour!.to.toLocaleString('de-DE').slice(0, -3)}
+										<br />{open.tour.events[open.tour.events.length - 1].street}<br />
+										{open.tour.events[open.tour.events.length - 1].postal_code}
+										{open.tour.events[open.tour.events.length - 1].city}
+									</Table.Cell>
+									<Table.Cell>{open.tour!.license_plate}</Table.Cell>
+								</Table.Row>
+							{/if}
+						</Table.Body>
+					</Table.Root>
+				</div>
+				<div class="grid grid-rows-1 place-items-end">
+					<div><ConfirmationDialog bind:tour={open.tour} /></div>
+				</div>
+			</div>
 		</Card.Content>
 	</Card.Root>
 {/snippet}

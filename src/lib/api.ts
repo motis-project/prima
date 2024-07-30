@@ -92,6 +92,10 @@ export const booking = async (
 	});
 };
 
+export const reassignTour = async (tourId: number) => {
+	console.log('TODO: reassign tour:', tourId);
+}
+
 export async function geoCode(address: string) {
 	const response = await fetch('https://europe.motis-project.de/?elm=AddressSuggestions', {
 		headers: {

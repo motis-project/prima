@@ -1,60 +1,41 @@
-<script>
-	import { goto } from '$app/navigation';
-	let showDialog = false;
+<script lang="ts">
+	import Button from '$lib/components/ui/button/button.svelte';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import type { TourDetails } from './TourDetails';
+	import { reassignTour } from '$lib/api';
 
-	function handleConfirm() {
-		showDialog = false;
-		goto('/taxi?date=2024-07-25');
-	}
+	let open = $state<boolean>(false);
 
-	function handleCancel() {
-		showDialog = false;
-		// alert('You clicked Cancel!');
+	class Props {
+		tour: TourDetails | undefined;
 	}
+	let { tour = $bindable() }: Props = $props();
 
-	function openDialog() {
-		showDialog = true;
-	}
+	const handleConfirm = async () => {
+		if (tour) {
+			await reassignTour(tour.tour_id);
+		}
+		tour = undefined;
+	};
+
+	const handleCancel = () => {
+		open = false;
+	};
 </script>
 
-{#if showDialog}
-	<div class="overlay" on:click={handleCancel}></div>
-	<div class="dialog">
-		<p>Are you sure?</p>
-		<button on:click={handleConfirm}>Ok</button>
-		<button on:click={handleCancel}>Cancel</button>
-	</div>
-{/if}
-
-<button on:click={openDialog}>Click me</button>
-
-<style>
-	.dialog {
-		position: fixed;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		padding: 20px;
-		background: white;
-		border: 1px solid #ccc;
-		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-		z-index: 1000;
-	}
-
-	.overlay {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background: rgba(0, 0, 0, 0.5);
-		z-index: 999;
-	}
-
-	button {
-		padding: 10px 20px;
-		margin: 5px;
-		font-size: 16px;
-		cursor: pointer;
-	}
-</style>
+<Dialog.Root bind:open>
+	<Dialog.Trigger><Button variant="destructive">Tour redisponieren</Button></Dialog.Trigger>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Sind Sie sicher?</Dialog.Title>
+			<Dialog.Description>
+				Dies kann nicht rückgangig gemacht werden.<br />
+				Die Fahrt wid (falls möglich) einem anderen Anbieter zugewiesen.
+			</Dialog.Description>
+		</Dialog.Header>
+		<Dialog.Description>
+			<Button on:click={handleConfirm}>Ok</Button>
+			<Button on:click={handleCancel}>Abbrechen</Button>
+		</Dialog.Description>
+	</Dialog.Content>
+</Dialog.Root>
