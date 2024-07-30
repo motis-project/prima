@@ -63,8 +63,6 @@
 
 	const routes = $derived(open.tour && getRoutes(open.tour.events));
 	const center = $derived(open.tour && getCenter(open.tour.events));
-
-	let reassignFailed = $state<boolean>(false);
 </script>
 
 <Dialog.Root
