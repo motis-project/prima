@@ -46,7 +46,7 @@
 		"@lucia-auth/adapter-postgresql": "^3.1.2",
 		"@node-rs/argon2": "^1.8.3",
 		"@playwright/test": "^1.45.2",
-		"bits-ui": "^0.21.12",
+		"bits-ui": "^0.21.13",
 		"clsx": "^2.1.1",
 		"formsnap": "^1.0.1",
 		"geojson": "^0.5.0",
