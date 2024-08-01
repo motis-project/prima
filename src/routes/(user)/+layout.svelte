@@ -20,7 +20,7 @@
 </script>
 
 <div class="flex min-h-screen">
-	<div class="container min-w-[1440px] relative mt-28">
+	<div class="container min-w-[1440px] relative my-20">
 		<section>
 			<Nav {routeLinks} />
 			<div class="overflow-hidden rounded-[0.5rem] border bg-background shadow-xl">

@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build_site:
+  build:
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -81,3 +81,15 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
+
+  deploy:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ['self-hosted', 'prima', 'Linux', 'X64']
+    needs: build
+    steps:
+      - name: Deploy
+        run: |
+          cd /home/prima
+          docker compose pull
+          docker compose down
+          docker compose up -d
