@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ['ubuntu-latest']
+    runs-on: ubuntu-latest
     permissions:
       packages: write
       contents: read
@@ -81,7 +81,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
-
 
   deploy:
     if: github.ref == 'refs/heads/master'
