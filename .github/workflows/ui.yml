@@ -7,8 +7,8 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build_site:
-    runs-on: ['self-hosted', 'prima', 'Linux', 'X64']
+  build:
+    runs-on: ['ubuntu-latest']
     permissions:
       packages: write
       contents: read
@@ -37,7 +37,7 @@ jobs:
         run: npm run test:unit
 
       - name: Install Playwright Dependencies
-        run: npx playwright install #  --with-deps
+        run: npx playwright install --with-deps
 
       - name: Integration Tests
         run: |
@@ -82,8 +82,13 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
 
+
+  deploy:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ['self-hosted', 'prima', 'Linux', 'X64']
+    needs: build
+    steps:
       - name: Deploy
-        if: github.ref == 'refs/heads/master'
         run: |
           cd /home/prima
           docker compose pull
