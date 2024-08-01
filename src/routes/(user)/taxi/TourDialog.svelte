@@ -10,6 +10,7 @@
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import type { TourDetails, Event } from './TourDetails';
+	import maplibregl from 'maplibre-gl';
 
 	class Props {
 		open!: {
@@ -62,6 +63,16 @@
 
 	const routes = $derived(open.tour && getRoutes(open.tour.events));
 	const center = $derived(open.tour && getCenter(open.tour.events));
+
+	let map = $state<null | maplibregl.Map>(null);
+	let init = false;
+	$effect(() => {
+		if (map && !init) {
+			map.addControl(new maplibregl.FullscreenControl());
+			map.addControl(new maplibregl.NavigationControl(), 'bottom-left');
+			init = true;
+		}
+	});
 </script>
 
 <Dialog.Root
@@ -80,7 +91,7 @@
 		<Dialog.Description>
 			<div class="grid grid-rows-2 grid-cols-2 gap-4">
 				{@render overview()}
-				{@render map()}
+				{@render mapView()}
 				<div class="col-span-2">{@render details()}</div>
 			</div>
 		</Dialog.Description>
@@ -125,9 +136,10 @@
 	</Card.Root>
 {/snippet}
 
-{#snippet map()}
+{#snippet mapView()}
 	{#if center && routes != null}
 		<Map
+			bind:map
 			transformRequest={(url) => {
 				if (url.startsWith('/')) {
 					return { url: `https://europe.motis-project.de/tiles${url}` };
