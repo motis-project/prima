@@ -35,7 +35,7 @@ jobs:
 
       - name: Integration Tests
         run: |
-          docker compose up -d
+          docker compose up -d pg
           sleep 5
           ./test_data/load.sh default
           npm run test:integration
