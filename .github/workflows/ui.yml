@@ -37,7 +37,7 @@ jobs:
         run: npm run test:unit
 
       - name: Install Playwright Dependencies
-        run: npx playwright install --with-deps
+        run: npx playwright install #  --with-deps
 
       - name: Integration Tests
         run: |
