@@ -20,9 +20,6 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Playwright Dependencies
-        run: npx playwright install --with-deps
-
       - name: Install Dependencies
         run: npm install -f
 
@@ -35,6 +32,9 @@ jobs:
       - name: Unit Tests
         run: npm run test:unit
 
+      - name: Install Playwright Dependencies
+        run: npx playwright install --with-deps
+
       - name: Integration Tests
         run: |
           docker compose up -d pg
@@ -42,3 +42,38 @@ jobs:
           ./test_data/load.sh default
           npm run test:integration
           docker compose down
+
+      - name: Docker setup-buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=edge
+
+      - name: Docker build and push
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          context: .
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
