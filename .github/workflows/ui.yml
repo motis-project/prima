@@ -9,6 +9,8 @@ on:
 jobs:
   build_site:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:pw@localhost:6500/prima
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,7 +37,7 @@ jobs:
 
       - name: Integration Tests
         run: |
-          docker compose up -d
+          docker compose up -d pg
           sleep 5
           ./test_data/load.sh default
           npm run test:integration
