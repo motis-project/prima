@@ -40,7 +40,8 @@
 	let day = $derived(new ReactiveDate(value));
 
 	$effect(() => {
-		goto(`/taxi?date=${value.toDate('UTC').toISOString().slice(0, 10)}`);
+		const offset = value.toDate('UTC').getTimezoneOffset();
+		goto(`/taxi?offset=${offset}&date=${value.toDate('UTC').toISOString().slice(0, 10)}`);
 	});
 
 	onMount(() => {

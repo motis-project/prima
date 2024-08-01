@@ -1,4 +1,3 @@
-import { TZ } from '$lib/constants.js';
 import { db } from '$lib/database';
 import { mapTourEvents } from './TourDetails';
 import type { Vehicle } from './types';
@@ -7,9 +6,11 @@ export async function load(event) {
 	const companyId = event.locals.user?.company;
 	const url = event.url;
 	const localDateParam = url.searchParams.get('date');
-	const localDate = localDateParam ? new Date(localDateParam) : new Date();
-	const utcDate = new Date(localDate.toLocaleString('en', { timeZone: TZ }));
-	utcDate.setHours(0, 0, 0, 0);
+	const timezoneOffset = url.searchParams.get('offset');
+	const utcDate =
+		localDateParam && timezoneOffset
+			? new Date(new Date(localDateParam!).getTime() + Number(timezoneOffset) * 60 * 1000)
+			: new Date();
 	if (!companyId) {
 		return {
 			tours: [],
