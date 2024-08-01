@@ -81,3 +81,11 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
+
+      - name: Deploy
+        if: github.ref == 'refs/heads/master'
+        run: |
+          cd /home/prima
+          docker compose pull
+          docker compose down
+          docker compose up -d
