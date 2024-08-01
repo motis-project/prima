@@ -19,8 +19,8 @@
 	};
 
 	let selectedTour = $state<{
-		tour: TourDetails | undefined;
-	}>({ tour: undefined });
+		tours: Array<TourDetails> | undefined;
+	}>({ tours: undefined });
 
 	const getCustomerCount = (tour: TourDetails) => {
 		let customers: Set<string> = new Set<string>();
@@ -59,7 +59,7 @@
 				{#each data.tours as tour}
 					<Table.Row
 						on:click={() => {
-							selectedTour = { tour: tour };
+							selectedTour = { tours: [tour] };
 						}}
 						class="cursor-pointer"
 					>

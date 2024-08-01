@@ -24,8 +24,6 @@
 	import { TZ } from '$lib/constants.js';
 	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
 
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-
 	import TourDialog from './TourDialog.svelte';
 	import AddVehicle from './AddVehicle.svelte';
 	import type { TourDetails } from './TourDetails';
@@ -35,8 +33,8 @@
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
 	let selectedTour = $state<{
-		tour: TourDetails | undefined;
-	}>({ tour: undefined });
+		tours: Array<TourDetails> | undefined;
+	}>({ tours: undefined });
 
 	let value = $state(toCalendarDate(fromDate(data.utcDate, TZ)));
 	let day = $derived(new ReactiveDate(value));
@@ -244,29 +242,17 @@
 	};
 
 	const cellColor = (id: number, v: Vehicle, cell: Range) => {
+		let tours = getTours(id, cell);
 		if (hasDraggedTour(id, cell)) {
 			return hasOverlap() ? 'bg-red-500' : 'bg-orange-200';
-		} else if (hasTour(id, cell)) {
+		} else if (tours.length > 1) {
+			return 'bg-orange-600';
+		} else if (tours.length != 0) {
 			return 'bg-orange-400';
 		} else if (selection !== null && isSelected(id, cell)) {
 			return selection.available ? 'bg-yellow-100' : '';
 		} else if (isAvailable(v, cell)) {
 			return 'bg-yellow-100';
-		}
-	};
-
-	const getTourInfoShort = (tour: TourDetails) => {
-		let l1 = tour.events[0];
-		let l2 = tour.events[tour.events.length - 1];
-
-		if (!(l1.city && l2.city)) {
-			return l1.street + ' -- ' + l2.street;
-		}
-
-		if (l1.city == l2.city) {
-			return l1.city + ': ' + l1.street + ' -- ' + l2.street;
-		} else {
-			return l1.city + ' -- ' + l2.city;
 		}
 	};
 </script>
@@ -322,36 +308,21 @@
 												onfocus={() => {}}
 											>
 												{#if hasTour(id, cell)}
-													<DropdownMenu.Root>
-														<DropdownMenu.Trigger asChild let:builder>
-															<Button
-																builders={[builder]}
-																class={[
-																	'w-8',
-																	'h-8',
-																	'border',
-																	'rounded-md',
-																	'hover:bg-orange-400',
-																	cellColor(id, v, cell)
-																].join(' ')}
-															></Button>
-														</DropdownMenu.Trigger>
-														<DropdownMenu.Content class="absolute z-10">
-															<DropdownMenu.Group>
-																<DropdownMenu.Label>Touren</DropdownMenu.Label>
-																<DropdownMenu.Separator />
-																{#each getTours(id, cell) as tour}
-																	<DropdownMenu.Item
-																		on:click={() => {
-																			selectedTour = { tour: tour };
-																		}}
-																	>
-																		{getTourInfoShort(tour)}
-																	</DropdownMenu.Item>
-																{/each}
-															</DropdownMenu.Group>
-														</DropdownMenu.Content>
-													</DropdownMenu.Root>
+													<!-- svelte-ignore a11y_click_events_have_key_events -->
+													<!-- svelte-ignore a11y_no_static_element_interactions -->
+													<div
+														onclick={() => {
+															selectedTour.tours = getTours(id, cell);
+														}}
+														class={[
+															'cursor-pointer',
+															'w-8',
+															'h-8',
+															'border',
+															'rounded-md',
+															cellColor(id, v, cell)
+														].join(' ')}
+													></div>
 												{:else}
 													<div
 														class={[
