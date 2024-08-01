@@ -8,7 +8,7 @@ on:
 
 jobs:
   build_site:
-    runs-on: ubuntu-latest
+    runs-on: ['self-hosted', 'prima', 'Linux', 'X64']
     permissions:
       packages: write
       contents: read
