@@ -10,6 +10,7 @@
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import type { TourDetails, Event } from './TourDetails';
+	import { getFareEstimation } from '../../api/booking/fare-estimation/fare_estimation';
 
 	class Props {
 		open!: {
@@ -18,6 +19,12 @@
 	}
 
 	const { open = $bindable() }: Props = $props();
+
+	const getFare = async (start: any, destination: any) => {
+		let fare = await getFareEstimation(start, destination);
+		let res: string = Math.floor(fare / 100) + ',' + (fare % 100);
+		return res;
+	};
 
 	const getRoutes = (tourEvents: Array<Event> | null) => {
 		// eslint-disable-next-line
@@ -46,6 +53,7 @@
 				})
 			);
 		}
+
 		return routes;
 	};
 
@@ -99,6 +107,7 @@
 						<Table.Head>Abfahrt</Table.Head>
 						<Table.Head>Ankunft</Table.Head>
 						<Table.Head>Fahrzeug</Table.Head>
+						<Table.Head class="text-right">Fahrpreis</Table.Head>
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
@@ -116,7 +125,10 @@
 								{open.tour.events[open.tour.events.length - 1].postal_code}
 								{open.tour.events[open.tour.events.length - 1].city}
 							</Table.Cell>
-							<Table.Cell>{open.tour!.license_plate}</Table.Cell>
+							<Table.Cell class="text-right">{open.tour!.license_plate}</Table.Cell>
+							{#await getFare(open.tour.events[0], open.tour.events[open.tour.events.length - 1]) then fare}
+								<Table.Cell class="text-right">{fare} €</Table.Cell>
+							{/await}
 						</Table.Row>
 					{/if}
 				</Table.Body>
@@ -195,7 +207,6 @@
 						<Table.Head>Kunde</Table.Head>
 						<Table.Head>Tel. Kunde</Table.Head>
 						<Table.Head>Ein-/Ausstieg</Table.Head>
-						<Table.Head class="text-right">Fahrpreis</Table.Head>
 					</Table.Row>
 				</Table.Header>
 
@@ -225,7 +236,6 @@
 										<ArrowLeft class="h-4 w-4" />
 									</Table.Cell>
 								{/if}
-								<Table.Cell class="text-right">19,80</Table.Cell>
 							</Table.Row>
 						{/each}
 					{/if}
