@@ -9,10 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
-      attestations: write
+    permissions: write-all
     env:
       DATABASE_URL: postgresql://postgres:pw@localhost:6500/prima
     steps:
