@@ -11,13 +11,14 @@
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import type { TourDetails, Event } from './TourDetails';
 	import { getFareEstimation } from '../../api/booking/fare-estimation/fare_estimation';
+	import maplibregl from 'maplibre-gl';
+	import { Button } from '$lib/components/ui/button';
 
 	class Props {
 		open!: {
-			tour: TourDetails | undefined;
+			tours: Array<TourDetails> | undefined;
 		};
 	}
-
 	const { open = $bindable() }: Props = $props();
 
 	const getFare = async (start: any, destination: any) => {
@@ -25,6 +26,9 @@
 		let res: string = Math.floor(fare / 100) + ',' + (fare % 100);
 		return res;
 	};
+
+	let tourIndex = $state(0);
+	let tour = $derived(open.tours && open.tours[tourIndex]);
 
 	const getRoutes = (tourEvents: Array<Event> | null) => {
 		// eslint-disable-next-line
@@ -68,27 +72,68 @@
 		];
 	};
 
-	const routes = $derived(open.tour && getRoutes(open.tour.events));
-	const center = $derived(open.tour && getCenter(open.tour.events));
+	const routes = $derived(tour && getRoutes(tour.events));
+	const center = $derived(tour && getCenter(tour.events));
+
+	let map = $state<undefined | maplibregl.Map>();
+	let init = false;
+	$effect(() => {
+		if (map && !init) {
+			map.addControl(new maplibregl.FullscreenControl());
+			map.addControl(new maplibregl.NavigationControl(), 'bottom-left');
+			init = true;
+		}
+	});
+
+	const getTourInfoShort = (tour: TourDetails) => {
+		let l1 = tour.events[0];
+		let l2 = tour.events[tour.events.length - 1];
+
+		if (!(l1.city && l2.city)) {
+			return l1.street + ' -- ' + l2.street;
+		}
+
+		if (l1.city == l2.city) {
+			return l1.city + ': ' + l1.street + ' -- ' + l2.street;
+		} else {
+			return l1.city + ' -- ' + l2.city;
+		}
+	};
 </script>
 
 <Dialog.Root
-	open={open.tour !== undefined}
+	open={tour !== undefined}
 	onOpenChange={(x) => {
 		if (!x) {
-			open.tour = undefined;
+			open.tours = undefined;
 		}
 	}}
 	on:close={() => history.back()}
 >
 	<Dialog.Content class="container max-h-screen">
 		<Dialog.Header>
-			<Dialog.Title>Tour Details</Dialog.Title>
+			<div class="flex justify-between items-center pr-4">
+				<Dialog.Title>Tour Details</Dialog.Title>
+				<div>
+					{#if open!.tours && open.tours.length > 1}
+						{#each open.tours as tour, i}
+							<Button
+								on:click={() => {
+									tourIndex = i;
+								}}
+								variant={tourIndex === i ? 'default' : 'outline'}
+								class="mx-2"
+								>{getTourInfoShort(tour)}
+							</Button>
+						{/each}
+					{/if}
+				</div>
+			</div>
 		</Dialog.Header>
 		<Dialog.Description>
 			<div class="grid grid-rows-2 grid-cols-2 gap-4">
 				{@render overview()}
-				{@render map()}
+				{@render mapView()}
 				<div class="col-span-2">{@render details()}</div>
 			</div>
 		</Dialog.Description>
@@ -111,24 +156,25 @@
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
-					{#if open.tour}
+					{#if tour}
 						<Table.Row>
 							<Table.Cell>
-								{open.tour!.from.toLocaleString('de-DE').slice(0, -3)}
-								<br />{open.tour.events[0].street}<br />
-								{open.tour.events[0].postal_code}
-								{open.tour.events[0].city}
+								{tour!.from.toLocaleString('de-DE').slice(0, -3)}
+								<br />{tour.events[0].street}<br />
+								{tour.events[0].postal_code}
+								{tour.events[0].city}
 							</Table.Cell>
 							<Table.Cell>
-								{open.tour!.to.toLocaleString('de-DE').slice(0, -3)}
-								<br />{open.tour.events[open.tour.events.length - 1].street}<br />
-								{open.tour.events[open.tour.events.length - 1].postal_code}
-								{open.tour.events[open.tour.events.length - 1].city}
+								{tour!.to.toLocaleString('de-DE').slice(0, -3)}
+								<br />{tour.events[tour.events.length - 1].street}<br />
+								{tour.events[tour.events.length - 1].postal_code}
+								{tour.events[tour.events.length - 1].city}
 							</Table.Cell>
-							<Table.Cell class="text-right">{open.tour!.license_plate}</Table.Cell>
-							{#await getFare(open.tour.events[0], open.tour.events[open.tour.events.length - 1]) then fare}
+							<Table.Cell class="text-right">{tour!.license_plate}</Table.Cell>
+							{#await getFare(tour.events[0], tour.events[tour.events.length - 1]) then fare}
 								<Table.Cell class="text-right">{fare} €</Table.Cell>
 							{/await}
+							<Table.Cell>{tour!.license_plate}</Table.Cell>
 						</Table.Row>
 					{/if}
 				</Table.Body>
@@ -137,9 +183,10 @@
 	</Card.Root>
 {/snippet}
 
-{#snippet map()}
+{#snippet mapView()}
 	{#if center && routes != null}
 		<Map
+			bind:map
 			transformRequest={(url) => {
 				if (url.startsWith('/')) {
 					return { url: `https://europe.motis-project.de/tiles${url}` };
@@ -211,8 +258,8 @@
 				</Table.Header>
 
 				<Table.Body>
-					{#if open.tour!.events != null}
-						{#each open.tour!.events as event}
+					{#if tour!.events != null}
+						{#each tour!.events as event}
 							<Table.Row>
 								<Table.Cell>
 									{event.scheduled_time.toLocaleString('de-DE').slice(0, -3).replace(',', ' ')}
