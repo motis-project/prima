@@ -21,7 +21,6 @@ export const POST = async (event) => {
 	const fromCoordinates: Coordinates = from.coordinates;
 	const toCoordinates: Coordinates = to.coordinates;
 	const time = new Date(timeStamp);
-	console.log(time);
 
 	let travelDuration = 0;
 	try {
@@ -34,19 +33,22 @@ export const POST = async (event) => {
 			})
 		).metadata.duration;
 	} catch (e) {
-		return json({ status: 1 });
+		return json({ status: 1, message: "Es ist ein Fehler im Routing von Start zu Ziel aufgetreten." });
 	}
 
 	if (travelDuration == 0) {
-		return json({ status: 1 });
+		return json({ status: 2, message: "Start und Ziel sind identisch." });
+	}
+
+	if(travelDuration > hoursToMs(1)){
+		return json({ status: 3, message: "Die maximale Fahrtzeit wurde überschritten." });
 	}
 
 	const startTime = startFixed ? time : new Date(time.getTime() - secondsToMs(travelDuration));
 	const targetTime = startFixed ? new Date(time.getTime() + secondsToMs(travelDuration)) : time;
 	const travelInterval = new Interval(startTime, targetTime);
 	if (new Date(Date.now() + minutesToMs(MIN_PREP_MINUTES)) > startTime) {
-		console.log('Insufficient preparation time.');
-		return json({ status: 1 });
+		return json({ status: 4, message: "Die Anfrage verletzt die minimale Vorlaufzeit." });
 	}
 	const expandedTravelInterval = travelInterval.expand(hoursToMs(24), hoursToMs(24));
 
@@ -115,8 +117,19 @@ export const POST = async (event) => {
 		.execute();
 
 	if (dbResults.length == 0) {
-		console.log('There is no vehicle which is able to do the tour.');
-		return json({ status: 1 });
+		try{await db
+			.selectFrom('zone')
+			.where((eb) =>
+				eb.and([
+					eb('zone.is_community', '=', false),
+					sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${fromCoordinates.lng}, ${fromCoordinates.lat}),4326))`,
+					sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${toCoordinates.lng}, ${toCoordinates.lat}),4326))`
+				])
+			).executeTakeFirstOrThrow()}
+				catch{
+					return json({ status: 5, message: "Start und Ziel sind nicht im selben Pflichtfahrgebiet enthalten." });
+				}
+		return json({ status: 6, message: "Kein Unternehmen im relevanten Pflichtfahrgebiet hat ein Fahrzeug, das zwischen Start und Ende der Anfrage verfügbar ist." });
 	}
 
 	// Group availabilities by vehicle, merge availabilities corresponding to the same vehicle, filter out availabilities which don't contain the
@@ -148,6 +161,10 @@ export const POST = async (event) => {
 			};
 		});
 
+	if(availableVehicles.length == 0){
+		return json({ status: 7, message: 'Kein Unternehmen im relevanten Pflichtfahrgebiet hat ein Fahrzeug, das zwischen Start und Ende der Anfrage verfügbar ist.' });
+	}
+
 	// Group the data of the vehicles which are available during the travel interval by their companies,
 	// extract the information needed for the motis-one_to_many requests
 	const availableVehiclesByCompany = groupBy(
@@ -173,11 +190,6 @@ export const POST = async (event) => {
 		return new Coordinates(vehicles![0].latitude!, vehicles![0].longitude!);
 	});
 
-	if (centralCoordinates.length == 0) {
-		console.log('centralCoordinates array was empty');
-		return json({ status: 1 });
-	}
-
 	let durationToStart: Array<number> = [];
 	let durationFromTarget: Array<number> = [];
 	try {
@@ -189,7 +201,7 @@ export const POST = async (event) => {
 			await oneToMany(toCoordinates, centralCoordinates, Direction.Forward)
 		).map((res) => secondsToMs(res.duration));
 	} catch (e) {
-		return json({ status: 1 });
+		return json({ status: 8, message: "Fehler in Motis-Anfrage" });
 	}
 	const fullTravelIntervals = companies.map((_, index) =>
 		travelInterval.expand(durationToStart[index], durationFromTarget[index])
@@ -199,6 +211,7 @@ export const POST = async (event) => {
 	const toRemoveIdxs: number[] = [];
 	vehicles.forEach((companyVehicles, index) => {
 		if (
+			fullTravelIntervals[index].getDurationMs() > hoursToMs(3) ||
 			!companyVehicles.some((vehicle) => vehicle.availability.contains(fullTravelIntervals[index]))
 		) {
 			toRemoveIdxs.push(index);
@@ -221,11 +234,7 @@ export const POST = async (event) => {
 	);
 
 	if (vehicleIds.length == 0) {
-		console.log(
-			'vehicleIds.length == 0\n',
-			'No one can handle this booking request, there are no available vehicles which fulfill the zone and capacity requirements.'
-		);
-		return json({ status: 1 });
+		return json({ status: 9, message: 'Kein Unternehmen im relevanten Pflichtfahrgebiet hat ein Fahrzeug, das für die gesamte Tour mit An- und Rückfahrt durchgängig verfügbar ist.' });
 	}
 
 	let tour_id: number | undefined = undefined;
@@ -274,11 +283,7 @@ export const POST = async (event) => {
 		});
 
 		if (viable_vehicles.length == 0) {
-			console.log(
-				'viable_vehicles.length == 0\n',
-				'No one can handle this booking request, all available vehicles which fulfill the zone and capacity requirements are busy.'
-			);
-			return json({ status: 1 });
+			return json({ status: 10, message: 'Kein Fahrzeug ist für die gesamte Fahrtzeit verfügbar und nicht mit anderen Aufträgen beschäftigt.' });
 		}
 
 		// Sort companies by the distance of their taxi-central to start + target
@@ -384,8 +389,7 @@ export const POST = async (event) => {
 			.execute();
 	});
 	if (tour_id) {
-		console.log('Booking request was assigned.');
-		return json({ status: 0, tour_id: tour_id });
+		return json({ status: 0, tour_id: tour_id, message: "Die Buchung war erfolgreich." });
 	}
-	return json({ status: 1 });
+	return json({ status: 11, message: "Fehler beim schreiben in die Datenbank" });
 };
