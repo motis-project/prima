@@ -15,6 +15,7 @@ export const load: PageServerLoad = async (event) => {
 			.innerJoin('address', 'address.id', 'event.address')
 			.innerJoin('auth_user', 'auth_user.id', 'event.customer')
 			.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
+			.innerJoin('company', 'company.id', 'vehicle.company')
 			.where('company', '=', companyId!)
 			.orderBy('event.scheduled_time')
 			.selectAll()
