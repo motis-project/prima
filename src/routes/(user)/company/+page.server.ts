@@ -79,6 +79,39 @@ export const actions: Actions = {
 				form
 			});
 		}
+		try {
+			await db
+				.selectFrom('zone as compulsory_area')
+				.where((eb) =>
+					eb.and([
+						eb('compulsory_area.is_community', '=', false),
+						eb('compulsory_area.name', '=', form.data.zone)
+					])
+				)
+				.innerJoin(
+					(eb) =>
+						eb
+							.selectFrom('zone')
+							.where((eb) =>
+								eb.and([
+									eb('zone.is_community', '=', true),
+									eb('zone.name', '=', form.data.community)
+								])
+							)
+							.selectAll()
+							.as('community'),
+					(join) => join.onTrue()
+				)
+				.where(sql<boolean>`ST_Intersects(compulsory_area.area, community.area)`)
+				.selectAll()
+				.executeTakeFirstOrThrow();
+		} catch {
+			form.errors.zone = ['Die Gemeinde und das Pflichtfahrgebiet überlappen sich nicht.'];
+			form.errors.community = ['Die Gemeinde und das Pflichtfahrgebiet überlappen sich nicht.'];
+			return fail(400, {
+				form
+			});
+		}
 		db.updateTable('company')
 			.set({
 				name: form.data.companyname,
