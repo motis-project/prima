@@ -24,6 +24,7 @@ export const getTourEvents = () => {
 		.innerJoin('auth_user', 'auth_user.id', 'event.customer')
 		.innerJoin('tour', 'tour.id', 'event.tour')
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
+		.innerJoin('company', 'company.id', 'vehicle.company')
 		.selectAll()
 		.execute();
 };
@@ -45,6 +46,7 @@ export const mapTourEvents = (events: DbTourEvents) => {
 			vehicle_id: first.vehicle,
 			license_plate: first.license_plate,
 			company_id: first.company,
+			company_name: first.name,
 			events: events.map((e) => {
 				return {
 					address: e.address,

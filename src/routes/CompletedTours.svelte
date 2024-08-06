@@ -67,7 +67,7 @@
 						class="cursor-pointer"
 					>
 						{#if isMaintainer}
-							<Table.Cell>{tour.company_id}</Table.Cell>
+							<Table.Cell>{tour.company_name}</Table.Cell>
 						{:else}
 							<Table.Cell>{tour.license_plate}</Table.Cell>
 						{/if}
