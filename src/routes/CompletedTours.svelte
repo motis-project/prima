@@ -6,11 +6,10 @@
 	import TourDialog from './(user)/taxi/TourDialog.svelte';
 
     type Props = {
+		isMaintainer: boolean;
 		tours: TourDetails[];
 	};
-	let { tours }: Props = $props();
-
-	const maintainer = false;
+	let { isMaintainer, tours }: Props = $props();
 
 	const getTourInfoShort = (tour: TourDetails) => {
 		let l1 = tour.events[0];
@@ -45,7 +44,7 @@
 		<Table.Root>
 			<Table.Header>
 				<Table.Row>
-					{#if maintainer}
+					{#if isMaintainer}
 						<Table.Head>Unternehmen</Table.Head>
 					{:else}
 						<Table.Head>Fahrzeug</Table.Head>
@@ -67,7 +66,7 @@
 						}}
 						class="cursor-pointer"
 					>
-						{#if maintainer}
+						{#if isMaintainer}
 							<Table.Cell>{tour.company_id}</Table.Cell>
 						{:else}
 							<Table.Cell>{tour.license_plate}</Table.Cell>
