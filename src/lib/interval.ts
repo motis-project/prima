@@ -69,7 +69,7 @@ export class Interval {
 		return this.overlaps(other) || this.touches(other);
 	}
 
-	getDurationMs(){
+	getDurationMs() {
 		return this.endTime.getTime() - this.startTime.getTime();
 	}
 
