@@ -5,7 +5,7 @@
 	import type { TourDetails } from './(user)/taxi/TourDetails.js';
 	import TourDialog from './(user)/taxi/TourDialog.svelte';
 
-    type Props = {
+	type Props = {
 		isMaintainer: boolean;
 		tours: TourDetails[];
 	};
