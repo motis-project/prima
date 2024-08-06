@@ -257,7 +257,8 @@ export const POST = async (event) => {
 		});
 	}
 
-	let tour_id: number | undefined = undefined;
+	let tourId: number | undefined = undefined;
+	let companyName: string | undefined = undefined;
 
 	await db.transaction().execute(async (trx) => {
 		sql`LOCK TABLE tour, request, event IN ACCESS EXCLUSIVE MODE;`.execute(trx);
@@ -290,11 +291,13 @@ export const POST = async (event) => {
 						)
 					)
 				)
-				.select(['vehicle.company', 'vehicle.id as vehicle'])
+				.innerJoin('company', 'company.id', 'vehicle.company')
+				.select(['vehicle.company', 'vehicle.id as vehicle', 'company.name as companyName'])
 				.execute()
 		).map((v) => {
 			const companyIdx = companies.indexOf(v.company);
 			return {
+				companyName: v.companyName,
 				vehicleId: v.vehicle,
 				departure: fullTravelIntervals[companyIdx].startTime,
 				arrival: fullTravelIntervals[companyIdx].endTime,
@@ -313,7 +316,8 @@ export const POST = async (event) => {
 		// Sort companies by the distance of their taxi-central to start + target
 		viable_vehicles.sort((a, b) => a.distance - b.distance);
 
-		const bestCompany = viable_vehicles[0];
+		const bestVehicle = viable_vehicles[0];
+		companyName = bestVehicle.companyName!;
 
 		// Write tour, request, 2 events and if not existant address in db.
 		let startAddress = await trx
@@ -364,19 +368,19 @@ export const POST = async (event) => {
 				.returning('id')
 				.executeTakeFirst())!;
 		}
-		tour_id = (await trx
+		tourId = (await trx
 			.insertInto('tour')
 			.values({
-				departure: bestCompany.departure,
-				arrival: bestCompany.arrival,
-				vehicle: bestCompany.vehicleId!
+				departure: bestVehicle.departure,
+				arrival: bestVehicle.arrival,
+				vehicle: bestVehicle.vehicleId!
 			})
 			.returning('id')
 			.executeTakeFirst())!.id;
 		const requestId = (await trx
 			.insertInto('request')
 			.values({
-				tour: tour_id!,
+				tour: tourId!,
 				passengers: numPassengers,
 				bikes: numBikes,
 				wheelchairs: numWheelchairs,
@@ -395,7 +399,7 @@ export const POST = async (event) => {
 					communicated_time: startTime, // TODO
 					address: startAddress.id,
 					request: requestId!,
-					tour: tour_id!,
+					tour: tourId!,
 					customer: customerId
 				},
 				{
@@ -406,14 +410,14 @@ export const POST = async (event) => {
 					communicated_time: targetTime, // TODO
 					address: targetAddress.id,
 					request: requestId!,
-					tour: tour_id!,
+					tour: tourId!,
 					customer: customerId
 				}
 			])
 			.execute();
 	});
-	if (tour_id) {
-		return json({ status: 0, tour_id: tour_id, message: 'Die Buchung war erfolgreich.' });
+	if (tourId) {
+		return json({ status: 0, companyName: companyName!, pickupTime: startTime, dropoffTime: targetTime, tour_id: tourId, message: 'Die Buchung war erfolgreich.' });
 	}
 	return json({ status: 11, message: 'Fehler beim schreiben in die Datenbank' });
 };
