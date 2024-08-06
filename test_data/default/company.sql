@@ -1,4 +1,4 @@
 INSERT INTO "company" ("longitude", "latitude", "name", "address", "zone", "community_area") VALUES
-(14.097294853223417, 51.27571523301026,	'Taxi-Unternehmen Bautzen-1', 'Kamenz Ostrstr 21', 2, 11),
-(14.43063772516797, 51.18775568198066,	'Taxi-Unternehmen Bautzen-2', 'Bautzen Behringstr 45', 1, 12),
-(14.839784424630352, 51.29273054080147,	'Taxi-Unternehmen Görlitz-1', 'Niesky am Anker 18', 3, 13)
+(14.462836184381786, 51.257429223319974,	'Taxi-Unternehmen Bautzen-1', 'Kleindubrau Goethestraße 9', 2, 15),
+(14.51622896055764, 51.10081994744087,	'Taxi-Unternehmen Bautzen-2', 'Cunewalde Hauptstraße 83', 1, 10),
+(14.522423592358592, 51.23735562132754,	'Taxi-Unternehmen Görlitz-1', 'Malschwitz Gutauer Landstraße 15', 3, 21)
