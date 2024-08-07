@@ -142,36 +142,36 @@
 			<div class="grid grid-rows-2 gap-12">
 				<div>
 					<Table.Root>
-            <Table.Header>
-              <Table.Row>
-                <Table.Head>Abfahrt</Table.Head>
-                <Table.Head>Ankunft</Table.Head>
-                <Table.Head>Fahrzeug</Table.Head>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {#if tour}
-                <Table.Row>
-                  <Table.Cell>
-                    {tour!.from.toLocaleString('de-DE').slice(0, -3)}
-                    <br />{tour.events[0].street}<br />
-                    {tour.events[0].postal_code}
-                    {tour.events[0].city}
-                  </Table.Cell>
-                  <Table.Cell>
-                    {tour!.to.toLocaleString('de-DE').slice(0, -3)}
-                    <br />{tour.events[tour.events.length - 1].street}<br />
-                    {tour.events[tour.events.length - 1].postal_code}
-                    {tour.events[tour.events.length - 1].city}
-                  </Table.Cell>
-                  <Table.Cell>{tour!.license_plate}</Table.Cell>
-                </Table.Row>
-              {/if}
-            </Table.Body>
-          </Table.Root>
+						<Table.Header>
+							<Table.Row>
+								<Table.Head>Abfahrt</Table.Head>
+								<Table.Head>Ankunft</Table.Head>
+								<Table.Head>Fahrzeug</Table.Head>
+							</Table.Row>
+						</Table.Header>
+						<Table.Body>
+							{#if tour}
+								<Table.Row>
+									<Table.Cell>
+										{tour!.from.toLocaleString('de-DE').slice(0, -3)}
+										<br />{tour.events[0].street}<br />
+										{tour.events[0].postal_code}
+										{tour.events[0].city}
+									</Table.Cell>
+									<Table.Cell>
+										{tour!.to.toLocaleString('de-DE').slice(0, -3)}
+										<br />{tour.events[tour.events.length - 1].street}<br />
+										{tour.events[tour.events.length - 1].postal_code}
+										{tour.events[tour.events.length - 1].city}
+									</Table.Cell>
+									<Table.Cell>{tour!.license_plate}</Table.Cell>
+								</Table.Row>
+							{/if}
+						</Table.Body>
+					</Table.Root>
 				</div>
 				<div class="grid grid-rows-1 place-items-end">
-					<div><ConfirmationDialog bind:tour={open.tour} /></div>
+					<div><ConfirmationDialog bind:tour={open.tours![tourIndex]} /></div>
 				</div>
 			</div>
 		</Card.Content>
