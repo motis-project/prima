@@ -61,8 +61,8 @@ export const actions: Actions = {
 				form
 			});
 		}
-		try {
-			await db
+		if (
+			!(await db
 				.selectFrom('zone')
 				.where((eb) =>
 					eb.and([
@@ -71,16 +71,16 @@ export const actions: Actions = {
 						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${bestAddressGuess!.pos.lng}, ${bestAddressGuess!.pos.lat}),4326))`
 					])
 				)
-				.executeTakeFirstOrThrow();
-		} catch {
+				.executeTakeFirst())
+		) {
 			form.errors.address = ['Die Addresse liegt nicht in der ausgewählten Gemeinde.'];
 			form.errors.community = ['Die Addresse liegt nicht in der ausgewählten Gemeinde.'];
 			return fail(400, {
 				form
 			});
 		}
-		try {
-			await db
+		if (
+			!(await db
 				.selectFrom('zone as compulsory_area')
 				.where((eb) =>
 					eb.and([
@@ -104,8 +104,8 @@ export const actions: Actions = {
 				)
 				.where(sql<boolean>`ST_Intersects(compulsory_area.area, community.area)`)
 				.selectAll()
-				.executeTakeFirstOrThrow();
-		} catch {
+				.executeTakeFirst())
+		) {
 			form.errors.zone = ['Die Gemeinde und das Pflichtfahrgebiet überlappen sich nicht.'];
 			form.errors.community = ['Die Gemeinde und das Pflichtfahrgebiet überlappen sich nicht.'];
 			return fail(400, {
