@@ -2,6 +2,8 @@ import bautzenJson from './bautzen.json';
 import { createTrace } from './create_trace';
 import { getRoute } from '$lib/api';
 import { TZ } from '$lib/constants';
+import { db } from '$lib/database';
+import { sql } from 'kysely';
 
 
 const calculateDistance = (segment: number[][]) => {
@@ -55,6 +57,10 @@ const getRouteSegment = async (start: any, destination: any) => {
 
 const getSegmentFare = async (start: any, dst: any, tarif: number) => {
     let route = await getRouteSegment(start, dst);
+    if (!route) {
+        console.log('getSegmentFare: Could not get route');
+        return 0;
+    }
     let dist = route.metadata.distance / 1000;
     let duration = route.metadata.duration / 3600;
     let distFare = dist * tarif;
@@ -63,12 +69,7 @@ const getSegmentFare = async (start: any, dst: any, tarif: number) => {
     return Math.round(distFare + timeFare);
 }
 
-const isInsideComunity = (event: any) => {
-    // TODO
-    return true;
-}
-
-const getCompanyBase = (companyId: number) => {
+const getCompanyBase = (vehicleId: number) => {
     // TODO
     return {
         latitude: 51.18813445535576,
@@ -82,24 +83,58 @@ const isTimestampInRange = (isoTimestampUTC: string, startHour: number, endHour:
     return localDateTime.getHours() >= startHour || localDateTime.getHours() < endHour;
 }
 
-export const getFareEstimation = async (start: any, destination: any) => {
-    let totalFare = bautzenJson['grundpreis'];
+export const getFareEstimation = async (start: any, destination: any, vehicleId: number): Promise<number> => {
+    const zone = await db
+        .selectFrom('zone')
+        .where((eb) =>
+            eb.and([
+                eb('zone.is_community', '=', true),
+                sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${start.longitude}, ${start.latitude}),4326))`,
+            ])
+        )
+        .innerJoin('taxi_rates', 'taxi_rates.id', 'zone.rates')
+        .select(['zone.id', 'taxi_rates.rates'])
+        .executeTakeFirst();
+    if (!zone) {
+        throw new Error('Zuordnung Taxi-Unternehmen -> Gemeinde fehlgeschlagen.');
+    }
+    const compulsory_area = await db
+        .selectFrom('zone')
+        .where('id', '=', zone.id)
+        .innerJoin('taxi_rates', 'taxi_rates.id', 'taxi_rates.rates')
+        .select('taxi_rates.rates')
+        .executeTakeFirst()
+    if (!compulsory_area) {
+        throw new Error('Zuordnung Taxi-Unternehmen -> Pflichtfahrgebiet fehlgeschlagen.');
+    }
 
-    if (!isInsideComunity(start)) {
+    let ratesJson = JSON.parse(compulsory_area.rates);
+    let totalFare = ratesJson['grundpreis'];
+
+    const vehicle = await db
+        .selectFrom('vehicle')
+        .where('vehicle.id', '=', vehicleId)
+        .innerJoin('company', 'company.id', 'vehicle.company')
+        .select(['community_area', 'latitude', 'longitude'])
+        .executeTakeFirst();
+
+    if (zone.id != vehicle?.community_area) {
         // rate for journey to first pickup
-        totalFare += await getSegmentFare(getCompanyBase(0), start, bautzenJson['anfahrt-pkm']);
+        console.log('Not within comunity');
+        totalFare += await getSegmentFare(getCompanyBase(vehicleId), start, ratesJson['anfahrt-pkm']);
     }
 
     if (isTimestampInRange(
         start.scheduled_time.toISOString(),
-        bautzenJson['beginn-nacht'],
-        bautzenJson['ende-nacht']
+        ratesJson['beginn-nacht'],
+        ratesJson['ende-nacht']
     )) {
         // nighttime rate
-        totalFare += await getSegmentFare(start, destination, bautzenJson['ts3-pkm']);
+        totalFare += await getSegmentFare(start, destination, ratesJson['ts3-pkm']);
+        console.log('Nighttime rate');
     } else {
         // daytime rate
-        totalFare += await getSegmentFare(start, destination, bautzenJson['ts2-pkm']);
+        totalFare += await getSegmentFare(start, destination, ratesJson['ts2-pkm']);
     }
 
     return totalFare;

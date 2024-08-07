@@ -45,6 +45,7 @@ export const mapTourEvents = (events: DbTourEvents) => {
 			vehicle_id: first.vehicle,
 			license_plate: first.license_plate,
 			company_id: first.company,
+			fare: first.fare,
 			events: events.map((e) => {
 				return {
 					address: e.address,

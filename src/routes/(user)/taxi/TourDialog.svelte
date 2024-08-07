@@ -10,7 +10,6 @@
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import type { TourDetails, Event } from './TourDetails';
-	import { getFareEstimation } from '../../api/booking/fare-estimation/fare_estimation';
 	import maplibregl from 'maplibre-gl';
 	import { Button } from '$lib/components/ui/button';
 
@@ -21,8 +20,10 @@
 	}
 	const { open = $bindable() }: Props = $props();
 
-	const getFare = async (start: any, destination: any) => {
-		let fare = await getFareEstimation(start, destination);
+	const displayFare = (fare: number | null) => {
+		if (!fare) {
+			return '-';
+		}
 		let res: string = Math.floor(fare / 100) + ',' + (fare % 100);
 		return res;
 	};
@@ -151,7 +152,7 @@
 					<Table.Row>
 						<Table.Head>Abfahrt</Table.Head>
 						<Table.Head>Ankunft</Table.Head>
-						<Table.Head>Fahrzeug</Table.Head>
+						<Table.Head class="text-right">Fahrzeug</Table.Head>
 						<Table.Head class="text-right">Fahrpreis</Table.Head>
 					</Table.Row>
 				</Table.Header>
@@ -171,10 +172,7 @@
 								{tour.events[tour.events.length - 1].city}
 							</Table.Cell>
 							<Table.Cell class="text-right">{tour!.license_plate}</Table.Cell>
-							{#await getFare(tour.events[0], tour.events[tour.events.length - 1]) then fare}
-								<Table.Cell class="text-right">{fare} €</Table.Cell>
-							{/await}
-							<Table.Cell>{tour!.license_plate}</Table.Cell>
+							<Table.Cell class="text-right">{displayFare(tour!.fare)} €</Table.Cell>
 						</Table.Row>
 					{/if}
 				</Table.Body>

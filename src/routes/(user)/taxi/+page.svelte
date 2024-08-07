@@ -262,7 +262,7 @@
 
 <svelte:window onmouseup={() => selectionFinish()} />
 
-{#snippet availability_table(range)}
+{#snippet availability_table(range: any)}
 	<table class="mb-16 select-none">
 		<thead>
 			<tr>
