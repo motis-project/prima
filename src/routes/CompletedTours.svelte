@@ -54,6 +54,7 @@
 					<Table.Head>Abfahrt</Table.Head>
 					<Table.Head>Ankunft</Table.Head>
 					<Table.Head>Anzahl Kunden</Table.Head>
+					<Table.Head>No-Show</Table.Head>
 					<Table.Head>Anzahl Stationen</Table.Head>
 					<Table.Head>Gesamtfahrpreis</Table.Head>
 				</Table.Row>
@@ -76,6 +77,7 @@
 						<Table.Cell>{tour.from.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
 						<Table.Cell>{tour.to.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
 						<Table.Cell>{getCustomerCount(tour)}</Table.Cell>
+						<Table.Cell>TODO</Table.Cell>
 						<Table.Cell>{tour.events.length}</Table.Cell>
 						<Table.Cell>TODO</Table.Cell>
 					</Table.Row>
