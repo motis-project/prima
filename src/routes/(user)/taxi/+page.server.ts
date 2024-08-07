@@ -57,9 +57,22 @@ export async function load(event) {
 				])
 			)
 			.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
+			.innerJoin('company', 'company.id', 'vehicle.company')
 			.where('company', '=', companyId)
 			.orderBy('event.scheduled_time')
-			.selectAll()
+			.selectAll('event')
+			.selectAll('address')
+			.selectAll('auth_user')
+			.selectAll('tour')
+			.selectAll('vehicle')
+			.select([
+				'company.name as company_name',
+				'company.address as company_address',
+				'company.zone as company_zone',
+				'company.community_area as company_community_area',
+				'company.latitude as company_lat',
+				'company.longitude as company_long'
+	  			])
 			.execute()
 	);
 
