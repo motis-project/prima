@@ -1,15 +1,11 @@
 import { type Database } from './types';
 import pg from 'pg';
 import { Kysely, PostgresDialect } from 'kysely';
+import { env } from '$env/dynamic/private';
 
-export const pool = new pg.Pool({
-	database: 'prima',
-	host: 'localhost',
-	user: 'postgres',
-	password: 'pw',
-	port: 6500,
-	max: 10
-});
+console.log('Connecting to dabase: ', env.DATABASE_URL);
+
+export const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
 
 export const dialect = new PostgresDialect({
 	pool
