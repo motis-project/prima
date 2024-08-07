@@ -19,26 +19,26 @@ const db = new Kysely<Database>({
 
 export const getTourEvents = () => {
 	return db
-	.selectFrom('event')
-	.innerJoin('address', 'address.id', 'event.address')
-	.innerJoin('auth_user', 'auth_user.id', 'event.customer')
-	.innerJoin('tour', 'tour.id', 'event.tour')
-	.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
-	.innerJoin('company', 'company.id', 'vehicle.company')
-	.selectAll('event')
-	.selectAll('address')
-	.selectAll('auth_user')
-	.selectAll('tour')
-	.selectAll('vehicle')
-	.select([
-		'company.name as company_name',
-		'company.address as company_address',
-		'company.zone as company_zone',
-		'company.community_area as company_community_area',
-		'company.latitude as company_lat',
-		'company.longitude as company_long'
-	  ])
-	.execute();
+		.selectFrom('event')
+		.innerJoin('address', 'address.id', 'event.address')
+		.innerJoin('auth_user', 'auth_user.id', 'event.customer')
+		.innerJoin('tour', 'tour.id', 'event.tour')
+		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
+		.innerJoin('company', 'company.id', 'vehicle.company')
+		.selectAll('event')
+		.selectAll('address')
+		.selectAll('auth_user')
+		.selectAll('tour')
+		.selectAll('vehicle')
+		.select([
+			'company.name as company_name',
+			'company.address as company_address',
+			'company.zone as company_zone',
+			'company.community_area as company_community_area',
+			'company.latitude as company_lat',
+			'company.longitude as company_long'
+		])
+		.execute();
 };
 
 /*select event.*,address.*,auth_user.*,tour.*,vehicle.*,company.name as company_name,company.address as company_address,company.zone as company_zone,company.community_area as company_community_area
@@ -47,7 +47,7 @@ inner Join address on address.id = event.address
 inner Join auth_user on auth_user.id = event.customer
 inner Join tour on tour.id = event.tour
 inner Join vehicle on vehicle.id = tour.vehicle
-inner Join company on company.id = vehicle.company*/ 
+inner Join company on company.id = vehicle.company*/
 
 type DbTourEvents = Awaited<ReturnType<typeof getTourEvents>>;
 

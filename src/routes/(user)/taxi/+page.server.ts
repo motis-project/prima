@@ -72,7 +72,7 @@ export async function load(event) {
 				'company.community_area as company_community_area',
 				'company.latitude as company_lat',
 				'company.longitude as company_long'
-	  			])
+			])
 			.execute()
 	);
 
