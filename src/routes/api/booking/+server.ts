@@ -6,7 +6,7 @@ import { groupBy, updateValues } from '$lib/collection_utils.js';
 import { error, json } from '@sveltejs/kit';
 import {} from '$lib/utils.js';
 import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
-import { MIN_PREP_MINUTES } from '$lib/constants.js';
+import { MAX_TRAVEL_DURATION, MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
 
 export const POST = async (event) => {
@@ -43,7 +43,7 @@ export const POST = async (event) => {
 		return json({ status: 2, message: 'Start und Ziel sind identisch.' });
 	}
 
-	if (travelDuration > hoursToMs(1)) {
+	if (travelDuration > MAX_TRAVEL_DURATION) {
 		return json({ status: 3, message: 'Die maximale Fahrtzeit wurde überschritten.' });
 	}
 
@@ -120,8 +120,8 @@ export const POST = async (event) => {
 		.execute();
 
 	if (dbResults.length == 0) {
-		try {
-			await db
+		if (
+			!(await db
 				.selectFrom('zone')
 				.where((eb) =>
 					eb.and([
@@ -130,8 +130,8 @@ export const POST = async (event) => {
 						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${toCoordinates.lng}, ${toCoordinates.lat}),4326))`
 					])
 				)
-				.executeTakeFirstOrThrow();
-		} catch {
+				.executeTakeFirst())
+		) {
 			return json({
 				status: 5,
 				message: 'Start und Ziel sind nicht im selben Pflichtfahrgebiet enthalten.'
@@ -217,7 +217,7 @@ export const POST = async (event) => {
 			await oneToMany(toCoordinates, centralCoordinates, Direction.Forward)
 		).map((res) => secondsToMs(res.duration));
 	} catch (e) {
-		return json({ status: 8, message: 'Fehler in Motis-Anfrage' });
+		return json({ status: 8, message: 'Routing Anfrage fehlgeschlagen' });
 	}
 	const fullTravelIntervals = companies.map((_, index) =>
 		travelInterval.expand(durationToStart[index], durationFromTarget[index])
@@ -417,7 +417,14 @@ export const POST = async (event) => {
 			.execute();
 	});
 	if (tourId) {
-		return json({ status: 0, companyName: companyName!, pickupTime: startTime, dropoffTime: targetTime, tour_id: tourId, message: 'Die Buchung war erfolgreich.' });
+		return json({
+			status: 0,
+			companyName: companyName!,
+			pickupTime: startTime,
+			dropoffTime: targetTime,
+			tour_id: tourId,
+			message: 'Die Buchung war erfolgreich.'
+		});
 	}
 	return json({ status: 11, message: 'Fehler beim schreiben in die Datenbank' });
 };
