@@ -1,1 +1,8 @@
-<div>TODO</div>
+<script lang="ts">
+	const { data } = $props();
+	import CompletedTours from '../../CompletedTours.svelte';
+</script>
+
+<div class="w-full h-full">
+	<CompletedTours isMaintainer={true} tours={data.tours} />
+</div>

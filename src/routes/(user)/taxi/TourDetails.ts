@@ -24,7 +24,15 @@ export const getTourEvents = () => {
 		.innerJoin('auth_user', 'auth_user.id', 'event.customer')
 		.innerJoin('tour', 'tour.id', 'event.tour')
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
-		.selectAll()
+		.innerJoin('company', 'company.id', 'vehicle.company')
+		.selectAll(['event', 'address', 'tour', 'vehicle'])
+		.select([
+			'company.name as company_name',
+			'company.address as company_address',
+			'auth_user.first_name as customerFirstName',
+			'auth_user.last_name as customerLastName',
+			'auth_user.phone as customerPhone'
+		])
 		.execute();
 };
 
@@ -45,6 +53,7 @@ export const mapTourEvents = (events: DbTourEvents) => {
 			vehicle_id: first.vehicle,
 			license_plate: first.license_plate,
 			company_id: first.company,
+			company_name: first.company_name,
 			events: events.map((e) => {
 				return {
 					address: e.address,
@@ -55,9 +64,9 @@ export const mapTourEvents = (events: DbTourEvents) => {
 					city: e.city,
 					scheduled_time: e.scheduled_time,
 					house_number: e.house_number,
-					first_name: e.first_name,
-					last_name: e.last_name,
-					phone: e.phone,
+					first_name: e.customerFirstName,
+					last_name: e.customerLastName,
+					phone: e.customerPhone,
 					is_pickup: e.is_pickup,
 					customer_id: e.customer
 				};

@@ -57,9 +57,17 @@ export async function load(event) {
 				])
 			)
 			.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
+			.innerJoin('company', 'company.id', 'vehicle.company')
 			.where('company', '=', companyId)
 			.orderBy('event.scheduled_time')
-			.selectAll()
+			.selectAll(['event', 'address', 'tour', 'vehicle'])
+			.select([
+				'company.name as company_name',
+				'company.address as company_address',
+				'auth_user.first_name as customerFirstName',
+				'auth_user.last_name as customerLastName',
+				'auth_user.phone as customerPhone'
+			])
 			.execute()
 	);
 

@@ -1,10 +1,9 @@
 import type { PageServerLoad } from './$types.js';
 import { db } from '$lib/database';
 import { TZ } from '$lib/constants.js';
-import { mapTourEvents } from '../taxi/TourDetails.js';
+import { mapTourEvents } from '../../(user)/taxi/TourDetails.js';
 
-export const load: PageServerLoad = async (event) => {
-	const companyId = event.locals.user?.company;
+export const load: PageServerLoad = async () => {
 	const utcDate = new Date(new Date().toLocaleString('en', { timeZone: TZ }));
 
 	const tours = mapTourEvents(
@@ -16,7 +15,6 @@ export const load: PageServerLoad = async (event) => {
 			.innerJoin('auth_user', 'auth_user.id', 'event.customer')
 			.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 			.innerJoin('company', 'company.id', 'vehicle.company')
-			.where('company', '=', companyId!)
 			.orderBy('event.scheduled_time')
 			.selectAll(['event', 'address', 'tour', 'vehicle'])
 			.select([
