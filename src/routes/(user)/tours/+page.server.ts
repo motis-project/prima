@@ -18,18 +18,13 @@ export const load: PageServerLoad = async (event) => {
 			.innerJoin('company', 'company.id', 'vehicle.company')
 			.where('company', '=', companyId!)
 			.orderBy('event.scheduled_time')
-			.selectAll('event')
-			.selectAll('address')
-			.selectAll('auth_user')
-			.selectAll('tour')
-			.selectAll('vehicle')
+			.selectAll(['event', 'address', 'tour', 'vehicle'])
 			.select([
 				'company.name as company_name',
 				'company.address as company_address',
-				'company.zone as company_zone',
-				'company.community_area as company_community_area',
-				'company.latitude as company_lat',
-				'company.longitude as company_long'
+				'auth_user.first_name as customerFirstName',
+				'auth_user.last_name as customerLastName',
+				'auth_user.phone as customerPhone',
 			])
 			.execute()
 	);

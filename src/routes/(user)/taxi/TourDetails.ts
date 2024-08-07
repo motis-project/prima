@@ -25,29 +25,16 @@ export const getTourEvents = () => {
 		.innerJoin('tour', 'tour.id', 'event.tour')
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 		.innerJoin('company', 'company.id', 'vehicle.company')
-		.selectAll('event')
-		.selectAll('address')
-		.selectAll('auth_user')
-		.selectAll('tour')
-		.selectAll('vehicle')
+		.selectAll(['event', 'address', 'tour', 'vehicle'])
 		.select([
 			'company.name as company_name',
 			'company.address as company_address',
-			'company.zone as company_zone',
-			'company.community_area as company_community_area',
-			'company.latitude as company_lat',
-			'company.longitude as company_long'
+			'auth_user.first_name as customerFirstName',
+			'auth_user.last_name as customerLastName',
+			'auth_user.phone as customerPhone',
 		])
 		.execute();
 };
-
-/*select event.*,address.*,auth_user.*,tour.*,vehicle.*,company.name as company_name,company.address as company_address,company.zone as company_zone,company.community_area as company_community_area
-from event
-inner Join address on address.id = event.address
-inner Join auth_user on auth_user.id = event.customer
-inner Join tour on tour.id = event.tour
-inner Join vehicle on vehicle.id = tour.vehicle
-inner Join company on company.id = vehicle.company*/
 
 type DbTourEvents = Awaited<ReturnType<typeof getTourEvents>>;
 
@@ -77,9 +64,9 @@ export const mapTourEvents = (events: DbTourEvents) => {
 					city: e.city,
 					scheduled_time: e.scheduled_time,
 					house_number: e.house_number,
-					first_name: e.first_name,
-					last_name: e.last_name,
-					phone: e.phone,
+					first_name: e.customerFirstName,
+					last_name: e.customerLastName,
+					phone: e.customerPhone,
 					is_pickup: e.is_pickup,
 					customer_id: e.customer
 				};
