@@ -31,7 +31,7 @@ export const getTourEvents = () => {
 			'company.address as company_address',
 			'auth_user.first_name as customerFirstName',
 			'auth_user.last_name as customerLastName',
-			'auth_user.phone as customerPhone',
+			'auth_user.phone as customerPhone'
 		])
 		.execute();
 };
