@@ -9,6 +9,19 @@ import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { MAX_TRAVEL_DURATION, MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
 
+const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
+	return await db
+				.selectFrom('zone')
+				.where((eb) =>
+					eb.and([
+						eb('zone.is_community', '=', false),
+						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${from.lng}, ${from.lat}),4326))`,
+						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${to.lng}, ${to.lat}),4326))`
+					])
+				)
+				.executeTakeFirst();
+}
+
 export const POST = async (event) => {
 	const customer = event.locals.user;
 	if (!customer) {
@@ -120,18 +133,7 @@ export const POST = async (event) => {
 		.execute();
 
 	if (dbResults.length == 0) {
-		if (
-			!(await db
-				.selectFrom('zone')
-				.where((eb) =>
-					eb.and([
-						eb('zone.is_community', '=', false),
-						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${fromCoordinates.lng}, ${fromCoordinates.lat}),4326))`,
-						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${toCoordinates.lng}, ${toCoordinates.lat}),4326))`
-					])
-				)
-				.executeTakeFirst())
-		) {
+		if (!startAndTargetShareZone(fromCoordinates, toCoordinates)) {
 			return json({
 				status: 5,
 				message: 'Start und Ziel sind nicht im selben Pflichtfahrgebiet enthalten.'
