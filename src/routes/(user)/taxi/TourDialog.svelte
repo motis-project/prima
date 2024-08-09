@@ -9,7 +9,7 @@
 	import Layer from '$lib/Layer.svelte';
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import type { TourDetails, Event } from './TourDetails';
+	import { type TourDetails, type Event, getTourInfoShort } from './TourDetails';
 	import ConfirmationDialog from './ConfirmationDialog.svelte';
 	import maplibregl from 'maplibre-gl';
 	import { Button } from '$lib/components/ui/button';
@@ -18,8 +18,9 @@
 		open!: {
 			tours: Array<TourDetails> | undefined;
 		};
+		isMaintainer: boolean = false;
 	}
-	const { open = $bindable() }: Props = $props();
+	const { open = $bindable(), isMaintainer }: Props = $props();
 
 	let tourIndex = $state(0);
 	let tour = $derived(open.tours && open.tours[tourIndex]);
@@ -77,21 +78,6 @@
 			init = true;
 		}
 	});
-
-	const getTourInfoShort = (tour: TourDetails) => {
-		let l1 = tour.events[0];
-		let l2 = tour.events[tour.events.length - 1];
-
-		if (!(l1.city && l2.city)) {
-			return l1.street + ' -- ' + l2.street;
-		}
-
-		if (l1.city == l2.city) {
-			return l1.city + ': ' + l1.street + ' -- ' + l2.street;
-		} else {
-			return l1.city + ' -- ' + l2.city;
-		}
-	};
 </script>
 
 <Dialog.Root
@@ -125,7 +111,7 @@
 		</Dialog.Header>
 		<Dialog.Description>
 			<div class="grid grid-rows-2 grid-cols-2 gap-4">
-				{@render overview()}
+				{@render overview(isMaintainer)}
 				{@render mapView()}
 				<div class="col-span-2">{@render details()}</div>
 			</div>
@@ -133,7 +119,7 @@
 	</Dialog.Content>
 </Dialog.Root>
 
-{#snippet overview()}
+{#snippet overview(isMaintainer: boolean)}
 	<Card.Root class="h-full w-full">
 		<Card.Header>
 			<Card.Title>Übersicht</Card.Title>
@@ -171,7 +157,9 @@
 					</Table.Root>
 				</div>
 				<div class="grid grid-rows-1 place-items-end">
-					<div><ConfirmationDialog bind:tour={open.tours![tourIndex]} /></div>
+					{#if !isMaintainer}
+						<div><ConfirmationDialog bind:tour={open.tours![tourIndex]} /></div>
+					{/if}
 				</div>
 			</div>
 		</Card.Content>

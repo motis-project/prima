@@ -79,3 +79,13 @@ export const mapTourEvents = (events: DbTourEvents) => {
 type TourEvents = ReturnType<typeof mapTourEvents>;
 export type TourDetails = TourEvents[0];
 export type Event = TourDetails['events'][0];
+
+export const getTourInfoShort = (tour: TourDetails) => {
+	let l1 = tour.events[0];
+	let l2 = tour.events[tour.events.length - 1];
+
+	if (l1.city === '' || l2.city === '') {
+		return [l1.street, l2.street];
+	}
+	return [l1.city + ': ' + l1.street, l2.city + ': ' + l2.street];
+};
