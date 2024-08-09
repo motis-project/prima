@@ -1,5 +1,5 @@
 import { db } from '$lib/database';
-import { mapTourEvents } from '../../../lib/TourDetails';
+import { mapTourEvents } from '$lib/TourDetails';
 import type { Vehicle } from './types';
 
 export async function load(event) {
