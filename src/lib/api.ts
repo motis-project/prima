@@ -92,7 +92,11 @@ export const booking = async (
 	});
 };
 
-export async function geoCode(address: string) {
+export class AddressGuess {
+	pos!: { lat: number; lng: number };
+}
+
+export async function geoCode(address: string): Promise<AddressGuess> {
 	const response = await fetch('https://europe.motis-project.de/?elm=AddressSuggestions', {
 		headers: {
 			'Content-Type': 'application/json'
