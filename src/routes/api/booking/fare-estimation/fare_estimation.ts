@@ -64,22 +64,14 @@ const getSegmentFare = async (
 ) => {
 	const route = await getRouteSegment(start, dst);
 	if (!route) {
-		console.log('getSegmentFare: Could not get route');
-		return 0;
+		throw new Error('getSegmentFare: Could not get route');
 	}
 	const dist = route.metadata.distance / 1000;
-	const duration = route.metadata.duration / 3600;
+	// const duration = route.metadata.duration / 3600;
+	const waitTime = 0;
 	const distFare = dist * rate_km;
-	const timeFare = duration * rate_time;
+	const timeFare = waitTime * rate_time;
 	return Math.round(distFare + timeFare);
-};
-
-const getCompanyBase = (_vehicleId: number) => {
-	// TODO
-	return {
-		latitude: 51.18813445535576,
-		longitude: 14.45274310414274
-	};
 };
 
 const isTimestampInRange = (isoTimestampUTC: string, startHour: number, endHour: number) => {
@@ -126,15 +118,21 @@ export const getFareEstimation = async (
 		.innerJoin('company', 'company.id', 'vehicle.company')
 		.select(['community_area', 'latitude', 'longitude'])
 		.executeTakeFirst();
+	if (!vehicle) {
+		throw new Error();
+	}
 
-	if (zone.id != vehicle?.community_area) {
+	if (zone.id != vehicle.community_area) {
 		// rate for journey to first pickup
 		console.log('Not within comunity');
+		if (vehicle.latitude == null || vehicle.longitude == null) {
+			throw new Error();
+		}
 		totalFare += await getSegmentFare(
-			getCompanyBase(vehicleId),
+			{ latitude: vehicle.latitude, longitude: vehicle.longitude },
 			start,
 			ratesJson['anfahrt-pkm'],
-			0
+			ratesJson['wartezeit-ph']
 		);
 	}
 
@@ -146,11 +144,11 @@ export const getFareEstimation = async (
 		)
 	) {
 		// nighttime rate
-		totalFare += await getSegmentFare(start, destination, ratesJson['ts3-pkm'], 0);
+		totalFare += await getSegmentFare(start, destination, ratesJson['ts3-pkm'], ratesJson['wartezeit-ph']);
 		console.log('Nighttime rate');
 	} else {
 		// daytime rate
-		totalFare += await getSegmentFare(start, destination, ratesJson['ts2-pkm'], 0);
+		totalFare += await getSegmentFare(start, destination, ratesJson['ts2-pkm'], ratesJson['wartezeit-ph']);
 	}
 
 	return totalFare;
