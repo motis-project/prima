@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types.js';
 import { db } from '$lib/database';
 import { TZ } from '$lib/constants.js';
-import { mapTourEvents } from '../../(user)/taxi/TourDetails.js';
+import { mapTourEvents } from '../../../lib/TourDetails.js';
 
 export const load: PageServerLoad = async () => {
 	const utcDate = new Date(new Date().toLocaleString('en', { timeZone: TZ }));

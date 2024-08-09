@@ -1,8 +1,8 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import { getTourInfoShort, type TourDetails } from './(user)/taxi/TourDetails.js';
-	import TourDialog from './(user)/taxi/TourDialog.svelte';
+	import { getTourInfoShort, type TourDetails } from '$lib/TourDetails.js';
+	import TourDialog from '$lib/TourDialog.svelte';
 
 	type Props = {
 		isMaintainer: boolean;

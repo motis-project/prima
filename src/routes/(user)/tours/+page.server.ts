@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types.js';
 import { db } from '$lib/database';
 import { TZ } from '$lib/constants.js';
-import { mapTourEvents } from '../taxi/TourDetails.js';
+import { mapTourEvents } from '../../../lib/TourDetails.js';
 
 export const load: PageServerLoad = async (event) => {
 	const companyId = event.locals.user?.company;
