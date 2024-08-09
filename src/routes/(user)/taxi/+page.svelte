@@ -417,4 +417,4 @@
 	{/if}
 </Card.Content>
 
-<TourDialog bind:open={selectedTour} />
+<TourDialog bind:open={selectedTour} isMaintainer={false} />
