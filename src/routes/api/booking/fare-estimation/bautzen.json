@@ -1,10 +1,10 @@
 {
-    "grundpreis": 450,
-    "anfahrt-pkm": 130,
-    "ts2-pkm": 250,
-    "ts3-pkm": 270,
-    "wartezeit-ph": 4500,
-    "zs-grossraum": 700,
-    "beginn-nacht": 22,
-    "ende-nacht": 6
+	"grundpreis": 450,
+	"anfahrt-pkm": 130,
+	"ts2-pkm": 250,
+	"ts3-pkm": 270,
+	"wartezeit-ph": 4500,
+	"zs-grossraum": 700,
+	"beginn-nacht": 22,
+	"ende-nacht": 6
 }

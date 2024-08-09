@@ -1,10 +1,10 @@
 import { oneToMany, Direction, getRoute } from '../../../lib/api.js';
 import { Coordinates } from '../../../lib/location.js';
-import { db, pool } from '$lib/database';
+import { db } from '$lib/database';
 import { Interval } from '../../../lib/interval.js';
 import { groupBy, updateValues } from '$lib/collection_utils.js';
 import { error, json } from '@sveltejs/kit';
-import { } from '$lib/utils.js';
+import {} from '$lib/utils.js';
 import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
@@ -136,7 +136,7 @@ export const POST = async (event) => {
 
 	console.assert(
 		Math.max(...[...mergedAvailabilites.values()].map((availabilities) => availabilities.length)) <=
-		1
+			1
 	);
 
 	const availableVehicles = [...mergedAvailabilites.entries()]
@@ -393,16 +393,16 @@ export const POST = async (event) => {
 		console.log('Booking request was assigned.');
 
 		try {
-			let fare_ = await getFareEstimation(
-				{ longitude: fromCoordinates.lng, latitude: fromCoordinates.lat, scheduled_time: startTime },
+			const fare = await getFareEstimation(
+				{
+					longitude: fromCoordinates.lng,
+					latitude: fromCoordinates.lat,
+					scheduled_time: startTime
+				},
 				{ longitude: toCoordinates.lng, latitude: toCoordinates.lat },
-				bestCompany!.vehicleId,
+				bestCompany!.vehicleId
 			);
-			await db
-				.updateTable('tour')
-				.set({ fare: fare_ })
-				.where('id', '=', tour_id)
-				.executeTakeFirst();
+			await db.updateTable('tour').set({ fare: fare }).where('id', '=', tour_id).executeTakeFirst();
 		} catch (e) {
 			console.log(e);
 		}

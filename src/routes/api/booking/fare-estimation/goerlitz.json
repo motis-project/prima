@@ -1,18 +1,18 @@
 {
-    "ts1": {
-        "grundpreis": 450,
-        "pkm-bis-2": 350,
-        "pkm-ab-11": 210
-    },
-    "ts2": {
-        "grundpreis": 550,
-        "pkm-bis-2": 360,
-        "pkm-ab-11": 220
-    },
-    "anfahrt-bis-10km": 1000,
-    "anfahrt-ab-10km": 2000,
-    "wartezeit-ph": 3500,
-    "zs-grossraum": 900,
-    "beginn-nacht": 21,
-    "ende-nacht": 5
+	"ts1": {
+		"grundpreis": 450,
+		"pkm-bis-2": 350,
+		"pkm-ab-11": 210
+	},
+	"ts2": {
+		"grundpreis": 550,
+		"pkm-bis-2": 360,
+		"pkm-ab-11": 220
+	},
+	"anfahrt-bis-10km": 1000,
+	"anfahrt-ab-10km": 2000,
+	"wartezeit-ph": 3500,
+	"zs-grossraum": 900,
+	"beginn-nacht": 21,
+	"ende-nacht": 5
 }
