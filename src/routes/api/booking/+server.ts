@@ -11,16 +11,16 @@ import { sql } from 'kysely';
 
 const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 	return await db
-				.selectFrom('zone')
-				.where((eb) =>
-					eb.and([
-						eb('zone.is_community', '=', false),
-						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${from.lng}, ${from.lat}),4326))`,
-						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${to.lng}, ${to.lat}),4326))`
-					])
-				)
-				.executeTakeFirst();
-}
+		.selectFrom('zone')
+		.where((eb) =>
+			eb.and([
+				eb('zone.is_community', '=', false),
+				sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${from.lng}, ${from.lat}),4326))`,
+				sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${to.lng}, ${to.lat}),4326))`
+			])
+		)
+		.executeTakeFirst();
+};
 
 export const POST = async (event) => {
 	const customer = event.locals.user;
