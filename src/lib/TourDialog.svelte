@@ -18,9 +18,8 @@
 		open!: {
 			tours: Array<TourDetails> | undefined;
 		};
-		isMaintainer: boolean = false;
 	}
-	const { open = $bindable(), isMaintainer }: Props = $props();
+	const { open = $bindable() }: Props = $props();
 
 	let tourIndex = $state(0);
 	let tour = $derived(open.tours && open.tours[tourIndex]);
@@ -78,6 +77,14 @@
 			init = true;
 		}
 	});
+
+	const isRedisposable = (tour: TourDetails | undefined) => {
+		if (tour == null) return false;
+		const leadTime = 2;
+		const now = new Date(Date.now());
+		const threshold = new Date(now.setHours(now.getHours() + leadTime));
+		return new Date(tour.events[0].scheduled_time) > threshold;
+	};
 </script>
 
 <Dialog.Root
@@ -111,7 +118,7 @@
 		</Dialog.Header>
 		<Dialog.Description>
 			<div class="grid grid-rows-2 grid-cols-2 gap-4">
-				{@render overview(isMaintainer)}
+				{@render overview(isRedisposable(open.tours![tourIndex]))}
 				{@render mapView()}
 				<div class="col-span-2">{@render details()}</div>
 			</div>
@@ -119,7 +126,7 @@
 	</Dialog.Content>
 </Dialog.Root>
 
-{#snippet overview(isMaintainer: boolean)}
+{#snippet overview(redisposable: boolean)}
 	<Card.Root class="h-full w-full">
 		<Card.Header>
 			<Card.Title>Übersicht</Card.Title>
@@ -130,8 +137,8 @@
 					<Table.Root>
 						<Table.Header>
 							<Table.Row>
-								<Table.Head>Abfahrt</Table.Head>
-								<Table.Head>Ankunft</Table.Head>
+								<Table.Head>Beginn</Table.Head>
+								<Table.Head>Ende</Table.Head>
 								<Table.Head>Fahrzeug</Table.Head>
 							</Table.Row>
 						</Table.Header>
@@ -140,15 +147,9 @@
 								<Table.Row>
 									<Table.Cell>
 										{tour!.from.toLocaleString('de-DE').slice(0, -3)}
-										<br />{tour.events[0].street}<br />
-										{tour.events[0].postal_code}
-										{tour.events[0].city}
 									</Table.Cell>
 									<Table.Cell>
 										{tour!.to.toLocaleString('de-DE').slice(0, -3)}
-										<br />{tour.events[tour.events.length - 1].street}<br />
-										{tour.events[tour.events.length - 1].postal_code}
-										{tour.events[tour.events.length - 1].city}
 									</Table.Cell>
 									<Table.Cell>{tour!.license_plate}</Table.Cell>
 								</Table.Row>
@@ -157,7 +158,7 @@
 					</Table.Root>
 				</div>
 				<div class="grid grid-rows-1 place-items-end">
-					{#if !isMaintainer}
+					{#if redisposable}
 						<div><ConfirmationDialog bind:tour={open.tours![tourIndex]} /></div>
 					{/if}
 				</div>
