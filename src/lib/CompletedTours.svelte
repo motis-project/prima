@@ -74,4 +74,4 @@
 	</Card.Content>
 </div>
 
-<TourDialog bind:open={selectedTour} redisposable={false} />
+<TourDialog bind:open={selectedTour} />
