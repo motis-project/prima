@@ -9,8 +9,8 @@
 	import Layer from '$lib/Layer.svelte';
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import { type TourDetails, type Event, getTourInfoShort } from './TourDetails';
-	import ConfirmationDialog from './ConfirmationDialog.svelte';
+	import { type TourDetails, type Event, getTourInfoShort } from '$lib/TourDetails';
+	import ConfirmationDialog from '$lib/ConfirmationDialog.svelte';
 	import maplibregl from 'maplibre-gl';
 	import { Button } from '$lib/components/ui/button';
 

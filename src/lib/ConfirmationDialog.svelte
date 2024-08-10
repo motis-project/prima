@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/button/button.svelte';
-	import type { TourDetails } from './TourDetails';
+	import type { TourDetails } from '$lib/TourDetails';
 	import { reassignTour } from '$lib/api';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 
