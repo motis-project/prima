@@ -2,11 +2,10 @@ import { db } from '$lib/database';
 import { TZ } from '$lib/constants.js';
 
 export const queryCompletedTours = async (companyId: number | undefined) => {
-	const utcDate = new Date(new Date().toLocaleString('en', { timeZone: TZ }));
 	return await db
 		.selectFrom('event')
 		.innerJoin('tour', 'tour.id', 'event.tour')
-		.where((eb) => eb.and([eb('tour.arrival', '<', utcDate)]))
+		.where((eb) => eb.and([eb('tour.arrival', '<', new Date())]))
 		.innerJoin('address', 'address.id', 'event.address')
 		.innerJoin('auth_user', 'auth_user.id', 'event.customer')
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
