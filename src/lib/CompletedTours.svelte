@@ -1,24 +1,14 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import type { TourDetails } from './(user)/taxi/TourDetails.js';
-	import TourDialog from './(user)/taxi/TourDialog.svelte';
+	import { getTourInfoShort, type TourDetails } from '$lib/TourDetails.js';
+	import TourDialog from '$lib/TourDialog.svelte';
 
 	type Props = {
 		isMaintainer: boolean;
 		tours: TourDetails[];
 	};
 	let { isMaintainer, tours }: Props = $props();
-
-	const getTourInfoShort = (tour: TourDetails) => {
-		let l1 = tour.events[0];
-		let l2 = tour.events[tour.events.length - 1];
-
-		if (l1.city === '' || l2.city === '') {
-			return [l1.street, l2.street];
-		}
-		return [l1.city + ': ' + l1.street, l2.city + ': ' + l2.street];
-	};
 
 	let selectedTour = $state<{
 		tours: Array<TourDetails> | undefined;

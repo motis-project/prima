@@ -24,9 +24,9 @@
 	import { TZ } from '$lib/constants.js';
 	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
 
-	import TourDialog from './TourDialog.svelte';
+	import TourDialog from '$lib/TourDialog.svelte';
 	import AddVehicle from './AddVehicle.svelte';
-	import type { TourDetails } from './TourDetails';
+	import type { TourDetails } from '$lib/TourDetails';
 	import { onMount } from 'svelte';
 	import type { Range, Tour, Vehicle } from './types';
 
@@ -262,7 +262,7 @@
 
 <svelte:window onmouseup={() => selectionFinish()} />
 
-{#snippet availability_table(range)}
+{#snippet availability_table(range: Range)}
 	<table class="mb-16 select-none">
 		<thead>
 			<tr>

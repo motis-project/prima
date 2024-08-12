@@ -1,6 +1,6 @@
 <script lang="ts">
 	const { data } = $props();
-	import CompletedTours from '../../CompletedTours.svelte';
+	import CompletedTours from '$lib/CompletedTours.svelte';
 </script>
 
 <div class="w-full h-full">

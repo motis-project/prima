@@ -9,7 +9,8 @@
 	import Layer from '$lib/Layer.svelte';
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import type { TourDetails, Event } from './TourDetails';
+	import { type TourDetails, type Event, getTourInfoShort } from '$lib/TourDetails';
+	import ConfirmationDialog from '$lib/ConfirmationDialog.svelte';
 	import maplibregl from 'maplibre-gl';
 	import { Button } from '$lib/components/ui/button';
 
@@ -77,19 +78,12 @@
 		}
 	});
 
-	const getTourInfoShort = (tour: TourDetails) => {
-		let l1 = tour.events[0];
-		let l2 = tour.events[tour.events.length - 1];
-
-		if (!(l1.city && l2.city)) {
-			return l1.street + ' -- ' + l2.street;
-		}
-
-		if (l1.city == l2.city) {
-			return l1.city + ': ' + l1.street + ' -- ' + l2.street;
-		} else {
-			return l1.city + ' -- ' + l2.city;
-		}
+	const isRedisposable = (tour: TourDetails | undefined) => {
+		if (tour == null) return false;
+		const leadTime = 2;
+		const now = new Date(Date.now());
+		const threshold = new Date(now.setHours(now.getHours() + leadTime));
+		return new Date(tour.events[0].scheduled_time) > threshold;
 	};
 </script>
 
@@ -124,7 +118,7 @@
 		</Dialog.Header>
 		<Dialog.Description>
 			<div class="grid grid-rows-2 grid-cols-2 gap-4">
-				{@render overview()}
+				{@render overview(isRedisposable(open.tours![tourIndex]))}
 				{@render mapView()}
 				<div class="col-span-2">{@render details()}</div>
 			</div>
@@ -132,40 +126,43 @@
 	</Dialog.Content>
 </Dialog.Root>
 
-{#snippet overview()}
+{#snippet overview(redisposable: boolean)}
 	<Card.Root class="h-full w-full">
 		<Card.Header>
 			<Card.Title>Übersicht</Card.Title>
 		</Card.Header>
 		<Card.Content class="h-full w-full">
-			<Table.Root>
-				<Table.Header>
-					<Table.Row>
-						<Table.Head>Abfahrt</Table.Head>
-						<Table.Head>Ankunft</Table.Head>
-						<Table.Head>Fahrzeug</Table.Head>
-					</Table.Row>
-				</Table.Header>
-				<Table.Body>
-					{#if tour}
-						<Table.Row>
-							<Table.Cell>
-								{tour!.from.toLocaleString('de-DE').slice(0, -3)}
-								<br />{tour.events[0].street}<br />
-								{tour.events[0].postal_code}
-								{tour.events[0].city}
-							</Table.Cell>
-							<Table.Cell>
-								{tour!.to.toLocaleString('de-DE').slice(0, -3)}
-								<br />{tour.events[tour.events.length - 1].street}<br />
-								{tour.events[tour.events.length - 1].postal_code}
-								{tour.events[tour.events.length - 1].city}
-							</Table.Cell>
-							<Table.Cell>{tour!.license_plate}</Table.Cell>
-						</Table.Row>
+			<div class="grid grid-rows-2 gap-12">
+				<div>
+					<Table.Root>
+						<Table.Header>
+							<Table.Row>
+								<Table.Head>Beginn</Table.Head>
+								<Table.Head>Ende</Table.Head>
+								<Table.Head>Fahrzeug</Table.Head>
+							</Table.Row>
+						</Table.Header>
+						<Table.Body>
+							{#if tour}
+								<Table.Row>
+									<Table.Cell>
+										{tour!.from.toLocaleString('de-DE').slice(0, -3)}
+									</Table.Cell>
+									<Table.Cell>
+										{tour!.to.toLocaleString('de-DE').slice(0, -3)}
+									</Table.Cell>
+									<Table.Cell>{tour!.license_plate}</Table.Cell>
+								</Table.Row>
+							{/if}
+						</Table.Body>
+					</Table.Root>
+				</div>
+				<div class="grid grid-rows-1 place-items-end">
+					{#if redisposable}
+						<div><ConfirmationDialog bind:tour={open.tours![tourIndex]} /></div>
 					{/if}
-				</Table.Body>
-			</Table.Root>
+				</div>
+			</div>
 		</Card.Content>
 	</Card.Root>
 {/snippet}

@@ -1,0 +1,26 @@
+{
+	"from": {
+		"coordinates": { "lat": 51.2276466699279, "lng": 14.5064713170819 },
+		"address": {
+			"street": "Pließkowitz Bautzener Straße",
+			"house_number": "",
+			"city": "",
+			"postal_code": ""
+		}
+	},
+	"to": {
+		"coordinates": { "lat": 51.1737509906473, "lng": 14.4297462086546 },
+		"address": {
+			"street": "Bautzen Bahnhof/Taucherstraße",
+			"house_number": "",
+			"city": "",
+			"postal_code": ""
+		}
+	},
+	"startFixed": true,
+	"timeStamp": "2024-08-10T14:10:00Z",
+	"numPassengers": 2,
+	"numWheelchairs": 0,
+	"numBikes": 0,
+	"luggage": 0
+}
