@@ -10,4 +10,5 @@ node_modules
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 booking-generator/data
+booking-generator/test
 .vscode
