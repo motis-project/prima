@@ -92,6 +92,11 @@ export const booking = async (
 	});
 };
 
+export const reassignTour = async (tourId: number) => {
+	console.log('TODO: reassign tour:', tourId);
+	return false;
+};
+
 export class AddressGuess {
 	pos!: { lat: number; lng: number };
 }
