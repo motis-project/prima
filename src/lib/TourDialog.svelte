@@ -13,6 +13,7 @@
 	import ConfirmationDialog from '$lib/ConfirmationDialog.svelte';
 	import maplibregl from 'maplibre-gl';
 	import { Button } from '$lib/components/ui/button';
+	import { MIN_PREP_MINUTES } from './constants';
 
 	class Props {
 		open!: {
@@ -79,10 +80,12 @@
 	});
 
 	const isRedisposable = (tour: TourDetails | undefined) => {
-		if (tour == null) return false;
-		const leadTime = 2;
-		const now = new Date(Date.now());
-		const threshold = new Date(now.setHours(now.getHours() + leadTime));
+		if (tour == null) {
+			return false;
+		}
+		const leadTime = MIN_PREP_MINUTES;
+		const now = new Date();
+		const threshold = new Date(now.setMinutes(now.getMinutes() + leadTime));
 		return new Date(tour.events[0].scheduled_time) > threshold;
 	};
 </script>
@@ -118,7 +121,7 @@
 		</Dialog.Header>
 		<Dialog.Description>
 			<div class="grid grid-rows-2 grid-cols-2 gap-4">
-				{@render overview(isRedisposable(open.tours![tourIndex]))}
+				{@render overview()}
 				{@render mapView()}
 				<div class="col-span-2">{@render details()}</div>
 			</div>
@@ -126,7 +129,7 @@
 	</Dialog.Content>
 </Dialog.Root>
 
-{#snippet overview(redisposable: boolean)}
+{#snippet overview()}
 	<Card.Root class="h-full w-full">
 		<Card.Header>
 			<Card.Title>Übersicht</Card.Title>
@@ -158,7 +161,7 @@
 					</Table.Root>
 				</div>
 				<div class="grid grid-rows-1 place-items-end">
-					{#if redisposable}
+					{#if isRedisposable(open.tours![tourIndex])}
 						<div><ConfirmationDialog bind:tour={open.tours![tourIndex]} /></div>
 					{/if}
 				</div>

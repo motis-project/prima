@@ -17,9 +17,9 @@ export const queryCompletedTours = async (companyId: number | undefined) => {
 		.select([
 			'company.name as company_name',
 			'company.address as company_address',
-			'auth_user.first_name as customerFirstName',
-			'auth_user.last_name as customerLastName',
-			'auth_user.phone as customerPhone'
+			'auth_user.first_name as customer_first_name',
+			'auth_user.last_name as customer_last_ame',
+			'auth_user.phone as customer_phone'
 		])
 		.execute();
 };
