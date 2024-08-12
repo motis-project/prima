@@ -32,7 +32,7 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Sind Sie sicher?</AlertDialog.Title>
 			<AlertDialog.Description>
-				Diese Fahrt wid (falls möglich) einem anderen Anbieter zugewiesen.
+				Diese Fahrt wird (falls möglich) einem anderen Anbieter zugewiesen.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
