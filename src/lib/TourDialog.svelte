@@ -79,13 +79,11 @@
 		}
 	});
 
+	const threshold = new Date();
+	threshold.setMinutes(threshold.getMinutes() + MIN_PREP_MINUTES);
+
 	const isRedisposable = (tour: TourDetails | undefined) => {
-		if (tour == null) {
-			return false;
-		}
-		const threshold = new Date();
-		threshold.setMinutes(threshold.getMinutes() + MIN_PREP_MINUTES));
-		return new Date(tour.events[0].scheduled_time) > threshold;
+		return tour !== undefined && new Date(tour.events[0].scheduled_time) > threshold;
 	};
 </script>
 
