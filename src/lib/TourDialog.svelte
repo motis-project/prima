@@ -83,9 +83,9 @@
 		if (tour == null) {
 			return false;
 		}
-		const leadTime = MIN_PREP_MINUTES;
+		const leadTimeMinutes = MIN_PREP_MINUTES;
 		const now = new Date();
-		const threshold = new Date(now.setMinutes(now.getMinutes() + leadTime));
+		const threshold = new Date(now.setMinutes(now.getMinutes() + leadTimeMinutes));
 		return new Date(tour.events[0].scheduled_time) > threshold;
 	};
 </script>
