@@ -15,6 +15,10 @@
 		{
 			name: 'Abgeschlossene Fahrten',
 			href: '/tours'
+		},
+		{
+			name: 'Fahrer',
+			href: '/drivers'
 		}
 	];
 </script>
