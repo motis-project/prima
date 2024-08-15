@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types.js';
-import { mapTourEvents } from '$lib/TourDetails.js';
 import { queryCompletedTours } from '$lib/sqlHelpers.js';
+import { mapTourEvents } from '$lib/TourDetails.js';
 
 export const load: PageServerLoad = async () => {
 	return {

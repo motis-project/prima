@@ -69,6 +69,10 @@ export class Interval {
 		return this.overlaps(other) || this.touches(other);
 	}
 
+	getDurationMs() {
+		return this.endTime.getTime() - this.startTime.getTime();
+	}
+
 	static merge = (unmerged: Interval[]): Interval[] => {
 		if (unmerged.length == 0) {
 			return new Array<Interval>();
