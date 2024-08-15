@@ -4,7 +4,7 @@ import { db } from '$lib/database';
 import { Interval } from '../../../lib/interval.js';
 import { groupBy, updateValues } from '$lib/collection_utils.js';
 import { error, json } from '@sveltejs/kit';
-import {} from '$lib/utils.js';
+import { } from '$lib/utils.js';
 import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
@@ -22,7 +22,6 @@ export const POST = async (event) => {
 	const fromCoordinates: Coordinates = from.coordinates;
 	const toCoordinates: Coordinates = to.coordinates;
 	const time = new Date(timeStamp);
-	console.log(time);
 
 	let travelDuration = 0;
 	try {
@@ -45,6 +44,26 @@ export const POST = async (event) => {
 	const startTime = startFixed ? time : new Date(time.getTime() - secondsToMs(travelDuration));
 	const targetTime = startFixed ? new Date(time.getTime() + secondsToMs(travelDuration)) : time;
 	const travelInterval = new Interval(startTime, targetTime);
+
+
+	// TEST
+	// const fare = await getFareEstimation(
+	// 	{
+	// 		longitude: fromCoordinates.lng,
+	// 		latitude: fromCoordinates.lat,
+	// 		scheduled_time: startTime
+	// 	},
+	// 	{
+	// 		longitude: toCoordinates.lng,
+	// 		latitude: toCoordinates.lat
+	// 	},
+	// 	7
+	// );
+	// console.log(fare);
+	// return json({ status: 1 });
+	// ---
+
+
 	if (new Date(Date.now() + minutesToMs(MIN_PREP_MINUTES)) > startTime) {
 		console.log('Insufficient preparation time.');
 		return json({ status: 1 });
@@ -136,7 +155,7 @@ export const POST = async (event) => {
 
 	console.assert(
 		Math.max(...[...mergedAvailabilites.values()].map((availabilities) => availabilities.length)) <=
-			1
+		1
 	);
 
 	const availableVehicles = [...mergedAvailabilites.entries()]
@@ -399,7 +418,10 @@ export const POST = async (event) => {
 					latitude: fromCoordinates.lat,
 					scheduled_time: startTime
 				},
-				{ longitude: toCoordinates.lng, latitude: toCoordinates.lat },
+				{
+					longitude: toCoordinates.lng,
+					latitude: toCoordinates.lat
+				},
 				bestCompany!.vehicleId
 			);
 			await db.updateTable('tour').set({ fare: fare }).where('id', '=', tour_id).executeTakeFirst();

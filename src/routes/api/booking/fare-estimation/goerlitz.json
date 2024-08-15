@@ -1,18 +1,24 @@
 {
-	"ts1": {
+	"anfahrt": {
+		"grundpreis": 0,
+		"pkm": [],
+		"pauschal": [[0, 1000], [10, 2000]],
+		"return-free": true
+	},
+	"tag": {
 		"grundpreis": 450,
-		"pkm-bis-2": 350,
-		"pkm-ab-11": 210
+		"pkm": [[0, 350], [3, 210], [11, 210]],
+		"pauschal": []
 	},
-	"ts2": {
+	"nacht": {
 		"grundpreis": 550,
-		"pkm-bis-2": 360,
-		"pkm-ab-11": 220
+		"pkm": [[0, 360], [3, 220], [11, 220]],
+		"pauschal": []
 	},
-	"anfahrt-bis-10km": 1000,
-	"anfahrt-ab-10km": 2000,
+	"zuschlag": {
+		"grossraum": 900
+	},
 	"wartezeit-ph": 3500,
-	"zs-grossraum": 900,
 	"beginn-nacht": 21,
 	"ende-nacht": 5
 }

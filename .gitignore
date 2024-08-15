@@ -10,4 +10,4 @@ node_modules
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 booking-generator/data/stops.txt
-booking-generator/conf.json
+booking-generator/test/
