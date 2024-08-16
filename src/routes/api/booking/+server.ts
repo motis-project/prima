@@ -23,6 +23,11 @@ const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 };
 
 export const POST = async (event) => {
+	//
+	// console.log(await db.selectFrom('zone').where('zone.id', '=', 4).select([
+	// 	sql`ST_asGeoJson(zone.area)`.as('z')
+	// ]).execute())
+	//
 	const customer = event.locals.user;
 	if (!customer) {
 		return error(403);
@@ -163,7 +168,7 @@ export const POST = async (event) => {
 
 	console.assert(
 		Math.max(...[...mergedAvailabilites.values()].map((availabilities) => availabilities.length)) <=
-			1
+		1
 	);
 
 	const availableVehicles = [...mergedAvailabilites.entries()]

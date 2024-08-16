@@ -50,6 +50,7 @@ type Leg = {
 type Segment = {
 	dist: number;
 	rate: number;
+	flat: boolean;
 };
 
 type Rates = {
@@ -99,10 +100,7 @@ const getSegments = async (rates: Rates, leg: Leg): Promise<Segment[]> => {
 	/* eslint-disable-next-line */
 	let segments: Array<Segment> = [];
 	const route_leg = await getRouteSegment(leg);
-	// let dist = route_leg.metadata.distance / 1000;
 	let dist = Math.floor(route_leg.metadata.distance);
-	console.log('distance =', route_leg.metadata.distance);
-	console.log('duration =', route_leg.metadata.duration);
 	if (rates.base === 0) {
 		// pauschal
 		let rate = rates.steps[0][1];
@@ -111,12 +109,12 @@ const getSegments = async (rates: Rates, leg: Leg): Promise<Segment[]> => {
 				rate = rates.steps[i][1];
 			}
 		}
-		segments.push({ dist: dist, rate: rate });
+		segments.push({ dist: dist, rate: rate, flat: true });
 	} else {
 		// segmenting leg
 		if (rates.steps.length === 1) {
 			// constant rate
-			segments.push({ dist: dist, rate: rates.steps[0][1] });
+			segments.push({ dist: dist, rate: rates.steps[0][1], flat: false });
 		} else {
 			for (let i = 0; i < rates.steps.length - 1; ++i) {
 				const diff = rates.steps[i + 1][0] - rates.steps[i][0];
@@ -126,7 +124,7 @@ const getSegments = async (rates: Rates, leg: Leg): Promise<Segment[]> => {
 					d = dist;
 				}
 				dist -= d;
-				segments.push({ dist: d, rate: rate });
+				segments.push({ dist: d, rate: rate, flat: false });
 				if (dist === 0) {
 					break;
 				}
@@ -204,23 +202,23 @@ export const getFareEstimation = async (
 	const returnFree = dstCommunity != null && ratesJson['anfahrt']['return-free'];
 
 	//
-	console.log(
-		await db.selectFrom('zone as zone1')
-			.where('zone1.is_community', '=', false)
-			.innerJoin((eb) => eb.selectFrom('zone')
-				.where('zone.is_community', '=', false)
-				.selectAll()
-				.as('zone2'),
-				(join) => join.onTrue()
-			)
-			.where(
-				sql<boolean>`ST_Intersects(zone1.area, zone2.area)`
-			)
-			.where((eb) => eb.and([eb('zone1.id', '!=', eb.ref('zone2.id'))]))
-			.select(['zone1.name as name1', 'zone2.name as name2',
-				sql<string>`ST_AsGeoJSON(ST_Intersection(zone1.area, zone2.area))`.as('intersection')])
-			.execute()
-	);
+	// console.log(
+	// 	await db.selectFrom('zone as zone1')
+	// 		.where('zone1.is_community', '=', false)
+	// 		.innerJoin((eb) => eb.selectFrom('zone')
+	// 			.where('zone.is_community', '=', false)
+	// 			.selectAll()
+	// 			.as('zone2'),
+	// 			(join) => join.onTrue()
+	// 		)
+	// 		.where(
+	// 			sql<boolean>`ST_Intersects(zone1.area, zone2.area)`
+	// 		)
+	// 		.where((eb) => eb.and([eb('zone1.id', '!=', eb.ref('zone2.id'))]))
+	// 		.select(['zone1.name as name1', 'zone2.name as name2',
+	// 			sql<string>`ST_AsGeoJSON(ST_Intersection(zone1.area, zone2.area))`.as('intersection')])
+	// 		.execute()
+	// );
 	//
 
 	if (startCommunity == null && !returnFree) {
@@ -238,7 +236,7 @@ export const getFareEstimation = async (
 			}
 		};
 		const segments_ = await getSegments(rates, leg);
-		segments = segments.concat(segments_);
+
 		console.log('Anfahrt:', segments_);
 	}
 
@@ -278,7 +276,11 @@ export const getFareEstimation = async (
 	let totalDist = 0;
 	segments.forEach((e) => {
 		totalDist += e.dist;
-		totalFare += e.dist * e.rate;
+		if (e.flat) {
+			totalFare += e.rate;
+		} else {
+			totalFare += e.dist * e.rate;
+		}
 	});
 	console.log('Distance =', totalDist);
 
