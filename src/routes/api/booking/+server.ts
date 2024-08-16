@@ -430,7 +430,8 @@ export const POST = async (event) => {
 				},
 				{
 					longitude: toCoordinates.lng,
-					latitude: toCoordinates.lat
+					latitude: toCoordinates.lat,
+					scheduled_time: null
 				},
 				bestVehicle!.vehicleId
 			);

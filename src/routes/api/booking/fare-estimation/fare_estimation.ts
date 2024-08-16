@@ -36,9 +36,15 @@ const getLines = (route: Route) => {
 
 type Route = { features: { geometry: { coordinates: [number, number][] } }[] };
 
+type SimpleEvent = {
+	latitude: number;
+	longitude: number;
+	scheduled_time: Date | null;
+};
+
 type Leg = {
-	start: { latitude: number; longitude: number };
-	destination: { latitude: number; longitude: number };
+	start: SimpleEvent;
+	destination: SimpleEvent;
 };
 
 type Segment = {
@@ -95,7 +101,8 @@ const getSegments = async (rates: Rates, leg: Leg): Promise<Segment[]> => {
 	const route_leg = await getRouteSegment(leg);
 	// let dist = route_leg.metadata.distance / 1000;
 	let dist = Math.floor(route_leg.metadata.distance);
-	console.log('dauer =', route_leg.metadata.duration);
+	console.log('distance =', route_leg.metadata.distance);
+	console.log('duration =', route_leg.metadata.duration);
 	if (rates.base === 0) {
 		// pauschal
 		let rate = rates.steps[0][1];
@@ -130,8 +137,8 @@ const getSegments = async (rates: Rates, leg: Leg): Promise<Segment[]> => {
 };
 
 export const getFareEstimation = async (
-	start: { latitude: number; longitude: number; scheduled_time: Date },
-	destination: { latitude: number; longitude: number },
+	start: SimpleEvent,
+	destination: SimpleEvent,
 	vehicleId: number
 ): Promise<number> => {
 	const vehicle = await db
@@ -199,14 +206,25 @@ export const getFareEstimation = async (
 	if (startCommunity == null && !returnFree) {
 		const rates = getRates(ratesJson, 'anfahrt');
 		const leg = {
-			start: { latitude: companyLatitude, longitude: companyLongitude },
-			destination: { latitude: start.latitude, longitude: start.longitude }
+			start: {
+				latitude: companyLatitude,
+				longitude: companyLongitude,
+				scheduled_time: null
+			},
+			destination: {
+				latitude: start.latitude,
+				longitude: start.longitude,
+				scheduled_time: null
+			}
 		};
 		const segments_ = await getSegments(rates, leg);
 		segments = segments.concat(segments_);
 		console.log('Anfahrt:', segments_);
 	}
 
+	if (start.scheduled_time == null) {
+		throw new Error('No start time was defned');
+	}
 	if (
 		isWithinNightTime(
 			start.scheduled_time.toISOString(),
