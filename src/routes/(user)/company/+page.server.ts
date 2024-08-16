@@ -118,7 +118,7 @@ export const actions: Actions = {
 				zone: (await db
 					.selectFrom('zone')
 					.where((eb) =>
-						eb.and([eb('zone.is_community', '=', false), eb('zone.name', '=', form.data.community)])
+						eb.and([eb('zone.is_community', '=', false), eb('zone.name', '=', form.data.zone)])
 					)
 					.select('id')
 					.executeTakeFirst())!.id,
