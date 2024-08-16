@@ -26,7 +26,7 @@
 
 	let zoom = $state(12);
 	let bounds = $state<undefined | maplibregl.LngLatBounds>(undefined);
-	let map = $state<null | maplibregl.Map>(null);
+	let map = $state<undefined | maplibregl.Map>();
 
 	let profile = $state({ value: 'foot', label: 'Foot' });
 	let start = $state<Coordinates>({
