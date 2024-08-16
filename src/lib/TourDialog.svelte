@@ -141,36 +141,39 @@
 			<Card.Title>Übersicht</Card.Title>
 		</Card.Header>
 		<Card.Content class="h-full w-full">
-			<Table.Root>
-				<Table.Header>
-					<Table.Row>
-						<Table.Head>Abfahrt</Table.Head>
-						<Table.Head>Ankunft</Table.Head>
-						<Table.Head class="text-right">Fahrzeug</Table.Head>
-						<Table.Head class="text-right">Fahrpreis</Table.Head>
-					</Table.Row>
-				</Table.Header>
-				<Table.Body>
-					{#if tour}
-						<Table.Row>
-							<Table.Cell>
-								{tour!.from.toLocaleString('de-DE').slice(0, -3)}
-								<br />{tour.events[0].street}<br />
-								{tour.events[0].postal_code}
-								{tour.events[0].city}
-							</Table.Cell>
-							<Table.Cell>
-								{tour!.to.toLocaleString('de-DE').slice(0, -3)}
-								<br />{tour.events[tour.events.length - 1].street}<br />
-								{tour.events[tour.events.length - 1].postal_code}
-								{tour.events[tour.events.length - 1].city}
-							</Table.Cell>
-							<Table.Cell class="text-right">{tour!.license_plate}</Table.Cell>
-							<Table.Cell class="text-right">{displayFare(tour!.fare)} €</Table.Cell>
-						</Table.Row>
+			<div class="grid grid-rows-2 gap-12">
+				<div>
+					<Table.Root>
+						<Table.Header>
+							<Table.Row>
+								<Table.Head>Abfahrt</Table.Head>
+								<Table.Head>Ankunft</Table.Head>
+								<Table.Head class="text-right">Fahrzeug</Table.Head>
+								<Table.Head class="text-right">Fahrpreis</Table.Head>
+							</Table.Row>
+						</Table.Header>
+						<Table.Body>
+							{#if tour}
+								<Table.Row>
+									<Table.Cell>
+										{tour!.from.toLocaleString('de-DE').slice(0, -3)}
+									</Table.Cell>
+									<Table.Cell>
+										{tour!.to.toLocaleString('de-DE').slice(0, -3)}
+									</Table.Cell>
+									<Table.Cell class="text-right">{tour!.license_plate}</Table.Cell>
+									<Table.Cell class="text-right">{displayFare(tour!.fare)} €</Table.Cell>
+								</Table.Row>
+							{/if}
+						</Table.Body>
+					</Table.Root>
+				</div>
+				<div class="grid grid-rows-1 place-items-end">
+					{#if isRedisposable(open.tours![tourIndex])}
+						<div><ConfirmationDialog bind:tour={open.tours![tourIndex]} /></div>
 					{/if}
-				</Table.Body>
-			</Table.Root>
+				</div>
+			</div>
 		</Card.Content>
 	</Card.Root>
 {/snippet}

@@ -4,7 +4,6 @@ import { db } from '$lib/database';
 import { Interval } from '$lib/interval.js';
 import { groupBy, updateValues } from '$lib/collection_utils.js';
 import { error, json } from '@sveltejs/kit';
-import { } from '$lib/utils.js';
 import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { MAX_TRAVEL_DURATION, MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
@@ -64,25 +63,6 @@ export const POST = async (event) => {
 	const startTime = startFixed ? time : new Date(time.getTime() - secondsToMs(travelDuration));
 	const targetTime = startFixed ? new Date(time.getTime() + secondsToMs(travelDuration)) : time;
 	const travelInterval = new Interval(startTime, targetTime);
-
-
-	// TEST
-	// const fare = await getFareEstimation(
-	// 	{
-	// 		longitude: fromCoordinates.lng,
-	// 		latitude: fromCoordinates.lat,
-	// 		scheduled_time: startTime
-	// 	},
-	// 	{
-	// 		longitude: toCoordinates.lng,
-	// 		latitude: toCoordinates.lat
-	// 	},
-	// 	7
-	// );
-	// console.log(fare);
-	// return json({ status: 1 });
-	// ---
-
 
 	if (new Date(Date.now() + minutesToMs(MIN_PREP_MINUTES)) > startTime) {
 		return json({ status: 4, message: 'Die Anfrage verletzt die minimale Vorlaufzeit.' });
@@ -283,9 +263,8 @@ export const POST = async (event) => {
 		});
 	}
 
-	let bestCompany = undefined;
 	let tourId: number | undefined = undefined;
-	let companyName: string | undefined = undefined;
+	let bestVehicle = undefined;
 
 	await db.transaction().execute(async (trx) => {
 		sql`LOCK TABLE tour, request, event IN ACCESS EXCLUSIVE MODE;`.execute(trx);
@@ -342,9 +321,7 @@ export const POST = async (event) => {
 
 		// Sort companies by the distance of their taxi-central to start + target
 		viableVehicles.sort((a, b) => a.distance - b.distance);
-
-		const bestVehicle = viableVehicles[0];
-		companyName = bestVehicle.companyName!;
+		bestVehicle = viableVehicles[0];
 
 		// Write tour, request, 2 events and if not existant address in db.
 		let startAddress = await trx
@@ -455,7 +432,7 @@ export const POST = async (event) => {
 					longitude: toCoordinates.lng,
 					latitude: toCoordinates.lat
 				},
-				bestCompany!.vehicleId
+				bestVehicle!.vehicleId
 			);
 			await db.updateTable('tour').set({ fare: fare }).where('id', '=', tourId).executeTakeFirst();
 		} catch (e) {
@@ -463,7 +440,7 @@ export const POST = async (event) => {
 		}
 		return json({
 			status: 0,
-			companyName: companyName!,
+			companyName: bestVehicle!.companyName!,
 			pickupTime: startTime,
 			dropoffTime: targetTime,
 			tour_id: tourId,

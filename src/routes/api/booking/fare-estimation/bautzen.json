@@ -1,18 +1,18 @@
 {
 	"anfahrt": {
 		"grundpreis": 450,
-		"pkm": [{"0": 130}],
+		"pkm": [[0, 130]],
 		"pauschal": [],
 		"return-free": true
 	},
 	"tag": {
 		"grundpreis": 450,
-		"pkm": [{"0": 250}],
+		"pkm": [[0, 250]],
 		"pauschal": []
 	},
 	"nacht": {
 		"grundpreis": 450,
-		"pkm": [{"0": 270}],
+		"pkm": [[0, 270]],
 		"pauschal": []
 	},
 	"zuschlag": {

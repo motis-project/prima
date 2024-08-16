@@ -49,7 +49,7 @@ type Segment = {
 type Rates = {
 	base: number;
 	steps: [[number, number]];
-}
+};
 
 const getRouteSegment = async (leg: Leg) => {
 	return await getRoute({
@@ -68,29 +68,13 @@ const getRouteSegment = async (leg: Leg) => {
 	});
 };
 
-// const getSegmentFare = async (
-// 	leg: Leg,
-// 	rate_km: number,
-// 	rate_time: number
-// ) => {
-// 	const route = await getRouteSegment(leg.start, leg.destination);
-// 	if (!route) {
-// 		throw new Error('getSegmentFare: Could not get route');
-// 	}
-// 	const dist = route.metadata.distance / 1000;
-// 	// const duration = route.metadata.duration / 3600;
-// 	const waitTime = 0;
-// 	const distFare = dist * rate_km;
-// 	const timeFare = waitTime * rate_time;
-// 	return Math.round(distFare + timeFare);
-// };
-
-const isTimestampInRange = (isoTimestampUTC: string, startHour: number, endHour: number) => {
+const isWithinNightTime = (isoTimestampUTC: string, startHour: number, endHour: number) => {
 	const timestamp = new Date(isoTimestampUTC); // GMT + 0 on server
 	const localDateTime = new Date(timestamp.toLocaleString('en', { timeZone: TZ }));
 	return localDateTime.getHours() >= startHour || localDateTime.getHours() < endHour;
 };
 
+/* eslint-disable-next-line */
 const getRates = (ratesJson: any, key: string): Rates => {
 	let steps = null;
 	let base = 0;
@@ -103,12 +87,15 @@ const getRates = (ratesJson: any, key: string): Rates => {
 		steps = ratesJson[key]['pauschal'];
 	}
 	return { base: base, steps: steps };
-}
+};
 
 const getSegments = async (rates: Rates, leg: Leg): Promise<Segment[]> => {
+	/* eslint-disable-next-line */
 	let segments: Array<Segment> = [];
-	let route_leg = await getRouteSegment(leg);
-	let dist = route_leg.metadata.distance / 1000;
+	const route_leg = await getRouteSegment(leg);
+	// let dist = route_leg.metadata.distance / 1000;
+	let dist = Math.floor(route_leg.metadata.distance);
+	console.log('dauer =', route_leg.metadata.duration);
 	if (rates.base === 0) {
 		// pauschal
 		let rate = rates.steps[0][1];
@@ -125,8 +112,8 @@ const getSegments = async (rates: Rates, leg: Leg): Promise<Segment[]> => {
 			segments.push({ dist: dist, rate: rates.steps[0][1] });
 		} else {
 			for (let i = 0; i < rates.steps.length - 1; ++i) {
-				let diff = rates.steps[i + 1][0] - rates.steps[i][0];
-				let rate = rates.steps[i][1];
+				const diff = rates.steps[i + 1][0] - rates.steps[i][0];
+				const rate = rates.steps[i][1];
 				let d = diff;
 				if (dist - d < 0) {
 					d = dist;
@@ -140,7 +127,7 @@ const getSegments = async (rates: Rates, leg: Leg): Promise<Segment[]> => {
 		}
 	}
 	return segments;
-}
+};
 
 export const getFareEstimation = async (
 	start: { latitude: number; longitude: number; scheduled_time: Date },
@@ -154,7 +141,7 @@ export const getFareEstimation = async (
 		.select(['community_area', 'zone', 'latitude', 'longitude'])
 		.executeTakeFirst();
 
-	if (!vehicle) {
+	if (vehicle == null) {
 		throw new Error('Invalid vehicle ID');
 	}
 	if (vehicle.latitude == null || vehicle.longitude == null) {
@@ -185,72 +172,77 @@ export const getFareEstimation = async (
 	if (!zoneRates) {
 		throw new Error('Cannot get taxi rates for vehicle');
 	}
-	const ratesJson = JSON.parse(zoneRates.rates);
 
 	const startCommunity = await db
 		.selectFrom('zone')
 		.where('id', '=', communityId)
-		.where(sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${start.longitude}, ${start.latitude}),4326))`)
+		.where(
+			sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${start.longitude}, ${start.latitude}),4326))`
+		)
 		.selectAll()
 		.executeTakeFirst();
 
 	const dstCommunity = await db
 		.selectFrom('zone')
 		.where('id', '=', communityId)
-		.where(sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${destination.longitude}, ${destination.latitude}),4326))`)
+		.where(
+			sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${destination.longitude}, ${destination.latitude}),4326))`
+		)
 		.selectAll()
 		.executeTakeFirst();
 
+	/* eslint-disable-next-line */
+	let segments: Array<Segment> = [];
+	const ratesJson = JSON.parse(zoneRates.rates);
 	const returnFree = dstCommunity != null && ratesJson['anfahrt']['return-free'];
 
-	let segments: Array<Segment> = [];
-
 	if (startCommunity == null && !returnFree) {
-		// rate for journey to first pickup
-		let rates = getRates(ratesJson, 'anfahrt');
-		let leg = {
+		const rates = getRates(ratesJson, 'anfahrt');
+		const leg = {
 			start: { latitude: companyLatitude, longitude: companyLongitude },
 			destination: { latitude: start.latitude, longitude: start.longitude }
-		}
-		let segments_ = await getSegments(rates, leg);
+		};
+		const segments_ = await getSegments(rates, leg);
 		segments = segments.concat(segments_);
 		console.log('Anfahrt:', segments_);
 	}
 
 	if (
-		isTimestampInRange(
+		isWithinNightTime(
 			start.scheduled_time.toISOString(),
 			ratesJson['beginn-nacht'],
 			ratesJson['ende-nacht']
 		)
 	) {
 		// nighttime rate
-		totalFare += ratesJson['nacht']['grundpreis'];
-		let rates = getRates(ratesJson, 'nacht');
-		let leg = {
+		const rates = getRates(ratesJson, 'nacht');
+		totalFare += rates.base;
+		const leg = {
 			start: start,
 			destination: destination
 		};
-		let segments_ = await getSegments(rates, leg);
+		const segments_ = await getSegments(rates, leg);
 		segments = segments.concat(segments_);
 		console.log('Nacht-Tarif:', segments_);
 	} else {
 		// daytime rate
-		totalFare += ratesJson['tag']['grundpreis'];
-		let rates = getRates(ratesJson, 'tag');
-		let leg = {
+		const rates = getRates(ratesJson, 'tag');
+		totalFare += rates.base;
+		const leg = {
 			start: start,
 			destination: destination
 		};
-		let segments_ = await getSegments(rates, leg);
+		const segments_ = await getSegments(rates, leg);
 		segments = segments.concat(segments_);
 		console.log('Tag-Tarif:', segments_);
-
 	}
 
+	let totalDist = 0;
 	segments.forEach((e) => {
+		totalDist += e.dist;
 		totalFare += e.dist * e.rate;
 	});
+	console.log('Distance =', totalDist);
 
-	return totalFare;
+	return Math.round(totalFare / 1000);
 };
