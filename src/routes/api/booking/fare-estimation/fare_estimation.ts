@@ -203,6 +203,26 @@ export const getFareEstimation = async (
 	const ratesJson = JSON.parse(zoneRates.rates);
 	const returnFree = dstCommunity != null && ratesJson['anfahrt']['return-free'];
 
+	//
+	console.log(
+		await db.selectFrom('zone as zone1')
+			.where('zone1.is_community', '=', false)
+			.innerJoin((eb) => eb.selectFrom('zone')
+				.where('zone.is_community', '=', false)
+				.selectAll()
+				.as('zone2'),
+				(join) => join.onTrue()
+			)
+			.where(
+				sql<boolean>`ST_Intersects(zone1.area, zone2.area)`
+			)
+			.where((eb) => eb.and([eb('zone1.id', '!=', eb.ref('zone2.id'))]))
+			.select(['zone1.name as name1', 'zone2.name as name2',
+				sql<string>`ST_AsGeoJSON(ST_Intersection(zone1.area, zone2.area))`.as('intersection')])
+			.execute()
+	);
+	//
+
 	if (startCommunity == null && !returnFree) {
 		const rates = getRates(ratesJson, 'anfahrt');
 		const leg = {
