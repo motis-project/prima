@@ -30,12 +30,12 @@
 
 	let profile = $state({ value: 'foot', label: 'Foot' });
 	let start = $state<Coordinates>({
-		lat: 49.872584079,
-		lng: 8.6312708899
+		lat: 51.1588351,
+		lng: 14.9813484
 	});
 	let destination = $state<Coordinates>({
-		lat: 50.11352164499803,
-		lng: 8.677728968355844
+		lat: 51.1169562,
+		lng: 14.9721042
 	});
 	let dummyAddress = {
 		street: '',
