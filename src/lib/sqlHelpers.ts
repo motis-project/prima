@@ -1,5 +1,4 @@
 import { db } from '$lib/database';
-import { TZ } from '$lib/constants.js';
 
 export const queryCompletedTours = async (companyId: number | undefined) => {
 	return await db
