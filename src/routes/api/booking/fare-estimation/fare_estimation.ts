@@ -54,7 +54,7 @@ type Segment = {
 
 type Rates = {
 	base: number;
-	steps: [[number, number]];
+	steps: number[][];
 };
 
 const getRouteSegment = async (leg: Leg) => {
@@ -82,7 +82,7 @@ const isWithinNightTime = (isoTimestampUTC: string, startHour: number, endHour: 
 
 /* eslint-disable-next-line */
 const getRates = (ratesJson: any, key: string): Rates => {
-	let steps = null;
+	let steps = [[0, 0]];
 	let base = 0;
 	if (ratesJson[key]['pkm'].length > 0) {
 		// rate per km
