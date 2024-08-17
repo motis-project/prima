@@ -67,27 +67,22 @@ export const addAvailability = async (vehicleId: number, from: Date, to: Date) =
 	});
 };
 
-export const booking = async (
-	from: Location,
-	to: Location,
-	startFixed: boolean,
-	timeStamp: Date,
-	numPassengers: number,
-	numWheelchairs: number,
-	numBikes: number,
-	luggage: number
-) => {
+export type BookingRequestParameters = {
+	from: Location;
+	to: Location;
+	startFixed: boolean;
+	timeStamp: Date;
+	numPassengers: number;
+	numWheelchairs: number;
+	numBikes: number;
+	luggage: number;
+};
+
+export const booking = async (p: BookingRequestParameters[]) => {
 	return await fetch('/api/booking', {
 		method: 'POST',
 		body: JSON.stringify({
-			from,
-			to,
-			startFixed,
-			timeStamp,
-			numPassengers,
-			numWheelchairs,
-			numBikes,
-			luggage
+			p
 		})
 	});
 };

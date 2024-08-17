@@ -81,6 +81,7 @@ export async function up(db) {
         .addColumn('house_number', 'varchar', (col) => col.notNull())
         .addColumn('postal_code', 'varchar', (col) => col.notNull())
         .addColumn('city', 'varchar', (col) => col.notNull())
+        .addUniqueConstraint('unique_address', ['street', 'house_number', 'postal_code', 'city'])
         .execute();
 
     await db.schema

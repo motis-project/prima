@@ -73,6 +73,10 @@ export class Interval {
 		return this.endTime.getTime() - this.startTime.getTime();
 	}
 
+	size() {
+		return this.endTime.getTime() - this.startTime.getTime();
+	}
+
 	static merge = (unmerged: Interval[]): Interval[] => {
 		if (unmerged.length == 0) {
 			return new Array<Interval>();

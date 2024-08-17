@@ -134,6 +134,10 @@ export interface EventTable {
 	tour: number;
 	customer: string;
 	request: number;
+	passengers: number;
+	luggage: number;
+	wheelchairs: number;
+	bikes: number;
 }
 
 export type Event = Selectable<EventTable>;
