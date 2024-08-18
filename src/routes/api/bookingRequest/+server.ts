@@ -7,7 +7,8 @@ import { MAX_TRAVEL_DURATION, MIN_PREP_MINUTES } from '$lib/constants.js';
 import {
 	areChosenCoordinatesInsideAnyZone,
 	bookingApiQuery,
-	doesVehicleWithCapacityExist
+	doesVehicleWithCapacityExist,
+	type BookingApiQueryResult
 } from './queries';
 import { TourConcatenations } from './tourConcatenation';
 import { computeSearchIntervals } from './searchInterval';
@@ -100,7 +101,7 @@ const doStuff = async (
 		);
 	}
 
-	const dbResult = await bookingApiQuery(
+	const dbResult: BookingApiQueryResult = await bookingApiQuery(
 		oneCoordinates,
 		requiredCapacity,
 		maxIntervals.expandedSearchInterval,
@@ -110,10 +111,8 @@ const doStuff = async (
 		return determineError(oneCoordinates, requiredCapacity);
 	}
 
-	for (const { index, travelDuration } of travelDurations.map((travelDuration, index) => ({
-		index,
-		travelDuration
-	}))) {
+	for(let index=0;index!=travelDurations.length;++index) {
+		const travelDuration = travelDurations[index];
 		if (travelDuration > MAX_TRAVEL_DURATION) {
 			results[index] = {
 				status: 6,
@@ -131,7 +130,7 @@ const doStuff = async (
 			};
 			continue;
 		}
-		const targetZones = dbResult.targetZones.get(index);
+		const targetZones = dbResult.targetZoneIds.get(index);
 		if (targetZones == undefined) {
 			return json({ status: 500 });
 		}
@@ -153,8 +152,8 @@ const doStuff = async (
 
 	const startMany: Coordinates[] = [];
 	const targetMany: Coordinates[] = [];
-	const tourConcatenations = new TourConcatenations(requiredCapacity);
-	tourConcatenations.createTourConcatenations(dbResult.companies);
+	const tourConcatenations = new TourConcatenations();
+	tourConcatenations.createTourConcatenations(dbResult.companies, requiredCapacity);
 
 	tourConcatenations.addCoordinates();
 

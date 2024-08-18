@@ -2,7 +2,7 @@ import { Interval } from '$lib/interval.js';
 import { Coordinates } from '$lib/location.js';
 import { minutesToMs } from '$lib/time_utils.js';
 import { Capacity, CapacityState as CapacitySimulation } from './capacities.js';
-import { forEachTour } from './queries.js';
+import { forEachVehicle } from './queries.js';
 import { type Company, type Event } from '$lib/compositionTypes.js';
 
 export const addTourConcatCoordinates = (
@@ -135,13 +135,11 @@ class BetweenEventsConcatenationPair extends TourConcatenation {
 }
 
 export class TourConcatenations {
-	constructor(requiredCapacity: Capacity) {
-		this.newRequiredCapacity = requiredCapacity;
+	constructor() {
 		this.concatenations = [];
 		this.startMany = [];
 		this.targetMany = [];
 	}
-	newRequiredCapacity: Capacity;
 	concatenations: TourConcatenation[];
 	startMany: Coordinates[];
 	targetMany: Coordinates[];
@@ -159,47 +157,55 @@ export class TourConcatenations {
 		});
 	};
 
-	createTourConcatenations = (companies: Company[]) => {
+	createTourConcatenations = (companies: Company[], requiredCapacity: Capacity) => {
 		this.concatenations.concat(companies.map((c) => new NewTour(c.id, 1, c.coordinates)));
-		const cc = new Array<TourConcatenation>();
-		forEachTour(companies, (c, v, t) => {
+		forEachVehicle(companies, (c, v) => {
 			const simulation = new CapacitySimulation(
 				v.bike_capacity,
 				v.wheelchair_capacity,
 				v.seats,
 				v.storage_space
 			);
-			const insertions = simulation.getPossibleInsertionIntervals(
-				t.events,
-				this.newRequiredCapacity
-			);
-			insertions.forEach((insertion) => {
-				const eventInsertions = new Array<BetweenEventsConcatenation>(
-					insertion.end - insertion.start
+			let prevTourInsertions = simulation.getPossibleInsertionIntervals(
+				v.tours[0].events,
+				requiredCapacity
+			)
+			for(let i=0;i!=v.tours.length-1;++i) {
+				const t1 = v.tours[i];
+				const t2 = v.tours[i+1];
+				const nextTourInsertions = simulation.getPossibleInsertionIntervals(
+					t2.events,
+					requiredCapacity
 				);
-				for (let i = insertion.start; i != insertion.end; ++i) {
-					for (let j = i; j != insertion.end; ++j) {
-						if (i == j) {
-							eventInsertions[j - insertion.start] = new BetweenEventsConcatenation(
-								t.events[i],
-								t.events[i + 1],
-								c.id
+				nextTourInsertions.forEach((insertion) => {
+					const eventInsertions = new Array<BetweenEventsConcatenation>(
+						insertion.end - insertion.start
+					);
+					for (let i = insertion.start; i != insertion.end; ++i) {
+						for (let j = i; j != insertion.end; ++j) {
+							if (i == j) {
+								eventInsertions[j - insertion.start] = new BetweenEventsConcatenation(
+									t2.events[i],
+									t2.events[i + 1],
+									c.id
+								);
+								this.concatenations.push(eventInsertions[j - insertion.start]);
+								continue;
+							}
+							this.concatenations.push(
+								new BetweenEventsConcatenationPair(
+									c.id,
+									1,
+									v.id,
+									eventInsertions[i - insertion.start],
+									eventInsertions[j - insertion.start]
+								)
 							);
-							cc.push(eventInsertions[j - insertion.start]);
-							continue;
 						}
-						cc.push(
-							new BetweenEventsConcatenationPair(
-								c.id,
-								1,
-								v.id,
-								eventInsertions[i - insertion.start],
-								eventInsertions[j - insertion.start]
-							)
-						);
 					}
-				}
-			});
+				});
+				prevTourInsertions = nextTourInsertions;
+			}
 		});
 	};
 

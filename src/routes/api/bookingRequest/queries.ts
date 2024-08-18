@@ -17,11 +17,13 @@ import type { Company, Tour, Vehicle } from '$lib/compositionTypes';
 
 export type BookingApiQueryResult = {
 	companies: Company[];
-	targetZones: Map<number, number[]>;
+	targetZoneIds: Map<number, number[]>;
 };
 
-export function forEachTour<T>(companies: Company[], fn: (c: Company, v: Vehicle, t: Tour) => T) {
-	companies.forEach((c) => c.vehicles.forEach((v) => v.tours.forEach((t) => fn(c, v, t))));
+export function forEachVehicle<T>(companies: Company[], fn: (c: Company, v: Vehicle) => T) {
+	companies.forEach((c) => c.vehicles.forEach((v) => {
+			fn(c, v);
+	}));
 }
 
 const selectAvailabilities = (eb: ExpressionBuilder<Database, 'vehicle'>, interval: Interval) => {
@@ -179,7 +181,7 @@ export const bookingApiQuery = async (
 		.executeTakeFirst();
 
 	if (dbResult == undefined) {
-		return { companies: [], targetZones: new Map<number, number[]>() };
+		return { companies: [], targetZoneIds: new Map<number, number[]>() };
 	}
 
 	const companies = dbResult.companies
@@ -241,7 +243,7 @@ export const bookingApiQuery = async (
 	);
 	return {
 		companies,
-		targetZones: groupBy(
+		targetZoneIds: groupBy(
 			dbResult.target,
 			(t) => t.targetIndex,
 			(t) => t.zoneId

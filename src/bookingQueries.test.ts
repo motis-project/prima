@@ -25,7 +25,7 @@ describe('1start 1target same zones', async () => {
 		expect(res.companies[0].zoneId).toBe(2);
 		expect(vehicles.length).toBe(1);
 	});
-	it('targetZones match', () => expect(res.targetZones.get(0)).toStrictEqual([2]));
+	it('targetZones match', () => expect(res.targetZoneIds.get(0)).toStrictEqual([2]));
 });
 
 describe('1start 1target different zones', async () => {
@@ -36,7 +36,7 @@ describe('1start 1target different zones', async () => {
 		expect(res.companies.length).toBe(1);
 		expect(res.companies[0].zoneId).toBe(2);
 	});
-	it('targetZones match', () => expect([...res.targetZones.keys()].length).toBe(0));
+	it('targetZones match', () => expect([...res.targetZoneIds.keys()].length).toBe(0));
 });
 
 describe('1start 1target same zone, too many passengers', async () => {
@@ -90,5 +90,5 @@ describe('1start 2targets', async () => {
 		expect(res.companies.length).toBe(1);
 		expect(res.companies[0].zoneId).toBe(2);
 	});
-	it('targetZones match', () => expect([...res.targetZones.keys()].length).toBe(2));
+	it('targetZones match', () => expect([...res.targetZoneIds.keys()].length).toBe(2));
 });
