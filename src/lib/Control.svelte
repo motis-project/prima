@@ -39,12 +39,3 @@
 <div class:hidden={!initialized} class="maplibregl-ctrl" {...props} bind:this={el}>
 	{@render children()}
 </div>
-
-<style>
-	.ctrl-btn-center {
-		display: grid !important;
-		height: 100%;
-		width: 100%;
-		place-items: center;
-	}
-</style>

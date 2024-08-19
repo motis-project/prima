@@ -5,7 +5,6 @@
 	import Map from '$lib/Map.svelte';
 	import Control from '$lib/Control.svelte';
 	import { Location } from '$lib/location';
-	import { Button } from '$lib/components/ui/button/index.js';
 	import {
 		Select,
 		SelectTrigger,
@@ -22,7 +21,6 @@
 	import { toTable } from '$lib/toTable';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import { CircleAlert, CircleCheckBig } from "lucide-svelte/icons";
-	import { Description } from 'formsnap';
 
 	let zoom = $state(12);
 	let bounds = $state<undefined | maplibregl.LngLatBounds>(undefined);

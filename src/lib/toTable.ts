@@ -2,7 +2,7 @@ export const toTable = (properties: Object) => {
 	const table = document.createElement('table');
 	table.classList.add('routing-graph', 'properties');
 	for (const key in properties) {
-		const value = properties[key];
+		const value = properties[key as keyof object];
 		const row = document.createElement('tr');
 		const keyCell = document.createElement('td');
 		keyCell.innerText = key;

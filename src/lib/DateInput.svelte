@@ -27,7 +27,7 @@
 	)}
 	bind:this={el}
 	onchange={(e) => {
-		const dateTimeLocalValue = e.target.value;
+		const dateTimeLocalValue = (e.target as HTMLTextAreaElement).value;
 		const fakeUtcTime = new Date(`${dateTimeLocalValue}Z`);
 		value = new Date(fakeUtcTime.getTime() + fakeUtcTime.getTimezoneOffset() * 60000);
 	}}
