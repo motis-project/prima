@@ -20,7 +20,7 @@
 	import { booking } from '$lib/api';
 	import { toTable } from '$lib/toTable';
 	import * as Alert from '$lib/components/ui/alert/index.js';
-	import { CircleAlert, CircleCheckBig } from "lucide-svelte/icons";
+	import { CircleAlert, CircleCheckBig } from 'lucide-svelte/icons';
 
 	let zoom = $state(12);
 	let bounds = $state<undefined | maplibregl.LngLatBounds>(undefined);
@@ -37,20 +37,20 @@
 	});
 	let dummyAddress = {
 		street: '',
-    	house_number: '',
-    	postal_code: '',
-    	city: '',
-	}
+		house_number: '',
+		postal_code: '',
+		city: ''
+	};
 	let query = $derived<{
-		from: Location,
-		to: Location,
+		from: Location;
+		to: Location;
 		// startFixed true --> Abfahrtszeit
- 		startFixed: boolean,
-		timeStamp: Date,
-		numPassengers: number,
-		numWheelchairs: number,
-		numBikes: number,
-		luggage: number
+		startFixed: boolean;
+		timeStamp: Date;
+		numPassengers: number;
+		numWheelchairs: number;
+		numBikes: number;
+		luggage: number;
 	}>({
 		from: new Location(start, dummyAddress),
 		to: new Location(destination, dummyAddress),
@@ -167,10 +167,18 @@
 	let bookingResponse = $state<Array<Promise<any>>>([]);
 
 	$effect(() => {
-		bookingResponse = [booking(
-			query.from, query.to, arriveBy, dateTime, query.numPassengers, query.numWheelchairs,
-			query.numWheelchairs, query.luggage
-		)];
+		bookingResponse = [
+			booking(
+				query.from,
+				query.to,
+				arriveBy,
+				dateTime,
+				query.numPassengers,
+				query.numWheelchairs,
+				query.numWheelchairs,
+				query.luggage
+			)
+		];
 	});
 
 	// client ID: a9b1f1ad1051790a9c6970db85710986
@@ -187,7 +195,7 @@
 		}
 	}}
 	center={[14.9361567, 51.150878]}
-	zoom={zoom}
+	{zoom}
 	style={getStyle(0)}
 	className="h-screen w-screen h-full w-full rounded-lg border shadow"
 >
@@ -253,13 +261,14 @@
 								</div>
 							{:then res}
 								<div class="w-full flex justify-between items-center space-x-4">
-									<Alert.Root variant={r.ok ? "default" : "destructive"}>
+									<Alert.Root variant={r.ok ? 'default' : 'destructive'}>
 										{#if r.ok}
 											<CircleCheckBig class="h-4 w-4" />
-										{:else} 
+										{:else}
 											<CircleAlert class="h-4 w-4" />
 										{/if}
-										<Alert.Title class="font-bold text-base">{r.status}: {r.statusText}</Alert.Title>
+										<Alert.Title class="font-bold text-base">{r.status}: {r.statusText}</Alert.Title
+										>
 										<Alert.Description>
 											{res.status}: {res.message}
 										</Alert.Description>
