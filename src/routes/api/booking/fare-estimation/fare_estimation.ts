@@ -3,39 +3,6 @@ import { TZ } from '$lib/constants';
 import { db } from '$lib/database';
 import { sql } from 'kysely';
 
-/* eslint-disable */
-const calculateDistance = (segment: number[][]) => {
-	const R = 6371; // Radius of the Earth in kilometers
-	const [lon1, lat1] = segment[0];
-	const [lon2, lat2] = segment[1];
-
-	// Convert degrees to radians
-	const toRadians = (degrees: number) => degrees * (Math.PI / 180);
-	const dLat = toRadians(lat2 - lat1);
-	const dLon = toRadians(lon2 - lon1);
-	const a =
-		Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-		Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-	return R * c; // Distance in kilometers
-};
-
-const getLines = (route: Route) => {
-	const points: [number, number][] = [];
-	route.features.forEach((feature: { geometry: { coordinates: [number, number][] } }) => {
-		points.push(feature.geometry.coordinates[0]);
-	});
-	const lines: number[][][] = [];
-	for (let i = 0; i < points.length - 1; i++) {
-		lines.push([points[i], points[i + 1]]);
-	}
-	return lines;
-};
-/* eslint-enable */
-
-type Route = { features: { geometry: { coordinates: [number, number][] } }[] };
-
 type SimpleEvent = {
 	latitude: number;
 	longitude: number;
