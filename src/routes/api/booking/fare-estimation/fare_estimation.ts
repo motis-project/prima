@@ -186,6 +186,7 @@ export const getFareEstimation = async (
 			}
 		};
 		const segments_ = await getSegments(rates, leg);
+		// segments = segments.concat(segments_); TODO: tmp until JF22.08.
 		console.log('Anfahrt:', segments_);
 	}
 
