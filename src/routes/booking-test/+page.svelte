@@ -5,13 +5,6 @@
 	import Map from '$lib/Map.svelte';
 	import Control from '$lib/Control.svelte';
 	import { Location } from '$lib/location';
-	import {
-		Select,
-		SelectTrigger,
-		SelectValue,
-		SelectContent,
-		SelectItem
-	} from '$lib/components/ui/select';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Card } from '$lib/components/ui/card';
 	import DateInput from '$lib/DateInput.svelte';
@@ -21,12 +14,12 @@
 	import { toTable } from '$lib/toTable';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import { CircleAlert, CircleCheckBig } from 'lucide-svelte/icons';
+	import Button from '$lib/components/ui/button/button.svelte';
 
 	let zoom = $state(12);
 	let bounds = $state<undefined | maplibregl.LngLatBounds>(undefined);
 	let map = $state<undefined | maplibregl.Map>();
 
-	let profile = $state({ value: 'foot', label: 'Foot' });
 	let start = $state<Coordinates>({
 		lat: 51.1588351,
 		lng: 14.9813484
@@ -166,21 +159,6 @@
 
 	let bookingResponse = $state<Array<Promise<Response>>>([]);
 
-	$effect(() => {
-		bookingResponse = [
-			booking(
-				query.from,
-				query.to,
-				arriveBy,
-				dateTime,
-				query.numPassengers,
-				query.numWheelchairs,
-				query.numWheelchairs,
-				query.luggage
-			)
-		];
-	});
-
 	// client ID: a9b1f1ad1051790a9c6970db85710986
 	// client Secret: df987129855de70a804f146718aac956
 	// client Secret: 30dee8771d325304274b7c2555fae33e
@@ -203,8 +181,6 @@
 		<Card class="w-[520px] max-h-[90vh] overflow-y-auto overflow-x-hidden bg-white rounded-lg">
 			<div class="flex flex-col w-full">
 				<div class="flex flex-row space-x-4 p-4 shadow-md rounded">
-					<!-- <ComboBox placeholder="From" /> -->
-					<!-- <ComboBox placeholder="To" /> -->
 					<DateInput bind:value={dateTime} />
 					<div class="flex">
 						<RadioGroup.Root class="flex space-x-1 ml-1" bind:value={timeType}>
@@ -235,17 +211,23 @@
 						</RadioGroup.Root>
 					</div>
 					<div class="min-w-24">
-						<Select bind:selected={profile}>
-							<SelectTrigger>
-								<SelectValue placeholder="Profile" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="wheelchair">Wheelchair</SelectItem>
-								<SelectItem value="foot">Foot</SelectItem>
-								<SelectItem value="bike">Bike</SelectItem>
-								<SelectItem value="car">Car</SelectItem>
-							</SelectContent>
-						</Select>
+						<Button
+							variant="outline"
+							on:click={() => {
+								bookingResponse = [
+									booking(
+										query.from,
+										query.to,
+										arriveBy,
+										dateTime,
+										query.numPassengers,
+										query.numWheelchairs,
+										query.numWheelchairs,
+										query.luggage
+									)
+								];
+							}}>Suchen</Button
+						>
 					</div>
 				</div>
 				<div class="flex flex-col space-y-8 h-[45vh] overflow-y-auto px-4 py-8">
