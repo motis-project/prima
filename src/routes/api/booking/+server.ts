@@ -332,7 +332,7 @@ export const POST = async (event) => {
 			};
 		});
 
-		if (viable_vehicles.length == 0) {
+		if (viableVehicles.length == 0) {
 			return json(
 				{
 					status: 10,
