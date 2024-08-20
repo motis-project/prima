@@ -64,8 +64,7 @@ const getRates = (ratesJson: any, key: string): Rates => {
 };
 
 const getSegments = async (rates: Rates, leg: Leg): Promise<Segment[]> => {
-	/* eslint-disable-next-line */
-	let segments: Array<Segment> = [];
+	const segments: Array<Segment> = [];
 	const route_leg = await getRouteSegment(leg);
 	let dist = Math.floor(route_leg.metadata.distance);
 	if (rates.base === 0) {
@@ -84,17 +83,19 @@ const getSegments = async (rates: Rates, leg: Leg): Promise<Segment[]> => {
 			segments.push({ dist: dist, rate: rates.steps[0][1], flat: false });
 		} else {
 			for (let i = 0; i < rates.steps.length - 1; ++i) {
-				const diff = rates.steps[i + 1][0] - rates.steps[i][0];
 				const rate = rates.steps[i][1];
-				let d = diff;
-				if (dist - d < 0) {
-					d = dist;
+				let diff = rates.steps[i + 1][0] - rates.steps[i][0];
+				if (dist - diff < 0) {
+					diff = dist;
 				}
-				dist -= d;
-				segments.push({ dist: d, rate: rate, flat: false });
+				dist -= diff;
+				segments.push({ dist: diff, rate: rate, flat: false });
 				if (dist === 0) {
 					break;
 				}
+			}
+			if (dist != 0) {
+				segments.push({ dist: dist, rate: rates.steps[rates.steps.length - 1][1], flat: false });
 			}
 		}
 	}
@@ -166,7 +167,6 @@ export const getFareEstimation = async (
 		.selectAll()
 		.executeTakeFirst();
 
-	/* eslint-disable-next-line */
 	let segments: Array<Segment> = [];
 	const ratesJson = JSON.parse(zoneRates.rates);
 	const returnFree = dstCommunity != null && ratesJson['anfahrt']['return-free'];
