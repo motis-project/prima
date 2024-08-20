@@ -63,8 +63,8 @@
 	});
 
 	let init = false;
-	let startMarker: any = null;
-	let destinationMarker: any = null;
+	let startMarker: maplibregl.Marker | null = null;
+	let destinationMarker: maplibregl.Marker | null = null;
 
 	$effect(() => {
 		if (map && !init) {
@@ -101,7 +101,7 @@
 				.setLngLat([start.lng, start.lat])
 				.addTo(map)
 				.on('dragend', async () => {
-					const x = startMarker.getLngLat();
+					const x = startMarker!.getLngLat();
 					start.lng = x.lng;
 					start.lat = x.lat;
 				});
@@ -113,7 +113,7 @@
 				.setLngLat([destination.lng, destination.lat])
 				.addTo(map)
 				.on('dragend', async () => {
-					const x = destinationMarker.getLngLat();
+					const x = destinationMarker!.getLngLat();
 					destination.lng = x.lng;
 					destination.lat = x.lat;
 				});
@@ -134,7 +134,7 @@
 				setStart.href = '#';
 				setStart.innerText = 'start';
 				setStart.onclick = () => {
-					startMarker.setLngLat(x);
+					startMarker!.setLngLat(x);
 					start.lng = x.lng;
 					start.lat = x.lat;
 					popup!.remove();
@@ -146,7 +146,7 @@
 				setDest.href = '#';
 				setDest.innerText = 'destination';
 				setDest.onclick = () => {
-					destinationMarker.setLngLat(x);
+					destinationMarker!.setLngLat(x);
 					destination.lng = x.lng;
 					destination.lat = x.lat;
 					popup!.remove();
@@ -164,7 +164,7 @@
 	let dateTime = $state(new Date());
 	let arriveBy = $derived(timeType === 'arrival');
 
-	let bookingResponse = $state<Array<Promise<any>>>([]);
+	let bookingResponse = $state<Array<Promise<Response>>>([]);
 
 	$effect(() => {
 		bookingResponse = [

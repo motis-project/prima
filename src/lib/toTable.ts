@@ -1,4 +1,4 @@
-export const toTable = (properties: Object) => {
+export const toTable = (properties: object) => {
 	const table = document.createElement('table');
 	table.classList.add('routing-graph', 'properties');
 	for (const key in properties) {
