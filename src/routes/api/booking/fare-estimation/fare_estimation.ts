@@ -125,6 +125,9 @@ export const getFareEstimation = async (
 	if (vehicle.zone == null) {
 		throw new Error('Cannot get zone ID for vehicle');
 	}
+	if (start.scheduled_time == null) {
+		throw new Error('No start time was defned');
+	}
 
 	const companyLatitude = vehicle.latitude;
 	const companyLongitude = vehicle.longitude;
@@ -132,8 +135,8 @@ export const getFareEstimation = async (
 	const zoneId = vehicle.zone;
 	let totalFare = 0;
 
-	console.log('communityZoneId =', communityId);
-	console.log('zoneId =', zoneId);
+	console.log('Betriebssitzgemeinde =', communityId);
+	console.log('Pflichtfahrgebiet =', zoneId);
 
 	const zoneRates = await db
 		.selectFrom('zone')
@@ -183,13 +186,9 @@ export const getFareEstimation = async (
 			}
 		};
 		const segments_ = await getSegments(rates, leg);
-
 		console.log('Anfahrt:', segments_);
 	}
 
-	if (start.scheduled_time == null) {
-		throw new Error('No start time was defned');
-	}
 	if (
 		isWithinNightTime(
 			start.scheduled_time.toISOString(),
@@ -229,10 +228,10 @@ export const getFareEstimation = async (
 			totalFare += e.dist * e.rate;
 		}
 	});
-	console.log('Distance =', totalDist);
+	console.log('Distanz =', totalDist);
 
 	totalFare = Math.round(totalFare / 1000);
-	console.log('Fare =', totalFare);
+	console.log('Fahrpreis =', totalFare);
 
 	return totalFare;
 };
