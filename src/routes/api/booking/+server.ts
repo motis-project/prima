@@ -23,11 +23,6 @@ const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 };
 
 export const POST = async (event) => {
-	//
-	// console.log(await db.selectFrom('zone').where('zone.id', '=', 4).select([
-	// 	sql`ST_asGeoJson(zone.area)`.as('z')
-	// ]).execute())
-	//
 	const customer = event.locals.user;
 	if (!customer) {
 		return error(403);
@@ -51,18 +46,24 @@ export const POST = async (event) => {
 			})
 		).metadata.duration;
 	} catch (e) {
-		return json({
-			status: 1,
-			message: 'Es ist ein Fehler im Routing von Start zu Ziel aufgetreten.'
-		});
+		return json(
+			{
+				status: 1,
+				message: 'Es ist ein Fehler im Routing von Start zu Ziel aufgetreten.'
+			},
+			{ status: 404 }
+		);
 	}
 
 	if (travelDuration == 0) {
-		return json({ status: 2, message: 'Start und Ziel sind identisch.' });
+		return json({ status: 2, message: 'Start und Ziel sind identisch.' }, { status: 404 });
 	}
 
 	if (travelDuration > MAX_TRAVEL_DURATION) {
-		return json({ status: 3, message: 'Die maximale Fahrtzeit wurde überschritten.' });
+		return json(
+			{ status: 3, message: 'Die maximale Fahrtzeit wurde überschritten.' },
+			{ status: 404 }
+		);
 	}
 
 	const startTime = startFixed ? time : new Date(time.getTime() - secondsToMs(travelDuration));
@@ -70,7 +71,10 @@ export const POST = async (event) => {
 	const travelInterval = new Interval(startTime, targetTime);
 
 	if (new Date(Date.now() + minutesToMs(MIN_PREP_MINUTES)) > startTime) {
-		return json({ status: 4, message: 'Die Anfrage verletzt die minimale Vorlaufzeit.' });
+		return json(
+			{ status: 4, message: 'Die Anfrage verletzt die minimale Vorlaufzeit.' },
+			{ status: 404 }
+		);
 	}
 	const expandedTravelInterval = travelInterval.expand(hoursToMs(24), hoursToMs(24));
 
@@ -142,16 +146,22 @@ export const POST = async (event) => {
 
 	if (dbResults.length == 0) {
 		if (!startAndTargetShareZone(fromCoordinates, toCoordinates)) {
-			return json({
-				status: 5,
-				message: 'Start und Ziel sind nicht im selben Pflichtfahrgebiet enthalten.'
-			});
+			return json(
+				{
+					status: 5,
+					message: 'Start und Ziel sind nicht im selben Pflichtfahrgebiet enthalten.'
+				},
+				{ status: 404 }
+			);
 		}
-		return json({
-			status: 6,
-			message:
-				'Kein Unternehmen im relevanten Pflichtfahrgebiet hat ein Fahrzeug, das zwischen Start und Ende der Anfrage verfügbar ist.'
-		});
+		return json(
+			{
+				status: 6,
+				message:
+					'Kein Unternehmen im relevanten Pflichtfahrgebiet hat ein Fahrzeug, das zwischen Start und Ende der Anfrage verfügbar ist.'
+			},
+			{ status: 404 }
+		);
 	}
 
 	// Group availabilities by vehicle, merge availabilities corresponding to the same vehicle,
@@ -185,11 +195,14 @@ export const POST = async (event) => {
 		});
 
 	if (availableVehicles.length == 0) {
-		return json({
-			status: 7,
-			message:
-				'Kein Unternehmen im relevanten Pflichtfahrgebiet hat ein Fahrzeug, das zwischen Start und Ende der Anfrage verfügbar ist.'
-		});
+		return json(
+			{
+				status: 7,
+				message:
+					'Kein Unternehmen im relevanten Pflichtfahrgebiet hat ein Fahrzeug, das zwischen Start und Ende der Anfrage verfügbar ist.'
+			},
+			{ status: 404 }
+		);
 	}
 
 	// Group the data of the vehicles which are available during the travel interval by their companies,
@@ -261,11 +274,14 @@ export const POST = async (event) => {
 	);
 
 	if (vehicleIds.length == 0) {
-		return json({
-			status: 9,
-			message:
-				'Kein Unternehmen im relevanten Pflichtfahrgebiet hat ein Fahrzeug, das für die gesamte Tour mit An- und Rückfahrt durchgängig verfügbar ist.'
-		});
+		return json(
+			{
+				status: 9,
+				message:
+					'Kein Unternehmen im relevanten Pflichtfahrgebiet hat ein Fahrzeug, das für die gesamte Tour mit An- und Rückfahrt durchgängig verfügbar ist.'
+			},
+			{ status: 404 }
+		);
 	}
 
 	let tourId: number | undefined = undefined;
@@ -316,12 +332,15 @@ export const POST = async (event) => {
 			};
 		});
 
-		if (viableVehicles.length == 0) {
-			return json({
-				status: 10,
-				message:
-					'Kein Fahrzeug ist für die gesamte Fahrtzeit verfügbar und nicht mit anderen Aufträgen beschäftigt.'
-			});
+		if (viable_vehicles.length == 0) {
+			return json(
+				{
+					status: 10,
+					message:
+						'Kein Fahrzeug ist für die gesamte Fahrtzeit verfügbar und nicht mit anderen Aufträgen beschäftigt.'
+				},
+				{ status: 404 }
+			);
 		}
 
 		// Sort companies by the distance of their taxi-central to start + target
@@ -453,5 +472,5 @@ export const POST = async (event) => {
 			message: 'Die Buchung war erfolgreich.'
 		});
 	}
-	return json({ status: 11, message: 'Fehler beim schreiben in die Datenbank' });
+	return json({ status: 11, message: 'Fehler beim schreiben in die Datenbank' }, { status: 503 });
 };
