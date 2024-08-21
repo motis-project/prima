@@ -9,7 +9,7 @@ import { MAX_TRAVEL_DURATION, MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
 
 const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
-	return await db
+	const zoneContainingStartAndDestination = await db
 		.selectFrom('zone')
 		.where((eb) =>
 			eb.and([
@@ -19,6 +19,7 @@ const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 			])
 		)
 		.executeTakeFirst();
+	return zoneContainingStartAndDestination != undefined;
 };
 
 export const POST = async (event) => {
@@ -141,7 +142,7 @@ export const POST = async (event) => {
 		.execute();
 
 	if (dbResults.length == 0) {
-		if (!startAndTargetShareZone(fromCoordinates, toCoordinates)) {
+		if (!(await startAndTargetShareZone(fromCoordinates, toCoordinates))) {
 			return json(
 				{
 					status: 5,
