@@ -21,12 +21,12 @@
 	let map = $state<undefined | maplibregl.Map>();
 
 	let start = $state<Coordinates>({
-		lat: 51.1588351,
-		lng: 14.9813484
+		lat: 51.343543966724404,
+		lng: 14.843405973137568
 	});
 	let destination = $state<Coordinates>({
-		lat: 51.1169562,
-		lng: 14.9721042
+		lat: 51.30359310483892,
+		lng: 14.901901510528297
 	});
 	let dummyAddress = {
 		street: '',
@@ -58,7 +58,6 @@
 	let init = false;
 	let startMarker: maplibregl.Marker | null = null;
 	let destinationMarker: maplibregl.Marker | null = null;
-	let taxiMarker: maplibregl.Marker | null = null;
 
 	$effect(() => {
 		if (map && !init) {
@@ -113,11 +112,53 @@
 				});
 
 			// TEST
-			taxiMarker = new maplibregl.Marker({
+			let taxiMarker4: maplibregl.Marker | null = null;
+			let taxiMarker5: maplibregl.Marker | null = null;
+			let taxiMarker6: maplibregl.Marker | null = null;
+			let taxiMarker7: maplibregl.Marker | null = null;
+			let taxiMarker8: maplibregl.Marker | null = null;
+			let taxiMarker9: maplibregl.Marker | null = null;
+
+			taxiMarker4 = new maplibregl.Marker({
 				draggable: false,
 				color: 'yellow'
 			})
 				.setLngLat([14.641439, 51.504585])
+				.addTo(map);
+
+			taxiMarker5 = new maplibregl.Marker({
+				draggable: false,
+				color: 'yellow'
+			})
+				.setLngLat([14.660599, 51.532974])
+				.addTo(map);
+
+			taxiMarker6 = new maplibregl.Marker({
+				draggable: false,
+				color: 'yellow'
+			})
+				.setLngLat([14.666578, 51.38096])
+				.addTo(map);
+
+			taxiMarker7 = new maplibregl.Marker({
+				draggable: false,
+				color: 'yellow'
+			})
+				.setLngLat([14.782109, 51.30576])
+				.addTo(map);
+
+			taxiMarker8 = new maplibregl.Marker({
+				draggable: false,
+				color: 'yellow'
+			})
+				.setLngLat([14.834551, 51.302185])
+				.addTo(map);
+
+			taxiMarker9 = new maplibregl.Marker({
+				draggable: false,
+				color: 'yellow'
+			})
+				.setLngLat([14.944467, 51.321884])
 				.addTo(map);
 			// ---
 
@@ -182,7 +223,7 @@
 			return { url: `https://europe.motis-project.de/tiles${url}` };
 		}
 	}}
-	center={[14.679165796358308, 51.32815838241428]}
+	center={[14.889815398274935, 51.33709604007766]}
 	{zoom}
 	style={getStyle(0)}
 	className="h-screen w-screen h-full w-full rounded-lg border shadow"
@@ -266,6 +307,17 @@
 										</Alert.Description>
 									</Alert.Root>
 								</div>
+								{#if r.ok}
+									<Alert.Root variant={r.ok ? 'default' : 'destructive'}>
+										<Alert.Description>
+											{res.companyName}<br />
+											{res.companyId}<br />
+											{res.companyLat}<br />
+											{res.companyLng}<br />
+											{start.lat}<br />
+										</Alert.Description>
+									</Alert.Root>
+								{/if}
 							{/await}
 						{:catch e}
 							<div>Error: {e}</div>
