@@ -334,14 +334,7 @@ export const POST = async (event) => {
 		});
 
 		if (viableVehicles.length == 0) {
-			return json(
-				{
-					status: 10,
-					message:
-						'Kein Fahrzeug ist für die gesamte Fahrtzeit verfügbar und nicht mit anderen Aufträgen beschäftigt.'
-				},
-				{ status: 404 }
-			);
+			return;
 		}
 
 		// Sort companies by the distance of their taxi-central to start + target
@@ -473,5 +466,12 @@ export const POST = async (event) => {
 			message: 'Die Buchung war erfolgreich.'
 		});
 	}
-	return json({ status: 11, message: 'Fehler beim schreiben in die Datenbank' }, { status: 503 });
+	return json(
+		{
+			status: 10,
+			message:
+				'Kein Fahrzeug ist für die gesamte Fahrtzeit verfügbar und nicht mit anderen Aufträgen beschäftigt.'
+		},
+		{ status: 404 }
+	);
 };

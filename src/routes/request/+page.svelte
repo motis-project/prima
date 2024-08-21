@@ -155,7 +155,7 @@
 
 	let timeType = $state('departure');
 	let dateTime = $state(new Date());
-	let arriveBy = $derived(timeType === 'arrival');
+	let arriveBy = $derived(timeType === 'departure');
 
 	let bookingResponse = $state<Array<Promise<Response>>>([]);
 
