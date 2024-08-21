@@ -16,7 +16,7 @@
 	import { CircleAlert, CircleCheckBig } from 'lucide-svelte/icons';
 	import Button from '$lib/components/ui/button/button.svelte';
 
-	let zoom = $state(12);
+	let zoom = $state(10);
 	let bounds = $state<undefined | maplibregl.LngLatBounds>(undefined);
 	let map = $state<undefined | maplibregl.Map>();
 
@@ -172,7 +172,7 @@
 			return { url: `https://europe.motis-project.de/tiles${url}` };
 		}
 	}}
-	center={[14.9361567, 51.150878]}
+	center={[14.679165796358308, 51.32815838241428]}
 	{zoom}
 	style={getStyle(0)}
 	className="h-screen w-screen h-full w-full rounded-lg border shadow"
