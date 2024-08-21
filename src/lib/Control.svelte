@@ -6,10 +6,9 @@
 		children!: Snippet;
 		position?: ControlPosition = 'top-right';
 	}
+
 	let { children, position, ...props }: Props = $props();
-
 	let el: HTMLElement | null = null;
-
 	let initialized = $state(false);
 
 	class Control implements IControl {
@@ -25,7 +24,6 @@
 	}
 
 	let ctrl = new Control();
-
 	let ctx: { map: Map | null } = getContext('map');
 
 	$effect(() => {

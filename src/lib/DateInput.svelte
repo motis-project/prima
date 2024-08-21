@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { cn } from './utils';
+	import { minutesToMs } from '$lib/time_utils';
+	import { cn } from '$lib/utils';
 
 	let {
 		value = $bindable()
@@ -12,7 +13,7 @@
 	$effect(() => {
 		if (el !== undefined) {
 			value.setSeconds(0, 0);
-			const dateTimeLocalValue = new Date(value.getTime() - value.getTimezoneOffset() * 60000)
+			const dateTimeLocalValue = new Date(value.getTime() - minutesToMs(value.getTimezoneOffset()))
 				.toISOString()
 				.slice(0, -1);
 			el.value = dateTimeLocalValue;
@@ -29,6 +30,6 @@
 	onchange={(e) => {
 		const dateTimeLocalValue = (e.target as HTMLTextAreaElement).value;
 		const fakeUtcTime = new Date(`${dateTimeLocalValue}Z`);
-		value = new Date(fakeUtcTime.getTime() + fakeUtcTime.getTimezoneOffset() * 60000);
+		value = new Date(fakeUtcTime.getTime() + minutesToMs(fakeUtcTime.getTimezoneOffset()));
 	}}
 />
