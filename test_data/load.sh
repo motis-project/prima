@@ -22,6 +22,7 @@ cd $BASEDIR
 export PGPASSWORD=pw
 
 psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/address.sql
+psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/taxi_rates.sql
 psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/zone.sql
 psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/company.sql
 psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/vehicle.sql
