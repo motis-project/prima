@@ -58,6 +58,7 @@
 	let init = false;
 	let startMarker: maplibregl.Marker | null = null;
 	let destinationMarker: maplibregl.Marker | null = null;
+	let taxiMarker: maplibregl.Marker | null = null;
 
 	$effect(() => {
 		if (map && !init) {
@@ -110,6 +111,15 @@
 					destination.lng = x.lng;
 					destination.lat = x.lat;
 				});
+
+			// TEST
+			taxiMarker = new maplibregl.Marker({
+				draggable: false,
+				color: 'yellow'
+			})
+				.setLngLat([14.641439, 51.504585])
+				.addTo(map);
+			// ---
 
 			let popup: maplibregl.Popup | null = null;
 			map.on('contextmenu', (e) => {
