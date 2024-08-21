@@ -1,4 +1,4 @@
-function getOrCreate<K, V>(map: Map<K, V>, key: K, valueFn: (key: K) => V): V {
+export function getOrCreate<K, V>(map: Map<K, V>, key: K, valueFn: (key: K) => V): V {
 	let value = map.get(key);
 	if (value == undefined) {
 		value = valueFn(key);

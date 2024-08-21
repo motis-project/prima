@@ -13,7 +13,7 @@ import {
 	selectZonesContainingCoordinates,
 	ZoneType
 } from '$lib/sqlHelpers';
-import type { Company, Tour, Vehicle } from '$lib/compositionTypes';
+import type { Company, Vehicle } from '$lib/compositionTypes';
 
 export type BookingApiQueryResult = {
 	companies: Company[];
@@ -21,9 +21,11 @@ export type BookingApiQueryResult = {
 };
 
 export function forEachVehicle<T>(companies: Company[], fn: (c: Company, v: Vehicle) => T) {
-	companies.forEach((c) => c.vehicles.forEach((v) => {
+	companies.forEach((c) =>
+		c.vehicles.forEach((v) => {
 			fn(c, v);
-	}));
+		})
+	);
 }
 
 const selectAvailabilities = (eb: ExpressionBuilder<Database, 'vehicle'>, interval: Interval) => {
@@ -44,18 +46,19 @@ const selectAvailabilities = (eb: ExpressionBuilder<Database, 'vehicle'>, interv
 const selectEvents = (eb: ExpressionBuilder<Database, 'tour'>) => {
 	return jsonArrayFrom(
 		eb
-			.selectFrom('event')
-			.whereRef('event.tour', '=', 'tour.id')
+			.selectFrom('request')
+			.whereRef('request.tour', '=', 'tour.id')
+			.innerJoin('event', 'request.id', 'event.request')
 			.select([
 				'event.id',
 				'event.communicated_time',
 				'event.scheduled_time',
 				'event.latitude',
 				'event.longitude',
-				'event.passengers',
-				'event.bikes',
-				'event.luggage',
-				'event.wheelchairs',
+				'request.passengers',
+				'request.bikes',
+				'request.luggage',
+				'request.wheelchairs',
 				'event.is_pickup'
 			])
 	).as('events');
@@ -208,7 +211,10 @@ export const bookingApiQuery = async (
 									departure: t.departure,
 									arrival: t.arrival,
 									events: t.events.map((e) => {
+										const scheduled: Date = new Date(e.scheduled_time);
+										const communicated: Date = new Date(e.communicated_time);
 										return {
+											tourId: t.id,
 											id: e.id,
 											bikes: e.bikes,
 											wheelchairs: e.wheelchairs,
@@ -217,12 +223,8 @@ export const bookingApiQuery = async (
 											is_pickup: e.is_pickup,
 											coordinates: new Coordinates(e.latitude, e.longitude),
 											time: new Interval(
-												new Date(
-													Math.min(e.scheduled_time.getTime(), e.communicated_time.getTime())
-												),
-												new Date(
-													Math.max(e.scheduled_time.getTime(), e.communicated_time.getTime())
-												)
+												new Date(Math.min(scheduled.getTime(), communicated.getTime())),
+												new Date(Math.max(scheduled.getTime(), communicated.getTime()))
 											)
 										};
 									})

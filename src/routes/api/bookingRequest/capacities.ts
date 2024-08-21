@@ -7,7 +7,12 @@ export class Capacity {
 	luggage!: number;
 }
 
-export class CapacityState {
+export type Range = {
+	earliestPickup: number;
+	latestDropoff: number;
+};
+
+export class CapacitySimulation {
 	constructor(
 		bikeCapacity: number,
 		wheelchairCapacity: number,
@@ -55,7 +60,7 @@ export class CapacityState {
 		);
 	}
 
-	getPossibleInsertionIntervals = (events: Event[], toInsert: Capacity) => {
+	getPossibleInsertionIntervals = (events: Event[], toInsert: Capacity): Range[] => {
 		const possibleInsertions = [];
 		this.adjustValues(toInsert);
 		let start: number | undefined = undefined;
@@ -63,7 +68,7 @@ export class CapacityState {
 			this.adjustValues(events[i]);
 			if (!this.isValid()) {
 				if (start != undefined) {
-					possibleInsertions.push({ start, end: i });
+					possibleInsertions.push({ earliestPickup: start, latestDropoff: i });
 					start = undefined;
 				}
 				continue;
@@ -71,7 +76,7 @@ export class CapacityState {
 			start = start == undefined ? i : start;
 		}
 		if (start != undefined) {
-			possibleInsertions.push({ start, end: events.length });
+			possibleInsertions.push({ earliestPickup: start, latestDropoff: events.length });
 		}
 		return possibleInsertions;
 	};

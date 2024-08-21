@@ -1,9 +1,10 @@
 import { Interval } from '$lib/interval.js';
 import { Coordinates } from '$lib/location.js';
 import { minutesToMs } from '$lib/time_utils.js';
-import { Capacity, CapacityState as CapacitySimulation } from './capacities.js';
+import { Capacity, CapacitySimulation, type Range } from './capacities.js';
 import { forEachVehicle } from './queries.js';
 import { type Company, type Event } from '$lib/compositionTypes.js';
+import { getOrCreate } from '$lib/collection_utils.js';
 
 export const addTourConcatCoordinates = (
 	tourConcatenation: TourConcatenation,
@@ -100,7 +101,7 @@ class NewTour extends TourConcatenation {
 	};
 }
 
-class BetweenEventsConcatenation extends TourConcatenation {
+class BetweenEvents extends TourConcatenation {
 	constructor(event1: Event, event2: Event, companyId: number) {
 		super(companyId, 1);
 		this.event1 = event1;
@@ -121,8 +122,8 @@ class BetweenEventsConcatenationPair extends TourConcatenation {
 		companyId: number,
 		toIdx: number,
 		vehicleId: number,
-		insertion1: BetweenEventsConcatenation,
-		insertion2: BetweenEventsConcatenation
+		insertion1: BetweenEvents,
+		insertion2: BetweenEvents
 	) {
 		super(companyId, toIdx);
 		this.firstInsert = insertion1;
@@ -130,8 +131,8 @@ class BetweenEventsConcatenationPair extends TourConcatenation {
 		this.vehicleId = vehicleId;
 	}
 	vehicleId: number;
-	firstInsert: BetweenEventsConcatenation;
-	secondInsert: BetweenEventsConcatenation;
+	firstInsert: BetweenEvents;
+	secondInsert: BetweenEvents;
 }
 
 export class TourConcatenations {
@@ -139,10 +140,12 @@ export class TourConcatenations {
 		this.concatenations = [];
 		this.startMany = [];
 		this.targetMany = [];
+		this.possibleInsertionsByVehicle = new Map<number, Range[]>();
 	}
 	concatenations: TourConcatenation[];
 	startMany: Coordinates[];
 	targetMany: Coordinates[];
+	possibleInsertionsByVehicle: Map<number, Range[]>;
 
 	cmpFullTravelDurations = (
 		durationStart: number[],
@@ -166,46 +169,21 @@ export class TourConcatenations {
 				v.seats,
 				v.storage_space
 			);
-			let prevTourInsertions = simulation.getPossibleInsertionIntervals(
-				v.tours[0].events,
-				requiredCapacity
-			)
-			for(let i=0;i!=v.tours.length-1;++i) {
-				const t1 = v.tours[i];
-				const t2 = v.tours[i+1];
-				const nextTourInsertions = simulation.getPossibleInsertionIntervals(
-					t2.events,
+			const allEvents = v.tours.flatMap((t) => t.events);
+			const insertions = getOrCreate(this.possibleInsertionsByVehicle, v.id, (_) =>
+				simulation.getPossibleInsertionIntervals(
+					allEvents,
 					requiredCapacity
-				);
-				nextTourInsertions.forEach((insertion) => {
-					const eventInsertions = new Array<BetweenEventsConcatenation>(
-						insertion.end - insertion.start
-					);
-					for (let i = insertion.start; i != insertion.end; ++i) {
-						for (let j = i; j != insertion.end; ++j) {
-							if (i == j) {
-								eventInsertions[j - insertion.start] = new BetweenEventsConcatenation(
-									t2.events[i],
-									t2.events[i + 1],
-									c.id
-								);
-								this.concatenations.push(eventInsertions[j - insertion.start]);
-								continue;
-							}
-							this.concatenations.push(
-								new BetweenEventsConcatenationPair(
-									c.id,
-									1,
-									v.id,
-									eventInsertions[i - insertion.start],
-									eventInsertions[j - insertion.start]
-								)
-							);
-						}
-					}
-				});
-				prevTourInsertions = nextTourInsertions;
-			}
+				)
+			);
+			const s: BetweenEvents[] = [];
+			insertions.forEach((insertionRange) => {
+				for (let i = insertionRange.earliestPickup; i != insertionRange.latestDropoff; ++i) {
+					const prevEvent = allEvents[i];
+					const nextEvent = allEvents[i+1];
+					s.push(new BetweenEvents(prevEvent, nextEvent, c.id));
+				}
+			});
 		});
 	};
 

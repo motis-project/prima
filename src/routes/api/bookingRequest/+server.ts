@@ -111,7 +111,7 @@ const doStuff = async (
 		return determineError(oneCoordinates, requiredCapacity);
 	}
 
-	for(let index=0;index!=travelDurations.length;++index) {
+	for (let index = 0; index != travelDurations.length; ++index) {
 		const travelDuration = travelDurations[index];
 		if (travelDuration > MAX_TRAVEL_DURATION) {
 			results[index] = {
