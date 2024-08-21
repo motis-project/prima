@@ -22,6 +22,14 @@
 	}
 	const { open = $bindable() }: Props = $props();
 
+	const displayFare = (fare: number | null) => {
+		if (!fare) {
+			return '-';
+		}
+		let res: string = Math.floor(fare / 100) + ',' + (fare % 100);
+		return res;
+	};
+
 	let tourIndex = $state(0);
 	let tour = $derived(open.tours && open.tours[tourIndex]);
 
@@ -52,6 +60,7 @@
 				})
 			);
 		}
+
 		return routes;
 	};
 
@@ -137,9 +146,10 @@
 					<Table.Root>
 						<Table.Header>
 							<Table.Row>
-								<Table.Head>Beginn</Table.Head>
-								<Table.Head>Ende</Table.Head>
-								<Table.Head>Fahrzeug</Table.Head>
+								<Table.Head>Abfahrt</Table.Head>
+								<Table.Head>Ankunft</Table.Head>
+								<Table.Head class="text-right">Fahrzeug</Table.Head>
+								<Table.Head class="text-right">Fahrpreis</Table.Head>
 							</Table.Row>
 						</Table.Header>
 						<Table.Body>
@@ -151,7 +161,8 @@
 									<Table.Cell>
 										{tour!.to.toLocaleString('de-DE').slice(0, -3)}
 									</Table.Cell>
-									<Table.Cell>{tour!.license_plate}</Table.Cell>
+									<Table.Cell class="text-right">{tour!.license_plate}</Table.Cell>
+									<Table.Cell class="text-right">{displayFare(tour!.fare)} €</Table.Cell>
 								</Table.Row>
 							{/if}
 						</Table.Body>
@@ -238,7 +249,6 @@
 						<Table.Head>Kunde</Table.Head>
 						<Table.Head>Tel. Kunde</Table.Head>
 						<Table.Head>Ein-/Ausstieg</Table.Head>
-						<Table.Head class="text-right">Fahrpreis</Table.Head>
 					</Table.Row>
 				</Table.Header>
 
@@ -268,7 +278,6 @@
 										<ArrowLeft class="h-4 w-4" />
 									</Table.Cell>
 								{/if}
-								<Table.Cell class="text-right">19,80</Table.Cell>
 							</Table.Row>
 						{/each}
 					{/if}

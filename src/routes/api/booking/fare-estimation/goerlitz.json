@@ -1,0 +1,35 @@
+{
+	"anfahrt": {
+		"grundpreis": 0,
+		"pkm": [],
+		"pauschal": [
+			[0, 1000],
+			[10000, 2000]
+		],
+		"return-free": true
+	},
+	"tag": {
+		"grundpreis": 450,
+		"pkm": [
+			[0, 350],
+			[3000, 210],
+			[11000, 210]
+		],
+		"pauschal": []
+	},
+	"nacht": {
+		"grundpreis": 550,
+		"pkm": [
+			[0, 360],
+			[3000, 220],
+			[11000, 220]
+		],
+		"pauschal": []
+	},
+	"zuschlag": {
+		"grossraum": 900
+	},
+	"wartezeit-ph": 3500,
+	"beginn-nacht": 21,
+	"ende-nacht": 5
+}
