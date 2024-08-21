@@ -1,5 +1,5 @@
-import type { Interval } from './interval';
-import type { Coordinates } from './location';
+import type { Interval } from '$lib/interval';
+import type { Coordinates } from '$lib/location';
 
 export type Company = {
 	id: number;
