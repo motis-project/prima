@@ -257,7 +257,7 @@ export const POST = async (event) => {
 	toRemoveIdxs.forEach((r) => vehicles.splice(r, 1));
 	toRemoveIdxs.forEach((r) => fullTravelIntervals.splice(r, 1));
 
-	const vehicleIds = vehicles.map((v) => v[0].vehicle);
+	const vehicleIds = vehicles.flatMap((v) => v.map((vehicles) => vehicles.vehicle));
 
 	console.assert(
 		vehicles.length == fullTravelIntervals.length,
