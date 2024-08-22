@@ -111,6 +111,7 @@
 					const x = destinationMarker!.getLngLat();
 					destination.lng = x.lng;
 					destination.lat = x.lat;
+					routes = [];
 				});
 
 			// TEST
@@ -216,11 +217,16 @@
 	// client Secret: df987129855de70a804f146718aac956
 	// client Secret: 30dee8771d325304274b7c2555fae33e
 
-	let routes = $state<Array<Promise<any>>>([]);
+	type ColoredRoute = {
+		route: Promise<any>;
+		color: string;
+	};
+	let routes = $state<Array<ColoredRoute>>([]);
 
 	const getRoutes = (companyLat: number, companyLng: number) => {
-		routes.push(
-			getRoute({
+		routes = [];
+		routes.push({
+			route: getRoute({
 				start: {
 					lat: companyLat,
 					lng: companyLng,
@@ -233,10 +239,11 @@
 				},
 				profile: 'car',
 				direction: 'forward'
-			})
-		);
-		routes.push(
-			getRoute({
+			}),
+			color: 'red'
+		});
+		routes.push({
+			route: getRoute({
 				start: {
 					lat: start.lat,
 					lng: start.lng,
@@ -249,10 +256,11 @@
 				},
 				profile: 'car',
 				direction: 'forward'
-			})
-		);
-		routes.push(
-			getRoute({
+			}),
+			color: '#42a5f5'
+		});
+		routes.push({
+			route: getRoute({
 				start: {
 					lat: destination.lat,
 					lng: destination.lng,
@@ -265,8 +273,9 @@
 				},
 				profile: 'car',
 				direction: 'forward'
-			})
-		);
+			}),
+			color: 'yellow'
+		});
 	};
 </script>
 
@@ -320,7 +329,6 @@
 						<Button
 							variant="outline"
 							on:click={() => {
-								routes = [];
 								bookingResponse = [
 									booking(
 										query.from,
@@ -386,7 +394,7 @@
 	</Control>
 
 	{#each routes as segment, i}
-		{#await segment then r}
+		{#await segment.route then r}
 			{#if r.type == 'FeatureCollection'}
 				<GeoJSON id={'r_ ' + i} data={r}>
 					<Layer
@@ -412,7 +420,7 @@
 						}}
 						filter={true}
 						paint={{
-							'line-color': '#42a5f5',
+							'line-color': segment.color,
 							'line-width': 5,
 							'line-opacity': 0.8
 						}}
