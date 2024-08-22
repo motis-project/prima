@@ -357,7 +357,7 @@ export const POST = async (event) => {
 		// Sort companies by the distance of their taxi-central to start + target
 		viableVehicles.sort((a, b) => a.distance - b.distance);
 		bestVehicle = viableVehicles[0];
-		console.log(viableVehicles);
+		// console.log(viableVehicles);
 
 		// Write tour, request, 2 events and if not existant address in db.
 		let startAddress = await trx
@@ -475,7 +475,6 @@ export const POST = async (event) => {
 		} catch (e) {
 			console.log(e);
 		}
-		console.log(bestVehicle!.companyId);
 		return json({
 			status: 0,
 			companyId: bestVehicle!.companyId!,

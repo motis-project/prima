@@ -10,11 +10,13 @@
 	import DateInput from '$lib/DateInput.svelte';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import { Coordinates } from '$lib/location';
-	import { booking } from '$lib/api';
+	import { booking, getRoute } from '$lib/api';
 	import { toTable } from '$lib/toTable';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import { CircleAlert, CircleCheckBig } from 'lucide-svelte/icons';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import GeoJSON from '$lib/GeoJSON.svelte';
+	import Layer from '$lib/Layer.svelte';
 
 	let zoom = $state(10);
 	let bounds = $state<undefined | maplibregl.LngLatBounds>(undefined);
@@ -213,6 +215,59 @@
 	// client ID: a9b1f1ad1051790a9c6970db85710986
 	// client Secret: df987129855de70a804f146718aac956
 	// client Secret: 30dee8771d325304274b7c2555fae33e
+
+	let routes = $state<Array<Promise<any>>>([]);
+
+	const getRoutes = (companyLat: number, companyLng: number) => {
+		routes.push(
+			getRoute({
+				start: {
+					lat: companyLat,
+					lng: companyLng,
+					level: 0
+				},
+				destination: {
+					lat: start.lat,
+					lng: start.lng,
+					level: 0
+				},
+				profile: 'car',
+				direction: 'forward'
+			})
+		);
+		routes.push(
+			getRoute({
+				start: {
+					lat: start.lat,
+					lng: start.lng,
+					level: 0
+				},
+				destination: {
+					lat: destination.lat,
+					lng: destination.lng,
+					level: 0
+				},
+				profile: 'car',
+				direction: 'forward'
+			})
+		);
+		routes.push(
+			getRoute({
+				start: {
+					lat: destination.lat,
+					lng: destination.lng,
+					level: 0
+				},
+				destination: {
+					lat: companyLat,
+					lng: companyLng,
+					level: 0
+				},
+				profile: 'car',
+				direction: 'forward'
+			})
+		);
+	};
 </script>
 
 <Map
@@ -265,6 +320,7 @@
 						<Button
 							variant="outline"
 							on:click={() => {
+								routes = [];
 								bookingResponse = [
 									booking(
 										query.from,
@@ -315,6 +371,7 @@
 											{res.companyLat}<br />
 											{res.companyLng}<br />
 											{start.lat}<br />
+											{getRoutes(res.companyLat, res.companyLng)}
 										</Alert.Description>
 									</Alert.Root>
 								{/if}
@@ -327,4 +384,41 @@
 			</div>
 		</Card>
 	</Control>
+
+	{#each routes as segment, i}
+		{#await segment then r}
+			{#if r.type == 'FeatureCollection'}
+				<GeoJSON id={'r_ ' + i} data={r}>
+					<Layer
+						id={'path-outline_ ' + i}
+						type="line"
+						layout={{
+							'line-join': 'round',
+							'line-cap': 'round'
+						}}
+						filter={true}
+						paint={{
+							'line-color': '#1966a4',
+							'line-width': 7.5,
+							'line-opacity': 0.8
+						}}
+					/>
+					<Layer
+						id={'path_ ' + i}
+						type="line"
+						layout={{
+							'line-join': 'round',
+							'line-cap': 'round'
+						}}
+						filter={true}
+						paint={{
+							'line-color': '#42a5f5',
+							'line-width': 5,
+							'line-opacity': 0.8
+						}}
+					/>
+				</GeoJSON>
+			{/if}
+		{/await}
+	{/each}
 </Map>
