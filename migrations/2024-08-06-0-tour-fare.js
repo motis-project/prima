@@ -7,7 +7,7 @@ export async function up(db) {
 
 export async function down(db) {
     await db.schema
-    .alterTable('tour')
-    .dropColumn('fare')
-    .execute();
+        .alterTable('tour')
+        .dropColumn('fare')
+        .execute();
 }
