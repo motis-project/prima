@@ -17,6 +17,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import GeoJSON from '$lib/GeoJSON.svelte';
 	import Layer from '$lib/Layer.svelte';
+	const { data } = $props();
 
 	let zoom = $state(10);
 	let bounds = $state<undefined | maplibregl.LngLatBounds>(undefined);
@@ -99,6 +100,7 @@
 					const x = startMarker!.getLngLat();
 					start.lng = x.lng;
 					start.lat = x.lat;
+					routes = [];
 				});
 
 			destinationMarker = new maplibregl.Marker({
@@ -114,56 +116,14 @@
 					routes = [];
 				});
 
-			// TEST
-			let taxiMarker4: maplibregl.Marker | null = null;
-			let taxiMarker5: maplibregl.Marker | null = null;
-			let taxiMarker6: maplibregl.Marker | null = null;
-			let taxiMarker7: maplibregl.Marker | null = null;
-			let taxiMarker8: maplibregl.Marker | null = null;
-			let taxiMarker9: maplibregl.Marker | null = null;
-
-			taxiMarker4 = new maplibregl.Marker({
-				draggable: false,
-				color: 'yellow'
-			})
-				.setLngLat([14.641439, 51.504585])
-				.addTo(map);
-
-			taxiMarker5 = new maplibregl.Marker({
-				draggable: false,
-				color: 'yellow'
-			})
-				.setLngLat([14.660599, 51.532974])
-				.addTo(map);
-
-			taxiMarker6 = new maplibregl.Marker({
-				draggable: false,
-				color: 'yellow'
-			})
-				.setLngLat([14.666578, 51.38096])
-				.addTo(map);
-
-			taxiMarker7 = new maplibregl.Marker({
-				draggable: false,
-				color: 'yellow'
-			})
-				.setLngLat([14.782109, 51.30576])
-				.addTo(map);
-
-			taxiMarker8 = new maplibregl.Marker({
-				draggable: false,
-				color: 'yellow'
-			})
-				.setLngLat([14.834551, 51.302185])
-				.addTo(map);
-
-			taxiMarker9 = new maplibregl.Marker({
-				draggable: false,
-				color: 'yellow'
-			})
-				.setLngLat([14.944467, 51.321884])
-				.addTo(map);
-			// ---
+			for (let e in data.companies) {
+				new maplibregl.Marker({
+					draggable: false,
+					color: 'yellow'
+				})
+					.setLngLat([data.companies[e].longitude!, data.companies[e].latitude!])
+					.addTo(map);
+			}
 
 			let popup: maplibregl.Popup | null = null;
 			map.on('contextmenu', (e) => {
@@ -218,6 +178,7 @@
 	// client Secret: 30dee8771d325304274b7c2555fae33e
 
 	type ColoredRoute = {
+		/* eslint-disable-next-line */
 		route: Promise<any>;
 		color: string;
 	};

@@ -7,4 +7,5 @@ INSERT INTO "company" ("latitude", "longitude", "name", "address", "zone", "comm
 (51.38096,	14.666578,	'Taxi Reichwalde',	'Robert-Koch-Straße 45, 02943 Boxberg/Oberlausitz',	3,	38),
 (51.30576,	14.782109,	'Taxi Moholz',	'Postweg 10, 02906 Niesky',	3,	65),
 (51.302185,	14.834551,	'Taxi Niesky',	'Trebuser Str. 4, 02906 Niesky',	3,	65),
-(51.321884,	14.944467,	'Taxi Rothenburg',	'Zur Wasserscheide 37, 02929 Rothenburg/Oberlausitz',	3,	75);
+(51.321884,	14.944467,	'Taxi Rothenburg',	'Zur Wasserscheide 37, 02929 Rothenburg/Oberlausitz',	3,	75),
+(51.166775,	14.934901,	'Taxi Schöpstal',	'Ebersbacher Str. 43, 02829 Schöpstal',	4,	79);
