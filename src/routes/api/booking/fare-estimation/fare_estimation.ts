@@ -29,13 +29,11 @@ const getRouteSegment = async (leg: Leg) => {
 	return await getRoute({
 		start: {
 			lat: leg.start.latitude,
-			lng: leg.start.longitude,
-			level: 0
+			lng: leg.start.longitude
 		},
 		destination: {
 			lat: leg.destination.latitude,
-			lng: leg.destination.longitude,
-			level: 0
+			lng: leg.destination.longitude
 		},
 		profile: 'car',
 		direction: 'forward'
