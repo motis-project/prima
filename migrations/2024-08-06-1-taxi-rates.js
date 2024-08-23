@@ -14,8 +14,8 @@ export async function up(db) {
 
 export async function down(db) {
     await db.schema
-    .alterTable('zone')
-    .dropColumn('rates')
-    .execute();
+        .alterTable('zone')
+        .dropColumn('rates')
+        .execute();
     await db.schema.dropTable('taxi_rates').execute();
 }
