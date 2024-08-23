@@ -5,6 +5,7 @@ import { fail } from '@sveltejs/kit';
 export const actions = {
 	default: async ({ request }) => {
 		const email = (await request.formData()).get('email')!.toString();
+		const companyId = 0;
 		if (!email) {
 			return fail(400, { email, missing: true });
 		}
@@ -14,24 +15,12 @@ export const actions = {
 				.where('email', '=', email)
 				.selectAll()
 				.executeTakeFirstOrThrow();
-			if (user.is_entrepreneur) {
+			if (user.is_driver) {
 				return { existed: true };
 			}
-			const companyId = (await db
-				.insertInto('company')
-				.values({
-					latitude: null,
-					longitude: null,
-					name: null,
-					address: null,
-					zone: null,
-					community_area: null
-				})
-				.returning('company.id')
-				.executeTakeFirst())!.id;
 			await db
 				.updateTable('auth_user')
-				.set({ company_id: companyId, is_entrepreneur: true })
+				.set({ company_id: companyId, is_driver: true })
 				.where('email', '=', email)
 				.executeTakeFirst();
 		} catch {
