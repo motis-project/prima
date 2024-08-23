@@ -61,7 +61,7 @@ export class CapacitySimulation {
 	}
 
 	getPossibleInsertionIntervals = (events: Event[], toInsert: Capacity): Range[] => {
-		const possibleInsertions = [];
+		const possibleInsertions: Range[] = [];
 		this.adjustValues(toInsert);
 		let start: number | undefined = undefined;
 		for (let i = 0; i != events.length; i++) {
