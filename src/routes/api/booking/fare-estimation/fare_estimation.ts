@@ -147,14 +147,15 @@ export const getFareEstimation = async (
 		throw new Error('Cannot get taxi rates for vehicle');
 	}
 
-	const startCommunity = await db
-		.selectFrom('zone')
-		.where('id', '=', communityId)
-		.where(
-			sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${start.longitude}, ${start.latitude}),4326))`
-		)
-		.selectAll()
-		.executeTakeFirst();
+	const startIsInCommunity =
+		(await db
+			.selectFrom('zone')
+			.where('id', '=', communityId)
+			.where(
+				sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${start.longitude}, ${start.latitude}),4326))`
+			)
+			.selectAll()
+			.executeTakeFirst()) !== undefined;
 
 	const dstCommunity = await db
 		.selectFrom('zone')
@@ -169,7 +170,7 @@ export const getFareEstimation = async (
 	const ratesJson = JSON.parse(zoneRates.rates);
 	const returnFree = dstCommunity != null && ratesJson['anfahrt']['return-free'];
 
-	if (startCommunity == null && !returnFree) {
+	if (!startIsInCommunity && !returnFree) {
 		const rates = getRates(ratesJson, 'anfahrt');
 		const leg = {
 			start: {
