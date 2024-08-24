@@ -171,7 +171,7 @@ export class TourConcatenations {
 			);
 			const allEvents = v.tours.flatMap((t) => t.events);
 			const insertions = getOrCreate(this.possibleInsertionsByVehicle, v.id, (_) =>
-				simulation.getPossibleInsertionIntervals(
+				simulation.getPossibleInsertionRanges(
 					allEvents,
 					requiredCapacity
 				)
