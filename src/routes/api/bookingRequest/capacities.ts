@@ -61,6 +61,7 @@ export class CapacitySimulation {
 	}
 
 	getPossibleInsertionRanges = (events: Event[], toInsert: Capacity): Range[] => {
+		this.reset();
 		const possibleInsertions: Range[] = [];
 		this.adjustValues(toInsert);
 		let start: number | undefined = undefined;
@@ -81,7 +82,7 @@ export class CapacitySimulation {
 		return possibleInsertions;
 	};
 
-	reset() {
+	private reset() {
 		this.bikes = 0;
 		this.wheelchairs = 0;
 		this.passengers = 0;

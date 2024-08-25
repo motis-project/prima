@@ -10,7 +10,7 @@ import {
 	doesVehicleWithCapacityExist,
 	type BookingApiQueryResult
 } from './queries';
-import { TourConcatenations } from './tourConcatenation';
+import { TourScheduler } from './tourConcatenation';
 import { computeSearchIntervals } from './searchInterval';
 import type { Capacity } from './capacities';
 import { groupBy } from '$lib/collection_utils';
@@ -18,6 +18,11 @@ import { groupBy } from '$lib/collection_utils';
 export type ReturnType = {
 	status: number;
 	message: string;
+};
+
+export type SimpleEvent = {
+	location: Location;
+	time: Date;
 };
 
 export const POST = async (event) => {
@@ -39,7 +44,7 @@ export const POST = async (event) => {
 		parameters,
 		(p) => p.startFixed,
 		(p) => {
-			return { locations: p.startFixed ? p.to : p.from, time: new Date(p.timeStamp) };
+			return { location: p.startFixed ? p.to : p.from, time: new Date(p.timeStamp) };
 		}
 	);
 	const startMany = grouped.get(false);
@@ -54,7 +59,7 @@ export const POST = async (event) => {
 
 const doStuff = async (
 	oneLocation: Location,
-	many: { locations: Location; time: Date }[],
+	many: SimpleEvent[],
 	startFixed: boolean,
 	requiredCapacity: Capacity
 ) => {
@@ -62,7 +67,7 @@ const doStuff = async (
 	if (many.length == 0) {
 		return json({ status: 1, message: 'Es wurden keine Haltestellen angegeben.' }, { status: 400 });
 	}
-	const targets: Coordinates[] = many.map((e) => e.locations.coordinates);
+	const targets: Coordinates[] = many.map((e) => e.location.coordinates);
 
 	let travelDurations = [];
 	try {
@@ -152,8 +157,8 @@ const doStuff = async (
 
 	const startMany: Coordinates[] = [];
 	const targetMany: Coordinates[] = [];
-	const tourConcatenations = new TourConcatenations();
-	tourConcatenations.createTourConcatenations(dbResult.companies, requiredCapacity);
+	const tourConcatenations = new TourScheduler(startFixed, oneLocation.coordinates);
+	tourConcatenations.createTourConcatenations(dbResult.companies, requiredCapacity, many);
 
 	tourConcatenations.addCoordinates();
 

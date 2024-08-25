@@ -33,4 +33,5 @@ export type Event = {
 	time: Interval;
 	id: number;
 	coordinates: Coordinates;
+	tourId: number;
 };
