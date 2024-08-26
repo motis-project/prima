@@ -3,6 +3,7 @@ import { TZ } from '$lib/constants';
 import { db } from '$lib/database';
 import { sql } from 'kysely';
 import type { Rate, RateInfo } from './rates';
+import { rateInfo } from './rates';
 
 type SimpleEvent = {
 	latitude: number;
@@ -51,10 +52,10 @@ const isWithinNightTime = (isoTimestampUTC: string, startHour: number, endHour: 
 const getRates = (rate: Rate): Rates => {
 	let steps = [[0, 0]];
 	let base = 0;
-	if (rate.pkm.length > 0) {
+	if (rate.pKm.length > 0) {
 		// rate per km
 		base = rate.grundpreis;
-		steps = rate.pkm;
+		steps = rate.pKm;
 	} else if (rate.pauschal.length > 0) {
 		// pauschale
 		steps = rate.pauschal;
@@ -141,8 +142,7 @@ export const getFareEstimation = async (
 	const zoneRates = await db
 		.selectFrom('zone')
 		.where('zone.id', '=', zoneId)
-		.innerJoin('taxi_rates', 'taxi_rates.id', 'zone.rates')
-		.select('taxi_rates.rates')
+		.select('rates')
 		.executeTakeFirst();
 	if (!zoneRates) {
 		throw new Error('Cannot get taxi rates for vehicle');
@@ -168,11 +168,10 @@ export const getFareEstimation = async (
 		.executeTakeFirst();
 
 	let segments: Array<Segment> = [];
-	const ratesJson: RateInfo = JSON.parse(zoneRates.rates);
-	const returnFree = dstCommunity != null && ratesJson.anfahrt.returnFree;
+	const rates: RateInfo = rateInfo[zoneRates.rates];
+	const returnFree = dstCommunity != null && rates.returnFree;
 
 	if (!startIsInCommunity && !returnFree) {
-		const rates = getRates(ratesJson.anfahrt);
 		const leg = {
 			start: {
 				latitude: companyLatitude,
@@ -185,33 +184,31 @@ export const getFareEstimation = async (
 				scheduled_time: null
 			}
 		};
-		const segments_ = await getSegments(rates, leg);
+		const segments_ = await getSegments(getRates(rates.anfahrt), leg);
 		segments = segments.concat(segments_);
 		console.log('Anfahrt:', segments_);
 	}
 
 	if (
-		isWithinNightTime(start.scheduled_time.toISOString(), ratesJson.beginnNacht, ratesJson.endNacht)
+		isWithinNightTime(start.scheduled_time.toISOString(), rates.beginnNacht, rates.endeNacht)
 	) {
 		// nighttime rate
-		const rates = getRates(ratesJson.nacht);
-		totalFare += rates.base;
+		totalFare += rates.nacht.grundpreis;
 		const leg = {
 			start: start,
 			destination: destination
 		};
-		const segments_ = await getSegments(rates, leg);
+		const segments_ = await getSegments(getRates(rates.nacht), leg);
 		segments = segments.concat(segments_);
 		console.log('Nacht-Tarif:', segments_);
 	} else {
 		// daytime rate
-		const rates = getRates(ratesJson.tag);
-		totalFare += rates.base;
+		totalFare += rates.tag.grundpreis;
 		const leg = {
 			start: start,
 			destination: destination
 		};
-		const segments_ = await getSegments(rates, leg);
+		const segments_ = await getSegments(getRates(rates.tag), leg);
 		segments = segments.concat(segments_);
 		console.log('Tag-Tarif:', segments_);
 	}
