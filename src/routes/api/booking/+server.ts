@@ -39,8 +39,8 @@ export const POST = async (event) => {
 	try {
 		travelDuration = (
 			await getRoute({
-				start: { lat: from.coordinates.lat, lng: from.coordinates.lng, level: 0 },
-				destination: { lat: to.coordinates.lat, lng: to.coordinates.lng, level: 0 },
+				start: { lat: from.coordinates.lat, lng: from.coordinates.lng },
+				destination: { lat: to.coordinates.lat, lng: to.coordinates.lng },
 				profile: 'car',
 				direction: 'forward'
 			})
