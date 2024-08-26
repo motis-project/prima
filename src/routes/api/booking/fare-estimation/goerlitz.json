@@ -6,7 +6,7 @@
 			[0, 1000],
 			[10000, 2000]
 		],
-		"return-free": true
+		"returnFree": true
 	},
 	"tag": {
 		"grundpreis": 450,

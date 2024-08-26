@@ -3,7 +3,7 @@
 		"grundpreis": 450,
 		"pkm": [[0, 130]],
 		"pauschal": [],
-		"return-free": true
+		"returnFree": true
 	},
 	"tag": {
 		"grundpreis": 450,
