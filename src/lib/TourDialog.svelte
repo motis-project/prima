@@ -47,13 +47,11 @@
 				getRoute({
 					start: {
 						lat: e1.latitude,
-						lng: e1.longitude,
-						level: 0
+						lng: e1.longitude
 					},
 					destination: {
 						lat: e2.latitude,
-						lng: e2.longitude,
-						level: 0
+						lng: e2.longitude
 					},
 					profile: 'car',
 					direction: 'forward'

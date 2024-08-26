@@ -6,7 +6,7 @@
 			[0, 1000],
 			[10000, 2000]
 		],
-		"return-free": true
+		"return_free": true
 	},
 	"tag": {
 		"grundpreis": 450,
@@ -29,7 +29,6 @@
 	"zuschlag": {
 		"grossraum": 900
 	},
-	"wartezeit-ph": 3500,
-	"beginn-nacht": 21,
-	"ende-nacht": 5
+	"wartezeit_ph": 3500,
+	"nacht_zeiten": [5, 21]
 }

@@ -167,7 +167,7 @@ export const getFareEstimation = async (
 
 	let segments: Array<Segment> = [];
 	const ratesJson = JSON.parse(zoneRates.rates);
-	const returnFree = dstCommunity != null && ratesJson['anfahrt']['return-free'];
+	const returnFree = dstCommunity != null && ratesJson['anfahrt']['return_free'];
 
 	if (startCommunity == null && !returnFree) {
 		const rates = getRates(ratesJson, 'anfahrt');
@@ -191,8 +191,8 @@ export const getFareEstimation = async (
 	if (
 		isWithinNightTime(
 			start.scheduled_time.toISOString(),
-			ratesJson['beginn-nacht'],
-			ratesJson['ende-nacht']
+			ratesJson['nacht_zeiten'][0],
+			ratesJson['nacht_zeiten'][1]
 		)
 	) {
 		// nighttime rate
