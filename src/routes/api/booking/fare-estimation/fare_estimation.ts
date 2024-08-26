@@ -2,6 +2,7 @@ import { getRoute } from '$lib/api';
 import { TZ } from '$lib/constants';
 import { db } from '$lib/database';
 import { sql } from 'kysely';
+import type { Rate, RateInfo } from './rates';
 
 type SimpleEvent = {
 	latitude: number;
@@ -47,16 +48,16 @@ const isWithinNightTime = (isoTimestampUTC: string, startHour: number, endHour: 
 };
 
 /* eslint-disable-next-line */
-const getRates = (ratesJson: any, key: string): Rates => {
+const getRates = (rate: Rate): Rates => {
 	let steps = [[0, 0]];
 	let base = 0;
-	if (ratesJson[key]['pkm'].length > 0) {
+	if (rate.pkm.length > 0) {
 		// rate per km
-		base = ratesJson[key]['grundpreis'];
-		steps = ratesJson[key]['pkm'];
-	} else if (ratesJson[key]['pauschal'].length > 0) {
+		base = rate.grundpreis;
+		steps = rate.pkm;
+	} else if (rate.pauschal.length > 0) {
 		// pauschale
-		steps = ratesJson[key]['pauschal'];
+		steps = rate.pauschal;
 	}
 	return { base: base, steps: steps };
 };
@@ -147,14 +148,15 @@ export const getFareEstimation = async (
 		throw new Error('Cannot get taxi rates for vehicle');
 	}
 
-	const startCommunity = await db
-		.selectFrom('zone')
-		.where('id', '=', communityId)
-		.where(
-			sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${start.longitude}, ${start.latitude}),4326))`
-		)
-		.selectAll()
-		.executeTakeFirst();
+	const startIsInCommunity =
+		(await db
+			.selectFrom('zone')
+			.where('id', '=', communityId)
+			.where(
+				sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${start.longitude}, ${start.latitude}),4326))`
+			)
+			.selectAll()
+			.executeTakeFirst()) !== undefined;
 
 	const dstCommunity = await db
 		.selectFrom('zone')
@@ -166,11 +168,11 @@ export const getFareEstimation = async (
 		.executeTakeFirst();
 
 	let segments: Array<Segment> = [];
-	const ratesJson = JSON.parse(zoneRates.rates);
-	const returnFree = dstCommunity != null && ratesJson['anfahrt']['return_free'];
+	const ratesJson: RateInfo = JSON.parse(zoneRates.rates);
+	const returnFree = dstCommunity != null && ratesJson.anfahrt.returnFree;
 
-	if (startCommunity == null && !returnFree) {
-		const rates = getRates(ratesJson, 'anfahrt');
+	if (!startIsInCommunity && !returnFree) {
+		const rates = getRates(ratesJson.anfahrt);
 		const leg = {
 			start: {
 				latitude: companyLatitude,
@@ -189,14 +191,10 @@ export const getFareEstimation = async (
 	}
 
 	if (
-		isWithinNightTime(
-			start.scheduled_time.toISOString(),
-			ratesJson['nacht_zeiten'][0],
-			ratesJson['nacht_zeiten'][1]
-		)
+		isWithinNightTime(start.scheduled_time.toISOString(), ratesJson.beginnNacht, ratesJson.endNacht)
 	) {
 		// nighttime rate
-		const rates = getRates(ratesJson, 'nacht');
+		const rates = getRates(ratesJson.nacht);
 		totalFare += rates.base;
 		const leg = {
 			start: start,
@@ -207,7 +205,7 @@ export const getFareEstimation = async (
 		console.log('Nacht-Tarif:', segments_);
 	} else {
 		// daytime rate
-		const rates = getRates(ratesJson, 'tag');
+		const rates = getRates(ratesJson.tag);
 		totalFare += rates.base;
 		const leg = {
 			start: start,
