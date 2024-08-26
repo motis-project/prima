@@ -11,6 +11,17 @@ type StartTimesWithDuration = {
 	duration: number;
 };
 
+abstract class TCC {
+	constructor() {
+		this.oneRoutingResultIdx = undefined;
+		this.manyRoutingResultIdx = undefined;
+	}
+	abstract getStartCoordinates(): Coordinates;
+	abstract getTargetCoordinates(): Coordinates;
+	oneRoutingResultIdx: number | undefined;
+	manyRoutingResultIdx: number | undefined;
+}
+
 export class TourConcatenation {
 	constructor(companyId: number, toIdx: number) {
 		this.companyId = companyId;
@@ -56,16 +67,16 @@ export class TourConcatenation {
 	}
 }
 
-class NewTour extends TourConcatenation {
+class NewTour extends TCC {
 	constructor(companyId: number, toIdx: number, coordinates: Coordinates) {
-		super(companyId, toIdx);
+		super();
 		this.coordinates = coordinates;
 	}
 	coordinates: Coordinates;
-	getStartCoordinates = (): Coordinates => {
+	getStartCoordinates(): Coordinates {
 		return this.coordinates;
 	};
-	getTargetCoordinates = (): Coordinates => {
+	getTargetCoordinates(): Coordinates {
 		return this.coordinates;
 	};
 }
@@ -214,7 +225,7 @@ export class TourScheduler {
 		});
 	}
 
-	addTc(start: boolean, tourConcatenation: TourConcatenation, many: Coordinates[]) {
+	private addTc(start: boolean, tourConcatenation: TCC, many: Coordinates[]) {
 		const position: number | undefined = many.findIndex(
 			(coordinates) => coordinates.lat == coordinates.lat && coordinates.lng == coordinates.lng
 		);
