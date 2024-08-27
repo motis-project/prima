@@ -11,7 +11,6 @@ export interface Database {
 	event: EventTable;
 	address: AddressTable;
 	request: RequestTable;
-	taxi_rates: TaxiRatesTable;
 }
 
 // ====
@@ -174,15 +173,3 @@ export interface RequestTable {
 export type Request = Selectable<RequestTable>;
 export type NewRequest = Insertable<RequestTable>;
 export type RequestUpdate = Updateable<RequestTable>;
-
-// ===============
-// TAXI RATES
-// ---------------
-export interface TaxiRatesTable {
-	id: Generated<number>;
-	rates: string;
-}
-
-export type TaxiRate = Selectable<TaxiRatesTable>;
-export type NewTaxiRate = Insertable<TaxiRatesTable>;
-export type TaxiRateUpdate = Updateable<TaxiRatesTable>;
