@@ -53,7 +53,7 @@ const ratesGoerlitz: RateInfo = {
 	wartzeitPStd: 3500,
 	beginnNacht: 21,
 	endeNacht: 5
-}
+};
 
 const ratesBautzen: RateInfo = {
 	anfahrt: {
@@ -78,9 +78,6 @@ const ratesBautzen: RateInfo = {
 	wartzeitPStd: 4500,
 	beginnNacht: 22,
 	endeNacht: 6
-}
+};
 
-export const rateInfo = [
-	ratesBautzen,
-	ratesGoerlitz
-]
+export const rateInfo = [ratesGoerlitz, ratesBautzen];

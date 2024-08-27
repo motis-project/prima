@@ -189,9 +189,7 @@ export const getFareEstimation = async (
 		console.log('Anfahrt:', segments_);
 	}
 
-	if (
-		isWithinNightTime(start.scheduled_time.toISOString(), rates.beginnNacht, rates.endeNacht)
-	) {
+	if (isWithinNightTime(start.scheduled_time.toISOString(), rates.beginnNacht, rates.endeNacht)) {
 		// nighttime rate
 		totalFare += rates.nacht.grundpreis;
 		const leg = {
