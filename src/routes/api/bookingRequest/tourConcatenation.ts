@@ -15,11 +15,18 @@ abstract class TCC {
 	constructor() {
 		this.oneRoutingResultIdx = undefined;
 		this.manyRoutingResultIdx = undefined;
+		this.fullTravelDurations = [];
 	}
 	abstract getStartCoordinates(): Coordinates;
 	abstract getTargetCoordinates(): Coordinates;
+	abstract cmpFullTravelDurations(
+		durationStart: number[],
+		durationsTargets: number[][],
+		travelDurations: number[]
+	): void;
 	oneRoutingResultIdx: number | undefined;
 	manyRoutingResultIdx: number | undefined;
+	fullTravelDurations: number[][];
 }
 
 export class TourConcatenation {
@@ -75,10 +82,22 @@ class NewTour extends TCC {
 	coordinates: Coordinates;
 	getStartCoordinates(): Coordinates {
 		return this.coordinates;
-	};
+	}
 	getTargetCoordinates(): Coordinates {
 		return this.coordinates;
-	};
+	}
+	cmpFullTravelDurations(
+		durationStart: number[],
+		durationsTargets: number[][],
+		travelDurations: number[]
+	): void {
+		this.fullTravelDurations.forEach((fullTravelDurations, targetIdx) => {
+			fullTravelDurations[targetIdx] =
+				durationStart[this.oneRoutingResultIdx!] +
+				durationsTargets[targetIdx][this.manyRoutingResultIdx!] +
+				travelDurations[targetIdx];
+		});
+	}
 }
 
 class BetweenEvents extends TourConcatenation {
@@ -121,17 +140,14 @@ class EventInsertion {
 		event2: Event | undefined,
 		companyId: number,
 		vehicleId: number,
-		type: string,
 		idx: number
 	) {
 		this.event1 = event1;
 		this.event2 = event2;
 		this.vehicleId = vehicleId;
 		this.companyId = companyId;
-		this.type = type;
 		this.previousEventIdx = idx;
 	}
-	type: string;
 	previousEventIdx: number;
 	event1: Event | undefined;
 	event2: Event | undefined;
@@ -143,70 +159,109 @@ export class TourScheduler {
 	constructor(startFixed: boolean, one: Coordinates) {
 		this.eventInsertionIdx = 0;
 		this.singleEventInsertions = [];
+		this.approachIdxs = [];
+		this.returnIdxs = [];
+		this.approachFromCompanyHome = [];
+		this.returnFromCompanyHome = [];
 		this.possible = [];
 		this.newTours = [];
-		this.startMany = [];
-		this.targetMany = [];
+		this.approachMany = [];
+		this.returnMany = [];
 		this.possibleInsertionsByVehicle = new Map<number, Range[]>();
 		this.startFixed = startFixed;
-		this.one = one;
+		this.userChosen = one;
 	}
 	startFixed: boolean;
-	one: Coordinates;
+	userChosen: Coordinates;
 	singleEventInsertions: EventInsertion[];
+	approachIdxs: number[];
+	returnIdxs: number[];
+	approachFromCompanyHome: number[];
+	returnFromCompanyHome: number[];
 	possible: boolean[][];
 	eventInsertionIdx: number;
 	newTours: NewTour[];
-	startMany: Coordinates[];
-	targetMany: Coordinates[];
+	approachMany: Coordinates[];
+	returnMany: Coordinates[];
 	possibleInsertionsByVehicle: Map<number, Range[]>;
-
-	cmpFullTravelDurations = (
-		durationStart: number[],
-		durationsTargets: number[][],
-		travelDurations: number[]
-	) => {
-		this.newTours.forEach((tc) => {
-			tc.fullTravelDuration =
-				durationStart[tc.oneRoutingResultIdx!] +
-				durationsTargets[tc.toIdx][tc.manyRoutingResultIdx!] +
-				travelDurations[tc.toIdx];
-		});
-	};
 
 	createTourConcatenations = (
 		companies: Company[],
 		requiredCapacity: Capacity,
-		many: SimpleEvent[]
+		busStops: SimpleEvent[]
 	) => {
 		this.newTours.concat(companies.map((c) => new NewTour(c.id, 1, c.coordinates)));
-		forEachVehicle(companies, (c, v) => {
-			const simulation = new CapacitySimulation(
-				v.bike_capacity,
-				v.wheelchair_capacity,
-				v.seats,
-				v.storage_space
-			);
-			const allEvents = v.tours.flatMap((t) => t.events);
-			const insertions = simulation.getPossibleInsertionRanges(allEvents, requiredCapacity);
-			this.possibleInsertionsByVehicle.set(v.id, insertions);
-			forEachInsertion(insertions, (insertionIdx) => {
-				const prevEvent = allEvents[insertionIdx];
-				const nextEvent = allEvents[insertionIdx + 1];
-				const insertionCandidate = new EventInsertion(
-					prevEvent,
-					nextEvent,
-					c.id,
-					v.id,
-					'',
-					insertionIdx
+		companies.forEach((c) => {
+			const companyApproachIdx = this.addRoutingRequest(c.coordinates, this.approachMany);
+			const companyReturnIdx = this.addRoutingRequest(c.coordinates, this.returnMany);
+			c.vehicles.forEach((v) => {
+				const simulation = new CapacitySimulation(
+					v.bike_capacity,
+					v.wheelchair_capacity,
+					v.seats,
+					v.storage_space
 				);
-				this.addEventInsertion(insertionCandidate, many);
+				const allEvents = v.tours.flatMap((t) => t.events);
+				const insertions = simulation.getPossibleInsertionRanges(allEvents, requiredCapacity);
+				this.possibleInsertionsByVehicle.set(v.id, insertions);
+				forEachInsertion(insertions, (insertionIdx) => {
+					const prevEvent = allEvents[insertionIdx];
+					const nextEvent = allEvents[insertionIdx + 1];
+					const insertionCandidate = new EventInsertion(
+						prevEvent,
+						nextEvent,
+						c.id,
+						v.id,
+						insertionIdx
+					);
+					this.addEventInsertion(
+						insertionCandidate,
+						busStops,
+						this.addRoutingRequest(prevEvent.coordinates, this.approachMany),
+						this.addRoutingRequest(nextEvent.coordinates, this.returnMany)
+					);
+				});
 			});
 		});
 	};
 
-	private addEventInsertion(insertion: EventInsertion, many: SimpleEvent[]) {
+	private addTc(
+		pickup: boolean,
+		coordinates: Coordinates,
+		tourConcatenation: TCC,
+		many: Coordinates[]
+	) {
+		let routingResultIdx: number | undefined = many.findIndex(
+			(c) => c.lat == coordinates.lat && c.lng == coordinates.lng
+		);
+		if (routingResultIdx == undefined) {
+			routingResultIdx = many.length;
+			many.push(coordinates);
+		}
+		if (pickup) {
+			tourConcatenation.oneRoutingResultIdx = routingResultIdx;
+		} else {
+			tourConcatenation.manyRoutingResultIdx = routingResultIdx;
+		}
+	}
+
+	private addRoutingRequest(c: Coordinates, many: Coordinates[]): number {
+		let routingResultIdx: number | undefined = many.findIndex(
+			(coordinates) => c.lat == coordinates.lat && c.lng == coordinates.lng
+		);
+		if (routingResultIdx == undefined) {
+			routingResultIdx = many.length;
+			many.push(c);
+		}
+		return routingResultIdx;
+	}
+
+	private addEventInsertion(
+		insertion: EventInsertion,
+		many: SimpleEvent[],
+		approachIdx: number,
+		returnIdx: number
+	) {
 		const possible = new Array<boolean>(many.length);
 		many.forEach((se, idx) => {
 			possible[idx] = beelineCheck(insertion, se);
@@ -216,34 +271,26 @@ export class TourScheduler {
 		}
 		this.possible.push(possible);
 		this.singleEventInsertions.push(insertion);
+		this.approachIdxs.push(approachIdx);
+		this.returnIdxs.push(returnIdx);
 	}
 
 	addCoordinates() {
 		this.newTours.forEach((t) => {
-			this.addTc(true, t, this.startMany);
-			this.addTc(false, t, this.targetMany);
+			this.addTc(true, t.getStartCoordinates(), t, this.approachMany);
+			this.addTc(false, t.getStartCoordinates(), t, this.returnMany);
 		});
 	}
 
-	private addTc(start: boolean, tourConcatenation: TCC, many: Coordinates[]) {
-		const position: number | undefined = many.findIndex(
-			(coordinates) => coordinates.lat == coordinates.lat && coordinates.lng == coordinates.lng
-		);
-		let routingResultIdx: number | undefined = undefined;
-		if (position == undefined) {
-			routingResultIdx = many.length;
-			many.push(
-				start ? tourConcatenation.getStartCoordinates() : tourConcatenation.getTargetCoordinates()
-			);
-		} else {
-			routingResultIdx = position;
-		}
-		if (start) {
-			tourConcatenation.oneRoutingResultIdx = routingResultIdx;
-		} else {
-			tourConcatenation.manyRoutingResultIdx = routingResultIdx;
-		}
-	}
+	cmpFullTravelDurations = (
+		durationStart: number[],
+		durationsTargets: number[][],
+		travelDurations: number[]
+	) => {
+		this.newTours.forEach((tc) => {
+			tc.cmpFullTravelDurations(durationStart, durationsTargets, travelDurations);
+		});
+	};
 }
 
 function forEachInsertion<T>(insertions: Range[], fn: (insertionIdx: number) => T) {
