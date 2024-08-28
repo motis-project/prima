@@ -1,10 +1,11 @@
 import { Interval } from '$lib/interval.js';
 import { Coordinates } from '$lib/location.js';
-import { minutesToMs } from '$lib/time_utils.js';
+import { minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { Capacity, CapacitySimulation, type Range } from './capacities.js';
 import { forEachVehicle } from './queries.js';
 import { type Company, type Event } from '$lib/compositionTypes.js';
 import type { SimpleEvent } from './+server.js';
+import { Direction, oneToMany } from '$lib/api.js';
 
 type StartTimesWithDuration = {
 	possibleStartTimes: Interval[];
@@ -147,43 +148,63 @@ class EventInsertion {
 		this.vehicleId = vehicleId;
 		this.companyId = companyId;
 		this.previousEventIdx = idx;
+		this.fullTravelDurations = [];
+		this.appendFullTravelDurations = [];
+		this.prependFullTravelDurations = [];
 	}
 	previousEventIdx: number;
 	event1: Event | undefined;
 	event2: Event | undefined;
 	vehicleId: number;
 	companyId: number;
+	fullTravelDurations: number[];
+	appendFullTravelDurations: number[];
+	prependFullTravelDurations: number[];
+
+	getEventTimeDifference() {
+		return this.event2!.time.startTime.getTime() - this.event1!.time.endTime.getTime();
+	}
 }
 
 export class TourScheduler {
-	constructor(startFixed: boolean, one: Coordinates) {
+	constructor(startFixed: boolean, one: Coordinates, busStops: Coordinates[]) {
 		this.eventInsertionIdx = 0;
 		this.singleEventInsertions = [];
 		this.approachIdxs = [];
 		this.returnIdxs = [];
-		this.approachFromCompanyHome = [];
-		this.returnFromCompanyHome = [];
+		this.approachFromCompanyHomeIdx = [];
+		this.returnFromCompanyHomeIdx = [];
 		this.possible = [];
 		this.newTours = [];
 		this.approachMany = [];
 		this.returnMany = [];
+		this.approachRoutingResults = [];
+		this.returnRoutingResults = [];
+		this.fullTravelDurations = [];
 		this.possibleInsertionsByVehicle = new Map<number, Range[]>();
 		this.startFixed = startFixed;
 		this.userChosen = one;
+		this.busStops = busStops;
+		this.companies = [];
 	}
+	busStops: Coordinates[];
 	startFixed: boolean;
 	userChosen: Coordinates;
 	singleEventInsertions: EventInsertion[];
 	approachIdxs: number[];
 	returnIdxs: number[];
-	approachFromCompanyHome: number[];
-	returnFromCompanyHome: number[];
+	approachFromCompanyHomeIdx: number[];
+	returnFromCompanyHomeIdx: number[];
 	possible: boolean[][];
 	eventInsertionIdx: number;
 	newTours: NewTour[];
 	approachMany: Coordinates[];
 	returnMany: Coordinates[];
 	possibleInsertionsByVehicle: Map<number, Range[]>;
+	approachRoutingResults: number[][];
+	returnRoutingResults: number[][];
+	fullTravelDurations: number[];
+	companies: Company[];
 
 	createTourConcatenations = (
 		companies: Company[],
@@ -291,6 +312,65 @@ export class TourScheduler {
 			tc.cmpFullTravelDurations(durationStart, durationsTargets, travelDurations);
 		});
 	};
+
+	private async routing(one: Coordinates, many: Coordinates[], direction: Direction) {
+		return (await oneToMany(one, many, direction)).map((res) => secondsToMs(res.duration));
+	}
+
+	async allRoutings() {
+		this.busStops.forEach(async (busStop) => {
+			this.approachRoutingResults.push(
+				await this.routing(busStop, this.approachMany, Direction.Backward)
+			);
+			this.returnRoutingResults.push(
+				await this.routing(busStop, this.returnMany, Direction.Forward)
+			);
+		});
+		this.approachRoutingResults.push(
+			await this.routing(this.userChosen, this.approachMany, Direction.Backward)
+		);
+		this.returnRoutingResults.push(
+			await this.routing(this.userChosen, this.returnMany, Direction.Forward)
+		);
+	}
+
+	cmpFullInsertionTravelDurations() {
+		this.singleEventInsertions.forEach((se, idx) => {
+			const sameTour = se.event1?.tourId != se.event2?.tourId;
+			se.fullTravelDurations = this.busStops.map(
+				(_, busIdx) =>
+					this.approachRoutingResults[busIdx][idx] + this.returnRoutingResults[busIdx][idx]
+			);
+			se.appendFullTravelDurations = this.busStops.map((_, busIdx) => this.approachRoutingResults[busIdx][idx]);
+			se.prependFullTravelDurations = this.busStops.map((_, busIdx) => this.approachRoutingResults[busIdx][idx]);
+			const possible: boolean[] = new Array<boolean>(this.busStops.length);
+			if (sameTour) {
+				for (let i = 0; i != possible.length; ++i) {
+					possible[i] = se.fullTravelDurations[i] <= se.getEventTimeDifference();
+				}
+			} else {
+				const e1End = se.event1!.time.endTime;
+				const e2Start = se.event2!.time.startTime;
+				const difference = se.getEventTimeDifference();
+				const vehicle = this.companies[se.companyId].vehicles[se.vehicleId];
+				const betweenEvents = vehicle.availabilities.some((ava) =>
+					ava.contains(new Interval(e1End, e2Start))
+				);
+				const appendPossible = new Array<boolean>(this.busStops.length);
+				const prependPossible = new Array<boolean>(this.busStops.length);
+				for (let i = 0; i != possible.length; ++i) {
+					if (betweenEvents) {
+						possible[i] = se.fullTravelDurations[i] <= difference;
+					}else{
+						possible[i] = false;
+					}
+					appendPossible[i] = vehicle.availabilities.some((ava) => ava.contains(new Interval(e1End, new Date(e1End.getTime() + se.appendFullTravelDurations[i]))))
+					&& se.appendFullTravelDurations[i] <= difference;
+					prependPossible[i] = vehicle.availabilities.some((ava) => ava.contains(new Interval()))
+				}
+			}
+		});
+	}
 }
 
 function forEachInsertion<T>(insertions: Range[], fn: (insertionIdx: number) => T) {
