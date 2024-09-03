@@ -36,7 +36,7 @@
 
 <div class="w-full h-full">
 	<Card.Header>
-		<Card.Title>Stammdaten ihres Unternehmens</Card.Title>
+		<Card.Title>Stammdaten Ihres Unternehmens</Card.Title>
 	</Card.Header>
 	<Card.Content class="w-full h-full">
 		<form
@@ -71,7 +71,7 @@
 								s && s.label && ($formData.zone = s.label!);
 							}}
 						>
-							<Select.Trigger id="zone">
+							<Select.Trigger id="zone" data-testid="select-zone">
 								<Select.Value placeholder="Bitte auswählen" />
 							</Select.Trigger>
 							<Select.Content class="overflow-y-auto max-h-[33%] absolute z-10">
@@ -95,7 +95,7 @@
 								s && s.label && ($formData.community = s.label!);
 							}}
 						>
-							<Select.Trigger id="community">
+							<Select.Trigger id="community" data-testid="select-community">
 								<Select.Value placeholder="Bitte auswählen" />
 							</Select.Trigger>
 							<Select.Content class="overflow-y-auto max-h-[33%] absolute z-10">
@@ -106,7 +106,7 @@
 								{/each}
 							</Select.Content>
 						</Select.Root>
-						<Form.FieldErrors />
+						<Form.FieldErrors data-testid="community-error" />
 						<input hidden bind:value={$formData.community} name={attrs.name} />
 					</Form.Control>
 				</Form.Field>
