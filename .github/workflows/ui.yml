@@ -40,8 +40,9 @@ jobs:
         run: |
           npm run build
           docker compose build prima
-          docker compose up -d
+          docker compose up -d pg
           sleep 5
+          echo "CREATE DATABASE prima;" | PGPASSWORD=pw psql postgresql://localhost:6500 --user postgres
           npx playwright test
 
       - name: Docker setup-buildx
