@@ -220,13 +220,11 @@
 			route: getRoute({
 				start: {
 					lat: destination.lat,
-					lng: destination.lng,
-					level: 0
+					lng: destination.lng
 				},
 				destination: {
 					lat: companyLat,
-					lng: companyLng,
-					level: 0
+					lng: companyLng
 				},
 				profile: 'car',
 				direction: 'forward'
