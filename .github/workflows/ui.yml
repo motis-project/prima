@@ -41,7 +41,7 @@ jobs:
           npm run build
           docker compose build prima
           docker compose up -d
-          sleep 2
+          sleep 5
           npx playwright test
 
       - name: Docker setup-buildx
