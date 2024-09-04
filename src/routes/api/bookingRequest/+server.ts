@@ -157,7 +157,14 @@ const getValidBookings = async (
 
 	const startMany: Coordinates[] = [];
 	const targetMany: Coordinates[] = [];
-	const tourConcatenations = new TourScheduler(startFixed, oneLocation.coordinates, many.map((l)=>l.location.coordinates), travelDurations, dbResult.companies, requiredCapacity);
+	const tourConcatenations = new TourScheduler(
+		startFixed,
+		oneLocation.coordinates,
+		many.map((l) => l.location.coordinates),
+		travelDurations,
+		dbResult.companies,
+		requiredCapacity
+	);
 	tourConcatenations.createTourConcatenations();
 };
 
