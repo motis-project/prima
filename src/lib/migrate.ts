@@ -1,7 +1,6 @@
 import * as path from 'path';
 import { promises as fs } from 'fs';
 import { Migrator, FileMigrationProvider, Kysely } from 'kysely';
-import { db } from './database';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import type { Database } from './types';

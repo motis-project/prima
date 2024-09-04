@@ -320,12 +320,22 @@ export const POST = async (event) => {
 					)
 				)
 				.innerJoin('company', 'company.id', 'vehicle.company')
-				.select(['vehicle.company', 'vehicle.id as vehicle', 'company.name as companyName'])
+				.select([
+					'vehicle.company',
+					'vehicle.id as vehicle',
+					'company.name as companyName',
+					'company.id as companyId',
+					'company.latitude as companyLat',
+					'company.longitude as companyLng'
+				])
 				.execute()
 		).map((v) => {
 			const companyIdx = companies.indexOf(v.company);
 			return {
 				companyName: v.companyName,
+				companyId: v.companyId,
+				companyLat: v.companyLat,
+				companyLng: v.companyLng,
 				vehicleId: v.vehicle,
 				departure: fullTravelIntervals[companyIdx].startTime,
 				arrival: fullTravelIntervals[companyIdx].endTime,
@@ -453,16 +463,15 @@ export const POST = async (event) => {
 				},
 				bestVehicle!.vehicleId
 			);
-			await db
-				.updateTable('tour')
-				.set({ fare_route: fare_route })
-				.where('id', '=', tourId)
-				.executeTakeFirst();
+			await db.updateTable('tour').set({ fare_route }).where('id', '=', tourId).executeTakeFirst();
 		} catch (e) {
 			console.log(e);
 		}
 		return json({
 			status: 0,
+			companyId: bestVehicle!.companyId!,
+			companyLat: bestVehicle!.companyLat!,
+			companyLng: bestVehicle!.companyLng!,
 			companyName: bestVehicle!.companyName!,
 			pickupTime: startTime,
 			dropoffTime: targetTime,

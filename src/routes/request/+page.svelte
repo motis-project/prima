@@ -10,23 +10,26 @@
 	import DateInput from '$lib/DateInput.svelte';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import { Coordinates } from '$lib/location';
-	import { booking } from '$lib/api';
+	import { booking, getRoute } from '$lib/api';
 	import { toTable } from '$lib/toTable';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import { CircleAlert, CircleCheckBig } from 'lucide-svelte/icons';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import GeoJSON from '$lib/GeoJSON.svelte';
+	import Layer from '$lib/Layer.svelte';
+	const { data } = $props();
 
 	let zoom = $state(10);
 	let bounds = $state<undefined | maplibregl.LngLatBounds>(undefined);
 	let map = $state<undefined | maplibregl.Map>();
 
 	let start = $state<Coordinates>({
-		lat: 51.1588351,
-		lng: 14.9813484
+		lat: 51.343543966724404,
+		lng: 14.843405973137568
 	});
 	let destination = $state<Coordinates>({
-		lat: 51.1169562,
-		lng: 14.9721042
+		lat: 51.30359310483892,
+		lng: 14.901901510528297
 	});
 	let dummyAddress = {
 		street: '',
@@ -97,6 +100,7 @@
 					const x = startMarker!.getLngLat();
 					start.lng = x.lng;
 					start.lat = x.lat;
+					routes = [];
 				});
 
 			destinationMarker = new maplibregl.Marker({
@@ -109,7 +113,17 @@
 					const x = destinationMarker!.getLngLat();
 					destination.lng = x.lng;
 					destination.lat = x.lat;
+					routes = [];
 				});
+
+			for (let e in data.companies) {
+				new maplibregl.Marker({
+					draggable: false,
+					color: 'yellow'
+				})
+					.setLngLat([data.companies[e].longitude!, data.companies[e].latitude!])
+					.addTo(map);
+			}
 
 			let popup: maplibregl.Popup | null = null;
 			map.on('contextmenu', (e) => {
@@ -155,13 +169,69 @@
 
 	let timeType = $state('departure');
 	let dateTime = $state(new Date());
-	let arriveBy = $derived(timeType === 'departure');
+	let arriveBy = $derived(timeType === 'arrival');
 
 	let bookingResponse = $state<Array<Promise<Response>>>([]);
 
 	// client ID: a9b1f1ad1051790a9c6970db85710986
 	// client Secret: df987129855de70a804f146718aac956
 	// client Secret: 30dee8771d325304274b7c2555fae33e
+
+	type ColoredRoute = {
+		/* eslint-disable-next-line */
+		route: Promise<any>;
+		color: string;
+	};
+	let routes = $state<Array<ColoredRoute>>([]);
+
+	const getRoutes = (companyLat: number, companyLng: number) => {
+		routes = [];
+		routes.push({
+			route: getRoute({
+				start: {
+					lat: companyLat,
+					lng: companyLng
+				},
+				destination: {
+					lat: start.lat,
+					lng: start.lng
+				},
+				profile: 'car',
+				direction: 'forward'
+			}),
+			color: 'red'
+		});
+		routes.push({
+			route: getRoute({
+				start: {
+					lat: start.lat,
+					lng: start.lng
+				},
+				destination: {
+					lat: destination.lat,
+					lng: destination.lng
+				},
+				profile: 'car',
+				direction: 'forward'
+			}),
+			color: '#42a5f5'
+		});
+		routes.push({
+			route: getRoute({
+				start: {
+					lat: destination.lat,
+					lng: destination.lng
+				},
+				destination: {
+					lat: companyLat,
+					lng: companyLng
+				},
+				profile: 'car',
+				direction: 'forward'
+			}),
+			color: 'yellow'
+		});
+	};
 </script>
 
 <Map
@@ -172,7 +242,7 @@
 			return { url: `https://europe.motis-project.de/tiles${url}` };
 		}
 	}}
-	center={[14.679165796358308, 51.32815838241428]}
+	center={[14.889815398274935, 51.33709604007766]}
 	{zoom}
 	style={getStyle(0)}
 	className="h-screen w-screen h-full w-full rounded-lg border shadow"
@@ -256,6 +326,18 @@
 										</Alert.Description>
 									</Alert.Root>
 								</div>
+								{#if r.ok}
+									<Alert.Root variant={r.ok ? 'default' : 'destructive'}>
+										<Alert.Description>
+											{res.companyName}<br />
+											{res.companyId}<br />
+											{res.companyLat}<br />
+											{res.companyLng}<br />
+											{start.lat}<br />
+											{getRoutes(res.companyLat, res.companyLng)}
+										</Alert.Description>
+									</Alert.Root>
+								{/if}
 							{/await}
 						{:catch e}
 							<div>Error: {e}</div>
@@ -265,4 +347,41 @@
 			</div>
 		</Card>
 	</Control>
+
+	{#each routes as segment, i}
+		{#await segment.route then r}
+			{#if r.type == 'FeatureCollection'}
+				<GeoJSON id={'r_ ' + i} data={r}>
+					<Layer
+						id={'path-outline_ ' + i}
+						type="line"
+						layout={{
+							'line-join': 'round',
+							'line-cap': 'round'
+						}}
+						filter={true}
+						paint={{
+							'line-color': '#1966a4',
+							'line-width': 7.5,
+							'line-opacity': 0.8
+						}}
+					/>
+					<Layer
+						id={'path_ ' + i}
+						type="line"
+						layout={{
+							'line-join': 'round',
+							'line-cap': 'round'
+						}}
+						filter={true}
+						paint={{
+							'line-color': segment.color,
+							'line-width': 5,
+							'line-opacity': 0.8
+						}}
+					/>
+				</GeoJSON>
+			{/if}
+		{/await}
+	{/each}
 </Map>
