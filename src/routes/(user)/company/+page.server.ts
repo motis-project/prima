@@ -31,8 +31,8 @@ export const load: PageServerLoad = async (event) => {
 		if (company!.name != null) {
 			form.data.companyname = company!.name;
 			form.data.address = company!.address!;
-			form.data.zone = zones.find((z) => z.id! === company!.zone!)!.name;
-			form.data.community = communities.find((z) => z.id! === company!.community_area!)!.name;
+			form.data.zone = company!.zone!;
+			form.data.community = company!.community_area!;
 		}
 	}
 	return {
@@ -61,18 +61,8 @@ export const actions: Actions = {
 				form
 			});
 		}
-		if (
-			!(await db
-				.selectFrom('zone')
-				.where((eb) =>
-					eb.and([
-						eb('zone.is_community', '=', true),
-						eb('zone.name', '=', form.data.community),
-						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${bestAddressGuess!.pos.lng}, ${bestAddressGuess!.pos.lat}),4326))`
-					])
-				)
-				.executeTakeFirst())
-		) {
+
+		if (!(await db.selectFrom('zone').where('id', '=', form.data.community).executeTakeFirst())) {
 			form.errors.address = ['Die Addresse liegt nicht in der ausgewählten Gemeinde.'];
 			form.errors.community = ['Die Addresse liegt nicht in der ausgewählten Gemeinde.'];
 			return fail(400, {
@@ -82,24 +72,10 @@ export const actions: Actions = {
 		if (
 			!(await db
 				.selectFrom('zone as compulsory_area')
-				.where((eb) =>
-					eb.and([
-						eb('compulsory_area.is_community', '=', false),
-						eb('compulsory_area.name', '=', form.data.zone)
-					])
-				)
+				.where('compulsory_area.id', '=', form.data.zone)
 				.innerJoin(
 					(eb) =>
-						eb
-							.selectFrom('zone')
-							.where((eb) =>
-								eb.and([
-									eb('zone.is_community', '=', true),
-									eb('zone.name', '=', form.data.community)
-								])
-							)
-							.selectAll()
-							.as('community'),
+						eb.selectFrom('zone').where('id', '=', form.data.community).selectAll().as('community'),
 					(join) => join.onTrue()
 				)
 				.where(sql<boolean>`ST_Intersects(compulsory_area.area, community.area)`)
@@ -112,19 +88,12 @@ export const actions: Actions = {
 				form
 			});
 		}
+
 		db.updateTable('company')
 			.set({
 				name: form.data.companyname,
-				zone: (await db
-					.selectFrom('zone')
-					.where('name', '=', form.data.zone)
-					.select('id')
-					.executeTakeFirst())!.id,
-				community_area: (await db
-					.selectFrom('zone')
-					.where('name', '=', form.data.community)
-					.select('id')
-					.executeTakeFirst())!.id,
+				zone: form.data.zone,
+				community_area: form.data.community,
 				address,
 				latitude: bestAddressGuess!.pos.lat,
 				longitude: bestAddressGuess!.pos.lng

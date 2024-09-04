@@ -1,35 +1,21 @@
 <script lang="ts">
 	const { data } = $props();
+	import ChevronDown from 'svelte-radix/ChevronDown.svelte';
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
-	import * as Select from '$lib/components/ui/select';
 	import * as Card from '$lib/components/ui/card';
 	import { formSchema } from './schema';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { enhance } from '$app/forms';
 	import { Toaster, toast } from 'svelte-sonner';
+	import { buttonVariants } from '$lib/components/ui/button';
+	import { cn } from '$lib/utils';
 
 	const form = superForm(data.form, {
 		validators: zodClient(formSchema)
 	});
 	const { form: formData } = form;
-
-	let selectedZone = $state<{
-		value: string;
-		label: string;
-	}>({
-		value: $formData.zone,
-		label: $formData.zone
-	});
-
-	let selectedCommunity = $state<{
-		value: string;
-		label: string;
-	}>({
-		value: $formData.community,
-		label: $formData.community
-	});
 </script>
 
 <Toaster />
@@ -65,49 +51,46 @@
 				<Form.Field {form} name="zone">
 					<Form.Control let:attrs>
 						<Form.Label>Pflichtfahrgebiet</Form.Label>
-						<Select.Root
-							selected={selectedZone}
-							onSelectedChange={(s) => {
-								s && s.label && ($formData.zone = s.label!);
-							}}
-						>
-							<Select.Trigger id="zone">
-								<Select.Value placeholder="Bitte auswählen" />
-							</Select.Trigger>
-							<Select.Content class="overflow-y-auto max-h-[33%] absolute z-10">
+						<div class="w-full">
+							<select
+								{...attrs}
+								class={cn(
+									buttonVariants({ variant: 'outline' }),
+									'w-full appearance-none font-normal'
+								)}
+								bind:value={$formData.zone}
+							>
 								{#each data.zones as zone}
-									<Select.Item value={zone} label={zone.name.toString()}>
+									<option value={zone.id} selected={$formData.zone == zone.id}>
 										{zone.name.toString()}
-									</Select.Item>
+									</option>
 								{/each}
-							</Select.Content>
-						</Select.Root>
-						<Form.FieldErrors />
-						<input hidden bind:value={$formData.zone} name={attrs.name} />
+							</select>
+							<ChevronDown class="absolute right-3 top-2.5 size-4 opacity-50" />
+						</div>
 					</Form.Control>
 				</Form.Field>
 				<Form.Field {form} name="community">
 					<Form.Control let:attrs>
 						<Form.Label>Gemeinde</Form.Label>
-						<Select.Root
-							selected={selectedCommunity}
-							onSelectedChange={(s) => {
-								s && s.label && ($formData.community = s.label!);
-							}}
-						>
-							<Select.Trigger id="community">
-								<Select.Value placeholder="Bitte auswählen" />
-							</Select.Trigger>
-							<Select.Content class="overflow-y-auto max-h-[33%] absolute z-10">
+						<div class="w-full">
+							<select
+								{...attrs}
+								class={cn(
+									buttonVariants({ variant: 'outline' }),
+									'w-full appearance-none font-normal'
+								)}
+								bind:value={$formData.community}
+							>
 								{#each data.communities as community}
-									<Select.Item value={community} label={community.name.toString()}>
+									<option value={community.id} selected={$formData.community == community.id}>
 										{community.name.toString()}
-									</Select.Item>
+									</option>
 								{/each}
-							</Select.Content>
-						</Select.Root>
+							</select>
+							<ChevronDown class="absolute right-3 top-2.5 size-4 opacity-50" />
+						</div>
 						<Form.FieldErrors />
-						<input hidden bind:value={$formData.community} name={attrs.name} />
 					</Form.Control>
 				</Form.Field>
 				<div class="mt-6 row-start-3 col-span-2 text-right">
