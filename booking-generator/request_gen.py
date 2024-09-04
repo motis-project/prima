@@ -83,13 +83,13 @@ def generate_booking_requests(data, conf):
             status = 1
             try:
                 status = res['status']
+                print('status:', status)
+                print('msg:', res['message'])
             except:
                 print('API not reachable. Invalid session id?')
             if status == 0:
                 n_valid += 1
-                print(res['tour_id'])
-            else:
-                print('status =', status)
+                print('tour_id:', res['tour_id'])
             
             if conf['max_bookings'] and n_valid == conf['max_bookings']:
                 break
@@ -124,12 +124,12 @@ def single_request(conf):
     status = 1
     try:
         status = res['status']
+        print('status:', status)
+        print('msg:', res['message'])
     except:
         print('API not reachable. Invalid session id?')
     if status == 0:
-        print(res['tour_id'])
-    else:
-        print('status =', status)
+        print('tour_id:', res['tour_id'])
 
 
 if __name__ == '__main__':

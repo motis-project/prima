@@ -1,5 +1,5 @@
 import type { Company, Vehicle } from './types';
-import { Coordinates, CoordinatesWithLevel, Location } from './location';
+import { Coordinates, Location } from './location';
 
 export const getCompany = async (id: number): Promise<Company> => {
 	const response = await fetch(`/api/company?id=${id}`);
@@ -122,8 +122,8 @@ export async function geoCode(address: string): Promise<AddressGuess> {
 }
 
 export class RoutingQuery {
-	start!: CoordinatesWithLevel;
-	destination!: CoordinatesWithLevel;
+	start!: Coordinates;
+	destination!: Coordinates;
 	profile!: string;
 	direction!: string;
 }
