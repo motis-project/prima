@@ -21,15 +21,11 @@ const ENTREPENEUR: UserCredentials = {
 test.describe.configure({ mode: 'serial' });
 
 async function hammerF5(page: Page) {
-	await page.reload({ waitUntil: 'commit' });
-	await page.reload({ waitUntil: 'commit' });
-	await page.reload({ waitUntil: 'commit' });
-	await page.reload({ waitUntil: 'commit' });
-	await page.reload({ waitUntil: 'commit' });
-	await page.reload({ waitUntil: 'commit' });
-	await page.reload({ waitUntil: 'commit' });
-	await page.waitForLoadState('networkidle');
-	await page.waitForLoadState('networkidle');
+	for (let i = 0; i != 10; ++i) {
+		await page.waitForTimeout(250);
+		await page.reload({ waitUntil: 'commit' });
+		await page.waitForLoadState('networkidle');
+	}
 }
 
 async function login(page: Page, credentials: UserCredentials) {
