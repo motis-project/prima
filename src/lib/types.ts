@@ -11,7 +11,6 @@ export interface Database {
 	event: EventTable;
 	address: AddressTable;
 	request: RequestTable;
-	taxi_rates: TaxiRatesTable;
 }
 
 // ====
