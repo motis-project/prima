@@ -10,21 +10,15 @@ const PASSWORD_TAXI = 'longEnough2';
 
 test.describe.configure({ mode: 'serial' });
 
-let page: Page;
-
-test.beforeAll(async ({ browser }) => {
-	page = await browser.newPage();
-});
-
-test.afterAll(async () => {
-	await page.close();
-});
-
 async function hammerF5(page: Page) {
 	await page.reload({ waitUntil: 'commit' });
 	await page.reload({ waitUntil: 'commit' });
 	await page.reload({ waitUntil: 'commit' });
 	await page.reload({ waitUntil: 'commit' });
+	await page.reload({ waitUntil: 'commit' });
+	await page.reload({ waitUntil: 'commit' });
+	await page.reload({ waitUntil: 'commit' });
+	await page.waitForLoadState('networkidle');
 	await page.waitForLoadState('networkidle');
 }
 
