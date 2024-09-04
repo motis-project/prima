@@ -13,20 +13,12 @@ import {
 	selectZonesContainingCoordinates,
 	ZoneType
 } from '$lib/sqlHelpers';
-import type { Company, Vehicle } from '$lib/compositionTypes';
+import type { Company } from '$lib/compositionTypes';
 
 export type BookingApiQueryResult = {
 	companies: Company[];
 	targetZoneIds: Map<number, number[]>;
 };
-
-export function forEachVehicle<T>(companies: Company[], fn: (c: Company, v: Vehicle) => T) {
-	companies.forEach((c) =>
-		c.vehicles.forEach((v) => {
-			fn(c, v);
-		})
-	);
-}
 
 const selectAvailabilities = (eb: ExpressionBuilder<Database, 'vehicle'>, interval: Interval) => {
 	return jsonArrayFrom(

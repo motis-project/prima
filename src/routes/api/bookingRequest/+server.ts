@@ -49,15 +49,15 @@ export const POST = async (event) => {
 	);
 	const startMany = grouped.get(false);
 	if (startMany != undefined) {
-		doStuff(parameters[0].to, startMany, false, requiredCapacity);
+		getValidBookings(parameters[0].to, startMany, false, requiredCapacity);
 	}
 	const targetMany = grouped.get(true)!;
 	if (targetMany != undefined) {
-		doStuff(parameters[0].from, targetMany, true, requiredCapacity);
+		getValidBookings(parameters[0].from, targetMany, true, requiredCapacity);
 	}
 };
 
-const doStuff = async (
+const getValidBookings = async (
 	oneLocation: Location,
 	many: SimpleEvent[],
 	startFixed: boolean,
@@ -157,34 +157,8 @@ const doStuff = async (
 
 	const startMany: Coordinates[] = [];
 	const targetMany: Coordinates[] = [];
-	const tourConcatenations = new TourScheduler(startFixed, oneLocation.coordinates);
-	tourConcatenations.createTourConcatenations(dbResult.companies, requiredCapacity, many);
-
-	tourConcatenations.addCoordinates();
-
-	const durationStart = (
-		await oneToMany(
-			oneCoordinates,
-			startFixed ? startMany : targetMany,
-			startFixed ? Direction.Forward : Direction.Backward
-		)
-	).map((res) => secondsToMs(res.duration));
-	const durationsTargets = new Array<Array<number>>(travelDurations.length);
-	travelDurations.forEach(async (_, index) => {
-		try {
-			durationsTargets[index] = (
-				await oneToMany(
-					targets[index],
-					startFixed ? targetMany : startMany,
-					startFixed ? Direction.Backward : Direction.Forward
-				)
-			).map((res) => secondsToMs(res.duration));
-		} catch (e) {
-			return json({ status: 500 });
-		}
-	});
-
-	tourConcatenations.cmpFullTravelDurations(durationStart, durationsTargets, travelDurations);
+	const tourConcatenations = new TourScheduler(startFixed, oneLocation.coordinates, many.map((l)=>l.location.coordinates), travelDurations, dbResult.companies, requiredCapacity);
+	tourConcatenations.createTourConcatenations();
 };
 
 const determineError = async (
