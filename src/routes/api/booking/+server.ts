@@ -7,9 +7,10 @@ import { error, json } from '@sveltejs/kit';
 import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { MAX_TRAVEL_DURATION, MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
+import { getFareEstimation } from './fare-estimation/fare_estimation.js';
 
 const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
-	return await db
+	const zoneContainingStartAndDestination = await db
 		.selectFrom('zone')
 		.where((eb) =>
 			eb.and([
@@ -19,6 +20,7 @@ const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 			])
 		)
 		.executeTakeFirst();
+	return zoneContainingStartAndDestination != undefined;
 };
 
 export const POST = async (event) => {
@@ -38,8 +40,8 @@ export const POST = async (event) => {
 	try {
 		travelDuration = (
 			await getRoute({
-				start: { lat: from.coordinates.lat, lng: from.coordinates.lng, level: 0 },
-				destination: { lat: to.coordinates.lat, lng: to.coordinates.lng, level: 0 },
+				start: { lat: from.coordinates.lat, lng: from.coordinates.lng },
+				destination: { lat: to.coordinates.lat, lng: to.coordinates.lng },
 				profile: 'car',
 				direction: 'forward'
 			})
@@ -68,6 +70,7 @@ export const POST = async (event) => {
 	const startTime = startFixed ? time : new Date(time.getTime() - secondsToMs(travelDuration));
 	const targetTime = startFixed ? new Date(time.getTime() + secondsToMs(travelDuration)) : time;
 	const travelInterval = new Interval(startTime, targetTime);
+
 	if (new Date(Date.now() + minutesToMs(MIN_PREP_MINUTES)) > startTime) {
 		return json(
 			{ status: 4, message: 'Die Anfrage verletzt die minimale Vorlaufzeit.' },
@@ -76,10 +79,12 @@ export const POST = async (event) => {
 	}
 	const expandedTravelInterval = travelInterval.expand(hoursToMs(24), hoursToMs(24));
 
-	// Get (unmerged) availabilities which overlap the expanded travel interval, for vehicles which satisfy the zone constraints and the capacity constraints.
+	// Get (unmerged) availabilities which overlap the expanded travel interval,
+	// for vehicles which satisfy the zone constraints and the capacity constraints.
 	// Also get some other data to reduce number of select calls to db.
-	// Use expanded travel interval, to ensure that, if a vehicle is available for the full travel interval (taxicentral-start-target-taxicentral) the corresponding
-	// availbilities are already fetched in this select statement.
+	// Use expanded travel interval, to ensure that, if a vehicle is available
+	// for the full travel interval (taxicentral-start-target-taxicentral),
+	// the corresponding availbilities are already fetched in this select statement.
 	const dbResults = await db
 		.selectFrom('zone')
 		.where((eb) =>
@@ -141,7 +146,7 @@ export const POST = async (event) => {
 		.execute();
 
 	if (dbResults.length == 0) {
-		if (!startAndTargetShareZone(fromCoordinates, toCoordinates)) {
+		if (!(await startAndTargetShareZone(fromCoordinates, toCoordinates))) {
 			return json(
 				{
 					status: 5,
@@ -160,8 +165,9 @@ export const POST = async (event) => {
 		);
 	}
 
-	// Group availabilities by vehicle, merge availabilities corresponding to the same vehicle, filter out availabilities which don't contain the
-	// travel-interval (start-target), filter out vehicles which don't have any availabilities left.
+	// Group availabilities by vehicle, merge availabilities corresponding to the same vehicle,
+	// filter out availabilities which don't contain the travel-interval (start-target),
+	// filter out vehicles which don't have any availabilities left.
 	const mergedAvailabilites = groupBy(
 		dbResults,
 		(element) => element.vehicle,
@@ -257,7 +263,7 @@ export const POST = async (event) => {
 	toRemoveIdxs.forEach((r) => vehicles.splice(r, 1));
 	toRemoveIdxs.forEach((r) => fullTravelIntervals.splice(r, 1));
 
-	const vehicleIds = vehicles.map((v) => v[0].vehicle);
+	const vehicleIds = vehicles.flatMap((vehicles) => vehicles.map((vehicle) => vehicle.vehicle));
 
 	console.assert(
 		vehicles.length == fullTravelIntervals.length,
@@ -280,12 +286,12 @@ export const POST = async (event) => {
 	}
 
 	let tourId: number | undefined = undefined;
-	let companyName: string | undefined = undefined;
+	let bestVehicle = undefined;
 
 	await db.transaction().execute(async (trx) => {
 		sql`LOCK TABLE tour, request, event IN ACCESS EXCLUSIVE MODE;`.execute(trx);
 		// Fetch data of tours corresponding to the remaining vehicles
-		const viable_vehicles = (
+		const viableVehicles = (
 			await trx
 				.selectFrom('vehicle')
 				.where('vehicle.id', 'in', vehicleIds)
@@ -327,22 +333,13 @@ export const POST = async (event) => {
 			};
 		});
 
-		if (viable_vehicles.length == 0) {
-			return json(
-				{
-					status: 10,
-					message:
-						'Kein Fahrzeug ist für die gesamte Fahrtzeit verfügbar und nicht mit anderen Aufträgen beschäftigt.'
-				},
-				{ status: 404 }
-			);
+		if (viableVehicles.length == 0) {
+			return;
 		}
 
 		// Sort companies by the distance of their taxi-central to start + target
-		viable_vehicles.sort((a, b) => a.distance - b.distance);
-
-		const bestVehicle = viable_vehicles[0];
-		companyName = bestVehicle.companyName!;
+		viableVehicles.sort((a, b) => a.distance - b.distance);
+		bestVehicle = viableVehicles[0];
 
 		// Write tour, request, 2 events and if not existant address in db.
 		let startAddress = await trx
@@ -442,14 +439,43 @@ export const POST = async (event) => {
 			.execute();
 	});
 	if (tourId) {
+		try {
+			const fare_route = await getFareEstimation(
+				{
+					longitude: fromCoordinates.lng,
+					latitude: fromCoordinates.lat,
+					scheduled_time: startTime
+				},
+				{
+					longitude: toCoordinates.lng,
+					latitude: toCoordinates.lat,
+					scheduled_time: null
+				},
+				bestVehicle!.vehicleId
+			);
+			await db
+				.updateTable('tour')
+				.set({ fare_route: fare_route })
+				.where('id', '=', tourId)
+				.executeTakeFirst();
+		} catch (e) {
+			console.log(e);
+		}
 		return json({
 			status: 0,
-			companyName: companyName!,
+			companyName: bestVehicle!.companyName!,
 			pickupTime: startTime,
 			dropoffTime: targetTime,
 			tour_id: tourId,
 			message: 'Die Buchung war erfolgreich.'
 		});
 	}
-	return json({ status: 11, message: 'Fehler beim schreiben in die Datenbank' }, { status: 503 });
+	return json(
+		{
+			status: 10,
+			message:
+				'Kein Fahrzeug ist für die gesamte Fahrtzeit verfügbar und nicht mit anderen Aufträgen beschäftigt.'
+		},
+		{ status: 404 }
+	);
 };
