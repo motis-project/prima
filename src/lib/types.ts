@@ -71,6 +71,7 @@ export interface TourTable {
 	arrival: Date;
 	vehicle: number;
 	fare: number | null;
+	fare_route: number | null;
 }
 
 export type Tour = Selectable<TourTable>;

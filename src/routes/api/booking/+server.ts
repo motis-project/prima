@@ -40,8 +40,8 @@ export const POST = async (event) => {
 	try {
 		travelDuration = (
 			await getRoute({
-				start: { lat: from.coordinates.lat, lng: from.coordinates.lng, level: 0 },
-				destination: { lat: to.coordinates.lat, lng: to.coordinates.lng, level: 0 },
+				start: { lat: from.coordinates.lat, lng: from.coordinates.lng },
+				destination: { lat: to.coordinates.lat, lng: to.coordinates.lng },
 				profile: 'car',
 				direction: 'forward'
 			})
@@ -344,20 +344,12 @@ export const POST = async (event) => {
 		});
 
 		if (viableVehicles.length == 0) {
-			return json(
-				{
-					status: 10,
-					message:
-						'Kein Fahrzeug ist für die gesamte Fahrtzeit verfügbar und nicht mit anderen Aufträgen beschäftigt.'
-				},
-				{ status: 404 }
-			);
+			return;
 		}
 
 		// Sort companies by the distance of their taxi-central to start + target
 		viableVehicles.sort((a, b) => a.distance - b.distance);
 		bestVehicle = viableVehicles[0];
-		// console.log(viableVehicles);
 
 		// Write tour, request, 2 events and if not existant address in db.
 		let startAddress = await trx
@@ -458,7 +450,7 @@ export const POST = async (event) => {
 	});
 	if (tourId) {
 		try {
-			const fare = await getFareEstimation(
+			const fare_route = await getFareEstimation(
 				{
 					longitude: fromCoordinates.lng,
 					latitude: fromCoordinates.lat,
@@ -471,7 +463,7 @@ export const POST = async (event) => {
 				},
 				bestVehicle!.vehicleId
 			);
-			await db.updateTable('tour').set({ fare: fare }).where('id', '=', tourId).executeTakeFirst();
+			await db.updateTable('tour').set({ fare_route }).where('id', '=', tourId).executeTakeFirst();
 		} catch (e) {
 			console.log(e);
 		}
@@ -487,5 +479,12 @@ export const POST = async (event) => {
 			message: 'Die Buchung war erfolgreich.'
 		});
 	}
-	return json({ status: 11, message: 'Fehler beim schreiben in die Datenbank' }, { status: 503 });
+	return json(
+		{
+			status: 10,
+			message:
+				'Kein Fahrzeug ist für die gesamte Fahrtzeit verfügbar und nicht mit anderen Aufträgen beschäftigt.'
+		},
+		{ status: 404 }
+	);
 };

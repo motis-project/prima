@@ -19,5 +19,16 @@ services:
     ports:
       - 6501:8080
 
+  prima:
+    image: prima
+    restart: always
+    ports:
+      - 8080:3000
+    environment:
+      - DATABASE_URL=postgresql://postgres:pw@pg/prima
+      - ORIGIN=http://localhost:8080
+    build:
+      context: .
+
 volumes:
   data-volume:

@@ -2,6 +2,8 @@ import { getRoute } from '$lib/api';
 import { TZ } from '$lib/constants';
 import { db } from '$lib/database';
 import { sql } from 'kysely';
+import type { Rate, RateInfo } from './rates';
+import { rateInfo } from './rates';
 
 type SimpleEvent = {
 	latitude: number;
@@ -29,13 +31,11 @@ const getRouteSegment = async (leg: Leg) => {
 	return await getRoute({
 		start: {
 			lat: leg.start.latitude,
-			lng: leg.start.longitude,
-			level: 0
+			lng: leg.start.longitude
 		},
 		destination: {
 			lat: leg.destination.latitude,
-			lng: leg.destination.longitude,
-			level: 0
+			lng: leg.destination.longitude
 		},
 		profile: 'car',
 		direction: 'forward'
@@ -49,16 +49,16 @@ const isWithinNightTime = (isoTimestampUTC: string, startHour: number, endHour: 
 };
 
 /* eslint-disable-next-line */
-const getRates = (ratesJson: any, key: string): Rates => {
+const getRates = (rate: Rate): Rates => {
 	let steps = [[0, 0]];
 	let base = 0;
-	if (ratesJson[key]['pkm'].length > 0) {
+	if (rate.pKm.length > 0) {
 		// rate per km
-		base = ratesJson[key]['grundpreis'];
-		steps = ratesJson[key]['pkm'];
-	} else if (ratesJson[key]['pauschal'].length > 0) {
+		base = rate.grundpreis;
+		steps = rate.pKm;
+	} else if (rate.pauschal.length > 0) {
 		// pauschale
-		steps = ratesJson[key]['pauschal'];
+		steps = rate.pauschal;
 	}
 	return { base: base, steps: steps };
 };
@@ -142,21 +142,21 @@ export const getFareEstimation = async (
 	const zoneRates = await db
 		.selectFrom('zone')
 		.where('zone.id', '=', zoneId)
-		.innerJoin('taxi_rates', 'taxi_rates.id', 'zone.rates')
-		.select('taxi_rates.rates')
+		.select('rates')
 		.executeTakeFirst();
 	if (!zoneRates) {
 		throw new Error('Cannot get taxi rates for vehicle');
 	}
 
-	const startCommunity = await db
-		.selectFrom('zone')
-		.where('id', '=', communityId)
-		.where(
-			sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${start.longitude}, ${start.latitude}),4326))`
-		)
-		.selectAll()
-		.executeTakeFirst();
+	const startIsInCommunity =
+		(await db
+			.selectFrom('zone')
+			.where('id', '=', communityId)
+			.where(
+				sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${start.longitude}, ${start.latitude}),4326))`
+			)
+			.selectAll()
+			.executeTakeFirst()) !== undefined;
 
 	const dstCommunity = await db
 		.selectFrom('zone')
@@ -168,11 +168,10 @@ export const getFareEstimation = async (
 		.executeTakeFirst();
 
 	let segments: Array<Segment> = [];
-	const ratesJson = JSON.parse(zoneRates.rates);
-	const returnFree = dstCommunity != null && ratesJson['anfahrt']['return-free'];
+	const rates: RateInfo = rateInfo[zoneRates.rates];
+	const returnFree = dstCommunity != null && rates.returnFree;
 
-	if (startCommunity == null && !returnFree) {
-		const rates = getRates(ratesJson, 'anfahrt');
+	if (!startIsInCommunity && !returnFree) {
 		const leg = {
 			start: {
 				latitude: companyLatitude,
@@ -185,37 +184,29 @@ export const getFareEstimation = async (
 				scheduled_time: null
 			}
 		};
-		const segments_ = await getSegments(rates, leg);
-		// segments = segments.concat(segments_); TODO: tmp until JF22.08.
+		const segments_ = await getSegments(getRates(rates.anfahrt), leg);
+		segments = segments.concat(segments_);
 		console.log('Anfahrt:', segments_);
 	}
 
-	if (
-		isWithinNightTime(
-			start.scheduled_time.toISOString(),
-			ratesJson['beginn-nacht'],
-			ratesJson['ende-nacht']
-		)
-	) {
+	if (isWithinNightTime(start.scheduled_time.toISOString(), rates.beginnNacht, rates.endeNacht)) {
 		// nighttime rate
-		const rates = getRates(ratesJson, 'nacht');
-		totalFare += rates.base;
+		totalFare += rates.nacht.grundpreis;
 		const leg = {
 			start: start,
 			destination: destination
 		};
-		const segments_ = await getSegments(rates, leg);
+		const segments_ = await getSegments(getRates(rates.nacht), leg);
 		segments = segments.concat(segments_);
 		console.log('Nacht-Tarif:', segments_);
 	} else {
 		// daytime rate
-		const rates = getRates(ratesJson, 'tag');
-		totalFare += rates.base;
+		totalFare += rates.tag.grundpreis;
 		const leg = {
 			start: start,
 			destination: destination
 		};
-		const segments_ = await getSegments(rates, leg);
+		const segments_ = await getSegments(getRates(rates.tag), leg);
 		segments = segments.concat(segments_);
 		console.log('Tag-Tarif:', segments_);
 	}

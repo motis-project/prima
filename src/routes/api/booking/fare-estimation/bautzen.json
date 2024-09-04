@@ -3,7 +3,7 @@
 		"grundpreis": 450,
 		"pkm": [[0, 130]],
 		"pauschal": [],
-		"return-free": true
+		"returnFree": true
 	},
 	"tag": {
 		"grundpreis": 450,
@@ -18,7 +18,7 @@
 	"zuschlag": {
 		"grossraum": 700
 	},
-	"wartezeit-ph": 4500,
-	"beginn-nacht": 22,
-	"ende-nacht": 6
+	"wartezeitPh": 4500,
+	"beginnNacht": 22,
+	"endeNacht": 6
 }

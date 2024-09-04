@@ -47,13 +47,11 @@
 				getRoute({
 					start: {
 						lat: e1.latitude,
-						lng: e1.longitude,
-						level: 0
+						lng: e1.longitude
 					},
 					destination: {
 						lat: e2.latitude,
-						lng: e2.longitude,
-						level: 0
+						lng: e2.longitude
 					},
 					profile: 'car',
 					direction: 'forward'
@@ -162,7 +160,7 @@
 										{tour!.to.toLocaleString('de-DE').slice(0, -3)}
 									</Table.Cell>
 									<Table.Cell class="text-right">{tour!.license_plate}</Table.Cell>
-									<Table.Cell class="text-right">{displayFare(tour!.fare)} €</Table.Cell>
+									<Table.Cell class="text-right">{displayFare(tour!.fare_route)} €</Table.Cell>
 								</Table.Row>
 							{/if}
 						</Table.Body>

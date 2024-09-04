@@ -5,6 +5,7 @@ set -o xtrace
 
 BASEDIR=$(dirname $0)
 SCENARIO=$1
+DATABASE_URL=postgresql://localhost:6500
 
 if [ $# -eq 0 ]
   then
@@ -12,8 +13,8 @@ if [ $# -eq 0 ]
     exit 1
 fi
 
-echo "DROP DATABASE prima;" | PGPASSWORD=pw psql postgresql://localhost:6500 --user postgres
-echo "CREATE DATABASE prima;" | PGPASSWORD=pw psql postgresql://localhost:6500 --user postgres
+echo "DROP DATABASE prima;" | PGPASSWORD=pw psql $DATABASE_URL --user postgres
+echo "CREATE DATABASE prima;" | PGPASSWORD=pw psql $DATABASE_URL --user postgres
 
 npm run kysely migrate:latest
 
@@ -21,12 +22,11 @@ cd $BASEDIR
 
 export PGPASSWORD=pw
 
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/address.sql
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/taxi_rates.sql
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/zone.sql
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/company.sql
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/vehicle.sql
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/availability.sql
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/tour.sql
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/auth_user.sql
-psql postgresql://localhost:6500/prima --user postgres < $SCENARIO/event.sql
+psql $DATABASE_URL/prima --user postgres < $SCENARIO/address.sql
+psql $DATABASE_URL/prima --user postgres < $SCENARIO/zone.sql
+psql $DATABASE_URL/prima --user postgres < $SCENARIO/company.sql
+psql $DATABASE_URL/prima --user postgres < $SCENARIO/vehicle.sql
+psql $DATABASE_URL/prima --user postgres < $SCENARIO/availability.sql
+psql $DATABASE_URL/prima --user postgres < $SCENARIO/tour.sql
+psql $DATABASE_URL/prima --user postgres < $SCENARIO/auth_user.sql
+psql $DATABASE_URL/prima --user postgres < $SCENARIO/event.sql
