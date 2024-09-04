@@ -3,10 +3,20 @@ import { Kysely, PostgresDialect, sql } from 'kysely';
 import { dbConfig } from './config';
 import pg from 'pg';
 
-const EMAIL_MASTER = 'master@example.com';
-const PASSWORD_MASTER = 'longEnough1';
-const EMAIL_TAXI = 'taxi@example.com';
-const PASSWORD_TAXI = 'longEnough2';
+type UserCredentials = {
+	email: string;
+	password: string;
+};
+
+const MAINTAINER: UserCredentials = {
+	email: 'master@example.com',
+	password: 'longEnough1'
+};
+
+const ENTREPENEUR: UserCredentials = {
+	email: 'taxi@example.com',
+	password: 'longEnough2'
+};
 
 test.describe.configure({ mode: 'serial' });
 
@@ -22,33 +32,27 @@ async function hammerF5(page: Page) {
 	await page.waitForLoadState('networkidle');
 }
 
-async function login(page: Page, email: string, password: string) {
+async function login(page: Page, credentials: UserCredentials) {
 	await page.goto('/login');
 	await expect(page.getByRole('heading', { name: 'Login' })).toBeVisible();
-	await page.getByLabel('Email').fill(email);
-	await page.getByLabel('Password').fill(password);
+	await page.getByLabel('Email').fill(credentials.email);
+	await page.getByLabel('Password').fill(credentials.password);
 	await page.getByRole('button', { name: 'Login' }).click();
 }
 
-async function signup(page: Page, email: string, password: string) {
+async function signup(page: Page, credentials: UserCredentials) {
 	await page.goto('/signup');
 	await expect(page.getByRole('heading', { name: 'Neuen Account erstellen' })).toBeVisible();
-	await page.getByLabel('Email').fill(email);
-	await page.getByLabel('Password').fill(password);
+	await page.getByLabel('Email').fill(credentials.email);
+	await page.getByLabel('Password').fill(credentials.password);
 	await page.getByRole('button', { name: 'Account erstellen' }).click();
 	await expect(
 		page.getByRole('heading', { name: 'Willkommen beim Projekt PrimaÖV!' })
 	).toBeVisible();
 }
 
-test('signup master', async ({ page }) => {
-	await signup(page, EMAIL_MASTER, PASSWORD_MASTER);
-});
-
-test('signup taxi', async ({ page }) => {
-	await signup(page, EMAIL_TAXI, PASSWORD_TAXI);
-
-	// Manually activate maintainer via DB query
+test('signup maintainer', async ({ page }) => {
+	await signup(page, MAINTAINER);
 	const db = new Kysely<unknown>({
 		dialect: new PostgresDialect({
 			pool: new pg.Pool({ ...dbConfig, database: 'prima' })
@@ -60,16 +64,20 @@ test('signup taxi', async ({ page }) => {
 	db.destroy();
 });
 
+test('signup taxi', async ({ page }) => {
+	await signup(page, ENTREPENEUR);
+});
+
 test('activate taxi', async ({ page }) => {
-	await login(page, EMAIL_MASTER, PASSWORD_MASTER);
+	await login(page, MAINTAINER);
 	await expect(page.getByRole('heading', { name: 'Unternehmer freischalten' })).toBeVisible();
-	await page.getByLabel('Email').fill(EMAIL_TAXI);
+	await page.getByLabel('Email').fill(ENTREPENEUR.email);
 	await page.getByRole('button', { name: 'Unternehmer freischalten' }).click();
 	await expect(page.getByText('Freischalten erfolgreich!')).toBeVisible();
 });
 
 test('taxi set base data', async ({ page }) => {
-	await login(page, EMAIL_TAXI, PASSWORD_TAXI);
+	await login(page, ENTREPENEUR);
 
 	await expect(page.getByRole('heading', { name: 'Stammdaten ihres Unternehmens' })).toBeVisible();
 
