@@ -22,7 +22,7 @@ export default defineConfig({
 		{
 			name: 'user test',
 			testMatch: /(.+\.)?(test|spec)\.[jt]s/,
-			dependencies: ['setup db']
+			dependencies: ['setup db', 'login']
 		}
 	]
 });
