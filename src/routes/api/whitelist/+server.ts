@@ -12,7 +12,7 @@ import {
 } from './queries';
 import { TourScheduler } from './tourScheduler';
 import { computeSearchIntervals } from './searchInterval';
-import type { Capacity } from './capacities';
+import type { Capacity } from '$lib/capacities';
 
 export type ReturnType = {
 	status: number;

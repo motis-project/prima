@@ -7,7 +7,7 @@ import type { ExpressionBuilder } from 'kysely';
 import type { Database } from '$lib/types';
 import { SRID } from '$lib/constants';
 import { groupBy } from '$lib/collection_utils';
-import type { Capacity } from './capacities';
+import type { Capacity } from '$lib/capacities';
 import {
 	joinInitializedCompaniesOnZones,
 	selectZonesContainingCoordinates,

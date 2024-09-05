@@ -1,7 +1,7 @@
 import { Interval } from '$lib/interval.js';
 import { Coordinates } from '$lib/location.js';
 import { minutesToMs } from '$lib/time_utils.js';
-import { Capacity, CapacitySimulation, type Range } from './capacities.js';
+import { Capacity, CapacitySimulation, type Range } from '$lib/capacities.js';
 import { type Company, type Event } from '$lib/compositionTypes.js';
 import type { SimpleEvent } from './+server.js';
 import { Direction, oneToMany } from '$lib/api.js';
