@@ -51,6 +51,7 @@ export const actions: Actions = {
 				form
 			});
 		}
+
 		const address = form.data.address;
 		let bestAddressGuess: AddressGuess | undefined = undefined;
 		try {
