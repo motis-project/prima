@@ -10,6 +10,8 @@ test('Set company data, incomplete 1', async ({ page }) => {
 
 	await expect(page.getByRole('heading', { name: 'Stammdaten Ihres Unternehmens' })).toBeVisible();
 	await expect(page.getByText('Die Eingabe muss mindestens 2 Zeichen enthalten.')).toBeVisible();
+	await expect(page.getByText('Es muss ein Pflichtfahrgebiet ausgewählt werden.')).toBeVisible();
+	await expect(page.getByText('Es muss eine Gemeinde ausgewählt werden.')).toBeVisible();
 });
 
 test('Set company data, incomplete 2', async ({ page }) => {
@@ -24,9 +26,8 @@ test('Set company data, incomplete 2', async ({ page }) => {
 	await expect(
 		page.getByText('Die Eingabe muss mindestens 2 Zeichen enthalten.')
 	).not.toBeVisible();
-	await expect(
-		page.getByText('Die Addresse liegt nicht in der ausgewählten Gemeinde.')
-	).toBeVisible();
+	await expect(page.getByText('Es muss ein Pflichtfahrgebiet ausgewählt werden.')).toBeVisible();
+	await expect(page.getByText('Es muss eine Gemeinde ausgewählt werden.')).toBeVisible();
 });
 
 test('Set company data, incomplete 3', async ({ page }) => {
@@ -45,8 +46,9 @@ test('Set company data, incomplete 3', async ({ page }) => {
 		page.getByText('Die Eingabe muss mindestens 2 Zeichen enthalten.')
 	).not.toBeVisible();
 	await expect(
-		page.getByText('Die Addresse liegt nicht in der ausgewählten Gemeinde.')
-	).toBeVisible();
+		page.getByText('Es muss ein Pflichtfahrgebiet ausgewählt werden.')
+	).not.toBeVisible();
+	await expect(page.getByText('Es muss eine Gemeinde ausgewählt werden.')).toBeVisible();
 });
 
 test('Set company data, address not in community', async ({ page }) => {
@@ -63,6 +65,10 @@ test('Set company data, address not in community', async ({ page }) => {
 	await expect(
 		page.getByText('Die Eingabe muss mindestens 2 Zeichen enthalten.')
 	).not.toBeVisible();
+	await expect(
+		page.getByText('Es muss ein Pflichtfahrgebiet ausgewählt werden.')
+	).not.toBeVisible();
+	await expect(page.getByText('Es muss eine Gemeinde ausgewählt werden.')).not.toBeVisible();
 	await expect(
 		page.getByText('Die Gemeinde und das Pflichtfahrgebiet überlappen sich nicht.')
 	).toBeVisible();
@@ -81,20 +87,25 @@ test('Set company data, complete and consistent', async ({ page }) => {
 	await page.getByRole('button', { name: 'Übernehmen' }).click();
 
 	await expect(page.getByRole('heading', { name: 'Stammdaten Ihres Unternehmens' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Stammdaten Ihres Unternehmens' })).toBeVisible();
 	await expect(
 		page.getByText('Die Eingabe muss mindestens 2 Zeichen enthalten.')
 	).not.toBeVisible();
 	await expect(
-		page.getByText('Die Addresse liegt nicht in der ausgewählten Gemeinde.')
+		page.getByText('Es muss ein Pflichtfahrgebiet ausgewählt werden.')
+	).not.toBeVisible();
+	await expect(page.getByText('Es muss eine Gemeinde ausgewählt werden.')).not.toBeVisible();
+	await expect(
+		page.getByText('Die Gemeinde und das Pflichtfahrgebiet überlappen sich nicht.')
 	).not.toBeVisible();
 	await expect(page.getByText('Die Daten wurden übernommen.')).toBeVisible();
 
-	// await hammerF5(page);
+	await hammerF5(page);
 
 	// await expect(page.getByLabel('Name')).toHaveValue('Taxi Weißwasser');
-	// await expect(page.getByLabel('Unternehmenssitz')).toHaveValue(
-	// 	'Werner-Seelenbinder-Straße 70A, 02943 Weißwasser/Oberlausitz'
-	// );
-	// await expect(page.getByLabel('Pflichtfahrgebiet')).toHaveValue('2' /* Görlitz */);
-	// await expect(page.getByLabel('Gemeinde')).toHaveValue('85' /* Weißwasser */);
+	await expect(page.getByLabel('Unternehmenssitz')).toHaveValue(
+		'Werner-Seelenbinder-Straße 70A, 02943 Weißwasser/Oberlausitz'
+	);
+	await expect(page.getByLabel('Pflichtfahrgebiet')).toHaveValue('2' /* Görlitz */);
+	await expect(page.getByLabel('Gemeinde')).toHaveValue('85' /* Weißwasser */);
 });
