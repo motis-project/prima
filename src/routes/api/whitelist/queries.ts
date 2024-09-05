@@ -190,7 +190,6 @@ export const bookingApiQuery = async (
 					.map((v) => {
 						return {
 							...v,
-							id: v.id,
 							availabilities: Interval.merge(
 								v.availabilities.map((a) => new Interval(a.start_time, a.end_time))
 							),
