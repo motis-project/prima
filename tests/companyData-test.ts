@@ -102,7 +102,7 @@ test('Set company data, complete and consistent', async ({ page }) => {
 
 	await hammerF5(page);
 
-	// await expect(page.getByLabel('Name')).toHaveValue('Taxi Weißwasser');
+	await expect(page.getByLabel('Name')).toHaveValue('Taxi Weißwasser');
 	await expect(page.getByLabel('Unternehmenssitz')).toHaveValue(
 		'Werner-Seelenbinder-Straße 70A, 02943 Weißwasser/Oberlausitz'
 	);
