@@ -56,9 +56,7 @@ test('Set company data, address not in community', async ({ page }) => {
 	await expect(page.getByRole('heading', { name: 'Stammdaten Ihres Unternehmens' })).toBeVisible();
 
 	await page.getByLabel('Name').fill('Taxi Weißwasser');
-	await page
-		.getByLabel('Unternehmenssitz')
-		.fill('Plantagenweg 3, 02827 Görlitz');
+	await page.getByLabel('Unternehmenssitz').fill('Plantagenweg 3, 02827 Görlitz');
 	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: 'Görlitz' });
 	await page.getByLabel('Gemeinde').selectOption({ label: 'Weißwasser/O.L.' });
 	await page.getByRole('button', { name: 'Übernehmen' }).click();

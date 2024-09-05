@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { Kysely, PostgresDialect, sql } from 'kysely';
 import { dbConfig } from './config';
 import pg from 'pg';
