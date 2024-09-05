@@ -13,7 +13,7 @@ export default defineConfig({
 	projects: [
 		{
 			name: 'setup db',
-			testMatch: /global\.setup\.ts/
+			testMatch: /db\.setup\.ts/
 		},
 		{
 			name: 'login',
