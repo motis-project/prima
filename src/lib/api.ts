@@ -78,7 +78,7 @@ export type BookingRequestParameters = {
 	luggage: number;
 };
 
-export const blacklisting = async (r: BookingRequestParameters[]) => {
+export const blacklisting = async (r: BookingRequestParameters) => {
 	return await fetch('/api/blacklisting', {
 		method: 'POST',
 		body: JSON.stringify({
