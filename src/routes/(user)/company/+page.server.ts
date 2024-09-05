@@ -64,7 +64,6 @@ export const actions: Actions = {
 
 		if (!(await db.selectFrom('zone').where('id', '=', form.data.community).executeTakeFirst())) {
 			form.errors.address = ['Die Addresse liegt nicht in der ausgewählten Gemeinde.'];
-			form.errors.community = ['Die Addresse liegt nicht in der ausgewählten Gemeinde.'];
 			return fail(400, {
 				form
 			});
@@ -82,7 +81,6 @@ export const actions: Actions = {
 				.selectAll()
 				.executeTakeFirst())
 		) {
-			form.errors.zone = ['Die Gemeinde und das Pflichtfahrgebiet überlappen sich nicht.'];
 			form.errors.community = ['Die Gemeinde und das Pflichtfahrgebiet überlappen sich nicht.'];
 			return fail(400, {
 				form

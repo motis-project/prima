@@ -40,8 +40,6 @@ test('Set company data, incomplete 1', async ({ page }) => {
 
 	await expect(page.getByRole('heading', { name: 'Stammdaten Ihres Unternehmens' })).toBeVisible();
 	await expect(page.getByText('Die Eingabe muss mindestens 2 Zeichen enthalten.')).toBeVisible();
-	await expect(page.getByText('Es wurde kein Gebiet ausgewählt.')).toBeVisible();
-	await expect(page.getByText('Es wurde keine Gemeinde ausgewählt.')).toBeVisible();
 });
 
 test('Set company data, incomplete 2', async ({ page }) => {
@@ -56,8 +54,9 @@ test('Set company data, incomplete 2', async ({ page }) => {
 	await expect(
 		page.getByText('Die Eingabe muss mindestens 2 Zeichen enthalten.')
 	).not.toBeVisible();
-	await expect(page.getByText('Es wurde kein Gebiet ausgewählt.')).toBeVisible();
-	await expect(page.getByText('Es wurde keine Gemeinde ausgewählt.')).toBeVisible();
+	await expect(
+		page.getByText('Die Addresse liegt nicht in der ausgewählten Gemeinde.')
+	).toBeVisible();
 	// await expect(page.getByText('Die Daten wurden übernommen.')).not.toBeVisible();
 });
 
@@ -76,8 +75,9 @@ test('Set company data, incomplete 3', async ({ page }) => {
 	await expect(
 		page.getByText('Die Eingabe muss mindestens 2 Zeichen enthalten.')
 	).not.toBeVisible();
-	await expect(page.getByText('Es wurde kein Gebiet ausgewählt.')).not.toBeVisible();
-	await expect(page.getByText('Es wurde keine Gemeinde ausgewählt.')).toBeVisible();
+	await expect(
+		page.getByText('Die Addresse liegt nicht in der ausgewählten Gemeinde.')
+	).toBeVisible();
 	// await expect(page.getByText('Die Daten wurden übernommen.')).not.toBeVisible();
 });
 
@@ -95,8 +95,6 @@ test('Set company data, address not in community', async ({ page }) => {
 	await expect(
 		page.getByText('Die Eingabe muss mindestens 2 Zeichen enthalten.')
 	).not.toBeVisible();
-	await expect(page.getByText('Es wurde kein Gebiet ausgewählt.')).not.toBeVisible();
-	await expect(page.getByText('Es wurde keine Gemeinde ausgewählt.')).not.toBeVisible();
 	await expect(page.getByTestId('community-error')).toHaveText(
 		'Die Addresse liegt nicht in der ausgewählten Gemeinde.'
 	);
@@ -119,8 +117,6 @@ test('Set company data, complete and consistent', async ({ page }) => {
 	await expect(
 		page.getByText('Die Eingabe muss mindestens 2 Zeichen enthalten.')
 	).not.toBeVisible();
-	await expect(page.getByText('Es wurde kein Gebiet ausgewählt.')).not.toBeVisible();
-	await expect(page.getByText('Es wurde keine Gemeinde ausgewählt.')).not.toBeVisible();
 	await expect(page.getByTestId('community-error')).not.toHaveText(
 		'Die Addresse liegt nicht in der ausgewählten Gemeinde.'
 	);
