@@ -31,7 +31,6 @@ test('activate taxi', async ({ page }) => {
 	await expect(page.getByText('Freischalten erfolgreich!')).toBeVisible();
 });
 
-
 test('Set company data, incomplete 1', async ({ page }) => {
 	await login(page, ENTREPENEUR);
 	await expect(page.getByRole('heading', { name: 'Stammdaten Ihres Unternehmens' })).toBeVisible();
