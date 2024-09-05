@@ -1,10 +1,10 @@
 INSERT INTO "vehicle" ("license_plate", "company", "seats", "wheelchair_capacity", "bike_capacity", "storage_space") VALUES
-('BZ-TU-11',	1,	3,	0,	0, 0),
-('BZ-TU-12',	1,	3,	0,	0, 0),
-('BZ-TU-21',	2,	3,	0,	0, 0),
-('BZ-TU-22',	2,	3,	0,	0, 0),
-('GR-TU-11',	3,	3,	0,	0, 0),
-('GR-TU-12',    3,	3,	0,	0, 0),
+('GR-TU-11',	1,	3,	0,	0, 0),
+('GR-TU-12',	1,	3,	0,	0, 0),
+('GR-TU-21',	2,	3,	0,	0, 0),
+('GR-TU-22',	2,	3,	0,	0, 0),
+('GR-TU-31',	3,	3,	0,	0, 0),
+('GR-TU-32',	3,	3,	0,	0, 0),
 ('GR-TU-41',	4,	3,	0,	0, 0),
 ('GR-TU-42',	4,	3,	0,	0, 0),
 ('GR-TU-51',	5,	3,	0,	0, 0),
@@ -14,6 +14,4 @@ INSERT INTO "vehicle" ("license_plate", "company", "seats", "wheelchair_capacity
 ('GR-TU-71',	7,	3,	0,	0, 0),
 ('GR-TU-72',	7,	3,	0,	0, 0),
 ('GR-TU-81',	8,	3,	0,	0, 0),
-('GR-TU-82',	8,	3,	0,	0, 0),
-('GR-TU-91',	9,	3,	0,	0, 0),
-('GR-TU-92',	9,	3,	0,	0, 0)
+('GR-TU-82',	8,	3,	0,	0, 0);
