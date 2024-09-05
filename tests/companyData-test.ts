@@ -64,7 +64,7 @@ test('Set company data, address not in community', async ({ page }) => {
 		page.getByText('Die Eingabe muss mindestens 2 Zeichen enthalten.')
 	).not.toBeVisible();
 	await expect(
-		page.getByText('Die Addresse liegt nicht in der ausgewählten Gemeinde.')
+		page.getByText('Die Gemeinde und das Pflichtfahrgebiet überlappen sich nicht.')
 	).toBeVisible();
 });
 
@@ -86,7 +86,7 @@ test('Set company data, complete and consistent', async ({ page }) => {
 	).not.toBeVisible();
 	await expect(
 		page.getByText('Die Addresse liegt nicht in der ausgewählten Gemeinde.')
-	).toBeVisible();
+	).not.toBeVisible();
 	await expect(page.getByText('Die Daten wurden übernommen.')).toBeVisible();
 
 	await hammerF5(page);
