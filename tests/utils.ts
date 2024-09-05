@@ -15,14 +15,6 @@ export const ENTREPENEUR: UserCredentials = {
 	password: 'longEnough2'
 };
 
-export async function hammerF5(page: Page) {
-	for (let i = 0; i != 10; ++i) {
-		await page.waitForTimeout(250);
-		await page.reload({ waitUntil: 'commit' });
-		await page.waitForLoadState('networkidle');
-	}
-}
-
 export async function login(page: Page, credentials: UserCredentials) {
 	await page.goto('/login');
 	await expect(page.getByRole('heading', { name: 'Login' })).toBeVisible();

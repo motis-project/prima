@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { Kysely, PostgresDialect, sql } from 'kysely';
 import { dbConfig } from './config';
 import pg from 'pg';
-import { login, signup, MAINTAINER, ENTREPENEUR } from './testUtils';
+import { login, signup, MAINTAINER, ENTREPENEUR } from './utils';
 
 test.describe.configure({ mode: 'serial' });
 
