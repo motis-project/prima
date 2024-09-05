@@ -51,7 +51,7 @@
 				<Form.Field {form} name="zone">
 					<Form.Control let:attrs>
 						<Form.Label>Pflichtfahrgebiet</Form.Label>
-						<div class="w-full">
+						<div class="relative w-full">
 							<select
 								{...attrs}
 								class={cn(
@@ -73,7 +73,7 @@
 				<Form.Field {form} name="community">
 					<Form.Control let:attrs>
 						<Form.Label>Gemeinde</Form.Label>
-						<div class="w-full">
+						<div class="relative w-full">
 							<select
 								{...attrs}
 								class={cn(
