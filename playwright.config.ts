@@ -16,6 +16,10 @@ export default defineConfig({
 			testMatch: /global\.setup\.ts/
 		},
 		{
+			name: 'login',
+			testMatch: /login\.setup\.ts/
+		},
+		{
 			name: 'user test',
 			testMatch: /(.+\.)?(test|spec)\.[jt]s/,
 			dependencies: ['setup db']
