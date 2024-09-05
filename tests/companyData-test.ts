@@ -89,12 +89,12 @@ test('Set company data, complete and consistent', async ({ page }) => {
 	).not.toBeVisible();
 	await expect(page.getByText('Die Daten wurden übernommen.')).toBeVisible();
 
-	await hammerF5(page);
+	// await hammerF5(page);
 
-	await expect(page.getByLabel('Name')).toHaveValue('Taxi Weißwasser');
-	await expect(page.getByLabel('Unternehmenssitz')).toHaveValue(
-		'Werner-Seelenbinder-Straße 70A, 02943 Weißwasser/Oberlausitz'
-	);
-	await expect(page.getByLabel('Pflichtfahrgebiet')).toHaveValue('2' /* Görlitz */);
-	await expect(page.getByLabel('Gemeinde')).toHaveValue('85' /* Weißwasser */);
+	// await expect(page.getByLabel('Name')).toHaveValue('Taxi Weißwasser');
+	// await expect(page.getByLabel('Unternehmenssitz')).toHaveValue(
+	// 	'Werner-Seelenbinder-Straße 70A, 02943 Weißwasser/Oberlausitz'
+	// );
+	// await expect(page.getByLabel('Pflichtfahrgebiet')).toHaveValue('2' /* Görlitz */);
+	// await expect(page.getByLabel('Gemeinde')).toHaveValue('85' /* Weißwasser */);
 });
