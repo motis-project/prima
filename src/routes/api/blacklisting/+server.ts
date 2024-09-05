@@ -21,7 +21,7 @@ export const POST = async (event) => {
 	const parameters: BookingRequestParameters = JSON.parse(await event.request.json());
 	const userChosen = parameters.userChosen;
 	const busStops: Coordinates[] = parameters.busStops;
-	const times: Interval[][] = parameters.timeStamps.map((timesByBusStop) =>
+	const allTimes: Interval[][] = parameters.timeStamps.map((timesByBusStop) =>
 		timesByBusStop.map(
 			(t) =>
 				new Interval(
@@ -50,13 +50,13 @@ export const POST = async (event) => {
 		})
 		.with('times', (db) => {
 			const cteValues: RawBuilder<string>[] = [];
-			for (let i = 0; i != times.length; ++i) {
-				const timesA = times[i];
-				timesA.map((t, j) => {
-					cteValues.concat(
-						sql<string>`SELECT cast(${i} as integer) AS targetIndex, cast(${j} as integer) AS index, ${t.startTime} AS startTime, ${t.endTime} AS endTime`
-					);
-				});
+			for (let i = 0; i != allTimes.length; ++i) {
+				cteValues.concat(
+					allTimes[i].map(
+						(t, j) =>
+							sql<string>`SELECT cast(${i} as integer) AS targetIndex, cast(${j} as integer) AS index, ${t.startTime} AS startTime, ${t.endTime} AS endTime`
+					)
+				);
 			}
 			return db
 				.selectFrom(sql<TimesTable>`(${sql.join(cteValues, sql<string>` UNION ALL `)})`.as('times'))
