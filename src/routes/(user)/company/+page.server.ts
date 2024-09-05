@@ -106,7 +106,8 @@ export const actions = {
 			});
 		}
 
-		db.updateTable('company')
+		await db
+			.updateTable('company')
 			.set({
 				name,
 				zone,

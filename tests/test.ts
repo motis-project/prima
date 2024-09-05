@@ -20,14 +20,6 @@ const ENTREPENEUR: UserCredentials = {
 
 test.describe.configure({ mode: 'serial' });
 
-async function hammerF5(page: Page) {
-	for (let i = 0; i != 10; ++i) {
-		await page.waitForTimeout(250);
-		await page.reload({ waitUntil: 'commit' });
-		await page.waitForLoadState('networkidle');
-	}
-}
-
 async function login(page: Page, credentials: UserCredentials) {
 	await page.goto('/login');
 	await expect(page.getByRole('heading', { name: 'Login' })).toBeVisible();
@@ -83,12 +75,18 @@ test('taxi set base data', async ({ page }) => {
 	await page.getByLabel('Gemeinde').selectOption({ label: 'Bautzen' });
 	await page.getByRole('button', { name: 'Übernehmen' }).click();
 
-	await hammerF5(page);
+	await expect(page.getByText('Aktualisierung erfolgreich.')).toBeVisible();
 
-	await expect(page.getByLabel('Name')).toHaveValue('Mein Taxi Unternehmen');
-	await expect(page.getByLabel('Unternehmenssitz')).toHaveValue(
-		'Wilhelm-Busch-Straße 3, 02625 Bautzen'
-	);
-	await expect(page.getByLabel('Pflichtfahrgebiet')).toHaveValue('1' /* Altkreis Bautzen */);
-	await expect(page.getByLabel('Gemeinde')).toHaveValue('7' /* Bautzen */);
+	const checkData = async () => {
+		await expect(page.getByLabel('Name')).toHaveValue('Mein Taxi Unternehmen');
+		await expect(page.getByLabel('Unternehmenssitz')).toHaveValue(
+			'Wilhelm-Busch-Straße 3, 02625 Bautzen'
+		);
+		await expect(page.getByLabel('Pflichtfahrgebiet')).toHaveValue('1' /* Altkreis Bautzen */);
+		await expect(page.getByLabel('Gemeinde')).toHaveValue('7' /* Bautzen */);
+	};
+
+	await checkData();
+	await page.reload();
+	await checkData();
 });

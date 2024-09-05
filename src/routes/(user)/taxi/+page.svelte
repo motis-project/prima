@@ -118,7 +118,7 @@
 		available!: boolean;
 	}
 
-	let selection = $state.frozen<Selection | null>(null);
+	let selection = $state.raw<Selection | null>(null);
 
 	const getSelection = () => {
 		return selection == null

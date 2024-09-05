@@ -10,10 +10,7 @@
 	import ExclamationTriangle from 'svelte-radix/ExclamationTriangle.svelte';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 
-	let name = $state(data.company?.name);
-	let address = $state(data.company?.address);
-	let zone = $state(data.company?.zone);
-	let community_area = $state(data.company?.community_area);
+	let { name, address, zone, community_area } = $state(data.company!);
 </script>
 
 <div class="w-full h-full">
@@ -22,7 +19,7 @@
 	</Card.Header>
 	<Card.Content class="w-full h-full">
 		{#if form?.error}
-			<Alert.Root variant="destructive">
+			<Alert.Root variant="destructive" class="mb-4">
 				<ExclamationTriangle class="h-4 w-4" />
 				<Alert.Title>Es ist ein Fehler aufgetreten.</Alert.Title>
 				<Alert.Description>{form?.error}</Alert.Description>
@@ -30,7 +27,7 @@
 		{/if}
 
 		{#if form?.success}
-			<Alert.Root>
+			<Alert.Root class="mb-4">
 				<ExclamationTriangle class="h-4 w-4" />
 				<Alert.Title>Aktualisierung erfolgreich.</Alert.Title>
 				<Alert.Description
@@ -39,8 +36,8 @@
 			</Alert.Root>
 		{/if}
 
-		<form class="mt-6" method="POST">
-			<div class="grid w-full grid-rows-3 grid-cols-2 gap-4">
+		<form method="POST">
+			<div class="grid w-full grid-rows-2 grid-cols-2 gap-6">
 				<div>
 					<Label for="name">Name</Label>
 					<Input name="name" id="name" value={name} />
@@ -91,9 +88,9 @@
 						<ChevronDown class="absolute right-3 top-2.5 size-4 opacity-50" />
 					</div>
 				</div>
-				<div class="mt-6 row-start-3 col-span-2 text-right">
-					<Form.Button>Übernehmen</Form.Button>
-				</div>
+			</div>
+			<div class="mt-8 w-full text-right">
+				<Form.Button>Übernehmen</Form.Button>
 			</div>
 		</form>
 	</Card.Content>
