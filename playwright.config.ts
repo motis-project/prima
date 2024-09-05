@@ -17,7 +17,8 @@ export default defineConfig({
 		},
 		{
 			name: 'login',
-			testMatch: /login\.setup\.ts/
+			testMatch: /login\.setup\.ts/,
+			dependencies: ['setup db']
 		},
 		{
 			name: 'user test',
