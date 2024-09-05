@@ -22,7 +22,7 @@
 
 <div class="w-full h-full">
 	<Card.Header>
-		<Card.Title>Stammdaten ihres Unternehmens</Card.Title>
+		<Card.Title>Stammdaten Ihres Unternehmens</Card.Title>
 	</Card.Header>
 	<Card.Content class="w-full h-full">
 		<form
