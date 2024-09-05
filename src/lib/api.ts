@@ -67,6 +67,26 @@ export const addAvailability = async (vehicleId: number, from: Date, to: Date) =
 	});
 };
 
+export type BookingRequestParameters = {
+	userChosen: Coordinates;
+	busStops: Coordinates[];
+	startFixed: boolean;
+	timeStamps: Date[][];
+	numPassengers: number;
+	numWheelchairs: number;
+	numBikes: number;
+	luggage: number;
+};
+
+export const blacklisting = async (r: BookingRequestParameters[]) => {
+	return await fetch('/api/blacklisting', {
+		method: 'POST',
+		body: JSON.stringify({
+			r
+		})
+	});
+};
+
 export const booking = async (
 	from: Location,
 	to: Location,
