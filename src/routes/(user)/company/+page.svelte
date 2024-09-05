@@ -68,6 +68,7 @@
 							</select>
 							<ChevronDown class="absolute right-3 top-2.5 size-4 opacity-50" />
 						</div>
+						<Form.FieldErrors />
 					</Form.Control>
 				</Form.Field>
 				<Form.Field {form} name="community">
