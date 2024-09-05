@@ -189,30 +189,20 @@ export const bookingApiQuery = async (
 					.filter((v) => v.availabilities.length != 0)
 					.map((v) => {
 						return {
+							...v,
 							id: v.id,
-							bike_capacity: v.bike_capacity,
-							seats: v.seats,
-							wheelchair_capacity: v.wheelchair_capacity,
-							storage_space: v.storage_space,
 							availabilities: Interval.merge(
 								v.availabilities.map((a) => new Interval(a.start_time, a.end_time))
 							),
 							tours: v.tours.map((t) => {
 								return {
-									id: t.id,
-									departure: t.departure,
-									arrival: t.arrival,
+									...t,
 									events: t.events.map((e) => {
 										const scheduled: Date = new Date(e.scheduled_time);
 										const communicated: Date = new Date(e.communicated_time);
 										return {
 											tourId: t.id,
-											id: e.id,
-											bikes: e.bikes,
-											wheelchairs: e.wheelchairs,
-											luggage: e.luggage,
-											passengers: e.passengers,
-											is_pickup: e.is_pickup,
+											...e,
 											coordinates: new Coordinates(e.latitude, e.longitude),
 											time: new Interval(
 												new Date(Math.min(scheduled.getTime(), communicated.getTime())),
