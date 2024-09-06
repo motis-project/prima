@@ -24,12 +24,12 @@
 	let map = $state<undefined | maplibregl.Map>();
 
 	let start = $state<Coordinates>({
-		lat: 51.343543966724404,
-		lng: 14.843405973137568
+		lat: 51.526934461032994,
+		lng: 14.57712544716437
 	});
 	let destination = $state<Coordinates>({
-		lat: 51.30359310483892,
-		lng: 14.901901510528297
+		lat: 51.505730979747334,
+		lng: 14.638267982988827
 	});
 	let dummyAddress = {
 		street: '',

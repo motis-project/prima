@@ -18,7 +18,6 @@
 </script>
 
 {#if showDialog}
-	<div class="overlay" on:click={handleCancel}></div>
 	<div class="dialog">
 		<p>Are you sure?</p>
 		<button on:click={handleConfirm}>Ok</button>
@@ -39,16 +38,6 @@
 		border: 1px solid #ccc;
 		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 		z-index: 1000;
-	}
-
-	.overlay {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background: rgba(0, 0, 0, 0.5);
-		z-index: 999;
 	}
 
 	button {
