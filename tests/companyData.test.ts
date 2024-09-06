@@ -34,7 +34,7 @@ test('Set company data, incomplete 3', async ({ page }) => {
 	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: 'Görlitz' });
 	await page.getByRole('button', { name: 'Übernehmen' }).click();
 
-	await expect(page.getByText('Gemeinde nicht gesetzt.')).not.toBeVisible();
+	await expect(page.getByText('Gemeinde nicht gesetzt.')).toBeVisible();
 });
 
 test('Set company data, address not in community', async ({ page }) => {
@@ -43,6 +43,7 @@ test('Set company data, address not in community', async ({ page }) => {
 
 	await page.getByLabel('Name').fill('Taxi Weißwasser');
 	await page.getByLabel('Unternehmenssitz').fill('Plantagenweg 3, 02827 Görlitz');
+	await page.waitForTimeout(250);
 	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: 'Görlitz' });
 	await page.getByLabel('Gemeinde').selectOption({ label: 'Weißwasser/O.L.' });
 	await page.getByRole('button', { name: 'Übernehmen' }).click();
@@ -60,7 +61,8 @@ test('Set company data, complete and consistent', async ({ page }) => {
 	await page
 		.getByLabel('Unternehmenssitz')
 		.fill('Werner-Seelenbinder-Straße 70A, 02943 Weißwasser/Oberlausitz');
-	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: 'Görlitz' });
+	await page.waitForTimeout(250);
+	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: 'Weißwasser' });
 	await page.getByLabel('Gemeinde').selectOption({ label: 'Weißwasser/O.L.' });
 	await page.getByRole('button', { name: 'Übernehmen' }).click();
 
