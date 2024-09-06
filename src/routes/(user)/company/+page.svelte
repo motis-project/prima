@@ -15,7 +15,7 @@
 
 <div class="w-full h-full">
 	<Card.Header>
-		<Card.Title>Stammdaten ihres Unternehmens</Card.Title>
+		<Card.Title>Stammdaten Ihres Unternehmens</Card.Title>
 	</Card.Header>
 	<Card.Content class="w-full h-full">
 		{#if form?.error}
@@ -30,9 +30,9 @@
 			<Alert.Root class="mb-4">
 				<ExclamationTriangle class="h-4 w-4" />
 				<Alert.Title>Aktualisierung erfolgreich.</Alert.Title>
-				<Alert.Description
-					>Die Stammdaten ihres Unternehmens Ihres Unternehmens wurden aktualisiert.</Alert.Description
-				>
+				<Alert.Description>
+					Die Stammdaten Ihres Unternehmens wurden aktualisiert.
+				</Alert.Description>
 			</Alert.Root>
 		{/if}
 

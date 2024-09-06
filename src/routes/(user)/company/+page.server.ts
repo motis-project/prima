@@ -62,7 +62,7 @@ export const actions = {
 		}
 
 		if (isNaN(zone) || zone < 1) {
-			return fail(400, { error: 'Pflichtfahrgebiet nicht gesetzt' });
+			return fail(400, { error: 'Pflichtfahrgebiet nicht gesetzt.' });
 		}
 
 		let bestAddressGuess: AddressGuess | undefined = undefined;
