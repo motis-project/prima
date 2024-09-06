@@ -1,6 +1,6 @@
 {
 	"from": {
-		"coordinates": { "lat": 51.2276466699279, "lng": 14.5064713170819 },
+		"coordinates": { "lat": 51.18205293877134, "lng": 14.862986488474997 },
 		"address": {
 			"street": "",
 			"house_number": "",
@@ -9,7 +9,7 @@
 		}
 	},
 	"to": {
-		"coordinates": { "lat": 51.1737509906473, "lng": 14.4297462086546 },
+		"coordinates": { "lat": 51.14937071095368, "lng": 14.93582906557364 },
 		"address": {
 			"street": "",
 			"house_number": "",
@@ -18,7 +18,7 @@
 		}
 	},
 	"startFixed": true,
-	"timeStamp": "2024-08-15T14:10:00Z",
+	"timeStamp": "2024-08-16T14:00:00Z",
 	"numPassengers": 2,
 	"numWheelchairs": 0,
 	"numBikes": 0,

@@ -1,11 +1,11 @@
 import * as path from 'path';
 import { promises as fs } from 'fs';
-import { Migrator, FileMigrationProvider } from 'kysely';
-import { db } from './database';
+import { Migrator, FileMigrationProvider, Kysely } from 'kysely';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import type { Database } from './types';
 
-export async function migrateToLatest() {
+export async function migrateToLatest(db: Kysely<Database>) {
 	const __filename = fileURLToPath(import.meta.url);
 	const __dirname = dirname(__filename);
 

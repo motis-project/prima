@@ -20,6 +20,7 @@ export interface ZoneTable {
 	id: Generated<number>;
 	name: string;
 	is_community: boolean;
+	rates: number;
 }
 
 export type Zone = Selectable<ZoneTable>;
@@ -68,6 +69,8 @@ export interface TourTable {
 	departure: Date;
 	arrival: Date;
 	vehicle: number;
+	fare: number | null;
+	fare_route: number | null;
 }
 
 export type Tour = Selectable<TourTable>;

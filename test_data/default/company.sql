@@ -1,4 +1,9 @@
-INSERT INTO "company" ("longitude", "latitude", "name", "address", "zone", "community_area") VALUES
-(14.462836184381786, 51.257429223319974,	'Taxi-Unternehmen Bautzen-1', 'Kleindubrau Goethestraße 9', 2, 15),
-(14.51622896055764, 51.10081994744087,	'Taxi-Unternehmen Bautzen-2', 'Cunewalde Hauptstraße 83', 1, 10),
-(14.522423592358592, 51.23735562132754,	'Taxi-Unternehmen Görlitz-1', 'Malschwitz Gutauer Landstraße 15', 3, 21)
+INSERT INTO "company" ("latitude", "longitude", "name", "address", "zone", "community_area") VALUES
+(51.493713,	14.625855,	'Taxi Weißwasser',	'Werner-Seelenbinder-Straße 70A, 02943 Weißwasser/Oberlausitz',	2,	85),
+(51.532974,	14.660599,	'Taxi Gablenz',	'Schulstraße 21, 02953 Gablenz',	2,	41),
+(51.38096,	14.666578,	'Taxi Reichwalde',	'Robert-Koch-Straße 45, 02943 Boxberg/Oberlausitz',	3,	38),
+(51.30576,	14.782109,	'Taxi Moholz',	'Postweg 10, 02906 Niesky',	3,	65),
+(51.302185,	14.834551,	'Taxi Niesky',	'Trebuser Str. 4, 02906 Niesky',	3,	65),
+(51.321884,	14.944467,	'Taxi Rothenburg',	'Zur Wasserscheide 37, 02929 Rothenburg/Oberlausitz',	3,	75),
+(51.166775,	14.934901,	'Taxi Schöpstal',	'Ebersbacher Str. 43, 02829 Schöpstal',	4,	79),
+(51.129536,	14.941331,	'Taxi Görlitz',	'Plantagenweg 3, 02827 Görlitz',	4,	42);

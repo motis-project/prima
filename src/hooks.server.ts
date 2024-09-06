@@ -1,8 +1,9 @@
 import { migrateToLatest } from '$lib/migrate';
 import { lucia } from '$lib/auth';
+import { db } from '$lib/database';
 import type { Handle } from '@sveltejs/kit';
 
-migrateToLatest();
+migrateToLatest(db);
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const sessionId = event.cookies.get(lucia.sessionCookieName);
