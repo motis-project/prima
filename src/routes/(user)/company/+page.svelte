@@ -31,7 +31,7 @@
 				<ExclamationTriangle class="h-4 w-4" />
 				<Alert.Title>Aktualisierung erfolgreich.</Alert.Title>
 				<Alert.Description>
-					Die Stammdaten ihres Unternehmens Ihres Unternehmens wurden aktualisiert.
+					Die Stammdaten Ihres Unternehmens wurden aktualisiert.
 				</Alert.Description>
 			</Alert.Root>
 		{/if}
