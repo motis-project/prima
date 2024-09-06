@@ -19,20 +19,16 @@ services:
     ports:
       - 6501:8080
 
-  osr:
-    image: ghcr.io/motis-project/osr:master
+  prima:
+    image: prima
     restart: always
     ports:
-      - 6502:8000
-    volumes:
-      - type: bind
-        source: ./osm
-        target: /input
-        read_only: true
-      - type: volume
-        source: data-osr
-        target: /data
+      - 8080:3000
+    environment:
+      - DATABASE_URL=postgresql://postgres:pw@pg/prima
+      - ORIGIN=http://localhost:8080
+    build:
+      context: .
 
 volumes:
   data-volume:
-  data-osr:

@@ -1,15 +1,16 @@
-import { TZ } from '$lib/constants.js';
 import { db } from '$lib/database';
-import { mapTourEvents } from './TourDetails';
+import { mapTourEvents } from '$lib/TourDetails';
 import type { Vehicle } from './types';
 
 export async function load(event) {
 	const companyId = event.locals.user?.company;
 	const url = event.url;
 	const localDateParam = url.searchParams.get('date');
-	const localDate = localDateParam ? new Date(localDateParam) : new Date();
-	const utcDate = new Date(localDate.toLocaleString('en', { timeZone: TZ }));
-	utcDate.setHours(0, 0, 0, 0);
+	const timezoneOffset = url.searchParams.get('offset');
+	const utcDate =
+		localDateParam && timezoneOffset
+			? new Date(new Date(localDateParam!).getTime() + Number(timezoneOffset) * 60 * 1000)
+			: new Date();
 	if (!companyId) {
 		return {
 			tours: [],
@@ -56,9 +57,17 @@ export async function load(event) {
 				])
 			)
 			.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
+			.innerJoin('company', 'company.id', 'vehicle.company')
 			.where('company', '=', companyId)
 			.orderBy('event.scheduled_time')
-			.selectAll()
+			.selectAll(['event', 'address', 'tour', 'vehicle'])
+			.select([
+				'company.name as company_name',
+				'company.address as company_address',
+				'auth_user.first_name as customer_first_name',
+				'auth_user.last_name as customer_last_ame',
+				'auth_user.phone as customer_phone'
+			])
 			.execute()
 	);
 

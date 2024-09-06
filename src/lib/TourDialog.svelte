@@ -9,17 +9,29 @@
 	import Layer from '$lib/Layer.svelte';
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import type { TourDetails, Event } from './TourDetails';
-	import Button from '$lib/components/ui/button/button.svelte';
-	import ConfirmationDialog from './ConfirmationDialog.svelte';
+	import { type TourDetails, type Event, getTourInfoShort } from '$lib/TourDetails';
+	import ConfirmationDialog from '$lib/ConfirmationDialog.svelte';
+	import maplibregl from 'maplibre-gl';
+	import { Button } from '$lib/components/ui/button';
+	import { MIN_PREP_MINUTES } from './constants';
 
 	class Props {
 		open!: {
-			tour: TourDetails | undefined;
+			tours: Array<TourDetails> | undefined;
 		};
 	}
-
 	const { open = $bindable() }: Props = $props();
+
+	const displayFare = (fare: number | null) => {
+		if (!fare) {
+			return '-';
+		}
+		let res: string = Math.floor(fare / 100) + ',' + (fare % 100);
+		return res;
+	};
+
+	let tourIndex = $state(0);
+	let tour = $derived(open.tours && open.tours[tourIndex]);
 
 	const getRoutes = (tourEvents: Array<Event> | null) => {
 		// eslint-disable-next-line
@@ -35,19 +47,18 @@
 				getRoute({
 					start: {
 						lat: e1.latitude,
-						lng: e1.longitude,
-						level: 0
+						lng: e1.longitude
 					},
 					destination: {
 						lat: e2.latitude,
-						lng: e2.longitude,
-						level: 0
+						lng: e2.longitude
 					},
 					profile: 'car',
 					direction: 'forward'
 				})
 			);
 		}
+
 		return routes;
 	};
 
@@ -62,37 +73,60 @@
 		];
 	};
 
-	const routes = $derived(open.tour && getRoutes(open.tour.events));
-	const center = $derived(open.tour && getCenter(open.tour.events));
+	const routes = $derived(tour && getRoutes(tour.events));
+	const center = $derived(tour && getCenter(tour.events));
 
-	let showConfirmationDialog = $state<boolean>(false);
+	let map = $state<undefined | maplibregl.Map>();
+	let init = false;
+	$effect(() => {
+		if (map && !init) {
+			map.addControl(new maplibregl.FullscreenControl());
+			map.addControl(new maplibregl.NavigationControl(), 'bottom-left');
+			init = true;
+		}
+	});
 
-	function handleConfirm() {
-		showConfirmationDialog = false;
-	}
+	const threshold = new Date();
+	threshold.setMinutes(threshold.getMinutes() + MIN_PREP_MINUTES);
 
-	function handleCancel() {
-		showConfirmationDialog = false;
-	}
+	const isRedisposable = (tour: TourDetails | undefined) => {
+		return tour !== undefined && new Date(tour.events[0].scheduled_time) > threshold;
+	};
 </script>
 
 <Dialog.Root
-	open={open.tour !== undefined}
+	open={tour !== undefined}
 	onOpenChange={(x) => {
 		if (!x) {
-			open.tour = undefined;
+			open.tours = undefined;
 		}
 	}}
 	on:close={() => history.back()}
 >
 	<Dialog.Content class="container max-h-screen">
 		<Dialog.Header>
-			<Dialog.Title>Tour Details</Dialog.Title>
+			<div class="flex justify-between items-center pr-4">
+				<Dialog.Title>Tour Details</Dialog.Title>
+				<div>
+					{#if open!.tours && open.tours.length > 1}
+						{#each open.tours as tour, i}
+							<Button
+								on:click={() => {
+									tourIndex = i;
+								}}
+								variant={tourIndex === i ? 'default' : 'outline'}
+								class="mx-2"
+								>{getTourInfoShort(tour)}
+							</Button>
+						{/each}
+					{/if}
+				</div>
+			</div>
 		</Dialog.Header>
 		<Dialog.Description>
 			<div class="grid grid-rows-2 grid-cols-2 gap-4">
 				{@render overview()}
-				{@render map()}
+				{@render mapView()}
 				<div class="col-span-2">{@render details()}</div>
 			</div>
 		</Dialog.Description>
@@ -105,56 +139,47 @@
 			<Card.Title>Übersicht</Card.Title>
 		</Card.Header>
 		<Card.Content class="h-full w-full">
-			<Table.Root>
-				<Table.Header>
-					<Table.Row>
-						<Table.Head>Abfahrt</Table.Head>
-						<Table.Head>Ankunft</Table.Head>
-						<Table.Head>Fahrzeug</Table.Head>
-					</Table.Row>
-				</Table.Header>
-				<Table.Body>
-					{#if open.tour}
-						<Table.Row>
-							<Table.Cell>
-								{open.tour!.from.toLocaleString('de-DE').slice(0, -3)}
-								<br />{open.tour.events[0].street}<br />
-								{open.tour.events[0].postal_code}
-								{open.tour.events[0].city}
-							</Table.Cell>
-							<Table.Cell>
-								{open.tour!.to.toLocaleString('de-DE').slice(0, -3)}
-								<br />{open.tour.events[open.tour.events.length - 1].street}<br />
-								{open.tour.events[open.tour.events.length - 1].postal_code}
-								{open.tour.events[open.tour.events.length - 1].city}
-							</Table.Cell>
-							<Table.Cell>{open.tour!.license_plate}</Table.Cell>
-						</Table.Row>
+			<div class="grid grid-rows-2 gap-12">
+				<div>
+					<Table.Root>
+						<Table.Header>
+							<Table.Row>
+								<Table.Head>Abfahrt</Table.Head>
+								<Table.Head>Ankunft</Table.Head>
+								<Table.Head class="text-right">Fahrzeug</Table.Head>
+								<Table.Head class="text-right">Fahrpreis</Table.Head>
+							</Table.Row>
+						</Table.Header>
+						<Table.Body>
+							{#if tour}
+								<Table.Row>
+									<Table.Cell>
+										{tour!.from.toLocaleString('de-DE').slice(0, -3)}
+									</Table.Cell>
+									<Table.Cell>
+										{tour!.to.toLocaleString('de-DE').slice(0, -3)}
+									</Table.Cell>
+									<Table.Cell class="text-right">{tour!.license_plate}</Table.Cell>
+									<Table.Cell class="text-right">{displayFare(tour!.fare_route)} €</Table.Cell>
+								</Table.Row>
+							{/if}
+						</Table.Body>
+					</Table.Root>
+				</div>
+				<div class="grid grid-rows-1 place-items-end">
+					{#if isRedisposable(open.tours![tourIndex])}
+						<div><ConfirmationDialog bind:tour={open.tours![tourIndex]} /></div>
 					{/if}
-				</Table.Body>
-			</Table.Root>
-			<ConfirmationDialog />
-			<Dialog.Root>
-				<Dialog.Trigger><Button>Tour redisponieren</Button></Dialog.Trigger>
-				<Dialog.Content>
-					<Dialog.Header>
-						<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
-						<Dialog.Description>
-							This action cannot be undone. This will permanently delete your account and remove
-							your data from our servers.
-						</Dialog.Description>
-					</Dialog.Header>
-					<Button on:click={handleConfirm}>Ok</Button>
-					<Button on:click={handleCancel}>Cancel</Button>
-				</Dialog.Content>
-			</Dialog.Root>
+				</div>
+			</div>
 		</Card.Content>
 	</Card.Root>
 {/snippet}
 
-{#snippet map()}
+{#snippet mapView()}
 	{#if center && routes != null}
 		<Map
+			bind:map
 			transformRequest={(url) => {
 				if (url.startsWith('/')) {
 					return { url: `https://europe.motis-project.de/tiles${url}` };
@@ -222,13 +247,12 @@
 						<Table.Head>Kunde</Table.Head>
 						<Table.Head>Tel. Kunde</Table.Head>
 						<Table.Head>Ein-/Ausstieg</Table.Head>
-						<Table.Head class="text-right">Fahrpreis</Table.Head>
 					</Table.Row>
 				</Table.Header>
 
 				<Table.Body>
-					{#if open.tour!.events != null}
-						{#each open.tour!.events as event}
+					{#if tour!.events != null}
+						{#each tour!.events as event}
 							<Table.Row>
 								<Table.Cell>
 									{event.scheduled_time.toLocaleString('de-DE').slice(0, -3).replace(',', ' ')}
@@ -252,7 +276,6 @@
 										<ArrowLeft class="h-4 w-4" />
 									</Table.Cell>
 								{/if}
-								<Table.Cell class="text-right">19,80</Table.Cell>
 							</Table.Row>
 						{/each}
 					{/if}

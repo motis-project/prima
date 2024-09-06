@@ -1,122 +1,96 @@
 <script lang="ts">
-	const { data } = $props();
+	const { data, form } = $props();
+	import ChevronDown from 'svelte-radix/ChevronDown.svelte';
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
-	import * as Select from '$lib/components/ui/select';
 	import * as Card from '$lib/components/ui/card';
-	import { formSchema } from './schema';
-	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { enhance } from '$app/forms';
-	import { Toaster, toast } from 'svelte-sonner';
+	import { Label } from '$lib/components/ui/label/index.js';
+	import { buttonVariants } from '$lib/components/ui/button';
+	import { cn } from '$lib/utils';
+	import ExclamationTriangle from 'svelte-radix/ExclamationTriangle.svelte';
+	import * as Alert from '$lib/components/ui/alert/index.js';
 
-	const form = superForm(data.form, {
-		validators: zodClient(formSchema)
-	});
-	const { form: formData } = form;
-
-	let selectedZone = $state<{
-		value: string;
-		label: string;
-	}>({
-		value: $formData.zone,
-		label: $formData.zone
-	});
-
-	let selectedCommunity = $state<{
-		value: string;
-		label: string;
-	}>({
-		value: $formData.community,
-		label: $formData.community
-	});
+	let { name, address, zone, community_area } = $state(data.company!);
 </script>
-
-<Toaster />
 
 <div class="w-full h-full">
 	<Card.Header>
-		<Card.Title>Stammdaten ihres Unternehmens</Card.Title>
+		<Card.Title>Stammdaten Ihres Unternehmens</Card.Title>
 	</Card.Header>
 	<Card.Content class="w-full h-full">
-		<form
-			method="POST"
-			use:enhance={() => {
-				return async ({ update }) => {
-					update({ reset: false });
-				};
-			}}
-		>
-			<div class="grid w-full grid-rows-3 grid-cols-2 gap-4">
-				<Form.Field {form} name="companyname">
-					<Form.Control let:attrs>
-						<Form.Label>Name</Form.Label>
-						<Input {...attrs} bind:value={$formData.companyname} />
-						<Form.FieldErrors />
-					</Form.Control>
-				</Form.Field>
-				<Form.Field {form} name="address">
-					<Form.Control let:attrs>
-						<Form.Label>Unternehmenssitz</Form.Label>
-						<Input {...attrs} bind:value={$formData.address} />
-						<Form.FieldErrors />
-					</Form.Control>
-				</Form.Field>
-				<Form.Field {form} name="zone">
-					<Form.Control let:attrs>
-						<Form.Label>Pflichtfahrgebiet</Form.Label>
-						<Select.Root
-							selected={selectedZone}
-							onSelectedChange={(s) => {
-								s && s.label && ($formData.zone = s.label!);
-							}}
-						>
-							<Select.Trigger id="zone">
-								<Select.Value placeholder="Bitte auswählen" />
-							</Select.Trigger>
-							<Select.Content class="overflow-y-auto max-h-[33%] absolute z-10">
-								{#each data.zones as zone}
-									<Select.Item value={zone} label={zone.name.toString()}>
-										{zone.name.toString()}
-									</Select.Item>
-								{/each}
-							</Select.Content>
-						</Select.Root>
-						<Form.FieldErrors />
-						<input hidden bind:value={$formData.zone} name={attrs.name} />
-					</Form.Control>
-				</Form.Field>
-				<Form.Field {form} name="community">
-					<Form.Control let:attrs>
-						<Form.Label>Gemeinde</Form.Label>
-						<Select.Root
-							selected={selectedCommunity}
-							onSelectedChange={(s) => {
-								s && s.label && ($formData.community = s.label!);
-							}}
-						>
-							<Select.Trigger id="community">
-								<Select.Value placeholder="Bitte auswählen" />
-							</Select.Trigger>
-							<Select.Content class="overflow-y-auto max-h-[33%] absolute z-10">
-								{#each data.communities as community}
-									<Select.Item value={community} label={community.name.toString()}>
-										{community.name.toString()}
-									</Select.Item>
-								{/each}
-							</Select.Content>
-						</Select.Root>
-						<Form.FieldErrors />
-						<input hidden bind:value={$formData.community} name={attrs.name} />
-					</Form.Control>
-				</Form.Field>
-				<div class="mt-6 row-start-3 col-span-2 text-right">
-					<Form.Button
-						onclick={async () => {
-							toast(`Die Daten wurden übernommen.`);
-						}}>Übernehmen</Form.Button
-					>
+		{#if form?.error}
+			<Alert.Root variant="destructive" class="mb-4">
+				<ExclamationTriangle class="h-4 w-4" />
+				<Alert.Title>Es ist ein Fehler aufgetreten.</Alert.Title>
+				<Alert.Description>{form?.error}</Alert.Description>
+			</Alert.Root>
+		{/if}
+
+		{#if form?.success}
+			<Alert.Root class="mb-4">
+				<ExclamationTriangle class="h-4 w-4" />
+				<Alert.Title>Aktualisierung erfolgreich.</Alert.Title>
+				<Alert.Description>
+					Die Stammdaten Ihres Unternehmens wurden aktualisiert.
+				</Alert.Description>
+			</Alert.Root>
+		{/if}
+
+		<form method="POST">
+			<div class="grid w-full grid-rows-2 grid-cols-2 gap-6">
+				<div>
+					<Label for="name">Name</Label>
+					<Input name="name" id="name" value={name} />
 				</div>
+				<div>
+					<Label for="address">Unternehmenssitz</Label>
+					<Input name="address" id="address" value={address} />
+				</div>
+				<div>
+					<Label for="zone">Pflichtfahrgebiet</Label>
+					<div class="relative w-full">
+						<select
+							name="zone"
+							id="zone"
+							class={cn(
+								buttonVariants({ variant: 'outline' }),
+								'w-full appearance-none font-normal'
+							)}
+							value={zone}
+						>
+							{#each data.zones as z}
+								<option id="zone" value={z.id} selected={zone == z.id}>
+									{z.name.toString()}
+								</option>
+							{/each}
+						</select>
+						<ChevronDown class="absolute right-3 top-2.5 size-4 opacity-50" />
+					</div>
+				</div>
+				<div>
+					<Label for="community_area">Gemeinde</Label>
+					<div class="relative w-full">
+						<select
+							name="community_area"
+							id="community_area"
+							class={cn(
+								buttonVariants({ variant: 'outline' }),
+								'w-full appearance-none font-normal'
+							)}
+							value={community_area}
+						>
+							{#each data.communities as c}
+								<option value={c.id} selected={community_area == c.id}>
+									{c.name.toString()}
+								</option>
+							{/each}
+						</select>
+						<ChevronDown class="absolute right-3 top-2.5 size-4 opacity-50" />
+					</div>
+				</div>
+			</div>
+			<div class="mt-8 w-full text-right">
+				<Form.Button>Übernehmen</Form.Button>
 			</div>
 		</form>
 	</Card.Content>

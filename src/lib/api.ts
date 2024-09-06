@@ -1,5 +1,5 @@
 import type { Company, Vehicle } from './types';
-import { Coordinates, CoordinatesWithLevel, Location } from './location';
+import { Coordinates, Location } from './location';
 
 export const getCompany = async (id: number): Promise<Company> => {
 	const response = await fetch(`/api/company?id=${id}`);
@@ -92,7 +92,16 @@ export const booking = async (
 	});
 };
 
-export async function geoCode(address: string) {
+export const reassignTour = async (tourId: number) => {
+	console.log('TODO: reassign tour:', tourId);
+	return false;
+};
+
+export class AddressGuess {
+	pos!: { lat: number; lng: number };
+}
+
+export async function geoCode(address: string): Promise<AddressGuess> {
 	const response = await fetch('https://europe.motis-project.de/?elm=AddressSuggestions', {
 		headers: {
 			'Content-Type': 'application/json'
@@ -113,8 +122,8 @@ export async function geoCode(address: string) {
 }
 
 export class RoutingQuery {
-	start!: CoordinatesWithLevel;
-	destination!: CoordinatesWithLevel;
+	start!: Coordinates;
+	destination!: Coordinates;
 	profile!: string;
 	direction!: string;
 }
