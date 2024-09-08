@@ -17,7 +17,7 @@ import type { Company } from '$lib/compositionTypes';
 
 export type BookingApiQueryResult = {
 	companies: Company[];
-	targetZoneIds: Map<number, number[]>;
+	busStopZoneIds: Map<number, number[]>;
 };
 
 const selectAvailabilities = (eb: ExpressionBuilder<Database, 'vehicle'>, interval: Interval) => {
@@ -137,7 +137,7 @@ export const bookingApiQuery = async (
 	start: Coordinates,
 	requiredCapacities: Capacity,
 	expandedSearchInterval: Interval,
-	targets: Coordinates[]
+	busStops: Coordinates[]
 ): Promise<BookingApiQueryResult> => {
 	interface CoordinateTable {
 		index: number;
@@ -146,10 +146,10 @@ export const bookingApiQuery = async (
 	}
 
 	const dbResult = await db
-		.with('targets', (db) => {
-			const cteValues = targets.map(
-				(target, i) =>
-					sql<string>`SELECT cast(${i} as integer) AS index, ${target.lat} AS latitude, ${target.lng} AS longitude`
+		.with('busStops', (db) => {
+			const cteValues = busStops.map(
+				(busStop, i) =>
+					sql<string>`SELECT cast(${i} as integer) AS index, ${busStop.lat} AS latitude, ${busStop.lng} AS longitude`
 			);
 			return db
 				.selectFrom(
@@ -166,17 +166,17 @@ export const bookingApiQuery = async (
 			selectCompanies(eb, expandedSearchInterval, requiredCapacities),
 			jsonArrayFrom(
 				eb
-					.selectFrom('targets')
+					.selectFrom('busStops')
 					.where(
-						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(cast(targets.longitude as float), cast(targets.latitude as float)), ${SRID}))`
+						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(cast(busStops.longitude as float), cast(busStops.latitude as float)), ${SRID}))`
 					)
-					.select(['targets.index as targetIndex', 'zone.id as zoneId'])
-			).as('target')
+					.select(['busStops.index as busStopIndex', 'zone.id as zoneId'])
+			).as('busStopZone')
 		])
 		.executeTakeFirst();
 
 	if (dbResult == undefined) {
-		return { companies: [], targetZoneIds: new Map<number, number[]>() };
+		return { companies: [], busStopZoneIds: new Map<number, number[]>() };
 	}
 
 	const companies = dbResult.companies
@@ -224,12 +224,30 @@ export const bookingApiQuery = async (
 			);
 		})
 	);
+	const a = groupBy(
+		dbResult.busStopZone,
+		(b) => b.busStopIndex,
+		(b) => b.zoneId
+	);
+	const zoneContainsBusStop: (boolean)[][] = [];
+	for(let busStopIdx=0;busStopIdx!=busStops.length;++busStopIdx){
+		const buffer=new Array<boolean>(dbResult.companies.length);
+		const busStopZones=a.get(busStopIdx);
+		if(busStopZones!=undefined){
+			for(let companyIdx=0;companyIdx!=dbResult.companies.length;++companyIdx){
+				buffer[companyIdx]=busStopZones.find((z)=>z==dbResult.companies[companyIdx].zone)!=undefined;
+			}
+			zoneContainsBusStop[busStopIdx]=buffer;	
+		}else{
+		zoneContainsBusStop[busStopIdx]=[];
+		}
+	}
 	return {
 		companies,
-		targetZoneIds: groupBy(
-			dbResult.target,
-			(t) => t.targetIndex,
-			(t) => t.zoneId
+		busStopZoneIds: groupBy(
+			dbResult.busStopZone,
+			(b) => b.busStopIndex,
+			(b) => b.zoneId
 		)
 	};
 };

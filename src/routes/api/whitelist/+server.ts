@@ -30,18 +30,12 @@ export const POST = async (event) => {
 		return error(403);
 	}
 	const parameters: BookingRequestParameters[] = JSON.parse(await event.request.json());
-	if (parameters.length == 0) {
+	const requests = parameters.length;
+	if (requests == 0) {
 		return json({ status: 1, message: 'Es wurden keine Daten übermittelt.' }, { status: 400 });
 	}
-	const requiredCapacity: Capacity = {
-		bikes: parameters[0].numBikes,
-		luggage: parameters[0].luggage,
-		wheelchairs: parameters[0].numWheelchairs,
-		passengers: parameters[0].numPassengers
-	};
-	const requests = parameters.length;
-	if(requests==0 || requests>2){
-		
+	if(requests>2){
+		return json({ status: 1, message: 'Die API erwartet ein Array mit entweder einem oder zwei Einträgen, für die erste und letzte Meile.' }, { status: 400 });
 	}
 	getValidBookings(parameters[0]);
 	getValidBookings(parameters[1]);
@@ -56,14 +50,14 @@ const getValidBookings = async (
 		wheelchairs: p.numWheelchairs,
 		passengers: p.numPassengers
 	};
-	const oneCoordinates: Coordinates = p.userChosen;
+	const userChosen: Coordinates = p.userChosen;
 	if (p.busStops.length == 0) {
 		return json({ status: 1, message: 'Es wurden keine Haltestellen angegeben.' }, { status: 400 });
 	}
 
 	let travelDurations = [];
 	try {
-		travelDurations = (await oneToMany(oneCoordinates, p.busStops, Direction.Forward)).map((res) =>
+		travelDurations = (await oneToMany(userChosen, p.busStops, Direction.Forward)).map((res) =>
 			secondsToMs(res.duration)
 		);
 	} catch (e) {
@@ -75,7 +69,7 @@ const getValidBookings = async (
 			{
 				status: 2,
 				message:
-					'Die ausgewählten Koordinaten konnten in den Open Street Map Daten nicht zugeordnet werden.'
+					'Das Straßenrouting war nicht erfolgreich. Mögliche Gründe: (1) Die angegebenen Koordinaten wurden nicht in den Open Street Map Daten gefunden, (2) Die Reisezeit überschreitet eine Stunde.'
 			},
 			{ status: 400 }
 		);
@@ -99,13 +93,13 @@ const getValidBookings = async (
 	}
 
 	const dbResult: BookingApiQueryResult = await bookingApiQuery(
-		oneCoordinates,
+		userChosen,
 		requiredCapacity,
 		maxIntervals.expandedSearchInterval,
 		p.busStops
 	);
 	if (dbResult.companies.length == 0) {
-		return determineError(oneCoordinates, requiredCapacity);
+		return determineError(userChosen, requiredCapacity);
 	}
 
 	for (let index = 0; index != travelDurations.length; ++index) {
@@ -127,12 +121,12 @@ const getValidBookings = async (
 			};
 			continue;
 		}
-		const targetZones = dbResult.targetZoneIds.get(index);
-		if (targetZones == undefined) {
+		const busStopZones = dbResult.busStopZoneIds.get(index);
+		if (busStopZones == undefined) {
 			return json({ status: 500 });
 		}
 		const currentCompanies = dbResult.companies.filter(
-			(c) => targetZones.find((zId) => zId == c.zoneId) != undefined
+			(c) => busStopZones.find((zId) => zId == c.zoneId) != undefined
 		);
 		if (currentCompanies.length == 0) {
 			results[index] = {
