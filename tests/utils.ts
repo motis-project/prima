@@ -5,14 +5,40 @@ export type UserCredentials = {
 	password: string;
 };
 
+export type Company = {
+	name: string;
+	address: string;
+	zone: string;
+	community: string;
+};
+
 export const MAINTAINER: UserCredentials = {
 	email: 'master@example.com',
 	password: 'longEnough1'
 };
 
 export const ENTREPENEUR: UserCredentials = {
-	email: 'taxi@example.com',
+	email: 'taxi1@test.de',
 	password: 'longEnough2'
+};
+
+export const ENTREPENEUR2: UserCredentials = {
+	email: 'taxi2@test.de',
+	password: 'longEnough2'
+};
+
+export const COMPANY1: Company = {
+	name: 'Taxi Weißwasser',
+	address: 'Werner-Seelenbinder-Straße 70A, 02943 Weißwasser/Oberlausitz',
+	zone: 'Weißwasser',
+	community: 'Weißwasser/O.L.'
+};
+
+export const COMPANY2: Company = {
+	name: 'Taxi Gablenz',
+	address: 'Schulstraße 21, 02953 Gablenz',
+	zone: 'Weißwasser',
+	community: 'Gablenz'
 };
 
 export async function login(page: Page, credentials: UserCredentials) {
@@ -32,4 +58,16 @@ export async function signup(page: Page, credentials: UserCredentials) {
 	await expect(
 		page.getByRole('heading', { name: 'Willkommen beim Projekt PrimaÖV!' })
 	).toBeVisible();
+}
+
+export async function setCompanyData(page: Page, user: UserCredentials, company: Company) {
+	await login(page, user);
+	await expect(page.getByRole('heading', { name: 'Stammdaten Ihres Unternehmens' })).toBeVisible();
+
+	await page.getByLabel('Name').fill(company.name);
+	await page.getByLabel('Unternehmenssitz').fill(company.address);
+	await page.waitForTimeout(250);
+	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: company.zone });
+	await page.getByLabel('Gemeinde').selectOption({ label: company.community });
+	await page.getByRole('button', { name: 'Übernehmen' }).click();
 }

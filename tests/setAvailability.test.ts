@@ -1,20 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { login, ENTREPENEUR } from './utils';
+import { login, ENTREPENEUR, setCompanyData, COMPANY1 } from './utils';
 
 test.describe.configure({ mode: 'serial' });
 
-test('Set company data, complete and consistent', async ({ page }) => {
-	await login(page, ENTREPENEUR);
-	await expect(page.getByRole('heading', { name: 'Stammdaten Ihres Unternehmens' })).toBeVisible();
-
-	await page.getByLabel('Name').fill('Taxi Weißwasser');
-	await page
-		.getByLabel('Unternehmenssitz')
-		.fill('Werner-Seelenbinder-Straße 70A, 02943 Weißwasser/Oberlausitz');
-	await page.waitForTimeout(250);
-	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: 'Weißwasser' });
-	await page.getByLabel('Gemeinde').selectOption({ label: 'Weißwasser/O.L.' });
-	await page.getByRole('button', { name: 'Übernehmen' }).click();
+test('Set company data', async ({ page }) => {
+	await setCompanyData(page, ENTREPENEUR, COMPANY1);
 });
 
 test('Set availability', async ({ page }) => {
