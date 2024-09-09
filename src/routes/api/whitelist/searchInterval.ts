@@ -10,7 +10,7 @@ export const computeSearchIntervals = (
 	searchInterval: Interval;
 	expandedSearchInterval: Interval;
 } => {
-	const time = times.flatMap((t)=>t)[0];
+	const time = times.flatMap((t) => t)[0];
 	const possibleStartTimes = new Interval(
 		startFixed ? time : new Date(time.getTime() - SEARCH_INTERVAL_SIZE - travelDuration),
 		startFixed

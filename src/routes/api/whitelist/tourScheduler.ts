@@ -34,25 +34,35 @@ class EventInsertion {
 		console.assert(fromBusStopDurations.length == toBusStopDurations.length);
 		console.assert(fromBusStopDurations.length == travelDurations.length);
 		this.busStops = new Array<Interval[][]>(busStopTimes.length);
-		this.both=new Array<Interval[][]>(busStopTimes.length);
+		this.both = new Array<Interval[][]>(busStopTimes.length);
 
-		const availabilitiesInWindow: Interval[] = type!=InsertionType.INSERT?[window]:Interval.intersect(availabilities, window);
-		
-		this.userChosen=availabilitiesInWindow.filter((a)=>a.getDurationMs()>=fromUserChosenDuration + toUserChosenDuration!);
-		for(let i=0;i!=travelDurations.length;++i){
+		const availabilitiesInWindow: Interval[] =
+			type != InsertionType.INSERT ? [window] : Interval.intersect(availabilities, window);
+
+		this.userChosen = availabilitiesInWindow.filter(
+			(a) => a.getDurationMs() >= fromUserChosenDuration + toUserChosenDuration!
+		);
+		for (let i = 0; i != travelDurations.length; ++i) {
 			const duration = fromBusStopDurations[i] + toBusStopDurations[i];
-			const bothDuration = (startFixed ? fromBusStopDurations[i] : fromUserChosenDuration) +
-			travelDurations[i] +
-			(startFixed ? toUserChosenDuration : toBusStopDurations[i]);
-			for(let j=0;j!=busStopTimes[i].length;++j){
-				this.busStops[i][j] = Interval.intersect(availabilitiesInWindow.filter((a)=>a.getDurationMs()>=duration), busStopTimes[i][j]);
-				this.both[i][j] = Interval.intersect(availabilitiesInWindow.filter((a)=>a.getDurationMs()>=bothDuration), busStopTimes[i][j]);
+			const bothDuration =
+				(startFixed ? fromBusStopDurations[i] : fromUserChosenDuration) +
+				travelDurations[i] +
+				(startFixed ? toUserChosenDuration : toBusStopDurations[i]);
+			for (let j = 0; j != busStopTimes[i].length; ++j) {
+				this.busStops[i][j] = Interval.intersect(
+					availabilitiesInWindow.filter((a) => a.getDurationMs() >= duration),
+					busStopTimes[i][j]
+				);
+				this.both[i][j] = Interval.intersect(
+					availabilitiesInWindow.filter((a) => a.getDurationMs() >= bothDuration),
+					busStopTimes[i][j]
+				);
 			}
 		}
 	}
-	userChosen:Interval[];
-	busStops:Interval[][][];
-	both:Interval[][][];
+	userChosen: Interval[];
+	busStops: Interval[][][];
+	both: Interval[][][];
 }
 
 type Answer = {
@@ -72,17 +82,25 @@ export class TourScheduler {
 		travelDurations: number[],
 		companies: Company[],
 		required: Capacity,
-		companyMayServeBusStop:boolean[][]
+		companyMayServeBusStop: boolean[][]
 	) {
 		this.companyMayServeBusStop = companyMayServeBusStop;
-		this.busStopTimes = busStopTimes.map((times)=>times.map((t)=>new Interval(startFixed?t:new Date(t.getTime()-MAX_PASSENGER_WAITING_TIME), startFixed?new Date(t.getTime()+MAX_PASSENGER_WAITING_TIME):t)));
+		this.busStopTimes = busStopTimes.map((times) =>
+			times.map(
+				(t) =>
+					new Interval(
+						startFixed ? t : new Date(t.getTime() - MAX_PASSENGER_WAITING_TIME),
+						startFixed ? new Date(t.getTime() + MAX_PASSENGER_WAITING_TIME) : t
+					)
+			)
+		);
 		this.required = required;
 		this.companies = companies;
 		this.travelDurations = travelDurations;
 		this.startFixed = startFixed;
 		this.userChosen = userChosen;
 		this.busStops = busStops;
-		
+
 		this.possibleInsertionsByVehicle = new Map<number, Range[]>();
 
 		this.userChosenMany = new Array<Coordinates[]>(2);
@@ -93,11 +111,11 @@ export class TourScheduler {
 
 		this.insertDurations = new Array<EventInsertion[][][]>(companies.length);
 
-		this.insertionIndexesUserChosenDurationIndexes=[];
-		this.insertionIndexesBusStopDurationIndexes=[];
+		this.insertionIndexesUserChosenDurationIndexes = [];
+		this.insertionIndexesBusStopDurationIndexes = [];
 
-		this.companyIndexesUserChosenDurationIndexes=new Array<number[]>(companies.length);
-		this.companyIndexesBusStopDurationIndexes=new Array<number[][]>(companies.length);
+		this.companyIndexesUserChosenDurationIndexes = new Array<number[]>(companies.length);
+		this.companyIndexesBusStopDurationIndexes = new Array<number[][]>(companies.length);
 
 		this.answers = new Array<Answer[]>(busStops.length);
 	}
@@ -109,7 +127,7 @@ export class TourScheduler {
 	travelDurations: number[];
 	userChosen: Coordinates;
 	busStops: Coordinates[];
-	
+
 	possibleInsertionsByVehicle: Map<number, Range[]>;
 
 	userChosenMany: Coordinates[][];
@@ -145,7 +163,13 @@ export class TourScheduler {
 					v.seats,
 					v.storage_space
 				);
-				this.possibleInsertionsByVehicle.set(v.id, simulation.getPossibleInsertionRanges(v.tours.flatMap((t) => t.events), this.required));
+				this.possibleInsertionsByVehicle.set(
+					v.id,
+					simulation.getPossibleInsertionRanges(
+						v.tours.flatMap((t) => t.events),
+						this.required
+					)
+				);
 			});
 		});
 	}
@@ -157,40 +181,62 @@ export class TourScheduler {
 				const allEvents = v.tours.flatMap((t) => t.events);
 				const insertions = this.possibleInsertionsByVehicle.get(v.id)!;
 				forEachInsertion(insertions, (insertionIdx) => {
-					this.addCoordinates(allEvents[insertionIdx].coordinates, allEvents[insertionIdx + 1].coordinates, companyIdx, vehicleIdx, insertionIdx);
+					this.addCoordinates(
+						allEvents[insertionIdx].coordinates,
+						allEvents[insertionIdx + 1].coordinates,
+						companyIdx,
+						vehicleIdx,
+						insertionIdx
+					);
 				});
 			});
 		});
 	}
 
-	private addCompanyCoordinates(c: Coordinates, companyIdx: number){
+	private addCompanyCoordinates(c: Coordinates, companyIdx: number) {
 		for (let busStopIdx = 0; busStopIdx != this.busStops.length; ++busStopIdx) {
-			if(!this.companyMayServeBusStop[busStopIdx][companyIdx]){
+			if (!this.companyMayServeBusStop[busStopIdx][companyIdx]) {
 				continue;
 			}
 			this.busStopMany[Timing.BEFORE][busStopIdx].push(c);
-			this.companyIndexesBusStopDurationIndexes[Timing.BEFORE][companyIdx][busStopIdx] = this.busStopMany.length;
+			this.companyIndexesBusStopDurationIndexes[Timing.BEFORE][companyIdx][busStopIdx] =
+				this.busStopMany.length;
 			this.busStopMany[Timing.AFTER][busStopIdx].push(c);
-			this.companyIndexesBusStopDurationIndexes[Timing.AFTER][companyIdx][busStopIdx] = this.busStopMany.length;
+			this.companyIndexesBusStopDurationIndexes[Timing.AFTER][companyIdx][busStopIdx] =
+				this.busStopMany.length;
 		}
 		this.userChosenMany[Timing.BEFORE].push(c);
 		this.userChosenMany[Timing.AFTER].push(c);
 	}
 
-	private addCoordinates(prev: Coordinates, next: Coordinates, companyIdx: number, vehicleIdx: number, insertionIdx: number) {
+	private addCoordinates(
+		prev: Coordinates,
+		next: Coordinates,
+		companyIdx: number,
+		vehicleIdx: number,
+		insertionIdx: number
+	) {
 		for (let busStopIdx = 0; busStopIdx != this.busStops.length; ++busStopIdx) {
-			if(!this.companyMayServeBusStop[busStopIdx][companyIdx]){
+			if (!this.companyMayServeBusStop[busStopIdx][companyIdx]) {
 				continue;
 			}
 			this.busStopMany[Timing.BEFORE][busStopIdx].push(prev);
-			this.insertionIndexesBusStopDurationIndexes[Timing.BEFORE][companyIdx][vehicleIdx][insertionIdx][busStopIdx] = this.busStopMany[busStopIdx].length;
+			this.insertionIndexesBusStopDurationIndexes[Timing.BEFORE][companyIdx][vehicleIdx][
+				insertionIdx
+			][busStopIdx] = this.busStopMany[busStopIdx].length;
 			this.busStopMany[Timing.AFTER][busStopIdx].push(next);
-			this.insertionIndexesBusStopDurationIndexes[Timing.AFTER][companyIdx][vehicleIdx][insertionIdx][busStopIdx] = this.busStopMany[busStopIdx].length;
+			this.insertionIndexesBusStopDurationIndexes[Timing.AFTER][companyIdx][vehicleIdx][
+				insertionIdx
+			][busStopIdx] = this.busStopMany[busStopIdx].length;
 		}
 		this.userChosenMany[Timing.BEFORE].push(prev);
-		this.insertionIndexesUserChosenDurationIndexes[Timing.BEFORE][companyIdx][vehicleIdx][insertionIdx] = this.busStopMany.length;
+		this.insertionIndexesUserChosenDurationIndexes[Timing.BEFORE][companyIdx][vehicleIdx][
+			insertionIdx
+		] = this.busStopMany.length;
 		this.userChosenMany[Timing.AFTER].push(next);
-		this.insertionIndexesUserChosenDurationIndexes[Timing.AFTER][companyIdx][vehicleIdx][insertionIdx] = this.busStopMany.length;
+		this.insertionIndexesUserChosenDurationIndexes[Timing.AFTER][companyIdx][vehicleIdx][
+			insertionIdx
+		] = this.busStopMany.length;
 	}
 
 	private async routing() {
@@ -219,7 +265,12 @@ export class TourScheduler {
 	}
 
 	private computeTravelDurations() {
-		const cases = [InsertionType.CONNECT, InsertionType.APPEND, InsertionType.PREPEND, InsertionType.INSERT];
+		const cases = [
+			InsertionType.CONNECT,
+			InsertionType.APPEND,
+			InsertionType.PREPEND,
+			InsertionType.INSERT
+		];
 		this.companies.forEach((c, companyIdx) => {
 			this.insertDurations[companyIdx] = new Array<EventInsertion[][]>(c.vehicles.length);
 			c.vehicles.forEach((v, vehicleIdx) => {
@@ -229,7 +280,9 @@ export class TourScheduler {
 					return;
 				}
 				const lastInsertionIdx = insertions[insertions.length - 1].latestDropoff;
-				this.insertDurations[companyIdx][vehicleIdx] = new Array<EventInsertion[]>(lastInsertionIdx);
+				this.insertDurations[companyIdx][vehicleIdx] = new Array<EventInsertion[]>(
+					lastInsertionIdx
+				);
 				forEachInsertion(insertions, (insertionIdx) => {
 					this.insertDurations[companyIdx][vehicleIdx][insertionIdx] = new Array<EventInsertion>(4);
 					const prev = allEvents[insertionIdx];
@@ -237,14 +290,17 @@ export class TourScheduler {
 					const departure = v.tours.find((t) => t.id == next.tourId)!.departure;
 					const arrival = v.tours.find((t) => t.id == prev.tourId)!.arrival;
 					cases.forEach((type) => {
-						if((prev.tourId == next.tourId) != (type == InsertionType.INSERT)){
+						if ((prev.tourId == next.tourId) != (type == InsertionType.INSERT)) {
 							return;
 						}
 						const isAppend = type === InsertionType.CONNECT || type === InsertionType.APPEND;
 						const isPrepend = type === InsertionType.CONNECT || type === InsertionType.PREPEND;
-						const interv = new Interval(isAppend?arrival:prev.time.startTime, isPrepend?departure:next.time.endTime);
-						const p = isAppend?companyIdx: insertionIdx;
-						const n = isPrepend?companyIdx: insertionIdx;
+						const interv = new Interval(
+							isAppend ? arrival : prev.time.startTime,
+							isPrepend ? departure : next.time.endTime
+						);
+						const p = isAppend ? companyIdx : insertionIdx;
+						const n = isPrepend ? companyIdx : insertionIdx;
 						this.insertDurations[companyIdx][vehicleIdx][insertionIdx][type] = new EventInsertion(
 							this.startFixed,
 							this.userChosenDuration[Timing.BEFORE][p],
@@ -284,11 +340,12 @@ export class TourScheduler {
 							if (nextPickup.tourId != prevDropoff.tourId) {
 								break;
 							}
-							if(prevPickup.tourId == nextDropoff.tourId) {
-								if(prevPickup.id == prevDropoff.id) {
+							if (prevPickup.tourId == nextDropoff.tourId) {
+								if (prevPickup.id == prevDropoff.id) {
 									this.busStops.forEach((_, busStopIdx) => {
 										const duration =
-											this.insertDurations[InsertionType.INSERT][companyIdx][vehicleIdx][pickupIdx].bothDurations[busStopIdx];		
+											this.insertDurations[InsertionType.INSERT][companyIdx][vehicleIdx][pickupIdx]
+												.bothDurations[busStopIdx];
 										if (duration != undefined && duration <= pickupTimeDifference) {
 											this.answers[busStopIdx].push({
 												companyId: c.id,
@@ -299,21 +356,16 @@ export class TourScheduler {
 											});
 										}
 									});
-								}
-								else{
-
+								} else {
 								}
 								continue;
 							}
-							if(prevPickup.tourId == nextPickup.tourId) {
-
+							if (prevPickup.tourId == nextPickup.tourId) {
 								continue;
 							}
-							if(prevDropoff.tourId == nextDropoff.tourId) {
-
+							if (prevDropoff.tourId == nextDropoff.tourId) {
 								continue;
 							}
-
 						}
 					}
 				});
@@ -344,24 +396,30 @@ export class TourScheduler {
 			if (pickupIdx == dropoffIdx) {
 				if (prevPickup.tourId != nextPickup.tourId) {
 					connectDuration =
-						this.insertDurations[InsertionType.CONNECT][companyIdx][vehicleIdx][pickupIdx].bothDurations[busStopIdx];
+						this.insertDurations[InsertionType.CONNECT][companyIdx][vehicleIdx][pickupIdx]
+							.bothDurations[busStopIdx];
 					appendDuration =
-						this.insertDurations[InsertionType.APPEND][companyIdx][vehicleIdx][pickupIdx].bothDurations[busStopIdx];
+						this.insertDurations[InsertionType.APPEND][companyIdx][vehicleIdx][pickupIdx]
+							.bothDurations[busStopIdx];
 					prependDuration =
-						this.insertDurations[InsertionType.PREPEND][companyIdx][vehicleIdx][pickupIdx].bothDurations[busStopIdx];
+						this.insertDurations[InsertionType.PREPEND][companyIdx][vehicleIdx][pickupIdx]
+							.bothDurations[busStopIdx];
 				} else {
 					duration =
-						this.insertDurations[InsertionType.INSERT][companyIdx][vehicleIdx][pickupIdx].bothDurations[busStopIdx];
+						this.insertDurations[InsertionType.INSERT][companyIdx][vehicleIdx][pickupIdx]
+							.bothDurations[busStopIdx];
 				}
 			} else {
 				if (prevPickup.tourId != nextPickup.tourId) {
 				} else {
 					const busStopDuration =
-						this.insertDurations[InsertionType.INSERT][companyIdx][vehicleIdx][this.startFixed ? pickupIdx : dropoffIdx]
-							.busStopDurations[busStopIdx];
+						this.insertDurations[InsertionType.INSERT][companyIdx][vehicleIdx][
+							this.startFixed ? pickupIdx : dropoffIdx
+						].busStopDurations[busStopIdx];
 					const userChosenDuration =
-						this.insertDurations[InsertionType.INSERT][companyIdx][vehicleIdx][this.startFixed ? dropoffIdx : pickupIdx]
-							.userChosenDuration;
+						this.insertDurations[InsertionType.INSERT][companyIdx][vehicleIdx][
+							this.startFixed ? dropoffIdx : pickupIdx
+						].userChosenDuration;
 				}
 			}
 

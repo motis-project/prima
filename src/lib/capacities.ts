@@ -1,11 +1,11 @@
 import type { Event } from '$lib/compositionTypes.js';
 
-export class Capacity {
-	wheelchairs!: number;
-	bikes!: number;
-	passengers!: number;
-	luggage!: number;
-}
+export type Capacity = {
+	wheelchairs: number;
+	bikes: number;
+	passengers: number;
+	luggage: number;
+};
 
 export type Range = {
 	earliestPickup: number;
