@@ -81,9 +81,9 @@ export type BookingRequestParameters = {
 export const blacklisting = async (r: BookingRequestParameters) => {
 	return await fetch('/api/blacklisting', {
 		method: 'POST',
-		body: JSON.stringify({
+		body: JSON.stringify(
 			r
-		})
+		)
 	});
 };
 

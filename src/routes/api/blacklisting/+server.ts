@@ -1,7 +1,7 @@
-import type { BookingRequestParameters } from '$lib/api';
 import { MAX_PASSENGER_WAITING_TIME, SRID } from '$lib/constants';
 import { db } from '$lib/database.js';
 import { Interval } from '$lib/interval';
+import type { Coordinates } from '$lib/location';
 import { json } from '@sveltejs/kit';
 import { sql, type RawBuilder } from 'kysely';
 
@@ -12,13 +12,13 @@ export const POST = async (event) => {
 		latitude: number;
 	}
 	interface TimesTable {
-		busStopIndex: number;
+		busstopindex: number;
 		index: number;
-		startTime: Date;
-		endTime: Date;
+		starttime: Date;
+		endtime: Date;
 	}
-	const parameters: BookingRequestParameters = JSON.parse(await event.request.json());
-	if (parameters.timeStamps.length != parameters.busStops.length) {
+	const {userChosen, busStops,startFixed,timeStamps,numPassengers,numBikes,numWheelchairs,luggage} = await event.request.json();
+	if (timeStamps.length != busStops.length) {
 		return json(
 			{
 				message:
@@ -27,44 +27,63 @@ export const POST = async (event) => {
 			{ status: 400 }
 		);
 	}
-	const userChosen = parameters.userChosen;
-	const allTimes: Interval[][] = parameters.timeStamps.map((timesByBusStop) =>
+	if(timeStamps.length==0){
+		return json(
+			{
+				message:
+					'Es wurden keine Zeiten angegeben.'
+			},
+			{ status: 200 }
+		);
+	}
+	const timestamps: Date[][] = new Array<Date[]>(timeStamps.length);
+	for(let i=0;i!=timeStamps.length;++i){
+		timestamps[i] = new Array<Date>(timeStamps[i].length);
+		for(let j=0;j!=timeStamps.length;++j){
+			timestamps[i][j] = new Date(timeStamps[i][j]);
+		}
+	}
+	console.log(timeStamps);
+	console.log(timestamps);
+	const busstops: Coordinates[] = busStops
+	const allTimes: Interval[][] = timestamps.map((timesByBusStop) =>
 		timesByBusStop.map(
 			(t) =>
 				new Interval(
-					parameters.startFixed ? t : new Date(t.getTime() - MAX_PASSENGER_WAITING_TIME),
-					parameters.startFixed ? new Date(t.getTime() + MAX_PASSENGER_WAITING_TIME) : t
+					startFixed ? t : new Date(t.getTime() - MAX_PASSENGER_WAITING_TIME),
+					startFixed ? new Date(t.getTime() + MAX_PASSENGER_WAITING_TIME) : t
 				)
 		)
 	);
 	const requiredCapacity = {
-		wheelchairs: parameters.numWheelchairs,
-		bikes: parameters.numBikes,
-		passengers: parameters.numPassengers,
-		luggage: parameters.luggage
+		wheelchairs: numWheelchairs,
+		bikes: numBikes,
+		passengers: numPassengers,
+		luggage: luggage
 	};
 	const dbResult = await db
-		.with('busStops', (db) => {
-			const cteValues = parameters.busStops.map(
+		.with('busstops', (db) => {
+			const cteValues = busstops.map(
 				(busStop, i) =>
-					sql<string>`SELECT cast(${i} as integer) AS index, ${busStop.lat} AS latitude, ${busStop.lng} AS longitude`
+					sql<string>`SELECT cast(${i} as integer) AS index, cast(${busStop.lat} as decimal) AS latitude, cast(${busStop.lng} as decimal) AS longitude`
 			);
 			return db
 				.selectFrom(
-					sql<CoordinatesTable>`(${sql.join(cteValues, sql<string>` UNION ALL `)})`.as('targets')
+					sql<CoordinatesTable>`(${sql.join(cteValues, sql<string>` UNION ALL `)})`.as('busstops')
 				)
 				.selectAll();
 		})
 		.with('times', (db) => {
-			const cteValues: RawBuilder<string>[] = [];
-			for (let i = 0; i != parameters.timeStamps.length; ++i) {
-				cteValues.concat(
+			let cteValues: RawBuilder<string>[] = [];
+			for (let i = 0; i != timestamps.length; ++i) {
+				cteValues = cteValues.concat(
 					allTimes[i].map(
 						(t, j) =>
-							sql<string>`SELECT cast(${i} as integer) AS busStopIndex, cast(${j} as integer) AS index, ${t.startTime} AS startTime, ${t.endTime} AS endTime`
+							sql<string>`SELECT cast(${i} as integer) AS busstopindex, cast(${j} as integer) AS index, ${t.startTime} AS starttime, ${t.endTime} AS endtime`
 					)
 				);
 			}
+			console.log(cteValues);
 			return db
 				.selectFrom(sql<TimesTable>`(${sql.join(cteValues, sql<string>` UNION ALL `)})`.as('times'))
 				.selectAll();
@@ -76,24 +95,24 @@ export const POST = async (event) => {
 				sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${userChosen.lng}, ${userChosen.lat}), ${SRID}))`
 			])
 		)
-		.innerJoin(
+		.innerJoinLateral(
 			(eb) =>
 				eb
-					.selectFrom('busStops')
+					.selectFrom('busstops')
 					.where(
-						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(targets.longitude, targets.latitude), ${SRID}))`
+						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(busstops.longitude, busstops.latitude), ${SRID}))`
 					)
 					.selectAll()
-					.as('busStopZone'),
+					.as('busstopzone'),
 			(join) => join.onTrue()
 		)
-		.innerJoin(
+		.innerJoinLateral(
 			(eb) =>
 				eb
 					.selectFrom('times')
-					.whereRef('times.busStopIndex', '=', 'busStopZone.index')
+					.whereRef('times.busstopindex', '=', 'busstopzone.index')
 					.selectAll()
-					.as('busStopTimes'),
+					.as('busstoptimes'),
 			(join) => join.onTrue()
 		)
 		.where((eb) =>
@@ -101,7 +120,7 @@ export const POST = async (event) => {
 				eb.exists(
 					eb.selectFrom('company').where((eb) =>
 						eb.and([
-							eb('company.zone', '=', eb.ref('busStopZone.id')),
+							eb('company.zone', '=', eb.ref('zone.id')),
 							eb.exists((eb) =>
 								eb
 									.selectFrom('vehicle')
@@ -125,8 +144,8 @@ export const POST = async (event) => {
 														.whereRef('availability.vehicle', '=', 'vehicle.id')
 														.where((eb) =>
 															eb.and([
-																eb('availability.start_time', '<=', eb.ref('busStopTimes.endTime')),
-																eb('availability.end_time', '>=', eb.ref('busStopTimes.startTime'))
+																eb('availability.start_time', '<=', eb.ref('busstoptimes.endtime')),
+																eb('availability.end_time', '>=', eb.ref('busstoptimes.starttime'))
 															])
 														)
 												),
@@ -136,8 +155,8 @@ export const POST = async (event) => {
 														.whereRef('tour.vehicle', '=', 'vehicle.id')
 														.where((eb) =>
 															eb.and([
-																eb('tour.departure', '<=', eb.ref('busStopTimes.endTime')),
-																eb('tour.arrival', '>=', eb.ref('busStopTimes.startTime'))
+																eb('tour.departure', '<=', eb.ref('busstoptimes.endtime')),
+																eb('tour.arrival', '>=', eb.ref('busstoptimes.starttime'))
 															])
 														)
 												)
@@ -150,8 +169,10 @@ export const POST = async (event) => {
 				)
 			])
 		)
-		.select(['busStopTimes.index as timeIndex', 'busStopTimes.busStopIndex'])
+		.select(['busstoptimes.index as timeIndex', 'busstoptimes.busstopindex'])
 		.execute();
+
+		console.log(dbResult);
 
 	return json(
 		{
