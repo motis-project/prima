@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">OPNVTaxi</string>
+    <string name="login_button_text">Anmelden</string>
+    <string name="journeys_list_title">Auftragsübersicht</string>
+    <string name="single_journey">Auftrag</string>
+    <string name="from">Von</string>
+    <string name="to">Nach</string>
+</resources>
