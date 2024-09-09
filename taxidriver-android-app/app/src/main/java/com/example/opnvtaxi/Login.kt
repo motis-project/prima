@@ -53,7 +53,7 @@ class LoginViewModel : ViewModel() {
                     // successful login
                     _navigationEvent.emit(true)
                 } else {
-                    _loginErrorEvent.emit("Password oder E-Mail sind inkorrekt.")
+                    _loginErrorEvent.emit("Passwort oder E-Mail sind inkorrekt.")
                 }
             } catch (e: Exception) {
                 Log.d("Login Response Error", e.message!!)
@@ -119,6 +119,7 @@ fun Login(
                 },
                 label = { Text("E-Mail") },
                 maxLines = 1,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 isError = errorMessage != null
             )
             Spacer(modifier = Modifier.height(12.dp))
