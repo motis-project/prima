@@ -11,8 +11,7 @@ export const PUT = async (event) => {
 	const request = event.request;
 	const userMail = event.locals.user?.email;
 	try {
-		const { email } =
-			await request.json();
+		const { email } = await request.json();
 		if (email == userMail) {
 			error(400, {
 				message: 'not allowed for this user'

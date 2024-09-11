@@ -10,7 +10,7 @@
 	const { data, form } = $props<{ data: PageData; form: ActionData }>();
 
 	const removeUser = async (email: string) => {
-		const response = await fetch('/api/user', {
+		await fetch('/api/user', {
 			method: 'PUT',
 			body: JSON.stringify({ email })
 		});

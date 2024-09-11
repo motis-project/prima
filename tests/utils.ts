@@ -59,7 +59,6 @@ export async function signup(page: Page, credentials: UserCredentials) {
 		page.getByRole('heading', { name: 'Willkommen beim Projekt PrimaÖV!' })
 	).toBeVisible();
 	await page.getByRole('link', { name: 'Logout' }).click();
-
 }
 
 export async function setCompanyData(page: Page, user: UserCredentials, company: Company) {

@@ -100,7 +100,6 @@ export interface UserAuthTable {
 	password_hash: string;
 	is_entrepreneur: boolean;
 	is_maintainer: boolean;
-	is_driver: boolean;
 	first_name: string | null;
 	last_name: string | null;
 	phone: string | null;
