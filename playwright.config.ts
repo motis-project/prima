@@ -48,7 +48,7 @@ export default defineConfig({
 		{
 			name: 'resdispose tour',
 			testMatch: /redisposeTour\.ts/,
-			dependencies: ['availability']
+			dependencies: ['move tour']
 		}
 	]
 });

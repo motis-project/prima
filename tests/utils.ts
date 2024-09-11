@@ -43,11 +43,11 @@ export const COMPANY2: Company = {
 
 export async function login(page: Page, credentials: UserCredentials) {
 	await page.goto('/login');
-	await page.waitForTimeout(500);
 	await expect(page.getByRole('heading', { name: 'Login' })).toBeVisible();
 	await page.getByLabel('Email').fill(credentials.email);
 	await page.getByLabel('Password').fill(credentials.password);
 	await page.getByRole('button', { name: 'Login' }).click();
+	await page.waitForTimeout(500);
 }
 
 export async function signup(page: Page, credentials: UserCredentials) {
@@ -60,6 +60,7 @@ export async function signup(page: Page, credentials: UserCredentials) {
 		page.getByRole('heading', { name: 'Willkommen beim Projekt PrimaÖV!' })
 	).toBeVisible();
 	await page.getByRole('link', { name: 'Logout' }).click();
+	await page.waitForTimeout(500);
 }
 
 export async function setCompanyData(page: Page, user: UserCredentials, company: Company) {
@@ -72,11 +73,13 @@ export async function setCompanyData(page: Page, user: UserCredentials, company:
 	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: company.zone });
 	await page.getByLabel('Gemeinde').selectOption({ label: company.community });
 	await page.getByRole('button', { name: 'Übernehmen' }).click();
+	await page.waitForTimeout(500);
 }
 
 export async function addVehicle(page: Page, licensePlate: string) {
 	await login(page, ENTREPENEUR);
 	await page.goto('/company');
+	await page.waitForTimeout(500);
 	await page.getByRole('link', { name: 'Taxi' }).click();
 	await expect(page.getByRole('heading', { name: 'Fahrzeuge und Touren' })).toBeVisible();
 	await page.waitForTimeout(500);
@@ -87,4 +90,5 @@ export async function addVehicle(page: Page, licensePlate: string) {
 		.locator('button')
 		.filter({ hasText: /^Fahrzeug hinzufügen$/ })
 		.click();
+	await page.waitForTimeout(500);
 }

@@ -34,6 +34,7 @@ export async function requestRide(page: Page) {
 	await page.keyboard.press('ArrowRight');
 	await page.keyboard.down('A');
 	await page.getByRole('button', { name: 'Suchen' }).click();
+	await page.waitForTimeout(500);
 	await expect(page.getByRole('heading', { name: ': OK' })).toHaveText('200: OK');
 }
 
