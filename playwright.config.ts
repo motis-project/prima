@@ -2,7 +2,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
 	// test for development version
 	// webServer: {
-	// 	command: 'while true; do npm run dev; done',
+	// 	command: 'npm run dev',
 	// 	url: 'http://localhost:5173',
 	// 	timeout: 10000,
 	// 	reuseExistingServer: true
