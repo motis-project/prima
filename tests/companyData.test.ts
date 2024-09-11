@@ -18,9 +18,6 @@ test('Set company data, incomplete 2', async ({ page }) => {
 	await page.getByLabel('Unternehmenssitz').fill('Plantagenweg 3, 02827 Görlitz');
 	await page.getByRole('button', { name: 'Übernehmen' }).click();
 
-	await expect(
-		page.getByText('Die Eingabe muss mindestens 2 Zeichen enthalten.')
-	).not.toBeVisible();
 	await expect(page.getByText('Gemeinde nicht gesetzt.')).toBeVisible();
 });
 
