@@ -43,6 +43,7 @@ export const COMPANY2: Company = {
 
 export async function login(page: Page, credentials: UserCredentials) {
 	await page.goto('/login');
+	await page.waitForTimeout(500);
 	await expect(page.getByRole('heading', { name: 'Login' })).toBeVisible();
 	await page.getByLabel('Email').fill(credentials.email);
 	await page.getByLabel('Password').fill(credentials.password);
