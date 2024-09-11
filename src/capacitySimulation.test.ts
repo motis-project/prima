@@ -3,18 +3,15 @@ import { Interval } from '$lib/interval';
 import { Coordinates } from '$lib/location';
 import { describe, it, expect } from 'vitest';
 import type { Capacities } from '$lib/capacities';
-import { capacitySimulation} from './routes/api/whitelist/capacitySimulation';
+import { capacitySimulation } from './routes/api/whitelist/capacitySimulation';
 
-function createEventCapacitiesOnly(
-	capacities: Capacities,
-	is_pickup: boolean
-): Event {
+function createEventCapacitiesOnly(capacities: Capacities, is_pickup: boolean): Event {
 	const now = new Date(Date.now());
 	return {
-		passengers:capacities.passengers,
-		bikes:capacities.bikes,
-		wheelchairs:capacities.wheelchairs,
-		luggage:capacities.luggage,
+		passengers: capacities.passengers,
+		bikes: capacities.bikes,
+		wheelchairs: capacities.wheelchairs,
+		luggage: capacities.luggage,
 		is_pickup,
 		time: new Interval(now, now),
 		id: 1,
@@ -28,8 +25,8 @@ describe('capacity simulation test', () => {
 		const capacities = { wheelchairs: 0, bikes: 0, luggage: 0, passengers: 2 };
 		const required = { wheelchairs: 0, bikes: 0, luggage: 0, passengers: 1 };
 		const events = [
-			createEventCapacitiesOnly({passengers:1, bikes:0, wheelchairs:0, luggage:0}, true),
-			createEventCapacitiesOnly({passengers:1, bikes:0, wheelchairs:0, luggage:0}, false)
+			createEventCapacitiesOnly({ passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }, true),
+			createEventCapacitiesOnly({ passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }, false)
 		];
 		const ranges = capacitySimulation(capacities, required, events);
 		expect(ranges).toHaveLength(1);
@@ -40,8 +37,8 @@ describe('capacity simulation test', () => {
 		const capacities = { wheelchairs: 0, bikes: 2, luggage: 0, passengers: 0 };
 		const required = { wheelchairs: 0, bikes: 1, luggage: 0, passengers: 0 };
 		const events = [
-			createEventCapacitiesOnly({passengers:0, bikes:1, wheelchairs:0, luggage:0}, true),
-			createEventCapacitiesOnly({passengers:0, bikes:1, wheelchairs:0, luggage:0}, false)
+			createEventCapacitiesOnly({ passengers: 0, bikes: 1, wheelchairs: 0, luggage: 0 }, true),
+			createEventCapacitiesOnly({ passengers: 0, bikes: 1, wheelchairs: 0, luggage: 0 }, false)
 		];
 		const ranges = capacitySimulation(capacities, required, events);
 		expect(ranges).toHaveLength(1);
@@ -52,8 +49,8 @@ describe('capacity simulation test', () => {
 		const capacities = { wheelchairs: 2, bikes: 0, luggage: 0, passengers: 0 };
 		const required = { wheelchairs: 1, bikes: 0, luggage: 0, passengers: 0 };
 		const events = [
-			createEventCapacitiesOnly({passengers:0, bikes:0, wheelchairs:1, luggage:0}, true),
-			createEventCapacitiesOnly({passengers:0, bikes:0, wheelchairs:1, luggage:0}, false)
+			createEventCapacitiesOnly({ passengers: 0, bikes: 0, wheelchairs: 1, luggage: 0 }, true),
+			createEventCapacitiesOnly({ passengers: 0, bikes: 0, wheelchairs: 1, luggage: 0 }, false)
 		];
 		const ranges = capacitySimulation(capacities, required, events);
 		expect(ranges).toHaveLength(1);
@@ -64,8 +61,8 @@ describe('capacity simulation test', () => {
 		const capacities = { wheelchairs: 0, bikes: 0, luggage: 2, passengers: 0 };
 		const required = { wheelchairs: 0, bikes: 0, luggage: 1, passengers: 0 };
 		const events = [
-			createEventCapacitiesOnly({passengers:0, bikes:0, wheelchairs:0, luggage:1}, true),
-			createEventCapacitiesOnly({passengers:0, bikes:0, wheelchairs:0, luggage:1}, false)
+			createEventCapacitiesOnly({ passengers: 0, bikes: 0, wheelchairs: 0, luggage: 1 }, true),
+			createEventCapacitiesOnly({ passengers: 0, bikes: 0, wheelchairs: 0, luggage: 1 }, false)
 		];
 		const ranges = capacitySimulation(capacities, required, events);
 		expect(ranges).toHaveLength(1);
@@ -76,8 +73,8 @@ describe('capacity simulation test', () => {
 		const capacities = { wheelchairs: 0, bikes: 0, luggage: 0, passengers: 4 };
 		const required = { wheelchairs: 0, bikes: 0, luggage: 1, passengers: 1 };
 		const events = [
-			createEventCapacitiesOnly({passengers:1, bikes:0, wheelchairs:0, luggage:1}, true),
-			createEventCapacitiesOnly({passengers:1, bikes:0, wheelchairs:0, luggage:1}, false)
+			createEventCapacitiesOnly({ passengers: 1, bikes: 0, wheelchairs: 0, luggage: 1 }, true),
+			createEventCapacitiesOnly({ passengers: 1, bikes: 0, wheelchairs: 0, luggage: 1 }, false)
 		];
 		const ranges = capacitySimulation(capacities, required, events);
 		expect(ranges).toHaveLength(1);
@@ -88,8 +85,8 @@ describe('capacity simulation test', () => {
 		const capacities = { wheelchairs: 0, bikes: 0, luggage: 0, passengers: 1 };
 		const required = { wheelchairs: 0, bikes: 0, luggage: 0, passengers: 1 };
 		const events = [
-			createEventCapacitiesOnly({passengers:1, bikes:0, wheelchairs:0, luggage:0}, true),
-			createEventCapacitiesOnly({passengers:1, bikes:0, wheelchairs:0, luggage:0}, false)
+			createEventCapacitiesOnly({ passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }, true),
+			createEventCapacitiesOnly({ passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }, false)
 		];
 		const ranges = capacitySimulation(capacities, required, events);
 		expect(ranges).toHaveLength(2);
@@ -102,8 +99,8 @@ describe('capacity simulation test', () => {
 		const capacities = { wheelchairs: 0, bikes: 1, luggage: 0, passengers: 0 };
 		const required = { wheelchairs: 0, bikes: 1, luggage: 0, passengers: 0 };
 		const events = [
-			createEventCapacitiesOnly({passengers:0, bikes:1, wheelchairs:0, luggage:0}, true),
-			createEventCapacitiesOnly({passengers:0, bikes:1, wheelchairs:0, luggage:0}, false)
+			createEventCapacitiesOnly({ passengers: 0, bikes: 1, wheelchairs: 0, luggage: 0 }, true),
+			createEventCapacitiesOnly({ passengers: 0, bikes: 1, wheelchairs: 0, luggage: 0 }, false)
 		];
 		const ranges = capacitySimulation(capacities, required, events);
 		expect(ranges).toHaveLength(2);
@@ -116,8 +113,8 @@ describe('capacity simulation test', () => {
 		const capacities = { wheelchairs: 1, bikes: 0, luggage: 0, passengers: 0 };
 		const required = { wheelchairs: 1, bikes: 0, luggage: 0, passengers: 0 };
 		const events = [
-			createEventCapacitiesOnly({passengers:0, bikes:0, wheelchairs:1, luggage:0}, true),
-			createEventCapacitiesOnly({passengers:0, bikes:0, wheelchairs:1, luggage:0}, false)
+			createEventCapacitiesOnly({ passengers: 0, bikes: 0, wheelchairs: 1, luggage: 0 }, true),
+			createEventCapacitiesOnly({ passengers: 0, bikes: 0, wheelchairs: 1, luggage: 0 }, false)
 		];
 		const ranges = capacitySimulation(capacities, required, events);
 		expect(ranges).toHaveLength(2);
@@ -130,8 +127,8 @@ describe('capacity simulation test', () => {
 		const capacities = { wheelchairs: 0, bikes: 0, luggage: 1, passengers: 0 };
 		const required = { wheelchairs: 0, bikes: 0, luggage: 1, passengers: 0 };
 		const events = [
-			createEventCapacitiesOnly({passengers:0, bikes:0, wheelchairs:0, luggage:1}, true),
-			createEventCapacitiesOnly({passengers:0, bikes:0, wheelchairs:0, luggage:1}, false)
+			createEventCapacitiesOnly({ passengers: 0, bikes: 0, wheelchairs: 0, luggage: 1 }, true),
+			createEventCapacitiesOnly({ passengers: 0, bikes: 0, wheelchairs: 0, luggage: 1 }, false)
 		];
 		const ranges = capacitySimulation(capacities, required, events);
 		expect(ranges).toHaveLength(2);
@@ -144,8 +141,8 @@ describe('capacity simulation test', () => {
 		const capacities = { wheelchairs: 0, bikes: 0, luggage: 1, passengers: 2 };
 		const required = { wheelchairs: 0, bikes: 0, luggage: 1, passengers: 1 };
 		const events = [
-			createEventCapacitiesOnly({passengers:1, bikes:0, wheelchairs:0, luggage:1}, true),
-			createEventCapacitiesOnly({passengers:1, bikes:0, wheelchairs:0, luggage:0}, false)
+			createEventCapacitiesOnly({ passengers: 1, bikes: 0, wheelchairs: 0, luggage: 1 }, true),
+			createEventCapacitiesOnly({ passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }, false)
 		];
 		const ranges = capacitySimulation(capacities, required, events);
 		expect(ranges).toHaveLength(2);
@@ -158,12 +155,12 @@ describe('capacity simulation test', () => {
 		const capacities = { wheelchairs: 0, bikes: 0, luggage: 0, passengers: 2 };
 		const required = { wheelchairs: 0, bikes: 0, luggage: 0, passengers: 1 };
 		const events = [
-			createEventCapacitiesOnly({passengers:1, bikes:0, wheelchairs:0, luggage:0}, true),
-			createEventCapacitiesOnly({passengers:1, bikes:0, wheelchairs:0, luggage:0}, true),
-			createEventCapacitiesOnly({passengers:1, bikes:0, wheelchairs:0, luggage:0}, false),
-			createEventCapacitiesOnly({passengers:1, bikes:0, wheelchairs:0, luggage:0}, true),
-			createEventCapacitiesOnly({passengers:1, bikes:0, wheelchairs:0, luggage:0}, false),
-			createEventCapacitiesOnly({passengers:1, bikes:0, wheelchairs:0, luggage:0}, false)
+			createEventCapacitiesOnly({ passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }, true),
+			createEventCapacitiesOnly({ passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }, true),
+			createEventCapacitiesOnly({ passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }, false),
+			createEventCapacitiesOnly({ passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }, true),
+			createEventCapacitiesOnly({ passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }, false),
+			createEventCapacitiesOnly({ passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }, false)
 		];
 		const ranges = capacitySimulation(capacities, required, events);
 		expect(ranges).toHaveLength(3);

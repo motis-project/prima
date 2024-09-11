@@ -37,7 +37,7 @@ export function capacitySimulation(
 		adjustValues(current, events[i]);
 		if (!isValid(capacities, current)) {
 			if (start != undefined) {
-				possibleInsertions.push({ earliestPickup: start, latestDropoff: i-1 });
+				possibleInsertions.push({ earliestPickup: start, latestDropoff: i - 1 });
 				start = undefined;
 			}
 			continue;
@@ -45,7 +45,7 @@ export function capacitySimulation(
 		start = start == undefined ? i : start;
 	}
 	if (start != undefined) {
-		possibleInsertions.push({ earliestPickup: start, latestDropoff: events.length-1 });
+		possibleInsertions.push({ earliestPickup: start, latestDropoff: events.length - 1 });
 	}
 	return possibleInsertions;
 }

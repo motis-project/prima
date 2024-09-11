@@ -1,5 +1,3 @@
-
-
 export type Capacities = {
 	wheelchairs: number;
 	bikes: number;
