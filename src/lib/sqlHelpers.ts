@@ -1,4 +1,8 @@
-import { db } from '$lib/database';
+import { sql, type SelectQueryBuilder } from 'kysely';
+import { db } from './database';
+import type { Coordinates } from './location';
+import type { Database } from './types';
+import { SRID } from './constants';
 
 export const queryCompletedTours = async (companyId: number | undefined) => {
 	return await db
@@ -20,4 +24,47 @@ export const queryCompletedTours = async (companyId: number | undefined) => {
 			'auth_user.phone as customer_phone'
 		])
 		.execute();
+};
+
+export enum ZoneType {
+	Any,
+	Community,
+	CompulsoryArea
+}
+
+export const selectZonesContainingCoordinates = (
+	coordinates: Coordinates,
+	coordinates2: Coordinates | undefined,
+	zoneType: ZoneType
+) => {
+	return db
+		.selectFrom('zone')
+		.$if(zoneType != ZoneType.Any, (qb) =>
+			qb.where('zone.is_community', '=', zoneType == ZoneType.Community ? true : false)
+		)
+		.$if(coordinates2 != undefined, (qb) =>
+			qb.where(
+				sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${coordinates2!.lng}, ${coordinates2!.lat}), ${SRID}))`
+			)
+		)
+		.where(
+			sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${coordinates.lng}, ${coordinates.lat}), ${SRID}))`
+		);
+};
+
+export const joinInitializedCompaniesOnZones = (
+	query: SelectQueryBuilder<Database, 'zone', object>
+) => {
+	return query
+		.innerJoin('company', 'company.zone', 'zone.id')
+		.where((eb) =>
+			eb.and([
+				eb('company.latitude', 'is not', null),
+				eb('company.longitude', 'is not', null),
+				eb('company.address', 'is not', null),
+				eb('company.name', 'is not', null),
+				eb('company.zone', 'is not', null),
+				eb('company.community_area', 'is not', null)
+			])
+		);
 };
