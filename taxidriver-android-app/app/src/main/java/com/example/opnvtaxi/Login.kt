@@ -1,5 +1,6 @@
 package com.example.opnvtaxi
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,7 +31,9 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.example.opnvtaxi.app.TaxidriverApp
 import com.example.opnvtaxi.services.Api
+import com.example.opnvtaxi.services.CookieStore
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -42,6 +45,20 @@ class LoginViewModel : ViewModel() {
 
     private val _loginErrorEvent = MutableSharedFlow<String?>()
     val loginErrorEvent = _loginErrorEvent.asSharedFlow()
+
+    fun checkCookie(context: Context): Boolean {
+        val cookieStore = CookieStore(context)
+        Log.d("Cookie", "Checking for cookie")
+        if (!cookieStore.isEmpty()) {
+            Log.d("Cookie", "Cookie found")
+            viewModelScope.launch {
+                _navigationEvent.emit(true)
+            }
+            return true
+        }
+        Log.d("Cookie", "No cookie found.")
+        return false
+    }
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
@@ -56,7 +73,7 @@ class LoginViewModel : ViewModel() {
                     _loginErrorEvent.emit("Passwort oder E-Mail sind inkorrekt.")
                 }
             } catch (e: Exception) {
-                Log.d("Login Response Error", e.message!!)
+                Log.d("Login Response Network Error", e.message!!)
                 // TODO: handle possible network or other similar errors
             }
         }
@@ -69,16 +86,24 @@ fun Login(
     viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
 
+    LaunchedEffect(Unit) {
+        val isAuthenticated = viewModel.checkCookie(TaxidriverApp.instance)
+        if(isAuthenticated) {
+            navController.navigate("journeys")
+        }
+    }
+
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // Catching successful omit event and navigation to the next screen
+    // Catching successful login event or cookies already present and navigation to the next screen
     LaunchedEffect(key1 = viewModel) {
         viewModel.navigationEvent.collect { shouldNavigate ->
+            Log.d("Navigation event", "Navigation triggered.")
             if (shouldNavigate) {
+                Log.d("Navigation event", "Navigating to journeys.")
                 navController.navigate("journeys")
             }
         }
-
     }
 
     // Catching event when login failed due to incorrect login data
