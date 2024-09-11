@@ -30,18 +30,16 @@ setup('setup db', async () => {
 
 	await migrator.migrateToLatest();
 
-	await Promise.all([
-		db.deleteFrom('zone').execute(),
-		db.deleteFrom('company').execute(),
-		db.deleteFrom('vehicle').execute(),
-		db.deleteFrom('tour').execute(),
-		db.deleteFrom('availability').execute(),
-		db.deleteFrom('auth_user').execute(),
-		db.deleteFrom('user_session').execute(),
-		db.deleteFrom('event').execute(),
-		db.deleteFrom('address').execute(),
-		db.deleteFrom('request').execute()
-	]);
+	await db.deleteFrom('user_session').executeTakeFirstOrThrow();
+	await db.deleteFrom('auth_user').executeTakeFirstOrThrow();
+	await db.deleteFrom('availability').executeTakeFirstOrThrow();
+	await db.deleteFrom('event').executeTakeFirstOrThrow();
+	await db.deleteFrom('request').executeTakeFirstOrThrow();
+	await db.deleteFrom('tour').executeTakeFirstOrThrow();
+	await db.deleteFrom('vehicle').executeTakeFirstOrThrow();
+	await db.deleteFrom('company').executeTakeFirstOrThrow();
+	await db.deleteFrom('address').executeTakeFirstOrThrow();
+	await db.deleteFrom('zone').executeTakeFirstOrThrow();
 
 	const zonesSqlPath = path.join(__dirname, '../test_data/default/zone.sql');
 	const zonesQuery = fs.readFileSync(zonesSqlPath).toString();

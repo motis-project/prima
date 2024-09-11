@@ -31,9 +31,14 @@ export default defineConfig({
 			dependencies: ['setup db']
 		},
 		{
-			name: 'user test',
-			testMatch: /(.+\.)?(test|spec)\.[jt]s/,
-			dependencies: ['setup db', 'login']
+			name: 'company data',
+			testMatch: /companyData\.test\.ts/,
+			dependencies: ['login']
+		},
+		{
+			name: 'availability',
+			testMatch: /setAvailability\.test\.ts/,
+			dependencies: ['company data']
 		}
 	]
 });
