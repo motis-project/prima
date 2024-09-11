@@ -11,6 +11,4 @@ test('Redispose tour', async ({ page }) => {
 	await page.getByText('Bestätigen').click();
 	await page.getByText('Ok').click();
 	await page.getByRole('button', { name: 'cross 2, Close' }).click();
-
-	// TODO: check
 });

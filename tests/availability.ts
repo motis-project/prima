@@ -46,15 +46,83 @@ test('Set company data', async ({ page }) => {
 
 test('Add vehicle', async ({ page }) => {
 	await addVehicle(page, 'GR-TU-11');
-	// TODO: check
+	await expect(page.getByRole('cell', { name: 'GR-TU-11' }).first()).toBeVisible();
 });
 
 test('Set availability', async ({ page }) => {
 	await setAvailability(page);
-	// TODO: check
+	await expect(
+		page.locator(
+			'table:nth-child(2) > tbody > tr > td:nth-child(3) > .w-full > tbody > tr > td:nth-child(4) > .w-8'
+		)
+	).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+	await expect(
+		page
+			.locator(
+				'table:nth-child(2) > tbody > tr > td:nth-child(4) > .w-full > tbody > tr > td > .w-8'
+			)
+			.first()
+	).toHaveCSS('background-color', 'rgb(254, 249, 195)');
+	await expect(
+		page.locator(
+			'table:nth-child(2) > tbody > tr > td:nth-child(4) > .w-full > tbody > tr > td:nth-child(2) > .w-8'
+		)
+	).toHaveCSS('background-color', 'rgb(254, 249, 195)');
+	await expect(
+		page.locator(
+			'table:nth-child(2) > tbody > tr > td:nth-child(4) > .w-full > tbody > tr > td:nth-child(3) > .w-8'
+		)
+	).toHaveCSS('background-color', 'rgb(254, 249, 195)');
+	await expect(
+		page.locator(
+			'table:nth-child(2) > tbody > tr > td:nth-child(4) > .w-full > tbody > tr > td:nth-child(4) > .w-8'
+		)
+	).toHaveCSS('background-color', 'rgb(254, 249, 195)');
+	await expect(
+		page
+			.locator(
+				'table:nth-child(2) > tbody > tr > td:nth-child(5) > .w-full > tbody > tr > td > .w-8'
+			)
+			.first()
+	).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
 });
 
 test('Request ride', async ({ page }) => {
 	await requestRide(page);
-	// TODO: check
+	await page.goto('/taxi?offset=-120&date=2026-09-30');
+	await page.waitForTimeout(500);
+	await expect(
+		page.locator(
+			'table:nth-child(2) > tbody > tr > td:nth-child(3) > .w-full > tbody > tr > td:nth-child(4) > .w-8'
+		)
+	).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+	await expect(
+		page
+			.locator(
+				'table:nth-child(2) > tbody > tr > td:nth-child(4) > .w-full > tbody > tr > td > .w-8'
+			)
+			.first()
+	).toHaveCSS('background-color', 'rgb(251, 146, 60)');
+	await expect(
+		page.locator(
+			'table:nth-child(2) > tbody > tr > td:nth-child(4) > .w-full > tbody > tr > td:nth-child(2) > .w-8'
+		)
+	).toHaveCSS('background-color', 'rgb(251, 146, 60)');
+	await expect(
+		page.locator(
+			'table:nth-child(2) > tbody > tr > td:nth-child(4) > .w-full > tbody > tr > td:nth-child(3) > .w-8'
+		)
+	).toHaveCSS('background-color', 'rgb(251, 146, 60)');
+	await expect(
+		page.locator(
+			'table:nth-child(2) > tbody > tr > td:nth-child(4) > .w-full > tbody > tr > td:nth-child(4) > .w-8'
+		)
+	).toHaveCSS('background-color', 'rgb(254, 249, 195)');
+	await expect(
+		page
+			.locator(
+				'table:nth-child(2) > tbody > tr > td:nth-child(5) > .w-full > tbody > tr > td > .w-8'
+			)
+			.first()
+	).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
 });
