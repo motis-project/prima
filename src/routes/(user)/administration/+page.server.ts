@@ -4,14 +4,14 @@ import { fail } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types.js';
 
 export const load: PageServerLoad = async (event) => {
-	const drivers = await db
+	const administrators = await db
 		.selectFrom('auth_user')
 		.where('company_id', '=', event.locals.user!.company!)
-		.where('is_entrepreneur', '=', false)
+		.where('is_entrepreneur', '=', true)
 		.selectAll()
 		.execute();
 	return {
-		drivers
+		administrators
 	};
 };
 
@@ -28,12 +28,12 @@ export const actions = {
 				.where('email', '=', email)
 				.selectAll()
 				.executeTakeFirstOrThrow();
-			if (user.company_id != null) {
+			if (user.company_id != null && user.is_entrepreneur) {
 				return { existed: true };
 			}
 			await db
 				.updateTable('auth_user')
-				.set({ company_id: companyId })
+				.set({ company_id: companyId, is_entrepreneur: true })
 				.where('email', '=', email)
 				.executeTakeFirst();
 		} catch {

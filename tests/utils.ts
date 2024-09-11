@@ -58,6 +58,8 @@ export async function signup(page: Page, credentials: UserCredentials) {
 	await expect(
 		page.getByRole('heading', { name: 'Willkommen beim Projekt PrimaÖV!' })
 	).toBeVisible();
+	await page.getByRole('link', { name: 'Logout' }).click();
+
 }
 
 export async function setCompanyData(page: Page, user: UserCredentials, company: Company) {
@@ -70,4 +72,19 @@ export async function setCompanyData(page: Page, user: UserCredentials, company:
 	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: company.zone });
 	await page.getByLabel('Gemeinde').selectOption({ label: company.community });
 	await page.getByRole('button', { name: 'Übernehmen' }).click();
+}
+
+export async function addVehicle(page: Page, licensePlate: string) {
+	await login(page, ENTREPENEUR);
+	await page.goto('/company');
+	await page.getByRole('link', { name: 'Taxi' }).click();
+	await expect(page.getByRole('heading', { name: 'Fahrzeuge und Touren' })).toBeVisible();
+	await page.waitForTimeout(500);
+	await page.getByRole('button', { name: 'Fahrzeug hinzufügen' }).click();
+	await page.getByPlaceholder('DA-AB-1234').fill(licensePlate);
+	await page.getByLabel('3 Passagiere').check();
+	await page
+		.locator('button')
+		.filter({ hasText: /^Fahrzeug hinzufügen$/ })
+		.click();
 }

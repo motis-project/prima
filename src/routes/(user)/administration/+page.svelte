@@ -10,7 +10,7 @@
 	const { data, form } = $props<{ data: PageData; form: ActionData }>();
 
 	const removeUser = async (email: string) => {
-		const response = await fetch('/api/user', {
+		await fetch('/api/user', {
 			method: 'PUT',
 			body: JSON.stringify({ email })
 		});
@@ -26,7 +26,7 @@
 {#snippet assignment()}
 	<Card.Root class="h-full w-5/6 m-2">
 		<Card.Header>
-			<Card.Title>Fahrer freischalten</Card.Title>
+			<Card.Title>Verwalter freischalten</Card.Title>
 		</Card.Header>
 		<Card.Content>
 			<form method="POST">
@@ -67,7 +67,7 @@
 {#snippet drivers()}
 	<Card.Root class="h-full w-5/6 m-2">
 		<Card.Header>
-			<Card.Title>Aktive Fahrer</Card.Title>
+			<Card.Title>Inhaber</Card.Title>
 		</Card.Header>
 		<Card.Content>
 			<Table.Root>
@@ -78,11 +78,11 @@
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
-					{#each data.drivers as driver}
+					{#each data.administrators as admin}
 						<Table.Row>
-							<Table.Cell>{driver.email}</Table.Cell>
+							<Table.Cell>{admin.email}</Table.Cell>
 							<Table.Cell class="text-right"
-								><Button on:click={() => removeUser(driver.email)}>x</Button></Table.Cell
+								><Button on:click={() => removeUser(admin.email)}>x</Button></Table.Cell
 							>
 						</Table.Row>
 					{/each}

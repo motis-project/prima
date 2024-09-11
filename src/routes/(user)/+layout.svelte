@@ -19,6 +19,10 @@
 		{
 			name: 'Fahrer',
 			href: '/drivers'
+		},
+		{
+			name: 'Verwaltung',
+			href: '/administration'
 		}
 	];
 </script>
