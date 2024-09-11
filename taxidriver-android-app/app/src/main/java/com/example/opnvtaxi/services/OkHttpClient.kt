@@ -1,5 +1,6 @@
 package com.example.opnvtaxi.services
 
+import com.example.opnvtaxi.app.TaxidriverApp
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -13,6 +14,7 @@ import okhttp3.Response
  * https://medium.com/@1550707241489/how-to-add-headers-to-retrofit-android-kotlin-450da34d3c3a
  */
 fun okHttpClient() = OkHttpClient().newBuilder()
+    .cookieJar(CookieStore(TaxidriverApp.instance))
     .addInterceptor(
         object : Interceptor {
             override fun intercept(chain: Interceptor.Chain): Response {
