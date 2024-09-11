@@ -12,10 +12,14 @@ export function capacitySimulation(
 	events: Event[]
 ) {
 	const adjustValues = (capacities: Capacities, event: Event): void => {
-		capacities.wheelchairs += event.is_pickup ? event.wheelchairs : -event.wheelchairs;
-		capacities.bikes += event.is_pickup ? event.bikes : -event.bikes;
-		capacities.luggage += event.is_pickup ? event.luggage : -event.luggage;
-		capacities.passengers += event.is_pickup ? event.passengers : -event.passengers;
+		capacities.bikes += event.is_pickup ? event.capacities.bikes : -event.capacities.bikes;
+		capacities.luggage += event.is_pickup ? event.capacities.luggage : -event.capacities.luggage;
+		capacities.wheelchairs += event.is_pickup
+			? event.capacities.wheelchairs
+			: -event.capacities.wheelchairs;
+		capacities.passengers += event.is_pickup
+			? event.capacities.passengers
+			: -event.capacities.passengers;
 	};
 	const isValid = (capacities: Capacities, required: Capacities): boolean => {
 		return (
@@ -37,7 +41,7 @@ export function capacitySimulation(
 		adjustValues(current, events[i]);
 		if (!isValid(capacities, current)) {
 			if (start != undefined) {
-				possibleInsertions.push({ earliestPickup: start, latestDropoff: i - 1 });
+				possibleInsertions.push({ earliestPickup: start + 1, latestDropoff: i });
 				start = undefined;
 			}
 			continue;
@@ -45,7 +49,7 @@ export function capacitySimulation(
 		start = start == undefined ? i : start;
 	}
 	if (start != undefined) {
-		possibleInsertions.push({ earliestPickup: start, latestDropoff: events.length - 1 });
+		possibleInsertions.push({ earliestPickup: start + 1, latestDropoff: events.length });
 	}
 	return possibleInsertions;
 }
