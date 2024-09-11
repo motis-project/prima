@@ -12,10 +12,10 @@ export function capacitySimulation(
 	events: Event[]
 ) {
 	const adjustValues = (capacities: Capacities, event: Event): void => {
-		(capacities.wheelchairs += event.is_pickup ? event.wheelchairs : -event.wheelchairs),
-			(capacities.bikes += event.is_pickup ? event.bikes : -event.bikes),
-			(capacities.luggage += event.is_pickup ? event.luggage : -event.luggage),
-			(capacities.passengers += event.is_pickup ? event.passengers : -event.passengers);
+		capacities.wheelchairs += event.is_pickup ? event.wheelchairs : -event.wheelchairs;
+		capacities.bikes += event.is_pickup ? event.bikes : -event.bikes;
+		capacities.luggage += event.is_pickup ? event.luggage : -event.luggage;
+		capacities.passengers += event.is_pickup ? event.passengers : -event.passengers;
 	};
 	const isValid = (capacities: Capacities, required: Capacities): boolean => {
 		return (
