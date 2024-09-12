@@ -1,5 +1,6 @@
 import type { Company, Vehicle } from './types';
 import { Coordinates, Location } from './location';
+import type { Capacities } from './capacities';
 
 export const getCompany = async (id: number): Promise<Company> => {
 	const response = await fetch(`/api/company?id=${id}`);
@@ -69,14 +70,15 @@ export const addAvailability = async (vehicleId: number, from: Date, to: Date) =
 
 export type BookingRequestParameters = {
 	userChosen: Coordinates;
-	busStops: Coordinates[];
+	busStops: BusStop[];
 	startFixed: boolean;
-	timeStamps: Date[][];
-	numPassengers: number;
-	numWheelchairs: number;
-	numBikes: number;
-	luggage: number;
+	capacities: Capacities;
 };
+
+export type BusStop = {
+	coordinates: Coordinates;
+	times: Date[][];
+}
 
 export const blacklisting = async (r: BookingRequestParameters) => {
 	return await fetch('/api/blacklisting', {

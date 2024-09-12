@@ -21,7 +21,6 @@ export const load: PageServerLoad = async (event) => {
 		method: 'POST',
 		body: a
 	});
-	//console.log(res);
 
 	const companyId = event.locals.user?.company;
 	const zones = await db
