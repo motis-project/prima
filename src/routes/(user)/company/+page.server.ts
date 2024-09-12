@@ -8,19 +8,21 @@ import { Coordinates, Location } from '$lib/location.js';
 export const load: PageServerLoad = async (event) => {
 	const r = {
 		userChosen: new Coordinates(51.03485947001579, 13.293447066879821),
-		busStops: [new Coordinates(1,1)],
 		startFixed: true,
-		timeStamps: [[new Date(Date.now()).toISOString()]],
-		numPassengers: 1,
-		numWheelchairs: 0,
-		numBikes: 0,
-		luggage: 0
+		busStops:[{coordinates: [new Coordinates(1,1)], times: [[new Date(Date.now()).toISOString()]]}],
+		capacities: {
+			wheelchairs: 0,
+			bikes: 0,
+			passengers: 1,
+			luggage: 0
+		}
 	};
 	const a= JSON.stringify(r);
 	const res = await event.fetch('/api/blacklisting', {
 		method: 'POST',
 		body: a
 	});
+	console.log(await res.json());
 
 	const companyId = event.locals.user?.company;
 	const zones = await db

@@ -2,7 +2,7 @@ import type { Capacities } from '$lib/capacities';
 import { MAX_PASSENGER_WAITING_TIME, SRID } from '$lib/constants';
 import { db } from '$lib/database.js';
 import { Interval } from '$lib/interval';
-import type { Coordinates } from '$lib/location';
+import { Coordinates } from '$lib/location';
 import { json } from '@sveltejs/kit';
 import { sql, type RawBuilder } from 'kysely';
 
@@ -28,25 +28,22 @@ export const POST = async (event) => {
 			{ status: 200 }
 		);
 	}
-	const timestamps: Date[][] = new Array<Date[]>(busStops.length);
+	const timestamps = new Array<Interval[]>(busStops.length);
+	const busstops = new Array<Coordinates>(busStops.length);
 	for(let i=0;i!=busStops.length;++i){
-		const times=busStops[i];
-		console.log(times);
-		timestamps[i] = new Array<Date>(times.length);
+		busstops[i] = new Coordinates(busStops[i].coordinates.latitude, busStops[i].coordinates.longitude);
+		const times=busStops[i].times;
+		timestamps[i] = new Array<Interval>(times.length);
 		for(let j=0;j!=times.length;++j){
-			timestamps[i][j] = new Date(times[j]);
+			const t = new Date(times[j]);
+			timestamps[i][j] = 
+			new Interval(
+				startFixed ? t : new Date(t.getTime() - MAX_PASSENGER_WAITING_TIME),
+				startFixed ? new Date(t.getTime() + MAX_PASSENGER_WAITING_TIME) : t
+			)
+			new Date(times[j]);
 		}
 	}
-	const busstops: Coordinates[] = busStops
-	const allTimes: Interval[][] = timestamps.map((timesByBusStop) =>
-		timesByBusStop.map(
-			(t) =>
-				new Interval(
-					startFixed ? t : new Date(t.getTime() - MAX_PASSENGER_WAITING_TIME),
-					startFixed ? new Date(t.getTime() + MAX_PASSENGER_WAITING_TIME) : t
-				)
-		)
-	);
 
 	const dbResult = await db
 		.with('busstops', (db) => {
@@ -64,7 +61,7 @@ export const POST = async (event) => {
 			let cteValues: RawBuilder<string>[] = [];
 			for (let i = 0; i != busStops.length; ++i) {
 				cteValues = cteValues.concat(
-					allTimes[i].map(
+					timestamps[i].map(
 						(t, j) =>
 							sql<string>`SELECT cast(${i} as integer) AS busstopindex, cast(${j} as integer) AS index, ${t.startTime} AS starttime, ${t.endTime} AS endtime`
 					)
