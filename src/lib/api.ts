@@ -76,16 +76,6 @@ export type BookingRequestParameters = {
 	capacities: Capacities;
 };
 
-
-export const blacklisting = async (r: BookingRequestParameters) => {
-	return await fetch('/api/blacklisting', {
-		method: 'POST',
-		body: JSON.stringify(
-			r
-		)
-	});
-};
-
 export const booking = async (
 	from: Location,
 	to: Location,
