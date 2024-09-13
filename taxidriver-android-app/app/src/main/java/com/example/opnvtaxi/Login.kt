@@ -46,26 +46,11 @@ class LoginViewModel : ViewModel() {
     private val _loginErrorEvent = MutableSharedFlow<String?>()
     val loginErrorEvent = _loginErrorEvent.asSharedFlow()
 
-    fun checkCookie(context: Context): Boolean {
-        val cookieStore = CookieStore(context)
-        Log.d("Cookie", "Checking for cookie")
-        if (!cookieStore.isEmpty()) {
-            Log.d("Cookie", "Cookie found")
-            viewModelScope.launch {
-                _navigationEvent.emit(true)
-            }
-            return true
-        }
-        Log.d("Cookie", "No cookie found.")
-        return false
-    }
-
     fun login(email: String, password: String) {
         viewModelScope.launch {
             try {
                 val response = Api.apiService.login(email, password)
                 Log.d("Login Response", response.toString())
-                // TODO: handle storing response token
                 if (response.status == 302) {
                     // successful login
                     _navigationEvent.emit(true)
@@ -86,16 +71,9 @@ fun Login(
     viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
 
-    LaunchedEffect(Unit) {
-        val isAuthenticated = viewModel.checkCookie(TaxidriverApp.instance)
-        if(isAuthenticated) {
-            navController.navigate("journeys")
-        }
-    }
-
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // Catching successful login event or cookies already present and navigation to the next screen
+    // Catching successful login event and navigation to the next screen
     LaunchedEffect(key1 = viewModel) {
         viewModel.navigationEvent.collect { shouldNavigate ->
             Log.d("Navigation event", "Navigation triggered.")
