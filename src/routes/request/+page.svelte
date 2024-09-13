@@ -7,7 +7,6 @@
 	import { Location } from '$lib/location';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Card } from '$lib/components/ui/card';
-	import DateInput from '$lib/DateInput.svelte';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import { Coordinates } from '$lib/location';
 	import { booking, getRoute } from '$lib/api';
@@ -289,7 +288,7 @@
 										query.from,
 										query.to,
 										arriveBy,
-										dateTime,
+										new Date(dateTime),
 										query.numPassengers,
 										query.numWheelchairs,
 										query.numWheelchairs,
