@@ -5,7 +5,7 @@ test('Move tour to other vehicle', async ({ page }) => {
 	await addVehicle(page, 'GR-TU-12');
 
 	await page.goto('/taxi?offset=-120&date=2026-09-30');
-	await page.waitForTimeout(1000);
+	await page.waitForTimeout(2000);
 
 	await expect(
 		page

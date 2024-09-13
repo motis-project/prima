@@ -4,7 +4,7 @@ import { login, setCompanyData, addVehicle, ENTREPENEUR, COMPANY1 } from './util
 export async function setAvailability(page: Page) {
 	await login(page, ENTREPENEUR);
 	await page.goto('/taxi?offset=-120&date=2026-09-30');
-	await page.waitForTimeout(500);
+	await page.waitForTimeout(2000);
 
 	await page.mouse.move(425, 465);
 	await page.mouse.down();
@@ -17,22 +17,7 @@ export async function requestRide(page: Page) {
 	await page.goto('/request');
 	await page.waitForTimeout(500);
 
-	await page.getByRole('textbox').fill('');
-	await page.keyboard.down('0');
-	await page.keyboard.down('9');
-	await page.keyboard.down('3');
-	await page.keyboard.down('0');
-	await page.keyboard.down('2');
-	await page.keyboard.down('0');
-	await page.keyboard.down('2');
-	await page.keyboard.down('6');
-	await page.keyboard.press('ArrowRight');
-	await page.keyboard.down('1');
-	await page.keyboard.down('0');
-	await page.keyboard.down('4');
-	await page.keyboard.down('0');
-	await page.keyboard.press('ArrowRight');
-	await page.keyboard.down('A');
+	await page.getByRole('textbox').fill('2026-09-30T08:40:00Z');
 	await page.getByRole('button', { name: 'Suchen' }).click();
 	await page.waitForTimeout(500);
 	await expect(page.getByRole('heading', { name: ': OK' })).toHaveText('200: OK');
@@ -90,7 +75,7 @@ test('Set availability', async ({ page }) => {
 test('Request ride', async ({ page }) => {
 	await requestRide(page);
 	await page.goto('/taxi?offset=-120&date=2026-09-30');
-	await page.waitForTimeout(500);
+	await page.waitForTimeout(2000);
 	await expect(
 		page.locator(
 			'table:nth-child(2) > tbody > tr > td:nth-child(3) > .w-full > tbody > tr > td:nth-child(4) > .w-8'
