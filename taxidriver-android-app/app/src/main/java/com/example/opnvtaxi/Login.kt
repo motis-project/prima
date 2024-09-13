@@ -1,6 +1,5 @@
 package com.example.opnvtaxi
 
-import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,9 +30,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.example.opnvtaxi.app.TaxidriverApp
 import com.example.opnvtaxi.services.Api
-import com.example.opnvtaxi.services.CookieStore
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -142,7 +139,7 @@ fun Login(
             Button(
                 onClick = {
                     errorMessage = null
-                    Log.d("Login", "E-Mail: ${email}, Passwort: ${password}")
+                    Log.d("Login", "E-Mail: ${email}, Passwort: $password")
                     viewModel.login(email, password)
                 }
             ) {

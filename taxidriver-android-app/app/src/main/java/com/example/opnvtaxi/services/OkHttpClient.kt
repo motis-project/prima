@@ -1,5 +1,6 @@
 package com.example.opnvtaxi.services
 
+import com.example.opnvtaxi.BuildConfig
 import com.example.opnvtaxi.app.TaxidriverApp
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -21,7 +22,7 @@ fun okHttpClient() = OkHttpClient().newBuilder()
                 val request: Request = chain.request()
                     .newBuilder()
                     .header("x-sveltekit-action", "true")
-                    .header("Origin", "https://prima.motis-project.de")
+                    .header("Origin", BuildConfig.BASE_URL)
                     .build()
                 return chain.proceed(request)
             }

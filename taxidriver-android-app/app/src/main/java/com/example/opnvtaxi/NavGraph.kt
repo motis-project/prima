@@ -5,7 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -42,7 +41,7 @@ fun Nav() {
             /*JourneysActivity(navController)*/
         }
 
-        composable(route = "journey/{id}") { it ->
+        composable(route = "journey/{id}") {
             val journeys = getJourneys()
             val journeyId = it.arguments?.getString("id")
             val journey = journeys.findLast { j ->
