@@ -2,14 +2,20 @@ package com.example.opnvtaxi
 
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
 import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,7 +49,7 @@ class LoginViewModel : ViewModel() {
     private val _loginErrorEvent = MutableSharedFlow<Boolean>()
     val loginErrorEvent = _loginErrorEvent.asSharedFlow()
 
-    private val _networkErrorEvent = MutableSharedFlow<Boolean>()
+    private val _networkErrorEvent = MutableSharedFlow<Unit>()
     val networkErrorEvent = _networkErrorEvent.asSharedFlow()
 
     fun login(email: String, password: String) {
@@ -59,7 +65,7 @@ class LoginViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.d("Login Response Network Error", e.message!!)
-                _networkErrorEvent.emit(true)
+                _networkErrorEvent.emit(Unit)
             }
         }
     }
@@ -70,9 +76,11 @@ fun Login(
     navController: NavController,
     viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var isLoginFailed by remember { mutableStateOf(false) }
-    var isNetworkError by remember { mutableStateOf(false)}
+
+    val networkErrorMessage = stringResource(id = R.string.network_error_message)
 
     LaunchedEffect(key1 = viewModel) {
         // Catching successful login event and navigation to the next screen
@@ -93,72 +101,91 @@ fun Login(
             }
         }
 
-        // Catching event when a network error occurs
+        // Catching event when a network error occurs and displaying of error message
         launch {
-            viewModel.networkErrorEvent.collect { error ->
-                isNetworkError = error
+            viewModel.networkErrorEvent.collect {
+                snackbarHostState.showSnackbar(message = networkErrorMessage)
             }
         }
     }
 
-    ConstraintLayout(modifier = Modifier.fillMaxSize()) {
-        var email by remember {
-            mutableStateOf("")
-        }
-
-        var password by remember {
-            mutableStateOf("")
-        }
-
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            when {
-                isLoginFailed ->
-                    Text(
-                        text = stringResource(id = R.string.wrong_login_data),
-                        color = Color.Red,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-            }
-            OutlinedTextField(
-                value = email,
-                onValueChange = {
-                    email = it
-                    isLoginFailed = false
-                },
-                label = { Text(stringResource(id = R.string.email_label)) },
-                maxLines = 1,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                isError = isLoginFailed
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            OutlinedTextField(
-                value = password,
-                onValueChange = {
-                    password = it
-                    isLoginFailed = false
-                },
-                label = { Text(stringResource(id = R.string.password_label)) },
-                maxLines = 1,
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                isError = isLoginFailed
-            )
-            Spacer(modifier = Modifier.height(20.dp))
-            Button(
-                onClick = {
-                    isLoginFailed = false
-                    Log.d("Login", "E-Mail: ${email}, Password: $password")
-                    viewModel.login(email, password)
-                }
-            ) {
-                Text(
-                    text = stringResource(id = R.string.login_button_text), fontSize = 18.sp
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        snackbarHost = {
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentHeight(Alignment.Top)
+                        .padding(top = maxHeight * 0.25f)
                 )
+            }
+        }
+    ) { contentPadding ->
+        ConstraintLayout(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding)
+        ) {
+            var email by remember {
+                mutableStateOf("")
+            }
+
+            var password by remember {
+                mutableStateOf("")
+            }
+
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                when {
+                    isLoginFailed ->
+                        Text(
+                            text = stringResource(id = R.string.wrong_login_data),
+                            color = Color.Red,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                }
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = {
+                        email = it
+                        isLoginFailed = false
+                    },
+                    label = { Text(stringResource(id = R.string.email_label)) },
+                    maxLines = 1,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    isError = isLoginFailed
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = {
+                        password = it
+                        isLoginFailed = false
+                    },
+                    label = { Text(stringResource(id = R.string.password_label)) },
+                    maxLines = 1,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    isError = isLoginFailed
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                Button(
+                    onClick = {
+                        isLoginFailed = false
+                        Log.d("Login", "E-Mail: ${email}, Password: $password")
+                        viewModel.login(email, password)
+                    }
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.login_button_text), fontSize = 18.sp
+                    )
+                }
             }
         }
     }
