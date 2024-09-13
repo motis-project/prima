@@ -56,8 +56,8 @@
 								buttonVariants({ variant: 'outline' }),
 								'w-full appearance-none font-normal'
 							)}
-							value={zone}
 						>
+							<option id="zone" selected={!zone} disabled>Pflichtfahrgebiet</option>
 							{#each data.zones as z}
 								<option id="zone" value={z.id} selected={zone == z.id}>
 									{z.name.toString()}
@@ -77,8 +77,8 @@
 								buttonVariants({ variant: 'outline' }),
 								'w-full appearance-none font-normal'
 							)}
-							value={community_area}
 						>
+							<option id="zone" selected={!community_area} disabled>Gemeinde</option>
 							{#each data.communities as c}
 								<option value={c.id} selected={community_area == c.id}>
 									{c.name.toString()}
