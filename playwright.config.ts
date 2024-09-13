@@ -23,26 +23,26 @@ export default defineConfig({
 	projects: [
 		{
 			name: 'setup db',
-			testMatch: /db\.setup\.ts/
+			testMatch: 'db.setup.ts'
 		},
 		{
 			name: 'login',
-			testMatch: /login\.setup\.ts/,
+			testMatch: 'login.setup.ts',
 			dependencies: ['setup db']
 		},
 		{
 			name: 'entrepreneurAssignsRoles',
-			testMatch: /entrepreneurAssignsRoles\.ts/,
+			testMatch: 'entrepreneurAssignsRoles.ts',
 			dependencies: ['login']
 		},
 		{
 			name: 'availability',
-			testMatch: /availability\.ts/,
+			testMatch: 'availability.ts',
 			dependencies: ['login']
 		},
 		{
 			name: 'move tour',
-			testMatch: /moveTour\.ts/,
+			testMatch: 'moveTour.ts',
 			dependencies: ['availability']
 		}
 	]
