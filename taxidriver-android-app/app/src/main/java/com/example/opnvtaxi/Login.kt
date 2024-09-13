@@ -40,8 +40,11 @@ class LoginViewModel : ViewModel() {
     private val _navigationEvent = MutableSharedFlow<Boolean>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
-    private val _loginErrorEvent = MutableSharedFlow<String?>()
+    private val _loginErrorEvent = MutableSharedFlow<Boolean>()
     val loginErrorEvent = _loginErrorEvent.asSharedFlow()
+
+    private val _networkErrorEvent = MutableSharedFlow<Boolean>()
+    val networkErrorEvent = _networkErrorEvent.asSharedFlow()
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
@@ -52,11 +55,11 @@ class LoginViewModel : ViewModel() {
                     // successful login
                     _navigationEvent.emit(true)
                 } else {
-                    _loginErrorEvent.emit("Passwort oder E-Mail sind inkorrekt.")
+                    _loginErrorEvent.emit(true)
                 }
             } catch (e: Exception) {
                 Log.d("Login Response Network Error", e.message!!)
-                // TODO: handle possible network or other similar errors
+                _networkErrorEvent.emit(true)
             }
         }
     }
@@ -68,23 +71,33 @@ fun Login(
     viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
 
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoginFailed by remember { mutableStateOf(false) }
+    var isNetworkError by remember { mutableStateOf(false)}
 
-    // Catching successful login event and navigation to the next screen
     LaunchedEffect(key1 = viewModel) {
-        viewModel.navigationEvent.collect { shouldNavigate ->
-            Log.d("Navigation event", "Navigation triggered.")
-            if (shouldNavigate) {
-                Log.d("Navigation event", "Navigating to journeys.")
-                navController.navigate("journeys")
+        // Catching successful login event and navigation to the next screen
+        launch {
+            viewModel.navigationEvent.collect { shouldNavigate ->
+                Log.d("Navigation event", "Navigation triggered.")
+                if (shouldNavigate) {
+                    Log.d("Navigation event", "Navigating to journeys.")
+                    navController.navigate("journeys")
+                }
             }
         }
-    }
 
-    // Catching event when login failed due to incorrect login data
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.loginErrorEvent.collect { error ->
-            errorMessage = error
+        // Catching event when login failed due to incorrect login data
+        launch {
+            viewModel.loginErrorEvent.collect { error ->
+                isLoginFailed = error
+            }
+        }
+
+        // Catching event when a network error occurs
+        launch {
+            viewModel.networkErrorEvent.collect { error ->
+                isNetworkError = error
+            }
         }
     }
 
@@ -103,9 +116,9 @@ fun Login(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when {
-                errorMessage != null ->
+                isLoginFailed ->
                     Text(
-                        text = errorMessage!!,
+                        text = stringResource(id = R.string.wrong_login_data),
                         color = Color.Red,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -115,31 +128,31 @@ fun Login(
                 value = email,
                 onValueChange = {
                     email = it
-                    errorMessage = null
+                    isLoginFailed = false
                 },
-                label = { Text("E-Mail") },
+                label = { Text(stringResource(id = R.string.email_label)) },
                 maxLines = 1,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                isError = errorMessage != null
+                isError = isLoginFailed
             )
             Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
                 value = password,
                 onValueChange = {
                     password = it
-                    errorMessage = null
+                    isLoginFailed = false
                 },
-                label = { Text("Passwort") },
+                label = { Text(stringResource(id = R.string.password_label)) },
                 maxLines = 1,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                isError = errorMessage != null
+                isError = isLoginFailed
             )
             Spacer(modifier = Modifier.height(20.dp))
             Button(
                 onClick = {
-                    errorMessage = null
-                    Log.d("Login", "E-Mail: ${email}, Passwort: $password")
+                    isLoginFailed = false
+                    Log.d("Login", "E-Mail: ${email}, Password: $password")
                     viewModel.login(email, password)
                 }
             ) {

@@ -5,4 +5,7 @@
     <string name="single_journey">Auftrag</string>
     <string name="from">Von</string>
     <string name="to">Nach</string>
+    <string name="wrong_login_data">Passwort oder E-Mail sind inkorrekt.</string>
+    <string name="email_label">E-Mail</string>
+    <string name="password_label">Passwort</string>
 </resources>
