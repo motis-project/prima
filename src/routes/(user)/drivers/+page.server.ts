@@ -11,12 +11,13 @@ export const load: PageServerLoad = async (event) => {
 		.selectAll()
 		.execute();
 	return {
-		drivers
+		drivers,
+		userEmail: event.locals.user!.email
 	};
 };
 
 export const actions = {
-	default: async (event) => {
+	assign: async (event) => {
 		const email = (await event.request.formData()).get('email')!.toString();
 		const companyId = event.locals.user!.company!;
 		if (!email) {
@@ -40,5 +41,18 @@ export const actions = {
 			return fail(400, { email, incorrect: true });
 		}
 		return { updated: true };
+	},
+	revoke: async (event) => {
+		const email = (await event.request.formData()).get('email')!.toString();
+		const companyId = event.locals.user!.company!;
+		await db
+			.updateTable('auth_user')
+			.set({
+				is_entrepreneur: false,
+				company_id: null
+			})
+			.where('company_id', '=', companyId)
+			.where('email', '=', email)
+			.executeTakeFirst();
 	}
 } satisfies Actions;
