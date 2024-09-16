@@ -89,7 +89,11 @@ fun Login(
                 Log.d("Navigation event", "Navigation triggered.")
                 if (shouldNavigate) {
                     Log.d("Navigation event", "Navigating to journeys.")
-                    navController.navigate("journeys")
+                    navController.navigate("journeys") {
+                        popUpTo("login") {
+                            inclusive = true
+                        }
+                    }
                 }
             }
         }
