@@ -7,7 +7,6 @@
 	import { Location } from '$lib/location';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Card } from '$lib/components/ui/card';
-	import DateInput from '$lib/DateInput.svelte';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import { Coordinates } from '$lib/location';
 	import { booking, getRoute } from '$lib/api';
@@ -168,7 +167,7 @@
 	});
 
 	let timeType = $state('departure');
-	let dateTime = $state(new Date());
+	let dateTime = $state(new Date().toISOString());
 	let arriveBy = $derived(timeType === 'arrival');
 
 	let bookingResponse = $state<Array<Promise<Response>>>([]);
@@ -251,7 +250,7 @@
 		<Card class="w-[520px] max-h-[90vh] overflow-y-auto overflow-x-hidden bg-white rounded-lg">
 			<div class="flex flex-col w-full">
 				<div class="flex flex-row space-x-4 p-4 shadow-md rounded">
-					<DateInput bind:value={dateTime} />
+					<input type="text" bind:value={dateTime} />
 					<div class="flex">
 						<RadioGroup.Root class="flex space-x-1 ml-1" bind:value={timeType}>
 							<Label
@@ -289,7 +288,7 @@
 										query.from,
 										query.to,
 										arriveBy,
-										dateTime,
+										new Date(dateTime),
 										query.numPassengers,
 										query.numWheelchairs,
 										query.numWheelchairs,

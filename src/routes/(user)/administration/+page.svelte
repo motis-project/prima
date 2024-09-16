@@ -3,19 +3,9 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import * as Table from '$lib/components/ui/table/index.js';
-	import { invalidateAll } from '$app/navigation';
 	import type { ActionData, PageData } from './$types';
 
 	const { data, form } = $props<{ data: PageData; form: ActionData }>();
-
-	const removeUser = async (email: string) => {
-		await fetch('/api/user', {
-			method: 'PUT',
-			body: JSON.stringify({ email })
-		});
-		invalidateAll();
-	};
 </script>
 
 <div class="grid grid-rows-2 gap-4">
@@ -24,12 +14,12 @@
 </div>
 
 {#snippet assignment()}
-	<Card.Root class="h-full w-5/6 m-2">
+	<Card.Root class="w-5/6 m-2">
 		<Card.Header>
 			<Card.Title>Verwalter freischalten</Card.Title>
 		</Card.Header>
 		<Card.Content>
-			<form method="POST">
+			<form method="POST" action="?/assign">
 				<div class="grid w-full grid-rows-2 grid-cols-2 gap-4">
 					<Label>
 						Email
@@ -65,29 +55,36 @@
 {/snippet}
 
 {#snippet drivers()}
-	<Card.Root class="h-full w-5/6 m-2">
+	<Card.Root class="w-5/6 m-2">
 		<Card.Header>
-			<Card.Title>Inhaber</Card.Title>
+			<Card.Title>Aktive Verwalter</Card.Title>
 		</Card.Header>
 		<Card.Content>
-			<Table.Root>
-				<Table.Header>
-					<Table.Row>
-						<Table.Head>Email</Table.Head>
-						<Table.Head></Table.Head>
-					</Table.Row>
-				</Table.Header>
-				<Table.Body>
-					{#each data.administrators as admin}
-						<Table.Row>
-							<Table.Cell>{admin.email}</Table.Cell>
-							<Table.Cell class="text-right"
-								><Button on:click={() => removeUser(admin.email)}>x</Button></Table.Cell
-							>
-						</Table.Row>
-					{/each}
-				</Table.Body>
-			</Table.Root>
+			{#each data.administrators as admin}
+				<form method="POST" action="?/revoke">
+					<table>
+						<tbody>
+							<tr>
+								<td>{admin.email}</td>
+								<td
+									><Input
+										class="mt-2 invisible"
+										hidden={true}
+										name="email"
+										type="text"
+										value={admin.email}
+									/></td
+								>
+								<td>
+									{#if data.userEmail != admin.email}
+										<Button type="submit">x</Button>
+									{/if}
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</form>
+			{/each}
 		</Card.Content>
 	</Card.Root>
 {/snippet}

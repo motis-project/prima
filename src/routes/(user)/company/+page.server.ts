@@ -57,7 +57,6 @@ export const actions = {
 		}
 
 		if (isNaN(community_area) || community_area < 1) {
-			console.log(data, community_area);
 			return fail(400, { error: 'Gemeinde nicht gesetzt.' });
 		}
 

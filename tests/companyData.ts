@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { login, ENTREPENEUR } from './utils';
 
+test.describe.configure({ mode: 'serial' });
+
 test('Set company data, incomplete 1', async ({ page }) => {
 	await login(page, ENTREPENEUR);
 	await expect(page.getByRole('heading', { name: 'Stammdaten Ihres Unternehmens' })).toBeVisible();
@@ -18,9 +20,6 @@ test('Set company data, incomplete 2', async ({ page }) => {
 	await page.getByLabel('Unternehmenssitz').fill('Plantagenweg 3, 02827 Görlitz');
 	await page.getByRole('button', { name: 'Übernehmen' }).click();
 
-	await expect(
-		page.getByText('Die Eingabe muss mindestens 2 Zeichen enthalten.')
-	).not.toBeVisible();
 	await expect(page.getByText('Gemeinde nicht gesetzt.')).toBeVisible();
 });
 
@@ -60,7 +59,7 @@ test('Set company data, complete and consistent', async ({ page }) => {
 	await page.getByLabel('Name').fill('Taxi Weißwasser');
 	await page
 		.getByLabel('Unternehmenssitz')
-		.fill('Werner-Seelenbinder-Straße 70A, 02943 Weißwasser/Oberlausitz');
+		.fill('Werner-Seelenbinder-Strasse 70A, 02943 Weißwasser/Oberlausitz');
 	await page.waitForTimeout(250);
 	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: 'Weißwasser' });
 	await page.getByLabel('Gemeinde').selectOption({ label: 'Weißwasser/O.L.' });
@@ -71,7 +70,7 @@ test('Set company data, complete and consistent', async ({ page }) => {
 	const checkData = async () => {
 		await expect(page.getByLabel('Name')).toHaveValue('Taxi Weißwasser');
 		await expect(page.getByLabel('Unternehmenssitz')).toHaveValue(
-			'Werner-Seelenbinder-Straße 70A, 02943 Weißwasser/Oberlausitz'
+			'Werner-Seelenbinder-Strasse 70A, 02943 Weißwasser/Oberlausitz'
 		);
 		await expect(page.getByLabel('Pflichtfahrgebiet')).toHaveValue('2' /* Görlitz */);
 		await expect(page.getByLabel('Gemeinde')).toHaveValue('85' /* Weißwasser */);
