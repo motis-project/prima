@@ -1,12 +1,17 @@
 import type { BusStop } from '$lib/busStop';
 import type { Capacities } from '$lib/capacities';
-import { MAX_PASSENGER_WAITING_TIME, SRID } from '$lib/constants';
+import { MAX_PASSENGER_WAITING_TIME_PICKUP, MAX_PASSENGER_WAITING_TIME_DROPOFF, SRID } from '$lib/constants';
 import { db } from '$lib/database.js';
 import { Interval } from '$lib/interval';
 import { Coordinates } from '$lib/location';
 import { sql, type RawBuilder } from 'kysely';
 
-export const getViableBusStops = async (userChosen: Coordinates, busStops: BusStop[], startFixed: boolean, capacities: Capacities): Promise<BlacklistingResult[]> => {
+export const getViableBusStops = async (
+	userChosen: Coordinates,
+	busStops: BusStop[],
+	startFixed: boolean,
+	capacities: Capacities
+): Promise<BlacklistingResult[]> => {
 	interface CoordinatesTable {
 		index: number;
 		longitude: number;
@@ -18,22 +23,21 @@ export const getViableBusStops = async (userChosen: Coordinates, busStops: BusSt
 		starttime: Date;
 		endtime: Date;
 	}
-	if(busStops.length==0 || !busStops.some((b) => b.times.length!=0)){
+	if (busStops.length == 0 || !busStops.some((b) => b.times.length != 0)) {
 		return [];
 	}
-	const timestamps = new Array<Interval[]>(busStops.length);
+	const windows = new Array<Interval[]>(busStops.length);
 	const busstops = new Array<Coordinates>(busStops.length);
-	for(let i=0;i!=busStops.length;++i){
+	for (let i = 0; i != busStops.length; ++i) {
 		busstops[i] = new Coordinates(busStops[i].coordinates.lat, busStops[i].coordinates.lng);
-		const times: Date[]=busStops[i].times;
-		timestamps[i] = new Array<Interval>(times.length);
-		for(let j=0;j!=times.length;++j){
+		const times: Date[] = busStops[i].times;
+		windows[i] = new Array<Interval>(times.length);
+		for (let j = 0; j != times.length; ++j) {
 			const t = new Date(times[j]);
-			timestamps[i][j] = 
-			new Interval(
-				startFixed ? t : new Date(t.getTime() - MAX_PASSENGER_WAITING_TIME),
-				startFixed ? new Date(t.getTime() + MAX_PASSENGER_WAITING_TIME) : t
-			)
+			windows[i][j] = new Interval(
+				startFixed ? t : new Date(t.getTime() - MAX_PASSENGER_WAITING_TIME_PICKUP),
+				startFixed ? new Date(t.getTime() + MAX_PASSENGER_WAITING_TIME_DROPOFF) : t
+			);
 			new Date(times[j]);
 		}
 	}
@@ -54,7 +58,7 @@ export const getViableBusStops = async (userChosen: Coordinates, busStops: BusSt
 			let cteValues: RawBuilder<string>[] = [];
 			for (let i = 0; i != busStops.length; ++i) {
 				cteValues = cteValues.concat(
-					timestamps[i].map(
+					windows[i].map(
 						(t, j) =>
 							sql<string>`SELECT cast(${i} as integer) AS busstopindex, cast(${j} as integer) AS index, ${t.startTime} AS starttime, ${t.endTime} AS endtime`
 					)
@@ -145,6 +149,6 @@ export const getViableBusStops = async (userChosen: Coordinates, busStops: BusSt
 };
 
 type BlacklistingResult = {
-	timeIndex: number,
-	busstopindex: number
-}
+	timeIndex: number;
+	busstopindex: number;
+};
