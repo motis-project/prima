@@ -27,7 +27,7 @@
 	];
 </script>
 
-<div class="flex min-h-screen">
+<div class="flex max-h-screen">
 	<div class="container min-w-[1440px] relative my-20">
 		<section>
 			<Nav {routeLinks} />
