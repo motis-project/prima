@@ -11,6 +11,10 @@
 		{
 			name: 'Abgeschlossene Fahrten',
 			href: '/completed_tours'
+		},
+		{
+			name: 'Abrechnung',
+			href: '/accounting'
 		}
 	];
 </script>
