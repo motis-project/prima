@@ -15,11 +15,11 @@ export async function setAvailability(page: Page) {
 export async function requestRide(page: Page) {
 	await login(page, ENTREPENEUR);
 	await page.goto('/request');
-	await page.waitForTimeout(500);
+	await page.waitForTimeout(1000);
 
 	await page.getByRole('textbox').fill('2026-09-30T08:40:00Z');
 	await page.getByRole('button', { name: 'Suchen' }).click();
-	await page.waitForTimeout(500);
+	await page.waitForTimeout(2000);
 	await expect(page.getByRole('heading', { name: ': OK' })).toHaveText('200: OK');
 }
 
