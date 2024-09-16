@@ -1,6 +1,10 @@
 import type { BusStop } from '$lib/busStop';
 import type { Capacities } from '$lib/capacities';
-import { MAX_PASSENGER_WAITING_TIME_PICKUP, MAX_PASSENGER_WAITING_TIME_DROPOFF, SRID } from '$lib/constants';
+import {
+	MAX_PASSENGER_WAITING_TIME_PICKUP,
+	MAX_PASSENGER_WAITING_TIME_DROPOFF,
+	SRID
+} from '$lib/constants';
 import { db } from '$lib/database.js';
 import { Interval } from '$lib/interval';
 import { Coordinates } from '$lib/location';
