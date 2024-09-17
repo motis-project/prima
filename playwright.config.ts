@@ -21,7 +21,7 @@ export default defineConfig({
 	use: {
 		baseURL: 'http://localhost:8080/',
 		locale: 'de-DE',
-		timezoneId: 'Europe/Berlin',
+		timezoneId: 'Europe/Berlin'
 	},
 	testDir: './tests',
 	projects: [
