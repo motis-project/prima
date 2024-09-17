@@ -8,7 +8,9 @@ export default defineConfig({
 	// 	reuseExistingServer: true
 	// },
 	// use: {
-	// 	baseURL: 'http://localhost:5173/'
+	// 	baseURL: 'http://localhost:5173/',
+	// 	locale: 'de-DE',
+	// 	timezoneId: 'Europe/Berlin',
 	// },
 	webServer: {
 		command: 'docker compose up prima',
@@ -17,7 +19,9 @@ export default defineConfig({
 		reuseExistingServer: true
 	},
 	use: {
-		baseURL: 'http://localhost:8080/'
+		baseURL: 'http://localhost:8080/',
+		locale: 'de-DE',
+		timezoneId: 'Europe/Berlin',
 	},
 	testDir: './tests',
 	projects: [
