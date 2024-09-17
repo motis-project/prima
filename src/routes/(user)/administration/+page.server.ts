@@ -2,6 +2,7 @@ import type { Actions } from './$types';
 import { db } from '$lib/database';
 import { fail } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types.js';
+import type { RequestEvent } from './$types';
 
 export const load: PageServerLoad = async (event) => {
 	const administrators = await db
@@ -17,36 +18,34 @@ export const load: PageServerLoad = async (event) => {
 };
 
 export const actions = {
-	assign: async (event) => {
+	assign: async (event: RequestEvent) => {
 		const email = (await event.request.formData()).get('email')!.toString();
 		const companyId = event.locals.user!.company!;
 		if (!email) {
 			return fail(400, { email, missing: true });
 		}
-		try {
-			const user = await db
-				.selectFrom('auth_user')
-				.where('email', '=', email)
-				.selectAll()
-				.executeTakeFirstOrThrow();
-			if (user.company_id != null && user.is_entrepreneur) {
-				return { existed: true };
-			}
-			await db
-				.updateTable('auth_user')
-				.set({
-					company_id: companyId,
-					is_entrepreneur: true
-				})
-				.where('email', '=', email)
-				.executeTakeFirst();
-		} catch {
+		const { numUpdatedRows } = await db
+			.updateTable('auth_user')
+			.set({
+				company_id: companyId,
+				is_entrepreneur: true
+			})
+			.where('email', '=', email)
+			.where('company_id', 'is', null)
+			.where('is_entrepreneur', '=', false)
+			.where('is_maintainer', '=', false)
+			.executeTakeFirstOrThrow();
+		if (numUpdatedRows == BigInt(0)) {
 			return fail(400, { email, incorrect: true });
 		}
 		return { updated: true };
 	},
-	revoke: async (event) => {
+
+	revoke: async (event: RequestEvent) => {
 		const email = (await event.request.formData()).get('email')!.toString();
+		if (event.locals.user!.email == email) {
+			return fail(400);
+		}
 		const companyId = event.locals.user!.company!;
 		await db
 			.updateTable('auth_user')
