@@ -8,18 +8,13 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ['self-hosted', 'prima', 'Linux', 'X64']
     permissions: write-all
     env:
       DATABASE_URL: postgresql://postgres:pw@localhost:6500/prima
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup NodeJS
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
 
       - name: Install Dependencies
         run: npm install -f
@@ -34,7 +29,7 @@ jobs:
         run: npm run test:unit
 
       - name: Install Playwright Dependencies
-        run: npx playwright install --with-deps
+        run: npx playwright install
 
       - name: Integration Tests
         run: |

@@ -12,12 +12,12 @@ export default defineConfig({
 	// },
 	webServer: {
 		command: 'docker compose up prima',
-		url: 'http://127.0.0.1:8080',
+		url: 'http://127.0.0.1:7777',
 		timeout: 20000,
 		reuseExistingServer: true
 	},
 	use: {
-		baseURL: 'http://localhost:8080/'
+		baseURL: 'http://localhost:7777/'
 	},
 	testDir: './tests',
 	projects: [
