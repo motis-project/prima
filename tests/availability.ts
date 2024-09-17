@@ -19,8 +19,7 @@ export async function requestRide(page: Page) {
 
 	await page.getByRole('textbox').fill('2026-09-30T08:40:00Z');
 	await page.getByRole('button', { name: 'Suchen' }).click();
-	// await page.waitForTimeout(2000);
-	// await expect(page.getByRole('heading', { name: ': OK' })).toHaveText('200: OK');
+	await expect(page.getByRole('heading', { name: ': OK' })).toHaveText('200: OK');
 }
 
 test.describe.configure({ mode: 'serial' });
