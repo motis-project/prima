@@ -4,7 +4,7 @@ import { login, setCompanyData, addVehicle, ENTREPENEUR, COMPANY1 } from './util
 export async function setAvailability(page: Page) {
 	await login(page, ENTREPENEUR);
 	await page.goto('/taxi?offset=-120&date=2026-09-30');
-	await page.waitForTimeout(2000);
+	await page.waitForTimeout(500);
 
 	await page.mouse.move(425, 465);
 	await page.mouse.down();
@@ -74,7 +74,7 @@ test('Set availability', async ({ page }) => {
 test('Request ride', async ({ page }) => {
 	await requestRide(page);
 	await page.goto('/taxi?offset=-120&date=2026-09-30');
-	await page.waitForTimeout(2000);
+	await page.waitForTimeout(500);
 	await expect(
 		page.locator(
 			'table:nth-child(2) > tbody > tr > td:nth-child(3) > .w-full > tbody > tr > td:nth-child(4) > .w-8'

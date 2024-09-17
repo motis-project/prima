@@ -16,9 +16,9 @@ test('Activate driver', async ({ page }) => {
 test('Deactivate driver', async ({ page }) => {
 	await login(page, ENTREPENEUR);
 	await page.getByRole('link', { name: 'Fahrer' }).click();
-	await page.waitForTimeout(200);
+	await page.waitForTimeout(100);
 	await page.getByRole('button', { name: 'x' }).click();
-	await page.waitForTimeout(200);
+	await page.waitForTimeout(100);
 	await expect(page.getByRole('cell', { name: 'driver@test.de' })).not.toBeVisible();
 });
 
@@ -35,8 +35,8 @@ test('Activate administrator', async ({ page }) => {
 test('Deactivate administrator', async ({ page }) => {
 	await login(page, ENTREPENEUR);
 	await page.getByRole('link', { name: 'Verwaltung' }).click();
-	await page.waitForTimeout(200);
+	await page.waitForTimeout(100);
 	await page.getByRole('row', { name: 'admin2@test.de x' }).getByRole('button').click();
-	await page.waitForTimeout(200);
+	await page.waitForTimeout(100);
 	await expect(page.getByRole('cell', { name: 'admin2@test.de' })).not.toBeVisible();
 });
