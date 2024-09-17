@@ -36,19 +36,19 @@
 			</div>
 		</form>
 		<div class="rounded-md border mb-6">
-			<form method="POST" action="?/revoke">
-				<Table.Root>
-					<Table.Header>
+			<Table.Root>
+				<Table.Header>
+					<Table.Row>
+						<Table.Head>E-Mail</Table.Head>
+						<Table.Head></Table.Head>
+					</Table.Row>
+				</Table.Header>
+				<Table.Body>
+					{#each data.administrators as admin}
 						<Table.Row>
-							<Table.Head>E-Mail</Table.Head>
-							<Table.Head></Table.Head>
-						</Table.Row>
-					</Table.Header>
-					<Table.Body>
-						{#each data.administrators as admin}
-							<Table.Row>
-								<Table.Cell>{admin.email}</Table.Cell>
-								<Table.Cell class="h-16">
+							<Table.Cell>{admin.email}</Table.Cell>
+							<Table.Cell class="h-16">
+								<form method="POST" action="?/revoke" style="display: block !important;">
 									<Input
 										class="hidden"
 										hidden={true}
@@ -61,12 +61,12 @@
 											Zugang zum Unternehmen löschen
 										</Button>
 									{/if}
-								</Table.Cell>
-							</Table.Row>
-						{/each}
-					</Table.Body>
-				</Table.Root>
-			</form>
+								</form>
+							</Table.Cell>
+						</Table.Row>
+					{/each}
+				</Table.Body>
+			</Table.Root>
 		</div>
 	</Card.Content>
 </div>
