@@ -32,10 +32,7 @@ export const actions = {
 			.where('email', '=', email)
 			.where('is_entrepreneur', '=', false)
 			.where('is_maintainer', '=', false)
-			.where((eb) => eb.or([
-				eb('company_id', 'is', null),
-				eb('company_id', '=', companyId)
-			]))
+			.where((eb) => eb.or([eb('company_id', 'is', null), eb('company_id', '=', companyId)]))
 			.executeTakeFirstOrThrow();
 		if (numUpdatedRows == BigInt(0)) {
 			return fail(400, { email, incorrect: true });
