@@ -1,8 +1,7 @@
 import type { Actions } from './$types';
 import { db } from '$lib/database';
 import { fail } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types.js';
-import type { RequestEvent } from './$types';
+import type { PageServerLoad, RequestEvent } from './$types.js';
 
 export const load: PageServerLoad = async (event) => {
 	const administrators = await db
@@ -31,7 +30,6 @@ export const actions = {
 				is_entrepreneur: true
 			})
 			.where('email', '=', email)
-			.where('company_id', 'is', null)
 			.where('is_entrepreneur', '=', false)
 			.where('is_maintainer', '=', false)
 			.executeTakeFirstOrThrow();

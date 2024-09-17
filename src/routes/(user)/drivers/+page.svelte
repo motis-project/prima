@@ -2,89 +2,71 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
 	import type { ActionData, PageData } from './$types';
+	import * as Table from '$lib/components/ui/table/index.js';
 
 	const { data, form } = $props<{ data: PageData; form: ActionData }>();
 </script>
 
-<div class="grid grid-rows-2 gap-4">
-	{@render assignment()}
-	{@render drivers()}
-</div>
-
-{#snippet assignment()}
-	<Card.Root class="w-5/6 m-2">
-		<Card.Header>
-			<Card.Title>Fahrer freischalten</Card.Title>
-		</Card.Header>
-		<Card.Content>
-			<form method="POST" action="?/assign">
-				<div class="grid w-full grid-rows-2 grid-cols-2 gap-4">
-					<Label>
-						Email
-						{#if form?.missing}
-							<div class="text-[0.8rem] font-medium text-destructive mt-1">
-								Das Email Feld muss ausgefüllt werden.
-							</div>
-						{/if}
-						{#if form?.incorrect}
-							<div class="text-[0.8rem] font-medium text-destructive mt-1">
-								Es existiert kein Benutzer mit der angegebenen Emailadresse.
-							</div>
-						{/if}
-						{#if form?.updated}
-							<div class="text-[0.8rem] font-medium text-green-600 mt-1">
-								Freischaltung erfolgreich!
-							</div>
-						{/if}
-						{#if form?.existed}
-							<div class="text-[0.8rem] font-medium text-yellow-700 mt-1">
-								Nutzer bereits freigeschaltet
-							</div>
-						{/if}
-						<Input class="mt-2" name="email" type="text" />
-					</Label>
-					<div class="mt-6 row-start-2 col-span-2 text-right">
-						<Button type="submit">Freischalten</Button>
-					</div>
-				</div>
-			</form>
-		</Card.Content>
-	</Card.Root>
-{/snippet}
-
-{#snippet drivers()}
-	<Card.Root class="w-5/6 m-2">
-		<Card.Header>
-			<Card.Title>Aktive Fahrer</Card.Title>
-		</Card.Header>
-		<Card.Content>
-			{#each data.drivers as driver}
-				<form method="POST" action="?/revoke">
-					<table>
-						<tbody>
-							<tr>
-								<td>{driver.email}</td>
-								<td
-									><Input
-										class="mt-2 invisible"
+<div class="w-full h-full">
+	<Card.Header>
+		<Card.Title>Fahrer Zugang</Card.Title>
+	</Card.Header>
+	<Card.Content class="w-full h-full">
+		<form class="mb-6" method="POST" action="?/assign">
+			<div class=" flex w-full max-w-sm items-center space-x-2">
+				<Input name="email" type="email" placeholder="Email" />
+				<Button type="submit">Freischalten</Button>
+			</div>
+			<div
+				class="mt-1 ml-1 text-[0.8rem] font-medium"
+				class:text-green-600={form?.updated}
+				class:text-destructive={form?.incorrect}
+				class:text-yellow-600={form?.existed}
+			>
+				{#if form?.missing}
+					Das Email Feld muss ausgefüllt werden.
+				{/if}
+				{#if form?.incorrect}
+					Nutzer kann nicht freigeschaltet werden.
+				{/if}
+				{#if form?.updated}
+					Freischaltung erfolgreich!
+				{/if}
+			</div>
+		</form>
+		<div class="rounded-md border mb-6">
+			<Table.Root>
+				<Table.Header>
+					<Table.Row>
+						<Table.Head>E-Mail</Table.Head>
+						<Table.Head></Table.Head>
+					</Table.Row>
+				</Table.Header>
+				<Table.Body>
+					{#each data.drivers as driver}
+						<Table.Row>
+							<Table.Cell>{driver.email}</Table.Cell>
+							<Table.Cell class="h-16">
+								<form method="POST" action="?/revoke" style="display: block !important;">
+									<Input
+										class="hidden"
 										hidden={true}
 										name="email"
 										type="text"
 										value={driver.email}
-									/></td
-								>
-								<td>
+									/>
 									{#if data.userEmail != driver.email}
-										<Button type="submit">x</Button>
+										<Button type="submit" variant="destructive">
+											Zugang zum Unternehmen löschen
+										</Button>
 									{/if}
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</form>
-			{/each}
-		</Card.Content>
-	</Card.Root>
-{/snippet}
+								</form>
+							</Table.Cell>
+						</Table.Row>
+					{/each}
+				</Table.Body>
+			</Table.Root>
+		</div>
+	</Card.Content>
+</div>
