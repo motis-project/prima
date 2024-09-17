@@ -1,5 +1,9 @@
 name: UI
 
+defaults:
+  run:
+    shell: bash -leo pipefail {0}
+
 on:
   push:
     branches: [ "master" ]
