@@ -38,7 +38,6 @@ export const actions = {
 		}
 		return { updated: true };
 	},
-
 	revoke: async (event: RequestEvent) => {
 		const email = (await event.request.formData()).get('email')!.toString();
 		if (event.locals.user!.email == email) {

@@ -33,21 +33,29 @@ test('Deactivate driver', async ({ page }) => {
 });
 
 test('Activate administrator', async ({ page }) => {
-	await signup(page, { email: 'admin2@test.de', password: 'longEnough3' });
+	await signup(page, { email: 'admin2@test.de', password: 'longEnough2' });
+	await signup(page, { email: 'admin3@test.de', password: 'longEnough2' });
 	await setCompanyData(page, ENTREPENEUR, COMPANY1);
+
 	await page.getByRole('link', { name: 'Verwaltung' }).click();
 	await page.getByPlaceholder('Email').fill('admin2@test.de');
 	await page.getByRole('button', { name: 'Freischalten' }).click();
 	await expect(page.getByText('Freischaltung erfolgreich!')).toBeVisible();
 	await expect(page.getByRole('cell', { name: 'admin2@test.de' })).toBeVisible();
+
+	await page.reload();
+	await page.getByPlaceholder('Email').fill('admin3@test.de');
+	await page.getByRole('button', { name: 'Freischalten' }).click();
+	await expect(page.getByText('Freischaltung erfolgreich!')).toBeVisible();
+	await expect(page.getByRole('cell', { name: 'admin3@test.de' })).toBeVisible();
 });
 
 test('Deactivate administrator', async ({ page }) => {
 	await login(page, ENTREPENEUR);
 	await page.getByRole('link', { name: 'Verwaltung' }).click();
 	await page
-		.getByRole('row', { name: 'admin2@test.de Zugang zum Unternehmen löschen' })
+		.getByRole('row', { name: 'admin3@test.de Zugang zum Unternehmen löschen' })
 		.getByRole('button')
 		.click();
-	await expect(page.getByRole('cell', { name: 'admin2@test.de' })).not.toBeVisible();
+	await expect(page.getByRole('cell', { name: 'admin3@test.de' })).not.toBeVisible();
 });
