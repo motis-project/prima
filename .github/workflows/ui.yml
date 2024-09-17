@@ -21,10 +21,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Dependencies
-        run: |
-          echo $PATH
-          echo `whoami`
-          npm install -f
+        run: npm install -f
 
       - name: Code Lint
         run: npm run lint
