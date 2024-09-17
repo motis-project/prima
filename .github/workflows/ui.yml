@@ -23,6 +23,7 @@ jobs:
       - name: Install Dependencies
         run: |
           echo $PATH
+          echo `whoami`
           npm install -f
 
       - name: Code Lint
