@@ -9,6 +9,7 @@ test('Activate drivers', async ({ page }) => {
 	await setCompanyData(page, ENTREPENEUR, COMPANY1);
 
 	await page.getByRole('link', { name: 'Fahrer' }).click();
+	await page.waitForTimeout(200);
 	await page.getByPlaceholder('Email').fill('driver1@test.de');
 	await page.getByRole('button', { name: 'Freischalten' }).click();
 	await expect(page.getByText('Freischaltung erfolgreich!')).toBeVisible();
