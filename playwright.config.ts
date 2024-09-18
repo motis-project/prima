@@ -33,7 +33,7 @@ export default defineConfig({
 			name: 'login',
 			testMatch: 'login.setup.ts',
 			dependencies: ['setup db']
-		},
+		}
 		// {
 		// 	name: 'entrepreneurAssignsRoles',
 		// 	testMatch: 'entrepreneurAssignsRoles.ts',
