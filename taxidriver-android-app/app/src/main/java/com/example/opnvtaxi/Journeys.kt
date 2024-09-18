@@ -47,14 +47,12 @@ class JourneysActivity(private val navController: NavHostController) : AppCompat
 @Composable
 fun Journeys(navController: NavHostController?) {
 
-    val topPadding = 16.dp
+    val verticalPadding = 32.dp
 
     Text(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(topPadding)
-            .zIndex(1f)
-            .background(Color.White),
+            .padding(verticalPadding),
         text = stringResource(id = R.string.journeys_list_title),
         style = TextStyle(
             color = Color.Black,
@@ -69,7 +67,7 @@ fun Journeys(navController: NavHostController?) {
     LazyColumn(
         modifier = Modifier,
         contentPadding = PaddingValues(
-            top = 24.dp + topPadding,
+            top = 32.dp + verticalPadding,
             bottom = 24.dp,
             start = 8.dp,
             end = 8.dp
