@@ -33,6 +33,16 @@ class CookieStore(context: Context) : CookieJar {
         return listOf(cookie)
     }
 
+    fun clearCookies(host: String? = null) {
+        val editor = preferences.edit()
+        if (host != null) {
+            editor.remove(host)
+        } else {
+            editor.clear()
+        }
+        editor.apply()
+    }
+
     fun isEmpty(host: String): Boolean {
         return preferences.contains(host) && preferences.getString(host, null)?.isNotEmpty() == true
     }
