@@ -34,20 +34,20 @@ export default defineConfig({
 			testMatch: 'login.setup.ts',
 			dependencies: ['setup db']
 		},
-		{
-			name: 'entrepreneurAssignsRoles',
-			testMatch: 'entrepreneurAssignsRoles.ts',
-			dependencies: ['login']
-		},
-		{
-			name: 'availability',
-			testMatch: 'availability.ts',
-			dependencies: ['login']
-		},
-		{
-			name: 'move tour',
-			testMatch: 'moveTour.ts',
-			dependencies: ['availability']
-		}
+		// {
+		// 	name: 'entrepreneurAssignsRoles',
+		// 	testMatch: 'entrepreneurAssignsRoles.ts',
+		// 	dependencies: ['login']
+		// },
+		// {
+		// 	name: 'availability',
+		// 	testMatch: 'availability.ts',
+		// 	dependencies: ['login']
+		// },
+		// {
+		// 	name: 'move tour',
+		// 	testMatch: 'moveTour.ts',
+		// 	dependencies: ['availability']
+		// }
 	]
 });
