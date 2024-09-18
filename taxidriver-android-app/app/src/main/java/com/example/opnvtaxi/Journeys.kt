@@ -32,7 +32,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -77,7 +76,7 @@ class JourneysViewModel : ViewModel() {
 
 @Composable
 fun Journeys(
-    navController: NavHostController?,
+    navController: NavHostController,
     viewModel: JourneysViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
 
@@ -85,7 +84,7 @@ fun Journeys(
         launch {
             viewModel.logoutEvent.collect {
                 Log.d("Logout", "Logout event triggered.")
-                navController?.navigate("login") {
+                navController.navigate("login") {
                     popUpTo(navController.graph.startDestinationId) {
                         inclusive = true
                     }
@@ -144,7 +143,7 @@ fun Journeys(
                             .height(80.dp)
                     ) {
                         ConstraintLayout(modifier = Modifier.clickable {
-                            navController?.navigate("journey/${j.id}")
+                            navController.navigate("journey/${j.id}")
                         }) {
 
                             val (leftColumn, rightColumn) = createRefs()
@@ -211,14 +210,6 @@ fun Journeys(
             }
         }
     }
-}
-
-@Preview
-@Composable
-fun JourneysPreview() {
-    Journeys(
-        navController = null
-    )
 }
 
 fun getStopsText(stopCount: Int): String {
