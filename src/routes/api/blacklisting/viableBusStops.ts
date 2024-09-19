@@ -10,37 +10,36 @@ import { Interval } from '$lib/interval';
 import { Coordinates } from '$lib/location';
 import { sql, type RawBuilder } from 'kysely';
 
+interface CoordinatesTable {
+	index: number;
+	longitude: number;
+	latitude: number;
+}
+interface TimesTable {
+	busstopindex: number;
+	index: number;
+	starttime: Date;
+	endtime: Date;
+}
+
 export const getViableBusStops = async (
 	userChosen: Coordinates,
 	busStops: BusStop[],
 	startFixed: boolean,
 	capacities: Capacities
 ): Promise<BlacklistingResult[]> => {
-	interface CoordinatesTable {
-		index: number;
-		longitude: number;
-		latitude: number;
-	}
-	interface TimesTable {
-		busstopindex: number;
-		index: number;
-		starttime: Date;
-		endtime: Date;
-	}
 	if (busStops.length == 0 || !busStops.some((b) => b.times.length != 0)) {
 		return [];
 	}
 	const windows = new Array<Interval[]>(busStops.length);
-	const busstops = new Array<Coordinates>(busStops.length);
 	for (let i = 0; i != busStops.length; ++i) {
-		busstops[i] = new Coordinates(busStops[i].coordinates.lat, busStops[i].coordinates.lng);
 		const times: Date[] = busStops[i].times;
 		windows[i] = new Array<Interval>(times.length);
 		for (let j = 0; j != times.length; ++j) {
 			const t = new Date(times[j]);
 			windows[i][j] = new Interval(
-				startFixed ? t : new Date(t.getTime() - MAX_PASSENGER_WAITING_TIME_PICKUP),
-				startFixed ? new Date(t.getTime() + MAX_PASSENGER_WAITING_TIME_DROPOFF) : t
+				startFixed ? t : new Date(t.getTime() - MAX_PASSENGER_WAITING_TIME_DROPOFF),
+				startFixed ? new Date(t.getTime() + MAX_PASSENGER_WAITING_TIME_PICKUP) : t
 			);
 			new Date(times[j]);
 		}
@@ -48,9 +47,9 @@ export const getViableBusStops = async (
 
 	const dbResult = await db
 		.with('busstops', (db) => {
-			const cteValues = busstops.map(
+			const cteValues = busStops.map(
 				(busStop, i) =>
-					sql<string>`SELECT cast(${i} as integer) AS index, cast(${busStop.lat} as decimal) AS latitude, cast(${busStop.lng} as decimal) AS longitude`
+					sql<string>`SELECT cast(${i} as integer) AS index, cast(${busStop.coordinates.lat} as decimal) AS latitude, cast(${busStop.coordinates.lng} as decimal) AS longitude`
 			);
 			return db
 				.selectFrom(

@@ -12,6 +12,10 @@ import {
 	setTour,
 	Zone
 } from '$lib/testHelpers';
+import {
+	MAX_PASSENGER_WAITING_TIME_DROPOFF,
+	MAX_PASSENGER_WAITING_TIME_PICKUP
+} from '$lib/constants';
 
 const inNiesky = new Coordinates(51.292260904642916, 14.822263713757678);
 const inZittau = new Coordinates(50.89857713197384, 14.8098212004343);
@@ -19,6 +23,9 @@ const inZittau = new Coordinates(50.89857713197384, 14.8098212004343);
 const BASE_DATE_MS = new Date('2050-09-23T17:00').getTime();
 const dateInXMinutes = (x: number): Date => {
 	return new Date(BASE_DATE_MS + minutesToMs(x));
+};
+const dateInXMinutesYMs = (x: number, y: number): Date => {
+	return new Date(BASE_DATE_MS + minutesToMs(x) + y);
 };
 
 describe('blacklisting test', () => {
@@ -327,6 +334,91 @@ describe('blacklisting test', () => {
 			busStops: [{ times: [], coordinates: inNiesky }],
 			startFixed: true,
 			capacities: { passengers: 0, bikes: 0, wheelchairs: 0, luggage: 0 }
+		};
+		const res = await getViableBusStops(r.userChosen, r.busStops, r.startFixed, r.capacities);
+		expect(res).toHaveLength(0);
+	});
+
+	it('blacklisting success, availability barely overlaps (startfixed=false)', async () => {
+		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
+		const company = await addCompany(Zone.NIESKY);
+		const taxi1 = await addTaxi(company, capacities);
+
+		await setAvailability(taxi1, dateInXMinutes(0), dateInXMinutes(90));
+
+		const r: BookingRequestParameters = {
+			userChosen: inNiesky,
+			busStops: [
+				{
+					times: [dateInXMinutesYMs(90, MAX_PASSENGER_WAITING_TIME_DROPOFF)],
+					coordinates: inNiesky
+				}
+			],
+			startFixed: false,
+			capacities: { passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }
+		};
+		const res = await getViableBusStops(r.userChosen, r.busStops, r.startFixed, r.capacities);
+		expect(res).toHaveLength(1);
+	});
+
+	it('blacklisting success, availability barely does not overlap (startfixed=false)', async () => {
+		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
+		const company = await addCompany(Zone.NIESKY);
+		const taxi1 = await addTaxi(company, capacities);
+
+		await setAvailability(taxi1, dateInXMinutes(0), dateInXMinutes(90));
+
+		const r: BookingRequestParameters = {
+			userChosen: inNiesky,
+			busStops: [
+				{
+					times: [dateInXMinutesYMs(91, MAX_PASSENGER_WAITING_TIME_DROPOFF)],
+					coordinates: inNiesky
+				}
+			],
+			startFixed: false,
+			capacities: { passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }
+		};
+		const res = await getViableBusStops(r.userChosen, r.busStops, r.startFixed, r.capacities);
+		expect(res).toHaveLength(0);
+	});
+
+	it('blacklisting success, availability barely overlaps (startfixed=true)', async () => {
+		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
+		const company = await addCompany(Zone.NIESKY);
+		const taxi1 = await addTaxi(company, capacities);
+
+		await setAvailability(taxi1, dateInXMinutes(0), dateInXMinutes(90));
+
+		const r: BookingRequestParameters = {
+			userChosen: inNiesky,
+			busStops: [
+				{ times: [dateInXMinutesYMs(0, -MAX_PASSENGER_WAITING_TIME_PICKUP)], coordinates: inNiesky }
+			],
+			startFixed: true,
+			capacities: { passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }
+		};
+		const res = await getViableBusStops(r.userChosen, r.busStops, r.startFixed, r.capacities);
+		expect(res).toHaveLength(1);
+	});
+
+	it('blacklisting success, availability barely does not overlap (startfixed=true)', async () => {
+		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
+		const company = await addCompany(Zone.NIESKY);
+		const taxi1 = await addTaxi(company, capacities);
+
+		await setAvailability(taxi1, dateInXMinutes(0), dateInXMinutes(90));
+
+		const r: BookingRequestParameters = {
+			userChosen: inNiesky,
+			busStops: [
+				{
+					times: [dateInXMinutesYMs(-1, -MAX_PASSENGER_WAITING_TIME_PICKUP)],
+					coordinates: inNiesky
+				}
+			],
+			startFixed: true,
+			capacities: { passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }
 		};
 		const res = await getViableBusStops(r.userChosen, r.busStops, r.startFixed, r.capacities);
 		expect(res).toHaveLength(0);
