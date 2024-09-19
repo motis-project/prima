@@ -13,24 +13,27 @@ export enum Zone {
 }
 
 export const addCompany = async (zone: Zone): Promise<number> => {
-	return (await db.insertInto('company').values({ zone: zone }).returning('id').executeTakeFirst())!
-		.id;
+	return (
+		await db.insertInto('company').values({ zone: zone }).returning('id').executeTakeFirstOrThrow()
+	).id;
 };
 
 export const addTaxi = async (company: number, capacities: Capacities): Promise<number> => {
 	++plate;
-	return (await db
-		.insertInto('vehicle')
-		.values({
-			license_plate: String(plate),
-			company,
-			seats: capacities.passengers,
-			wheelchair_capacity: capacities.wheelchairs,
-			bike_capacity: capacities.bikes,
-			storage_space: capacities.luggage
-		})
-		.returning('id')
-		.executeTakeFirst())!.id;
+	return (
+		await db
+			.insertInto('vehicle')
+			.values({
+				license_plate: String(plate),
+				company,
+				seats: capacities.passengers,
+				wheelchair_capacity: capacities.wheelchairs,
+				bike_capacity: capacities.bikes,
+				storage_space: capacities.luggage
+			})
+			.returning('id')
+			.executeTakeFirstOrThrow()
+	).id;
 };
 
 export const setAvailability = async (vehicle: number, start_time: Date, end_time: Date) => {
