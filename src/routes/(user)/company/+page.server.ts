@@ -4,6 +4,7 @@ import { db } from '$lib/database';
 import { AddressGuess, geoCode } from '$lib/api.js';
 import { sql } from 'kysely';
 import type { Coordinates } from '$lib/location.js';
+import { intersects } from '$lib/sqlHelpers.js';
 
 export const load: PageServerLoad = async (event) => {
 	const companyId = event.locals.user?.company;
@@ -78,7 +79,7 @@ export const actions = {
 			});
 		}
 
-		if (!(await doIntersect(zone, community_area))) {
+		if (!(await intersects(zone, community_area))) {
 			return fail(400, {
 				error: 'Die Gemeinde liegt nicht im Pflichtfahrgebiet.'
 			});
@@ -100,21 +101,6 @@ export const actions = {
 		return { success: true };
 	}
 } satisfies Actions;
-
-const doIntersect = async (compulsory: number, community: number): Promise<boolean> => {
-	return (
-		(await db
-			.selectFrom('zone as compulsory_area')
-			.where('compulsory_area.id', '=', compulsory)
-			.innerJoin(
-				(eb) => eb.selectFrom('zone').where('id', '=', community).selectAll().as('community'),
-				(join) => join.onTrue()
-			)
-			.where(sql<boolean>`ST_Area(ST_Intersection(compulsory_area.area, community.area)) >= 1`)
-			.selectAll()
-			.executeTakeFirst()) != undefined
-	);
-};
 
 const contains = async (community: number, coordinates: Coordinates): Promise<boolean> => {
 	return (

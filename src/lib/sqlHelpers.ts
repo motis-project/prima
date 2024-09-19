@@ -1,4 +1,5 @@
 import { db } from '$lib/database';
+import { sql } from 'kysely';
 
 export const queryCompletedTours = async (companyId: number | undefined) => {
 	return await db
@@ -20,4 +21,19 @@ export const queryCompletedTours = async (companyId: number | undefined) => {
 			'auth_user.phone as customer_phone'
 		])
 		.execute();
+};
+
+export const intersects = async (compulsory: number, community: number): Promise<boolean> => {
+	return (
+		(await db
+			.selectFrom('zone as compulsory_area')
+			.where('compulsory_area.id', '=', compulsory)
+			.innerJoin(
+				(eb) => eb.selectFrom('zone').where('id', '=', community).selectAll().as('community'),
+				(join) => join.onTrue()
+			)
+			.where(sql<boolean>`ST_Area(ST_Intersection(compulsory_area.area, community.area)) >= 1`)
+			.selectAll()
+			.executeTakeFirst()) != undefined
+	);
 };
