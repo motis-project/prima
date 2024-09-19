@@ -1,7 +1,6 @@
-import type { BusStop } from "./busStop";
-import type { Capacities } from "./capacities";
-import type { Coordinates } from "./location";
-
+import type { BusStop } from './busStop';
+import type { Capacities } from './capacities';
+import type { Coordinates } from './location';
 
 export type BookingRequestParameters = {
 	userChosen: Coordinates;
