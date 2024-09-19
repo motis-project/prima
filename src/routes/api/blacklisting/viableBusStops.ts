@@ -7,6 +7,8 @@ import {
 } from '$lib/constants';
 import { db } from '$lib/database.js';
 import { Coordinates } from '$lib/location';
+import type { Database } from '$lib/types';
+import type { ExpressionBuilder } from 'kysely';
 import { sql, type RawBuilder } from 'kysely';
 
 interface CoordinatesTable {
@@ -50,6 +52,61 @@ const withBusStops = (busStops: BusStop[], startFixed: boolean) => {
 		});
 };
 
+const doesAvailabilityExist = (eb: ExpressionBuilder<Database, 'vehicle'>) => {
+	return eb.exists(
+		eb
+			.selectFrom('availability')
+			.whereRef('availability.vehicle', '=', 'vehicle.id')
+			.where((eb) =>
+				eb.and([
+					sql<boolean>`availability.start_time <= cast(busstoptimes.endtime as timestamp)`,
+					sql<boolean>`availability.end_time >= cast(busstoptimes.starttime as timestamp)`
+				])
+			)
+	);
+};
+
+const doesTourExist = (eb: ExpressionBuilder<Database, 'vehicle'>) => {
+	return eb.exists(
+		eb
+			.selectFrom('tour')
+			.whereRef('tour.vehicle', '=', 'vehicle.id')
+			.where((eb) =>
+				eb.and([
+					sql<boolean>`tour.departure <= cast(busstoptimes.endtime as timestamp)`,
+					sql<boolean>`tour.arrival >= cast(busstoptimes.starttime as timestamp)`
+				])
+			)
+	);
+};
+
+const doesVehicleExist = (eb: ExpressionBuilder<Database, 'company'>, capacities: Capacities) => {
+	return eb.exists((eb) =>
+		eb
+			.selectFrom('vehicle')
+			.whereRef('vehicle.company', '=', 'company.id')
+			.where((eb) =>
+				eb.and([
+					eb('vehicle.seats', '>=', capacities.passengers),
+					eb('vehicle.bike_capacity', '>=', capacities.bikes),
+					eb('vehicle.wheelchair_capacity', '>=', capacities.wheelchairs),
+					sql<boolean>`vehicle.storage_space >= cast(${capacities.luggage} as integer) + cast(${capacities.passengers} as integer) - cast(${eb.ref('vehicle.seats')} as integer)`,
+					eb.or([doesAvailabilityExist(eb), doesTourExist(eb)])
+				])
+			)
+	);
+};
+
+const doesCompanyExist = (eb: ExpressionBuilder<Database, 'zone'>, capacities: Capacities) => {
+	return eb.exists(
+		eb
+			.selectFrom('company')
+			.where((eb) =>
+				eb.and([eb('company.zone', '=', eb.ref('zone.id')), doesVehicleExist(eb, capacities)])
+			)
+	);
+};
+
 export const getViableBusStops = async (
 	userChosen: Coordinates,
 	busStops: BusStop[],
@@ -88,54 +145,7 @@ export const getViableBusStops = async (
 					.as('busstoptimes'),
 			(join) => join.onTrue()
 		)
-		.where((eb) =>
-			eb.and([
-				eb.exists(
-					eb.selectFrom('company').where((eb) =>
-						eb.and([
-							eb('company.zone', '=', eb.ref('zone.id')),
-							eb.exists((eb) =>
-								eb
-									.selectFrom('vehicle')
-									.whereRef('vehicle.company', '=', 'company.id')
-									.where((eb) =>
-										eb.and([
-											eb('vehicle.seats', '>=', capacities.passengers),
-											eb('vehicle.bike_capacity', '>=', capacities.bikes),
-											eb('vehicle.wheelchair_capacity', '>=', capacities.wheelchairs),
-											sql<boolean>`vehicle.storage_space>=cast(${capacities.luggage} as integer)+cast(${capacities.passengers} as integer)-cast(${eb.ref('vehicle.seats')} as integer)`,
-											eb.or([
-												eb.exists(
-													eb
-														.selectFrom('availability')
-														.whereRef('availability.vehicle', '=', 'vehicle.id')
-														.where((eb) =>
-															eb.and([
-																sql<boolean>`availability.start_time <= cast(busstoptimes.endtime as timestamp)`,
-																sql<boolean>`availability.end_time >= cast(busstoptimes.starttime as timestamp)`
-															])
-														)
-												),
-												eb.exists(
-													eb
-														.selectFrom('tour')
-														.whereRef('tour.vehicle', '=', 'vehicle.id')
-														.where((eb) =>
-															eb.and([
-																sql<boolean>`tour.departure <= cast(busstoptimes.endtime as timestamp)`,
-																sql<boolean>`tour.arrival >= cast(busstoptimes.starttime as timestamp)`
-															])
-														)
-												)
-											])
-										])
-									)
-							)
-						])
-					)
-				)
-			])
-		)
+		.where((eb) => doesCompanyExist(eb, capacities))
 		.select(['busstoptimes.index as timeIndex', 'busstoptimes.busstopindex'])
 		.execute();
 

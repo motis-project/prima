@@ -22,7 +22,6 @@ export const POST = async (event: RequestEvent) => {
 			parameters.busStops,
 			parameters.startFixed,
 			parameters.capacities
-		),
-		{ status: 200 }
+		)
 	);
 };
