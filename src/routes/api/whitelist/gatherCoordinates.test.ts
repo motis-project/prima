@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { capacitySimulation } from './capacitySimulation';
+import { capacitySimulation, type Range } from './capacitySimulation';
 import type { BusStop } from '$lib/busStop';
 import { hoursToMs } from '$lib/time_utils';
 import { Coordinates } from '$lib/location';
 import type { Vehicle, Company, Tour, Event } from '$lib/compositionTypes';
-import type { Interval } from '$lib/interval';
+import { Interval } from '$lib/interval';
+import { gatherRoutingCoordinates } from './routing';
 
 const baseTime = new Date(Date.now() + hoursToMs(500));
 
@@ -44,25 +45,52 @@ const createTour = (events: Event[]): Tour => {
 	};
 };
 
-const createEvent = (coordinates: Coordinates, time: Interval): Event => {
+const createEvent = (coordinates: Coordinates): Event => {
 	return {
 		capacities: { passengers: 0, bikes: 0, wheelchairs: 0, luggage: 0 },
 		is_pickup: true,
-		time,
+		time: new Interval(new Date(), new Date()),
 		id: 1,
 		coordinates,
 		tourId: 1
 	};
 };
 
-describe('capacity simulation test', () => {
-	it('all valid, passengers', () => {
-		const companies = { wheelchairs: 0, bikes: 0, luggage: 0, passengers: 2 };
-		const insertions = { wheelchairs: 0, bikes: 0, luggage: 0, passengers: 1 };
-		const busStops = [createBusStops([[50]])];
-		const ranges = capacitySimulation(capacities, required, events);
-		expect(ranges).toHaveLength(1);
-		expect(ranges[0].earliestPickup).toBe(0);
-		expect(ranges[0].latestDropoff).toBe(2);
+const createBusStop = () => {
+	return {coordinates: new Coordinates(1,1), times: []};
+}
+
+describe('gather coordinates test', () => {
+	it('TODO', () => {
+		let eventLatLng = 100;
+		let companyLatLng = 5;
+		const companies = [createCompany(
+			[createVehicle(1, 
+				[createTour(
+					[createEvent(new Coordinates(eventLatLng, eventLatLng++)),
+					createEvent(new Coordinates(eventLatLng, eventLatLng++))]
+				)]
+			)],
+			new Coordinates(companyLatLng, companyLatLng++)
+		), 
+		createCompany(
+			[createVehicle(2,
+				[createTour(
+					[createEvent(new Coordinates(eventLatLng, eventLatLng++)),
+					createEvent(new Coordinates(eventLatLng, eventLatLng++))]
+				)]
+			)],
+			new Coordinates(companyLatLng, companyLatLng++)
+		)];
+		const busStops = [createBusStop(), createBusStop()];
+		const insertions = new Map<number, Range[]>();
+		insertions.set(1, [{earliestPickup: 0, latestDropoff: 2}]);
+		insertions.set(2, [{earliestPickup: 0, latestDropoff: 2}]);
+		const coordinates = gatherRoutingCoordinates(companies, busStops, insertions);
+		expect(coordinates.busStopMany).toHaveLength(2);
+		expect(coordinates.userChosenMany).toHaveLength(18);
+		busStops.forEach((_, idx) => {
+			expect(coordinates.busStopMany[idx]).toHaveLength(18);
+		});
 	});
 });
