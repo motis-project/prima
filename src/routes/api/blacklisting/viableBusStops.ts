@@ -7,6 +7,7 @@ import {
 } from '$lib/constants';
 import { db } from '$lib/database.js';
 import { Coordinates } from '$lib/location';
+import { covers } from '$lib/sqlHelpers';
 import type { Database } from '$lib/types';
 import type { ExpressionBuilder } from 'kysely';
 import { sql, type RawBuilder } from 'kysely';
@@ -119,12 +120,7 @@ export const getViableBusStops = async (
 
 	const dbResult = withBusStops(busStops, startFixed)
 		.selectFrom('zone')
-		.where((eb) =>
-			eb.and([
-				eb('zone.is_community', '=', false),
-				sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${userChosen.lng}, ${userChosen.lat}), ${SRID}))`
-			])
-		)
+		.where((eb) => eb.and([eb('zone.is_community', '=', false), covers(eb, userChosen)]))
 		.innerJoinLateral(
 			(eb) =>
 				eb
