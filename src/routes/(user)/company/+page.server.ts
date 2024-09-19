@@ -2,9 +2,8 @@ import type { PageServerLoad, Actions } from './$types.js';
 import { fail } from '@sveltejs/kit';
 import { db } from '$lib/database';
 import { AddressGuess, geoCode } from '$lib/api.js';
-import { sql } from 'kysely';
 import type { Coordinates } from '$lib/location.js';
-import { intersects } from '$lib/sqlHelpers.js';
+import { covers, intersects } from '$lib/sqlHelpers.js';
 
 export const load: PageServerLoad = async (event) => {
 	const companyId = event.locals.user?.company;
@@ -106,12 +105,7 @@ const contains = async (community: number, coordinates: Coordinates): Promise<bo
 	return (
 		(await db
 			.selectFrom('zone')
-			.where((eb) =>
-				eb.and([
-					eb('zone.id', '=', community),
-					sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${coordinates!.lng}, ${coordinates!.lat}),4326))`
-				])
-			)
+			.where((eb) => eb.and([eb('zone.id', '=', community), covers(eb, coordinates!)]))
 			.executeTakeFirst()) != undefined
 	);
 };
