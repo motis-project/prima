@@ -29,7 +29,10 @@ const withBusStops = (busStops: BusStop[], startFixed: boolean) => {
 		.with('busstops', (db) => {
 			const cteValues = busStops.map(
 				(busStop, i) =>
-					sql<string>`SELECT cast(${i} as integer) AS index, cast(${busStop.coordinates.lat} as decimal) AS latitude, cast(${busStop.coordinates.lng} as decimal) AS longitude`
+					sql<string>`SELECT
+									cast(${i} as integer) AS index,
+									cast(${busStop.coordinates.lat} as decimal) AS latitude,
+									cast(${busStop.coordinates.lng} as decimal) AS longitude`
 			);
 			return db
 				.selectFrom(
