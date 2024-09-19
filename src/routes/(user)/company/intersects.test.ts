@@ -3,7 +3,7 @@ import { sql } from 'kysely';
 import { describe, expect, it } from 'vitest';
 import { intersects } from '$lib/sqlHelpers';
 
-describe('blacklisting test', () => {
+describe('intersects test', () => {
 	it('2 methods for checking zone overlaps yield same results', async () => {
 		const firstCommunityId = 7;
 		const lastCommunityId = 86;
