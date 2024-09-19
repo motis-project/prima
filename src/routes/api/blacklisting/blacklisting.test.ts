@@ -21,7 +21,7 @@ const dateInXMinutes = (x: number): Date => {
 	return new Date(BASE_DATE_MS + minutesToMs(x));
 };
 
-describe('sum test', () => {
+describe('blacklisting test', () => {
 	beforeEach(async () => {
 		await clearDatabase();
 	});

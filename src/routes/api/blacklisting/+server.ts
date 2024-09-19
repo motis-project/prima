@@ -1,19 +1,22 @@
 import { Validator } from 'jsonschema';
 import { getViableBusStops } from './viableBusStops';
+import type { RequestEvent } from './$types';
+import { json } from '@sveltejs/kit';
 
-export const POST = async (event) => {
+export const POST = async (event: RequestEvent) => {
 	const parameters = await event.request.json();
 	const validator = new Validator();
+	console.log('params: ', parameters);
 	const result = validator.validate(parameters, schema);
 	if (!result.valid) {
-		return parameters(
+		return json(
 			{
 				message: result.errors
 			},
 			{ status: 400 }
 		);
 	}
-	return parameters(
+	return json(
 		{
 			body: JSON.stringify(
 				getViableBusStops(
