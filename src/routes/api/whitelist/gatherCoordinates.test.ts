@@ -1,22 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { capacitySimulation, type Range } from './capacitySimulation';
-import type { BusStop } from '$lib/busStop';
-import { hoursToMs } from '$lib/time_utils';
+import { type Range } from './capacitySimulation';
 import { Coordinates } from '$lib/location';
 import type { Vehicle, Company, Tour, Event } from '$lib/compositionTypes';
 import { Interval } from '$lib/interval';
 import { gatherRoutingCoordinates } from './routing';
-
-const baseTime = new Date(Date.now() + hoursToMs(500));
-
-const createBusStops = (timeShifts: number[][]): BusStop[] => {
-	return timeShifts.map((shifts) => {
-		return {
-			coordinates: new Coordinates(1, 1),
-			times: shifts.map((shift) => new Date(baseTime.getTime() + shift))
-		};
-	});
-};
 
 const createCompany = (vehicles: Vehicle[], coordinates: Coordinates): Company => {
 	return {
@@ -57,35 +44,41 @@ const createEvent = (coordinates: Coordinates): Event => {
 };
 
 const createBusStop = () => {
-	return {coordinates: new Coordinates(1,1), times: []};
-}
+	return { coordinates: new Coordinates(1, 1), times: [] };
+};
 
 describe('gather coordinates test', () => {
 	it('TODO', () => {
 		let eventLatLng = 100;
 		let companyLatLng = 5;
-		const companies = [createCompany(
-			[createVehicle(1, 
-				[createTour(
-					[createEvent(new Coordinates(eventLatLng, eventLatLng++)),
-					createEvent(new Coordinates(eventLatLng, eventLatLng++))]
-				)]
-			)],
-			new Coordinates(companyLatLng, companyLatLng++)
-		), 
-		createCompany(
-			[createVehicle(2,
-				[createTour(
-					[createEvent(new Coordinates(eventLatLng, eventLatLng++)),
-					createEvent(new Coordinates(eventLatLng, eventLatLng++))]
-				)]
-			)],
-			new Coordinates(companyLatLng, companyLatLng++)
-		)];
+		const companies = [
+			createCompany(
+				[
+					createVehicle(1, [
+						createTour([
+							createEvent(new Coordinates(eventLatLng, eventLatLng++)),
+							createEvent(new Coordinates(eventLatLng, eventLatLng++))
+						])
+					])
+				],
+				new Coordinates(companyLatLng, companyLatLng++)
+			),
+			createCompany(
+				[
+					createVehicle(2, [
+						createTour([
+							createEvent(new Coordinates(eventLatLng, eventLatLng++)),
+							createEvent(new Coordinates(eventLatLng, eventLatLng++))
+						])
+					])
+				],
+				new Coordinates(companyLatLng, companyLatLng++)
+			)
+		];
 		const busStops = [createBusStop(), createBusStop()];
 		const insertions = new Map<number, Range[]>();
-		insertions.set(1, [{earliestPickup: 0, latestDropoff: 2}]);
-		insertions.set(2, [{earliestPickup: 0, latestDropoff: 2}]);
+		insertions.set(1, [{ earliestPickup: 0, latestDropoff: 2 }]);
+		insertions.set(2, [{ earliestPickup: 0, latestDropoff: 2 }]);
 		const coordinates = gatherRoutingCoordinates(companies, busStops, insertions);
 		expect(coordinates.busStopMany).toHaveLength(2);
 		expect(coordinates.userChosenMany).toHaveLength(18);
