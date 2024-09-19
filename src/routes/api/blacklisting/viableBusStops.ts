@@ -6,7 +6,6 @@ import {
 	SRID
 } from '$lib/constants';
 import { db } from '$lib/database.js';
-import { Interval } from '$lib/interval';
 import { Coordinates } from '$lib/location';
 import { sql, type RawBuilder } from 'kysely';
 
