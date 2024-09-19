@@ -1,7 +1,5 @@
 import type { Company, Vehicle } from './types';
 import { Coordinates, Location } from './location';
-import type { Capacities } from './capacities';
-import type { BusStop } from './busStop';
 
 export const getCompany = async (id: number): Promise<Company> => {
 	const response = await fetch(`/api/company?id=${id}`);
@@ -67,13 +65,6 @@ export const addAvailability = async (vehicleId: number, from: Date, to: Date) =
 			to
 		})
 	});
-};
-
-export type BookingRequestParameters = {
-	userChosen: Coordinates;
-	busStops: BusStop[];
-	startFixed: boolean;
-	capacities: Capacities;
 };
 
 export const booking = async (

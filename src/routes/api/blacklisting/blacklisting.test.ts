@@ -1,4 +1,4 @@
-import type { BookingRequestParameters } from '$lib/api';
+import type { BookingRequestParameters } from '$lib/bookingApiParameters';
 import { Coordinates } from '$lib/location';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { getViableBusStops } from './viableBusStops';
