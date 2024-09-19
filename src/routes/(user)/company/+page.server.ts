@@ -102,27 +102,30 @@ export const actions = {
 } satisfies Actions;
 
 const doIntersect = async (compulsory: number, community: number): Promise<boolean> => {
-	return (await db
-		.selectFrom('zone as compulsory_area')
-		.where('compulsory_area.id', '=', compulsory)
-		.innerJoin(
-			(eb) =>
-				eb.selectFrom('zone').where('id', '=', community).selectAll().as('community'),
-			(join) => join.onTrue()
-		)
-		.where(sql<boolean>`ST_Area(ST_Intersection(compulsory_area.area, community.area)) >= 1`)
-		.selectAll()
-		.executeTakeFirst()) != undefined;
-}
+	return (
+		(await db
+			.selectFrom('zone as compulsory_area')
+			.where('compulsory_area.id', '=', compulsory)
+			.innerJoin(
+				(eb) => eb.selectFrom('zone').where('id', '=', community).selectAll().as('community'),
+				(join) => join.onTrue()
+			)
+			.where(sql<boolean>`ST_Area(ST_Intersection(compulsory_area.area, community.area)) >= 1`)
+			.selectAll()
+			.executeTakeFirst()) != undefined
+	);
+};
 
 const contains = async (community: number, coordinates: Coordinates): Promise<boolean> => {
-	return await db
-		.selectFrom('zone')
-		.where((eb) =>
-			eb.and([
-				eb('zone.id', '=', community),
-				sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${coordinates!.lng}, ${coordinates!.lat}),4326))`
-			])
-		)
-		.executeTakeFirst() != undefined;
-}
+	return (
+		(await db
+			.selectFrom('zone')
+			.where((eb) =>
+				eb.and([
+					eb('zone.id', '=', community),
+					sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${coordinates!.lng}, ${coordinates!.lat}),4326))`
+				])
+			)
+			.executeTakeFirst()) != undefined
+	);
+};
