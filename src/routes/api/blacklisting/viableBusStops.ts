@@ -48,7 +48,11 @@ const withBusStops = (busStops: BusStop[], startFixed: boolean) => {
 						const endTime = startFixed
 							? new Date(t.getTime() + MAX_PASSENGER_WAITING_TIME_PICKUP)
 							: t;
-						return sql<string>`SELECT cast(${i} as integer) AS busstopindex, cast(${j} as integer) AS index, ${startTime} AS starttime, ${endTime} AS endtime`;
+						return sql<string>`SELECT
+												cast(${i} as integer) AS busstopindex,
+												cast(${j} as integer) AS index,
+												${startTime} AS starttime,
+												${endTime} AS endtime`;
 					})
 				);
 			}
