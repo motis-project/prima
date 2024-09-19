@@ -17,16 +17,12 @@ export const POST = async (event: RequestEvent) => {
 		);
 	}
 	return json(
-		{
-			body: JSON.stringify(
-				getViableBusStops(
-					parameters.userChosen,
-					parameters.busStops,
-					parameters.startFixed,
-					parameters.capacities
-				)
-			)
-		},
+		getViableBusStops(
+			parameters.userChosen,
+			parameters.busStops,
+			parameters.startFixed,
+			parameters.capacities
+		),
 		{ status: 200 }
 	);
 };

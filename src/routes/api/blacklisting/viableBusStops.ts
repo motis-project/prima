@@ -22,6 +22,34 @@ interface TimesTable {
 	endtime: Date;
 }
 
+const withBusStops = (busStops: BusStop[], windows: Interval[][]) => {
+	return db.with('busstops', (db) => {
+		const cteValues = busStops.map(
+			(busStop, i) =>
+				sql<string>`SELECT cast(${i} as integer) AS index, cast(${busStop.coordinates.lat} as decimal) AS latitude, cast(${busStop.coordinates.lng} as decimal) AS longitude`
+		);
+		return db
+			.selectFrom(
+				sql<CoordinatesTable>`(${sql.join(cteValues, sql<string>` UNION ALL `)})`.as('busstops')
+			)
+			.selectAll();
+	})
+	.with('times', (db) => {
+		let cteValues: RawBuilder<string>[] = [];
+		for (let i = 0; i != busStops.length; ++i) {
+			cteValues = cteValues.concat(
+				windows[i].map(
+					(t, j) =>
+						sql<string>`SELECT cast(${i} as integer) AS busstopindex, cast(${j} as integer) AS index, ${t.startTime} AS starttime, ${t.endTime} AS endtime`
+				)
+			);
+		}
+		return db
+			.selectFrom(sql<TimesTable>`(${sql.join(cteValues, sql<string>` UNION ALL `)})`.as('times'))
+			.selectAll();
+	});
+};
+
 export const getViableBusStops = async (
 	userChosen: Coordinates,
 	busStops: BusStop[],
@@ -41,36 +69,10 @@ export const getViableBusStops = async (
 				startFixed ? t : new Date(t.getTime() - MAX_PASSENGER_WAITING_TIME_DROPOFF),
 				startFixed ? new Date(t.getTime() + MAX_PASSENGER_WAITING_TIME_PICKUP) : t
 			);
-			new Date(times[j]);
 		}
 	}
 
-	const dbResult = await db
-		.with('busstops', (db) => {
-			const cteValues = busStops.map(
-				(busStop, i) =>
-					sql<string>`SELECT cast(${i} as integer) AS index, cast(${busStop.coordinates.lat} as decimal) AS latitude, cast(${busStop.coordinates.lng} as decimal) AS longitude`
-			);
-			return db
-				.selectFrom(
-					sql<CoordinatesTable>`(${sql.join(cteValues, sql<string>` UNION ALL `)})`.as('busstops')
-				)
-				.selectAll();
-		})
-		.with('times', (db) => {
-			let cteValues: RawBuilder<string>[] = [];
-			for (let i = 0; i != busStops.length; ++i) {
-				cteValues = cteValues.concat(
-					windows[i].map(
-						(t, j) =>
-							sql<string>`SELECT cast(${i} as integer) AS busstopindex, cast(${j} as integer) AS index, ${t.startTime} AS starttime, ${t.endTime} AS endtime`
-					)
-				);
-			}
-			return db
-				.selectFrom(sql<TimesTable>`(${sql.join(cteValues, sql<string>` UNION ALL `)})`.as('times'))
-				.selectAll();
-		})
+	const dbResult = withBusStops(busStops, windows)
 		.selectFrom('zone')
 		.where((eb) =>
 			eb.and([
@@ -148,6 +150,7 @@ export const getViableBusStops = async (
 		)
 		.select(['busstoptimes.index as timeIndex', 'busstoptimes.busstopindex'])
 		.execute();
+
 	return dbResult;
 };
 
