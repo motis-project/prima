@@ -1,7 +1,6 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import * as Select from "$lib/components/ui/select/index.js";
 	import * as Dialog from "$lib/components/ui/dialog/index.js";
 	import { type TourDetails } from '$lib/TourDetails.js';
 	import ChevronLeft from "lucide-svelte/icons/chevron-left";
@@ -75,21 +74,105 @@
 
 	// --- Filter: ---
 	let selectedCompany = $state("Unternehmen");
-	let companys = $state([data.tours.at(0)?.company_name + " "]);
+	let companys = $state([data.tours.at(0)?.company_name]);
 	const setCompanys = (tours: TourDetails[]) => {
 		for(let tour of tours) {
-			let stringifyname = tour.company_name + " ";
+			let stringifyname = tour.company_name;
 			if(!companys.includes(stringifyname))
 			{
 				companys.push(stringifyname);
 			}
 		}
 	};
+
+	const restore = () => {
+		selectedTimespan = "Zeitraum";
+		selectedCompany = "Unternehmen";
+		paginate(data.tours);
+		setPage(0);
+	};
+
 	let selectedTimespan = $state("Zeitraum");
 	let timespans = ["Quartal 1", "Quartal 2", "Quartal 3", "Quartal 4", "Aktuelles Jahr", "Letztes Jahr"];
 
 	const filter = (comp: boolean, time: boolean, selectedCompany: string, selectedTime: string) => {
-
+		let newrows: TourDetails[] = [];
+		if(comp) 
+		{
+			for(let row of data.tours)
+			{
+				if(row.company_name==selectedCompany) 
+				{
+					newrows.push(row);
+				}
+			}
+		}
+		else if(time) 
+		{	
+			switch(selectedTime) 
+			{
+				case "Quartal 1": {
+					for(let row of data.tours) {
+						if(row.from.getMonth()==0 || row.from.getMonth()==1 || row.from.getMonth()==2) {
+							newrows.push(row);
+						}
+					}
+					};
+					break;
+				case "Quartal 2": {
+					for(let row of data.tours) {
+						if(row.from.getMonth()==3 || row.from.getMonth()==4 || row.from.getMonth()==5) {	
+							newrows.push(row);
+						}
+					}
+					};
+					break;
+				case "Quartal 3": {
+					for(let row of data.tours) {
+						if(row.from.getMonth()==6 || row.from.getMonth()==7 || row.from.getMonth()==8) {
+							newrows.push(row);
+						}
+					}
+					};
+					break;
+				case "Quartal 4": {
+					for(let row of data.tours) {
+						if(row.from.getMonth()==9 || row.from.getMonth()==10 || row.from.getMonth()==11) {
+							newrows.push(row);
+						}
+					}
+					};
+					break;
+				case "Aktuelles Jahr": {
+					const currentDate = new Date();
+					let year = currentDate.getFullYear();
+					for(let row of data.tours) {
+						if(row.from.getFullYear()==year) {
+								newrows.push(row);
+						}
+					}
+					};
+					break;
+				case "Letztes Jahr": {
+					const currentDate = new Date();
+					let year = currentDate.getFullYear() - 1;
+					for(let row of data.tours) {
+						if(row.from.getFullYear()==year) {
+								newrows.push(row);
+						}
+					}
+					};
+					break;
+				default: newrows = data.tours;
+			}
+		}
+		else {
+			newrows = data.tours;
+		}
+		selectedTimespan = "Zeitraum";
+		selectedCompany = "Unternehmen";
+		paginate(newrows);
+		setPage(0);
 	};
 
 </script>
@@ -100,25 +183,27 @@
 	</Card.Header>
 	
 	<div class="font-semibold leading-none tracking-tight p-6 flex gap-4">
+		<Button type="submit" on:click={() => restore()} > 
+			Filter zurücksetzten
+		</Button>
 		<Dialog.Root>
 			<Dialog.Trigger class={buttonVariants({ variant: "outline" })}> 
 				Filteroptionen
 			</Dialog.Trigger>
-			<Dialog.Content class="sm:max-w-[425px]">
+			<Dialog.Content class="sm:max-w-[450px]">
 			  <Dialog.Header>
 				<Dialog.Title>Filteroptionen</Dialog.Title>
 				<Dialog.Description>
 				  Filteren Sie die Daten für eine bessere Übersicht.
 				</Dialog.Description>
 			  </Dialog.Header>
-			  <div class="grid gap-4 py-4">
-				<div class="grid grid-cols-4 items-center gap-4">
-					<Label for="name" class="text-right">Filter nach Unternehmen:</Label>
+				<div class="grid grid-cols-2 items-center gap-4">
+					<Label for="name" class="text-left">Filter nach Unternehmen:</Label>
 					<select
 					name="company"
 					id="company"
 					class={cn(buttonVariants({ variant: 'outline' }),
-						"w-[275px]"
+						"max-w-[275px]"
 					)}
 					bind:value={selectedCompany}
 				>
@@ -130,13 +215,13 @@
 					{/each}
 				</select>
 				</div>
-				<div class="grid grid-cols-4 items-center gap-4">
-				  <Label for="timespan" class="text-right">Filter nach Zeitraum:</Label>
+				<div class="grid grid-cols-2 items-center gap-4">
+				  <Label for="timespan" class="text-left">Filter nach Zeitraum:</Label>
 				  <select
 					name="months"
 					id="months"
 					class={cn(buttonVariants({ variant: 'outline' }),
-						"w-[275px]"
+						"max-w-[275px]"
 					)}
 					bind:value={selectedTimespan}
 				>
@@ -148,18 +233,17 @@
 					{/each}
 				</select>
 				</div>
-				<div class="grid grid-cols-4 items-center gap-4">
+				<div class="grid grid-cols-2 items-center gap-4">
 					<!-- TODO: Kalender für custom Timespan -->
-					<Label for="timespan" class="text-right">Filter nach Zeitraum:</Label>
-					<Input id="timespan" value="01.01.2024" class="col-span-3" />
+					<Label for="timespan" class="text-left">Filter nach beliebigem Zeitraum:</Label>
+					<Input id="timespan" value="01.01.2024" class="max-w-[275px]" />
 				</div>
-			  </div>
-			  <Dialog.Footer>
+			  <Dialog.Close class="text-right">
 				<Button type="submit" 
-					on:click={() => filter(selectedCompany=="Unternehmen", selectedTimespan=="Zeitraum", selectedCompany, selectedTimespan)}>
+					on:click={() => filter(selectedCompany!="Unternehmen", selectedTimespan!="Zeitraum", selectedCompany, selectedTimespan)}>
 					Filter anwenden
 				</Button>
-			  </Dialog.Footer>
+			  </Dialog.Close>
 			</Dialog.Content>
 		  </Dialog.Root>
 	</div>
