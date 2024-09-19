@@ -41,13 +41,15 @@ const withBusStops = (busStops: BusStop[], startFixed: boolean) => {
 			let cteValues: RawBuilder<string>[] = [];
 			for (let i = 0; i != busStops.length; ++i) {
 				cteValues = cteValues.concat(
-					busStops[i].times.map(
-						(t, j) =>{
-							const startTime = startFixed ? t : new Date(t.getTime() - MAX_PASSENGER_WAITING_TIME_DROPOFF);
-							const endTime = startFixed ? new Date(t.getTime() + MAX_PASSENGER_WAITING_TIME_PICKUP) : t;
-							return sql<string>`SELECT cast(${i} as integer) AS busstopindex, cast(${j} as integer) AS index, ${startTime} AS starttime, ${endTime} AS endtime`
-						}
-					)
+					busStops[i].times.map((t, j) => {
+						const startTime = startFixed
+							? t
+							: new Date(t.getTime() - MAX_PASSENGER_WAITING_TIME_DROPOFF);
+						const endTime = startFixed
+							? new Date(t.getTime() + MAX_PASSENGER_WAITING_TIME_PICKUP)
+							: t;
+						return sql<string>`SELECT cast(${i} as integer) AS busstopindex, cast(${j} as integer) AS index, ${startTime} AS starttime, ${endTime} AS endtime`;
+					})
 				);
 			}
 			return db
