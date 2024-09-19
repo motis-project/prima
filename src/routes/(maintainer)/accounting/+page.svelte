@@ -8,6 +8,7 @@
     import ChevronRight from "lucide-svelte/icons/chevron-right";
 	import { ChevronsRight, ChevronsLeft, ChevronsUpDown } from 'lucide-svelte';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import { cn } from '$lib/utils';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { onMount } from "svelte";
@@ -67,30 +68,27 @@
 		currentPageRows = totalPages.length > 0 ? totalPages[page] : [];
 	};
 
+	// --- Sortierung: ---
 	const sort = (des: boolean) => {
 
 	};
 
 	// --- Filter: ---
-	let selected = $state("TaxiTaxi"); // Nicht hinbekommen.... bind:value ging nicht, wieso?
-	//let companyName = $state('');
-	let value = $state("");
-	let selectvalues = [{value: "TaxiTaxi", label: "taxitaxi"}];
-	let companys = $state(selectvalues);
-	let notdouble: string[];
+	let selectedCompany = $state("Unternehmen");
+	let companys = $state([data.tours.at(0)?.company_name + " "]);
 	const setCompanys = (tours: TourDetails[]) => {
 		for(let tour of tours) {
 			let stringifyname = tour.company_name + " ";
-			if(!notdouble.includes(stringifyname))
+			if(!companys.includes(stringifyname))
 			{
-				notdouble.push(stringifyname);
-				let temp = {value: stringifyname, label: stringifyname};
-				companys.push(temp);
+				companys.push(stringifyname);
 			}
 		}
 	};
+	let selectedTimespan = $state("Zeitraum");
+	let timespans = ["Quartal 1", "Quartal 2", "Quartal 3", "Quartal 4", "Aktuelles Jahr", "Letztes Jahr"];
 
-	const filter = () => {
+	const filter = (comp: boolean, time: boolean, selectedCompany: string, selectedTime: string) => {
 
 	};
 
@@ -116,26 +114,51 @@
 			  <div class="grid gap-4 py-4">
 				<div class="grid grid-cols-4 items-center gap-4">
 					<Label for="name" class="text-right">Filter nach Unternehmen:</Label>
-				  	<Select.Root selected={value}>
-						<Select.Trigger class="w-[280px]">
-					  		<Select.Value placeholder="Wählen Sie ein Unternehmen" />
-						</Select.Trigger>
-						<Select.Content>
-							{#each companys as company}
-						  		<Select.Item value={company.value} label={company.label}>
-									{company}
-								</Select.Item>
-							{/each}
-						</Select.Content>
-				  	</Select.Root>
+					<select
+					name="company"
+					id="company"
+					class={cn(buttonVariants({ variant: 'outline' }),
+						"w-[275px]"
+					)}
+					bind:value={selectedCompany}
+				>
+					<option id="company" selected={true} disabled>Unternehmen</option>
+					{#each companys as c}
+						<option id="company" value={c}>
+							{c}
+						</option>
+					{/each}
+				</select>
 				</div>
 				<div class="grid grid-cols-4 items-center gap-4">
 				  <Label for="timespan" class="text-right">Filter nach Zeitraum:</Label>
-				  <Input id="timespan" value="01.01.2024" class="col-span-3" />
+				  <select
+					name="months"
+					id="months"
+					class={cn(buttonVariants({ variant: 'outline' }),
+						"w-[275px]"
+					)}
+					bind:value={selectedTimespan}
+				>
+					<option id="months" selected={true} disabled>Zeitraum</option>
+					{#each timespans as t}
+						<option id="months" value={t}>
+							{t}
+						</option>
+					{/each}
+				</select>
+				</div>
+				<div class="grid grid-cols-4 items-center gap-4">
+					<!-- TODO: Kalender für custom Timespan -->
+					<Label for="timespan" class="text-right">Filter nach Zeitraum:</Label>
+					<Input id="timespan" value="01.01.2024" class="col-span-3" />
 				</div>
 			  </div>
 			  <Dialog.Footer>
-				<Button type="submit" on:click={() => filter()}>Filter anwenden</Button>
+				<Button type="submit" 
+					on:click={() => filter(selectedCompany=="Unternehmen", selectedTimespan=="Zeitraum", selectedCompany, selectedTimespan)}>
+					Filter anwenden
+				</Button>
 			  </Dialog.Footer>
 			</Dialog.Content>
 		  </Dialog.Root>
