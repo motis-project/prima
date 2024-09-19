@@ -36,10 +36,10 @@ describe('blacklisting test', () => {
 	it('blacklisting success', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
+		const taxi = await addTaxi(company, capacities);
 
-		await setAvailability(taxi1, dateInXMinutes(0), dateInXMinutes(90));
-		await setTour(taxi1, dateInXMinutes(0), dateInXMinutes(90));
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
+		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(90));
 
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
@@ -54,9 +54,9 @@ describe('blacklisting test', () => {
 	it('blacklisting success with availability', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 3 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
+		const taxi = await addTaxi(company, capacities);
 
-		await setAvailability(taxi1, dateInXMinutes(0), dateInXMinutes(90));
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
 
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
@@ -71,9 +71,9 @@ describe('blacklisting test', () => {
 	it('blacklisting success with tour', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 3 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
+		const taxi = await addTaxi(company, capacities);
 
-		await setTour(taxi1, dateInXMinutes(0), dateInXMinutes(90));
+		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(90));
 
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
@@ -88,8 +88,8 @@ describe('blacklisting test', () => {
 	it('blacklisting success, 2 busstops with 2 times each', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 3 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
-		await setTour(taxi1, dateInXMinutes(0), dateInXMinutes(900));
+		const taxi = await addTaxi(company, capacities);
+		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
@@ -107,8 +107,8 @@ describe('blacklisting test', () => {
 	it('blacklisting success, luggage on seats', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 0 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
-		await setTour(taxi1, dateInXMinutes(0), dateInXMinutes(900));
+		const taxi = await addTaxi(company, capacities);
+		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
@@ -123,8 +123,8 @@ describe('blacklisting test', () => {
 	it('blacklisting fail, wrong busStop Zone', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 3 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
-		await setTour(taxi1, dateInXMinutes(0), dateInXMinutes(900));
+		const taxi = await addTaxi(company, capacities);
+		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
@@ -139,8 +139,8 @@ describe('blacklisting test', () => {
 	it('blacklisting fail, wrong user chosen Zone', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 3 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
-		await setTour(taxi1, dateInXMinutes(0), dateInXMinutes(900));
+		const taxi = await addTaxi(company, capacities);
+		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
 		const r: BookingRequestParameters = {
 			userChosen: inZittau,
@@ -155,8 +155,8 @@ describe('blacklisting test', () => {
 	it('blacklisting fail, too many passengers', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 3 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
-		await setTour(taxi1, dateInXMinutes(0), dateInXMinutes(900));
+		const taxi = await addTaxi(company, capacities);
+		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
@@ -171,8 +171,8 @@ describe('blacklisting test', () => {
 	it('blacklisting fail, too many bikes', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 3 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
-		await setTour(taxi1, dateInXMinutes(0), dateInXMinutes(900));
+		const taxi = await addTaxi(company, capacities);
+		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
@@ -187,8 +187,8 @@ describe('blacklisting test', () => {
 	it('blacklisting fail, too many wheelchairs', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 3 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
-		await setTour(taxi1, dateInXMinutes(0), dateInXMinutes(900));
+		const taxi = await addTaxi(company, capacities);
+		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
@@ -203,8 +203,8 @@ describe('blacklisting test', () => {
 	it('blacklisting fail, too much luggage', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 3 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
-		await setTour(taxi1, dateInXMinutes(0), dateInXMinutes(900));
+		const taxi = await addTaxi(company, capacities);
+		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
@@ -257,8 +257,8 @@ describe('blacklisting test', () => {
 	it('blacklisting, 1 busStop fails, other is succesful', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 3 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
-		await setTour(taxi1, dateInXMinutes(0), dateInXMinutes(900));
+		const taxi = await addTaxi(company, capacities);
+		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
@@ -278,8 +278,8 @@ describe('blacklisting test', () => {
 	it('blacklisting, 1 busStopTime fails, other is succesful', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 3 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
-		await setTour(taxi1, dateInXMinutes(0), dateInXMinutes(900));
+		const taxi = await addTaxi(company, capacities);
+		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
@@ -307,8 +307,8 @@ describe('blacklisting test', () => {
 	it('blacklisting, 1 busStop has not times and fails, other is succesful', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 3 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
-		await setTour(taxi1, dateInXMinutes(0), dateInXMinutes(900));
+		const taxi = await addTaxi(company, capacities);
+		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
 			busStops: [
@@ -327,8 +327,8 @@ describe('blacklisting test', () => {
 	it('blacklisting, no times', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 3 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
-		await setTour(taxi1, dateInXMinutes(0), dateInXMinutes(900));
+		const taxi = await addTaxi(company, capacities);
+		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
 			busStops: [{ times: [], coordinates: inNiesky }],
@@ -342,9 +342,9 @@ describe('blacklisting test', () => {
 	it('blacklisting success, availability barely overlaps (startfixed=false)', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
+		const taxi = await addTaxi(company, capacities);
 
-		await setAvailability(taxi1, dateInXMinutes(0), dateInXMinutes(90));
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
 
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
@@ -364,9 +364,9 @@ describe('blacklisting test', () => {
 	it('blacklisting success, availability barely does not overlap (startfixed=false)', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
+		const taxi = await addTaxi(company, capacities);
 
-		await setAvailability(taxi1, dateInXMinutes(0), dateInXMinutes(90));
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
 
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
@@ -386,9 +386,9 @@ describe('blacklisting test', () => {
 	it('blacklisting success, availability barely overlaps (startfixed=true)', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
+		const taxi = await addTaxi(company, capacities);
 
-		await setAvailability(taxi1, dateInXMinutes(0), dateInXMinutes(90));
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
 
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
@@ -405,9 +405,9 @@ describe('blacklisting test', () => {
 	it('blacklisting success, availability barely does not overlap (startfixed=true)', async () => {
 		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
 		const company = await addCompany(Zone.NIESKY);
-		const taxi1 = await addTaxi(company, capacities);
+		const taxi = await addTaxi(company, capacities);
 
-		await setAvailability(taxi1, dateInXMinutes(0), dateInXMinutes(90));
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
 
 		const r: BookingRequestParameters = {
 			userChosen: inNiesky,
