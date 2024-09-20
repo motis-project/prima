@@ -1,5 +1,5 @@
 import type { BusStop } from '$lib/busStop';
-import type { Company, Vehicle, Event } from '$lib/compositionTypes';
+import type { Company, Event } from '$lib/compositionTypes';
 import { Coordinates } from '$lib/location';
 import type { Range } from './capacitySimulation';
 
@@ -11,14 +11,12 @@ type RoutingCoordinates = {
 function iterateAllInsertions(
 	companies: Company[],
 	insertions: Map<number, Range[]>,
-	vehicleFn: (v: Vehicle) => void,
 	insertionFn: (events: Event[], insertionIdx: number, companyPos: number, eventPos: number) => void
 ) {
 	let companyPos = 0;
 	let eventPos = companies.length;
 	companies.forEach((company) => {
 		company.vehicles.forEach((vehicle) => {
-			vehicleFn(vehicle);
 			const events = vehicle.tours.flatMap((t) => t.events);
 			insertions.get(vehicle.id)!.forEach((insertion) => {
 				for (
@@ -55,18 +53,13 @@ export function gatherRoutingCoordinates(
 		}
 		userChosenMany[companyPos] = company.coordinates;
 	});
-	iterateAllInsertions(
-		companies,
-		insertionsByVehicle,
-		(_) => {},
-		(events, insertionIdx, _, eventPos) => {
-			const eventCoordinates = events[insertionIdx].coordinates;
-			for (let busStopIdx = 0; busStopIdx != busStops.length; ++busStopIdx) {
-				busStopMany[busStopIdx][eventPos] = eventCoordinates;
-			}
-			userChosenMany[eventPos] = eventCoordinates;
+	iterateAllInsertions(companies, insertionsByVehicle, (events, insertionIdx, _, eventPos) => {
+		const eventCoordinates = events[insertionIdx].coordinates;
+		for (let busStopIdx = 0; busStopIdx != busStops.length; ++busStopIdx) {
+			busStopMany[busStopIdx][eventPos] = eventCoordinates;
 		}
-	);
+		userChosenMany[eventPos] = eventCoordinates;
+	});
 	console.log(userChosenMany);
 	return {
 		busStopMany,
