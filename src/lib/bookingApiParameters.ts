@@ -2,7 +2,7 @@ import type { BusStop } from './busStop';
 import type { Capacities } from './capacities';
 import type { Coordinates } from './location';
 
-export type oneToManyCheckParameters = {
+export type CheckBookingValidityParameters = {
 	userChosen: Coordinates;
 	busStops: BusStop[];
 	startFixed: boolean;

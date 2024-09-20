@@ -65,13 +65,6 @@ export class Interval {
 		);
 	}
 
-	shrink(postponeStart: number, preponeEnd: number) {
-		return new Interval(
-			new Date(this.startTime.getTime() + postponeStart),
-			new Date(this.endTime.getTime() - preponeEnd)
-		);
-	}
-
 	isMergeable(other: Interval): boolean {
 		return this.overlaps(other) || this.touches(other);
 	}
@@ -97,29 +90,5 @@ export class Interval {
 		}
 		merged.push(unmerged.pop()!);
 		return merged;
-	};
-
-	intersect(other: Interval): Interval | undefined {
-		if (this.overlaps(other)) {
-			return new Interval(
-				new Date(Math.max(this.startTime.getTime(), other.startTime.getTime())),
-				new Date(Math.min(this.endTime.getTime(), other.endTime.getTime()))
-			);
-		}
-		return undefined;
-	}
-
-	static intersect = (many: Interval[], one: Interval): Interval[] => {
-		const result: Interval[] = [];
-		for (let i = 0; i != many.length; ++i) {
-			if (one.startTime.getTime() > many[i].endTime.getTime()) {
-				break;
-			}
-			if (!many[i].overlaps(one)) {
-				continue;
-			}
-			result.push(many[i].intersect(one)!);
-		}
-		return result;
 	};
 }
