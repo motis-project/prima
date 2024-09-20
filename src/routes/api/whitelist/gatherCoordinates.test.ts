@@ -109,6 +109,5 @@ describe('gather coordinates test', () => {
 		expect(coordinates.userChosenMany[5].lat).toBe(103);
 		expect(coordinates.busStopMany[0][5].lat).toBe(103);
 		expect(coordinates.busStopMany[1][5].lat).toBe(103);
-
 	});
 });

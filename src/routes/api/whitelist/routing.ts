@@ -12,12 +12,7 @@ function iterateAllInsertions(
 	companies: Company[],
 	insertions: Map<number, Range[]>,
 	vehicleFn: (v: Vehicle) => void,
-	insertionFn: (
-		events: Event[],
-		insertionIdx: number,
-		companyPos: number,
-		eventPos: number
-	) => void
+	insertionFn: (events: Event[], insertionIdx: number, companyPos: number, eventPos: number) => void
 ) {
 	let companyPos = 0;
 	let eventPos = companies.length;
