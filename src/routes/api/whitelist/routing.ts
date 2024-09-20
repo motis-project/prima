@@ -11,19 +11,17 @@ type RoutingCoordinates = {
 function iterateAllInsertions(
 	companies: Company[],
 	insertions: Map<number, Range[]>,
-	companyFn: (c: Company, companyPos: number) => number,
 	vehicleFn: (v: Vehicle) => void,
 	insertionFn: (
 		events: Event[],
 		insertionIdx: number,
 		companyPos: number,
 		eventPos: number
-	) => number
+	) => void
 ) {
 	let companyPos = 0;
-	let eventPos = 0;
+	let eventPos = companies.length;
 	companies.forEach((company) => {
-		eventPos = companyFn(company, companyPos);
 		company.vehicles.forEach((vehicle) => {
 			vehicleFn(vehicle);
 			const events = vehicle.tours.flatMap((t) => t.events);
@@ -33,11 +31,11 @@ function iterateAllInsertions(
 					insertionIdx != insertion.latestDropoff;
 					++insertionIdx
 				) {
-					eventPos = insertionFn(events, insertionIdx, companyPos, eventPos);
+					insertionFn(events, insertionIdx, companyPos, eventPos++);
 				}
 			});
 		});
-		companyPos = eventPos;
+		companyPos++;
 	});
 }
 
@@ -56,26 +54,25 @@ export function gatherRoutingCoordinates(
 		busStopMany[i] = new Array<Coordinates>(insertionCount);
 	}
 	const userChosenMany = new Array<Coordinates>(insertionCount);
+	companies.forEach((company, companyPos) => {
+		for (let busStopIdx = 0; busStopIdx != busStops.length; ++busStopIdx) {
+			busStopMany[busStopIdx][companyPos] = company.coordinates;
+		}
+		userChosenMany[companyPos] = company.coordinates;
+	});
 	iterateAllInsertions(
 		companies,
 		insertionsByVehicle,
-		(company, companyPos) => {
-			for (let busStopIdx = 0; busStopIdx != busStops.length; ++busStopIdx) {
-				busStopMany[busStopIdx][companyPos] = company.coordinates;
-			}
-			userChosenMany[companyPos++] = company.coordinates;
-			return companyPos;
-		},
 		(_) => {},
 		(events, insertionIdx, _, eventPos) => {
 			const eventCoordinates = events[insertionIdx].coordinates;
 			for (let busStopIdx = 0; busStopIdx != busStops.length; ++busStopIdx) {
 				busStopMany[busStopIdx][eventPos] = eventCoordinates;
 			}
-			userChosenMany[eventPos++] = eventCoordinates;
-			return eventPos;
+			userChosenMany[eventPos] = eventCoordinates;
 		}
 	);
+	console.log(userChosenMany);
 	return {
 		busStopMany,
 		userChosenMany

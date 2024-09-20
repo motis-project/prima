@@ -89,18 +89,18 @@ describe('gather coordinates test', () => {
 		expect(coordinates.userChosenMany[0].lat).toBe(5);
 		expect(coordinates.busStopMany[0][0].lat).toBe(5);
 		expect(coordinates.busStopMany[1][0].lat).toBe(5);
-		expect(coordinates.userChosenMany[3].lat).toBe(6);
-		expect(coordinates.busStopMany[0][3].lat).toBe(6);
-		expect(coordinates.busStopMany[1][3].lat).toBe(6);
+		expect(coordinates.userChosenMany[1].lat).toBe(6);
+		expect(coordinates.busStopMany[0][1].lat).toBe(6);
+		expect(coordinates.busStopMany[1][1].lat).toBe(6);
 
 		// Event coordinates
-		expect(coordinates.userChosenMany[1].lat).toBe(100);
-		expect(coordinates.busStopMany[0][1].lat).toBe(100);
-		expect(coordinates.busStopMany[1][1].lat).toBe(100);
+		expect(coordinates.userChosenMany[2].lat).toBe(100);
+		expect(coordinates.busStopMany[0][2].lat).toBe(100);
+		expect(coordinates.busStopMany[1][2].lat).toBe(100);
 
-		expect(coordinates.userChosenMany[2].lat).toBe(101);
-		expect(coordinates.busStopMany[0][2].lat).toBe(101);
-		expect(coordinates.busStopMany[1][2].lat).toBe(101);
+		expect(coordinates.userChosenMany[3].lat).toBe(101);
+		expect(coordinates.busStopMany[0][3].lat).toBe(101);
+		expect(coordinates.busStopMany[1][3].lat).toBe(101);
 
 		expect(coordinates.userChosenMany[4].lat).toBe(102);
 		expect(coordinates.busStopMany[0][4].lat).toBe(102);
