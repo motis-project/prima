@@ -3,6 +3,7 @@ import { fail } from '@sveltejs/kit';
 import { db } from '$lib/database';
 import { AddressGuess, geoCode } from '$lib/api.js';
 import { sql } from 'kysely';
+import { covers } from '$lib/sqlHelpers.js';
 
 export const load: PageServerLoad = async (event) => {
 	const companyId = event.locals.user?.company;
@@ -75,10 +76,7 @@ export const actions = {
 			!(await db
 				.selectFrom('zone')
 				.where((eb) =>
-					eb.and([
-						eb('zone.id', '=', community_area),
-						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${bestAddressGuess!.pos.lng}, ${bestAddressGuess!.pos.lat}),4326))`
-					])
+					eb.and([eb('zone.id', '=', community_area), covers(eb, bestAddressGuess!.pos)])
 				)
 				.executeTakeFirst())
 		) {
