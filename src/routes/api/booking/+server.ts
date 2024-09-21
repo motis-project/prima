@@ -8,17 +8,12 @@ import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { MAX_TRAVEL_DURATION, MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
 import { getFareEstimation } from './fare-estimation/fare_estimation.js';
+import { covers } from '$lib/sqlHelpers.js';
 
 const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 	const zoneContainingStartAndDestination = await db
 		.selectFrom('zone')
-		.where((eb) =>
-			eb.and([
-				eb('zone.is_community', '=', false),
-				sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${from.lng}, ${from.lat}),4326))`,
-				sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${to.lng}, ${to.lat}),4326))`
-			])
-		)
+		.where((eb) => eb.and([eb('zone.is_community', '=', false), covers(eb, from), covers(eb, to)]))
 		.executeTakeFirst();
 	return zoneContainingStartAndDestination != undefined;
 };
