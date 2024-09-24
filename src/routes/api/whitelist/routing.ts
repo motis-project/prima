@@ -32,7 +32,7 @@ export function gatherRoutingCoordinates(
 	const userChosenBackwardMany = new Array<Coordinates>();
 	const busStopForwardMany = new Array<Coordinates[]>(busStops.length);
 	const busStopBackwardMany = new Array<Coordinates[]>(busStops.length);
-	for(let busStopIdx=0;busStopIdx!=busStops.length;++busStopIdx){
+	for (let busStopIdx = 0; busStopIdx != busStops.length; ++busStopIdx) {
 		busStopForwardMany[busStopIdx] = new Array<Coordinates>();
 		busStopBackwardMany[busStopIdx] = new Array<Coordinates>();
 	}
@@ -53,15 +53,17 @@ export function gatherRoutingCoordinates(
 		busStopCompanyFilter,
 		insertionsByVehicle,
 		(busStopIdx, companyIdx, prevEventPos_, nextEventPos_, vehicle, insertionIdx) => {
-			let backwardMany = busStopIdx == undefined ? userChosenBackwardMany:busStopBackwardMany[busStopIdx];
-			let forwardMany = busStopIdx==undefined?userChosenForwardMany:busStopForwardMany[busStopIdx];
-				if (insertionIdx != 0) {
-					backwardMany.push(vehicle.events[insertionIdx-1].coordinates);
-				}
-				if (insertionIdx != vehicle.events.length) {
-					forwardMany.push(vehicle.events[insertionIdx].coordinates);
-				}
+			const backwardMany =
+				busStopIdx == undefined ? userChosenBackwardMany : busStopBackwardMany[busStopIdx];
+			const forwardMany =
+				busStopIdx == undefined ? userChosenForwardMany : busStopForwardMany[busStopIdx];
+			if (insertionIdx != 0) {
+				backwardMany.push(vehicle.events[insertionIdx - 1].coordinates);
 			}
+			if (insertionIdx != vehicle.events.length) {
+				forwardMany.push(vehicle.events[insertionIdx].coordinates);
+			}
+		}
 	);
 	return {
 		busStopForwardMany,

@@ -373,7 +373,7 @@ describe('gather coordinates test', () => {
 		expect(coordinates.busStopBackwardMany[0]).toHaveLength(3);
 		expect(coordinates.busStopForwardMany[0]).toHaveLength(3);
 		expect(coordinates.busStopBackwardMany[1]).toHaveLength(6);
-			expect(coordinates.busStopForwardMany[1]).toHaveLength(6);
+		expect(coordinates.busStopForwardMany[1]).toHaveLength(6);
 		// Company coordinates
 		expect(coordinates.userChosenBackwardMany[0].lat).toBe(5);
 		expect(coordinates.userChosenForwardMany[0].lat).toBe(5);
@@ -460,7 +460,7 @@ describe('gather coordinates test', () => {
 		expect(coordinates.userChosenForwardMany[0].lat).toBe(5);
 		expect(coordinates.busStopBackwardMany[1][0].lat).toBe(5);
 		expect(coordinates.busStopForwardMany[1][0].lat).toBe(5);
-		
+
 		expect(coordinates.userChosenBackwardMany[1].lat).toBe(6);
 		expect(coordinates.userChosenForwardMany[1].lat).toBe(6);
 		expect(coordinates.busStopBackwardMany[1][1].lat).toBe(6);
