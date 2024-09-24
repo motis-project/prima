@@ -2,10 +2,9 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
-	import type { ActionData, PageData } from './$types';
 	import * as Table from '$lib/components/ui/table/index.js';
 
-	const { data, form } = $props<{ data: PageData; form: ActionData }>();
+	const { data, form } = $props();
 </script>
 
 <div class="w-full h-full">
@@ -21,8 +20,7 @@
 			<div
 				class="mt-1 ml-1 text-[0.8rem] font-medium"
 				class:text-green-600={form?.updated}
-				class:text-destructive={form?.incorrect}
-				class:text-yellow-600={form?.existed}
+				class:text-destructive={form?.incorrect || form?.missing}
 			>
 				{#if form?.missing}
 					Das Email Feld muss ausgefüllt werden.
