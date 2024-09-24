@@ -29,9 +29,6 @@ jobs:
       - name: Svelte Check
         run: npm run check
 
-      - name: Unit Tests
-        run: npm run test:unit
-
       - name: Install Playwright Dependencies
         run: npx playwright install
 
@@ -43,6 +40,9 @@ jobs:
           sleep 5
           echo "CREATE DATABASE prima;" | PGPASSWORD=pw psql postgresql://localhost:6500 --user postgres
           npx playwright test
+
+      - name: Unit Tests
+        run: npm run test:unit
 
       - name: Docker setup-buildx
         uses: docker/setup-buildx-action@v3
