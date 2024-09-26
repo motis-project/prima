@@ -109,23 +109,6 @@ export class Interval {
 		return undefined;
 	}
 
-	static intersect = (many: Interval[], one: Interval | undefined): Interval[] => {
-		if (one == undefined) {
-			return [];
-		}
-		const result: Interval[] = [];
-		for (let i = 0; i != many.length; ++i) {
-			if (one.startTime.getTime() > many[i].endTime.getTime()) {
-				break;
-			}
-			if (!many[i].overlaps(one)) {
-				continue;
-			}
-			result.push(many[i].intersect(one)!);
-		}
-		return result;
-	};
-
 	covers(time: Date): boolean {
 		return this.startTime <= time && this.endTime >= time;
 	}

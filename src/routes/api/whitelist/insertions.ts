@@ -12,14 +12,14 @@ import {
 	TAXI_WAITING_TIME_COST_FACTOR
 } from '$lib/constants';
 
-enum InsertionType {
+export enum InsertionType {
 	CONNECT,
 	APPEND,
 	PREPEND,
 	INSERT
 }
 
-enum ToInsert {
+export enum ToInsert {
 	PICKUP,
 	DROPOFF,
 	BOTH
@@ -58,7 +58,7 @@ type Insertion = {
 	event2: number;
 };
 
-type InsertionDurations = {
+export type InsertionDurations = {
 	approach: number;
 	return: number;
 	pickupToDropoff: number;
