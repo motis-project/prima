@@ -9,3 +9,7 @@ export function minutesToMs(minutes: number) {
 export function hoursToMs(hours: number) {
 	return hours * 3600000;
 }
+
+export function yearsToMs(years: number) {
+	return years * 365 * 3600000 * 24;
+}
