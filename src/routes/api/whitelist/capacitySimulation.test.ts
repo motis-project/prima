@@ -13,7 +13,12 @@ function createEventCapacitiesOnly(capacities: Capacities, is_pickup: boolean): 
 		time: new Interval(now, now),
 		id: 1,
 		coordinates: new Coordinates(1, 1),
-		tourId: 1
+		tourId: 1,
+		arrival: new Date(),
+		departure: new Date(),
+		communicated: new Date(),
+		durationFromPrev: 0,
+		durationToNext: 0
 	};
 }
 

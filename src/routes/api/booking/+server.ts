@@ -9,6 +9,7 @@ import { MAX_TRAVEL_DURATION, MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
 import { getFareEstimation } from './fare-estimation/fare_estimation.js';
 import { covers } from '$lib/sqlHelpers.js';
+import type { RequestEvent } from './$types';
 
 const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 	const zoneContainingStartAndDestination = await db
@@ -18,7 +19,7 @@ const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 	return zoneContainingStartAndDestination != undefined;
 };
 
-export const POST = async (event) => {
+export const POST = async (event: RequestEvent) => {
 	const customer = event.locals.user;
 	if (!customer) {
 		return error(403);
@@ -427,7 +428,9 @@ export const POST = async (event) => {
 					address: startAddress.id,
 					request: requestId!,
 					tour: tourId!,
-					customer: customerId
+					customer: customerId,
+					durationFromPrev: 0,
+					durationToNext: 0
 				},
 				{
 					is_pickup: false,
@@ -438,7 +441,9 @@ export const POST = async (event) => {
 					address: targetAddress.id,
 					request: requestId!,
 					tour: tourId!,
-					customer: customerId
+					customer: customerId,
+					durationFromPrev: 0,
+					durationToNext: 0
 				}
 			])
 			.execute();
