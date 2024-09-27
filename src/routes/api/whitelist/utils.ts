@@ -22,13 +22,14 @@ export function iterateAllInsertions(
 		companyFilter: boolean[] | undefined,
 		busStopIdx: number | undefined
 	) => {
-		let prevEventIdx = 0;
-		let nextEventIdx = 0;
+		let prevEventIdxInRoutingResults = 0;
+		let nextEventIdxInRoutingResults = 0;
+		let companyIdxInRoutingResults = 0;
 		companies.forEach((company, companyIdx) => {
 			if (companyFilter != undefined && !companyFilter[companyIdx]) {
 				return;
 			}
-			company.vehicles.forEach((vehicle, vid) => {
+			company.vehicles.forEach((vehicle) => {
 				insertions.get(vehicle.id)!.forEach((insertion) => {
 					for (
 						let outerIdx = insertion.earliestPickup;
@@ -39,8 +40,9 @@ export function iterateAllInsertions(
 							insertionIdx: outerIdx,
 							companyIdx,
 							vehicle,
-							prevEventIdx,
-							nextEventIdx
+							prevEventIdxInRoutingResults,
+							nextEventIdxInRoutingResults,
+							companyIdxInRoutingResults
 						};
 						if (type == ITERATE_INSERTIONS_MODE.SINGLE) {
 							insertionFn(busStopIdx, info, undefined);
@@ -54,11 +56,12 @@ export function iterateAllInsertions(
 							}
 						}
 						if (outerIdx != 0) {
-							prevEventIdx++;
+							prevEventIdxInRoutingResults++;
 						}
 						if (outerIdx != vehicle.events.length) {
-							nextEventIdx++;
+							nextEventIdxInRoutingResults++;
 						}
+						companyIdxInRoutingResults++;
 					}
 				});
 			});
@@ -66,7 +69,6 @@ export function iterateAllInsertions(
 	};
 	iterateInsertions(undefined, undefined);
 	busStopCompanyFilter.forEach((companyFilter, busStopIdx) => {
-		const companyCount = companyFilter.filter((f) => f).length;
 		iterateInsertions(companyFilter, busStopIdx);
 	});
 }

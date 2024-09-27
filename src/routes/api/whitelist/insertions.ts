@@ -261,22 +261,22 @@ export function computeTravelDurations(
 			const fullWindowDuration = nextTime.getTime() - prevTime.getTime();
 			let window: Interval | undefined = new Interval(prevTime, nextTime);
 			console.log(insertionInfo.vehicle.events.length);
-			console.log('aa', insertionInfo.nextEventIdx);
+			console.log('aa', insertionInfo.nextEventIdxInRoutingResults);
 			console.log(next == undefined);
 			console.log(insertionInfo.insertionIdx);
 			console.log(insertionInfo.insertionIdx == insertionInfo.vehicle.events.length);
 			const toCompanyFromUserChosen =
-				routingResults.userChosen.toCompany[insertionInfo.companyIdx].duration;
+				routingResults.userChosen.toCompany[insertionInfo.companyIdxInRoutingResults].duration;
 			const fromCompanyToUserChosen =
-				routingResults.userChosen.fromCompany[insertionInfo.companyIdx].duration;
+				routingResults.userChosen.fromCompany[insertionInfo.companyIdxInRoutingResults].duration;
 			const fromPrevToUserChosen =
 				prev == undefined
 					? 0
-					: routingResults.userChosen.fromPrevEvent[insertionInfo.prevEventIdx].duration;
+					: routingResults.userChosen.fromPrevEvent[insertionInfo.prevEventIdxInRoutingResults].duration;
 			const toNextFromUserChosen =
 				next == undefined
 					? 0
-					: routingResults.userChosen.toNextEvent[insertionInfo.nextEventIdx].duration;
+					: routingResults.userChosen.toNextEvent[insertionInfo.nextEventIdxInRoutingResults].duration;
 			if (busStopIdx == undefined) {
 				// insert userChosen
 				if (type == (startFixed ? InsertionType.APPEND : InsertionType.PREPEND)) {
@@ -347,12 +347,12 @@ export function computeTravelDurations(
 			const times = busStopTimes[busStopIdx];
 			for (let timeIdx = 0; timeIdx != times.length; ++timeIdx) {
 				const fromCompanyToBus =
-					busStopRoutingResult.fromCompany[insertionInfo.companyIdx].duration;
-				const toCompanyFromBus = busStopRoutingResult.toCompany[insertionInfo.companyIdx].duration;
+					busStopRoutingResult.fromCompany[insertionInfo.companyIdxInRoutingResults].duration;
+				const toCompanyFromBus = busStopRoutingResult.toCompany[insertionInfo.companyIdxInRoutingResults].duration;
 				const fromPrevToBus =
-					busStopRoutingResult.fromPrevEvent[insertionInfo.prevEventIdx].duration;
+					busStopRoutingResult.fromPrevEvent[insertionInfo.prevEventIdxInRoutingResults].duration;
 				const toNextFromBus =
-					routingResults.userChosen.toNextEvent[insertionInfo.nextEventIdx].duration;
+					routingResults.userChosen.toNextEvent[insertionInfo.nextEventIdxInRoutingResults].duration;
 				// insert userChosen coordinates and busstop
 				const approachDurationBoth =
 					(startFixed

@@ -2,8 +2,9 @@ import type { Vehicle } from '$lib/compositionTypes';
 
 export type InsertionInfo = {
 	companyIdx: number;
-	prevEventIdx: number;
-	nextEventIdx: number;
+	companyIdxInRoutingResults: number;
+	prevEventIdxInRoutingResults: number;
+	nextEventIdxInRoutingResults: number;
 	vehicle: Vehicle;
 	insertionIdx: number;
 };
