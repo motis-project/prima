@@ -1,5 +1,6 @@
-import type { Company, Vehicle } from '$lib/compositionTypes';
+import type { Company } from '$lib/compositionTypes';
 import type { Range } from './capacitySimulation';
+import type { InsertionInfo } from './insertionTypes';
 
 export enum ITERATE_INSERTIONS_MODE {
 	SINGLE,
@@ -13,83 +14,59 @@ export function iterateAllInsertions(
 	insertions: Map<number, Range[]>,
 	insertionFn: (
 		busStopIdx: number | undefined,
-		companyIdx: number,
-		prevEventPos: number | undefined,
-		nextEventPos: number | undefined,
-		vehicle: Vehicle,
-		outerInsertionIdx: number,
+		info: InsertionInfo,
 		innerInsertionIdx: number | undefined
 	) => void
 ) {
 	const iterateInsertions = (
 		companyFilter: boolean[] | undefined,
-		busStopIdx: number | undefined,
-		prevEventPos: number,
-		nextEventPos: number
+		busStopIdx: number | undefined
 	) => {
+		let prevEventIdx=0;
+		let nextEventIdx=0;
 		companies.forEach((company, companyIdx) => {
 			if (companyFilter != undefined && !companyFilter[companyIdx]) {
 				return;
 			}
-			console.log('company', companyIdx);
 			company.vehicles.forEach((vehicle, vid) => {
-				console.log('vehicle', vid);
 				insertions.get(vehicle.id)!.forEach((insertion) => {
 					for (
 						let outerIdx = insertion.earliestPickup;
-						outerIdx != insertion.latestDropoff;
+						outerIdx != insertion.latestDropoff + 1;
 						++outerIdx
 					) {
-						//console.log('insertion', outerIdx);
-						//console.log('nnext', nextEventPos);
+						const info = {
+							insertionIdx: outerIdx,
+							companyIdx,
+							vehicle,
+							prevEventIdx,
+							nextEventIdx
+						};
 						if (type == ITERATE_INSERTIONS_MODE.SINGLE) {
-							insertionFn(
-								busStopIdx,
-								companyIdx,
-								outerIdx == 0 ? undefined : prevEventPos,
-								outerIdx == vehicle.events.length ? undefined : nextEventPos,
-								vehicle,
-								outerIdx,
-								undefined
-							);
+							insertionFn(busStopIdx, info, undefined);
 						} else {
 							for (
 								let innerIdx = outerIdx + 1;
 								innerIdx != insertion.latestDropoff + 1;
 								++innerIdx
 							) {
-								insertionFn(
-									busStopIdx,
-									companyIdx,
-									outerIdx == 0 ? undefined : prevEventPos,
-									outerIdx == vehicle.events.length ? undefined : nextEventPos,
-									vehicle,
-									outerIdx,
-									innerIdx
-								);
+								insertionFn(busStopIdx, info, innerIdx);
 							}
 						}
-						console.log('outer', outerIdx);
 						if (outerIdx != 0) {
-							prevEventPos++;
+							prevEventIdx++;
 						}
 						if (outerIdx != vehicle.events.length) {
-							nextEventPos++;
+							nextEventIdx++;
 						}
 					}
 				});
 			});
 		});
 	};
-	let prevEventPos = companies.length;
-	let nextEventPos = companies.length;
-	iterateInsertions(undefined, undefined, prevEventPos, nextEventPos);
+	iterateInsertions(undefined, undefined);
 	busStopCompanyFilter.forEach((companyFilter, busStopIdx) => {
-		console.log('busstop', busStopIdx);
-		console.assert(companyFilter.length == companies.length);
 		const companyCount = companyFilter.filter((f) => f).length;
-		prevEventPos = companyCount;
-		nextEventPos = companyCount;
-		iterateInsertions(companyFilter, busStopIdx, prevEventPos, nextEventPos);
+		iterateInsertions(companyFilter, busStopIdx);
 	});
 }

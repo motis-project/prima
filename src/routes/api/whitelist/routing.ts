@@ -54,16 +54,16 @@ export function gatherRoutingCoordinates(
 		companies,
 		busStopCompanyFilter,
 		insertionsByVehicle,
-		(busStopIdx, companyIdx, prevEventPos_, nextEventPos_, vehicle, insertionIdx) => {
+		(busStopIdx, insertionInfo) => {
 			const backwardMany =
 				busStopIdx == undefined ? userChosenBackwardMany : busStopBackwardMany[busStopIdx];
 			const forwardMany =
 				busStopIdx == undefined ? userChosenForwardMany : busStopForwardMany[busStopIdx];
-			if (insertionIdx != 0) {
-				backwardMany.push(vehicle.events[insertionIdx - 1].coordinates);
+			if (insertionInfo.insertionIdx != 0) {
+				backwardMany.push(insertionInfo.vehicle.events[insertionInfo.insertionIdx - 1].coordinates);
 			}
-			if (insertionIdx != vehicle.events.length) {
-				forwardMany.push(vehicle.events[insertionIdx].coordinates);
+			if (insertionInfo.insertionIdx != insertionInfo.vehicle.events.length) {
+				forwardMany.push(insertionInfo.vehicle.events[insertionInfo.insertionIdx].coordinates);
 			}
 		}
 	);
