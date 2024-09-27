@@ -31,7 +31,7 @@ const createVehicle = (id: number, events: Event[]): Vehicle => {
 	};
 };
 
-const createEvent = (coordinates: Coordinates): Event => {
+const createEvent = (coordinates: Coordinates, time: number): Event => {
 	return {
 		capacities: { passengers: 0, bikes: 0, wheelchairs: 0, luggage: 0 },
 		is_pickup: true,
@@ -39,7 +39,7 @@ const createEvent = (coordinates: Coordinates): Event => {
 		id: 1,
 		coordinates,
 		tourId: 1,
-		communicated: createDate(6),
+		communicated: createDate(time),
 		arrival: createDate(6),
 		departure: createDate(3),
 		durationFromPrev: 0,
@@ -55,14 +55,15 @@ describe('compute Intervals for single insertions test', () => {
 			createCompany(
 				[
 					createVehicle(1, [
-						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
-						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
-						createEvent(new Coordinates(eventLatLng, eventLatLng++))
+						createEvent(new Coordinates(eventLatLng, eventLatLng++), 4),
+						createEvent(new Coordinates(eventLatLng, eventLatLng++),5),
+						createEvent(new Coordinates(eventLatLng, eventLatLng++),6)
 					])
 				],
 				new Coordinates(companyLatLng, companyLatLng++)
 			)
 		];
+		companies[0].vehicles.forEach((v)=>v.events.forEach((e)=>{e.arrival=createDate(2);e.departure=createDate(7);}));
 		const insertions = new Map<number, Range[]>();
 		insertions.set(1, [{ earliestPickup: 0, latestDropoff: 3 }]);
 		const travelDurations = [50];
@@ -108,7 +109,7 @@ describe('compute Intervals for single insertions test', () => {
 			busStopTimes,
 			[[true]]
 		);
-		console.log(result);
+		console.log("res", result);
 		expect(1).toBe(1);
 	});
 });
