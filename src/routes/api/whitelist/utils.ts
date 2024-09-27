@@ -25,22 +25,16 @@ export function iterateAllInsertions(
 		nextEventPos: number
 	) => {
 		companies.forEach((company, companyIdx) => {
-			console.log('company', companyIdx);
 			if (companyFilter != undefined && !companyFilter[companyIdx]) {
 				return;
 			}
 			company.vehicles.forEach((vehicle, vid) => {
-				console.log('vehicle', vid);
-				console.log(insertions);
 				insertions.get(vehicle.id)!.forEach((insertion) => {
-					console.log(insertion);
 					for (
 						let outerIdx = insertion.earliestPickup;
 						outerIdx != insertion.latestDropoff + 1;
 						++outerIdx
 					) {
-						console.log('insertion', outerIdx);
-						//console.log('nnext', nextEventPos);
 						const info = 
 						{
 							insertionIdx: outerIdx,
@@ -49,8 +43,6 @@ export function iterateAllInsertions(
 							prevEventIdx: outerIdx == 0 ? undefined : prevEventPos,
 							nextEventIdx: outerIdx == vehicle.events.length ? undefined : nextEventPos
 						};
-						//console.log(info);
-						console.log("events: ", vehicle.events.length);
 						if (type == ITERATE_INSERTIONS_MODE.SINGLE) {
 							insertionFn(
 								busStopIdx,
@@ -84,10 +76,7 @@ export function iterateAllInsertions(
 	let prevEventPos = companies.length;
 	let nextEventPos = companies.length;
 	iterateInsertions(undefined, undefined, prevEventPos, nextEventPos);
-	console.log("companies done");
 	busStopCompanyFilter.forEach((companyFilter, busStopIdx) => {
-		console.log('busstop', busStopIdx);
-		console.assert(companyFilter.length == companies.length);
 		const companyCount = companyFilter.filter((f) => f).length;
 		prevEventPos = companyCount;
 		nextEventPos = companyCount;
