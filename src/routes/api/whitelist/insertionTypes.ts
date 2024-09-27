@@ -1,12 +1,12 @@
-import type { Vehicle } from "$lib/compositionTypes";
+import type { Vehicle } from '$lib/compositionTypes';
 
 export type InsertionInfo = {
-		companyIdx: number,
-		prevEventIdx: number | undefined,
-		nextEventIdx: number | undefined,
-		vehicle: Vehicle,
-		insertionIdx: number
-}
+	companyIdx: number;
+	prevEventIdx: number;
+	nextEventIdx: number;
+	vehicle: Vehicle;
+	insertionIdx: number;
+};
 
 export type InsertionEvaluation = {
 	userChosen: TimeCost;
@@ -20,11 +20,11 @@ export type InsertionEvaluation = {
 	tour2: number;
 	event1: number;
 	event2: number;
-}
+};
 
 export type TimeCost = {
-        time: Date;
-        cost: Cost;
+	time: Date;
+	cost: Cost;
 };
 
 export type Cost = {

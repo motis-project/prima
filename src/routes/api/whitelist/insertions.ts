@@ -3,7 +3,7 @@ import { Interval } from '$lib/interval';
 import { ITERATE_INSERTIONS_MODE, iterateAllInsertions } from './utils';
 import { type RoutingResults } from './routing';
 import type { Range } from './capacitySimulation';
-import { minutesToMs } from '$lib/time_utils';
+import { hoursToMs, minutesToMs } from '$lib/time_utils';
 import {
 	MIN_PREP_MINUTES,
 	PASSENGER_CHANGE_TIME,
@@ -11,6 +11,8 @@ import {
 	TAXI_DRIVING_TIME_COST_FACTOR,
 	TAXI_WAITING_TIME_COST_FACTOR
 } from '$lib/constants';
+import type { InsertionInfo } from './insertionTypes';
+import { Vehicle } from '../../(user)/taxi/types';
 
 export enum InsertionType {
 	CONNECT,
@@ -185,91 +187,98 @@ export function computeTravelDurations(
 	busStopCompanyFilter: boolean[][]
 ): Insertion[][] {
 	const allInsertions = new Array<Insertion[]>();
-	iterateAllInsertions(
-		ITERATE_INSERTIONS_MODE.SINGLE,
-		companies,
-		busStopCompanyFilter,
-		possibleInsertionsByVehicle,
-		(busStopIdx, insertionInfo, _) => {
-			if (insertionInfo.prevEventIdx == undefined) {
+	const insertionFn = (
+		busStopIdx: number | undefined,
+		insertionInfo: InsertionInfo,
+		_: number | undefined
+	) => {
+		const prev: Event | undefined =
+			insertionInfo.insertionIdx == 0
+				? undefined
+				: insertionInfo.vehicle.events[insertionInfo.insertionIdx - 1];
+		const next: Event | undefined =
+			insertionInfo.insertionIdx == insertionInfo.vehicle.events.length
+				? undefined
+				: insertionInfo.vehicle.events[insertionInfo.insertionIdx];
+		cases.forEach((type) => {
+			if (prev == undefined && type != InsertionType.PREPEND) {
 				return;
 			}
-			if (insertionInfo.nextEventIdx == undefined) {
+			if (next == undefined && type != InsertionType.APPEND) {
 				return;
 			}
-			const prev: Event | undefined =
-				insertionInfo.insertionIdx == 0 ? undefined : insertionInfo.vehicle.events[insertionInfo.insertionIdx - 1];
-			const next: Event | undefined =
-				insertionInfo.insertionIdx == insertionInfo.vehicle.events.length ? undefined : insertionInfo.vehicle.events[insertionInfo.insertionIdx];
-			cases.forEach((type) => {
+			if (
+				prev != undefined &&
+				next != undefined &&
+				(prev.tourId == next.tourId) != (type == InsertionType.INSERT)
+			) {
+				return;
+			}
+			const returnsToCompany = type === InsertionType.CONNECT || type === InsertionType.APPEND;
+			const comesFromCompany = type === InsertionType.CONNECT || type === InsertionType.PREPEND;
+
+			const prevTime =
+				prev == undefined ? new Date(0) : comesFromCompany ? prev.arrival : prev.communicated;
+			if (prevTime < new Date(Date.now() + minutesToMs(MIN_PREP_MINUTES))) {
+				return;
+			}
+			const nextTime =
+				next == undefined
+					? new Date(Date.now() + hoursToMs(240000))
+					: returnsToCompany
+						? next.departure
+						: next.communicated;
+			const fullWindowDuration = nextTime.getTime() - prevTime.getTime();
+			let window: Interval | undefined = new Interval(prevTime, nextTime);
+			if (busStopIdx == undefined) {
+				// insert userChosen
 				if (type == (startFixed ? InsertionType.APPEND : InsertionType.PREPEND)) {
 					return;
 				}
-				if (
-					prev == undefined ||
-					next == undefined ||
-					(prev.tourId == next.tourId) != (type == InsertionType.INSERT)
-				) {
+				console.assert(
+					insertionInfo.prevEventIdx != 0 || comesFromCompany,
+					'Accessing nonexistin previous event.'
+				);
+				console.assert(
+					insertionInfo.nextEventIdx != insertionInfo.vehicle.events.length || returnsToCompany,
+					'Accessing nonexisting next event.'
+				);
+				const toInsert = startFixed ? ToInsert.DROPOFF : ToInsert.PICKUP;
+				const cost = evaluateInsertion(
+					type,
+					window,
+					{
+						approach: comesFromCompany
+							? routingResults.userChosen.fromCompany[insertionInfo.companyIdx].duration
+							: routingResults.userChosen.fromPrevEvent[insertionInfo.prevEventIdx].duration,
+						return: returnsToCompany
+							? routingResults.userChosen.toCompany[insertionInfo.companyIdx].duration
+							: routingResults.userChosen.toNextEvent[insertionInfo.nextEventIdx].duration,
+						pickupToDropoff: 0,
+						toNext: next == undefined ? 0 : next.durationFromPrev,
+						fromPrev: prev == undefined ? 0 : prev.durationToNext,
+						fullWindow: fullWindowDuration
+					},
+					toInsert,
+					allInsertions[insertionInfo.insertionIdx][toInsert].userChosen,
+					undefined,
+					startFixed
+				);
+				if (cost == undefined) {
 					return;
 				}
-				const returnsToCompany = type === InsertionType.CONNECT || type === InsertionType.APPEND;
-				const comesFromCompany = type === InsertionType.CONNECT || type === InsertionType.PREPEND;
-
-				const prevTime = comesFromCompany ? prev.arrival : prev.communicated;
-				if (prevTime < new Date(Date.now() + minutesToMs(MIN_PREP_MINUTES))) {
-					return;
-				}
-				const nextTime = returnsToCompany ? next.departure : next.communicated;
-				const fullWindowDuration = nextTime.getTime() - prevTime.getTime();
-				let window: Interval | undefined = new Interval(prevTime, nextTime);
-				if (busStopIdx == undefined) {
-					// insert userChosen
-					if (type == (startFixed ? InsertionType.PREPEND : InsertionType.APPEND)) {
-						return;
-					}
-					const approachDuration = comesFromCompany
-						? routingResults.userChosen.fromCompany[insertionInfo.companyIdx].duration
-						: routingResults.userChosen.fromPrevEvent[insertionInfo.prevEventIdx!].duration;
-					const returnDuration = returnsToCompany
-						? routingResults.userChosen.toCompany[insertionInfo.companyIdx].duration
-						: routingResults.userChosen.toNextEvent[insertionInfo.nextEventIdx!].duration;
-					const toInsert = startFixed ? ToInsert.DROPOFF : ToInsert.PICKUP;
-					const cost = evaluateInsertion(
-						type,
-						window,
-						{
-							approach: approachDuration,
-							return: returnDuration,
-							pickupToDropoff: 0,
-							toNext: next.durationFromPrev,
-							fromPrev: prev.durationToNext,
-							fullWindow: fullWindowDuration
-						},
-						toInsert,
-						allInsertions[insertionInfo.insertionIdx][toInsert].userChosen,
-						undefined,
-						startFixed
-					);
-					if (cost == undefined) {
-						return;
-					}
-					allInsertions[insertionInfo.insertionIdx][toInsert].userChosen = cost;
-					return;
-				}
-				const relevantAvailabilities = (function () {
-					switch (type) {
-						case InsertionType.APPEND:
-							return insertionInfo.vehicle.availabilities.filter((availability) => availability.covers(prevTime));
-						case InsertionType.PREPEND:
-							return insertionInfo.vehicle.availabilities.filter((availability) => availability.covers(nextTime));
-						case InsertionType.CONNECT:
-							return insertionInfo.vehicle.availabilities.filter((availability) =>
+				allInsertions[insertionInfo.insertionIdx][toInsert].userChosen = cost;
+				return;
+			}
+			if (type != InsertionType.INSERT) {
+				const relevantAvailabilities =
+					type == InsertionType.CONNECT
+						? insertionInfo.vehicle.availabilities.filter((availability) =>
 								availability.contains(new Interval(prevTime, nextTime))
+							)
+						: insertionInfo.vehicle.availabilities.filter((availability) =>
+								availability.covers(prevTime)
 							);
-						case InsertionType.INSERT:
-							console.assert(false, 'unexpected InsertionType in computeTravelDurations');
-					}
-				})();
 
 				console.assert(
 					relevantAvailabilities != undefined && relevantAvailabilities.length < 2,
@@ -278,102 +287,115 @@ export function computeTravelDurations(
 				if (relevantAvailabilities == undefined || relevantAvailabilities.length == 0) {
 					return;
 				}
-				const relevantAvailability = relevantAvailabilities[0];
-				window = window.intersect(relevantAvailability);
+				window = window.intersect(relevantAvailabilities[0]);
 				if (window == undefined) {
 					return;
 				}
-				const busStopRoutingResult = routingResults.busStops[busStopIdx];
-				const travelDuration = travelDurations[busStopIdx];
-				const times = busStopTimes[busStopIdx];
-				for (let timeIdx = 0; timeIdx != times.length; ++timeIdx) {
-					// insert busstop
-					const approachDuration = comesFromCompany
-						? busStopRoutingResult.fromCompany[insertionInfo.companyIdx].duration
-						: busStopRoutingResult.fromPrevEvent[insertionInfo.prevEventIdx!].duration;
-					const returnDuration = returnsToCompany
-						? busStopRoutingResult.toCompany[insertionInfo.companyIdx].duration
-						: busStopRoutingResult.toNextEvent[insertionInfo.nextEventIdx!].duration;
-					const bestTime = getBestTime(
-						approachDuration,
-						returnDuration,
-						window,
-						times[timeIdx],
-						startFixed
-					);
-					if (bestTime != undefined) {
-						const toInsert = startFixed ? ToInsert.PICKUP : ToInsert.DROPOFF;
-						const timeCost = evaluateInsertion(
-							type,
-							window,
-							{
-								approach: approachDuration,
-								return: returnDuration,
-								pickupToDropoff: travelDuration,
-								toNext: next.durationFromPrev,
-								fromPrev: prev.durationToNext,
-								fullWindow: fullWindowDuration
-							},
-							toInsert,
-							allInsertions[insertionInfo.insertionIdx][toInsert].both[busStopIdx][timeIdx],
-							times[timeIdx],
-							startFixed
-						);
-						if (timeCost != undefined) {
-							allInsertions[insertionInfo.insertionIdx][toInsert].busStops[busStopIdx][timeIdx] = timeCost;
-						}
-					}
+			}
+			const busStopRoutingResult = routingResults.busStops[busStopIdx];
+			const travelDuration = travelDurations[busStopIdx];
+			const times = busStopTimes[busStopIdx];
+			for (let timeIdx = 0; timeIdx != times.length; ++timeIdx) {
+				// insert userChosen coordinates and busstop
+				const approachDurationBoth =
+					(startFixed
+						? comesFromCompany
+							? busStopRoutingResult.fromCompany[insertionInfo.companyIdx].duration
+							: busStopRoutingResult.fromPrevEvent[insertionInfo.prevEventIdx].duration
+						: comesFromCompany
+							? routingResults.userChosen.fromCompany[insertionInfo.companyIdx].duration
+							: routingResults.userChosen.fromPrevEvent[insertionInfo.prevEventIdx].duration) +
+					travelDuration;
+				const returnDurationBoth =
+					(startFixed
+						? returnsToCompany
+							? routingResults.userChosen.toCompany[insertionInfo.nextEventIdx].duration
+							: routingResults.userChosen.toNextEvent[insertionInfo.nextEventIdx].duration
+						: returnsToCompany
+							? busStopRoutingResult.toCompany[insertionInfo.companyIdx].duration
+							: busStopRoutingResult.toNextEvent[insertionInfo.nextEventIdx].duration) +
+					travelDuration;
+				const bestTimeBoth = getBestTime(
+					approachDurationBoth,
+					returnDurationBoth,
+					window,
+					times[timeIdx],
+					startFixed
+				);
+				if (bestTimeBoth == undefined) {
+					continue;
+				}
+				const timeCost = evaluateInsertion(
+					type,
+					window,
+					{
+						approach: approachDurationBoth,
+						return: returnDurationBoth,
+						pickupToDropoff: travelDuration,
+						toNext: next == undefined ? 0 : next.durationFromPrev,
+						fromPrev: prev == undefined ? 0 : prev.durationToNext,
+						fullWindow: fullWindowDuration
+					},
+					ToInsert.BOTH,
+					allInsertions[insertionInfo.insertionIdx][ToInsert.BOTH].both[busStopIdx][timeIdx],
+					times[timeIdx],
+					startFixed
+				);
+				if (timeCost == undefined) {
+					continue;
+				}
+				allInsertions[insertionInfo.insertionIdx][ToInsert.BOTH].both[busStopIdx][timeIdx] =
+					timeCost;
 
-					// insert userChosen coordinates and busstop
-					const approachDurationBoth =
-						(startFixed
-							? comesFromCompany
-								? busStopRoutingResult.fromCompany[insertionInfo.companyIdx].duration
-								: busStopRoutingResult.fromPrevEvent[insertionInfo.prevEventIdx!].duration
-							: comesFromCompany
-								? routingResults.userChosen.fromCompany[insertionInfo.companyIdx].duration
-								: routingResults.userChosen.fromPrevEvent[insertionInfo.prevEventIdx!].duration) + travelDuration;
-					const returnDurationBoth =
-						(startFixed
-							? returnsToCompany
-								? routingResults.userChosen.toCompany[insertionInfo.nextEventIdx!].duration
-								: routingResults.userChosen.toNextEvent[insertionInfo.nextEventIdx!].duration
-							: returnsToCompany
-								? busStopRoutingResult.toCompany[insertionInfo.companyIdx].duration
-								: busStopRoutingResult.toNextEvent[insertionInfo.nextEventIdx!].duration) + travelDuration;
-					const bestTimeBoth = getBestTime(
-						approachDurationBoth,
-						returnDurationBoth,
-						window,
-						times[timeIdx],
-						startFixed
-					);
-					if (bestTimeBoth == undefined) {
-						continue;
-					}
+				if (type == (startFixed ? InsertionType.PREPEND : InsertionType.APPEND)) {
+					return;
+				}
+				// insert busstop
+				const approachDuration = comesFromCompany
+					? busStopRoutingResult.fromCompany[insertionInfo.companyIdx].duration
+					: busStopRoutingResult.fromPrevEvent[insertionInfo.prevEventIdx].duration;
+				const returnDuration = returnsToCompany
+					? busStopRoutingResult.toCompany[insertionInfo.companyIdx].duration
+					: busStopRoutingResult.toNextEvent[insertionInfo.nextEventIdx].duration;
+				const bestTime = getBestTime(
+					approachDuration,
+					returnDuration,
+					window,
+					times[timeIdx],
+					startFixed
+				);
+				if (bestTime != undefined) {
+					const toInsert = startFixed ? ToInsert.PICKUP : ToInsert.DROPOFF;
 					const timeCost = evaluateInsertion(
 						type,
 						window,
 						{
-							approach: approachDurationBoth,
-							return: returnDurationBoth,
+							approach: approachDuration,
+							return: returnDuration,
 							pickupToDropoff: travelDuration,
-							toNext: next.durationFromPrev,
-							fromPrev: prev.durationToNext,
+							toNext: next == undefined ? 0 : next.durationFromPrev,
+							fromPrev: prev == undefined ? 0 : prev.durationToNext,
 							fullWindow: fullWindowDuration
 						},
-						ToInsert.BOTH,
-						allInsertions[insertionInfo.insertionIdx][ToInsert.BOTH].both[busStopIdx][timeIdx],
+						toInsert,
+						allInsertions[insertionInfo.insertionIdx][toInsert].both[busStopIdx][timeIdx],
 						times[timeIdx],
 						startFixed
 					);
-					if (timeCost == undefined) {
-						continue;
+					if (timeCost != undefined) {
+						allInsertions[insertionInfo.insertionIdx][toInsert].busStops[busStopIdx][timeIdx] =
+							timeCost;
 					}
-					allInsertions[insertionInfo.insertionIdx][ToInsert.BOTH].both[busStopIdx][timeIdx] = timeCost;
 				}
-			});
-		}
+			}
+		});
+	};
+	iterateAllInsertions(
+		ITERATE_INSERTIONS_MODE.SINGLE,
+		companies,
+		busStopCompanyFilter,
+		possibleInsertionsByVehicle,
+		insertionFn
 	);
 	return allInsertions;
 }

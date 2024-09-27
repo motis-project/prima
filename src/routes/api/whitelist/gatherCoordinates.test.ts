@@ -34,8 +34,8 @@ const createEvent = (coordinates: Coordinates): Event => {
 		arrival: new Date(),
 		departure: new Date(),
 		communicated: new Date(),
-        durationFromPrev: 0,
-        durationToNext: 0
+		durationFromPrev: 0,
+		durationToNext: 0
 	};
 };
 

@@ -21,8 +21,8 @@ export function iterateAllInsertions(
 	const iterateInsertions = (
 		companyFilter: boolean[] | undefined,
 		busStopIdx: number | undefined,
-		prevEventPos: number,
-		nextEventPos: number
+		prevEventIdx: number,
+		nextEventIdx: number
 	) => {
 		companies.forEach((company, companyIdx) => {
 			if (companyFilter != undefined && !companyFilter[companyIdx]) {
@@ -35,38 +35,29 @@ export function iterateAllInsertions(
 						outerIdx != insertion.latestDropoff + 1;
 						++outerIdx
 					) {
-						const info = 
-						{
+						const info = {
 							insertionIdx: outerIdx,
 							companyIdx,
 							vehicle,
-							prevEventIdx: outerIdx == 0 ? undefined : prevEventPos,
-							nextEventIdx: outerIdx == vehicle.events.length ? undefined : nextEventPos
+							prevEventIdx,
+							nextEventIdx
 						};
 						if (type == ITERATE_INSERTIONS_MODE.SINGLE) {
-							insertionFn(
-								busStopIdx,
-								info,
-								undefined
-							);
+							insertionFn(busStopIdx, info, undefined);
 						} else {
 							for (
 								let innerIdx = outerIdx + 1;
 								innerIdx != insertion.latestDropoff + 1;
 								++innerIdx
 							) {
-								insertionFn(
-									busStopIdx,
-									info,
-									innerIdx
-								);
+								insertionFn(busStopIdx, info, innerIdx);
 							}
 						}
 						if (outerIdx != 0) {
-							prevEventPos++;
+							prevEventIdx++;
 						}
 						if (outerIdx != vehicle.events.length) {
-							nextEventPos++;
+							nextEventIdx++;
 						}
 					}
 				});
