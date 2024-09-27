@@ -264,6 +264,10 @@ export function computeTravelDurations(
 			console.log(next == undefined);
 			console.log(insertionInfo.insertionIdx);
 			console.log(insertionInfo.insertionIdx == insertionInfo.vehicle.events.length);
+			console.log("companyidx:",insertionInfo.companyIdxInRoutingResults);
+			console.log(companies.length);
+			console.log(routingResults.userChosen.toCompany[insertionInfo.companyIdxInRoutingResults]);
+			console.log(routingResults.userChosen.toCompany);
 			const toCompanyFromUserChosen =
 				routingResults.userChosen.toCompany[insertionInfo.companyIdxInRoutingResults].duration;
 			const fromCompanyToUserChosen =
