@@ -1,5 +1,6 @@
-import type { Company, Vehicle } from '$lib/compositionTypes';
+import type { Company } from '$lib/compositionTypes';
 import type { Range } from './capacitySimulation';
+import type { InsertionInfo } from './insertionTypes';
 
 export enum ITERATE_INSERTIONS_MODE {
 	SINGLE,
@@ -13,11 +14,7 @@ export function iterateAllInsertions(
 	insertions: Map<number, Range[]>,
 	insertionFn: (
 		busStopIdx: number | undefined,
-		companyIdx: number,
-		prevEventPos: number,
-		nextEventPos: number,
-		vehicle: Vehicle,
-		outerInsertionIdx: number,
+		info: InsertionInfo,
 		innerInsertionIdx: number | undefined
 	) => void
 ) {
@@ -25,6 +22,9 @@ export function iterateAllInsertions(
 		companyFilter: boolean[] | undefined,
 		busStopIdx: number | undefined
 	) => {
+		let prevEventIdxInRoutingResults = 0;
+		let nextEventIdxInRoutingResults = 0;
+		let companyIdxInRoutingResults = 0;
 		companies.forEach((company, companyIdx) => {
 			if (companyFilter != undefined && !companyFilter[companyIdx]) {
 				return;
@@ -36,51 +36,39 @@ export function iterateAllInsertions(
 						outerIdx != insertion.latestDropoff + 1;
 						++outerIdx
 					) {
+						const info = {
+							insertionIdx: outerIdx,
+							companyIdx,
+							vehicle,
+							prevEventIdxInRoutingResults,
+							nextEventIdxInRoutingResults,
+							companyIdxInRoutingResults
+						};
 						if (type == ITERATE_INSERTIONS_MODE.SINGLE) {
-							insertionFn(
-								busStopIdx,
-								companyIdx,
-								prevEventPos,
-								nextEventPos,
-								vehicle,
-								outerIdx,
-								undefined
-							);
+							insertionFn(busStopIdx, info, undefined);
 						} else {
 							for (
 								let innerIdx = outerIdx + 1;
 								innerIdx != insertion.latestDropoff + 1;
 								++innerIdx
 							) {
-								insertionFn(
-									busStopIdx,
-									companyIdx,
-									prevEventPos,
-									nextEventPos,
-									vehicle,
-									outerIdx,
-									innerIdx
-								);
+								insertionFn(busStopIdx, info, innerIdx);
 							}
 						}
 						if (outerIdx != 0) {
-							prevEventPos++;
+							prevEventIdxInRoutingResults++;
 						}
 						if (outerIdx != vehicle.events.length) {
-							nextEventPos++;
+							nextEventIdxInRoutingResults++;
 						}
+						companyIdxInRoutingResults++;
 					}
 				});
 			});
 		});
 	};
-	let prevEventPos = companies.length;
-	let nextEventPos = companies.length;
 	iterateInsertions(undefined, undefined);
 	busStopCompanyFilter.forEach((companyFilter, busStopIdx) => {
-		const companyCount = companyFilter.filter((f) => f).length;
-		prevEventPos = companyCount;
-		nextEventPos = companyCount;
 		iterateInsertions(companyFilter, busStopIdx);
 	});
 }
