@@ -20,10 +20,10 @@ export function iterateAllInsertions(
 ) {
 	const iterateInsertions = (
 		companyFilter: boolean[] | undefined,
-		busStopIdx: number | undefined,
-		prevEventIdx: number,
-		nextEventIdx: number
+		busStopIdx: number | undefined
 	) => {
+		let prevEventIdx=0;
+		let nextEventIdx=0;
 		companies.forEach((company, companyIdx) => {
 			if (companyFilter != undefined && !companyFilter[companyIdx]) {
 				return;
@@ -64,13 +64,9 @@ export function iterateAllInsertions(
 			});
 		});
 	};
-	let prevEventPos = companies.length;
-	let nextEventPos = companies.length;
-	iterateInsertions(undefined, undefined, prevEventPos, nextEventPos);
+	iterateInsertions(undefined, undefined);
 	busStopCompanyFilter.forEach((companyFilter, busStopIdx) => {
 		const companyCount = companyFilter.filter((f) => f).length;
-		prevEventPos = companyCount;
-		nextEventPos = companyCount;
-		iterateInsertions(companyFilter, busStopIdx, prevEventPos, nextEventPos);
+		iterateInsertions(companyFilter, busStopIdx);
 	});
 }
