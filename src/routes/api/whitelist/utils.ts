@@ -22,8 +22,8 @@ export function iterateAllInsertions(
 		companyFilter: boolean[] | undefined,
 		busStopIdx: number | undefined
 	) => {
-		let prevEventIdx=0;
-		let nextEventIdx=0;
+		let prevEventIdx = 0;
+		let nextEventIdx = 0;
 		companies.forEach((company, companyIdx) => {
 			if (companyFilter != undefined && !companyFilter[companyIdx]) {
 				return;

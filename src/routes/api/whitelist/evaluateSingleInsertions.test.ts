@@ -56,14 +56,19 @@ describe('compute Intervals for single insertions test', () => {
 				[
 					createVehicle(1, [
 						createEvent(new Coordinates(eventLatLng, eventLatLng++), 4),
-						createEvent(new Coordinates(eventLatLng, eventLatLng++),5),
-						createEvent(new Coordinates(eventLatLng, eventLatLng++),6)
+						createEvent(new Coordinates(eventLatLng, eventLatLng++), 5),
+						createEvent(new Coordinates(eventLatLng, eventLatLng++), 6)
 					])
 				],
 				new Coordinates(companyLatLng, companyLatLng++)
 			)
 		];
-		companies[0].vehicles.forEach((v)=>v.events.forEach((e)=>{e.arrival=createDate(2);e.departure=createDate(7);}));
+		companies[0].vehicles.forEach((v) =>
+			v.events.forEach((e) => {
+				e.arrival = createDate(2);
+				e.departure = createDate(7);
+			})
+		);
 		const insertions = new Map<number, Range[]>();
 		insertions.set(1, [{ earliestPickup: 0, latestDropoff: 3 }]);
 		const travelDurations = [50];
@@ -109,7 +114,7 @@ describe('compute Intervals for single insertions test', () => {
 			busStopTimes,
 			[[true]]
 		);
-		console.log("res", result);
+		console.log('res', result);
 		expect(1).toBe(1);
 	});
 });

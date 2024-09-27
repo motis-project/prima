@@ -9,9 +9,9 @@ export type InsertionInfo = {
 };
 
 export type InsertionEvaluation = {
-	userChosen: TimeCost|undefined;
-	busStops: TimeCost|undefined[][];
-	both: TimeCost|undefined[][];
+	userChosen: TimeCost | undefined;
+	busStops: TimeCost | undefined[][];
+	both: TimeCost | undefined[][];
 	approachDuration: number | undefined;
 	returnDuration: number | undefined;
 	company: number;
