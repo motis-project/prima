@@ -1,4 +1,4 @@
-import type { Company, Vehicle } from '$lib/compositionTypes';
+import type { Company } from '$lib/compositionTypes';
 import type { Range } from './capacitySimulation';
 import type { InsertionInfo } from './insertionTypes';
 
