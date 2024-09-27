@@ -61,10 +61,10 @@ export function iterateAllInsertions(
 						if (outerIdx != vehicle.events.length) {
 							nextEventIdxInRoutingResults++;
 						}
-						companyIdxInRoutingResults++;
 					}
 				});
 			});
+			companyIdxInRoutingResults++;
 		});
 	};
 	iterateInsertions(undefined, undefined);
