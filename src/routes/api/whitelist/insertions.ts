@@ -45,6 +45,7 @@ type TimeCost = {
 	cost: Cost;
 	approachDuration: number;
 	returnDuration: number;
+	type: InsertionType;
 };
 
 type Insertion = {
@@ -114,7 +115,8 @@ export function evaluateInsertion(
 		time: startFixed ? arrivalWindow.startTime : arrivalWindow.endTime,
 		cost,
 		approachDuration: durations.approach,
-		returnDuration: durations.return
+		returnDuration: durations.return,
+		type
 	};
 }
 
