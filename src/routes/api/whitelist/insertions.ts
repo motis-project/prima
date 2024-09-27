@@ -5,6 +5,7 @@ import { type RoutingResults } from './routing';
 import type { Range } from './capacitySimulation';
 import { hoursToMs, minutesToMs } from '$lib/time_utils';
 import {
+	MAX_TRAVEL_DURATION,
 	MIN_PREP_MINUTES,
 	PASSENGER_CHANGE_TIME,
 	PASSENGER_TIME_COST_FACTOR,
@@ -90,10 +91,13 @@ export function evaluateInsertion(
 	busStopWindow: Interval | undefined,
 	startFixed: boolean
 ): TimeCost | undefined {
+	if(durations.approach>MAX_TRAVEL_DURATION||durations.return>MAX_TRAVEL_DURATION||durations.pickupToDropoff>MAX_TRAVEL_DURATION){
+		return undefined;
+	}
 	const fullDuration = durations.approach + durations.return + durations.pickupToDropoff;
-	console.log('window', window);
-	console.log(fullDuration);
-	console.log(window.getDurationMs());
+	//console.log('window', window);
+	//console.log(fullDuration);
+	//console.log(window.getDurationMs());
 	let arrivalWindow =
 		window.getDurationMs() < fullDuration
 			? undefined
@@ -194,12 +198,19 @@ export function computeTravelDurations(
 	busStopCompanyFilter: boolean[][]
 ): Map<number, Insertion[]> {
 	const allInsertions = new Map<number, Insertion[]>();
-	companies.forEach((company)=>company.vehicles.forEach((vehicle)=>allInsertions.set(vehicle.id, new Array<Insertion>(vehicle.events.length))))
+	companies.forEach((company) =>
+		company.vehicles.forEach((vehicle) =>
+			allInsertions.set(vehicle.id, new Array<Insertion>(vehicle.events.length))
+		)
+	);
 	const insertionFn = (
 		busStopIdx: number | undefined,
 		insertionInfo: InsertionInfo,
 		_: number | undefined
 	) => {
+		let insertionIdx = 0;
+		console.log('insertionIdx: ', insertionInfo.insertionIdx);
+		console.log(insertionInfo.vehicle.events.length);
 		const prev: Event | undefined =
 			insertionInfo.insertionIdx == 0
 				? undefined
@@ -208,6 +219,8 @@ export function computeTravelDurations(
 			insertionInfo.insertionIdx == insertionInfo.vehicle.events.length
 				? undefined
 				: insertionInfo.vehicle.events[insertionInfo.insertionIdx];
+		console.log(insertionInfo.insertionIdx == insertionInfo.vehicle.events.length);
+		console.log(next == undefined);
 		cases.forEach((type) => {
 			if (prev == undefined && type != InsertionType.PREPEND) {
 				return;
@@ -225,21 +238,16 @@ export function computeTravelDurations(
 			const returnsToCompany = type === InsertionType.CONNECT || type === InsertionType.APPEND;
 			const comesFromCompany = type === InsertionType.CONNECT || type === InsertionType.PREPEND;
 
-			const prevTime =
-				prev == undefined ? new Date(0) : comesFromCompany ? prev.arrival : prev.communicated;
-			if (prevTime < new Date(Date.now() + minutesToMs(MIN_PREP_MINUTES))) {
-				return;
-			}
-			console.assert(allInsertions.get(insertionInfo.vehicle.id)!=undefined);
+			console.assert(allInsertions.get(insertionInfo.vehicle.id) != undefined);
 			const insertions = allInsertions.get(insertionInfo.vehicle.id)!;
-			if (insertions[insertionInfo.insertionIdx] == undefined) {
+			if (insertions[insertionIdx] == undefined) {
 				const busStops = new Array<TimeCost[]>(busStopTimes.length);
 				const both = new Array<TimeCost[]>(busStopTimes.length);
 				for (let i = 0; i != busStops.length; ++i) {
 					busStops[i] = new Array<TimeCost>(busStopTimes[i].length);
 					both[i] = new Array<TimeCost>(busStopTimes[i].length);
 				}
-				insertions[insertionInfo.insertionIdx] = {
+				insertions[insertionIdx] = {
 					userChosen: undefined,
 					busStops,
 					both,
@@ -251,14 +259,23 @@ export function computeTravelDurations(
 					event2: next == undefined ? undefined : next.id
 				};
 			}
+			const prepTime = new Date(Date.now() + minutesToMs(MIN_PREP_MINUTES));
 			const nextTime =
 				next == undefined
 					? new Date(Date.now() + hoursToMs(240000))
 					: returnsToCompany
 						? next.departure
 						: next.communicated;
+			if (nextTime < prepTime) {
+				return;
+			}
+
+			let prevTime =
+				prev == undefined ? new Date(0) : comesFromCompany ? prev.arrival : prev.communicated;
+			prevTime = new Date(Math.max(prevTime.getTime(), prepTime.getTime()));
 			const fullWindowDuration = nextTime.getTime() - prevTime.getTime();
 			let window: Interval | undefined = new Interval(prevTime, nextTime);
+			/*
 			console.log(insertionInfo.vehicle.events.length);
 			console.log('aa', insertionInfo.nextEventIdxInRoutingResults);
 			console.log(next == undefined);
@@ -267,7 +284,7 @@ export function computeTravelDurations(
 			console.log("companyidx:",insertionInfo.companyIdxInRoutingResults);
 			console.log(companies.length);
 			console.log(routingResults.userChosen.toCompany[insertionInfo.companyIdxInRoutingResults]);
-			console.log(routingResults.userChosen.toCompany);
+			console.log(routingResults.userChosen.toCompany);*/
 			const toCompanyFromUserChosen =
 				routingResults.userChosen.toCompany[insertionInfo.companyIdxInRoutingResults].duration;
 			const fromCompanyToUserChosen =
@@ -275,11 +292,13 @@ export function computeTravelDurations(
 			const fromPrevToUserChosen =
 				prev == undefined
 					? 0
-					: routingResults.userChosen.fromPrevEvent[insertionInfo.prevEventIdxInRoutingResults].duration;
+					: routingResults.userChosen.fromPrevEvent[insertionInfo.prevEventIdxInRoutingResults]
+							.duration;
 			const toNextFromUserChosen =
 				next == undefined
 					? 0
-					: routingResults.userChosen.toNextEvent[insertionInfo.nextEventIdxInRoutingResults].duration;
+					: routingResults.userChosen.toNextEvent[insertionInfo.nextEventIdxInRoutingResults]
+							.duration;
 			if (busStopIdx == undefined) {
 				// insert userChosen
 				if (type == (startFixed ? InsertionType.APPEND : InsertionType.PREPEND)) {
@@ -294,7 +313,6 @@ export function computeTravelDurations(
 					'Accessing nonexisting next event.'
 				);
 				const toInsert = startFixed ? ToInsert.DROPOFF : ToInsert.PICKUP;
-				const entryExists = insertions[insertionInfo.insertionIdx].userChosen != undefined;
 				const approachDuration = comesFromCompany ? fromCompanyToUserChosen : fromPrevToUserChosen;
 				const returnDuration = returnsToCompany ? toCompanyFromUserChosen : toNextFromUserChosen;
 				const cost = evaluateInsertion(
@@ -309,16 +327,16 @@ export function computeTravelDurations(
 						fullWindow: fullWindowDuration
 					},
 					toInsert,
-					insertions[insertionInfo.insertionIdx].userChosen,
+					insertions[insertionIdx].userChosen,
 					undefined,
 					startFixed
 				);
-				console.log('cost', cost);
+				//console.log('cost', cost);
 				if (cost == undefined) {
 					return;
 				}
-				insertions[insertionInfo.insertionIdx] = {
-					...insertions[insertionInfo.insertionIdx],
+				insertions[insertionIdx] = {
+					...insertions[insertionIdx],
 					userChosen: cost
 				};
 				return;
@@ -351,11 +369,13 @@ export function computeTravelDurations(
 			for (let timeIdx = 0; timeIdx != times.length; ++timeIdx) {
 				const fromCompanyToBus =
 					busStopRoutingResult.fromCompany[insertionInfo.companyIdxInRoutingResults].duration;
-				const toCompanyFromBus = busStopRoutingResult.toCompany[insertionInfo.companyIdxInRoutingResults].duration;
+				const toCompanyFromBus =
+					busStopRoutingResult.toCompany[insertionInfo.companyIdxInRoutingResults].duration;
 				const fromPrevToBus =
 					busStopRoutingResult.fromPrevEvent[insertionInfo.prevEventIdxInRoutingResults].duration;
 				const toNextFromBus =
-					routingResults.userChosen.toNextEvent[insertionInfo.nextEventIdxInRoutingResults].duration;
+					routingResults.userChosen.toNextEvent[insertionInfo.nextEventIdxInRoutingResults]
+						.duration;
 				// insert userChosen coordinates and busstop
 				const approachDurationBoth =
 					(startFixed
@@ -385,14 +405,14 @@ export function computeTravelDurations(
 						fullWindow: fullWindowDuration
 					},
 					ToInsert.BOTH,
-					insertions[insertionInfo.insertionIdx].both[busStopIdx][timeIdx],
+					insertions[insertionIdx].both[busStopIdx][timeIdx],
 					times[timeIdx],
 					startFixed
 				);
 				if (timeCostBoth == undefined) {
 					continue;
 				}
-				insertions[insertionInfo.insertionIdx].both![busStopIdx][timeIdx] = timeCostBoth;
+				insertions[insertionIdx].both![busStopIdx][timeIdx] = timeCostBoth;
 
 				// insert busstop
 				if (type == (startFixed ? InsertionType.PREPEND : InsertionType.APPEND)) {
@@ -413,12 +433,12 @@ export function computeTravelDurations(
 						fullWindow: fullWindowDuration
 					},
 					toInsert,
-					insertions[insertionInfo.insertionIdx].both[busStopIdx][timeIdx],
+					insertions[insertionIdx].both[busStopIdx][timeIdx],
 					times[timeIdx],
 					startFixed
 				);
 				if (timeCostBus != undefined) {
-					insertions[insertionInfo.insertionIdx].busStops[busStopIdx][timeIdx] = timeCostBus;
+					insertions[insertionIdx].busStops[busStopIdx][timeIdx] = timeCostBus;
 				}
 			}
 		});
