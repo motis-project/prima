@@ -190,14 +190,9 @@ export function computeTravelDurations(
 	startFixed: boolean,
 	busStopTimes: Interval[][],
 	busStopCompanyFilter: boolean[][]
-): Insertion[] {
-	let insertionCount = 0;
-	[...possibleInsertionsByVehicle].forEach(([v, ranges]) => {
-		ranges.forEach((range) => {
-			insertionCount += range.latestDropoff + 1 - range.earliestPickup;
-		});
-	});
-	const allInsertions = new Array<Insertion>(insertionCount);
+): Map<number, Insertion[]> {
+	const allInsertions = new Map<number, Insertion[]>();
+	companies.forEach((company)=>company.vehicles.forEach((vehicle)=>allInsertions.set(vehicle.id, new Array<Insertion>(vehicle.events.length))))
 	const insertionFn = (
 		busStopIdx: number | undefined,
 		insertionInfo: InsertionInfo,
@@ -233,14 +228,16 @@ export function computeTravelDurations(
 			if (prevTime < new Date(Date.now() + minutesToMs(MIN_PREP_MINUTES))) {
 				return;
 			}
-			if (allInsertions[insertionInfo.insertionIdx] == undefined) {
+			console.assert(allInsertions.get(insertionInfo.vehicle.id)!=undefined);
+			const insertions = allInsertions.get(insertionInfo.vehicle.id)!;
+			if (insertions[insertionInfo.insertionIdx] == undefined) {
 				const busStops = new Array<TimeCost[]>(busStopTimes.length);
 				const both = new Array<TimeCost[]>(busStopTimes.length);
 				for (let i = 0; i != busStops.length; ++i) {
 					busStops[i] = new Array<TimeCost>(busStopTimes[i].length);
 					both[i] = new Array<TimeCost>(busStopTimes[i].length);
 				}
-				allInsertions[insertionInfo.insertionIdx] = {
+				insertions[insertionInfo.insertionIdx] = {
 					userChosen: undefined,
 					busStops,
 					both,
@@ -291,7 +288,7 @@ export function computeTravelDurations(
 					'Accessing nonexisting next event.'
 				);
 				const toInsert = startFixed ? ToInsert.DROPOFF : ToInsert.PICKUP;
-				const entryExists = allInsertions[insertionInfo.insertionIdx].userChosen != undefined;
+				const entryExists = insertions[insertionInfo.insertionIdx].userChosen != undefined;
 				const approachDuration = comesFromCompany ? fromCompanyToUserChosen : fromPrevToUserChosen;
 				const returnDuration = returnsToCompany ? toCompanyFromUserChosen : toNextFromUserChosen;
 				const cost = evaluateInsertion(
@@ -306,7 +303,7 @@ export function computeTravelDurations(
 						fullWindow: fullWindowDuration
 					},
 					toInsert,
-					allInsertions[insertionInfo.insertionIdx].userChosen,
+					insertions[insertionInfo.insertionIdx].userChosen,
 					undefined,
 					startFixed
 				);
@@ -314,8 +311,8 @@ export function computeTravelDurations(
 				if (cost == undefined) {
 					return;
 				}
-				allInsertions[insertionInfo.insertionIdx] = {
-					...allInsertions[insertionInfo.insertionIdx],
+				insertions[insertionInfo.insertionIdx] = {
+					...insertions[insertionInfo.insertionIdx],
 					userChosen: cost
 				};
 				return;
@@ -382,14 +379,14 @@ export function computeTravelDurations(
 						fullWindow: fullWindowDuration
 					},
 					ToInsert.BOTH,
-					allInsertions[insertionInfo.insertionIdx].both[busStopIdx][timeIdx],
+					insertions[insertionInfo.insertionIdx].both[busStopIdx][timeIdx],
 					times[timeIdx],
 					startFixed
 				);
 				if (timeCostBoth == undefined) {
 					continue;
 				}
-				allInsertions[insertionInfo.insertionIdx].both![busStopIdx][timeIdx] = timeCostBoth;
+				insertions[insertionInfo.insertionIdx].both![busStopIdx][timeIdx] = timeCostBoth;
 
 				// insert busstop
 				if (type == (startFixed ? InsertionType.PREPEND : InsertionType.APPEND)) {
@@ -410,12 +407,12 @@ export function computeTravelDurations(
 						fullWindow: fullWindowDuration
 					},
 					toInsert,
-					allInsertions[insertionInfo.insertionIdx].both[busStopIdx][timeIdx],
+					insertions[insertionInfo.insertionIdx].both[busStopIdx][timeIdx],
 					times[timeIdx],
 					startFixed
 				);
 				if (timeCostBus != undefined) {
-					allInsertions[insertionInfo.insertionIdx].busStops[busStopIdx][timeIdx] = timeCostBus;
+					insertions[insertionInfo.insertionIdx].busStops[busStopIdx][timeIdx] = timeCostBus;
 				}
 			}
 		});
