@@ -36,7 +36,7 @@ export function iterateAllInsertions(
 					console.log(insertion);
 					for (
 						let outerIdx = insertion.earliestPickup;
-						outerIdx != insertion.latestDropoff;
+						outerIdx != insertion.latestDropoff + 1;
 						++outerIdx
 					) {
 						console.log('insertion', outerIdx);
