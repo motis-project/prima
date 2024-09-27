@@ -1,5 +1,6 @@
 import type { Company, Vehicle } from '$lib/compositionTypes';
 import type { Range } from './capacitySimulation';
+import type { InsertionInfo } from './insertionTypes';
 
 export enum ITERATE_INSERTIONS_MODE {
 	SINGLE,
@@ -13,11 +14,7 @@ export function iterateAllInsertions(
 	insertions: Map<number, Range[]>,
 	insertionFn: (
 		busStopIdx: number | undefined,
-		companyIdx: number,
-		prevEventPos: number | undefined,
-		nextEventPos: number | undefined,
-		vehicle: Vehicle,
-		outerInsertionIdx: number,
+		info: InsertionInfo,
 		innerInsertionIdx: number | undefined
 	) => void
 ) {
@@ -42,14 +39,18 @@ export function iterateAllInsertions(
 					) {
 						//console.log('insertion', outerIdx);
 						//console.log('nnext', nextEventPos);
+						const info = 
+						{
+							insertionIdx: outerIdx,
+							companyIdx,
+							vehicle,
+							prevEventIdx: outerIdx == 0 ? undefined : prevEventPos,
+							nextEventIdx: outerIdx == vehicle.events.length ? undefined : nextEventPos
+						};
 						if (type == ITERATE_INSERTIONS_MODE.SINGLE) {
 							insertionFn(
 								busStopIdx,
-								companyIdx,
-								outerIdx == 0 ? undefined : prevEventPos,
-								outerIdx == vehicle.events.length ? undefined : nextEventPos,
-								vehicle,
-								outerIdx,
+								info,
 								undefined
 							);
 						} else {
@@ -60,11 +61,7 @@ export function iterateAllInsertions(
 							) {
 								insertionFn(
 									busStopIdx,
-									companyIdx,
-									outerIdx == 0 ? undefined : prevEventPos,
-									outerIdx == vehicle.events.length ? undefined : nextEventPos,
-									vehicle,
-									outerIdx,
+									info,
 									innerIdx
 								);
 							}

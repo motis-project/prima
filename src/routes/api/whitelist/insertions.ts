@@ -190,17 +190,17 @@ export function computeTravelDurations(
 		companies,
 		busStopCompanyFilter,
 		possibleInsertionsByVehicle,
-		(busStopIdx, companyIdx, prevEventIdx, nextEventIdx, vehicle, insertionIdx, _) => {
-			if (prevEventIdx == undefined) {
+		(busStopIdx, insertionInfo, _) => {
+			if (insertionInfo.prevEventIdx == undefined) {
 				return;
 			}
-			if (nextEventIdx == undefined) {
+			if (insertionInfo.nextEventIdx == undefined) {
 				return;
 			}
 			const prev: Event | undefined =
-				insertionIdx == 0 ? undefined : vehicle.events[insertionIdx - 1];
+				insertionInfo.insertionIdx == 0 ? undefined : insertionInfo.vehicle.events[insertionInfo.insertionIdx - 1];
 			const next: Event | undefined =
-				insertionIdx == vehicle.events.length ? undefined : vehicle.events[insertionIdx];
+				insertionInfo.insertionIdx == insertionInfo.vehicle.events.length ? undefined : insertionInfo.vehicle.events[insertionInfo.insertionIdx];
 			cases.forEach((type) => {
 				if (type == (startFixed ? InsertionType.APPEND : InsertionType.PREPEND)) {
 					return;
@@ -228,11 +228,11 @@ export function computeTravelDurations(
 						return;
 					}
 					const approachDuration = comesFromCompany
-						? routingResults.userChosen.fromCompany[companyIdx].duration
-						: routingResults.userChosen.fromPrevEvent[prevEventIdx].duration;
+						? routingResults.userChosen.fromCompany[insertionInfo.companyIdx].duration
+						: routingResults.userChosen.fromPrevEvent[insertionInfo.prevEventIdx!].duration;
 					const returnDuration = returnsToCompany
-						? routingResults.userChosen.toCompany[companyIdx].duration
-						: routingResults.userChosen.toNextEvent[nextEventIdx].duration;
+						? routingResults.userChosen.toCompany[insertionInfo.companyIdx].duration
+						: routingResults.userChosen.toNextEvent[insertionInfo.nextEventIdx!].duration;
 					const toInsert = startFixed ? ToInsert.DROPOFF : ToInsert.PICKUP;
 					const cost = evaluateInsertion(
 						type,
@@ -246,24 +246,24 @@ export function computeTravelDurations(
 							fullWindow: fullWindowDuration
 						},
 						toInsert,
-						allInsertions[insertionIdx][toInsert].userChosen,
+						allInsertions[insertionInfo.insertionIdx][toInsert].userChosen,
 						undefined,
 						startFixed
 					);
 					if (cost == undefined) {
 						return;
 					}
-					allInsertions[insertionIdx][toInsert].userChosen = cost;
+					allInsertions[insertionInfo.insertionIdx][toInsert].userChosen = cost;
 					return;
 				}
 				const relevantAvailabilities = (function () {
 					switch (type) {
 						case InsertionType.APPEND:
-							return vehicle.availabilities.filter((availability) => availability.covers(prevTime));
+							return insertionInfo.vehicle.availabilities.filter((availability) => availability.covers(prevTime));
 						case InsertionType.PREPEND:
-							return vehicle.availabilities.filter((availability) => availability.covers(nextTime));
+							return insertionInfo.vehicle.availabilities.filter((availability) => availability.covers(nextTime));
 						case InsertionType.CONNECT:
-							return vehicle.availabilities.filter((availability) =>
+							return insertionInfo.vehicle.availabilities.filter((availability) =>
 								availability.contains(new Interval(prevTime, nextTime))
 							);
 						case InsertionType.INSERT:
@@ -289,11 +289,11 @@ export function computeTravelDurations(
 				for (let timeIdx = 0; timeIdx != times.length; ++timeIdx) {
 					// insert busstop
 					const approachDuration = comesFromCompany
-						? busStopRoutingResult.fromCompany[companyIdx].duration
-						: busStopRoutingResult.fromPrevEvent[prevEventIdx].duration;
+						? busStopRoutingResult.fromCompany[insertionInfo.companyIdx].duration
+						: busStopRoutingResult.fromPrevEvent[insertionInfo.prevEventIdx!].duration;
 					const returnDuration = returnsToCompany
-						? busStopRoutingResult.toCompany[companyIdx].duration
-						: busStopRoutingResult.toNextEvent[nextEventIdx].duration;
+						? busStopRoutingResult.toCompany[insertionInfo.companyIdx].duration
+						: busStopRoutingResult.toNextEvent[insertionInfo.nextEventIdx!].duration;
 					const bestTime = getBestTime(
 						approachDuration,
 						returnDuration,
@@ -315,12 +315,12 @@ export function computeTravelDurations(
 								fullWindow: fullWindowDuration
 							},
 							toInsert,
-							allInsertions[insertionIdx][toInsert].both[busStopIdx][timeIdx],
+							allInsertions[insertionInfo.insertionIdx][toInsert].both[busStopIdx][timeIdx],
 							times[timeIdx],
 							startFixed
 						);
 						if (timeCost != undefined) {
-							allInsertions[insertionIdx][toInsert].busStops[busStopIdx][timeIdx] = timeCost;
+							allInsertions[insertionInfo.insertionIdx][toInsert].busStops[busStopIdx][timeIdx] = timeCost;
 						}
 					}
 
@@ -328,19 +328,19 @@ export function computeTravelDurations(
 					const approachDurationBoth =
 						(startFixed
 							? comesFromCompany
-								? busStopRoutingResult.fromCompany[companyIdx].duration
-								: busStopRoutingResult.fromPrevEvent[prevEventIdx].duration
+								? busStopRoutingResult.fromCompany[insertionInfo.companyIdx].duration
+								: busStopRoutingResult.fromPrevEvent[insertionInfo.prevEventIdx!].duration
 							: comesFromCompany
-								? routingResults.userChosen.fromCompany[companyIdx].duration
-								: routingResults.userChosen.fromPrevEvent[prevEventIdx].duration) + travelDuration;
+								? routingResults.userChosen.fromCompany[insertionInfo.companyIdx].duration
+								: routingResults.userChosen.fromPrevEvent[insertionInfo.prevEventIdx!].duration) + travelDuration;
 					const returnDurationBoth =
 						(startFixed
 							? returnsToCompany
-								? routingResults.userChosen.toCompany[nextEventIdx].duration
-								: routingResults.userChosen.toNextEvent[nextEventIdx].duration
+								? routingResults.userChosen.toCompany[insertionInfo.nextEventIdx!].duration
+								: routingResults.userChosen.toNextEvent[insertionInfo.nextEventIdx!].duration
 							: returnsToCompany
-								? busStopRoutingResult.toCompany[companyIdx].duration
-								: busStopRoutingResult.toNextEvent[nextEventIdx].duration) + travelDuration;
+								? busStopRoutingResult.toCompany[insertionInfo.companyIdx].duration
+								: busStopRoutingResult.toNextEvent[insertionInfo.nextEventIdx!].duration) + travelDuration;
 					const bestTimeBoth = getBestTime(
 						approachDurationBoth,
 						returnDurationBoth,
@@ -363,14 +363,14 @@ export function computeTravelDurations(
 							fullWindow: fullWindowDuration
 						},
 						ToInsert.BOTH,
-						allInsertions[insertionIdx][ToInsert.BOTH].both[busStopIdx][timeIdx],
+						allInsertions[insertionInfo.insertionIdx][ToInsert.BOTH].both[busStopIdx][timeIdx],
 						times[timeIdx],
 						startFixed
 					);
 					if (timeCost == undefined) {
 						continue;
 					}
-					allInsertions[insertionIdx][ToInsert.BOTH].both[busStopIdx][timeIdx] = timeCost;
+					allInsertions[insertionInfo.insertionIdx][ToInsert.BOTH].both[busStopIdx][timeIdx] = timeCost;
 				}
 			});
 		}
