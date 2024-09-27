@@ -1,4 +1,4 @@
-import type { BookingRequestParameters } from '$lib/bookingApiParameters';
+import type { CheckBookingValidityParameters } from '$lib/bookingApiParameters';
 import { Coordinates } from '$lib/location';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { getViableBusStops } from './viableBusStops';
@@ -41,7 +41,7 @@ describe('blacklisting test', () => {
 		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
 		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(90));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [{ times: [dateInXMinutes(50)], coordinates: inNiesky }],
 			startFixed: true,
@@ -58,7 +58,7 @@ describe('blacklisting test', () => {
 
 		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [{ times: [dateInXMinutes(50)], coordinates: inNiesky }],
 			startFixed: true,
@@ -75,7 +75,7 @@ describe('blacklisting test', () => {
 
 		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(90));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [{ times: [dateInXMinutes(50)], coordinates: inNiesky }],
 			startFixed: true,
@@ -91,7 +91,7 @@ describe('blacklisting test', () => {
 		const taxi = await addTaxi(company, capacities);
 		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [
 				{ times: [dateInXMinutes(50), dateInXMinutes(10)], coordinates: inNiesky },
@@ -110,7 +110,7 @@ describe('blacklisting test', () => {
 		const taxi = await addTaxi(company, capacities);
 		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [{ times: [dateInXMinutes(50)], coordinates: inNiesky }],
 			startFixed: true,
@@ -126,7 +126,7 @@ describe('blacklisting test', () => {
 		const taxi = await addTaxi(company, capacities);
 		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [{ times: [dateInXMinutes(50)], coordinates: inZittau }],
 			startFixed: true,
@@ -142,7 +142,7 @@ describe('blacklisting test', () => {
 		const taxi = await addTaxi(company, capacities);
 		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inZittau,
 			busStops: [{ times: [dateInXMinutes(50)], coordinates: inNiesky }],
 			startFixed: true,
@@ -158,7 +158,7 @@ describe('blacklisting test', () => {
 		const taxi = await addTaxi(company, capacities);
 		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [{ times: [dateInXMinutes(50)], coordinates: inNiesky }],
 			startFixed: true,
@@ -174,7 +174,7 @@ describe('blacklisting test', () => {
 		const taxi = await addTaxi(company, capacities);
 		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [{ times: [dateInXMinutes(50)], coordinates: inNiesky }],
 			startFixed: true,
@@ -190,7 +190,7 @@ describe('blacklisting test', () => {
 		const taxi = await addTaxi(company, capacities);
 		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [{ times: [dateInXMinutes(50)], coordinates: inNiesky }],
 			startFixed: true,
@@ -206,7 +206,7 @@ describe('blacklisting test', () => {
 		const taxi = await addTaxi(company, capacities);
 		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [{ times: [dateInXMinutes(50)], coordinates: inNiesky }],
 			startFixed: true,
@@ -219,7 +219,7 @@ describe('blacklisting test', () => {
 	it('blacklisting fail, no vehicle', async () => {
 		await addCompany(Zone.NIESKY);
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [{ times: [dateInXMinutes(50)], coordinates: inNiesky }],
 			startFixed: true,
@@ -230,7 +230,7 @@ describe('blacklisting test', () => {
 	});
 
 	it('blacklisting fail, no company', async () => {
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [{ times: [dateInXMinutes(50)], coordinates: inNiesky }],
 			startFixed: true,
@@ -244,7 +244,7 @@ describe('blacklisting test', () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 3 };
 		const company = await addCompany(Zone.NIESKY);
 		await addTaxi(company, capacities);
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [{ times: [dateInXMinutes(50)], coordinates: inNiesky }],
 			startFixed: true,
@@ -260,7 +260,7 @@ describe('blacklisting test', () => {
 		const taxi = await addTaxi(company, capacities);
 		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [
 				{ times: [dateInXMinutes(50)], coordinates: inZittau },
@@ -281,7 +281,7 @@ describe('blacklisting test', () => {
 		const taxi = await addTaxi(company, capacities);
 		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [{ times: [dateInXMinutes(1000), dateInXMinutes(50)], coordinates: inNiesky }],
 			startFixed: true,
@@ -294,7 +294,7 @@ describe('blacklisting test', () => {
 	});
 
 	it('blacklisting, no busStops', async () => {
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [],
 			startFixed: true,
@@ -309,7 +309,7 @@ describe('blacklisting test', () => {
 		const company = await addCompany(Zone.NIESKY);
 		const taxi = await addTaxi(company, capacities);
 		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [
 				{ times: [], coordinates: inNiesky },
@@ -329,7 +329,7 @@ describe('blacklisting test', () => {
 		const company = await addCompany(Zone.NIESKY);
 		const taxi = await addTaxi(company, capacities);
 		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(900));
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [{ times: [], coordinates: inNiesky }],
 			startFixed: true,
@@ -346,7 +346,7 @@ describe('blacklisting test', () => {
 
 		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [
 				{
@@ -368,7 +368,7 @@ describe('blacklisting test', () => {
 
 		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [
 				{
@@ -390,7 +390,7 @@ describe('blacklisting test', () => {
 
 		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [
 				{ times: [dateInXMinutesYMs(0, -MAX_PASSENGER_WAITING_TIME_PICKUP)], coordinates: inNiesky }
@@ -409,7 +409,7 @@ describe('blacklisting test', () => {
 
 		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
 
-		const r: BookingRequestParameters = {
+		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
 			busStops: [
 				{
