@@ -15,6 +15,7 @@ export function iterateAllInsertions(
 	insertionFn: (
 		busStopIdx: number | undefined,
 		info: InsertionInfo,
+		insertionCounter: number,
 		innerInsertionIdx: number | undefined
 	) => void
 ) {
@@ -25,6 +26,7 @@ export function iterateAllInsertions(
 		let prevEventIdxInRoutingResults = 0;
 		let nextEventIdxInRoutingResults = 0;
 		let companyIdxInRoutingResults = 0;
+		let insertionCounter = 0;
 		companies.forEach((company, companyIdx) => {
 			if (companyFilter != undefined && !companyFilter[companyIdx]) {
 				return;
@@ -45,14 +47,14 @@ export function iterateAllInsertions(
 							companyIdxInRoutingResults
 						};
 						if (type == ITERATE_INSERTIONS_MODE.SINGLE) {
-							insertionFn(busStopIdx, info, undefined);
+							insertionFn(busStopIdx, info, insertionCounter, undefined);
 						} else {
 							for (
 								let innerIdx = outerIdx + 1;
 								innerIdx != insertion.latestDropoff + 1;
 								++innerIdx
 							) {
-								insertionFn(busStopIdx, info, innerIdx);
+								insertionFn(busStopIdx, info, insertionCounter, innerIdx);
 							}
 						}
 						if (outerIdx != 0) {
@@ -61,14 +63,17 @@ export function iterateAllInsertions(
 						if (outerIdx != vehicle.events.length) {
 							nextEventIdxInRoutingResults++;
 						}
+						insertionCounter++;
 					}
 				});
 			});
 			companyIdxInRoutingResults++;
 		});
 	};
+	// iterate for user chosen coordinates
 	iterateInsertions(undefined, undefined);
 	busStopCompanyFilter.forEach((companyFilter, busStopIdx) => {
+		// iterate for each bus stop
 		iterateInsertions(companyFilter, busStopIdx);
 	});
 }
