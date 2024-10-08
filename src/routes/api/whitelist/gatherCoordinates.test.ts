@@ -14,9 +14,9 @@ const createCompany = (vehicles: Vehicle[], coordinates: Coordinates): Company =
 	};
 };
 
-const createVehicle = (id: number, events: Event[]): Vehicle => {
+const createVehicle = (events: Event[]): Vehicle => {
 	return {
-		id,
+		id: 1,
 		capacities: { passengers: 0, bikes: 0, wheelchairs: 0, luggage: 0 },
 		events,
 		tours: [],
@@ -44,7 +44,7 @@ describe('gather coordinates test', () => {
 		const companies = [
 			createCompany(
 				[
-					createVehicle(1, [
+					createVehicle([
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
@@ -86,7 +86,7 @@ describe('gather coordinates test', () => {
 		const companies = [
 			createCompany(
 				[
-					createVehicle(1, [
+					createVehicle([
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
@@ -128,7 +128,7 @@ describe('gather coordinates test', () => {
 		const companies = [
 			createCompany(
 				[
-					createVehicle(1, [
+					createVehicle([
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
@@ -170,7 +170,7 @@ describe('gather coordinates test', () => {
 		const companies = [
 			createCompany(
 				[
-					createVehicle(1, [
+					createVehicle([
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
@@ -219,7 +219,7 @@ describe('gather coordinates test', () => {
 		const companies = [
 			createCompany(
 				[
-					createVehicle(1, [
+					createVehicle([
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
@@ -228,7 +228,7 @@ describe('gather coordinates test', () => {
 			),
 			createCompany(
 				[
-					createVehicle(2, [
+					createVehicle([
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
@@ -301,7 +301,7 @@ describe('gather coordinates test', () => {
 		const companies = [
 			createCompany(
 				[
-					createVehicle(1, [
+					createVehicle([
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
@@ -310,7 +310,7 @@ describe('gather coordinates test', () => {
 			),
 			createCompany(
 				[
-					createVehicle(2, [
+					createVehicle([
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
@@ -377,7 +377,7 @@ describe('gather coordinates test', () => {
 		const companies = [
 			createCompany(
 				[
-					createVehicle(1, [
+					createVehicle([
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
