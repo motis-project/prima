@@ -31,9 +31,4 @@ export type Event = {
 	id: number;
 	coordinates: Coordinates;
 	tourId: number;
-	arrival: Date;
-	departure: Date;
-	communicated: Date;
-	approachDuration: number;
-	returnDuration: number;
 };

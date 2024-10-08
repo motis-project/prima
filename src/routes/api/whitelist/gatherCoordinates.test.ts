@@ -33,11 +33,6 @@ const createEvent = (coordinates: Coordinates): Event => {
 		id: 1,
 		coordinates,
 		tourId: 1,
-		arrival: new Date(),
-		departure: new Date(),
-		communicated: new Date(),
-		approachDuration: 0,
-		returnDuration: 0,
 		time: new Interval(new Date(), new Date())
 	};
 };
