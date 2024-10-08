@@ -146,7 +146,7 @@ export enum Direction {
 	Backward
 }
 
-export type oneToManyResult = {
+export type OneToManyResult = {
 	duration: number;
 	distance: number;
 };
@@ -155,7 +155,7 @@ export const oneToMany = async (
 	one: Coordinates,
 	many: Coordinates[],
 	direction: Direction
-): Promise<oneToManyResult[]> => {
+): Promise<OneToManyResult[]> => {
 	const dir = direction == Direction.Forward ? 'Forward' : 'Backward';
 	const response = await fetch('https://europe.motis-project.de/', {
 		headers: {
