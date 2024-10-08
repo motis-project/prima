@@ -61,29 +61,31 @@ export function gatherRoutingCoordinates(
 		busStopCompanyFilter,
 		insertionsByVehicle,
 		(insertionInfo, _insertionCounter, busStopFilter) => {
-			if (insertionInfo.insertionIdx != 0) {
-				userChosenBackwardMany.push(
-					insertionInfo.vehicle.events[insertionInfo.insertionIdx - 1].coordinates
-				);
+			const backwardCoordinates = (
+				insertionInfo.insertionIdx != 0
+					? insertionInfo.vehicle.events[insertionInfo.insertionIdx - 1]
+					: insertionInfo.vehicle.lastEventBefore
+			)?.coordinates;
+			const forwardCoordinates = (
+				insertionInfo.insertionIdx != insertionInfo.vehicle.events.length
+					? insertionInfo.vehicle.events[insertionInfo.insertionIdx]
+					: insertionInfo.vehicle.firstEventAfter
+			)?.coordinates;
+			if (backwardCoordinates != undefined) {
+				userChosenBackwardMany.push(backwardCoordinates);
 			}
-			if (insertionInfo.insertionIdx != insertionInfo.vehicle.events.length) {
-				userChosenForwardMany.push(
-					insertionInfo.vehicle.events[insertionInfo.insertionIdx].coordinates
-				);
+			if (forwardCoordinates != undefined) {
+				userChosenForwardMany.push(forwardCoordinates);
 			}
 			for (let busStopIdx = 0; busStopIdx != busStopFilter.length; ++busStopIdx) {
 				if (!busStopFilter[busStopIdx]) {
 					continue;
 				}
-				if (insertionInfo.insertionIdx != 0) {
-					busStopBackwardMany[busStopIdx].push(
-						insertionInfo.vehicle.events[insertionInfo.insertionIdx - 1].coordinates
-					);
+				if (backwardCoordinates != undefined) {
+					busStopBackwardMany[busStopIdx].push(backwardCoordinates);
 				}
-				if (insertionInfo.insertionIdx != insertionInfo.vehicle.events.length) {
-					busStopForwardMany[busStopIdx].push(
-						insertionInfo.vehicle.events[insertionInfo.insertionIdx].coordinates
-					);
+				if (forwardCoordinates != undefined) {
+					busStopForwardMany[busStopIdx].push(forwardCoordinates);
 				}
 			}
 		}

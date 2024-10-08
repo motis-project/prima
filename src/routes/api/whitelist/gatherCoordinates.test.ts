@@ -376,4 +376,49 @@ describe('gather coordinates test', () => {
 		expect(coordinates.busStopBackwardMany[1][5].lat).toBe(103);
 		expect(coordinates.busStopForwardMany[1][5].lat).toBe(103);
 	});
+	it('insertion only possible before first event, lastEventBefore exists', () => {
+		let eventLatLng = 100;
+		let companyLatLng = 5;
+		const companies = [
+			createCompany(
+				[
+					createVehicle(1, [
+						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
+						createEvent(new Coordinates(eventLatLng, eventLatLng++))
+					])
+				],
+				new Coordinates(companyLatLng, companyLatLng++)
+			)
+		];
+		companies[0].vehicles[0].lastEventBefore = createEvent(
+			new Coordinates(eventLatLng, eventLatLng++)
+		);
+		const busStopCompanyFilter = [[true, true]];
+		const insertions = new Map<number, Range[]>();
+		insertions.set(1, [{ earliestPickup: 0, latestDropoff: 0 }]);
+		const coordinates = gatherRoutingCoordinates(companies, insertions, busStopCompanyFilter);
+		expect(coordinates.busStopBackwardMany).toHaveLength(2);
+		expect(coordinates.busStopForwardMany).toHaveLength(2);
+		expect(coordinates.userChosenBackwardMany).toHaveLength(2);
+		expect(coordinates.userChosenForwardMany).toHaveLength(2);
+		busStopCompanyFilter.forEach((_, idx) => {
+			expect(coordinates.busStopBackwardMany[idx]).toHaveLength(2);
+			expect(coordinates.busStopForwardMany[idx]).toHaveLength(2);
+		});
+		// company
+		expect(coordinates.userChosenBackwardMany[0].lat).toBe(5);
+		expect(coordinates.userChosenForwardMany[0].lat).toBe(5);
+		expect(coordinates.busStopBackwardMany[0][0].lat).toBe(5);
+		expect(coordinates.busStopForwardMany[0][0].lat).toBe(5);
+		expect(coordinates.busStopBackwardMany[1][0].lat).toBe(5);
+		expect(coordinates.busStopForwardMany[1][0].lat).toBe(5);
+
+		// event
+		expect(coordinates.userChosenBackwardMany[1].lat).toBe(102);
+		expect(coordinates.userChosenForwardMany[1].lat).toBe(100);
+		expect(coordinates.busStopBackwardMany[0][1].lat).toBe(102);
+		expect(coordinates.busStopForwardMany[0][1].lat).toBe(100);
+		expect(coordinates.busStopBackwardMany[1][1].lat).toBe(102);
+		expect(coordinates.busStopForwardMany[1][1].lat).toBe(100);
+	});
 });

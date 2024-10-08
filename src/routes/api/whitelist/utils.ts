@@ -29,10 +29,10 @@ export function iterateAllInsertions(
 						currentRange: insertion
 					};
 					insertionFn(info, insertionIdx, busStopFilter);
-					if (idxInEvents != 0) {
+					if (idxInEvents != 0 || vehicle.lastEventBefore != undefined) {
 						prevEventIdxInRoutingResults++;
 					}
-					if (idxInEvents != vehicle.events.length) {
+					if (idxInEvents != vehicle.events.length || vehicle.firstEventAfter != undefined) {
 						nextEventIdxInRoutingResults++;
 					}
 					insertionIdx++;
