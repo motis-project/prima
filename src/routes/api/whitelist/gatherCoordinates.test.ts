@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { type Range } from './capacitySimulation';
 import { Coordinates } from '$lib/location';
 import type { Vehicle, Company, Event } from '$lib/compositionTypes';
-import { Interval } from '$lib/interval';
 import { gatherRoutingCoordinates } from './routing';
+import { Interval } from '$lib/interval';
 
 const createCompany = (vehicles: Vehicle[], coordinates: Coordinates): Company => {
 	return {
@@ -19,7 +19,10 @@ const createVehicle = (id: number, events: Event[]): Vehicle => {
 		id,
 		capacities: { passengers: 0, bikes: 0, wheelchairs: 0, luggage: 0 },
 		events,
-		availabilities: []
+		tours: [],
+		availabilities: [],
+		lastEventBefore: undefined,
+		firstEventAfter: undefined
 	};
 };
 
@@ -27,13 +30,15 @@ const createEvent = (coordinates: Coordinates): Event => {
 	return {
 		capacities: { passengers: 0, bikes: 0, wheelchairs: 0, luggage: 0 },
 		is_pickup: true,
-		time: new Interval(new Date(), new Date()),
 		id: 1,
 		coordinates,
 		tourId: 1,
 		arrival: new Date(),
 		departure: new Date(),
-		communicated: new Date()
+		communicated: new Date(),
+		approachDuration: 0,
+		returnDuration: 0,
+		time: new Interval(new Date(), new Date())
 	};
 };
 
@@ -52,7 +57,7 @@ describe('gather coordinates test', () => {
 				new Coordinates(companyLatLng, companyLatLng++)
 			)
 		];
-		const busStopCompanyFilter = [[true], [true]];
+		const busStopCompanyFilter = [[true, true]];
 		const insertions = new Map<number, Range[]>();
 		insertions.set(1, [{ earliestPickup: 0, latestDropoff: 0 }]);
 		const coordinates = gatherRoutingCoordinates(companies, insertions, busStopCompanyFilter);
@@ -94,7 +99,7 @@ describe('gather coordinates test', () => {
 				new Coordinates(companyLatLng, companyLatLng++)
 			)
 		];
-		const busStopCompanyFilter = [[true], [true]];
+		const busStopCompanyFilter = [[true, true]];
 		const insertions = new Map<number, Range[]>();
 		insertions.set(1, [{ earliestPickup: 2, latestDropoff: 2 }]);
 		const coordinates = gatherRoutingCoordinates(companies, insertions, busStopCompanyFilter);
@@ -136,7 +141,7 @@ describe('gather coordinates test', () => {
 				new Coordinates(companyLatLng, companyLatLng++)
 			)
 		];
-		const busStopCompanyFilter = [[true], [true]];
+		const busStopCompanyFilter = [[true, true]];
 		const insertions = new Map<number, Range[]>();
 		insertions.set(1, [{ earliestPickup: 1, latestDropoff: 1 }]);
 		const coordinates = gatherRoutingCoordinates(companies, insertions, busStopCompanyFilter);
@@ -178,7 +183,7 @@ describe('gather coordinates test', () => {
 				new Coordinates(companyLatLng, companyLatLng++)
 			)
 		];
-		const busStopCompanyFilter = [[true], [true]];
+		const busStopCompanyFilter = [[true, true]];
 		const insertions = new Map<number, Range[]>();
 		insertions.set(1, [{ earliestPickup: 0, latestDropoff: 1 }]);
 		const coordinates = gatherRoutingCoordinates(companies, insertions, busStopCompanyFilter);

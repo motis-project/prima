@@ -16,7 +16,9 @@ function createEventCapacitiesOnly(capacities: Capacities, is_pickup: boolean): 
 		tourId: 1,
 		arrival: new Date(),
 		departure: new Date(),
-		communicated: new Date()
+		communicated: new Date(),
+		approachDuration: 1,
+		returnDuration: 1
 	};
 }
 

@@ -3,7 +3,7 @@ import type { BusStop } from '$lib/busStop';
 import type { Company } from '$lib/compositionTypes';
 import { Coordinates } from '$lib/location';
 import type { Range } from './capacitySimulation';
-import { iterateAllInsertions, ITERATE_INSERTIONS_MODE } from './utils';
+import { iterateAllInsertions } from './utils';
 
 export type InsertionRoutingResult = {
 	fromCompany: OneToManyResult[];
@@ -29,17 +29,25 @@ export function gatherRoutingCoordinates(
 	insertionsByVehicle: Map<number, Range[]>,
 	busStopCompanyFilter: boolean[][]
 ): RoutingCoordinates {
+	if (busStopCompanyFilter.length == 0) {
+		return {
+			busStopBackwardMany: [],
+			busStopForwardMany: [],
+			userChosenBackwardMany: [],
+			userChosenForwardMany: []
+		};
+	}
 	const userChosenForwardMany = new Array<Coordinates>();
 	const userChosenBackwardMany = new Array<Coordinates>();
-	const busStopForwardMany = new Array<Coordinates[]>(busStopCompanyFilter.length);
-	const busStopBackwardMany = new Array<Coordinates[]>(busStopCompanyFilter.length);
-	for (let busStopIdx = 0; busStopIdx != busStopCompanyFilter.length; ++busStopIdx) {
+	const busStopForwardMany = new Array<Coordinates[]>(busStopCompanyFilter[0].length);
+	const busStopBackwardMany = new Array<Coordinates[]>(busStopCompanyFilter[0].length);
+	for (let busStopIdx = 0; busStopIdx != busStopCompanyFilter[0].length; ++busStopIdx) {
 		busStopForwardMany[busStopIdx] = new Array<Coordinates>();
 		busStopBackwardMany[busStopIdx] = new Array<Coordinates>();
 	}
 	companies.forEach((company, companyIdx) => {
-		for (let busStopIdx = 0; busStopIdx != busStopCompanyFilter.length; ++busStopIdx) {
-			if (!busStopCompanyFilter[busStopIdx][companyIdx]) {
+		for (let busStopIdx = 0; busStopIdx != busStopCompanyFilter[0].length; ++busStopIdx) {
+			if (!busStopCompanyFilter[companyIdx][busStopIdx]) {
 				continue;
 			}
 			busStopForwardMany[busStopIdx].push(company.coordinates);
@@ -49,20 +57,34 @@ export function gatherRoutingCoordinates(
 		userChosenBackwardMany.push(company.coordinates);
 	});
 	iterateAllInsertions(
-		ITERATE_INSERTIONS_MODE.SINGLE,
 		companies,
 		busStopCompanyFilter,
 		insertionsByVehicle,
-		(busStopIdx, InsertionInfo, _) => {
-			const backwardMany =
-				busStopIdx == undefined ? userChosenBackwardMany : busStopBackwardMany[busStopIdx];
-			const forwardMany =
-				busStopIdx == undefined ? userChosenForwardMany : busStopForwardMany[busStopIdx];
-			if (InsertionInfo.insertionIdx != 0) {
-				backwardMany.push(InsertionInfo.vehicle.events[InsertionInfo.insertionIdx - 1].coordinates);
+		(insertionInfo, _insertionCounter, busStopFilter) => {
+			if (insertionInfo.insertionIdx != 0) {
+				userChosenBackwardMany.push(
+					insertionInfo.vehicle.events[insertionInfo.insertionIdx - 1].coordinates
+				);
 			}
-			if (InsertionInfo.insertionIdx != InsertionInfo.vehicle.events.length) {
-				forwardMany.push(InsertionInfo.vehicle.events[InsertionInfo.insertionIdx].coordinates);
+			if (insertionInfo.insertionIdx != insertionInfo.vehicle.events.length) {
+				userChosenForwardMany.push(
+					insertionInfo.vehicle.events[insertionInfo.insertionIdx].coordinates
+				);
+			}
+			for (let busStopIdx = 0; busStopIdx != busStopFilter.length; ++busStopIdx) {
+				if (!busStopFilter[busStopIdx]) {
+					continue;
+				}
+				if (insertionInfo.insertionIdx != 0) {
+					busStopBackwardMany[busStopIdx].push(
+						insertionInfo.vehicle.events[insertionInfo.insertionIdx - 1].coordinates
+					);
+				}
+				if (insertionInfo.insertionIdx != insertionInfo.vehicle.events.length) {
+					busStopForwardMany[busStopIdx].push(
+						insertionInfo.vehicle.events[insertionInfo.insertionIdx].coordinates
+					);
+				}
 			}
 		}
 	);

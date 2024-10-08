@@ -12,8 +12,16 @@ export type Company = {
 export type Vehicle = {
 	id: number;
 	capacities: Capacities;
+	tours: Tour[];
 	events: Event[];
 	availabilities: Interval[];
+	lastEventBefore: Event | undefined;
+	firstEventAfter: Event | undefined;
+};
+
+export type Tour = {
+	arrival: Date;
+	departure: Date;
 };
 
 export type Event = {
@@ -26,4 +34,6 @@ export type Event = {
 	arrival: Date;
 	departure: Date;
 	communicated: Date;
+	approachDuration: number;
+	returnDuration: number;
 };
