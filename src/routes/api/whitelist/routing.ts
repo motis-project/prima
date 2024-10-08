@@ -106,7 +106,7 @@ export async function routing(
 ): Promise<RoutingResults> {
 	const from = await oneToMany(userChosen, coordinates.userChosenBackwardMany, Direction.Backward);
 	const to = await oneToMany(userChosen, coordinates.userChosenForwardMany, Direction.Forward);
-	const ret = {
+	const routingResults = {
 		userChosen: {
 			fromCompany: from.slice(0, busStops.length),
 			fromPrevEvent: from.slice(busStops.length),
@@ -128,12 +128,12 @@ export async function routing(
 			coordinates.busStopForwardMany[busStopIdx],
 			Direction.Forward
 		);
-		ret.busStops[busStopIdx] = {
+		routingResults.busStops[busStopIdx] = {
 			fromCompany: from.slice(0, relevantCompanyCount),
 			fromPrevEvent: from.slice(relevantCompanyCount),
 			toCompany: to.slice(0, relevantCompanyCount),
 			toNextEvent: to.slice(relevantCompanyCount)
 		};
 	}
-	return ret;
+	return routingResults;
 }
