@@ -37,7 +37,7 @@
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel>Abbrechen</AlertDialog.Cancel>
-			<AlertDialog.Action on:click={handleConfirm}>Ok</AlertDialog.Action>
+			<AlertDialog.Action on:click={handleConfirm}>Bestätigen</AlertDialog.Action>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>

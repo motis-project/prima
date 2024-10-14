@@ -1,7 +1,7 @@
 import { migrateToLatest } from '$lib/migrate';
 import { lucia } from '$lib/auth';
 import { db } from '$lib/database';
-import type { Handle } from '@sveltejs/kit';
+import { redirect, type Handle } from '@sveltejs/kit';
 
 migrateToLatest(db);
 
@@ -31,5 +31,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	event.locals.user = user;
 	event.locals.session = session;
+
+	if (event.route.id?.startsWith('/(user)') && (!user || !user.is_entrepreneur || !user.company)) {
+		return redirect(302, '/login');
+	}
+
 	return resolve(event);
 };

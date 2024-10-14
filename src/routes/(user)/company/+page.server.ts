@@ -2,7 +2,8 @@ import type { PageServerLoad, Actions } from './$types.js';
 import { fail } from '@sveltejs/kit';
 import { db } from '$lib/database';
 import { AddressGuess, geoCode } from '$lib/api.js';
-import { sql } from 'kysely';
+import type { Coordinates } from '$lib/location.js';
+import { covers, intersects } from '$lib/sqlHelpers.js';
 
 export const load: PageServerLoad = async (event) => {
 	const companyId = event.locals.user?.company;
@@ -71,35 +72,13 @@ export const actions = {
 			return fail(400, { error: 'Die Addresse konnte nicht gefunden werden.' });
 		}
 
-		if (
-			!(await db
-				.selectFrom('zone')
-				.where((eb) =>
-					eb.and([
-						eb('zone.id', '=', community_area),
-						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${bestAddressGuess!.pos.lng}, ${bestAddressGuess!.pos.lat}),4326))`
-					])
-				)
-				.executeTakeFirst())
-		) {
+		if (!(await contains(community_area, bestAddressGuess.pos))) {
 			return fail(400, {
 				error: 'Die Addresse liegt nicht in der ausgewählten Gemeinde.'
 			});
 		}
 
-		if (
-			!(await db
-				.selectFrom('zone as compulsory_area')
-				.where('compulsory_area.id', '=', zone)
-				.innerJoin(
-					(eb) =>
-						eb.selectFrom('zone').where('id', '=', community_area).selectAll().as('community'),
-					(join) => join.onTrue()
-				)
-				.where(sql<boolean>`ST_Intersects(compulsory_area.area, community.area)`)
-				.selectAll()
-				.executeTakeFirst())
-		) {
+		if (!(await intersects(zone, community_area))) {
 			return fail(400, {
 				error: 'Die Gemeinde liegt nicht im Pflichtfahrgebiet.'
 			});
@@ -121,3 +100,12 @@ export const actions = {
 		return { success: true };
 	}
 } satisfies Actions;
+
+const contains = async (community: number, coordinates: Coordinates): Promise<boolean> => {
+	return (
+		(await db
+			.selectFrom('zone')
+			.where((eb) => eb.and([eb('zone.id', '=', community), covers(eb, coordinates!)]))
+			.executeTakeFirst()) != undefined
+	);
+};
