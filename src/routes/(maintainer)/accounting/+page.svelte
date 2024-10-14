@@ -5,12 +5,16 @@
 	import { type TourDetails } from '$lib/TourDetails.js';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
-	import { ChevronsRight, ChevronsLeft } from 'lucide-svelte';
+	import { ChevronsRight, ChevronsLeft, ChevronsUpDown } from 'lucide-svelte';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
 	import Label from '$lib/components/ui/label/label.svelte';
-	import { Input } from '$lib/components/ui/input';
 	import { onMount } from 'svelte';
+	import {
+     getLocalTimeZone,
+     today
+    } from "@internationalized/date";
+	import { RangeCalendar } from "$lib/components/ui/range-calendar/index.js";
 
 	const { data } = $props();
 
@@ -27,14 +31,21 @@
 		if (fare == null || fare_route == null) {
 			return 0;
 		}
-		return fare + fare_route;
+		return (Math.round(fare + fare_route)/100).toFixed(2);
 	};
 
 	const getCost = (fare: number | null, fare_route: number | null) => {
 		if (fare == null || fare_route == null) {
 			return 0;
 		}
-		return (fare_route - fare) * 0.97;
+		return (Math.round((fare_route - fare) * 0.97)/100).toFixed(2);
+	};
+
+	const getPrice = (price: number | null) => {
+		if (price == null) {
+			return 0;
+		}
+		return (price / 100).toFixed(2);
 	};
 
 	let rows = [];
@@ -67,7 +78,15 @@
 		currentPageRows = totalPages.length > 0 ? totalPages[page] : [];
 	};
 
+	// --- Sortierung: ---
+	const sort = (des: boolean) => {
+		console.log("Sort Erreicht");
+	};
+
 	// --- Filter: ---
+	let start = today(getLocalTimeZone());
+  	let end = start.add({ days: 7 });
+  	let range = $state({ start, end });
 	let selectedCompany = $state('Unternehmen');
 	let companys = $state([data.tours.at(0)?.company_name]);
 	const setCompanys = (tours: TourDetails[]) => {
@@ -82,6 +101,9 @@
 	const restore = () => {
 		selectedTimespan = 'Zeitraum';
 		selectedCompany = 'Unternehmen';
+		start = today(getLocalTimeZone());
+  		end = start.add({ days: 7 });
+  		range = { start, end };
 		paginate(data.tours);
 		setPage(0);
 	};
@@ -96,51 +118,72 @@
 		'Letztes Jahr'
 	];
 
-	const filter = (comp: boolean, time: boolean, selectedCompany: string, selectedTime: string) => {
+	const filter = (comp: boolean, time: boolean, span: boolean, selectedCompany: string, selectedTime: string) => {
 		let newrows: TourDetails[] = [];
+		const currentDate = new Date();
+		let year = currentDate.getFullYear();
+		if (span) {
+			for (let row of data.tours) {
+			// TODO: Test über Monate hinaus!	
+				if (row.from.getFullYear() == range.start.year || row.from.getFullYear() == range.end.year) {
+					if (row.from.getMonth() == range.start.month - 1 || row.from.getMonth() == range.end.month - 1) {
+						if (row.from.getDate() > range.start.day && row.from.getDate() < range.end.day) {
+							newrows.push(row);
+						}
+					}
+				}	
+			}
+		}
 		if (comp) {
 			for (let row of data.tours) {
 				if (row.company_name == selectedCompany) {
 					newrows.push(row);
 				}
 			}
-		} else if (time) {
+		}
+		if (time) {
 			switch (selectedTime) {
 				case 'Quartal 1':
 					{
 						for (let row of data.tours) {
-							if (
-								row.from.getMonth() == 0 ||
-								row.from.getMonth() == 1 ||
-								row.from.getMonth() == 2
-							) {
-								newrows.push(row);
-							}
+							if (row.from.getFullYear() == year) {
+								if (
+									row.from.getMonth() == 0 ||
+									row.from.getMonth() == 1 ||
+									row.from.getMonth() == 2
+								) {
+									newrows.push(row);
+								}
+							}	
 						}
 					}
 					break;
 				case 'Quartal 2':
 					{
 						for (let row of data.tours) {
-							if (
-								row.from.getMonth() == 3 ||
-								row.from.getMonth() == 4 ||
-								row.from.getMonth() == 5
-							) {
-								newrows.push(row);
+							if (row.from.getFullYear() == year) {
+								if (
+									row.from.getMonth() == 3 ||
+									row.from.getMonth() == 4 ||
+									row.from.getMonth() == 5
+								) {
+									newrows.push(row);
+								}
 							}
-						}
+						}	
 					}
 					break;
 				case 'Quartal 3':
 					{
 						for (let row of data.tours) {
-							if (
-								row.from.getMonth() == 6 ||
-								row.from.getMonth() == 7 ||
-								row.from.getMonth() == 8
-							) {
-								newrows.push(row);
+							if (row.from.getFullYear() == year) {
+								if (
+									row.from.getMonth() == 6 ||
+									row.from.getMonth() == 7 ||
+									row.from.getMonth() == 8
+								) {
+									newrows.push(row);
+								}
 							}
 						}
 					}
@@ -148,20 +191,20 @@
 				case 'Quartal 4':
 					{
 						for (let row of data.tours) {
-							if (
-								row.from.getMonth() == 9 ||
-								row.from.getMonth() == 10 ||
-								row.from.getMonth() == 11
-							) {
-								newrows.push(row);
+							if (row.from.getFullYear() == year) {
+								if (
+									row.from.getMonth() == 9 ||
+									row.from.getMonth() == 10 ||
+									row.from.getMonth() == 11
+								) {
+									newrows.push(row);
+								}
 							}
 						}
 					}
 					break;
 				case 'Aktuelles Jahr':
 					{
-						const currentDate = new Date();
-						let year = currentDate.getFullYear();
 						for (let row of data.tours) {
 							if (row.from.getFullYear() == year) {
 								newrows.push(row);
@@ -171,10 +214,8 @@
 					break;
 				case 'Letztes Jahr':
 					{
-						const currentDate = new Date();
-						let year = currentDate.getFullYear() - 1;
 						for (let row of data.tours) {
-							if (row.from.getFullYear() == year) {
+							if (row.from.getFullYear() == year - 1) {
 								newrows.push(row);
 							}
 						}
@@ -183,11 +224,15 @@
 				default:
 					newrows = data.tours;
 			}
-		} else {
+		}
+		if(span == false && comp == false && time == false) {
 			newrows = data.tours;
 		}
 		selectedTimespan = 'Zeitraum';
 		selectedCompany = 'Unternehmen';
+		start = today(getLocalTimeZone());
+  		end = start.add({ days: 7 });
+  		range = { start, end };
 		paginate(newrows);
 		setPage(0);
 	};
@@ -202,7 +247,7 @@
 		<Button type="submit" on:click={() => restore()}>Filter zurücksetzten</Button>
 		<Dialog.Root>
 			<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}>Filteroptionen</Dialog.Trigger>
-			<Dialog.Content class="sm:max-w-[450px]">
+			<Dialog.Content class="sm:max-w-[600px]">
 				<Dialog.Header>
 					<Dialog.Title>Filteroptionen</Dialog.Title>
 					<Dialog.Description>
@@ -241,10 +286,9 @@
 						{/each}
 					</select>
 				</div>
-				<div class="grid grid-cols-2 items-center gap-4">
-					<!-- TODO: Kalender für custom Timespan -->
+				<div class="grid grid-cols-2 items-start gap-4">
 					<Label for="timespan" class="text-left">Filter nach beliebigem Zeitraum:</Label>
-					<Input id="timespan" value="01.01.2024" class="max-w-[275px]" />
+					<RangeCalendar bind:value={range}/>
 				</div>
 				<Dialog.Close class="text-right">
 					<Button
@@ -253,6 +297,7 @@
 							filter(
 								selectedCompany != 'Unternehmen',
 								selectedTimespan != 'Zeitraum',
+								(range.end == end && range.start == start) ? false : true,
 								selectedCompany,
 								selectedTimespan
 							)}
@@ -269,7 +314,10 @@
 		<Table.Header>
 			<Table.Row>
 				<Table.Head class="mt-6.5">Unternehmen</Table.Head>
-				<Table.Head class="mt-6.5">Abfahrt</Table.Head>
+				<Table.Head class="mt-6 flex justify-start">
+					Abfahrt
+					<ChevronsUpDown class="mx-2 size-5" on:click={() => sort(true)}></ChevronsUpDown>
+				</Table.Head>
 				<Table.Head class="mt-6.5">Ankunft</Table.Head>
 				<Table.Head class="mt-6.5">Anzahl Kunden</Table.Head>
 				<Table.Head class="mt-6.5">Taxameterpreis</Table.Head>
@@ -285,8 +333,8 @@
 					<Table.Cell>{tour.from.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
 					<Table.Cell>{tour.to.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
 					<Table.Cell>{getCustomerCount(tour)}</Table.Cell>
-					<Table.Cell>{tour.fare_route} €</Table.Cell>
-					<Table.Cell>{tour.fare} €</Table.Cell>
+					<Table.Cell>{getPrice(tour.fare_route)} €</Table.Cell>
+					<Table.Cell>{getPrice(tour.fare)} €</Table.Cell>
 					<Table.Cell>{getTotalPrice(tour.fare, tour.fare_route)} €</Table.Cell>
 					<Table.Cell>{getCost(tour.fare, tour.fare_route)} €</Table.Cell>
 				</Table.Row>
