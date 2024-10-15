@@ -5,29 +5,19 @@
 	const { children } = $props();
 	const routeLinks = [
 		{
-			name: 'Taxi',
-			href: '/taxi'
-		},
-		{
-			name: 'Stammdaten',
-			href: '/company'
+			name: 'Freischaltung',
+			href: '/maintainer/activation'
 		},
 		{
 			name: 'Abgeschlossene Fahrten',
-			href: '/tours'
-		},
-		{
-			name: 'Fahrer',
-			href: '/drivers'
-		},
-		{
-			name: 'Verwaltung',
-			href: '/administration'
+			href: '/maintainer/completed_tours'
 		}
 	];
+
+	console.log('Hello from maintainer layout');
 </script>
 
-<div class="flex max-h-screen">
+<div class="flex min-h-screen">
 	<div class="container min-w-[1440px] relative my-20">
 		<section>
 			<Nav {routeLinks} />
