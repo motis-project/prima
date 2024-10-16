@@ -5,7 +5,7 @@
 	import { type TourDetails } from '$lib/TourDetails.js';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
-	import { ChevronsRight, ChevronsLeft } from 'lucide-svelte';
+	import { ChevronsRight, ChevronsLeft, ChevronsUpDown } from 'lucide-svelte';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
 	import Label from '$lib/components/ui/label/label.svelte';
@@ -45,7 +45,7 @@
 		return (price / 100).toFixed(2);
 	};
 
-	let rows = [];
+	let currentRows: TourDetails[] = [];
 	let page = $state(0);
 	let perPage = 5;
 	let firstPage = data.tours.slice(0, perPage);
@@ -63,9 +63,9 @@
 	};
 
 	onMount(() => {
-		rows = data.tours;
-		paginate(rows);
-		setCompanys(rows);
+		currentRows = data.tours;
+		paginate(currentRows);
+		setCompanys(currentRows);
 	});
 
 	const setPage = (p: number) => {
@@ -75,10 +75,143 @@
 		currentPageRows = totalPages.length > 0 ? totalPages[page] : [];
 	};
 
-	// --- Sortierung: ---
-	//const sort = (des: boolean) => {
-	//	console.log('Sort Erreicht');
-	//};
+	// --- Sort: ---
+	let descending = [true, true, true, true];
+
+	// -1 => a before b
+	//  1 => a after b
+	//  0 => equal 
+
+	const compareDate = (a: TourDetails, b: TourDetails) => {
+		if (a.from.getFullYear() < b.from.getFullYear()) return -1; 
+		if (a.from.getFullYear() > b.from.getFullYear()) return 1; 
+		if (a.from.getMonth() < b.from.getMonth()) return -1;
+		if (a.from.getMonth() > b.from.getMonth()) return 1;
+		if (a.from.getDate() < b.from.getDate()) return -1;
+		if (a.from.getDate() > b.from.getDate()) return 1;	  
+  		return 0; 
+	};		
+
+	const compareFareRoute = (a: TourDetails, b: TourDetails) => {
+		if (a.fare_route == null && b.fare_route == null) return 0;
+		if (a.fare_route == null) return 1;
+		if (b.fare_route == null) return -1;
+  		if (a.fare_route != null && b.fare_route != null && a.fare_route < b.fare_route) return -1; 
+  		if (a.fare_route != null && b.fare_route != null && a.fare_route > b.fare_route) return 1;  
+  		return 0; 
+	};		
+
+	const compareTotalPrice = (a: TourDetails, b: TourDetails) => {
+		let aTotal = getTotalPrice(a.fare, a.fare_route);
+		let bTotal = getTotalPrice(b.fare, b.fare_route);
+  		if (+aTotal < +bTotal) return -1; 
+  		if (+aTotal > +bTotal) return 1;  
+  		return 0; 
+	};	
+	
+	const compareCost = (a: TourDetails, b: TourDetails) => {
+		let aCost = getCost(a.fare, a.fare_route);
+		let bCost = getCost(b.fare, b.fare_route);
+  		if (+aCost < +bCost) return -1; 
+  		if (+aCost > +bCost) return 1;  
+  		return 0; 
+	};
+
+	const sort = (des: boolean[], idx: number) => {
+		if(des[idx]) {
+			switch (idx) {
+				case 0:
+					{ 
+						currentRows.sort(compareDate); 
+						paginate(currentRows);
+						setPage(0);
+						descending[0] = false;
+						// all others reset
+						descending[1] = true;
+						descending[2] = true;
+						descending[3] = true;
+						break;
+					}
+				case 1: 
+					{ 
+						currentRows.sort(compareFareRoute); 
+						paginate(currentRows);
+						setPage(0);
+						descending[1] = false;
+						// all others reset
+						descending[0] = true;
+						descending[2] = true;
+						descending[3] = true;
+						break;
+					}
+				case 2:	
+					{ 
+						currentRows.sort(compareTotalPrice); 
+						paginate(currentRows);
+						setPage(0);
+						descending[2] = false;
+						// all others reset
+						descending[0] = true;
+						descending[1] = true;
+						descending[3] = true;
+						break;
+					}
+				case 3:
+					{ 
+						currentRows.sort(compareCost); 
+						paginate(currentRows);
+						setPage(0);
+						descending[3] = false;
+						// all others reset
+						descending[0] = true;
+						descending[1] = true;
+						descending[2] = true;
+						break;
+					}
+				default: return;
+			}
+		} else {
+			switch (idx) {
+				case 0:
+					{ 
+						currentRows.sort(compareDate); 
+						currentRows.reverse();
+						paginate(currentRows);
+						setPage(0);
+						descending[0] = true;
+						break;
+					}
+				case 1: 
+					{ 
+						currentRows.sort(compareFareRoute);
+						currentRows.reverse(); 
+						paginate(currentRows);
+						setPage(0);
+						descending[1] = true;
+						break;
+					}
+				case 2:	
+					{ 
+						currentRows.sort(compareTotalPrice);
+						currentRows.reverse(); 
+						paginate(currentRows);
+						setPage(0);
+						descending[2] = true;
+						break;
+					}
+				case 3:
+					{ 
+						currentRows.sort(compareCost);
+						currentRows.reverse(); 
+						paginate(currentRows);
+						setPage(0);
+						descending[3] = true;
+						break;
+					}
+				default: return;
+			}
+		}
+	};
 
 	// --- Filter: ---
 	let start = today(getLocalTimeZone());
@@ -101,7 +234,8 @@
 		start = today(getLocalTimeZone());
 		end = start.add({ days: 7 });
 		range = { start, end };
-		paginate(data.tours);
+		currentRows = data.tours;
+		paginate(currentRows);
 		setPage(0);
 	};
 
@@ -248,7 +382,8 @@
 		start = today(getLocalTimeZone());
 		end = start.add({ days: 7 });
 		range = { start, end };
-		paginate(newrows);
+		currentRows = newrows;
+		paginate(currentRows);
 		setPage(0);
 	};
 </script>
@@ -329,16 +464,29 @@
 		<Table.Header>
 			<Table.Row>
 				<Table.Head class="mt-6.5">Unternehmen</Table.Head>
-				<Table.Head class="mt-6 flex justify-start">
-					Abfahrt
-					<!--<ChevronsUpDown class="mx-2 size-5" on:click={() => sort(true)}></ChevronsUpDown>-->
+				<Table.Head class="mt-6.5">
+					<Button class=whitespace-pre variant="outline" on:click={() => sort(descending, 0)}>
+						{'Abfahrt  '} <ChevronsUpDown class="h-6 w-4" />
+					</Button>	
 				</Table.Head>
 				<Table.Head class="mt-6.5">Ankunft</Table.Head>
 				<Table.Head class="mt-6.5">Anzahl Kunden</Table.Head>
-				<Table.Head class="mt-6.5">Taxameterpreis</Table.Head>
+				<Table.Head class="mt-6.5">
+					<Button class=whitespace-pre variant="outline" on:click={() => sort(descending, 1)}>
+						{'Taxameterpreis  '} <ChevronsUpDown class="h-6 w-4" />
+					</Button>
+				</Table.Head>
 				<Table.Head class="mt-6.5">ÖV-Preis</Table.Head>
-				<Table.Head class="mt-6.5">Gesamtpreis</Table.Head>
-				<Table.Head class="mt-6.5">Kosten</Table.Head>
+				<Table.Head class="mt-6.5">
+					<Button class=whitespace-pre variant="outline" on:click={() => sort(descending, 2)}>
+						{'Gesamtpreis  '} <ChevronsUpDown class="h-6 w-4" />
+					</Button>
+				</Table.Head>
+				<Table.Head class="mt-6.5">
+					<Button class=whitespace-pre variant="outline" on:click={() => sort(descending, 3)}>
+						{'Kosten  '} <ChevronsUpDown class="h-6 w-4" />
+					</Button>
+				</Table.Head>
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
