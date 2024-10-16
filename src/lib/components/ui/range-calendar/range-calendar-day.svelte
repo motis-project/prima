@@ -4,7 +4,7 @@
 	import { cn } from "$lib/utils.js";
 
 	type $$Props = RangeCalendarPrimitive.DayProps;
-	type $$Events = RangeCalendarPrimitive.DayEvents;
+	//type $$Events = RangeCalendarPrimitive.DayEvents;
 
 	export let date: $$Props["date"];
 	export let month: $$Props["month"];

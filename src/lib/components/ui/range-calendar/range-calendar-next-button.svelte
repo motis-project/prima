@@ -5,7 +5,7 @@
 	import { cn } from "$lib/utils.js";
 
 	type $$Props = RangeCalendarPrimitive.NextButtonProps;
-	type $$Events = RangeCalendarPrimitive.NextButtonEvents;
+	//type $$Events = RangeCalendarPrimitive.NextButtonEvents;
 
 	let className: $$Props["class"] = undefined;
 	export { className as class };

@@ -10,7 +10,7 @@
 	  import * as Select from "$lib/components/ui/select/index.js";
 
 	type $$Props = RangeCalendarPrimitive.Props;
-	type $$Events = RangeCalendarPrimitive.Events;
+	//type $$Events = RangeCalendarPrimitive.Events; 
 
 	export let value: $$Props["value"] = undefined;
 	export let placeholder: $$Props["placeholder"] = today(getLocalTimeZone());

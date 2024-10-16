@@ -2,7 +2,7 @@
 	import { RangeCalendar as RangeCalendarPrimitive } from "bits-ui";
 	import { cn } from "$lib/utils.js";
 
-	type $$Props = RangeCalendarPrimitive.HeadingProps;
+	//type $$Props = RangeCalendarPrimitive.HeadingProps;
 
 	let className: string | undefined | null = undefined;
 	export { className as class };

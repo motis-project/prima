@@ -5,16 +5,13 @@
 	import { type TourDetails } from '$lib/TourDetails.js';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
-	import { ChevronsRight, ChevronsLeft, ChevronsUpDown } from 'lucide-svelte';
+	import { ChevronsRight, ChevronsLeft } from 'lucide-svelte';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { onMount } from 'svelte';
-	import {
-     getLocalTimeZone,
-     today
-    } from "@internationalized/date";
-	import { RangeCalendar } from "$lib/components/ui/range-calendar/index.js";
+	import { getLocalTimeZone, today } from '@internationalized/date';
+	import { RangeCalendar } from '$lib/components/ui/range-calendar/index.js';
 
 	const { data } = $props();
 
@@ -31,14 +28,14 @@
 		if (fare == null || fare_route == null) {
 			return 0;
 		}
-		return (Math.round(fare + fare_route)/100).toFixed(2);
+		return (Math.round(fare + fare_route) / 100).toFixed(2);
 	};
 
 	const getCost = (fare: number | null, fare_route: number | null) => {
 		if (fare == null || fare_route == null) {
 			return 0;
 		}
-		return (Math.round((fare_route - fare) * 0.97)/100).toFixed(2);
+		return (Math.round((fare_route - fare) * 0.97) / 100).toFixed(2);
 	};
 
 	const getPrice = (price: number | null) => {
@@ -79,14 +76,14 @@
 	};
 
 	// --- Sortierung: ---
-	const sort = (des: boolean) => {
-		console.log("Sort Erreicht");
-	};
+	//const sort = (des: boolean) => {
+	//	console.log('Sort Erreicht');
+	//};
 
 	// --- Filter: ---
 	let start = today(getLocalTimeZone());
-  	let end = start.add({ days: 7 });
-  	let range = $state({ start, end });
+	let end = start.add({ days: 7 });
+	let range = $state({ start, end });
 	let selectedCompany = $state('Unternehmen');
 	let companys = $state([data.tours.at(0)?.company_name]);
 	const setCompanys = (tours: TourDetails[]) => {
@@ -102,8 +99,8 @@
 		selectedTimespan = 'Zeitraum';
 		selectedCompany = 'Unternehmen';
 		start = today(getLocalTimeZone());
-  		end = start.add({ days: 7 });
-  		range = { start, end };
+		end = start.add({ days: 7 });
+		range = { start, end };
 		paginate(data.tours);
 		setPage(0);
 	};
@@ -118,20 +115,38 @@
 		'Letztes Jahr'
 	];
 
-	const filter = (comp: boolean, time: boolean, span: boolean, selectedCompany: string, selectedTime: string) => {
+	const filter = (
+		comp: boolean,
+		time: boolean,
+		span: boolean,
+		selectedCompany: string,
+		selectedTime: string
+	) => {
 		let newrows: TourDetails[] = [];
 		const currentDate = new Date();
 		let year = currentDate.getFullYear();
 		if (span) {
 			for (let row of data.tours) {
-			// TODO: Test über Monate hinaus!	
-				if (row.from.getFullYear() == range.start.year || row.from.getFullYear() == range.end.year) {
-					if (row.from.getMonth() == range.start.month - 1 || row.from.getMonth() == range.end.month - 1) {
-						if (row.from.getDate() > range.start.day && row.from.getDate() < range.end.day) {
+				if (
+					row.from.getFullYear() == range.start.year ||
+					row.from.getFullYear() == range.end.year
+				) {
+					if (
+						row.from.getMonth() == range.start.month - 1 ||
+						row.from.getMonth() == range.end.month - 1
+					) {
+						let onemonth = range.start.month == range.end.month;
+						if (
+							(row.from.getDate() >= range.start.day &&
+								row.from.getDate() <= range.end.day &&
+								onemonth) ||
+							((row.from.getDate() >= range.start.day || row.from.getDate() <= range.end.day) &&
+								!onemonth)
+						) {
 							newrows.push(row);
 						}
 					}
-				}	
+				}
 			}
 		}
 		if (comp) {
@@ -154,7 +169,7 @@
 								) {
 									newrows.push(row);
 								}
-							}	
+							}
 						}
 					}
 					break;
@@ -170,7 +185,7 @@
 									newrows.push(row);
 								}
 							}
-						}	
+						}
 					}
 					break;
 				case 'Quartal 3':
@@ -225,14 +240,14 @@
 					newrows = data.tours;
 			}
 		}
-		if(span == false && comp == false && time == false) {
+		if (span == false && comp == false && time == false) {
 			newrows = data.tours;
 		}
 		selectedTimespan = 'Zeitraum';
 		selectedCompany = 'Unternehmen';
 		start = today(getLocalTimeZone());
-  		end = start.add({ days: 7 });
-  		range = { start, end };
+		end = start.add({ days: 7 });
+		range = { start, end };
 		paginate(newrows);
 		setPage(0);
 	};
@@ -288,7 +303,7 @@
 				</div>
 				<div class="grid grid-cols-2 items-start gap-4">
 					<Label for="timespan" class="text-left">Filter nach beliebigem Zeitraum:</Label>
-					<RangeCalendar bind:value={range}/>
+					<RangeCalendar bind:value={range} />
 				</div>
 				<Dialog.Close class="text-right">
 					<Button
@@ -297,7 +312,7 @@
 							filter(
 								selectedCompany != 'Unternehmen',
 								selectedTimespan != 'Zeitraum',
-								(range.end == end && range.start == start) ? false : true,
+								range.end == end && range.start == start ? false : true,
 								selectedCompany,
 								selectedTimespan
 							)}
@@ -316,7 +331,7 @@
 				<Table.Head class="mt-6.5">Unternehmen</Table.Head>
 				<Table.Head class="mt-6 flex justify-start">
 					Abfahrt
-					<ChevronsUpDown class="mx-2 size-5" on:click={() => sort(true)}></ChevronsUpDown>
+					<!--<ChevronsUpDown class="mx-2 size-5" on:click={() => sort(true)}></ChevronsUpDown>-->
 				</Table.Head>
 				<Table.Head class="mt-6.5">Ankunft</Table.Head>
 				<Table.Head class="mt-6.5">Anzahl Kunden</Table.Head>
