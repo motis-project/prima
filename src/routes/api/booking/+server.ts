@@ -1,4 +1,4 @@
-import { oneToMany, Direction, getRoute } from '$lib/api.js';
+import { getRoute } from '$lib/api.js';
 import { Coordinates } from '$lib/location.js';
 import { db } from '$lib/database';
 import { Interval } from '$lib/interval.js';
@@ -9,6 +9,9 @@ import { MAX_TRAVEL_DURATION, MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
 import { getFareEstimation } from './fare-estimation/fare_estimation.js';
 import { covers } from '$lib/sqlHelpers.js';
+import { oneToMany, type Duration } from '$lib/motis';
+
+const MOTIS_BASE_URL = 'https://europe.motis-project.de'
 
 const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 	const zoneContainingStartAndDestination = await db
@@ -31,21 +34,30 @@ export const POST = async (event) => {
 	const toCoordinates: Coordinates = to.coordinates;
 	const time = new Date(timeStamp);
 
+	const coordinatesToStr = (c: Coordinates) => {
+		return `${c.lat};${c.lng}`;
+	}
+
 	let travelDuration = 0;
 	try {
 		travelDuration = (
-			await getRoute({
-				start: { lat: from.coordinates.lat, lng: from.coordinates.lng },
-				destination: { lat: to.coordinates.lat, lng: to.coordinates.lng },
-				profile: 'car',
-				direction: 'forward'
-			})
-		).metadata.duration;
+			await oneToMany({
+				baseUrl: MOTIS_BASE_URL,
+				query: {
+					one: coordinatesToStr(fromCoordinates),
+					many: [coordinatesToStr(toCoordinates)],
+					max: 3600,
+					maxMatchingDistance: 100,
+					mode: 'CAR',
+					arriveBy: false
+				}
+			}).then((d) => d.data!)
+		)[0].duration;
 	} catch (e) {
 		return json(
 			{
 				status: 1,
-				message: 'Es ist ein Fehler im Routing von Start zu Ziel aufgetreten.'
+				message: `Es ist ein Fehler im Routing von Start zu Ziel aufgetreten: ${e}.`
 			},
 			{ status: 404 }
 		);
@@ -174,7 +186,7 @@ export const POST = async (event) => {
 
 	console.assert(
 		Math.max(...[...mergedAvailabilites.values()].map((availabilities) => availabilities.length)) <=
-			1
+		1
 	);
 
 	const availableVehicles = [...mergedAvailabilites.entries()]
@@ -226,18 +238,44 @@ export const POST = async (event) => {
 		return new Coordinates(vehicles![0].latitude!, vehicles![0].longitude!);
 	});
 
+
 	let durationToStart: Array<number> = [];
 	let durationFromTarget: Array<number> = [];
 	try {
-		// Motis-one_to_many requests
-		durationToStart = (
-			await oneToMany(fromCoordinates, centralCoordinates, Direction.Backward)
-		).map((res) => secondsToMs(res.duration));
-		durationFromTarget = (
-			await oneToMany(toCoordinates, centralCoordinates, Direction.Forward)
-		).map((res) => secondsToMs(res.duration));
+		durationToStart =
+			await oneToMany({
+				baseUrl: MOTIS_BASE_URL,
+				query: {
+					one: coordinatesToStr(fromCoordinates),
+					many: centralCoordinates.map(coordinatesToStr),
+					max: 3600,
+					maxMatchingDistance: 100,
+					mode: 'CAR',
+					arriveBy: false
+				}
+			}).then((res) => {
+				return res.data!.map((d: Duration) => {
+					return d.duration ?? Number.MAX_VALUE;
+				});
+			});
+
+		durationFromTarget = await oneToMany({
+			baseUrl: MOTIS_BASE_URL,
+			query: {
+				one: coordinatesToStr(toCoordinates),
+				many: centralCoordinates.map(coordinatesToStr),
+				max: 3600,
+				maxMatchingDistance: 100,
+				mode: 'CAR',
+				arriveBy: true
+			}
+		}).then((res) => {
+			return res.data!.map((d: Duration) => {
+				return d.duration ?? Number.MAX_VALUE;
+			});
+		});
 	} catch (e) {
-		return json({ status: 8, message: 'Routing Anfrage fehlgeschlagen' });
+		return json({ status: 8, message: `Routing Anfrage fehlgeschlagen: ${e}` }, { status: 500 });
 	}
 	const fullTravelIntervals = companies.map((_, index) =>
 		travelInterval.expand(durationToStart[index], durationFromTarget[index])

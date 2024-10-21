@@ -5,17 +5,29 @@
 	const { children } = $props();
 	const routeLinks = [
 		{
-			name: 'Freischaltung',
-			href: '/activation'
+			name: 'Taxi',
+			href: '/user/taxi'
+		},
+		{
+			name: 'Stammdaten',
+			href: '/user/company'
 		},
 		{
 			name: 'Abgeschlossene Fahrten',
-			href: '/completed_tours'
+			href: '/user/tours'
+		},
+		{
+			name: 'Fahrer',
+			href: '/user/drivers'
+		},
+		{
+			name: 'Verwaltung',
+			href: '/user/administration'
 		}
 	];
 </script>
 
-<div class="flex min-h-screen">
+<div class="flex max-h-screen">
 	<div class="container min-w-[1440px] relative my-20">
 		<section>
 			<Nav {routeLinks} />

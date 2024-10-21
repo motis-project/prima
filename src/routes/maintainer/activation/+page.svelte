@@ -6,6 +6,8 @@
 	import type { ActionData } from './$types';
 
 	export let form: ActionData;
+
+	console.log('Hello from maintainer page');
 </script>
 
 <div class="w-full h-full">
