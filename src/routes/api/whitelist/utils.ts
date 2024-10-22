@@ -2,9 +2,11 @@ import type { Company } from '$lib/compositionTypes';
 import type { Range } from './capacitySimulation';
 import type { InsertionInfo } from './insertionTypes';
 
+type VehicleId = number;
+
 export function iterateAllInsertions(
 	companies: Company[],
-	insertions: Map<number, Range[]>,
+	insertions: Map<VehicleId, Range[]>,
 	insertionFn: (info: InsertionInfo, insertionCounter: number, busStopFilter: boolean[]) => void
 ) {
 	let prevEventIdxInRoutingResults = 0;
