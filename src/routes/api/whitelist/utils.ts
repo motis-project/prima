@@ -4,7 +4,6 @@ import type { InsertionInfo } from './insertionTypes';
 
 export function iterateAllInsertions(
 	companies: Company[],
-	busStopCompanyFilter: boolean[][],
 	insertions: Map<number, Range[]>,
 	insertionFn: (info: InsertionInfo, insertionCounter: number, busStopFilter: boolean[]) => void
 ) {
@@ -12,7 +11,6 @@ export function iterateAllInsertions(
 	let nextEventIdxInRoutingResults = 0;
 	let insertionIdx = 0;
 	companies.forEach((company, companyIdx) => {
-		const busStopFilter = busStopCompanyFilter[companyIdx];
 		company.vehicles.forEach((vehicle) => {
 			insertions.get(vehicle.id)!.forEach((insertion) => {
 				for (
@@ -28,7 +26,7 @@ export function iterateAllInsertions(
 						nextEventIdxInRoutingResults,
 						currentRange: insertion
 					};
-					insertionFn(info, insertionIdx, busStopFilter);
+					insertionFn(info, insertionIdx, company.busStopFilter);
 					if (idxInEvents != 0 || vehicle.lastEventBefore != undefined) {
 						prevEventIdxInRoutingResults++;
 					}

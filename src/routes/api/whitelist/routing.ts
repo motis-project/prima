@@ -26,10 +26,9 @@ type RoutingCoordinates = {
 
 export function gatherRoutingCoordinates(
 	companies: Company[],
-	insertionsByVehicle: Map<number, Range[]>,
-	busStopCompanyFilter: boolean[][]
+	insertionsByVehicle: Map<number, Range[]>
 ): RoutingCoordinates {
-	if (busStopCompanyFilter.length == 0) {
+	if (companies.length == 0 || companies[0].busStopFilter.length == 0) {
 		return {
 			busStopBackwardMany: [],
 			busStopForwardMany: [],
@@ -37,17 +36,18 @@ export function gatherRoutingCoordinates(
 			userChosenForwardMany: []
 		};
 	}
+	const busStopCount = companies[0].busStopFilter.length;
 	const userChosenForwardMany = new Array<Coordinates>();
 	const userChosenBackwardMany = new Array<Coordinates>();
-	const busStopForwardMany = new Array<Coordinates[]>(busStopCompanyFilter[0].length);
-	const busStopBackwardMany = new Array<Coordinates[]>(busStopCompanyFilter[0].length);
-	for (let busStopIdx = 0; busStopIdx != busStopCompanyFilter[0].length; ++busStopIdx) {
+	const busStopForwardMany = new Array<Coordinates[]>(busStopCount);
+	const busStopBackwardMany = new Array<Coordinates[]>(busStopCount);
+	for (let busStopIdx = 0; busStopIdx != busStopCount; ++busStopIdx) {
 		busStopForwardMany[busStopIdx] = new Array<Coordinates>();
 		busStopBackwardMany[busStopIdx] = new Array<Coordinates>();
 	}
-	companies.forEach((company, companyIdx) => {
-		for (let busStopIdx = 0; busStopIdx != busStopCompanyFilter[0].length; ++busStopIdx) {
-			if (!busStopCompanyFilter[companyIdx][busStopIdx]) {
+	companies.forEach((company) => {
+		for (let busStopIdx = 0; busStopIdx != busStopCount; ++busStopIdx) {
+			if (!company.busStopFilter[busStopIdx]) {
 				continue;
 			}
 			busStopForwardMany[busStopIdx].push(company.coordinates);
@@ -58,7 +58,6 @@ export function gatherRoutingCoordinates(
 	});
 	iterateAllInsertions(
 		companies,
-		busStopCompanyFilter,
 		insertionsByVehicle,
 		(insertionInfo, _insertionCounter, busStopFilter) => {
 			const backwardCoordinates = (

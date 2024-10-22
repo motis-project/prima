@@ -5,18 +5,23 @@ import type { Vehicle, Company, Event } from '$lib/compositionTypes';
 import { gatherRoutingCoordinates } from './routing';
 import { Interval } from '$lib/interval';
 
-const createCompany = (vehicles: Vehicle[], coordinates: Coordinates): Company => {
+const createCompany = (
+	vehicles: Vehicle[],
+	coordinates: Coordinates,
+	busStopFilter: boolean[]
+): Company => {
 	return {
 		id: 1,
 		coordinates: coordinates,
 		vehicles,
-		zoneId: 1
+		zoneId: 1,
+		busStopFilter
 	};
 };
 
-const createVehicle = (events: Event[]): Vehicle => {
+const createVehicle = (id: number, events: Event[]): Vehicle => {
 	return {
-		id: 1,
+		id,
 		capacities: { passengers: 0, bikes: 0, wheelchairs: 0, luggage: 0 },
 		events,
 		tours: [],
@@ -33,6 +38,11 @@ const createEvent = (coordinates: Coordinates): Event => {
 		id: 1,
 		coordinates,
 		tourId: 1,
+		arrival: new Date(),
+		departure: new Date(),
+		communicated: new Date(),
+		approachDuration: 0,
+		returnDuration: 0,
 		time: new Interval(new Date(), new Date())
 	};
 };
@@ -44,26 +54,26 @@ describe('gather coordinates test', () => {
 		const companies = [
 			createCompany(
 				[
-					createVehicle([
+					createVehicle(1, [
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
 				],
-				new Coordinates(companyLatLng, companyLatLng++)
+				new Coordinates(companyLatLng, companyLatLng++),
+				[true, true]
 			)
 		];
-		const busStopCompanyFilter = [[true, true]];
 		const insertions = new Map<number, Range[]>();
 		insertions.set(1, [{ earliestPickup: 0, latestDropoff: 0 }]);
-		const coordinates = gatherRoutingCoordinates(companies, insertions, busStopCompanyFilter);
+		const coordinates = gatherRoutingCoordinates(companies, insertions);
 		expect(coordinates.busStopBackwardMany).toHaveLength(2);
 		expect(coordinates.busStopForwardMany).toHaveLength(2);
 		expect(coordinates.userChosenBackwardMany).toHaveLength(1);
 		expect(coordinates.userChosenForwardMany).toHaveLength(2);
-		busStopCompanyFilter.forEach((_, idx) => {
-			expect(coordinates.busStopBackwardMany[idx]).toHaveLength(1);
-			expect(coordinates.busStopForwardMany[idx]).toHaveLength(2);
-		});
+		for (let i = 0; i != 2; ++i) {
+			expect(coordinates.busStopBackwardMany[i]).toHaveLength(1);
+			expect(coordinates.busStopForwardMany[i]).toHaveLength(2);
+		}
 		// company
 		expect(coordinates.userChosenBackwardMany[0].lat).toBe(5);
 		expect(coordinates.userChosenForwardMany[0].lat).toBe(5);
@@ -86,26 +96,26 @@ describe('gather coordinates test', () => {
 		const companies = [
 			createCompany(
 				[
-					createVehicle([
+					createVehicle(1, [
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
 				],
-				new Coordinates(companyLatLng, companyLatLng++)
+				new Coordinates(companyLatLng, companyLatLng++),
+				[true, true]
 			)
 		];
-		const busStopCompanyFilter = [[true, true]];
 		const insertions = new Map<number, Range[]>();
 		insertions.set(1, [{ earliestPickup: 2, latestDropoff: 2 }]);
-		const coordinates = gatherRoutingCoordinates(companies, insertions, busStopCompanyFilter);
+		const coordinates = gatherRoutingCoordinates(companies, insertions);
 		expect(coordinates.busStopBackwardMany).toHaveLength(2);
 		expect(coordinates.busStopForwardMany).toHaveLength(2);
 		expect(coordinates.userChosenBackwardMany).toHaveLength(2);
 		expect(coordinates.userChosenForwardMany).toHaveLength(1);
-		busStopCompanyFilter.forEach((_, idx) => {
-			expect(coordinates.busStopBackwardMany[idx]).toHaveLength(2);
-			expect(coordinates.busStopForwardMany[idx]).toHaveLength(1);
-		});
+		for (let i = 0; i != 2; ++i) {
+			expect(coordinates.busStopBackwardMany[i]).toHaveLength(2);
+			expect(coordinates.busStopForwardMany[i]).toHaveLength(1);
+		}
 		// company
 		expect(coordinates.userChosenBackwardMany[0].lat).toBe(5);
 		expect(coordinates.userChosenForwardMany[0].lat).toBe(5);
@@ -128,26 +138,26 @@ describe('gather coordinates test', () => {
 		const companies = [
 			createCompany(
 				[
-					createVehicle([
+					createVehicle(1, [
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
 				],
-				new Coordinates(companyLatLng, companyLatLng++)
+				new Coordinates(companyLatLng, companyLatLng++),
+				[true, true]
 			)
 		];
-		const busStopCompanyFilter = [[true, true]];
 		const insertions = new Map<number, Range[]>();
 		insertions.set(1, [{ earliestPickup: 1, latestDropoff: 1 }]);
-		const coordinates = gatherRoutingCoordinates(companies, insertions, busStopCompanyFilter);
+		const coordinates = gatherRoutingCoordinates(companies, insertions);
 		expect(coordinates.busStopBackwardMany).toHaveLength(2);
 		expect(coordinates.busStopForwardMany).toHaveLength(2);
 		expect(coordinates.userChosenBackwardMany).toHaveLength(2);
 		expect(coordinates.userChosenForwardMany).toHaveLength(2);
-		busStopCompanyFilter.forEach((_, idx) => {
-			expect(coordinates.busStopBackwardMany[idx]).toHaveLength(2);
-			expect(coordinates.busStopForwardMany[idx]).toHaveLength(2);
-		});
+		for (let i = 0; i != 2; ++i) {
+			expect(coordinates.busStopBackwardMany[i]).toHaveLength(2);
+			expect(coordinates.busStopForwardMany[i]).toHaveLength(2);
+		}
 		// company
 		expect(coordinates.userChosenBackwardMany[0].lat).toBe(5);
 		expect(coordinates.userChosenForwardMany[0].lat).toBe(5);
@@ -170,26 +180,26 @@ describe('gather coordinates test', () => {
 		const companies = [
 			createCompany(
 				[
-					createVehicle([
+					createVehicle(1, [
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
 				],
-				new Coordinates(companyLatLng, companyLatLng++)
+				new Coordinates(companyLatLng, companyLatLng++),
+				[true, true]
 			)
 		];
-		const busStopCompanyFilter = [[true, true]];
 		const insertions = new Map<number, Range[]>();
 		insertions.set(1, [{ earliestPickup: 0, latestDropoff: 1 }]);
-		const coordinates = gatherRoutingCoordinates(companies, insertions, busStopCompanyFilter);
+		const coordinates = gatherRoutingCoordinates(companies, insertions);
 		expect(coordinates.busStopBackwardMany).toHaveLength(2);
 		expect(coordinates.busStopForwardMany).toHaveLength(2);
 		expect(coordinates.userChosenBackwardMany).toHaveLength(2);
 		expect(coordinates.userChosenForwardMany).toHaveLength(3);
-		busStopCompanyFilter.forEach((_, idx) => {
-			expect(coordinates.busStopBackwardMany[idx]).toHaveLength(2);
-			expect(coordinates.busStopForwardMany[idx]).toHaveLength(3);
-		});
+		for (let i = 0; i != 2; ++i) {
+			expect(coordinates.busStopBackwardMany[i]).toHaveLength(2);
+			expect(coordinates.busStopForwardMany[i]).toHaveLength(3);
+		}
 		// company
 		expect(coordinates.userChosenBackwardMany[0].lat).toBe(5);
 		expect(coordinates.userChosenForwardMany[0].lat).toBe(5);
@@ -219,39 +229,37 @@ describe('gather coordinates test', () => {
 		const companies = [
 			createCompany(
 				[
-					createVehicle([
+					createVehicle(1, [
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
 				],
-				new Coordinates(companyLatLng, companyLatLng++)
+				new Coordinates(companyLatLng, companyLatLng++),
+				[true, true]
 			),
 			createCompany(
 				[
-					createVehicle([
+					createVehicle(2, [
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
 				],
-				new Coordinates(companyLatLng, companyLatLng++)
+				new Coordinates(companyLatLng, companyLatLng++),
+				[true, true]
 			)
-		];
-		const busStopCompanyFilter = [
-			[true, true],
-			[true, true]
 		];
 		const insertions = new Map<number, Range[]>();
 		insertions.set(1, [{ earliestPickup: 0, latestDropoff: 2 }]);
 		insertions.set(2, [{ earliestPickup: 0, latestDropoff: 2 }]);
-		const coordinates = gatherRoutingCoordinates(companies, insertions, busStopCompanyFilter);
+		const coordinates = gatherRoutingCoordinates(companies, insertions);
 		expect(coordinates.busStopBackwardMany).toHaveLength(2);
 		expect(coordinates.busStopForwardMany).toHaveLength(2);
 		expect(coordinates.userChosenBackwardMany).toHaveLength(6);
 		expect(coordinates.userChosenForwardMany).toHaveLength(6);
-		busStopCompanyFilter.forEach((_, idx) => {
-			expect(coordinates.busStopBackwardMany[idx]).toHaveLength(6);
-			expect(coordinates.busStopForwardMany[idx]).toHaveLength(6);
-		});
+		for (let i = 0; i != 2; ++i) {
+			expect(coordinates.busStopBackwardMany[i]).toHaveLength(6);
+			expect(coordinates.busStopForwardMany[i]).toHaveLength(6);
+		}
 		// Company coordinates
 		expect(coordinates.userChosenBackwardMany[0].lat).toBe(5);
 		expect(coordinates.userChosenForwardMany[0].lat).toBe(5);
@@ -301,31 +309,29 @@ describe('gather coordinates test', () => {
 		const companies = [
 			createCompany(
 				[
-					createVehicle([
+					createVehicle(1, [
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
 				],
-				new Coordinates(companyLatLng, companyLatLng++)
+				new Coordinates(companyLatLng, companyLatLng++),
+				[false, true]
 			),
 			createCompany(
 				[
-					createVehicle([
+					createVehicle(2, [
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
 				],
-				new Coordinates(companyLatLng, companyLatLng++)
+				new Coordinates(companyLatLng, companyLatLng++),
+				[true, true]
 			)
-		];
-		const busStopCompanyFilter = [
-			[false, true],
-			[true, true]
 		];
 		const insertions = new Map<number, Range[]>();
 		insertions.set(1, [{ earliestPickup: 0, latestDropoff: 2 }]);
 		insertions.set(2, [{ earliestPickup: 0, latestDropoff: 2 }]);
-		const coordinates = gatherRoutingCoordinates(companies, insertions, busStopCompanyFilter);
+		const coordinates = gatherRoutingCoordinates(companies, insertions);
 
 		expect(coordinates.busStopBackwardMany).toHaveLength(2);
 		expect(coordinates.busStopForwardMany).toHaveLength(2);
@@ -377,29 +383,29 @@ describe('gather coordinates test', () => {
 		const companies = [
 			createCompany(
 				[
-					createVehicle([
+					createVehicle(1, [
 						createEvent(new Coordinates(eventLatLng, eventLatLng++)),
 						createEvent(new Coordinates(eventLatLng, eventLatLng++))
 					])
 				],
-				new Coordinates(companyLatLng, companyLatLng++)
+				new Coordinates(companyLatLng, companyLatLng++),
+				[true, true]
 			)
 		];
 		companies[0].vehicles[0].lastEventBefore = createEvent(
 			new Coordinates(eventLatLng, eventLatLng++)
 		);
-		const busStopCompanyFilter = [[true, true]];
 		const insertions = new Map<number, Range[]>();
 		insertions.set(1, [{ earliestPickup: 0, latestDropoff: 0 }]);
-		const coordinates = gatherRoutingCoordinates(companies, insertions, busStopCompanyFilter);
+		const coordinates = gatherRoutingCoordinates(companies, insertions);
 		expect(coordinates.busStopBackwardMany).toHaveLength(2);
 		expect(coordinates.busStopForwardMany).toHaveLength(2);
 		expect(coordinates.userChosenBackwardMany).toHaveLength(2);
 		expect(coordinates.userChosenForwardMany).toHaveLength(2);
-		busStopCompanyFilter.forEach((_, idx) => {
-			expect(coordinates.busStopBackwardMany[idx]).toHaveLength(2);
-			expect(coordinates.busStopForwardMany[idx]).toHaveLength(2);
-		});
+		for (let i = 0; i != 2; ++i) {
+			expect(coordinates.busStopBackwardMany[i]).toHaveLength(2);
+			expect(coordinates.busStopForwardMany[i]).toHaveLength(2);
+		}
 		// company
 		expect(coordinates.userChosenBackwardMany[0].lat).toBe(5);
 		expect(coordinates.userChosenForwardMany[0].lat).toBe(5);
