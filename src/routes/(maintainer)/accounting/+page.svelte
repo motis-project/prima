@@ -10,7 +10,7 @@
 	import { cn } from '$lib/utils';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { onMount } from 'svelte';
-	import { getLocalTimeZone, today } from '@internationalized/date';
+	import { getLocalTimeZone, today, CalendarDate } from '@internationalized/date';
 	import { RangeCalendar } from '$lib/components/ui/range-calendar/index.js';
 
 	const { data } = $props();
@@ -80,135 +80,129 @@
 
 	// -1 => a before b
 	//  1 => a after b
-	//  0 => equal 
+	//  0 => equal
 
 	const compareDate = (a: TourDetails, b: TourDetails) => {
-		if (a.from.getFullYear() < b.from.getFullYear()) return -1; 
-		if (a.from.getFullYear() > b.from.getFullYear()) return 1; 
+		if (a.from.getFullYear() < b.from.getFullYear()) return -1;
+		if (a.from.getFullYear() > b.from.getFullYear()) return 1;
 		if (a.from.getMonth() < b.from.getMonth()) return -1;
 		if (a.from.getMonth() > b.from.getMonth()) return 1;
 		if (a.from.getDate() < b.from.getDate()) return -1;
-		if (a.from.getDate() > b.from.getDate()) return 1;	  
-  		return 0; 
-	};		
+		if (a.from.getDate() > b.from.getDate()) return 1;
+		return 0;
+	};
 
 	const compareFareRoute = (a: TourDetails, b: TourDetails) => {
 		if (a.fare_route == null && b.fare_route == null) return 0;
 		if (a.fare_route == null) return 1;
 		if (b.fare_route == null) return -1;
-  		if (a.fare_route != null && b.fare_route != null && a.fare_route < b.fare_route) return -1; 
-  		if (a.fare_route != null && b.fare_route != null && a.fare_route > b.fare_route) return 1;  
-  		return 0; 
-	};		
+		if (a.fare_route != null && b.fare_route != null && a.fare_route < b.fare_route) return -1;
+		if (a.fare_route != null && b.fare_route != null && a.fare_route > b.fare_route) return 1;
+		return 0;
+	};
 
 	const compareTotalPrice = (a: TourDetails, b: TourDetails) => {
 		let aTotal = getTotalPrice(a.fare, a.fare_route);
 		let bTotal = getTotalPrice(b.fare, b.fare_route);
-  		if (+aTotal < +bTotal) return -1; 
-  		if (+aTotal > +bTotal) return 1;  
-  		return 0; 
-	};	
-	
+		if (+aTotal < +bTotal) return -1;
+		if (+aTotal > +bTotal) return 1;
+		return 0;
+	};
+
 	const compareCost = (a: TourDetails, b: TourDetails) => {
 		let aCost = getCost(a.fare, a.fare_route);
 		let bCost = getCost(b.fare, b.fare_route);
-  		if (+aCost < +bCost) return -1; 
-  		if (+aCost > +bCost) return 1;  
-  		return 0; 
+		if (+aCost < +bCost) return -1;
+		if (+aCost > +bCost) return 1;
+		return 0;
 	};
 
 	const sort = (des: boolean[], idx: number) => {
-		if(des[idx]) {
+		if (des[idx]) {
 			switch (idx) {
-				case 0:
-					{ 
-						currentRows.sort(compareDate); 
-						paginate(currentRows);
-						setPage(0);
-						descending[0] = false;
-						// all others reset
-						descending[1] = true;
-						descending[2] = true;
-						descending[3] = true;
-						break;
-					}
-				case 1: 
-					{ 
-						currentRows.sort(compareFareRoute); 
-						paginate(currentRows);
-						setPage(0);
-						descending[1] = false;
-						// all others reset
-						descending[0] = true;
-						descending[2] = true;
-						descending[3] = true;
-						break;
-					}
-				case 2:	
-					{ 
-						currentRows.sort(compareTotalPrice); 
-						paginate(currentRows);
-						setPage(0);
-						descending[2] = false;
-						// all others reset
-						descending[0] = true;
-						descending[1] = true;
-						descending[3] = true;
-						break;
-					}
-				case 3:
-					{ 
-						currentRows.sort(compareCost); 
-						paginate(currentRows);
-						setPage(0);
-						descending[3] = false;
-						// all others reset
-						descending[0] = true;
-						descending[1] = true;
-						descending[2] = true;
-						break;
-					}
-				default: return;
+				case 0: {
+					currentRows.sort(compareDate);
+					paginate(currentRows);
+					setPage(0);
+					descending[0] = false;
+					// all others reset
+					descending[1] = true;
+					descending[2] = true;
+					descending[3] = true;
+					break;
+				}
+				case 1: {
+					currentRows.sort(compareFareRoute);
+					paginate(currentRows);
+					setPage(0);
+					descending[1] = false;
+					// all others reset
+					descending[0] = true;
+					descending[2] = true;
+					descending[3] = true;
+					break;
+				}
+				case 2: {
+					currentRows.sort(compareTotalPrice);
+					paginate(currentRows);
+					setPage(0);
+					descending[2] = false;
+					// all others reset
+					descending[0] = true;
+					descending[1] = true;
+					descending[3] = true;
+					break;
+				}
+				case 3: {
+					currentRows.sort(compareCost);
+					paginate(currentRows);
+					setPage(0);
+					descending[3] = false;
+					// all others reset
+					descending[0] = true;
+					descending[1] = true;
+					descending[2] = true;
+					break;
+				}
+				default:
+					return;
 			}
 		} else {
 			switch (idx) {
-				case 0:
-					{ 
-						currentRows.sort(compareDate); 
-						currentRows.reverse();
-						paginate(currentRows);
-						setPage(0);
-						descending[0] = true;
-						break;
-					}
-				case 1: 
-					{ 
-						currentRows.sort(compareFareRoute);
-						currentRows.reverse(); 
-						paginate(currentRows);
-						setPage(0);
-						descending[1] = true;
-						break;
-					}
-				case 2:	
-					{ 
-						currentRows.sort(compareTotalPrice);
-						currentRows.reverse(); 
-						paginate(currentRows);
-						setPage(0);
-						descending[2] = true;
-						break;
-					}
-				case 3:
-					{ 
-						currentRows.sort(compareCost);
-						currentRows.reverse(); 
-						paginate(currentRows);
-						setPage(0);
-						descending[3] = true;
-						break;
-					}
-				default: return;
+				case 0: {
+					currentRows.sort(compareDate);
+					currentRows.reverse();
+					paginate(currentRows);
+					setPage(0);
+					descending[0] = true;
+					break;
+				}
+				case 1: {
+					currentRows.sort(compareFareRoute);
+					currentRows.reverse();
+					paginate(currentRows);
+					setPage(0);
+					descending[1] = true;
+					break;
+				}
+				case 2: {
+					currentRows.sort(compareTotalPrice);
+					currentRows.reverse();
+					paginate(currentRows);
+					setPage(0);
+					descending[2] = true;
+					break;
+				}
+				case 3: {
+					currentRows.sort(compareCost);
+					currentRows.reverse();
+					paginate(currentRows);
+					setPage(0);
+					descending[3] = true;
+					break;
+				}
+				default:
+					return;
 			}
 		}
 	};
@@ -259,34 +253,28 @@
 		let newrows: TourDetails[] = [];
 		const currentDate = new Date();
 		let year = currentDate.getFullYear();
-		if (span) {
-			for (let row of data.tours) {
-				if (
-					row.from.getFullYear() == range.start.year ||
-					row.from.getFullYear() == range.end.year
-				) {
-					if (
-						row.from.getMonth() == range.start.month - 1 ||
-						row.from.getMonth() == range.end.month - 1
-					) {
-						let onemonth = range.start.month == range.end.month;
-						if (
-							(row.from.getDate() >= range.start.day &&
-								row.from.getDate() <= range.end.day &&
-								onemonth) ||
-							((row.from.getDate() >= range.start.day || row.from.getDate() <= range.end.day) &&
-								!onemonth)
-						) {
-							newrows.push(row);
-						}
-					}
-				}
-			}
-		}
-		if (comp) {
+		if (comp && span == false && time == false) {
 			for (let row of data.tours) {
 				if (row.company_name == selectedCompany) {
 					newrows.push(row);
+				}
+			}
+		}
+		if (span) {
+			for (let row of data.tours) {
+				let rowDate = new CalendarDate(
+					row.from.getFullYear(),
+					row.from.getMonth() + 1,
+					row.from.getDate()
+				);
+				if (rowDate.compare(range.start) >= 0 && rowDate.compare(range.end) <= 0) {
+					if (comp) {
+						if (row.company_name == selectedCompany) {
+							newrows.push(row);
+						}
+					} else {
+						newrows.push(row);
+					}
 				}
 			}
 		}
@@ -301,7 +289,13 @@
 									row.from.getMonth() == 1 ||
 									row.from.getMonth() == 2
 								) {
-									newrows.push(row);
+									if (comp) {
+										if (row.company_name == selectedCompany) {
+											newrows.push(row);
+										}
+									} else {
+										newrows.push(row);
+									}
 								}
 							}
 						}
@@ -316,7 +310,13 @@
 									row.from.getMonth() == 4 ||
 									row.from.getMonth() == 5
 								) {
-									newrows.push(row);
+									if (comp) {
+										if (row.company_name == selectedCompany) {
+											newrows.push(row);
+										}
+									} else {
+										newrows.push(row);
+									}
 								}
 							}
 						}
@@ -331,7 +331,13 @@
 									row.from.getMonth() == 7 ||
 									row.from.getMonth() == 8
 								) {
-									newrows.push(row);
+									if (comp) {
+										if (row.company_name == selectedCompany) {
+											newrows.push(row);
+										}
+									} else {
+										newrows.push(row);
+									}
 								}
 							}
 						}
@@ -346,7 +352,13 @@
 									row.from.getMonth() == 10 ||
 									row.from.getMonth() == 11
 								) {
-									newrows.push(row);
+									if (comp) {
+										if (row.company_name == selectedCompany) {
+											newrows.push(row);
+										}
+									} else {
+										newrows.push(row);
+									}
 								}
 							}
 						}
@@ -356,7 +368,13 @@
 					{
 						for (let row of data.tours) {
 							if (row.from.getFullYear() == year) {
-								newrows.push(row);
+								if (comp) {
+									if (row.company_name == selectedCompany) {
+										newrows.push(row);
+									}
+								} else {
+									newrows.push(row);
+								}
 							}
 						}
 					}
@@ -365,7 +383,13 @@
 					{
 						for (let row of data.tours) {
 							if (row.from.getFullYear() == year - 1) {
-								newrows.push(row);
+								if (comp) {
+									if (row.company_name == selectedCompany) {
+										newrows.push(row);
+									}
+								} else {
+									newrows.push(row);
+								}
 							}
 						}
 					}
@@ -465,26 +489,30 @@
 			<Table.Row>
 				<Table.Head class="mt-6.5">Unternehmen</Table.Head>
 				<Table.Head class="mt-6.5">
-					<Button class=whitespace-pre variant="outline" on:click={() => sort(descending, 0)}>
-						{'Abfahrt  '} <ChevronsUpDown class="h-6 w-4" />
-					</Button>	
+					<Button class="whitespace-pre" variant="outline" on:click={() => sort(descending, 0)}>
+						{'Abfahrt  '}
+						<ChevronsUpDown class="h-6 w-4" />
+					</Button>
 				</Table.Head>
 				<Table.Head class="mt-6.5">Ankunft</Table.Head>
 				<Table.Head class="mt-6.5">Anzahl Kunden</Table.Head>
 				<Table.Head class="mt-6.5">
-					<Button class=whitespace-pre variant="outline" on:click={() => sort(descending, 1)}>
-						{'Taxameterpreis  '} <ChevronsUpDown class="h-6 w-4" />
+					<Button class="whitespace-pre" variant="outline" on:click={() => sort(descending, 1)}>
+						{'Taxameterpreis  '}
+						<ChevronsUpDown class="h-6 w-4" />
 					</Button>
 				</Table.Head>
 				<Table.Head class="mt-6.5">ÖV-Preis</Table.Head>
 				<Table.Head class="mt-6.5">
-					<Button class=whitespace-pre variant="outline" on:click={() => sort(descending, 2)}>
-						{'Gesamtpreis  '} <ChevronsUpDown class="h-6 w-4" />
+					<Button class="whitespace-pre" variant="outline" on:click={() => sort(descending, 2)}>
+						{'Gesamtpreis  '}
+						<ChevronsUpDown class="h-6 w-4" />
 					</Button>
 				</Table.Head>
 				<Table.Head class="mt-6.5">
-					<Button class=whitespace-pre variant="outline" on:click={() => sort(descending, 3)}>
-						{'Kosten  '} <ChevronsUpDown class="h-6 w-4" />
+					<Button class="whitespace-pre" variant="outline" on:click={() => sort(descending, 3)}>
+						{'Kosten  '}
+						<ChevronsUpDown class="h-6 w-4" />
 					</Button>
 				</Table.Head>
 			</Table.Row>
