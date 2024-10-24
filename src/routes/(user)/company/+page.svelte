@@ -10,7 +10,9 @@
 	import ExclamationTriangle from 'svelte-radix/ExclamationTriangle.svelte';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 
-	let { name, zone, street, house_number, postal_code, city, community_area } = $state(data.company!);
+	let { name, zone, street, house_number, postal_code, city, community_area } = $state(
+		data.company!
+	);
 </script>
 
 <div class="w-full h-full">

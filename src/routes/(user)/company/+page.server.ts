@@ -78,7 +78,9 @@ export const actions = {
 
 		let bestAddressGuess: AddressGuess | undefined = undefined;
 		try {
-			bestAddressGuess = await geoCode(street+' '+house_number+' '+postal_code+' '+city);
+			bestAddressGuess = await geoCode(
+				street + ' ' + house_number + ' ' + postal_code + ' ' + city
+			);
 		} catch {
 			return fail(400, { error: 'Die Addresse konnte nicht gefunden werden.' });
 		}
