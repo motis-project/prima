@@ -160,7 +160,7 @@
 										{tour!.to.toLocaleString('de-DE').slice(0, -3)}
 									</Table.Cell>
 									<Table.Cell class="text-right">{tour!.license_plate}</Table.Cell>
-									<Table.Cell class="text-right">{displayFare(tour!.fare_route)} €</Table.Cell>
+									<Table.Cell class="text-right">{displayFare(tour!.fare)} €</Table.Cell>
 								</Table.Row>
 							{/if}
 						</Table.Body>
@@ -241,9 +241,7 @@
 				<Table.Header>
 					<Table.Row>
 						<Table.Head>Abfahrt</Table.Head>
-						<Table.Head>Straße</Table.Head>
-						<Table.Head>Hausnr.</Table.Head>
-						<Table.Head>Ort</Table.Head>
+						<Table.Head>Addresse</Table.Head>
 						<Table.Head>Kunde</Table.Head>
 						<Table.Head>Tel. Kunde</Table.Head>
 						<Table.Head>Ein-/Ausstieg</Table.Head>
@@ -257,9 +255,7 @@
 								<Table.Cell>
 									{event.scheduled_time.toLocaleString('de-DE').slice(0, -3).replace(',', ' ')}
 								</Table.Cell>
-								<Table.Cell>{event.street}</Table.Cell>
-								<Table.Cell>{event.house_number}</Table.Cell>
-								<Table.Cell>{event.postal_code} {event.city}</Table.Cell>
+								<Table.Cell>{event.address}</Table.Cell>
 								<Table.Cell>
 									{event.last_name},
 									{event.first_name}

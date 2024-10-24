@@ -20,15 +20,17 @@ const db = new Kysely<Database>({
 export const getTourEvents = () => {
 	return db
 		.selectFrom('event')
-		.innerJoin('address', 'address.id', 'event.address')
 		.innerJoin('auth_user', 'auth_user.id', 'event.customer')
 		.innerJoin('tour', 'tour.id', 'event.tour')
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 		.innerJoin('company', 'company.id', 'vehicle.company')
-		.selectAll(['event', 'address', 'tour', 'vehicle'])
+		.selectAll(['event', 'tour', 'vehicle'])
 		.select([
 			'company.name as company_name',
-			'company.address as company_address',
+			'company.street as company_street',
+			'company.house_number as company_house_number',
+			'company.postal_code as company_postal_code',
+			'company.city as company_city',
 			'auth_user.first_name as customer_first_name',
 			'auth_user.last_name as customer_last_ame',
 			'auth_user.phone as customer_phone'
@@ -54,18 +56,13 @@ export const mapTourEvents = (events: DbTourEvents) => {
 			license_plate: first.license_plate,
 			company_id: first.company,
 			fare: first.fare,
-			fare_route: first.fare_route,
 			company_name: first.company_name,
 			events: events.map((e) => {
 				return {
 					address: e.address,
 					latitude: e.latitude,
 					longitude: e.longitude,
-					street: e.street,
-					postal_code: e.postal_code,
-					city: e.city,
 					scheduled_time: e.scheduled_time,
-					house_number: e.house_number,
 					first_name: e.customer_first_name,
 					last_name: e.customer_last_ame,
 					phone: e.customer_phone,
@@ -85,9 +82,5 @@ export type Event = TourDetails['events'][0];
 export const getTourInfoShort = (tour: TourDetails) => {
 	const l1 = tour.events[0];
 	const l2 = tour.events[tour.events.length - 1];
-
-	if (l1.city === '' || l2.city === '') {
-		return [l1.street, l2.street];
-	}
-	return [l1.city + ': ' + l1.street, l2.city + ': ' + l2.street];
+	return [l1.address, l2.address];
 };

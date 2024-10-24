@@ -22,11 +22,11 @@ cd $BASEDIR
 
 export PGPASSWORD=pw
 
-psql $DATABASE_URL/prima --user postgres < $SCENARIO/address.sql
 psql $DATABASE_URL/prima --user postgres < $SCENARIO/zone.sql
 psql $DATABASE_URL/prima --user postgres < $SCENARIO/company.sql
 psql $DATABASE_URL/prima --user postgres < $SCENARIO/vehicle.sql
 psql $DATABASE_URL/prima --user postgres < $SCENARIO/availability.sql
 psql $DATABASE_URL/prima --user postgres < $SCENARIO/tour.sql
+psql $DATABASE_URL/prima --user postgres < $SCENARIO/request.sql
 psql $DATABASE_URL/prima --user postgres < $SCENARIO/auth_user.sql
 psql $DATABASE_URL/prima --user postgres < $SCENARIO/event.sql

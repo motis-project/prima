@@ -38,7 +38,6 @@ setup('setup db', async () => {
 	await db.deleteFrom('tour').executeTakeFirstOrThrow();
 	await db.deleteFrom('vehicle').executeTakeFirstOrThrow();
 	await db.deleteFrom('company').executeTakeFirstOrThrow();
-	await db.deleteFrom('address').executeTakeFirstOrThrow();
 	await db.deleteFrom('zone').executeTakeFirstOrThrow();
 
 	const zonesSqlPath = path.join(__dirname, '../test_data/default/zone.sql');
