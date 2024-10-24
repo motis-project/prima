@@ -46,7 +46,6 @@ export const setTour = async (vehicle: number, departure: Date, arrival: Date) =
 
 export const clearDatabase = async () => {
 	await Promise.all([
-		db.deleteFrom('address').execute(),
 		db.deleteFrom('availability').execute(),
 		db.deleteFrom('event').execute(),
 		db.deleteFrom('request').execute(),

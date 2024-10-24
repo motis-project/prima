@@ -10,12 +10,15 @@ export async function up(db) {
         .addColumn('latitude', 'real')
         .addColumn('longitude', 'real')
         .addColumn('name', 'varchar')
-        .addColumn('address', 'varchar')
+        .addColumn('street', 'varchar')
+        .addColumn('house_number', 'varchar')
+        .addColumn('postal_code', 'varchar')
+        .addColumn('city', 'varchar')
         .addColumn('zone', 'integer', (col) =>
-            col.references('zone.id').onDelete('cascade'),
+            col.references('zone.id'),
         )
         .addColumn('community_area', 'integer', (col) =>
-            col.references('zone.id').onDelete('cascade'),
+            col.references('zone.id'),
         )
         .execute();
 
@@ -24,7 +27,7 @@ export async function up(db) {
         .addColumn('id', 'serial', (col) => col.primaryKey())
         .addColumn('license_plate', 'varchar', (col) => col.notNull().unique())
         .addColumn('company', 'integer', (col) =>
-            col.references('company.id').onDelete('cascade').notNull(),
+            col.references('company.id').notNull(),
         )
         .addColumn('seats', 'integer', (col) => col.notNull())
         .addColumn('wheelchair_capacity', 'integer', (col) => col.notNull())
@@ -38,7 +41,7 @@ export async function up(db) {
         .addColumn('start_time', 'timestamp', (col) => col.notNull())
         .addColumn('end_time', 'timestamp', (col) => col.notNull())
         .addColumn('vehicle', 'integer', (col) =>
-            col.references('vehicle.id').onDelete('cascade').notNull(),
+            col.references('vehicle.id').notNull(),
         )
         .execute();
 
@@ -48,7 +51,7 @@ export async function up(db) {
         .addColumn('departure', 'timestamp', (col) => col.notNull())
         .addColumn('arrival', 'timestamp', (col) => col.notNull())
         .addColumn('vehicle', 'integer', (col) =>
-            col.references('vehicle.id').onDelete('cascade').notNull(),
+            col.references('vehicle.id').notNull(),
         )
         .execute();
 
@@ -70,17 +73,8 @@ export async function up(db) {
         .addColumn('id', 'varchar', (col) => col.primaryKey())
         .addColumn('expires_at', 'timestamp', (col) => col.notNull())
         .addColumn('user_id', 'varchar', (col) =>
-            col.references('auth_user.id').onDelete('cascade').notNull(),
+            col.references('auth_user.id').notNull(),
         )
-        .execute();
-
-    await db.schema
-        .createTable('address')
-        .addColumn('id', 'serial', (col) => col.primaryKey())
-        .addColumn('street', 'varchar', (col) => col.notNull())
-        .addColumn('house_number', 'varchar', (col) => col.notNull())
-        .addColumn('postal_code', 'varchar', (col) => col.notNull())
-        .addColumn('city', 'varchar', (col) => col.notNull())
         .execute();
 
     await db.schema
@@ -91,7 +85,7 @@ export async function up(db) {
         .addColumn('bikes', 'integer', (col) => col.notNull())
         .addColumn('luggage', 'integer', (col) => col.notNull())
         .addColumn('tour', 'integer', (col) =>
-            col.references('tour.id').onDelete('cascade').notNull(),
+            col.references('tour.id').notNull(),
         )
         .execute();
 
@@ -104,16 +98,14 @@ export async function up(db) {
         .addColumn('scheduled_time', 'timestamp', (col) => col.notNull())
         .addColumn('communicated_time', 'timestamp', (col) => col.notNull())
         .addColumn('request', 'integer', (col) =>
-            col.references('request.id').onDelete('cascade'),
+            col.references('request.id').notNull(),
         )
-        .addColumn('address', 'integer', (col) =>
-            col.references('address.id').onDelete('cascade').notNull(),
-        )
+        .addColumn('address', 'varchar', (col) => col.notNull())
         .addColumn('tour', 'integer', (col) =>
-            col.references('tour.id').onDelete('cascade').notNull(),
+            col.references('tour.id').notNull(),
         )
         .addColumn('customer', 'varchar', (col) =>
-            col.references('auth_user.id').onDelete('cascade').notNull(),
+            col.references('auth_user.id').notNull(),
         )
         .execute();
 }

@@ -23,7 +23,10 @@ export const actions = {
 					latitude: null,
 					longitude: null,
 					name: null,
-					address: null,
+					street: null,
+					house_number: null,
+					postal_code: null,
+					city: null,
 					zone: null,
 					community_area: null
 				})

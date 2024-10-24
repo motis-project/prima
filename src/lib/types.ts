@@ -9,7 +9,6 @@ export interface Database {
 	auth_user: UserAuthTable;
 	user_session: UserSessionTable;
 	event: EventTable;
-	address: AddressTable;
 	request: RequestTable;
 }
 
@@ -35,7 +34,10 @@ export interface CompanyTable {
 	latitude: number | null;
 	longitude: number | null;
 	name: string | null;
-	address: string | null;
+	street: string | null;
+	house_number: string | null;
+	city: string | null;
+	postal_code: string | null;
 	zone: number | null;
 	community_area: number | null;
 }
@@ -70,7 +72,6 @@ export interface TourTable {
 	arrival: Date;
 	vehicle: number;
 	fare: number | null;
-	fare_route: number | null;
 }
 
 export type Tour = Selectable<TourTable>;
@@ -133,7 +134,7 @@ export interface EventTable {
 	longitude: number;
 	scheduled_time: Date;
 	communicated_time: Date;
-	address: number;
+	address: string;
 	tour: number;
 	customer: string;
 	request: number;
@@ -142,21 +143,6 @@ export interface EventTable {
 export type Event = Selectable<EventTable>;
 export type NewEvent = Insertable<EventTable>;
 export type EventUpdate = Updateable<EventTable>;
-
-// =======
-// ADDRESS
-// -------
-export interface AddressTable {
-	id: Generated<number>;
-	street: string;
-	house_number: string;
-	postal_code: string;
-	city: string;
-}
-
-export type Address = Selectable<AddressTable>;
-export type NewAddress = Insertable<AddressTable>;
-export type AddressUpdate = Updateable<AddressTable>;
 
 // =======
 // REQUEST

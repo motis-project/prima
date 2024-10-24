@@ -44,7 +44,10 @@ export const actions = {
 
 		const companyId = event.locals.user!.company!;
 		const data = await event.request.formData();
-		const address = data.get('address')?.toString();
+		const street = data.get('street')?.toString();
+		const house_number = data.get('house_number')?.toString();
+		const postal_code = data.get('postal_code')?.toString();
+		const city = data.get('city')?.toString();
 		const name = data.get('name')?.toString();
 		const community_area = readInt(data.get('community_area'));
 		const zone = readInt(data.get('zone'));
@@ -53,8 +56,16 @@ export const actions = {
 			return fail(400, { error: 'Name zu kurz.' });
 		}
 
-		if (!address || address.length < 2) {
-			return fail(400, { error: 'Adresse zu kurz.' });
+		if (!street || street.length < 2) {
+			return fail(400, { error: 'Straße zu kurz.' });
+		}
+
+		if (!city || city.length < 2) {
+			return fail(400, { error: 'Stadt zu kurz.' });
+		}
+
+		if (!postal_code || postal_code.length < 2) {
+			return fail(400, { error: 'Postleitzahl zu kurz.' });
 		}
 
 		if (isNaN(community_area) || community_area < 1) {
@@ -67,7 +78,7 @@ export const actions = {
 
 		let bestAddressGuess: AddressGuess | undefined = undefined;
 		try {
-			bestAddressGuess = await geoCode(address);
+			bestAddressGuess = await geoCode(street+' '+house_number+' '+postal_code+' '+city);
 		} catch {
 			return fail(400, { error: 'Die Addresse konnte nicht gefunden werden.' });
 		}
@@ -90,7 +101,10 @@ export const actions = {
 				name,
 				zone,
 				community_area,
-				address,
+				street,
+				house_number,
+				postal_code,
+				city,
 				latitude: bestAddressGuess!.pos.lat,
 				longitude: bestAddressGuess!.pos.lng
 			})
