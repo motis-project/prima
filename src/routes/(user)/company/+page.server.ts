@@ -27,7 +27,11 @@ export const load: PageServerLoad = async (event) => {
 				latitude: null,
 				longitude: null,
 				name: null,
-				community_area: null
+				community_area: null,
+				street: null,
+				house_number: null,
+				postal_code: null,
+				city: null
 			};
 	return {
 		company,
