@@ -1,4 +1,3 @@
-import { getRoute } from '$lib/api.js';
 import { Coordinates } from '$lib/location.js';
 import { db } from '$lib/database';
 import { Interval } from '$lib/interval.js';
@@ -11,7 +10,7 @@ import { getFareEstimation } from './fare-estimation/fare_estimation.js';
 import { covers } from '$lib/sqlHelpers.js';
 import { oneToMany, type Duration } from '$lib/motis';
 
-const MOTIS_BASE_URL = 'https://europe.motis-project.de'
+const MOTIS_BASE_URL = 'https://europe.motis-project.de';
 
 const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 	const zoneContainingStartAndDestination = await db
@@ -36,11 +35,11 @@ export const POST = async (event) => {
 
 	const coordinatesToStr = (c: Coordinates) => {
 		return `${c.lat};${c.lng}`;
-	}
+	};
 
 	let travelDuration = 0;
 	try {
-		travelDuration = (
+		const duration = (
 			await oneToMany({
 				baseUrl: MOTIS_BASE_URL,
 				query: {
@@ -53,6 +52,10 @@ export const POST = async (event) => {
 				}
 			}).then((d) => d.data!)
 		)[0].duration;
+		if (!duration) {
+			throw 'keine Route gefunden';
+		}
+		travelDuration = duration;
 	} catch (e) {
 		return json(
 			{
@@ -238,26 +241,24 @@ export const POST = async (event) => {
 		return new Coordinates(vehicles![0].latitude!, vehicles![0].longitude!);
 	});
 
-
 	let durationToStart: Array<number> = [];
 	let durationFromTarget: Array<number> = [];
 	try {
-		durationToStart =
-			await oneToMany({
-				baseUrl: MOTIS_BASE_URL,
-				query: {
-					one: coordinatesToStr(fromCoordinates),
-					many: centralCoordinates.map(coordinatesToStr),
-					max: 3600,
-					maxMatchingDistance: 100,
-					mode: 'CAR',
-					arriveBy: false
-				}
-			}).then((res) => {
-				return res.data!.map((d: Duration) => {
-					return d.duration ?? Number.MAX_VALUE;
-				});
+		durationToStart = await oneToMany({
+			baseUrl: MOTIS_BASE_URL,
+			query: {
+				one: coordinatesToStr(fromCoordinates),
+				many: centralCoordinates.map(coordinatesToStr),
+				max: 3600,
+				maxMatchingDistance: 100,
+				mode: 'CAR',
+				arriveBy: false
+			}
+		}).then((res) => {
+			return res.data!.map((d: Duration) => {
+				return d.duration ?? Number.MAX_VALUE;
 			});
+		});
 
 		durationFromTarget = await oneToMany({
 			baseUrl: MOTIS_BASE_URL,
