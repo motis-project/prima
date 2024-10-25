@@ -12,3 +12,4 @@ vite.config.ts.timestamp-*
 booking-generator/data/stops.txt
 booking-generator/test
 .vscode
+/driver-app/.gradle/
