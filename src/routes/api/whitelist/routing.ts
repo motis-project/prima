@@ -2,6 +2,7 @@ import { Direction, oneToMany, type OneToManyResult } from '$lib/api';
 import type { BusStop } from '$lib/busStop';
 import type { Company } from '$lib/compositionTypes';
 import { Coordinates } from '$lib/location';
+import type { VehicleId } from '$lib/typeAliases';
 import type { Range } from './capacitySimulation';
 import { iterateAllInsertions } from './utils';
 
@@ -26,7 +27,7 @@ type RoutingCoordinates = {
 
 export function gatherRoutingCoordinates(
 	companies: Company[],
-	insertionsByVehicle: Map<number, Range[]>
+	insertionsByVehicle: Map<VehicleId, Range[]>
 ): RoutingCoordinates {
 	if (companies.length == 0 || companies[0].busStopFilter.length == 0) {
 		return {
@@ -100,23 +101,23 @@ export function gatherRoutingCoordinates(
 export async function routing(
 	coordinates: RoutingCoordinates,
 	userChosen: Coordinates,
-	busStops: BusStop[],
-	busStopCompanyFilter: boolean[][]
+	companies: Company[],
+	busStops: BusStop[]
 ): Promise<RoutingResults> {
 	const from = await oneToMany(userChosen, coordinates.userChosenBackwardMany, Direction.Backward);
 	const to = await oneToMany(userChosen, coordinates.userChosenForwardMany, Direction.Forward);
 	const routingResults = {
 		userChosen: {
-			fromCompany: from.slice(0, busStops.length),
-			fromPrevEvent: from.slice(busStops.length),
-			toCompany: to.slice(0, busStops.length),
-			toNextEvent: to.slice(busStops.length)
+			fromCompany: from.slice(0, companies.length),
+			fromPrevEvent: from.slice(companies.length),
+			toCompany: to.slice(0, companies.length),
+			toNextEvent: to.slice(companies.length)
 		},
 		busStops: new Array<InsertionRoutingResult>(busStops.length)
 	};
 	for (let busStopIdx = 0; busStopIdx != busStops.length; ++busStopIdx) {
 		const busStop = busStops[busStopIdx];
-		const relevantCompanyCount = busStopCompanyFilter[busStopIdx].filter((f) => f).length;
+		const relevantCompanyCount = companies.filter((company)=>company.busStopFilter[busStopIdx]).length;
 		const from = await oneToMany(
 			busStop.coordinates,
 			coordinates.busStopBackwardMany[busStopIdx],

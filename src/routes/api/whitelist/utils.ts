@@ -1,8 +1,7 @@
 import type { Company } from '$lib/compositionTypes';
+import type { VehicleId } from '$lib/typeAliases';
 import type { Range } from './capacitySimulation';
 import type { InsertionInfo } from './insertionTypes';
-
-type VehicleId = number;
 
 export function iterateAllInsertions(
 	companies: Company[],
