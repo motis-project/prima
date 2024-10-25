@@ -401,6 +401,7 @@
 		if (span == false && comp == false && time == false) {
 			newrows = data.tours;
 		}
+		prepareFilterString();
 		selectedTimespan = 'Zeitraum';
 		selectedCompany = 'Unternehmen';
 		start = today(getLocalTimeZone());
@@ -410,7 +411,41 @@
 		paginate(currentRows);
 		setPage(0);
 	};
-</script>
+	
+	// --- Summierung: ---
+	let filterString = $state("keine Filter ausgewählt");
+	
+	const prepareFilterString = () => {
+		let result = " ";
+		if (selectedCompany != "Unternehmen") {
+			console.log("selectedcomp");
+			result.concat(selectedCompany, "; ");
+			console.log(result);
+		}
+		if (selectedTimespan != "Zeitraum") {
+			console.log("timespan");
+			result.concat(selectedTimespan, "; ");
+		}
+		if(range.end != end && range.start != start) {
+			console.log("range");
+			result.concat(range.start.toString(), " - ", range.end.toString());
+		}
+		if (selectedCompany == "Unternehmen" && selectedTimespan == "Zeitraum" && range.end == end && range.start == start) {
+			result = "keine Filter ausgewählt"
+		}
+		filterString = result;
+		console.log(filterString);
+	};
+
+	const summarize = () => {
+
+	};
+
+	const csvExport = () => {
+
+	};
+	
+	</script>
 
 <div class="flex justify-between">
 	<Card.Header>
@@ -481,6 +516,61 @@
 				</Dialog.Close>
 			</Dialog.Content>
 		</Dialog.Root>
+
+		<Dialog.Root>
+			<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}>Summierung Kosten</Dialog.Trigger>
+			<Dialog.Content class="sm:max-w-[850px]">
+				<Dialog.Header>
+					<Dialog.Title>Summierung Kosten</Dialog.Title>
+					<Dialog.Description>
+						Summierung Sie die Kosten, um eine Abrechnungsdatei zu erstellen.
+					</Dialog.Description>
+				</Dialog.Header>
+					<Label for="name" class="text-left">
+						Folgende Filter sind ausgewählt: {filterString}
+					</Label>
+				<Table.Root>
+					<Table.Header>
+						<Table.Row>
+							<Table.Head class="mt-6.5">Unternehmen</Table.Head>
+							<Table.Head class="mt-6.5">Abfahrt</Table.Head>
+							<Table.Head class="mt-6.5">Ankunft</Table.Head>
+							<Table.Head class="mt-6.5">Anzahl Kunden</Table.Head>
+							<Table.Head class="mt-6.5">Taxameterpreis </Table.Head>
+							<Table.Head class="mt-6.5">ÖV-Preis</Table.Head>
+							<Table.Head class="mt-6.5">Gesamtpreis</Table.Head>
+							<Table.Head class="mt-6.5">Kosten</Table.Head>
+						</Table.Row>
+					</Table.Header>
+					<Table.Body>
+						{#each currentPageRows as tour}
+							<Table.Row>
+								<Table.Cell>{tour.company_name}</Table.Cell>
+								<Table.Cell>{tour.from.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
+								<Table.Cell>{tour.to.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
+								<Table.Cell>{getCustomerCount(tour)}</Table.Cell>
+								<Table.Cell>{getPrice(tour.fare_route)} €</Table.Cell>
+								<Table.Cell>{getPrice(tour.fare)} €</Table.Cell>
+								<Table.Cell>{getTotalPrice(tour.fare, tour.fare_route)} €</Table.Cell>
+								<Table.Cell>{getCost(tour.fare, tour.fare_route)} €</Table.Cell>
+							</Table.Row>
+						{/each}
+					</Table.Body>
+				</Table.Root>
+			<Button
+				variant= "outline"
+				on:click={() => summarize()}>
+				Summiere Kosten
+			</Button>
+			<Dialog.Close class="text-right">
+				<Button
+					type="submit"
+					on:click={() => csvExport()}>
+					CSV-Export starten
+				</Button>
+			</Dialog.Close>
+			</Dialog.Content>
+		</Dialog.Root>
 	</div>
 </div>
 <Card.Content class="w-full h-full">
@@ -532,42 +622,43 @@
 			{/each}
 		</Table.Body>
 	</Table.Root>
-</Card.Content>
 
-<div class="flex justify-center">
-	{#if totalPages.length > 10}
-		<Button variant="outline" on:click={() => setPage(0)}>
-			<ChevronsLeft class="mx-1 h-4 w-4" />
-			Erste Seite
-		</Button>
-		<Button variant="outline" on:click={() => setPage(page - 1)}>
-			<ChevronLeft class="h-4 w-4" />
-			Vorherige
-		</Button>
-		<Button variant="outline" on:click={() => setPage(page + 1)}>
-			Nächste
-			<ChevronRight class="h-4 w-4" />
-		</Button>
-		<Button variant="outline" on:click={() => setPage(totalPages.length - 1)}>
-			Letzte Seite
-			<ChevronsRight class="mx-1 h-4 w-4" />
-		</Button>
-	{:else}
-		<Button variant="outline" on:click={() => setPage(page - 1)}>
-			<ChevronLeft class="h-4 w-4" />
-			Vorherige Seite
-		</Button>
-		{#each totalPages as _page, i}
-			<Button variant="outline" on:click={() => setPage(i)}>
-				{i + 1}
+	<div class="flex justify-center">
+		{#if totalPages.length > 10}
+			<Button variant="outline" on:click={() => setPage(0)}>
+				<ChevronsLeft class="mx-1 h-4 w-4" />
+				Erste Seite
 			</Button>
-		{/each}
-		<Button variant="outline" on:click={() => setPage(page + 1)}>
-			Nächste Seite
-			<ChevronRight class="h-4 w-4" />
-		</Button>
-	{/if}
-	<Label class="mx-2 mt-2.5">
-		Auf Seite {page + 1} von {totalPages.length}
-	</Label>
-</div>
+			<Button variant="outline" on:click={() => setPage(page - 1)}>
+				<ChevronLeft class="h-4 w-4" />
+				Vorherige
+			</Button>
+			<Button variant="outline" on:click={() => setPage(page + 1)}>
+				Nächste
+				<ChevronRight class="h-4 w-4" />
+			</Button>
+			<Button variant="outline" on:click={() => setPage(totalPages.length - 1)}>
+				Letzte Seite
+				<ChevronsRight class="mx-1 h-4 w-4" />
+			</Button>
+		{:else}
+			<Button variant="outline" on:click={() => setPage(page - 1)}>
+				<ChevronLeft class="h-4 w-4" />
+				Vorherige Seite
+			</Button>
+			{#each totalPages as _page, i}
+				<Button variant="outline" on:click={() => setPage(i)}>
+					{i + 1}
+				</Button>
+			{/each}
+			<Button variant="outline" on:click={() => setPage(page + 1)}>
+				Nächste Seite
+				<ChevronRight class="h-4 w-4" />
+			</Button>
+		{/if}
+		<Label class="mx-2 mt-2.5">
+			Auf Seite {page + 1} von {totalPages.length}
+		</Label>
+	</div>
+
+</Card.Content>
