@@ -67,15 +67,15 @@ export const actions = {
 			return fail(400, { error: 'Pflichtfahrgebiet nicht gesetzt.' });
 		}
 
-		const response: GeocodeResponse  = await geocode({
+		const response: GeocodeResponse = await geocode({
 			baseUrl: MOTIS_BASE_URL,
 			query: {
 				text: address
 			}
 		}).then((res) => {
-			return res.data!
+			return res.data!;
 		});
-		if(response.length==0){
+		if (response.length == 0) {
 			return fail(400, { error: 'Die Addresse konnte nicht gefunden werden.' });
 		}
 		const bestAddressGuess = new Coordinates(response[0].lat, response[0].lon);

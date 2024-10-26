@@ -1,5 +1,5 @@
-import type { Coordinates } from "./location";
+import type { Coordinates } from './location';
 
 export const coordinatesToStr = (c: Coordinates) => {
-    return `${c.lat};${c.lng}`;
+	return `${c.lat};${c.lng}`;
 };
