@@ -4,13 +4,12 @@ import { Interval } from '$lib/interval.js';
 import { groupBy, updateValues } from '$lib/collection_utils.js';
 import { error, json } from '@sveltejs/kit';
 import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
-import { MAX_TRAVEL_DURATION, MIN_PREP_MINUTES } from '$lib/constants.js';
+import { MAX_TRAVEL_DURATION, MIN_PREP_MINUTES, MOTIS_BASE_URL } from '$lib/constants.js';
 import { sql } from 'kysely';
 import { getFareEstimation } from './fare-estimation/fare_estimation.js';
 import { covers } from '$lib/sqlHelpers.js';
 import { oneToMany, type Duration } from '$lib/motis';
-
-const MOTIS_BASE_URL = 'https://europe.motis-project.de';
+import { coordinatesToStr } from '$lib/motisUtils.js';
 
 const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 	const zoneContainingStartAndDestination = await db
@@ -32,10 +31,6 @@ export const POST = async (event) => {
 	const fromCoordinates: Coordinates = from.coordinates;
 	const toCoordinates: Coordinates = to.coordinates;
 	const time = new Date(timeStamp);
-
-	const coordinatesToStr = (c: Coordinates) => {
-		return `${c.lat};${c.lng}`;
-	};
 
 	let travelDuration = 0;
 	try {
