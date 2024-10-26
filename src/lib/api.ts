@@ -96,27 +96,3 @@ export const reassignTour = async (tourId: number) => {
 	console.log('TODO: reassign tour:', tourId);
 	return false;
 };
-
-export class AddressGuess {
-	pos!: { lat: number; lng: number };
-}
-
-export async function geoCode(address: string): Promise<AddressGuess> {
-	const response = await fetch('https://europe.motis-project.de/?elm=AddressSuggestions', {
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({
-			destination: { type: 'Module', target: '/address' },
-			content_type: 'AddressRequest',
-			content: { input: address }
-		}),
-		method: 'POST',
-		mode: 'cors'
-	}).then((res) => res.json());
-	const guesses = response.content.guesses;
-	if (guesses.length == 0) {
-		throw new Error('geoCode did not return any address guesses.');
-	}
-	return guesses[0];
-}

@@ -1,7 +1,6 @@
 import type { PageServerLoad, Actions } from './$types.js';
 import { fail } from '@sveltejs/kit';
 import { db } from '$lib/database';
-import { AddressGuess, geoCode } from '$lib/api.js';
 import { Coordinates } from '$lib/location.js';
 import { covers, intersects } from '$lib/sqlHelpers.js';
 import { geocode } from '$lib/motis/services.gen.js';
