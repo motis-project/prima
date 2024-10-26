@@ -3,7 +3,6 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Card from '$lib/components/ui/card';
 	import { getStyle } from '$lib/style';
-	import { getRoute } from '$lib/api';
 	import Map from '$lib/Map.svelte';
 	import GeoJSON from '$lib/GeoJSON.svelte';
 	import Layer from '$lib/Layer.svelte';
@@ -39,7 +38,6 @@
 		if (tourEvents == null || tourEvents!.length == 0) {
 			return routes;
 		}
-
 		for (let e = 0; e < tourEvents!.length - 1; e++) {
 			let e1 = tourEvents![e];
 			let e2 = tourEvents![e + 1];
