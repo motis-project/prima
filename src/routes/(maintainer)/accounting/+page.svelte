@@ -414,6 +414,7 @@
 	
 	// --- Summierung: ---
 	let filterString = $state("keine Filter ausgewählt");
+	let sum = $state(0);
 	
 	const prepareFilterString = () => {
 		let result = " ";
@@ -438,11 +439,54 @@
 	};
 
 	const summarize = () => {
-
+		for(let row of data.tours) {
+			sum += +getCost(row.fare, row.fare_route);
+		};
 	};
 
-	const csvExport = () => {
+	// TODO: Test!
+	const csvExport = (filename: string, rows: object[]): void => {
+		if (!rows || !rows.length) {
+			return;
+		}
+		const separator: string = ";";
+		const keys: string[] = ["Unternehmen", "Abfahrt", "Ankunft", "Anzahl", "Taxameterpreis", "ÖV-Preis", "Gesamtpreis", "Kosten"];
+		let columHearders = keys;
 
+		const csvContent =
+			"sep=,\n" +
+			columHearders.join(separator) +
+			'\n' +
+			rows.map(row => {
+				return keys.map(k => {
+					let cell = Object("abc");//row[k] === null || row[k] === undefined ? '' : row[k]; // mit k auf die Rows zugreifen ? String als indice?
+
+					cell = cell instanceof Date 
+						? cell.toLocaleString()
+						: cell.toString().replace(/"/g, '""');
+
+					//if (navigator.msSaveBlob) { // für internet explorer 10 baer navigator.mssaveblob does not exist any more.
+					//	cell = cell.replace(/[^\x00-\x7F]/g, ""); //remove non-ascii characters
+					//}
+					if (cell.search(/("|,|\n)/g) >= 0) {
+						cell = `"${cell}"`;
+					}
+					return cell;
+				}).join(separator);
+			}).join('\n');
+
+		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+		const link = document.createElement('a');
+		if (link.download !== undefined) {
+			// Browsers that support HTML5 download attribute
+			const url = URL.createObjectURL(blob);
+			link.setAttribute('href', url);
+			link.setAttribute('download', filename);
+			link.style.visibility = 'hidden';
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+		}
 	};
 	
 	</script>
@@ -523,7 +567,7 @@
 				<Dialog.Header>
 					<Dialog.Title>Summierung Kosten</Dialog.Title>
 					<Dialog.Description>
-						Summierung Sie die Kosten, um eine Abrechnungsdatei zu erstellen.
+						Summieren Sie die Kosten, um eine Abrechnungsdatei zu erstellen.
 					</Dialog.Description>
 				</Dialog.Header>
 					<Label for="name" class="text-left">
@@ -565,7 +609,7 @@
 			<Dialog.Close class="text-right">
 				<Button
 					type="submit"
-					on:click={() => csvExport()}>
+					on:click={() => csvExport("Abrechnung", currentPageRows)}>
 					CSV-Export starten
 				</Button>
 			</Dialog.Close>
