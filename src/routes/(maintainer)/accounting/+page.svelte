@@ -35,7 +35,7 @@
 		if (fare == null || fare_route == null) {
 			return 0;
 		}
-		let diff = Math.max(0, (fare_route - fare));
+		let diff = Math.max(0, fare_route - fare);
 		if (diff > 0) {
 			return Math.round((fare_route - fare) * 0.97);
 		}
@@ -44,7 +44,7 @@
 
 	const getEuroString = (price: number | null) => {
 		if (price == null) {
-			return "0.00";
+			return '0.00';
 		}
 		return (price / 100).toFixed(2);
 	};

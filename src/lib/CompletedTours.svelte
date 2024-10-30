@@ -63,7 +63,7 @@
 			return 0;
 		}
 		let cost = 0;
-		let diff = Math.max(0, (fare_route - fare));
+		let diff = Math.max(0, fare_route - fare);
 		if (diff > 0) {
 			cost = (fare_route - fare) * 0.97;
 		}
