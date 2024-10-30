@@ -12,6 +12,7 @@
 	import { onMount } from 'svelte';
 	import { getLocalTimeZone, today, CalendarDate } from '@internationalized/date';
 	import { RangeCalendar } from '$lib/components/ui/range-calendar/index.js';
+	import { Sigma } from 'lucide-svelte';
 
 	const { data } = $props();
 
@@ -28,7 +29,7 @@
 		if (fare == null || fare_route == null) {
 			return 0;
 		}
-		return (Math.round(fare + fare_route) / 100).toFixed(2);
+		return fare + getCost(fare, fare_route);
 	};
 
 	const getCost = (fare: number | null, fare_route: number | null) => {
@@ -37,14 +38,14 @@
 		}
 		let diff = Math.max(0, (fare_route - fare));
 		if (diff > 0) {
-			return (Math.round((fare_route - fare) * 0.97) / 100).toFixed(2);
+			return Math.round((fare_route - fare) * 0.97);
 		}
 		return 0;
 	};
 
-	const getPrice = (price: number | null) => {
+	const getEuroString = (price: number | null) => {
 		if (price == null) {
-			return 0;
+			return "0.00";
 		}
 		return (price / 100).toFixed(2);
 	};
@@ -229,6 +230,7 @@
 	const restore = () => {
 		selectedTimespan = 'Zeitraum';
 		selectedCompany = 'Unternehmen';
+		prepareFilterString();
 		start = today(getLocalTimeZone());
 		end = start.add({ days: 7 });
 		range = { start, end };
@@ -423,28 +425,28 @@
 	const prepareFilterString = () => {
 		let result = " ";
 		if (selectedCompany != "Unternehmen") {
-			console.log("selectedcomp");
-			result.concat(selectedCompany, "; ");
-			console.log(result);
+			result = result.concat(selectedCompany, "; ");
 		}
 		if (selectedTimespan != "Zeitraum") {
-			console.log("timespan");
-			result.concat(selectedTimespan, "; ");
+			result = result.concat(selectedTimespan, "; ");
 		}
 		if(range.end != end && range.start != start) {
-			console.log("range");
-			result.concat(range.start.toString(), " - ", range.end.toString());
+			result = result.concat(range.start.toString(), " - ", range.end.toString());
 		}
 		if (selectedCompany == "Unternehmen" && selectedTimespan == "Zeitraum" && range.end == end && range.start == start) {
 			result = "keine Filter ausgewählt"
 		}
 		filterString = result;
-		console.log(filterString);
 	};
 
-	const summarize = () => {
-		for(let row of data.tours) {
-			sum += +getCost(row.fare, row.fare_route);
+	const summarize = (currentPageRows: TourDetails[]) => {
+		sum = 0;
+		let toIterate = data.tours;
+		if (filterString != "keine Filter ausgewählt") {
+			toIterate = currentPageRows;
+		}
+		for(let row of toIterate) {
+			sum += getCost(row.fare, row.fare_route);
 		};
 	};
 
@@ -566,7 +568,11 @@
 		</Dialog.Root>
 
 		<Dialog.Root>
-			<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}>Summierung Kosten</Dialog.Trigger>
+			<Dialog.Trigger 
+				class={buttonVariants({ variant: 'outline' })} 
+				on:click={() => summarize(currentPageRows)}>
+				Summierung Kosten
+			</Dialog.Trigger>
 			<Dialog.Content class="sm:max-w-[850px]">
 				<Dialog.Header>
 					<Dialog.Title>Summierung Kosten</Dialog.Title>
@@ -583,11 +589,11 @@
 							<Table.Head class="mt-6.5">Unternehmen</Table.Head>
 							<Table.Head class="mt-6.5">Abfahrt</Table.Head>
 							<Table.Head class="mt-6.5">Ankunft</Table.Head>
-							<Table.Head class="mt-6.5">Anzahl Kunden</Table.Head>
-							<Table.Head class="mt-6.5">Taxameterpreis </Table.Head>
-							<Table.Head class="mt-6.5">ÖV-Preis</Table.Head>
-							<Table.Head class="mt-6.5">Gesamtpreis</Table.Head>
-							<Table.Head class="mt-6.5">Kosten</Table.Head>
+							<Table.Head class="mt-6.5 text-center">Anzahl Kunden</Table.Head>
+							<Table.Head class="mt-6.5 text-center">Taxameterpreis </Table.Head>
+							<Table.Head class="mt-6.5 text-center">ÖV-Preis</Table.Head>
+							<Table.Head class="mt-6.5 text-center">Gesamtpreis</Table.Head>
+							<Table.Head class="mt-6.5 text-center">Kosten</Table.Head>
 						</Table.Row>
 					</Table.Header>
 					<Table.Body>
@@ -596,27 +602,32 @@
 								<Table.Cell>{tour.company_name}</Table.Cell>
 								<Table.Cell>{tour.from.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
 								<Table.Cell>{tour.to.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
-								<Table.Cell>{getCustomerCount(tour)}</Table.Cell>
-								<Table.Cell>{getPrice(tour.fare_route)} €</Table.Cell>
-								<Table.Cell>{getPrice(tour.fare)} €</Table.Cell>
-								<Table.Cell>{getTotalPrice(tour.fare, tour.fare_route)} €</Table.Cell>
-								<Table.Cell>{getCost(tour.fare, tour.fare_route)} €</Table.Cell>
+								<Table.Cell class="text-center">{getCustomerCount(tour)}</Table.Cell>
+								<Table.Cell class="text-center">{getEuroString(tour.fare_route)} €</Table.Cell>
+								<Table.Cell class="text-center">{getEuroString(tour.fare)} €</Table.Cell>
+								<Table.Cell class="text-center">{getEuroString(getTotalPrice(tour.fare, tour.fare_route))} €</Table.Cell>
+								<Table.Cell class="text-center">{getEuroString(getCost(tour.fare, tour.fare_route))} €</Table.Cell>
 							</Table.Row>
 						{/each}
+						<Table.Row>
+							<Table.Cell><Sigma /></Table.Cell>
+							<Table.Cell></Table.Cell>
+							<Table.Cell></Table.Cell>
+							<Table.Cell></Table.Cell>
+							<Table.Cell></Table.Cell>
+							<Table.Cell></Table.Cell>
+							<Table.Cell></Table.Cell>
+							<Table.Cell>{getEuroString(sum)} €</Table.Cell>
+						</Table.Row>
 					</Table.Body>
 				</Table.Root>
-			<Button
-				variant= "outline"
-				on:click={() => summarize()}>
-				Summiere Kosten
-			</Button>
-			<Dialog.Close class="text-right">
-				<Button
-					type="submit"
-					on:click={() => csvExport("Abrechnung", currentPageRows)}>
-					CSV-Export starten
-				</Button>
-			</Dialog.Close>
+				<Dialog.Close class="text-right">
+					<Button
+						type="submit"
+						on:click={() => csvExport("Abrechnung", currentPageRows)}>
+						CSV-Export starten
+					</Button>
+				</Dialog.Close>
 			</Dialog.Content>
 		</Dialog.Root>
 	</div>
@@ -633,21 +644,21 @@
 					</Button>
 				</Table.Head>
 				<Table.Head class="mt-6.5">Ankunft</Table.Head>
-				<Table.Head class="mt-6.5">Anzahl Kunden</Table.Head>
-				<Table.Head class="mt-6.5">
+				<Table.Head class="mt-6.5 text-center">Anzahl Kunden</Table.Head>
+				<Table.Head class="mt-6.5 text-center">
 					<Button class="whitespace-pre" variant="outline" on:click={() => sort(descending, 1)}>
 						{'Taxameterpreis  '}
 						<ChevronsUpDown class="h-6 w-4" />
 					</Button>
 				</Table.Head>
-				<Table.Head class="mt-6.5">ÖV-Preis</Table.Head>
-				<Table.Head class="mt-6.5">
+				<Table.Head class="mt-6.5 text-center">ÖV-Preis</Table.Head>
+				<Table.Head class="mt-6.5 text-center">
 					<Button class="whitespace-pre" variant="outline" on:click={() => sort(descending, 2)}>
 						{'Gesamtpreis  '}
 						<ChevronsUpDown class="h-6 w-4" />
 					</Button>
 				</Table.Head>
-				<Table.Head class="mt-6.5">
+				<Table.Head class="mt-6.5 text-center">
 					<Button class="whitespace-pre" variant="outline" on:click={() => sort(descending, 3)}>
 						{'Kosten  '}
 						<ChevronsUpDown class="h-6 w-4" />
@@ -661,11 +672,11 @@
 					<Table.Cell>{tour.company_name}</Table.Cell>
 					<Table.Cell>{tour.from.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
 					<Table.Cell>{tour.to.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
-					<Table.Cell>{getCustomerCount(tour)}</Table.Cell>
-					<Table.Cell>{getPrice(tour.fare_route)} €</Table.Cell>
-					<Table.Cell>{getPrice(tour.fare)} €</Table.Cell>
-					<Table.Cell>{getTotalPrice(tour.fare, tour.fare_route)} €</Table.Cell>
-					<Table.Cell>{getCost(tour.fare, tour.fare_route)} €</Table.Cell>
+					<Table.Cell class="text-center">{getCustomerCount(tour)}</Table.Cell>
+					<Table.Cell class="text-center">{getEuroString(tour.fare_route)} €</Table.Cell>
+					<Table.Cell class="text-center">{getEuroString(tour.fare)} €</Table.Cell>
+					<Table.Cell class="text-center">{getEuroString(getTotalPrice(tour.fare, tour.fare_route))} €</Table.Cell>
+					<Table.Cell class="text-center">{getEuroString(getCost(tour.fare, tour.fare_route))} €</Table.Cell>
 				</Table.Row>
 			{/each}
 		</Table.Body>
