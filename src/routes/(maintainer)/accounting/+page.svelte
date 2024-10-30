@@ -35,7 +35,11 @@
 		if (fare == null || fare_route == null) {
 			return 0;
 		}
-		return (Math.round((fare_route - fare) * 0.97) / 100).toFixed(2);
+		let diff = Math.max(0, (fare_route - fare));
+		if (diff > 0) {
+			return (Math.round((fare_route - fare) * 0.97) / 100).toFixed(2);
+		}
+		return 0;
 	};
 
 	const getPrice = (price: number | null) => {
