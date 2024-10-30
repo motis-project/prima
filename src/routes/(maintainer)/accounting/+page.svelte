@@ -28,7 +28,7 @@
 		if (fare == null || fare_route == null) {
 			return 0;
 		}
-		return (Math.round(fare + fare_route) / 100).toFixed(2);
+		return fare + getCost(fare, fare_route);
 	};
 
 	const getCost = (fare: number | null, fare_route: number | null) => {
@@ -37,14 +37,14 @@
 		}
 		let diff = Math.max(0, (fare_route - fare));
 		if (diff > 0) {
-			return (Math.round((fare_route - fare) * 0.97) / 100).toFixed(2);
+			return Math.round((fare_route - fare) * 0.97);
 		}
 		return 0;
 	};
 
-	const getPrice = (price: number | null) => {
+	const getEuroString = (price: number | null) => {
 		if (price == null) {
-			return 0;
+			return "0.00";
 		}
 		return (price / 100).toFixed(2);
 	};
@@ -528,10 +528,10 @@
 					<Table.Cell>{tour.from.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
 					<Table.Cell>{tour.to.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
 					<Table.Cell>{getCustomerCount(tour)}</Table.Cell>
-					<Table.Cell>{getPrice(tour.fare_route)} €</Table.Cell>
-					<Table.Cell>{getPrice(tour.fare)} €</Table.Cell>
-					<Table.Cell>{getTotalPrice(tour.fare, tour.fare_route)} €</Table.Cell>
-					<Table.Cell>{getCost(tour.fare, tour.fare_route)} €</Table.Cell>
+					<Table.Cell>{getEuroString(tour.fare_route)} €</Table.Cell>
+					<Table.Cell>{getEuroString(tour.fare)} €</Table.Cell>
+					<Table.Cell>{getEuroString(getTotalPrice(tour.fare, tour.fare_route))} €</Table.Cell>
+					<Table.Cell>{getEuroString(getCost(tour.fare, tour.fare_route))} €</Table.Cell>
 				</Table.Row>
 			{/each}
 		</Table.Body>

@@ -62,7 +62,12 @@
 		if (fare == null || fare_route == null) {
 			return 0;
 		}
-		return (Math.round(fare + fare_route) / 100).toFixed(2);
+		let cost = 0;
+		let diff = Math.max(0, (fare_route - fare));
+		if (diff > 0) {
+			cost = (fare_route - fare) * 0.97;
+		}
+		return (Math.round(fare + cost) / 100).toFixed(2);
 	};
 </script>
 
