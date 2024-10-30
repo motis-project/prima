@@ -12,7 +12,8 @@
 	import { onMount } from 'svelte';
 	import { getLocalTimeZone, today, CalendarDate } from '@internationalized/date';
 	import { RangeCalendar } from '$lib/components/ui/range-calendar/index.js';
-	import { Sigma } from 'lucide-svelte';
+	import Papa from 'papaparse';
+	import { saveAs } from 'file-saver';
 
 	const { data } = $props();
 
@@ -450,51 +451,16 @@
 		};
 	};
 
-	// TODO: Test!
-	const csvExport = (filename: string, rows: object[]): void => {
-		if (!rows || !rows.length) {
-			return;
-		}
-		const separator: string = ";";
-		const keys: string[] = ["Unternehmen", "Abfahrt", "Ankunft", "Anzahl", "Taxameterpreis", "ÖV-Preis", "Gesamtpreis", "Kosten"];
-		let columHearders = keys;
-
-		const csvContent =
-			"sep=,\n" +
-			columHearders.join(separator) +
-			'\n' +
-			rows.map(row => {
-				return keys.map(k => {
-					let cell = Object("abc");//row[k] === null || row[k] === undefined ? '' : row[k]; // mit k auf die Rows zugreifen ? String als indice?
-
-					cell = cell instanceof Date 
-						? cell.toLocaleString()
-						: cell.toString().replace(/"/g, '""');
-
-					//if (navigator.msSaveBlob) { // für internet explorer 10 baer navigator.mssaveblob does not exist any more.
-					//	cell = cell.replace(/[^\x00-\x7F]/g, ""); //remove non-ascii characters
-					//}
-					if (cell.search(/("|,|\n)/g) >= 0) {
-						cell = `"${cell}"`;
-					}
-					return cell;
-				}).join(separator);
-			}).join('\n');
-
+	// TODO:
+	// Data soll nur das sein, was von current page rows angezeigt wird. Am besten ein eigenes string array bauen.
+	// Download funktioniert, daten sind noch nicht die die es sein sollen.
+	// Schauen wie es im excel aussieht und schauen wie es in notepad aussieht sozusagen. 
+	// Bei Papaparse website nach den Konfigurationsmöglichkeiten schauen.
+	const csvExport = (data: TourDetails[], filename: string) => {
+		const csvContent = Papa.unparse(data);
 		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-		const link = document.createElement('a');
-		if (link.download !== undefined) {
-			// Browsers that support HTML5 download attribute
-			const url = URL.createObjectURL(blob);
-			link.setAttribute('href', url);
-			link.setAttribute('download', filename);
-			link.style.visibility = 'hidden';
-			document.body.appendChild(link);
-			link.click();
-			document.body.removeChild(link);
-		}
+		saveAs(blob, filename);
 	};
-	
 	</script>
 
 <div class="flex justify-between">
@@ -610,7 +576,7 @@
 							</Table.Row>
 						{/each}
 						<Table.Row>
-							<Table.Cell><Sigma /></Table.Cell>
+							<Table.Cell>Summe</Table.Cell>
 							<Table.Cell></Table.Cell>
 							<Table.Cell></Table.Cell>
 							<Table.Cell></Table.Cell>
@@ -624,7 +590,7 @@
 				<Dialog.Close class="text-right">
 					<Button
 						type="submit"
-						on:click={() => csvExport("Abrechnung", currentPageRows)}>
+						on:click={() => csvExport(currentPageRows, "Abrechnung")}>
 						CSV-Export starten
 					</Button>
 				</Dialog.Close>
