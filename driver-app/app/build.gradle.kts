@@ -20,7 +20,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "BASE_URL", "\"http://130.83.165.211:8080\"")
+            buildConfigField("String", "BASE_URL", "\"http://130.83.165.211:7777\"")
         }
         release {
             isMinifyEnabled = false
@@ -28,10 +28,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "BASE_URL", "\"https://prima.motis-project.de\"")
         }
     }
     buildFeatures {
         buildConfig = true
+        compose = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.0"
@@ -49,6 +51,13 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+    implementation(libs.androidx.runtime.android)
+    implementation(libs.androidx.navigation.compose)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+    implementation(libs.androidx.material3.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
