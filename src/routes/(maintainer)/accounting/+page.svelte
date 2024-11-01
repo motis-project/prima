@@ -37,8 +37,7 @@
 		if (fare == null || fare_route == null) {
 			return 0;
 		}
-		let diff = Math.max(0, (fare_route - fare));
-		if (diff > 0) {
+		if (fare_route - fare >= 0) {
 			return Math.round((fare_route - fare) * 0.97);
 		}
 		return 0;
@@ -46,7 +45,7 @@
 
 	const getEuroString = (price: number | null) => {
 		if (price == null) {
-			return "0.00";
+			return '0.00';
 		}
 		return (price / 100).toFixed(2);
 	};
@@ -123,94 +122,38 @@
 		return 0;
 	};
 
-	const sort = (des: boolean[], idx: number) => {
-		if (des[idx]) {
-			switch (idx) {
-				case 0: {
-					currentRows.sort(compareDate);
-					paginate(currentRows);
-					setPage(0);
-					descending[0] = false;
-					// all others reset
-					descending[1] = true;
-					descending[2] = true;
-					descending[3] = true;
-					break;
-				}
-				case 1: {
-					currentRows.sort(compareFareRoute);
-					paginate(currentRows);
-					setPage(0);
-					descending[1] = false;
-					// all others reset
-					descending[0] = true;
-					descending[2] = true;
-					descending[3] = true;
-					break;
-				}
-				case 2: {
-					currentRows.sort(compareTotalPrice);
-					paginate(currentRows);
-					setPage(0);
-					descending[2] = false;
-					// all others reset
-					descending[0] = true;
-					descending[1] = true;
-					descending[3] = true;
-					break;
-				}
-				case 3: {
-					currentRows.sort(compareCost);
-					paginate(currentRows);
-					setPage(0);
-					descending[3] = false;
-					// all others reset
-					descending[0] = true;
-					descending[1] = true;
-					descending[2] = true;
-					break;
-				}
-				default:
-					return;
+	const sortColumn = (idx: number) => {
+		switch (idx) {
+			case 0: {
+				currentRows.sort(compareDate);
+				break;
 			}
+			case 1: {
+				currentRows.sort(compareFareRoute);
+				break;
+			}
+			case 2: {
+				currentRows.sort(compareTotalPrice);
+				break;
+			}
+			case 3: {
+				currentRows.sort(compareCost);
+				break;
+			}
+			default:
+				return;
+		}
+		if (!descending[idx]) {
+			currentRows.reverse();
 		} else {
-			switch (idx) {
-				case 0: {
-					currentRows.sort(compareDate);
-					currentRows.reverse();
-					paginate(currentRows);
-					setPage(0);
-					descending[0] = true;
-					break;
-				}
-				case 1: {
-					currentRows.sort(compareFareRoute);
-					currentRows.reverse();
-					paginate(currentRows);
-					setPage(0);
-					descending[1] = true;
-					break;
-				}
-				case 2: {
-					currentRows.sort(compareTotalPrice);
-					currentRows.reverse();
-					paginate(currentRows);
-					setPage(0);
-					descending[2] = true;
-					break;
-				}
-				case 3: {
-					currentRows.sort(compareCost);
-					currentRows.reverse();
-					paginate(currentRows);
-					setPage(0);
-					descending[3] = true;
-					break;
-				}
-				default:
-					return;
+			// descending - reset all others
+			for (let i = 0; i < descending.length; i++) {
+				if (i != idx) descending[i] = true;
 			}
 		}
+		descending[idx] = !descending[idx];
+		paginate(currentRows);
+		setPage(0);
 	};
 
 	// --- Filter: ---
@@ -418,50 +361,63 @@
 		paginate(currentRows);
 		setPage(0);
 	};
-	
+
 	// --- Summierung: ---
-	let filterString = $state("keine Filter ausgewählt");
+	let filterString = $state('keine Filter ausgewählt');
 	let sum = $state(0);
-	
+
 	const prepareFilterString = () => {
-		let result = " ";
-		if (selectedCompany != "Unternehmen") {
-			result = result.concat(selectedCompany, "; ");
+		let result = ' ';
+		if (selectedCompany != 'Unternehmen') {
+			result = result.concat(selectedCompany, '; ');
 		}
-		if (selectedTimespan != "Zeitraum") {
-			result = result.concat(selectedTimespan, "; ");
+		if (selectedTimespan != 'Zeitraum') {
+			result = result.concat(selectedTimespan, '; ');
 		}
-		if(range.end != end && range.start != start) {
-			result = result.concat(range.start.toString(), " - ", range.end.toString());
+		if (range.end != end && range.start != start) {
+			result = result.concat(range.start.toString(), ' - ', range.end.toString());
 		}
-		if (selectedCompany == "Unternehmen" && selectedTimespan == "Zeitraum" && range.end == end && range.start == start) {
-			result = "keine Filter ausgewählt"
+		if (
+			selectedCompany == 'Unternehmen' &&
+			selectedTimespan == 'Zeitraum' &&
+			range.end == end &&
+			range.start == start
+		) {
+			result = 'keine Filter ausgewählt';
 		}
 		filterString = result;
 	};
 
-	const summarize = (currentPageRows: TourDetails[]) => {
+	const summarize = (currentRows: TourDetails[]) => {
 		sum = 0;
 		let toIterate = data.tours;
-		if (filterString != "keine Filter ausgewählt") {
-			toIterate = currentPageRows;
+		if (filterString != 'keine Filter ausgewählt') {
+			toIterate = currentRows;
 		}
-		for(let row of toIterate) {
+		for (let row of toIterate) {
 			sum += getCost(row.fare, row.fare_route);
-		};
+		}
 	};
 
-	// TODO:
-	// Data soll nur das sein, was von current page rows angezeigt wird. Am besten ein eigenes string array bauen.
-	// Download funktioniert, daten sind noch nicht die die es sein sollen.
-	// Schauen wie es im excel aussieht und schauen wie es in notepad aussieht sozusagen. 
-	// Bei Papaparse website nach den Konfigurationsmöglichkeiten schauen.
-	const csvExport = (data: TourDetails[], filename: string) => {
-		const csvContent = Papa.unparse(data);
+	const csvExport = (currentTourData: TourDetails[], filename: string) => {
+		let data = [];
+		data.push(['Unternehmen', 'Tag', 'Taxameterpreis', 'ÖV-Preis', 'Gesamtpreis', 'Kosten']);
+		for (let row of currentTourData) {
+			data.push([
+				row.company_name,
+				row.from.toLocaleString('de-DE').slice(0, -10),
+				getEuroString(row.fare_route),
+				getEuroString(row.fare),
+				getEuroString(getTotalPrice(row.fare, row.fare_route)),
+				getEuroString(getCost(row.fare, row.fare_route))
+			]);
+		}
+		data.push(['Summe', '', '', '', '', getEuroString(sum)]);
+		const csvContent = Papa.unparse(data, { header: true });
 		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 		saveAs(blob, filename);
 	};
-	</script>
+</script>
 
 <div class="flex justify-between">
 	<Card.Header>
@@ -534,29 +490,28 @@
 		</Dialog.Root>
 
 		<Dialog.Root>
-			<Dialog.Trigger 
-				class={buttonVariants({ variant: 'outline' })} 
-				on:click={() => summarize(currentPageRows)}>
+			<Dialog.Trigger
+				class={buttonVariants({ variant: 'outline' })}
+				on:click={() => summarize(currentRows)}
+			>
 				Summierung Kosten
 			</Dialog.Trigger>
 			<Dialog.Content class="sm:max-w-[850px]">
 				<Dialog.Header>
 					<Dialog.Title>Summierung Kosten</Dialog.Title>
 					<Dialog.Description>
-						Summieren Sie die Kosten, um eine Abrechnungsdatei zu erstellen.
+						Summiere Kosten, um eine Abrechnungsdatei zu erstellen.
 					</Dialog.Description>
 				</Dialog.Header>
-					<Label for="name" class="text-left">
-						Folgende Filter sind ausgewählt: {filterString}
-					</Label>
+				<Label for="name" class="text-left">
+					Folgende Filter sind ausgewählt: {filterString}
+				</Label>
 				<Table.Root>
 					<Table.Header>
 						<Table.Row>
 							<Table.Head class="mt-6.5">Unternehmen</Table.Head>
-							<Table.Head class="mt-6.5">Abfahrt</Table.Head>
-							<Table.Head class="mt-6.5">Ankunft</Table.Head>
-							<Table.Head class="mt-6.5 text-center">Anzahl Kunden</Table.Head>
-							<Table.Head class="mt-6.5 text-center">Taxameterpreis </Table.Head>
+							<Table.Head class="mt-6.5">Tag</Table.Head>
+							<Table.Head class="mt-6.5 text-center">Taxameterpreis</Table.Head>
 							<Table.Head class="mt-6.5 text-center">ÖV-Preis</Table.Head>
 							<Table.Head class="mt-6.5 text-center">Gesamtpreis</Table.Head>
 							<Table.Head class="mt-6.5 text-center">Kosten</Table.Head>
@@ -566,19 +521,29 @@
 						{#each currentPageRows as tour}
 							<Table.Row>
 								<Table.Cell>{tour.company_name}</Table.Cell>
-								<Table.Cell>{tour.from.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
-								<Table.Cell>{tour.to.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
-								<Table.Cell class="text-center">{getCustomerCount(tour)}</Table.Cell>
+								<Table.Cell>{tour.from.toLocaleString('de-DE').slice(0, -10)}</Table.Cell>
 								<Table.Cell class="text-center">{getEuroString(tour.fare_route)} €</Table.Cell>
 								<Table.Cell class="text-center">{getEuroString(tour.fare)} €</Table.Cell>
-								<Table.Cell class="text-center">{getEuroString(getTotalPrice(tour.fare, tour.fare_route))} €</Table.Cell>
-								<Table.Cell class="text-center">{getEuroString(getCost(tour.fare, tour.fare_route))} €</Table.Cell>
+								<Table.Cell class="text-center"
+									>{getEuroString(getTotalPrice(tour.fare, tour.fare_route))} €</Table.Cell
+								>
+								<Table.Cell class="text-center"
+									>{getEuroString(getCost(tour.fare, tour.fare_route))} €</Table.Cell
+								>
 							</Table.Row>
 						{/each}
+						{#if totalPages.length > 1}
+							<Table.Row>
+								<Table.Cell>...</Table.Cell>
+								<Table.Cell class="text-center">...</Table.Cell>
+								<Table.Cell class="text-center">...</Table.Cell>
+								<Table.Cell class="text-center">...</Table.Cell>
+								<Table.Cell class="text-center">...</Table.Cell>
+								<Table.Cell class="text-center">...</Table.Cell>
+							</Table.Row>
+						{/if}
 						<Table.Row>
 							<Table.Cell>Summe</Table.Cell>
-							<Table.Cell></Table.Cell>
-							<Table.Cell></Table.Cell>
 							<Table.Cell></Table.Cell>
 							<Table.Cell></Table.Cell>
 							<Table.Cell></Table.Cell>
@@ -588,9 +553,7 @@
 					</Table.Body>
 				</Table.Root>
 				<Dialog.Close class="text-right">
-					<Button
-						type="submit"
-						on:click={() => csvExport(currentPageRows, "Abrechnung")}>
+					<Button type="submit" on:click={() => csvExport(currentRows, 'Abrechnung')}>
 						CSV-Export starten
 					</Button>
 				</Dialog.Close>
@@ -604,7 +567,7 @@
 			<Table.Row>
 				<Table.Head class="mt-6.5">Unternehmen</Table.Head>
 				<Table.Head class="mt-6.5">
-					<Button class="whitespace-pre" variant="outline" on:click={() => sort(descending, 0)}>
+					<Button class="whitespace-pre" variant="outline" on:click={() => sortColumn(0)}>
 						{'Abfahrt  '}
 						<ChevronsUpDown class="h-6 w-4" />
 					</Button>
@@ -612,20 +575,20 @@
 				<Table.Head class="mt-6.5">Ankunft</Table.Head>
 				<Table.Head class="mt-6.5 text-center">Anzahl Kunden</Table.Head>
 				<Table.Head class="mt-6.5 text-center">
-					<Button class="whitespace-pre" variant="outline" on:click={() => sort(descending, 1)}>
+					<Button class="whitespace-pre" variant="outline" on:click={() => sortColumn(1)}>
 						{'Taxameterpreis  '}
 						<ChevronsUpDown class="h-6 w-4" />
 					</Button>
 				</Table.Head>
 				<Table.Head class="mt-6.5 text-center">ÖV-Preis</Table.Head>
 				<Table.Head class="mt-6.5 text-center">
-					<Button class="whitespace-pre" variant="outline" on:click={() => sort(descending, 2)}>
+					<Button class="whitespace-pre" variant="outline" on:click={() => sortColumn(2)}>
 						{'Gesamtpreis  '}
 						<ChevronsUpDown class="h-6 w-4" />
 					</Button>
 				</Table.Head>
 				<Table.Head class="mt-6.5 text-center">
-					<Button class="whitespace-pre" variant="outline" on:click={() => sort(descending, 3)}>
+					<Button class="whitespace-pre" variant="outline" on:click={() => sortColumn(3)}>
 						{'Kosten  '}
 						<ChevronsUpDown class="h-6 w-4" />
 					</Button>
@@ -641,8 +604,12 @@
 					<Table.Cell class="text-center">{getCustomerCount(tour)}</Table.Cell>
 					<Table.Cell class="text-center">{getEuroString(tour.fare_route)} €</Table.Cell>
 					<Table.Cell class="text-center">{getEuroString(tour.fare)} €</Table.Cell>
-					<Table.Cell class="text-center">{getEuroString(getTotalPrice(tour.fare, tour.fare_route))} €</Table.Cell>
-					<Table.Cell class="text-center">{getEuroString(getCost(tour.fare, tour.fare_route))} €</Table.Cell>
+					<Table.Cell class="text-center"
+						>{getEuroString(getTotalPrice(tour.fare, tour.fare_route))} €</Table.Cell
+					>
+					<Table.Cell class="text-center"
+						>{getEuroString(getCost(tour.fare, tour.fare_route))} €</Table.Cell
+					>
 				</Table.Row>
 			{/each}
 		</Table.Body>
@@ -685,5 +652,4 @@
 			Auf Seite {page + 1} von {totalPages.length}
 		</Label>
 	</div>
-
 </Card.Content>

@@ -63,7 +63,7 @@
 			return 0;
 		}
 		let cost = 0;
-		let diff = Math.max(0, (fare_route - fare));
+		let diff = Math.max(0, fare_route - fare);
 		if (diff > 0) {
 			cost = (fare_route - fare) * 0.97;
 		}
@@ -111,10 +111,12 @@
 						<Table.Cell>{getTourInfoShort(tour)[1]}</Table.Cell>
 						<Table.Cell>{tour.from.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
 						<Table.Cell>{tour.to.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
-						<Table.Cell>{getCustomerCount(tour)}</Table.Cell>
+						<Table.Cell class="text-center">{getCustomerCount(tour)}</Table.Cell>
 						<Table.Cell>TODO</Table.Cell>
-						<Table.Cell>{tour.events.length}</Table.Cell>
-						<Table.Cell>{getTotalPrice(tour.fare, tour.fare_route)} €</Table.Cell>
+						<Table.Cell class="text-center">{tour.events.length}</Table.Cell>
+						<Table.Cell class="text-center"
+							>{getTotalPrice(tour.fare, tour.fare_route)} €</Table.Cell
+						>
 					</Table.Row>
 				{/each}
 			</Table.Body>
