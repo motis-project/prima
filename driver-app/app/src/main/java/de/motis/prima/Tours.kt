@@ -60,9 +60,6 @@ fun Tours(
             viewModel.logoutEvent.collect {
                 Log.d("Logout", "Logout event triggered.")
                 navController.navigate("login") {
-                    popUpTo(navController.graph.startDestinationId) {
-                        inclusive = true
-                    }
                     launchSingleTop = true
                 }
             }
