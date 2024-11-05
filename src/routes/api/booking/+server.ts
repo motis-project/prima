@@ -6,7 +6,6 @@ import { error, json } from '@sveltejs/kit';
 import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { MAX_TRAVEL_DURATION, MIN_PREP_MINUTES, MOTIS_BASE_URL } from '$lib/constants.js';
 import { sql } from 'kysely';
-import { getFareEstimation } from './fare-estimation/fare_estimation.js';
 import { covers } from '$lib/sqlHelpers.js';
 import { oneToMany, type Duration } from '$lib/motis';
 import { coordinatesToStr } from '$lib/motisUtils.js';
@@ -478,24 +477,6 @@ export const POST = async (event) => {
 			.execute();
 	});
 	if (tourId) {
-		try {
-			const fare_route = await getFareEstimation(
-				{
-					longitude: fromCoordinates.lng,
-					latitude: fromCoordinates.lat,
-					scheduled_time: startTime
-				},
-				{
-					longitude: toCoordinates.lng,
-					latitude: toCoordinates.lat,
-					scheduled_time: null
-				},
-				bestVehicle!.vehicleId
-			);
-			await db.updateTable('tour').set({ fare_route }).where('id', '=', tourId).executeTakeFirst();
-		} catch (e) {
-			console.log(e);
-		}
 		return json({
 			status: 0,
 			companyId: bestVehicle!.companyId!,
