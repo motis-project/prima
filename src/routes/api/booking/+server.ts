@@ -31,9 +31,9 @@ export const POST = async (event) => {
 	const toCoordinates: Coordinates = to.coordinates;
 	const time = new Date(timeStamp);
 
-	let travelDuration = 0;
+	let travelDuration: number | undefined = 0;
 	try {
-		const travelDuration = (
+		travelDuration = (
 			await oneToMany({
 				baseUrl: MOTIS_BASE_URL,
 				query: {
