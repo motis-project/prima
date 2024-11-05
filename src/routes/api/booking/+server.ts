@@ -33,23 +33,22 @@ export const POST = async (event) => {
 
 	let travelDuration = 0;
 	try {
-		const duration = (
+		const travelDuration = (
 			await oneToMany({
 				baseUrl: MOTIS_BASE_URL,
 				query: {
 					one: coordinatesToStr(fromCoordinates),
 					many: [coordinatesToStr(toCoordinates)],
 					max: 3600,
-					maxMatchingDistance: 100,
+					maxMatchingDistance: 200,
 					mode: 'CAR',
 					arriveBy: false
 				}
 			}).then((d) => d.data!)
 		)[0].duration;
-		if (!duration) {
+		if (!travelDuration) {
 			throw 'keine Route gefunden';
 		}
-		travelDuration = duration;
 	} catch (e) {
 		return json(
 			{
@@ -244,13 +243,13 @@ export const POST = async (event) => {
 				one: coordinatesToStr(fromCoordinates),
 				many: centralCoordinates.map(coordinatesToStr),
 				max: 3600,
-				maxMatchingDistance: 100,
+				maxMatchingDistance: 200,
 				mode: 'CAR',
-				arriveBy: false
+				arriveBy: true
 			}
 		}).then((res) => {
 			return res.data!.map((d: Duration) => {
-				return d.duration ?? Number.MAX_VALUE;
+				return secondsToMs(d.duration ?? Number.MAX_VALUE);
 			});
 		});
 
@@ -260,13 +259,13 @@ export const POST = async (event) => {
 				one: coordinatesToStr(toCoordinates),
 				many: centralCoordinates.map(coordinatesToStr),
 				max: 3600,
-				maxMatchingDistance: 100,
+				maxMatchingDistance: 200,
 				mode: 'CAR',
-				arriveBy: true
+				arriveBy: false
 			}
 		}).then((res) => {
 			return res.data!.map((d: Duration) => {
-				return d.duration ?? Number.MAX_VALUE;
+				return secondsToMs(d.duration ?? Number.MAX_VALUE);
 			});
 		});
 	} catch (e) {
