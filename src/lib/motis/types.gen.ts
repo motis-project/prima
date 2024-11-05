@@ -23,7 +23,7 @@ export type Area = {
      * of the area
      *
      */
-    admin_level: number;
+    adminLevel: number;
     /**
      * Whether this area was matched by the input text
      */
@@ -75,7 +75,7 @@ export type Match = {
      * (at the moment only for public transport)
      *
      */
-    level: number;
+    level?: number;
     /**
      * street name
      */
@@ -83,7 +83,7 @@ export type Match = {
     /**
      * house number
      */
-    house_number?: string;
+    houseNumber?: string;
     /**
      * zip code
      */
@@ -132,7 +132,6 @@ export type type = 'ADDRESS' | 'PLACE' | 'STOP';
  * - `HIGHSPEED_RAIL`: long distance high speed trains (e.g. TGV)
  * - `LONG_DISTANCE`: long distance inter city trains
  * - `NIGHT_RAIL`: long distance night trains
- * - `COACH`: long distance buses
  * - `REGIONAL_FAST_RAIL`: regional express routes that skip low traffic stops to be faster
  * - `REGIONAL_RAIL`: regional train
  *
@@ -140,65 +139,12 @@ export type type = 'ADDRESS' | 'PLACE' | 'STOP';
 export type Mode = 'WALK' | 'BIKE' | 'CAR' | 'BIKE_RENTAL' | 'BIKE_TO_PARK' | 'CAR_TO_PARK' | 'CAR_HAILING' | 'CAR_SHARING' | 'CAR_PICKUP' | 'CAR_RENTAL' | 'FLEXIBLE' | 'SCOOTER_RENTAL' | 'TRANSIT' | 'TRAM' | 'SUBWAY' | 'FERRY' | 'AIRPLANE' | 'METRO' | 'BUS' | 'COACH' | 'RAIL' | 'HIGHSPEED_RAIL' | 'LONG_DISTANCE' | 'NIGHT_RAIL' | 'REGIONAL_FAST_RAIL' | 'REGIONAL_RAIL' | 'OTHER';
 
 /**
- * departure or arrival event at a stop
- */
-export type StopTime = {
-    /**
-     * Transport mode for this leg
-     */
-    mode: Mode;
-    /**
-     * The offset from the scheduled arrival time of the boarding stop in this leg.
-     * Scheduled time of arrival at boarding stop = endTime - arrivalDelay
-     *
-     */
-    time: number;
-    /**
-     * The offset from the scheduled departure time of the boarding stop in this leg.
-     * Scheduled time of departure at boarding stop = startTime - departureDelay
-     *
-     */
-    delay: number;
-    /**
-     * Whether there is real-time data about this leg
-     */
-    realTime: boolean;
-    /**
-     * For transit legs, the route of the bus or train being used.
-     * For non-transit legs, the name of the street being traversed.
-     *
-     */
-    route: string;
-    /**
-     * For transit legs, the headsign of the bus or train being used.
-     * For non-transit legs, null
-     *
-     */
-    headsign: string;
-    agencyId: string;
-    agencyName: string;
-    agencyUrl: string;
-    routeColor: string;
-    routeTextColor: string;
-    routeType: string;
-    routeId: string;
-    tripId: string;
-    serviceDate: string;
-    routeShortName: string;
-    /**
-     * Filename and line number where this trip is from
-     */
-    source: string;
-};
-
-/**
  * - `NORMAL` - latitude / longitude coordinate or address
  * - `BIKESHARE` - bike sharing station
- * - `BIKEPARK` - bike parking
  * - `TRANSIT` - transit stop
  *
  */
-export type VertexType = 'NORMAL' | 'BIKESHARE' | 'BIKEPARK' | 'TRANSIT';
+export type VertexType = 'NORMAL' | 'BIKESHARE' | 'TRANSIT';
 
 export type Place = {
     /**
@@ -222,30 +168,71 @@ export type Place = {
      */
     level: number;
     /**
-     * The offset from the scheduled arrival time of the boarding stop in this leg.
+     * The offset from the scheduled arrival time of the boarding stop in this leg (in milliseconds).
      * Scheduled time of arrival at boarding stop = endTime - arrivalDelay
      *
      */
     arrivalDelay?: number;
     /**
-     * The offset from the scheduled departure time of the boarding stop in this leg.
+     * The offset from the scheduled departure time of the boarding stop in this leg (in milliseconds).
      * Scheduled time of departure at boarding stop = startTime - departureDelay
      *
      */
     departureDelay?: number;
     /**
-     * arrival time, format = unixtime in milliseconds
+     * arrival time
      */
-    arrival?: number;
+    arrival?: string;
     /**
-     * departure time, format = unixtime in milliseconds
+     * departure time
      */
-    departure?: number;
+    departure?: string;
     /**
-     * track/platform information, if available
+     * scheduled track from the static schedule timetable dataset
+     */
+    scheduledTrack?: string;
+    /**
+     * The current track/platform information, updated with real-time updates if available.
+     * Can be missing if neither real-time updates nor the schedule timetable contains track information.
+     *
      */
     track?: string;
     vertexType?: VertexType;
+};
+
+/**
+ * departure or arrival event at a stop
+ */
+export type StopTime = {
+    /**
+     * information about the stop place and time
+     */
+    place: Place;
+    /**
+     * Transport mode for this leg
+     */
+    mode: Mode;
+    /**
+     * Whether there is real-time data about this leg
+     */
+    realTime: boolean;
+    /**
+     * For transit legs, the headsign of the bus or train being used.
+     * For non-transit legs, null
+     *
+     */
+    headsign: string;
+    agencyId: string;
+    agencyName: string;
+    agencyUrl: string;
+    routeColor?: string;
+    routeTextColor?: string;
+    tripId: string;
+    routeShortName: string;
+    /**
+     * Filename and line number where this trip is from
+     */
+    source: string;
 };
 
 /**
@@ -257,10 +244,6 @@ export type TripInfo = {
      */
     tripId: string;
     /**
-     * service date
-     */
-    serviceDate: string;
-    /**
      * trip display name
      */
     routeShortName: string;
@@ -271,7 +254,7 @@ export type TripInfo = {
  */
 export type TripSegment = {
     trips: Array<TripInfo>;
-    routeColor: string;
+    routeColor?: string;
     /**
      * Transport mode for this leg
      */
@@ -283,21 +266,21 @@ export type TripSegment = {
     from: Place;
     to: Place;
     /**
-     * departure time, format = unixtime in milliseconds
+     * departure time
      */
-    departure: number;
+    departure: string;
     /**
-     * arrival time, format = unixtime in milliseconds
+     * arrival time
      */
-    arrival: number;
+    arrival: string;
     /**
-     * The offset from the scheduled departure time of the boarding stop in this leg.
+     * The offset from the scheduled departure time of the boarding stop in this leg (in milliseconds).
      * Scheduled time of departure at boarding stop = startTime - departureDelay
      *
      */
     departureDelay: number;
     /**
-     * The offset from the scheduled arrival time of the boarding stop in this leg.
+     * The offset from the scheduled arrival time of the boarding stop in this leg (in milliseconds).
      * Scheduled time of arrival at boarding stop = endTime - arrivalDelay
      *
      */
@@ -307,54 +290,16 @@ export type TripSegment = {
      */
     realTime: boolean;
     /**
-     * Google polyline encoded coordinate sequence where the trip travels on this segment
+     * Google polyline encoded coordinate sequence (with precision 7) where the trip travels on this segment.
      */
     polyline: string;
 };
 
-export type RelativeDirection = 'DEPART' | 'HARD_LEFT' | 'LEFT' | 'SLIGHTLY_LEFT' | 'CONTINUE' | 'SLIGHTLY_RIGHT' | 'RIGHT' | 'HARD_RIGHT' | 'CIRCLE_CLOCKWISE' | 'CIRCLE_COUNTERCLOCKWISE' | 'ELEVATOR' | 'UTURN_LEFT' | 'UTURN_RIGHT';
-
-export type AbsoluteDirection = 'NORTH' | 'NORTHEAST' | 'EAST' | 'SOUTHEAST' | 'SOUTH' | 'SOUTHWEST' | 'WEST' | 'NORTHWEST';
-
-export type StepInstruction = {
-    relativeDirection: RelativeDirection;
-    absoluteDirection: AbsoluteDirection;
-    /**
-     * The distance in meters that this step takes.
-     */
-    distance: number;
-    /**
-     * The name of the street.
-     */
-    streetName: string;
-    /**
-     * When exiting a highway or traffic circle, the exit name/number.
-     */
-    exit: string;
-    /**
-     * Indicates whether or not a street changes direction at an intersection.
-     *
-     */
-    stayOn: boolean;
-    /**
-     * This step is on an open area, such as a plaza or train platform,
-     * and thus the directions should say something like "cross"
-     *
-     */
-    area: boolean;
-    /**
-     * The longitude of start of the step
-     */
-    lon: number;
-    /**
-     * The latitude of start of the step
-     */
-    lat: number;
-};
+export type Direction = 'DEPART' | 'HARD_LEFT' | 'LEFT' | 'SLIGHTLY_LEFT' | 'CONTINUE' | 'SLIGHTLY_RIGHT' | 'RIGHT' | 'HARD_RIGHT' | 'CIRCLE_CLOCKWISE' | 'CIRCLE_COUNTERCLOCKWISE' | 'STAIRS' | 'ELEVATOR' | 'UTURN_LEFT' | 'UTURN_RIGHT';
 
 export type EncodedPolyline = {
     /**
-     * The encoded points of the polyline.
+     * The encoded points of the polyline using the Google polyline encoding with precision 7.
      */
     points: string;
     /**
@@ -363,20 +308,82 @@ export type EncodedPolyline = {
     length: number;
 };
 
-export type LevelEncodedPolyline = {
+export type StepInstruction = {
+    relativeDirection: Direction;
+    /**
+     * The distance in meters that this step takes.
+     */
+    distance: number;
     /**
      * level where this segment starts, based on OpenStreetMap data
      */
-    from_level: number;
+    fromLevel: number;
     /**
      * level where this segment starts, based on OpenStreetMap data
      */
-    to_level: number;
+    toLevel: number;
     /**
      * OpenStreetMap way index
      */
-    osm_way?: number;
+    osmWay?: number;
     polyline: EncodedPolyline;
+    /**
+     * The name of the street.
+     */
+    streetName: string;
+    /**
+     * Not implemented!
+     * When exiting a highway or traffic circle, the exit name/number.
+     *
+     */
+    exit: string;
+    /**
+     * Not implemented!
+     * Indicates whether or not a street changes direction at an intersection.
+     *
+     */
+    stayOn: boolean;
+    /**
+     * Not implemented!
+     * This step is on an open area, such as a plaza or train platform,
+     * and thus the directions should say something like "cross"
+     *
+     */
+    area: boolean;
+};
+
+/**
+ * Vehicle rental
+ */
+export type Rental = {
+    /**
+     * Vehicle share system ID
+     */
+    systemId: string;
+    /**
+     * Vehicle share system name
+     */
+    systemName?: string;
+    /**
+     * URL of the vehicle share system
+     */
+    url?: string;
+    /**
+     * Name of the station
+     */
+    stationName?: string;
+    /**
+     * Rental URI for Android (deep link to the specific station or vehicle)
+     */
+    rentalUriAndroid?: string;
+    /**
+     * Rental URI for iOS (deep link to the specific station or vehicle)
+     */
+    rentalUriIOS?: string;
+    /**
+     * Rental URI for web (deep link to the specific station or vehicle)
+     */
+    rentalUriWeb?: string;
 };
 
 export type Leg = {
@@ -391,21 +398,21 @@ export type Leg = {
      */
     duration: number;
     /**
-     * leg departure time, format = unixtime in milliseconds
+     * leg departure time
      */
-    startTime: number;
+    startTime: string;
     /**
-     * leg arrival time, format = unixtime in milliseconds
+     * leg arrival time
      */
-    endTime: number;
+    endTime: string;
     /**
-     * The offset from the scheduled departure time of the boarding stop in this leg.
+     * The offset from the scheduled departure time of the boarding stop in this leg (in milliseconds).
      * Scheduled time of departure at boarding stop = startTime - departureDelay
      *
      */
     departureDelay: number;
     /**
-     * The offset from the scheduled arrival time of the boarding stop in this leg.
+     * The offset from the scheduled arrival time of the boarding stop in this leg (in milliseconds).
      * Scheduled time of arrival at boarding stop = endTime - arrivalDelay
      *
      */
@@ -442,7 +449,6 @@ export type Leg = {
     routeId?: string;
     agencyId?: string;
     tripId?: string;
-    serviceDate?: string;
     routeShortName?: string;
     /**
      * Filename and line number where this trip is from
@@ -456,15 +462,12 @@ export type Leg = {
     intermediateStops?: Array<Place>;
     legGeometry: EncodedPolyline;
     /**
-     * Like `legGeometry`, but split at level changes
-     */
-    legGeometryWithLevels?: Array<LevelEncodedPolyline>;
-    /**
      * A series of turn by turn instructions
      * used for walking, biking and driving.
      *
      */
     steps?: Array<StepInstruction>;
+    rental?: Rental;
 };
 
 export type Itinerary = {
@@ -473,29 +476,13 @@ export type Itinerary = {
      */
     duration: number;
     /**
-     * journey departure time, format = unixtime in milliseconds
+     * journey departure time
      */
-    startTime: number;
+    startTime: string;
     /**
-     * journey arrival time, format = unixtime in milliseconds
+     * journey arrival time
      */
-    endTime: number;
-    /**
-     * How much time is spent walking, in seconds.
-     */
-    walkTime: number;
-    /**
-     * How much time is spent on transit, in seconds.
-     */
-    transitTime: number;
-    /**
-     * How much time is spent waiting for transit to arrive, in seconds.
-     */
-    waitingTime: number;
-    /**
-     * How far the user has to walk, in meters.
-     */
-    walkDistance: number;
+    endTime: string;
     /**
      * The number of transfers this trip has.
      */
@@ -608,19 +595,6 @@ export type GeocodeError = unknown;
 export type TripData = {
     query: {
         /**
-         * Service date as specified in the source dataset.
-         * Can be taken from an itinerary leg or stop event.
-         *
-         * Not that for GTFS the first departure time can be greater than 24:00:00
-         * which means that the service date is shifted by the offset (first departure / 24h).
-         * A valid use case for this are stay seated transfers expressed by `block_id`.
-         *
-         * Example: a train with first departure at 25:00:00 on 9th of Oct 2024
-         * has the 8th of Oct 2024 as service date.
-         *
-         */
-        date: string;
-        /**
          * trip identifier (e.g. from an itinerary leg or stop event)
          */
         tripId: string;
@@ -642,13 +616,6 @@ export type StoptimesData = {
          */
         arriveBy?: boolean;
         /**
-         * Optional. Defaults to the current date.
-         *
-         * Departure date ($arriveBy=false) / arrival date ($arriveBy=true), format: 06-28-2024
-         *
-         */
-        date?: string;
-        /**
          * the number of events
          */
         n: number;
@@ -660,15 +627,22 @@ export type StoptimesData = {
          */
         pageCursor?: string;
         /**
+         * Optional. Radius in meters.
+         *
+         * Default is that only stop times of the parent of the stop itself
+         * and all stops with the same name (+ their child stops) are returned.
+         *
+         * If set, all stops at parent stations and their child stops in the specified radius
+         * are returned.
+         *
+         */
+        radius?: number;
+        /**
          * stop id of the stop to retrieve departures/arrivals for
          */
         stopId: string;
         /**
          * Optional. Defaults to the current time.
-         *
-         * Format:
-         * - 12h format: 7:06pm
-         * - 24h format: 19:06
          *
          */
         time?: string;
@@ -707,16 +681,15 @@ export type PlanData = {
          */
         arriveBy?: boolean;
         /**
-         * Optional. Defaults to the current date.
-         *
-         * Departure date ($arriveBy=false) / arrival date ($arriveBy=true), format: 06-28-2024
-         *
-         */
-        date?: string;
-        /**
          * \`latitude,longitude,level\` tuple in degrees OR stop id
          */
         fromPlace: string;
+        /**
+         * Optional. Default is 30min which is `1800`.
+         * Maximum time in seconds for direct connections.
+         *
+         */
+        maxDirectTime?: number;
         /**
          * The maximum travel time in hours.
          * If not provided, the routing to uses the value
@@ -726,6 +699,8 @@ export type PlanData = {
          * optimal (e.g. the least transfers) journeys not being found.
          * If this value is too low to reach the destination at all,
          * it can lead to slow routing performance.
+         *
+         * TODO: pass parameter to nigiri
          *
          */
         maxHours?: number;
@@ -755,6 +730,8 @@ export type PlanData = {
         maxTransfers?: number;
         /**
          * Minimum transfer time for each transfer.
+         * TODO: pass parameter to nigiri
+         *
          */
         minTransferTime?: number;
         /**
@@ -779,6 +756,13 @@ export type PlanData = {
          */
         pageCursor?: string;
         /**
+         * Optional. Default is `false`.
+         *
+         * If set to `true`, all used transit trips are required to allow bike carriage.
+         *
+         */
+        requireBikeTransport?: boolean;
+        /**
          * Optional. Default is 2 hours which is `7200`.
          *
          * The length of the search-window in seconds. Default value two hours.
@@ -791,13 +775,7 @@ export type PlanData = {
         /**
          * Optional. Defaults to the current time.
          *
-         * Meaning depending on `arriveBy`
-         * - Departure time for `arriveBy=false`
-         * - Arrival time for `arriveBy=true`
-         *
-         * Format:
-         * - 12h format: 7:06pm
-         * - 24h format: 19:06
+         * Departure time ($arriveBy=false) / arrival date ($arriveBy=true),
          *
          */
         time?: string;
@@ -828,6 +806,8 @@ export type PlanData = {
         toPlace: string;
         /**
          * Factor to multiply transfer times with.
+         * TODO: pass parameter to nigiri
+         *
          */
         transferTimeFactor?: number;
         /**
@@ -848,14 +828,17 @@ export type PlanResponse = ({
      * debug statistics
      */
     debugOutput: {
-        [key: string]: (string);
+        [key: string]: (number);
     };
-    /**
-     * The time and date of travel
-     */
-    date: number;
     from: Place;
     to: Place;
+    /**
+     * Direct trips by `WALK`, `BIKE`, `CAR`, etc. without time-dependency.
+     * The starting time (`arriveBy=false`) / arrival time (`arriveBy=true`) is always the queried `time` parameter (set to \"now\" if not set).
+     * But all `direct` connections are meant to be independent of absolute times.
+     *
+     */
+    direct: Array<Itinerary>;
     /**
      * list of itineraries
      */
@@ -876,12 +859,12 @@ export type PlanResponse = ({
 
 export type PlanError = unknown;
 
-export type RailvizData = {
+export type TripsData = {
     query: {
         /**
-         * end if the time window (unix timestamp in milliseconds)
+         * end if the time window
          */
-        endTime: number;
+        endTime: string;
         /**
          * latitude,longitude pair of the upper left coordinate
          */
@@ -891,9 +874,9 @@ export type RailvizData = {
          */
         min: string;
         /**
-         * start of the time window (unix timestamp in milliseconds)
+         * start of the time window
          */
-        startTime: number;
+        startTime: string;
         /**
          * current zoom level
          */
@@ -901,9 +884,9 @@ export type RailvizData = {
     };
 };
 
-export type RailvizResponse = (Array<TripSegment>);
+export type TripsResponse = (Array<TripSegment>);
 
-export type RailvizError = unknown;
+export type TripsError = unknown;
 
 export type InitialResponse = ({
     /**
@@ -921,6 +904,23 @@ export type InitialResponse = ({
 });
 
 export type InitialError = unknown;
+
+export type StopsData = {
+    query: {
+        /**
+         * latitude,longitude pair of the upper left coordinate
+         */
+        max: string;
+        /**
+         * latitude,longitude pair of the lower right coordinate
+         */
+        min: string;
+    };
+};
+
+export type StopsResponse = (Array<Place>);
+
+export type StopsError = unknown;
 
 export type LevelsData = {
     query: {
