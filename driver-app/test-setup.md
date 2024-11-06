@@ -20,7 +20,7 @@ in order to allow the backend API to accept plaintext https requests
 
 Set env-variable
 ```
-ORIGIN=http://your-public-ip:7777
+ORIGIN=http://LAN-ip:7777
 ```
 
 ## 3 Build backend server and run the docker container
@@ -37,7 +37,7 @@ docker compose up
 ```
 buildTypes {
     debug {
-        buildConfigField("String", "BASE_URL", "\"http://your-public-ip:7777\"")
+        buildConfigField("String", "BASE_URL", "\"http://LAN-ip:7777\"")
     }
     ...
 }
