@@ -1,7 +1,7 @@
 version: '3'
 services:
   pg:
-    image: postgis/postgis
+    image: postgis/postgis:3.4.3
     restart: always
     container_name: pg
     ports:
