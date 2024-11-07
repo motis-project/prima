@@ -1,6 +1,7 @@
 package de.motis.prima
 
 import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -33,23 +35,60 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import de.motis.prima.app.DriversApp
+import de.motis.prima.services.Api
 import de.motis.prima.services.CookieStore
+import de.motis.prima.services.Tour
+import de.motis.prima.services.Vehicle
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class ToursViewModel : ViewModel() {
     private val cookieStore: CookieStore = CookieStore(DriversApp.instance)
 
     private val _logoutEvent = MutableSharedFlow<Unit>()
     val logoutEvent = _logoutEvent.asSharedFlow()
+
+    var tours = mutableStateOf<List<Tour>>(emptyList())
+        private set
+
+    var isLoading = mutableStateOf(true)
+        private set
+
+    init {
+        fetchTours()
+    }
+
+    private fun fetchTours() {
+        viewModelScope.launch {
+            Api.apiService.getTours().enqueue(object : Callback<List<Tour>> {
+                override fun onResponse(call: Call<List<Tour>>, response: Response<List<Tour>>) {
+                    if (response.isSuccessful) {
+                        tours.value = response.body() ?: emptyList()
+                        isLoading.value = false
+                    } else {
+                        isLoading.value = false
+                    }
+                }
+
+                override fun onFailure(call: Call<List<Tour>>, t: Throwable) {
+                    isLoading.value = false
+                }
+            })
+        }
+    }
 
     fun logout() {
         viewModelScope.launch {
@@ -67,7 +106,8 @@ class ToursViewModel : ViewModel() {
 @Composable
 fun Tours(
     navController: NavController,
-    viewModel: ToursViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    vehiclesViewModel: VehiclesViewModel,
+    viewModel: ToursViewModel //= androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     LaunchedEffect(key1 = viewModel) {
         launch {
@@ -117,9 +157,10 @@ fun Tours(
                         DropdownMenuItem(
                             onClick = {
                                 dropdownExpanded = false
+                                navController.navigate("vehicles")
 
                             },
-                            text = { Text("Option 1") }
+                            text = {Text("Fahrzeug wechseln")}
                         )
                         DropdownMenuItem(
                             onClick = {
@@ -135,31 +176,65 @@ fun Tours(
 
         }
     ) { contentPadding ->
+        if (vehiclesViewModel.selectedVehicleId == 0) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Kein Fahrzeug ausgewählt",
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(contentPadding)
         ) {
-            items(8) { index ->
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 0.dp)
-                        .height(100.dp)
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize().padding(16.dp),
-                        contentAlignment = Alignment.TopStart
+            val toursForVehicle = viewModel.tours.value.filter { t ->
+                t.vehicle_id == vehiclesViewModel.selectedVehicleId
+            }
+            items(items = toursForVehicle, itemContent = { tour ->
+                ConstraintLayout(modifier = Modifier.clickable {
+                    navController.navigate("legs/${tour.tour_id}/0")
+                }) {
+                    var startAddress = ""
+                    var displayTime = ""
+                    try {
+                        val startEvent = tour.events[0]
+                        startAddress = startEvent.city + ", " + startEvent.street + " " + startEvent.house_number
+                    } catch (e: Exception) {
+                        Log.d("error", "Error: Tour has no events")
+                    }
+                    try {
+                        displayTime = tour.from.split("T")[1].substring(0, 5)
+                    } catch (e: Exception) {
+                        Log.d("error", "Error: No display time")
+                    }
+
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 0.dp)
+                            .height(100.dp)
                     ) {
-                        Column {
-                            Text("08:30", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text("Görlitz, Beispielplatz ${index + 1}", fontSize = 24.sp)
+                        Box(
+                            modifier = Modifier.fillMaxSize().padding(16.dp),
+                            contentAlignment = Alignment.TopStart
+                        ) {
+                            Column {
+                                Text(displayTime, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(startAddress, fontSize = 24.sp)
+                            }
                         }
                     }
                 }
-            }
+            })
         }
     }
 }

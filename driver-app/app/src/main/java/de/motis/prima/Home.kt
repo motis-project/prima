@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -30,8 +31,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -67,6 +68,7 @@ class HomeViewModel : ViewModel() {
 @Composable
 fun Home(
     navController: NavController,
+    vehiclesViewModel: VehiclesViewModel,
     viewModel: HomeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     LaunchedEffect(key1 = viewModel) {
@@ -98,6 +100,14 @@ fun Home(
                         overflow = TextOverflow.Ellipsis
                     )
                 },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigate("home") }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Localized description"
+                        )
+                    }
+                },
                 actions = {
                     IconButton(onClick = { dropdownExpanded = !dropdownExpanded }) {
                         Icon(Icons.Filled.MoreVert, contentDescription = "More Options")
@@ -108,11 +118,11 @@ fun Home(
                     ) {
                         DropdownMenuItem(
                             onClick = {
-                                // Handle menu item click
                                 dropdownExpanded = false
+                                navController.navigate("vehicles")
 
                             },
-                            text = {Text("Option 1")}
+                            text = {Text("Fahrzeug wechseln")}
                         )
                         DropdownMenuItem(
                             onClick = {
@@ -120,7 +130,7 @@ fun Home(
                                 dropdownExpanded = false
 
                             },
-                            text = {Text("Logout")}
+                            text = { Text("Logout") }
                         )
                     }
                 }
@@ -128,61 +138,68 @@ fun Home(
 
         }
     ) { innerPadding ->
-        // Main Content
-        Box(
+        Column(
             modifier = Modifier
+                .fillMaxSize()
                 .padding(innerPadding)
-                .fillMaxSize(),
-            contentAlignment = Alignment.Center
         ) {
-            Scaffold(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) { contentPadding ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(contentPadding)
+            Spacer(modifier = Modifier.height(42.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                if (vehiclesViewModel.selectedVehicleId == 0) {
+                    Button(
+                        modifier = Modifier.width(300.dp),
+                        onClick = {
+                            navController.navigate("vehicles") {}
+                        }
+                    ) {
+                        Text(
+                            text = "Fahrzeug auswählen",
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    var licensePlate = ""
+                    try {
+                        val vehicle = vehiclesViewModel.vehicles.value.filter {
+                                v -> v.id == vehiclesViewModel.selectedVehicleId
+                        }[0]
+                        licensePlate = vehicle.plate
+                    } catch (e: Exception) {
+                        licensePlate = "Kein Fahrzeug ausgewählt"
+                    }
+
+                    Box() {
+                        Text(
+                            text = licensePlate,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(36.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button(
+                    modifier = Modifier.width(300.dp),
+                    onClick = {
+                        navController.navigate("tours") {}
+                    }
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Button(
-                            modifier = Modifier.width(300.dp),
-                            onClick = {
-                                navController.navigate("vehicles") {}
-                            }
-                        ) {
-                            Text(
-                                text = "Fahrzeug auswählen",
-                                fontSize = 24.sp,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(36.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Button(
-                            modifier = Modifier.width(300.dp),
-                            onClick = {
-                                navController.navigate("tours") {}
-                            }
-                        ) {
-                            Text(
-                                text = "Aufträge",
-                                fontSize = 24.sp,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
+                    Text(
+                        text = "Aufträge",
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }

@@ -1,6 +1,8 @@
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/database';
 import { sql } from 'kysely';
+import { Vehicle } from '../../(user)/taxi/types.js';
+import { mapTourEvents } from '$lib/TourDetails.js';
 
 export const POST = async (event) => {
 	const companyId = event.locals.user?.company;
@@ -57,3 +59,47 @@ export const POST = async (event) => {
 	});
 	return json({});
 };
+
+export const GET = async (event) => {
+	const company = event.locals.user?.company;
+	if (!company) {
+		error(400, {
+			message: 'not allowed without write access to company'
+		});
+	}
+	const url = event.url;
+	// const localDateParam = url.searchParams.get('id');
+
+	const earliest_displayed_time = new Date('2024-06-09 08:10:00');
+	const latest_displayed_time = new Date('2024-06-09 10:10:00');
+	const tours = mapTourEvents(
+		await db
+			.selectFrom('event')
+			.innerJoin('address', 'address.id', 'event.address')
+			.innerJoin('auth_user', 'auth_user.id', 'event.customer')
+			.innerJoin('tour', 'tour.id', 'event.tour')
+			.where((eb) =>
+				eb.and([
+					eb('tour.departure', '<', latest_displayed_time),
+					eb('tour.arrival', '>', earliest_displayed_time)
+				])
+			)
+			.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
+			.innerJoin('company', 'company.id', 'vehicle.company')
+			.where('company', '=', company)
+			.orderBy('event.scheduled_time')
+			.selectAll(['event', 'address', 'tour', 'vehicle'])
+			.select([
+				'company.name as company_name',
+				'company.address as company_address',
+				'auth_user.first_name as customer_first_name',
+				'auth_user.last_name as customer_last_ame',
+				'auth_user.phone as customer_phone'
+			])
+			.execute()
+	);
+
+	console.log(tours[0].events);
+
+	return json(tours);
+}

@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -15,8 +16,10 @@ import de.motis.prima.services.CookieStore
 fun Nav() {
 
     val navController = rememberNavController()
+    val vehiclesViewModel: VehiclesViewModel = viewModel()
+    val toursViewModel: ToursViewModel = viewModel()
 
-    // Check before render of any component whether user is authenticated.
+    // Before rendering any component, check whether user is authenticated.
     val startDestination by remember {
         derivedStateOf {
             val cookieStore = CookieStore(DriversApp.instance)
@@ -25,7 +28,11 @@ fun Nav() {
                 "login"
             } else {
                 Log.d("Cookie", "Cookie found. Navigating to Journeys.")
-                "home"
+                if (vehiclesViewModel.selectedVehicleId == 0) {
+                    "vehicles"
+                } else {
+                    "tours"
+                }
             }
         }
     }
@@ -33,19 +40,34 @@ fun Nav() {
     NavHost(navController = navController, startDestination = startDestination) {
 
         composable(route = "login") {
-            Login(navController)
+            Login(navController, vehiclesViewModel)
         }
 
         composable(route = "home") {
-            Home(navController)
+            Home(navController, vehiclesViewModel)
         }
 
         composable(route = "vehicles") {
-            Vehicles(navController)
+            Vehicles(navController, vehiclesViewModel)
         }
 
         composable(route = "tours") {
-            Tours(navController)
+            Tours(navController, vehiclesViewModel, toursViewModel)
+        }
+
+        composable(route = "taxameter") {
+            Taxameter(navController, toursViewModel)
+        }
+
+        composable(route = "overview") {
+            TourOverview(navController)
+        }
+
+
+        composable(route = "legs/{tourId}/{eventIndex}") {
+            val tourId = it.arguments?.getString("tourId")?.toInt()
+            val eventIndex = it.arguments?.getString("eventIndex")?.toInt()
+            TourDetail(navController,  tourId!!, eventIndex!!, toursViewModel)
         }
     }
 }

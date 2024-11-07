@@ -76,6 +76,7 @@ class LoginViewModel : ViewModel() {
 @Composable
 fun Login(
     navController: NavController,
+    vehiclesViewModel: VehiclesViewModel,
     viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -92,14 +93,15 @@ fun Login(
     LaunchedEffect(key1 = viewModel) {
         // Catching successful login event and navigation to the next screen
         launch {
+            // vehiclesViewModel.selectedVehicleId = 0
             viewModel.navigationEvent.collect { shouldNavigate ->
                 Log.d("Navigation event", "Navigation triggered.")
                 if (shouldNavigate) {
                     Log.d("Navigation event", "Navigating to vehicle selection.")
-                    navController.navigate("home") {
-                        popUpTo("login") {
-                            inclusive = true
-                        }
+                    if (vehiclesViewModel.selectedVehicleId == 0) {
+                        navController.navigate("vehicles") {}
+                    } else {
+                        navController.navigate("tours") {}
                     }
                 }
             }
