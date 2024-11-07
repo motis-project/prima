@@ -83,13 +83,13 @@ fun PortraitLayout(
 ) {
     Log.d("rotation", "portrait")
 
-    var isLastLeg = false
+    var isLastEvent = false
     val tour = toursViewModel.tours.value.filter { t -> t.tour_id == tourId }[0]
-    val fromEvent = tour.events[eventIndex]
-    val toEvent = tour.events[eventIndex + 1]
+    val event = tour.events[eventIndex]
+    //val toEvent = tour.events[eventIndex + 1]
 
-    if (eventIndex + 2 >= tour.events.size) {
-        isLastLeg = true
+    if (eventIndex + 1 == tour.events.size) {
+        isLastEvent = true
     }
 
     Column(
@@ -104,24 +104,12 @@ fun PortraitLayout(
                 .padding(contentPadding)
             ) {
                 Text(
-                    text = "${eventIndex + 1} / ${tour.events.size - 1}",
+                    text = "${eventIndex + 1} / ${tour.events.size}",
                     fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
             }
         }
-        /*Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Box(
-                modifier = Modifier
-                .padding(contentPadding)
-            ) {
-                EventDetail(event = fromEvent)
-            }
-        }*/
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
@@ -130,14 +118,14 @@ fun PortraitLayout(
                 modifier = Modifier
                 .padding(contentPadding)
             ) {
-                EventDetail(event = toEvent)
+                EventDetail(event)
             }
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
-            if (!isLastLeg) {
+            if (!isLastEvent) {
                 Box(
                     modifier = Modifier
                     .padding(contentPadding)
@@ -340,44 +328,92 @@ fun TourDetail(
 
 @Composable
 fun EventDetail(event: Event) {
+    var scheduledTime = ""
+    var city = ""
+    var street = ""
+    var houseNumber = ""
+    var isPickup = false
+    var firstName = ""
+    var lastName = ""
+    var phone = ""
+
+    try {
+        scheduledTime = event.scheduled_time.split("T")[1].substring(0, 5)
+        city = event.city
+        street = event.street
+        houseNumber = event.house_number
+        isPickup = event.is_pickup
+        firstName = event.first_name
+        lastName = event.last_name
+        phone = event.phone
+    } catch (e: Exception) {
+        Log.d("Exception", "Failed to read event details")
+        return
+    }
+
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = event.scheduled_time.split("T")[1].substring(0, 5),
+                text = scheduledTime,
                 fontSize = 24.sp,
                 textAlign = TextAlign.Center
             )
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = event.city,
-                fontSize = 24.sp,
-                textAlign = TextAlign.Center
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = event.street + " " + event.house_number,
-                fontSize = 24.sp,
-                textAlign = TextAlign.Center
-            )
-        }
-        if (event.is_pickup) {
+
+        if (city == "" || street == "") {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = event.last_name + ", " + event.first_name,
+                    text = "Fehler: Keine Addresse",
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = city,
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "$street $houseNumber",
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+        if (isPickup) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "$lastName, $firstName",
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = phone,
                     fontSize = 24.sp,
                     textAlign = TextAlign.Center
                 )

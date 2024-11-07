@@ -8,6 +8,7 @@ import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Query
 import java.util.Date
 
 interface ApiService {
@@ -22,7 +23,7 @@ interface ApiService {
     fun getVehicles() : Call<List<Vehicle>>
 
     @GET("api/tour")
-    fun getTours() : Call<List<Tour>>
+    fun getTours(@Query("date") currentDate: String) : Call<List<Tour>>
 }
 
 object Api {
@@ -43,7 +44,12 @@ data class LoginResponse(
 
 data class Vehicle(
     val id: Int,
-    val plate: String
+    val license_plate: String,
+    val company: Int,
+    val seats: Int,
+    val wheelchair_capacity: Int,
+    val bike_capacity: Int,
+    val storage_space: Int
 )
 
 data class Event(

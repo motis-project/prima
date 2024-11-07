@@ -1,7 +1,6 @@
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/database';
 import { sql } from 'kysely';
-import { Vehicle } from '../../(user)/taxi/types.js';
 import { mapTourEvents } from '$lib/TourDetails.js';
 
 export const POST = async (event) => {
@@ -68,10 +67,10 @@ export const GET = async (event) => {
 		});
 	}
 	const url = event.url;
-	// const localDateParam = url.searchParams.get('id');
+	const dateParam = url.searchParams.get('date');
 
-	const earliest_displayed_time = new Date('2024-06-09 08:10:00');
-	const latest_displayed_time = new Date('2024-06-09 10:10:00');
+	const earliest_displayed_time = new Date(dateParam + ' 00:00:00');
+	const latest_displayed_time = new Date(dateParam + ' 23:59:59');
 	const tours = mapTourEvents(
 		await db
 			.selectFrom('event')
@@ -98,8 +97,6 @@ export const GET = async (event) => {
 			])
 			.execute()
 	);
-
-	console.log(tours[0].events);
 
 	return json(tours);
 }

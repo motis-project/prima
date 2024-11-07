@@ -47,13 +47,14 @@ import de.motis.prima.app.DriversApp
 import de.motis.prima.services.Api
 import de.motis.prima.services.CookieStore
 import de.motis.prima.services.Tour
-import de.motis.prima.services.Vehicle
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.text.SimpleDateFormat
+import java.util.Date
 
 class ToursViewModel : ViewModel() {
     private val cookieStore: CookieStore = CookieStore(DriversApp.instance)
@@ -71,9 +72,11 @@ class ToursViewModel : ViewModel() {
         fetchTours()
     }
 
-    private fun fetchTours() {
+    fun fetchTours() {
+        val currentDate = SimpleDateFormat("yyyy-MM-dd").format(Date())
+        Log.d("date", currentDate)
         viewModelScope.launch {
-            Api.apiService.getTours().enqueue(object : Callback<List<Tour>> {
+            Api.apiService.getTours(currentDate).enqueue(object : Callback<List<Tour>> {
                 override fun onResponse(call: Call<List<Tour>>, response: Response<List<Tour>>) {
                     if (response.isSuccessful) {
                         tours.value = response.body() ?: emptyList()
@@ -107,9 +110,11 @@ class ToursViewModel : ViewModel() {
 fun Tours(
     navController: NavController,
     vehiclesViewModel: VehiclesViewModel,
-    viewModel: ToursViewModel //= androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: ToursViewModel
 ) {
     LaunchedEffect(key1 = viewModel) {
+        viewModel.fetchTours()
+        Log.d("fetch", "tours")
         launch {
             viewModel.logoutEvent.collect {
                 Log.d("Logout", "Logout event triggered.")
@@ -197,6 +202,7 @@ fun Tours(
             val toursForVehicle = viewModel.tours.value.filter { t ->
                 t.vehicle_id == vehiclesViewModel.selectedVehicleId
             }
+            Log.d("test", viewModel.tours.value.toString())
             items(items = toursForVehicle, itemContent = { tour ->
                 ConstraintLayout(modifier = Modifier.clickable {
                     //navController.navigate("legs/${tour.tour_id}/0")

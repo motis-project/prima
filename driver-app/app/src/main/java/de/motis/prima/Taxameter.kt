@@ -2,6 +2,7 @@ package de.motis.prima
 
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -23,6 +25,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -40,17 +44,30 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import de.motis.prima.services.Api
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+
+class TaxameterViewModel : ViewModel() {
+    private val _networkErrorEvent = MutableSharedFlow<Unit>()
+    val networkErrorEvent = _networkErrorEvent.asSharedFlow()
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Taxameter(
     navController: NavController,
-    toursViewModel: ToursViewModel
+    toursViewModel: ToursViewModel,
+    viewModel: TaxameterViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     var entryCorrect by remember { mutableStateOf(false) }
     var fare by remember { mutableStateOf("") }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val networkErrorMessage = stringResource(id = R.string.network_error_message)
 
     LaunchedEffect(key1 = toursViewModel) {
         launch {
@@ -59,6 +76,13 @@ fun Taxameter(
                 navController.navigate("login") {
                     launchSingleTop = true
                 }
+            }
+        }
+
+        // Catching event when a network error occurs and displaying of error message
+        launch {
+            viewModel.networkErrorEvent.collect {
+                snackbarHostState.showSnackbar(message = networkErrorMessage)
             }
         }
     }
@@ -117,6 +141,17 @@ fun Taxameter(
                 }
             )
 
+        },
+        snackbarHost = {
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentHeight(Alignment.Top)
+                        .padding(top = maxHeight * 0.25f)
+                )
+            }
         }
     ) { contentPadding ->
         ConstraintLayout(
@@ -145,7 +180,7 @@ fun Taxameter(
                     onClick = {
                         entryCorrect = false
                         Log.d("Taxameter", "Fare: ${fare}")
-                        // send fare to API
+                        // TODO: send fare to API
                         navController.navigate("tours")
                     }
                 ) {

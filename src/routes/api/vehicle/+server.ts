@@ -45,8 +45,8 @@ export const GET = async (event) => {
 			message: 'not allowed without write access to company'
 		});
 	}
-	const url = event.url;
-	// const localDateParam = url.searchParams.get('id');
 
-	return json([{ id: 1, plate: 'GR-TU-41' }, { id: 2, plate: 'GR-TU-42' }]);
+	const vehicles = await db.selectFrom('vehicle').where('company', '=', company).selectAll().execute();
+
+	return json(vehicles);
 }

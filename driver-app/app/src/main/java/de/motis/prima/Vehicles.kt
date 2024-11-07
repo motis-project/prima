@@ -69,7 +69,8 @@ class VehiclesViewModel : ViewModel() {
         fetchVehicles()
     }
 
-    private fun fetchVehicles() {
+    fun fetchVehicles() {
+        Log.d("test", "fetch vehicles")
         viewModelScope.launch {
             Api.apiService.getVehicles().enqueue(object : Callback<List<Vehicle>> {
                 override fun onResponse(call: Call<List<Vehicle>>, response: Response<List<Vehicle>>) {
@@ -105,9 +106,10 @@ class VehiclesViewModel : ViewModel() {
 @Composable
 fun Vehicles(
     navController: NavController,
-    viewModel: VehiclesViewModel //= androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: VehiclesViewModel
 ) {
     LaunchedEffect(key1 = viewModel) {
+        viewModel.fetchVehicles()
         launch {
             viewModel.logoutEvent.collect {
                 Log.d("Logout", "Logout event triggered.")
@@ -186,7 +188,7 @@ fun Vehicles(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center // Center content within the Box
                         ) {
-                            Text(vehicle.plate, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                            Text(vehicle.license_plate, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
