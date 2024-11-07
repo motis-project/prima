@@ -50,6 +50,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun TourOverview(
     navController: NavController,
+    tourId: Int,
     viewModel: HomeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     LaunchedEffect(key1 = viewModel) {
@@ -132,12 +133,12 @@ fun TourOverview(
                 Box() {
                     Text(
                         text = "Details zur gesamten Tour",
-                        fontWeight = FontWeight.Bold,
                         fontSize = 24.sp,
                         textAlign = TextAlign.Center
                     )
                 }
             }
+            // TODO
 
             Spacer(modifier = Modifier.height(36.dp))
 
@@ -148,11 +149,12 @@ fun TourOverview(
                 Button(
                     modifier = Modifier.width(300.dp),
                     onClick = {
-                        navController.navigate("tours") {}
+                        // navController.navigate("tours") {}
+                        navController.navigate("legs/${tourId}/0")
                     }
                 ) {
                     Text(
-                        text = "Aufträge",
+                        text = "Fahrt starten",
                         fontSize = 24.sp,
                         textAlign = TextAlign.Center
                     )

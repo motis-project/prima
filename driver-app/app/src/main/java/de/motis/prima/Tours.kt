@@ -199,7 +199,8 @@ fun Tours(
             }
             items(items = toursForVehicle, itemContent = { tour ->
                 ConstraintLayout(modifier = Modifier.clickable {
-                    navController.navigate("legs/${tour.tour_id}/0")
+                    //navController.navigate("legs/${tour.tour_id}/0")
+                    navController.navigate("overview/${tour.tour_id}")
                 }) {
                     var startAddress = ""
                     var displayTime = ""
