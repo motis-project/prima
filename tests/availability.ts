@@ -3,7 +3,7 @@ import { login, setCompanyData, addVehicle, ENTREPENEUR, COMPANY1 } from './util
 
 export async function setAvailability(page: Page) {
 	await login(page, ENTREPENEUR);
-	await page.goto('/taxi?offset=-120&date=2026-09-30');
+	await page.goto('/user/taxi?offset=-120&date=2026-09-30');
 	await page.waitForTimeout(500);
 
 	await page.mouse.move(425, 465);
@@ -73,7 +73,7 @@ test('Set availability', async ({ page }) => {
 
 test('Request ride', async ({ page }) => {
 	await requestRide(page);
-	await page.goto('/taxi?offset=-120&date=2026-09-30');
+	await page.goto('/user/taxi?offset=-120&date=2026-09-30');
 	await page.waitForTimeout(500);
 	await expect(
 		page.locator(

@@ -1,5 +1,5 @@
 import type { Company, Vehicle } from './types';
-import { Coordinates, Location } from './location';
+import { Location } from './location';
 
 export const getCompany = async (id: number): Promise<Company> => {
 	const response = await fetch(`/api/company?id=${id}`);
@@ -95,94 +95,4 @@ export const booking = async (
 export const reassignTour = async (tourId: number) => {
 	console.log('TODO: reassign tour:', tourId);
 	return false;
-};
-
-export class AddressGuess {
-	pos!: { lat: number; lng: number };
-}
-
-export async function geoCode(address: string): Promise<AddressGuess> {
-	const response = await fetch('https://europe.motis-project.de/?elm=AddressSuggestions', {
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({
-			destination: { type: 'Module', target: '/address' },
-			content_type: 'AddressRequest',
-			content: { input: address }
-		}),
-		method: 'POST',
-		mode: 'cors'
-	}).then((res) => res.json());
-	const guesses = response.content.guesses;
-	if (guesses.length == 0) {
-		throw new Error('geoCode did not return any address guesses.');
-	}
-	return guesses[0];
-}
-
-export class RoutingQuery {
-	start!: Coordinates;
-	destination!: Coordinates;
-	profile!: string;
-	direction!: string;
-}
-
-export const getRoute = async (query: RoutingQuery) => {
-	const response = await fetch(`https://osr.motis-project.de/api/route`, {
-		method: 'POST',
-		mode: 'cors',
-		headers: {
-			'Access-Control-Allow-Origin': '*',
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(query)
-	});
-	return await response.json();
-};
-
-export enum Direction {
-	Forward,
-	Backward
-}
-
-export type oneToManyResult = {
-	duration: number;
-	distance: number;
-};
-
-export const oneToMany = async (
-	one: Coordinates,
-	many: Coordinates[],
-	direction: Direction
-): Promise<oneToManyResult[]> => {
-	const dir = direction == Direction.Forward ? 'Forward' : 'Backward';
-	const response = await fetch('https://europe.motis-project.de/', {
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({
-			destination: {
-				type: 'Module',
-				target: '/osrm/one_to_many'
-			},
-			content_type: 'OSRMOneToManyRequest',
-			content: {
-				profile: 'car',
-				direction: dir,
-				one: {
-					lat: one.lat,
-					lng: one.lng
-				},
-				many: many
-			}
-		}),
-		method: 'POST',
-		mode: 'cors'
-	}).then((res) => res.json());
-	const result = response.content.costs;
-	if (result.length == 0) {
-		throw new Error('oneToMany api did not return any distTime-object.');
-	}
-	return result;
 };

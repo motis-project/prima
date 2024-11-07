@@ -9,13 +9,16 @@
 	import { Card } from '$lib/components/ui/card';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import { Coordinates } from '$lib/location';
-	import { booking, getRoute } from '$lib/api';
+	import { booking } from '$lib/api';
 	import { toTable } from '$lib/toTable';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import { CircleAlert, CircleCheckBig } from 'lucide-svelte/icons';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import GeoJSON from '$lib/GeoJSON.svelte';
 	import Layer from '$lib/Layer.svelte';
+	import { plan } from '$lib/motis/services.gen.js';
+	import { coordinatesToPlace } from '$lib/motisUtils.js';
+	import { MOTIS_BASE_URL } from '$lib/constants.js';
 	const { data } = $props();
 
 	let zoom = $state(10);
@@ -186,47 +189,35 @@
 	const getRoutes = (companyLat: number, companyLng: number) => {
 		routes = [];
 		routes.push({
-			route: getRoute({
-				start: {
-					lat: companyLat,
-					lng: companyLng
-				},
-				destination: {
-					lat: start.lat,
-					lng: start.lng
-				},
-				profile: 'car',
-				direction: 'forward'
+			route: plan({
+				baseUrl: MOTIS_BASE_URL,
+				query: {
+					fromPlace: coordinatesToPlace(new Coordinates(companyLat, companyLng)),
+					toPlace: coordinatesToPlace(new Coordinates(start.lat, start.lng)),
+					mode: ['CAR']
+				}
 			}),
 			color: 'red'
 		});
 		routes.push({
-			route: getRoute({
-				start: {
-					lat: start.lat,
-					lng: start.lng
-				},
-				destination: {
-					lat: destination.lat,
-					lng: destination.lng
-				},
-				profile: 'car',
-				direction: 'forward'
+			route: plan({
+				baseUrl: MOTIS_BASE_URL,
+				query: {
+					fromPlace: coordinatesToPlace(new Coordinates(start.lat, start.lng)),
+					toPlace: coordinatesToPlace(new Coordinates(destination.lat, destination.lng)),
+					mode: ['CAR']
+				}
 			}),
 			color: '#42a5f5'
 		});
 		routes.push({
-			route: getRoute({
-				start: {
-					lat: destination.lat,
-					lng: destination.lng
-				},
-				destination: {
-					lat: companyLat,
-					lng: companyLng
-				},
-				profile: 'car',
-				direction: 'forward'
+			route: plan({
+				baseUrl: MOTIS_BASE_URL,
+				query: {
+					fromPlace: coordinatesToPlace(new Coordinates(destination.lat, destination.lng)),
+					toPlace: coordinatesToPlace(new Coordinates(companyLat, companyLng)),
+					mode: ['CAR']
+				}
 			}),
 			color: 'yellow'
 		});
