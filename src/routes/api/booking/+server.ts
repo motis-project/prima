@@ -2,13 +2,12 @@ import { Coordinates } from '$lib/location.js';
 import { db } from '$lib/database';
 import { Interval } from '$lib/interval.js';
 import { groupBy, updateValues } from '$lib/collection_utils.js';
-import { error, json } from '@sveltejs/kit';
+import { error, json, type RequestEvent } from '@sveltejs/kit';
 import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
-import { MAX_TRAVEL_DURATION, MIN_PREP_MINUTES, MOTIS_BASE_URL } from '$lib/constants.js';
+import { MAX_TRAVEL_MS, MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
 import { covers } from '$lib/sqlHelpers.js';
-import { oneToMany, type Duration } from '$lib/motis';
-import { coordinatesToStr } from '$lib/motisUtils.js';
+import { oneToMany } from '$lib/api';
 
 const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 	const zoneContainingStartAndDestination = await db
@@ -18,7 +17,7 @@ const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 	return zoneContainingStartAndDestination != undefined;
 };
 
-export const POST = async (event) => {
+export const POST = async (event: RequestEvent) => {
 	const customer = event.locals.user;
 	if (!customer) {
 		return error(403);
@@ -33,20 +32,8 @@ export const POST = async (event) => {
 
 	let travelDuration: number | undefined = 0;
 	try {
-		travelDuration = (
-			await oneToMany({
-				baseUrl: MOTIS_BASE_URL,
-				query: {
-					one: coordinatesToStr(fromCoordinates),
-					many: [coordinatesToStr(toCoordinates)],
-					max: 3600,
-					maxMatchingDistance: 200,
-					mode: 'CAR',
-					arriveBy: false
-				}
-			}).then((d) => d.data!)
-		)[0].duration;
-		if (!travelDuration) {
+		travelDuration = (await oneToMany(fromCoordinates, [toCoordinates], false))[0];
+		if (travelDuration > MAX_TRAVEL_MS) {
 			throw 'keine Route gefunden';
 		}
 	} catch (e) {
@@ -63,15 +50,15 @@ export const POST = async (event) => {
 		return json({ status: 2, message: 'Start und Ziel sind identisch.' }, { status: 404 });
 	}
 
-	if (travelDuration > MAX_TRAVEL_DURATION) {
+	if (travelDuration > MAX_TRAVEL_MS) {
 		return json(
 			{ status: 3, message: 'Die maximale Fahrtzeit wurde überschritten.' },
 			{ status: 404 }
 		);
 	}
 
-	const startTime = startFixed ? time : new Date(time.getTime() - secondsToMs(travelDuration));
-	const targetTime = startFixed ? new Date(time.getTime() + secondsToMs(travelDuration)) : time;
+	const startTime = startFixed ? time : new Date(time.getTime() - travelDuration);
+	const targetTime = startFixed ? new Date(time.getTime() + travelDuration) : time;
 	const travelInterval = new Interval(startTime, targetTime);
 
 	if (new Date(Date.now() + minutesToMs(MIN_PREP_MINUTES)) > startTime) {
@@ -237,37 +224,9 @@ export const POST = async (event) => {
 	let durationToStart: Array<number> = [];
 	let durationFromTarget: Array<number> = [];
 	try {
-		durationToStart = await oneToMany({
-			baseUrl: MOTIS_BASE_URL,
-			query: {
-				one: coordinatesToStr(fromCoordinates),
-				many: centralCoordinates.map(coordinatesToStr),
-				max: 3600,
-				maxMatchingDistance: 200,
-				mode: 'CAR',
-				arriveBy: true
-			}
-		}).then((res) => {
-			return res.data!.map((d: Duration) => {
-				return secondsToMs(d.duration ?? Number.MAX_VALUE);
-			});
-		});
+		durationToStart = await oneToMany(fromCoordinates, centralCoordinates, false);
 
-		durationFromTarget = await oneToMany({
-			baseUrl: MOTIS_BASE_URL,
-			query: {
-				one: coordinatesToStr(toCoordinates),
-				many: centralCoordinates.map(coordinatesToStr),
-				max: 3600,
-				maxMatchingDistance: 200,
-				mode: 'CAR',
-				arriveBy: false
-			}
-		}).then((res) => {
-			return res.data!.map((d: Duration) => {
-				return secondsToMs(d.duration ?? Number.MAX_VALUE);
-			});
-		});
+		durationFromTarget = await oneToMany(toCoordinates, centralCoordinates, true);
 	} catch (e) {
 		return json({ status: 8, message: `Routing Anfrage fehlgeschlagen: ${e}` }, { status: 500 });
 	}
