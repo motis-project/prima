@@ -9,6 +9,9 @@
 	import { ChevronsRight, ChevronsLeft } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import Label from '$lib/components/ui/label/label.svelte';
+	// ---------------------------------------
+	import { setPage } from '$lib/Paginate';
+	import { paginate } from '$lib/Paginate';
 
 	type Props = {
 		isMaintainer: boolean;
@@ -37,26 +40,27 @@
 	let totalPages = $state(firstarray);
 	let currentPageRows = $state(firstPage);
 
-	const paginate = (tours: TourDetails[]) => {
-		const pagesCount = Math.ceil(tours.length / perPage);
-		const paginatedItems = Array.from({ length: pagesCount }, (_, index) => {
-			const start = index * perPage;
-			return tours.slice(start, start + perPage);
-		});
-		totalPages = [...paginatedItems];
-	};
+	// const paginate = (tours: TourDetails[]) => {
+	// 	const pagesCount = Math.ceil(tours.length / perPage);
+	// 	const paginatedItems = Array.from({ length: pagesCount }, (_, index) => {
+	// 		const start = index * perPage;
+	// 		return tours.slice(start, start + perPage);
+	// 	});
+	// 	totalPages = [...paginatedItems];
+	// };
 
 	onMount(() => {
 		currentRows = tours;
-		paginate(currentRows);
+		//paginate(currentRows);
+		totalPages = paginate(perPage, currentRows);
 	});
 
-	const setPage = (p: number) => {
-		if (p >= 0 && p < totalPages.length) {
-			page = p;
-		}
-		currentPageRows = totalPages.length > 0 ? totalPages[page] : [];
-	};
+	// const setPage = (p: number) => {
+	// 	if (p >= 0 && p < totalPages.length) {
+	// 		page = p;
+	// 	}
+	// 	currentPageRows = totalPages.length > 0 ? totalPages[page] : [];
+	// };
 
 	const getTotalPrice = (fare: number | null, fare_route: number | null) => {
 		if (fare == null || fare_route == null) {
@@ -124,35 +128,36 @@
 	</Card.Content>
 </div>
 
+<!-- setPage(0); ... setPage(page - 1); etc. -->
 <div class="flex justify-center">
 	{#if totalPages.length > 10}
-		<Button variant="outline" on:click={() => setPage(0)}>
+		<Button variant="outline" on:click={_currentPageRows => setPage(0, totalPages)}>
 			<ChevronsLeft class="mx-1 h-4 w-4" />
 			Erste Seite
 		</Button>
-		<Button variant="outline" on:click={() => setPage(page - 1)}>
+		<Button variant="outline" on:click={_currentPageRows => setPage(page - 1, totalPages)}>
 			<ChevronLeft class="h-4 w-4" />
 			Vorherige
 		</Button>
-		<Button variant="outline" on:click={() => setPage(page + 1)}>
+		<Button variant="outline" on:click={_currentPageRows => setPage(page + 1, totalPages)}>
 			Nächste
 			<ChevronRight class="h-4 w-4" />
 		</Button>
-		<Button variant="outline" on:click={() => setPage(totalPages.length - 1)}>
+		<Button variant="outline" on:click={_currentPageRows => setPage(totalPages.length - 1, totalPages)}>
 			Letzte Seite
 			<ChevronsRight class="mx-1 h-4 w-4" />
 		</Button>
 	{:else}
-		<Button variant="outline" on:click={() => setPage(page - 1)}>
+		<Button variant="outline" on:click={_currentPageRows => setPage(page - 1, totalPages)}>
 			<ChevronLeft class="h-4 w-4" />
 			Vorherige Seite
 		</Button>
 		{#each totalPages as _page, i}
-			<Button variant="outline" on:click={() => setPage(i)}>
+			<Button variant="outline" on:click={_currentPageRows => setPage(i, totalPages)}>
 				{i + 1}
 			</Button>
 		{/each}
-		<Button variant="outline" on:click={() => setPage(page + 1)}>
+		<Button variant="outline" on:click={_currentPageRows => setPage(page + 1, totalPages)}>
 			Nächste Seite
 			<ChevronRight class="h-4 w-4" />
 		</Button>

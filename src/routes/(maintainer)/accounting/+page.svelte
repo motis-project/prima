@@ -13,9 +13,16 @@
 	import { getLocalTimeZone, today, CalendarDate } from '@internationalized/date';
 	import { RangeCalendar } from '$lib/components/ui/range-calendar/index.js';
 	import Papa from 'papaparse';
-	import { saveAs } from 'file-saver';
+	// ---------------------------------------------
+	//import { saveAs } from 'file-saver';
+	import pkg from 'file-saver';
+	//import Paginate from '$lib/Paginate.svelte';
+	import { setPage } from '$lib/Paginate';
+	import { paginate } from '$lib/Paginate';
 
 	const { data } = $props();
+
+	const {saveAs} = pkg;
 
 	const getCustomerCount = (tour: TourDetails) => {
 		let customers: Set<string> = new Set<string>();
@@ -58,27 +65,27 @@
 	let totalPages = $state(firstarray);
 	let currentPageRows = $state(firstPage);
 
-	const paginate = (tours: TourDetails[]) => {
-		const pagesCount = Math.ceil(tours.length / perPage);
-		const paginatedItems = Array.from({ length: pagesCount }, (_, index) => {
-			const start = index * perPage;
-			return tours.slice(start, start + perPage);
-		});
-		totalPages = [...paginatedItems];
-	};
+	// const paginate = (tours: TourDetails[]) => {
+	// 	const pagesCount = Math.ceil(tours.length / perPage);
+	// 	const paginatedItems = Array.from({ length: pagesCount }, (_, index) => {
+	// 		const start = index * perPage;
+	// 		return tours.slice(start, start + perPage);
+	// 	});
+	// 	totalPages = [...paginatedItems];
+	// };
 
 	onMount(() => {
 		currentRows = data.tours;
-		paginate(currentRows);
+		//paginate(currentRows);
 		setCompanys(currentRows);
 	});
 
-	const setPage = (p: number) => {
-		if (p >= 0 && p < totalPages.length) {
-			page = p;
-		}
-		currentPageRows = totalPages.length > 0 ? totalPages[page] : [];
-	};
+	// const setPage = (p: number) => {
+	// 	if (p >= 0 && p < totalPages.length) {
+	// 		page = p;
+	// 	}
+	// 	currentPageRows = totalPages.length > 0 ? totalPages[page] : [];
+	// };
 
 	// --- Sort: ---
 	let descending = [true, true, true, true];
@@ -152,8 +159,10 @@
 			}
 		}
 		descending[idx] = !descending[idx];
-		paginate(currentRows);
-		setPage(0);
+		// totalPages = paginate(currentRows);
+		totalPages = paginate(perPage, currentRows);
+		// currentPageRows = setPage(0);
+		currentPageRows = setPage(0, totalPages);
 	};
 
 	// --- Filter: ---
@@ -179,8 +188,10 @@
 		end = start.add({ days: 7 });
 		range = { start, end };
 		currentRows = data.tours;
-		paginate(currentRows);
-		setPage(0);
+		// totalPages = paginate(currentRows);
+		totalPages = paginate(perPage, currentRows);
+		// currentPageRows = setPage(0);
+		currentPageRows = setPage(0, totalPages);
 	};
 
 	let selectedTimespan = $state('Zeitraum');
@@ -358,8 +369,10 @@
 		end = start.add({ days: 7 });
 		range = { start, end };
 		currentRows = newrows;
-		paginate(currentRows);
-		setPage(0);
+		// totalPages = paginate(currentRows);
+		totalPages = paginate(perPage, currentRows);
+		// currentPageRows = setPage(0);
+		currentPageRows = setPage(0, totalPages);
 	};
 
 	// --- Summierung: ---
@@ -615,35 +628,36 @@
 		</Table.Body>
 	</Table.Root>
 
+	<!-- setPage(0); ... setPage(page - 1); etc. -->
 	<div class="flex justify-center">
 		{#if totalPages.length > 10}
-			<Button variant="outline" on:click={() => setPage(0)}>
+			<Button variant="outline" on:click={_currentPageRows => setPage(0, totalPages)}>
 				<ChevronsLeft class="mx-1 h-4 w-4" />
 				Erste Seite
 			</Button>
-			<Button variant="outline" on:click={() => setPage(page - 1)}>
+			<Button variant="outline" on:click={_currentPageRows => setPage(page - 1, totalPages)}>
 				<ChevronLeft class="h-4 w-4" />
 				Vorherige
 			</Button>
-			<Button variant="outline" on:click={() => setPage(page + 1)}>
+			<Button variant="outline" on:click={_currentPageRows => setPage(page + 1, totalPages)}>
 				Nächste
 				<ChevronRight class="h-4 w-4" />
 			</Button>
-			<Button variant="outline" on:click={() => setPage(totalPages.length - 1)}>
+			<Button variant="outline" on:click={_currentPageRows => setPage(totalPages.length - 1,totalPages)}>
 				Letzte Seite
 				<ChevronsRight class="mx-1 h-4 w-4" />
 			</Button>
 		{:else}
-			<Button variant="outline" on:click={() => setPage(page - 1)}>
+			<Button variant="outline" on:click={_currentPageRows => setPage(page - 1, totalPages)}>
 				<ChevronLeft class="h-4 w-4" />
 				Vorherige Seite
 			</Button>
 			{#each totalPages as _page, i}
-				<Button variant="outline" on:click={() => setPage(i)}>
+				<Button variant="outline" on:click={_currentPageRows => setPage(i, totalPages)}>
 					{i + 1}
 				</Button>
 			{/each}
-			<Button variant="outline" on:click={() => setPage(page + 1)}>
+			<Button variant="outline" on:click={_currentPageRows => setPage(page + 1, totalPages)}>
 				Nächste Seite
 				<ChevronRight class="h-4 w-4" />
 			</Button>
