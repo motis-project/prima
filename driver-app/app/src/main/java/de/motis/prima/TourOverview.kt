@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
@@ -42,6 +44,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import de.motis.prima.app.DriversApp
 import de.motis.prima.services.CookieStore
+import de.motis.prima.services.Event
+import de.motis.prima.services.Tour
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -51,7 +55,7 @@ import kotlinx.coroutines.launch
 fun TourOverview(
     navController: NavController,
     tourId: Int,
-    viewModel: HomeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: ToursViewModel
 ) {
     LaunchedEffect(key1 = viewModel) {
         launch {
@@ -138,7 +142,13 @@ fun TourOverview(
                     )
                 }
             }
-            // TODO
+            Spacer(modifier = Modifier.height(42.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                TourDetails(tourId = tourId, viewModel = viewModel)
+            }
 
             Spacer(modifier = Modifier.height(36.dp))
 
@@ -149,7 +159,6 @@ fun TourOverview(
                 Button(
                     modifier = Modifier.width(300.dp),
                     onClick = {
-                        // navController.navigate("tours") {}
                         navController.navigate("legs/${tourId}/0")
                     }
                 ) {
@@ -159,6 +168,60 @@ fun TourOverview(
                         textAlign = TextAlign.Center
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun TourDetails(tourId: Int, viewModel: ToursViewModel) {
+    val tour = viewModel.tours.value.filter { t: Tour ->  tourId == t.tour_id}[0]
+    val events = tour.events
+    val from = tour.from
+    val to = tour.to
+
+    try {
+       // TODO
+    } catch (e: Exception) {
+        Log.d("error", "Failed to get tour details")
+        return
+    }
+
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = from,
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = to,
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            LazyColumn(
+
+            ) {
+                items(items = events, itemContent = { event ->
+                    Text(
+                        text = event.street,
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
+                })
             }
         }
     }

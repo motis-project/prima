@@ -81,12 +81,9 @@ fun PortraitLayout(
     toursViewModel: ToursViewModel,
     contentPadding: PaddingValues
 ) {
-    Log.d("rotation", "portrait")
-
     var isLastEvent = false
     val tour = toursViewModel.tours.value.filter { t -> t.tour_id == tourId }[0]
     val event = tour.events[eventIndex]
-    //val toEvent = tour.events[eventIndex + 1]
 
     if (eventIndex + 1 == tour.events.size) {
         isLastEvent = true
@@ -328,26 +325,35 @@ fun TourDetail(
 
 @Composable
 fun EventDetail(event: Event) {
-    var scheduledTime = ""
-    var city = ""
-    var street = ""
-    var houseNumber = ""
+    var scheduledTime = "-"
+    var city = "-"
+    var street = "-"
+    var houseNumber = "-"
     var isPickup = false
-    var firstName = ""
-    var lastName = ""
-    var phone = ""
+    var firstName = "-"
+    var lastName = "-"
+    var phone = "-"
 
     try {
-        scheduledTime = event.scheduled_time.split("T")[1].substring(0, 5)
-        city = event.city
-        street = event.street
-        houseNumber = event.house_number
+        scheduledTime = event.scheduled_time
+            .replace("T", " ")
+            .toDate()
+            .formatTo("HH:mm")
+        if (event.city != null)
+            city = event.city
+        if (event.street != null)
+            street = event.street
+        if (event.house_number != null)
+            houseNumber = event.house_number
         isPickup = event.is_pickup
-        firstName = event.first_name
-        lastName = event.last_name
-        phone = event.phone
+        if (event.first_name != null)
+            firstName = event.first_name
+        if (event.last_name != null)
+            lastName = event.last_name
+        if (event.phone != null)
+            phone = event.phone
     } catch (e: Exception) {
-        Log.d("Exception", "Failed to read event details")
+        Log.d("error", "Failed to read event details")
         return
     }
 

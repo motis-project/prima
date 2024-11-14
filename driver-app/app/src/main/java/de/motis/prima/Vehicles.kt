@@ -70,7 +70,6 @@ class VehiclesViewModel : ViewModel() {
     }
 
     fun fetchVehicles() {
-        Log.d("test", "fetch vehicles")
         viewModelScope.launch {
             Api.apiService.getVehicles().enqueue(object : Callback<List<Vehicle>> {
                 override fun onResponse(call: Call<List<Vehicle>>, response: Response<List<Vehicle>>) {

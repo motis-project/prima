@@ -61,7 +61,7 @@ fun Nav() {
 
         composable(route = "overview/{tourId}") {
             val tourId = it.arguments?.getString("tourId")?.toInt()
-            TourOverview(navController, tourId!!)
+            TourOverview(navController, tourId!!, toursViewModel)
         }
 
 
