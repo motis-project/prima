@@ -178,7 +178,13 @@ fun TourDetails(tourId: Int, viewModel: ToursViewModel) {
     val tour = viewModel.tours.value.filter { t: Tour ->  tourId == t.tour_id}[0]
     val events = tour.events
     val from = tour.from
+        .replace("T", " ")
+        .toDate()
+        .formatTo("HH:mm")
     val to = tour.to
+        .replace("T", " ")
+        .toDate()
+        .formatTo("HH:mm")
 
     try {
        // TODO
@@ -193,7 +199,7 @@ fun TourDetails(tourId: Int, viewModel: ToursViewModel) {
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = from,
+                text =  "Von: " + from,
                 fontSize = 24.sp,
                 textAlign = TextAlign.Center
             )
@@ -203,17 +209,22 @@ fun TourDetails(tourId: Int, viewModel: ToursViewModel) {
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = to,
+                text = "Bis: " + to,
                 fontSize = 24.sp,
                 textAlign = TextAlign.Center
             )
         }
+        Spacer(modifier = Modifier.height(40.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
-            LazyColumn(
-
+            Text(
+                text = "Liste der Wegpunkte",
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center
+            )
+            /*LazyColumn(
             ) {
                 items(items = events, itemContent = { event ->
                     Text(
@@ -222,7 +233,7 @@ fun TourDetails(tourId: Int, viewModel: ToursViewModel) {
                         textAlign = TextAlign.Center
                     )
                 })
-            }
+            }*/
         }
     }
 }

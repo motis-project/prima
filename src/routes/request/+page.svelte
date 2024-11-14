@@ -16,7 +16,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import GeoJSON from '$lib/GeoJSON.svelte';
 	import Layer from '$lib/Layer.svelte';
-	import { plan } from '$lib/motis/services.gen.js';
+	import { plan, reverseGeocode } from '$lib/motis/services.gen.js';
 	import { coordinatesToPlace } from '$lib/motisUtils.js';
 	import { MOTIS_BASE_URL } from '$lib/constants.js';
 	const { data } = $props();
@@ -273,7 +273,15 @@
 					<div class="min-w-24">
 						<Button
 							variant="outline"
-							on:click={() => {
+							on:click={async () => {
+								const fromAddr = await reverseGeocode({
+									baseUrl: MOTIS_BASE_URL,
+									query: {
+										place: coordinatesToPlace(query.from.coordinates)
+									}
+								});
+								dummyAddress.street = fromAddr.data![0].street!;
+								console.log(dummyAddress);
 								bookingResponse = [
 									booking(
 										query.from,
