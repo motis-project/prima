@@ -182,7 +182,7 @@ export const POST = async (event) => {
 
 	console.assert(
 		Math.max(...[...mergedAvailabilites.values()].map((availabilities) => availabilities.length)) <=
-			1
+		1
 	);
 
 	const availableVehicles = [...mergedAvailabilites.entries()]

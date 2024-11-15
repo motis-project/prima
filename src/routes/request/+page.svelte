@@ -33,12 +33,45 @@
 		lat: 51.505730979747334,
 		lng: 14.638267982988827
 	});
-	let dummyAddress = {
-		street: '',
-		house_number: '',
-		postal_code: '',
-		city: ''
+	type Address = {
+		street: string;
+		house_number: string;
+		postal_code: string;
+		city: string;
 	};
+	let emptyAddress = {
+		street: '-',
+		house_number: '-',
+		postal_code: '-',
+		city: '-'
+	};
+
+	const getAddress = async (coordinates: Coordinates): Promise<Address> => {
+		const res = await reverseGeocode({
+			baseUrl: MOTIS_BASE_URL,
+			query: {
+				place: coordinatesToPlace(coordinates)
+			}
+		});
+		let addr = null;
+		try {
+			addr = res.data![1];
+		} catch (e) {
+			console.log(e);
+		}
+
+		if (addr != null) {
+			return {
+				street: addr.street ? addr.street : '-',
+				house_number: addr.houseNumber ? addr.houseNumber : '-',
+				postal_code: addr.zip ? addr.zip : '-',
+				city: addr.name ? addr.name : '-'
+			};
+		} else {
+			return emptyAddress;
+		}
+	};
+
 	let query = $derived<{
 		from: Location;
 		to: Location;
@@ -50,8 +83,8 @@
 		numBikes: number;
 		luggage: number;
 	}>({
-		from: new Location(start, dummyAddress),
-		to: new Location(destination, dummyAddress),
+		from: new Location(start, emptyAddress),
+		to: new Location(destination, emptyAddress),
 		startFixed: true,
 		timeStamp: new Date(),
 		numPassengers: 3,
@@ -112,6 +145,7 @@
 				.setLngLat([destination.lng, destination.lat])
 				.addTo(map)
 				.on('dragend', async () => {
+					console.log('Dest dragged');
 					const x = destinationMarker!.getLngLat();
 					destination.lng = x.lng;
 					destination.lat = x.lat;
@@ -274,18 +308,13 @@
 						<Button
 							variant="outline"
 							on:click={async () => {
-								const fromAddr = await reverseGeocode({
-									baseUrl: MOTIS_BASE_URL,
-									query: {
-										place: coordinatesToPlace(query.from.coordinates)
-									}
-								});
-								dummyAddress.street = fromAddr.data![0].street!;
-								console.log(dummyAddress);
+								let from = new Location(start, await getAddress(start));
+								let to = new Location(destination, await getAddress(destination));
+
 								bookingResponse = [
 									booking(
-										query.from,
-										query.to,
+										from,
+										to,
 										arriveBy,
 										new Date(dateTime),
 										query.numPassengers,
