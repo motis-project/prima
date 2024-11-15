@@ -23,8 +23,8 @@ export default defineConfig({
 		locale: 'de-DE',
 		timezoneId: 'Europe/Berlin',
 		launchOptions: {
-			slowMo: 0,
-		},
+			slowMo: 0
+		}
 	},
 	testDir: './tests',
 	projects: [

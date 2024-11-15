@@ -3,7 +3,7 @@ import { db } from '$lib/database';
 import { Interval } from '$lib/interval.js';
 import { groupBy, updateValues } from '$lib/collection_utils.js';
 import { error, json, type RequestEvent } from '@sveltejs/kit';
-import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
+import { hoursToMs, minutesToMs } from '$lib/time_utils.js';
 import { MAX_TRAVEL_MS, MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
 import { covers } from '$lib/sqlHelpers.js';
