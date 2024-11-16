@@ -72,6 +72,7 @@ export async function setCompanyData(page: Page, user: UserCredentials, company:
 	await page.waitForTimeout(250);
 	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: company.zone });
 	await page.getByLabel('Gemeinde').selectOption({ label: company.community });
+	await page.screenshot({ path: 'screenshots/afterEnteringCompanyData.png', fullPage: true });
 	await page.getByRole('button', { name: 'Übernehmen' }).click();
 	await page.waitForTimeout(500);
 	await page.screenshot({ path: 'screenshots/afterSetCompany.png', fullPage: true });
