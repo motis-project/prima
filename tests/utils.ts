@@ -74,6 +74,7 @@ export async function setCompanyData(page: Page, user: UserCredentials, company:
 	await page.getByLabel('Gemeinde').selectOption({ label: company.community });
 	await page.getByRole('button', { name: 'Übernehmen' }).click();
 	await page.waitForTimeout(500);
+	await page.screenshot({ path: 'screenshots/afterSetCompany.png', fullPage: true });
 }
 
 export async function addVehicle(page: Page, licensePlate: string) {
