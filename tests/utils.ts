@@ -80,6 +80,7 @@ export async function addVehicle(page: Page, licensePlate: string) {
 	await login(page, ENTREPENEUR);
 	await page.goto('/user/company');
 	await page.waitForTimeout(500);
+	await page.screenshot({ path: 'beforeNavigateToTaxi.png', fullPage: true });
 	await page.getByRole('link', { name: 'Taxi' }).click();
 	await expect(page.getByRole('heading', { name: 'Fahrzeuge und Touren' })).toBeVisible();
 	await page.waitForTimeout(500);
