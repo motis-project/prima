@@ -76,7 +76,7 @@ export const actions = {
 			return res.data!;
 		});
 		if (response.length == 0) {
-			return fail(400, { error: 'TEST' });
+			return fail(400, { error: 'Die Addresse konnte nicht gefunden werden.' });
 		}
 		const bestAddressGuess = new Coordinates(response[0].lat, response[0].lon);
 
