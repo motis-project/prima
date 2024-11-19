@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Prima+ÖV</string>
+    <string name="login_button_text">Anmelden</string>
+    <string name="wrong_login_data">Passwort oder E-Mail sind inkorrekt.</string>
+    <string name="email_label">E-Mail</string>
+    <string name="password_label">Passwort</string>
+    <string name="network_error_message">Etwas ist schiefgelaufen. Bitte versuchen Sie es später erneut.</string>
 </resources>
