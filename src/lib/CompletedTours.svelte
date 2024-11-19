@@ -10,8 +10,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import Label from '$lib/components/ui/label/label.svelte';
 	// ---------------------------------------
-	import { setPage } from '$lib/Paginate';
-	import { paginate } from '$lib/Paginate';
+	import { isPageValid, paginate, setCurrentPages } from '$lib/Paginate';
 
 	type Props = {
 		isMaintainer: boolean;
@@ -34,7 +33,7 @@
 	// --- Pageination ---
 	let currentRows: TourDetails[] = [];
 	let page = $state(0);
-	let perPage = 15;
+	let perPage = 5;
 	let firstPage = tours.slice(0, perPage);
 	let firstarray = [firstPage];
 	let totalPages = $state(firstarray);
@@ -131,33 +130,75 @@
 <!-- setPage(0); ... setPage(page - 1); etc. -->
 <div class="flex justify-center">
 	{#if totalPages.length > 10}
-		<Button variant="outline" on:click={_currentPageRows => setPage(0, totalPages)}>
+		<Button
+			variant="outline"
+			on:click={() => {
+				page = 0;
+				currentPageRows = setCurrentPages(page, totalPages);
+			}}
+		>
 			<ChevronsLeft class="mx-1 h-4 w-4" />
 			Erste Seite
 		</Button>
-		<Button variant="outline" on:click={_currentPageRows => setPage(page - 1, totalPages)}>
+		<Button
+			variant="outline"
+			on:click={() => {
+				page = isPageValid(page - 1, totalPages.length) ? page - 1 : page;
+				currentPageRows = setCurrentPages(page, totalPages);
+			}}
+		>
 			<ChevronLeft class="h-4 w-4" />
 			Vorherige
 		</Button>
-		<Button variant="outline" on:click={_currentPageRows => setPage(page + 1, totalPages)}>
+		<Button
+			variant="outline"
+			on:click={() => {
+				page = isPageValid(page + 1, totalPages.length) ? page + 1 : page;
+				currentPageRows = setCurrentPages(page, totalPages);
+			}}
+		>
 			Nächste
 			<ChevronRight class="h-4 w-4" />
 		</Button>
-		<Button variant="outline" on:click={_currentPageRows => setPage(totalPages.length - 1, totalPages)}>
+		<Button
+			variant="outline"
+			on:click={() => {
+				page = totalPages.length - 1;
+				currentPageRows = setCurrentPages(page, totalPages);
+			}}
+		>
 			Letzte Seite
 			<ChevronsRight class="mx-1 h-4 w-4" />
 		</Button>
 	{:else}
-		<Button variant="outline" on:click={_currentPageRows => setPage(page - 1, totalPages)}>
+		<Button
+			variant="outline"
+			on:click={() => {
+				page = isPageValid(page - 1, totalPages.length) ? page - 1 : page;
+				currentPageRows = setCurrentPages(page, totalPages);
+			}}
+		>
 			<ChevronLeft class="h-4 w-4" />
 			Vorherige Seite
 		</Button>
 		{#each totalPages as _page, i}
-			<Button variant="outline" on:click={_currentPageRows => setPage(i, totalPages)}>
+			<Button
+				variant="outline"
+				on:click={() => {
+					page = i;
+					currentPageRows = setCurrentPages(page, totalPages);
+				}}
+			>
 				{i + 1}
 			</Button>
 		{/each}
-		<Button variant="outline" on:click={_currentPageRows => setPage(page + 1, totalPages)}>
+		<Button
+			variant="outline"
+			on:click={() => {
+				page = isPageValid(page + 1, totalPages.length) ? page + 1 : page;
+				currentPageRows = setCurrentPages(page, totalPages);
+			}}
+		>
 			Nächste Seite
 			<ChevronRight class="h-4 w-4" />
 		</Button>

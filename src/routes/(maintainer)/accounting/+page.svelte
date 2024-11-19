@@ -13,16 +13,13 @@
 	import { getLocalTimeZone, today, CalendarDate } from '@internationalized/date';
 	import { RangeCalendar } from '$lib/components/ui/range-calendar/index.js';
 	import Papa from 'papaparse';
-	// ---------------------------------------------
 	//import { saveAs } from 'file-saver';
 	import pkg from 'file-saver';
-	//import Paginate from '$lib/Paginate.svelte';
-	import { setPage } from '$lib/Paginate';
-	import { paginate } from '$lib/Paginate';
+	import { isPageValid, paginate, setCurrentPages } from '$lib/Paginate';
 
 	const { data } = $props();
 
-	const {saveAs} = pkg;
+	const { saveAs } = pkg;
 
 	const getCustomerCount = (tour: TourDetails) => {
 		let customers: Set<string> = new Set<string>();
@@ -65,27 +62,11 @@
 	let totalPages = $state(firstarray);
 	let currentPageRows = $state(firstPage);
 
-	// const paginate = (tours: TourDetails[]) => {
-	// 	const pagesCount = Math.ceil(tours.length / perPage);
-	// 	const paginatedItems = Array.from({ length: pagesCount }, (_, index) => {
-	// 		const start = index * perPage;
-	// 		return tours.slice(start, start + perPage);
-	// 	});
-	// 	totalPages = [...paginatedItems];
-	// };
-
 	onMount(() => {
 		currentRows = data.tours;
-		//paginate(currentRows);
+		totalPages = paginate(perPage, currentRows);
 		setCompanys(currentRows);
 	});
-
-	// const setPage = (p: number) => {
-	// 	if (p >= 0 && p < totalPages.length) {
-	// 		page = p;
-	// 	}
-	// 	currentPageRows = totalPages.length > 0 ? totalPages[page] : [];
-	// };
 
 	// --- Sort: ---
 	let descending = [true, true, true, true];
@@ -114,18 +95,18 @@
 	};
 
 	const compareTotalPrice = (a: TourDetails, b: TourDetails) => {
-		let aTotal = getTotalPrice(a.fare, a.fare_route);
-		let bTotal = getTotalPrice(b.fare, b.fare_route);
-		if (+aTotal < +bTotal) return -1;
-		if (+aTotal > +bTotal) return 1;
+		const aTotal = getTotalPrice(a.fare, a.fare_route);
+		const bTotal = getTotalPrice(b.fare, b.fare_route);
+		if (aTotal < bTotal) return -1;
+		if (aTotal > bTotal) return 1;
 		return 0;
 	};
 
 	const compareCost = (a: TourDetails, b: TourDetails) => {
-		let aCost = getCost(a.fare, a.fare_route);
-		let bCost = getCost(b.fare, b.fare_route);
-		if (+aCost < +bCost) return -1;
-		if (+aCost > +bCost) return 1;
+		const aCost = getCost(a.fare, a.fare_route);
+		const bCost = getCost(b.fare, b.fare_route);
+		if (aCost < bCost) return -1;
+		if (aCost > bCost) return 1;
 		return 0;
 	};
 
@@ -159,10 +140,9 @@
 			}
 		}
 		descending[idx] = !descending[idx];
-		// totalPages = paginate(currentRows);
 		totalPages = paginate(perPage, currentRows);
-		// currentPageRows = setPage(0);
-		currentPageRows = setPage(0, totalPages);
+		page = 0;
+		currentPageRows = setCurrentPages(page, totalPages);
 	};
 
 	// --- Filter: ---
@@ -188,10 +168,9 @@
 		end = start.add({ days: 7 });
 		range = { start, end };
 		currentRows = data.tours;
-		// totalPages = paginate(currentRows);
 		totalPages = paginate(perPage, currentRows);
-		// currentPageRows = setPage(0);
-		currentPageRows = setPage(0, totalPages);
+		page = 0;
+		currentPageRows = setCurrentPages(page, totalPages);
 	};
 
 	let selectedTimespan = $state('Zeitraum');
@@ -214,149 +193,50 @@
 		let newrows: TourDetails[] = [];
 		const currentDate = new Date();
 		let year = currentDate.getFullYear();
-		if (comp && span == false && time == false) {
-			for (let row of data.tours) {
-				if (row.company_name == selectedCompany) {
-					newrows.push(row);
-				}
-			}
-		}
-		if (span) {
-			for (let row of data.tours) {
-				let rowDate = new CalendarDate(
-					row.from.getFullYear(),
-					row.from.getMonth() + 1,
-					row.from.getDate()
-				);
-				if (rowDate.compare(range.start) >= 0 && rowDate.compare(range.end) <= 0) {
-					if (comp) {
-						if (row.company_name == selectedCompany) {
-							newrows.push(row);
-						}
-					} else {
-						newrows.push(row);
-					}
-				}
-			}
-		}
-		if (time) {
-			switch (selectedTime) {
+		const isMonthOk = (time: string, row: TourDetails) => {
+			let result = false;
+			switch (time) {
 				case 'Quartal 1':
-					{
-						for (let row of data.tours) {
-							if (row.from.getFullYear() == year) {
-								if (
-									row.from.getMonth() == 0 ||
-									row.from.getMonth() == 1 ||
-									row.from.getMonth() == 2
-								) {
-									if (comp) {
-										if (row.company_name == selectedCompany) {
-											newrows.push(row);
-										}
-									} else {
-										newrows.push(row);
-									}
-								}
-							}
-						}
-					}
+					result = row.from.getMonth() == 0 || row.from.getMonth() == 1 || row.from.getMonth() == 2;
 					break;
 				case 'Quartal 2':
-					{
-						for (let row of data.tours) {
-							if (row.from.getFullYear() == year) {
-								if (
-									row.from.getMonth() == 3 ||
-									row.from.getMonth() == 4 ||
-									row.from.getMonth() == 5
-								) {
-									if (comp) {
-										if (row.company_name == selectedCompany) {
-											newrows.push(row);
-										}
-									} else {
-										newrows.push(row);
-									}
-								}
-							}
-						}
-					}
+					result = row.from.getMonth() == 3 || row.from.getMonth() == 4 || row.from.getMonth() == 5;
 					break;
 				case 'Quartal 3':
-					{
-						for (let row of data.tours) {
-							if (row.from.getFullYear() == year) {
-								if (
-									row.from.getMonth() == 6 ||
-									row.from.getMonth() == 7 ||
-									row.from.getMonth() == 8
-								) {
-									if (comp) {
-										if (row.company_name == selectedCompany) {
-											newrows.push(row);
-										}
-									} else {
-										newrows.push(row);
-									}
-								}
-							}
-						}
-					}
+					result = row.from.getMonth() == 6 || row.from.getMonth() == 7 || row.from.getMonth() == 8;
 					break;
 				case 'Quartal 4':
-					{
-						for (let row of data.tours) {
-							if (row.from.getFullYear() == year) {
-								if (
-									row.from.getMonth() == 9 ||
-									row.from.getMonth() == 10 ||
-									row.from.getMonth() == 11
-								) {
-									if (comp) {
-										if (row.company_name == selectedCompany) {
-											newrows.push(row);
-										}
-									} else {
-										newrows.push(row);
-									}
-								}
-							}
-						}
-					}
-					break;
-				case 'Aktuelles Jahr':
-					{
-						for (let row of data.tours) {
-							if (row.from.getFullYear() == year) {
-								if (comp) {
-									if (row.company_name == selectedCompany) {
-										newrows.push(row);
-									}
-								} else {
-									newrows.push(row);
-								}
-							}
-						}
-					}
+					result =
+						row.from.getMonth() == 9 || row.from.getMonth() == 10 || row.from.getMonth() == 11;
 					break;
 				case 'Letztes Jahr':
-					{
-						for (let row of data.tours) {
-							if (row.from.getFullYear() == year - 1) {
-								if (comp) {
-									if (row.company_name == selectedCompany) {
-										newrows.push(row);
-									}
-								} else {
-									newrows.push(row);
-								}
-							}
-						}
-					}
+					result = true;
 					break;
-				default:
-					newrows = data.tours;
+				case 'Aktuelles Jahr':
+					result = true;
+					break;
+			}
+			return result;
+		};
+		const targetYear = selectedTime === 'Letztes Jahr' ? year - 1 : year;
+		for (let row of data.tours) {
+			if (time && timespans.find((str) => str === selectedTime) == undefined) {
+				newrows = data.tours;
+				break;
+			}
+			let rowDate: CalendarDate = new CalendarDate(
+				row.from.getFullYear(),
+				row.from.getMonth() + 1,
+				row.from.getDate()
+			);
+			if (
+				(time && row.from.getFullYear() == targetYear && isMonthOk(selectedTime, row)) ||
+				(span && rowDate.compare(range.start) >= 0 && rowDate.compare(range.end) <= 0) ||
+				(comp && span == false && time == false)
+			) {
+				if (!comp || (comp && row.company_name == selectedCompany)) {
+					newrows.push(row);
+				}
 			}
 		}
 		if (span == false && comp == false && time == false) {
@@ -369,10 +249,9 @@
 		end = start.add({ days: 7 });
 		range = { start, end };
 		currentRows = newrows;
-		// totalPages = paginate(currentRows);
 		totalPages = paginate(perPage, currentRows);
-		// currentPageRows = setPage(0);
-		currentPageRows = setPage(0, totalPages);
+		page = 0;
+		currentPageRows = setCurrentPages(page, totalPages);
 	};
 
 	// --- Summierung: ---
@@ -628,36 +507,77 @@
 		</Table.Body>
 	</Table.Root>
 
-	<!-- setPage(0); ... setPage(page - 1); etc. -->
 	<div class="flex justify-center">
 		{#if totalPages.length > 10}
-			<Button variant="outline" on:click={_currentPageRows => setPage(0, totalPages)}>
+			<Button
+				variant="outline"
+				on:click={() => {
+					page = 0;
+					currentPageRows = setCurrentPages(page, totalPages);
+				}}
+			>
 				<ChevronsLeft class="mx-1 h-4 w-4" />
 				Erste Seite
 			</Button>
-			<Button variant="outline" on:click={_currentPageRows => setPage(page - 1, totalPages)}>
+			<Button
+				variant="outline"
+				on:click={() => {
+					page = isPageValid(page - 1, totalPages.length) ? page - 1 : page;
+					currentPageRows = setCurrentPages(page, totalPages);
+				}}
+			>
 				<ChevronLeft class="h-4 w-4" />
 				Vorherige
 			</Button>
-			<Button variant="outline" on:click={_currentPageRows => setPage(page + 1, totalPages)}>
+			<Button
+				variant="outline"
+				on:click={() => {
+					page = isPageValid(page + 1, totalPages.length) ? page + 1 : page;
+					currentPageRows = setCurrentPages(page, totalPages);
+				}}
+			>
 				Nächste
 				<ChevronRight class="h-4 w-4" />
 			</Button>
-			<Button variant="outline" on:click={_currentPageRows => setPage(totalPages.length - 1,totalPages)}>
+			<Button
+				variant="outline"
+				on:click={() => {
+					page = totalPages.length - 1;
+					currentPageRows = setCurrentPages(page, totalPages);
+				}}
+			>
 				Letzte Seite
 				<ChevronsRight class="mx-1 h-4 w-4" />
 			</Button>
 		{:else}
-			<Button variant="outline" on:click={_currentPageRows => setPage(page - 1, totalPages)}>
+			<Button
+				variant="outline"
+				on:click={() => {
+					page = isPageValid(page - 1, totalPages.length) ? page - 1 : page;
+					currentPageRows = setCurrentPages(page, totalPages);
+				}}
+			>
 				<ChevronLeft class="h-4 w-4" />
 				Vorherige Seite
 			</Button>
 			{#each totalPages as _page, i}
-				<Button variant="outline" on:click={_currentPageRows => setPage(i, totalPages)}>
+				<Button
+					variant="outline"
+					on:click={() => {
+						page = i;
+						currentPageRows = setCurrentPages(page, totalPages);
+					}}
+				>
 					{i + 1}
 				</Button>
 			{/each}
-			<Button variant="outline" on:click={_currentPageRows => setPage(page + 1, totalPages)}>
+			<Button
+				variant="outline"
+				on:click={() => {
+					page = isPageValid(page + 1, totalPages.length) ? page + 1 : page;
+					currentPageRows = setCurrentPages(page, totalPages);
+				}}
+			>
 				Nächste Seite
 				<ChevronRight class="h-4 w-4" />
 			</Button>
