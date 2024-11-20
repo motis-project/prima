@@ -13,3 +13,4 @@ booking-generator/data/stops.txt
 booking-generator/test
 .vscode
 /driver-app/.gradle/
+/screenshots
