@@ -2,7 +2,8 @@ import type { Company, Vehicle } from './types';
 import { Coordinates, Location } from './location';
 import { MAX_MATCHING_DISTANCE, MAX_TRAVEL_SECONDS, MOTIS_BASE_URL } from './constants';
 import { coordinatesToPlace, coordinatesToStr } from './motisUtils';
-import { oneToMany as oneToManyMotis, plan as planMotis, type Duration } from './motis';
+import { type Duration } from './motis/types.gen';
+import { oneToMany as oneToManyMotis, plan as planMotis } from './motis/services.gen';
 import { secondsToMs } from './time_utils';
 
 export const getCompany = async (id: number): Promise<Company> => {
@@ -107,7 +108,8 @@ export const plan = (from: Coordinates, to: Coordinates) => {
 		query: {
 			fromPlace: coordinatesToPlace(from),
 			toPlace: coordinatesToPlace(to),
-			mode: ['CAR'],
+			directModes: ['CAR'],
+			transitModes: [],
 			maxDirectTime: MAX_TRAVEL_SECONDS
 		}
 	});

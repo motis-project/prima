@@ -116,17 +116,11 @@ export const MatchSchema = {
 export const ModeSchema = {
     description: `# Street modes
 
-  - \`WALK\`: Walking some or all of the way of the route.
-  - \`BIKE\`: Cycling for the entirety of the route or taking a bicycle onto the public transport (if enabled) and cycling from the arrival station to the destination.
-  - \`BIKE_RENTAL\`: Taking a rented, shared-mobility bike for part or the entirety of the route.
-  - \`BIKE_TO_PARK\`: Leaving the bicycle at the departure station and walking from the arrival station to the destination. This mode needs to be combined with at least one transit mode otherwise it behaves like an ordinary bicycle journey.
-  - \`CAR\`: Driving your own car the entirety of the route. This can be combined with transit, where will return routes with a Kiss & Ride component. This means that the car is not parked in a permanent parking area but rather the passenger is dropped off (for example, at an airport) and the driver continues driving the car away from the drop off location.
-  - \`CAR_PARK\` | \`CAR_TO_PARK\`: Driving a car to the park-and-ride facilities near a station and taking publictransport. This mode needs to be combined with at least one transit mode otherwise, it behaves like an ordinary car journey.
-  - \`CAR_HAILING\`: Using a car hailing app like Uber or Lyft to get to a train station or all the way to the destination.
-  - \`CAR_PICKUP\`: Walking to a pickup point along the road, driving to a drop-off point along the road, and walking the rest of the way. This can include various taxi-services or kiss & ride.
-  - \`CAR_RENTAL\`: Walk to a car rental point, drive to a car rental drop-off point and walk the rest of the way. This can include car rental at fixed locations or free-floating services.
-  - \`FLEXIBLE\`: Encompasses all types of on-demand and flexible transportation for example GTFS Flex or NeTEx Flexible Stop Places.
-  - \`SCOOTER_RENTAL\`: Walking to a scooter rental point, riding a scooter to a scooter rental drop-off point, and walking the rest of the way. This can include scooter rental at fixed locations or free-floating services.
+  - \`WALK\`
+  - \`BIKE\`
+  - \`BIKE_RENTAL\`
+  - \`CAR\`
+  - \`CAR_PARKING\`
 
 # Transit modes
 
@@ -146,7 +140,7 @@ export const ModeSchema = {
   - \`REGIONAL_RAIL\`: regional train
 `,
     type: 'string',
-    enum: ['WALK', 'BIKE', 'CAR', 'BIKE_RENTAL', 'BIKE_TO_PARK', 'CAR_TO_PARK', 'CAR_HAILING', 'CAR_SHARING', 'CAR_PICKUP', 'CAR_RENTAL', 'FLEXIBLE', 'SCOOTER_RENTAL', 'TRANSIT', 'TRAM', 'SUBWAY', 'FERRY', 'AIRPLANE', 'METRO', 'BUS', 'COACH', 'RAIL', 'HIGHSPEED_RAIL', 'LONG_DISTANCE', 'NIGHT_RAIL', 'REGIONAL_FAST_RAIL', 'REGIONAL_RAIL', 'OTHER']
+    enum: ['WALK', 'BIKE', 'CAR', 'BIKE_RENTAL', 'CAR_PARKING', 'TRANSIT', 'TRAM', 'SUBWAY', 'FERRY', 'AIRPLANE', 'METRO', 'BUS', 'COACH', 'RAIL', 'HIGHSPEED_RAIL', 'LONG_DISTANCE', 'NIGHT_RAIL', 'REGIONAL_FAST_RAIL', 'REGIONAL_RAIL', 'OTHER']
 } as const;
 
 export const VertexTypeSchema = {
@@ -182,18 +176,6 @@ export const PlaceSchema = {
             description: 'level according to OpenStreetMap',
             type: 'number'
         },
-        arrivalDelay: {
-            type: 'integer',
-            description: `The offset from the scheduled arrival time of the boarding stop in this leg (in milliseconds).
-Scheduled time of arrival at boarding stop = endTime - arrivalDelay
-`
-        },
-        departureDelay: {
-            type: 'integer',
-            description: `The offset from the scheduled departure time of the boarding stop in this leg (in milliseconds).
-Scheduled time of departure at boarding stop = startTime - departureDelay
-`
-        },
         arrival: {
             description: 'arrival time',
             type: 'string',
@@ -201,6 +183,16 @@ Scheduled time of departure at boarding stop = startTime - departureDelay
         },
         departure: {
             description: 'departure time',
+            type: 'string',
+            format: 'date-time'
+        },
+        scheduledArrival: {
+            description: 'scheduled arrival time',
+            type: 'string',
+            format: 'date-time'
+        },
+        scheduledDeparture: {
+            description: 'scheduled departure time',
             type: 'string',
             format: 'date-time'
         },
@@ -290,7 +282,7 @@ export const TripInfoSchema = {
 export const TripSegmentSchema = {
     description: 'trip segment between two stops to show a trip on a map',
     type: 'object',
-    required: ['trips', 'mode', 'distance', 'from', 'to', 'departure', 'arrival', 'departureDelay', 'arrivalDelay', 'realTime', 'polyline'],
+    required: ['trips', 'mode', 'distance', 'from', 'to', 'departure', 'arrival', 'scheduledArrival', 'scheduledDeparture', 'realTime', 'polyline'],
     properties: {
         trips: {
             type: 'array',
@@ -325,17 +317,15 @@ export const TripSegmentSchema = {
             type: 'string',
             format: 'date-time'
         },
-        departureDelay: {
-            type: 'integer',
-            description: `The offset from the scheduled departure time of the boarding stop in this leg (in milliseconds).
-Scheduled time of departure at boarding stop = startTime - departureDelay
-`
+        scheduledDeparture: {
+            description: 'scheduled departure time',
+            type: 'string',
+            format: 'date-time'
         },
-        arrivalDelay: {
-            type: 'integer',
-            description: `The offset from the scheduled arrival time of the boarding stop in this leg (in milliseconds).
-Scheduled time of arrival at boarding stop = endTime - arrivalDelay
-`
+        scheduledArrival: {
+            description: 'scheduled arrival time',
+            type: 'string',
+            format: 'date-time'
         },
         realTime: {
             description: 'Whether there is real-time data about this leg',
@@ -370,7 +360,7 @@ export const EncodedPolylineSchema = {
 
 export const StepInstructionSchema = {
     type: 'object',
-    required: ['fromLevel', 'toLevel', 'polyline', 'relativeDirection', 'distance', 'streetName', 'exit', 'stayOn', 'area', 'lon', 'lat'],
+    required: ['fromLevel', 'toLevel', 'polyline', 'relativeDirection', 'distance', 'streetName', 'exit', 'stayOn', 'area'],
     properties: {
         relativeDirection: {
             '$ref': '#/components/schemas/Direction'
@@ -458,7 +448,7 @@ export const RentalSchema = {
 
 export const LegSchema = {
     type: 'object',
-    required: ['mode', 'startTime', 'endTime', 'departureDelay', 'arrivalDelay', 'realTime', 'distance', 'duration', 'from', 'to', 'legGeometry'],
+    required: ['mode', 'startTime', 'endTime', 'scheduledStartTime', 'scheduledEndTime', 'realTime', 'duration', 'from', 'to', 'legGeometry'],
     properties: {
         mode: {
             '$ref': '#/components/schemas/Mode',
@@ -471,7 +461,19 @@ export const LegSchema = {
             '$ref': '#/components/schemas/Place'
         },
         duration: {
-            description: 'Leg duration in seconds',
+            description: `Leg duration in seconds
+
+If leg is footpath:
+  The footpath duration is derived from the default footpath
+  duration using the query parameters \`transferTimeFactor\` and
+  \`additionalTransferTime\` as follows:
+  \`leg.duration = defaultDuration * transferTimeFactor + additionalTransferTime.\`
+  In case the defaultDuration is needed, it can be calculated by
+  \`defaultDuration = (leg.duration - additionalTransferTime) / transferTimeFactor\`.
+  Note that the default values are \`transferTimeFactor = 1\` and
+  \`additionalTransferTime = 0\` in case they are not explicitly
+  provided in the query.
+`,
             type: 'integer'
         },
         startTime: {
@@ -484,46 +486,32 @@ export const LegSchema = {
             format: 'date-time',
             description: 'leg arrival time'
         },
-        departureDelay: {
-            type: 'integer',
-            description: `The offset from the scheduled departure time of the boarding stop in this leg (in milliseconds).
-Scheduled time of departure at boarding stop = startTime - departureDelay
-`
+        scheduledStartTime: {
+            type: 'string',
+            format: 'date-time',
+            description: 'scheduled leg departure time'
         },
-        arrivalDelay: {
-            type: 'integer',
-            description: `The offset from the scheduled arrival time of the boarding stop in this leg (in milliseconds).
-Scheduled time of arrival at boarding stop = endTime - arrivalDelay
-`
+        scheduledEndTime: {
+            type: 'string',
+            format: 'date-time',
+            description: 'scheduled leg arrival time'
         },
         realTime: {
             description: 'Whether there is real-time data about this leg',
             type: 'boolean'
         },
         distance: {
-            description: 'The distance traveled while traversing this leg in meters.',
+            description: 'For non-transit legs the distance traveled while traversing this leg in meters.',
             type: 'number'
         },
         interlineWithPreviousLeg: {
             description: 'For transit legs, if the rider should stay on the vehicle as it changes route names.',
             type: 'boolean'
         },
-        route: {
-            description: `For transit legs, the route of the bus or train being used.
-For non-transit legs, the name of the street being traversed.
-`,
-            type: 'string'
-        },
         headsign: {
             description: `For transit legs, the headsign of the bus or train being used.
 For non-transit legs, null
 `,
-            type: 'string'
-        },
-        agencyName: {
-            type: 'string'
-        },
-        agencyUrl: {
             type: 'string'
         },
         routeColor: {
@@ -535,7 +523,10 @@ For non-transit legs, null
         routeType: {
             type: 'string'
         },
-        routeId: {
+        agencyName: {
+            type: 'string'
+        },
+        agencyUrl: {
             type: 'string'
         },
         agencyId: {

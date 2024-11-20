@@ -106,17 +106,11 @@ export type type = 'ADDRESS' | 'PLACE' | 'STOP';
 /**
  * # Street modes
  *
- * - `WALK`: Walking some or all of the way of the route.
- * - `BIKE`: Cycling for the entirety of the route or taking a bicycle onto the public transport (if enabled) and cycling from the arrival station to the destination.
- * - `BIKE_RENTAL`: Taking a rented, shared-mobility bike for part or the entirety of the route.
- * - `BIKE_TO_PARK`: Leaving the bicycle at the departure station and walking from the arrival station to the destination. This mode needs to be combined with at least one transit mode otherwise it behaves like an ordinary bicycle journey.
- * - `CAR`: Driving your own car the entirety of the route. This can be combined with transit, where will return routes with a Kiss & Ride component. This means that the car is not parked in a permanent parking area but rather the passenger is dropped off (for example, at an airport) and the driver continues driving the car away from the drop off location.
- * - `CAR_PARK` | `CAR_TO_PARK`: Driving a car to the park-and-ride facilities near a station and taking publictransport. This mode needs to be combined with at least one transit mode otherwise, it behaves like an ordinary car journey.
- * - `CAR_HAILING`: Using a car hailing app like Uber or Lyft to get to a train station or all the way to the destination.
- * - `CAR_PICKUP`: Walking to a pickup point along the road, driving to a drop-off point along the road, and walking the rest of the way. This can include various taxi-services or kiss & ride.
- * - `CAR_RENTAL`: Walk to a car rental point, drive to a car rental drop-off point and walk the rest of the way. This can include car rental at fixed locations or free-floating services.
- * - `FLEXIBLE`: Encompasses all types of on-demand and flexible transportation for example GTFS Flex or NeTEx Flexible Stop Places.
- * - `SCOOTER_RENTAL`: Walking to a scooter rental point, riding a scooter to a scooter rental drop-off point, and walking the rest of the way. This can include scooter rental at fixed locations or free-floating services.
+ * - `WALK`
+ * - `BIKE`
+ * - `BIKE_RENTAL`
+ * - `CAR`
+ * - `CAR_PARKING`
  *
  * # Transit modes
  *
@@ -136,7 +130,7 @@ export type type = 'ADDRESS' | 'PLACE' | 'STOP';
  * - `REGIONAL_RAIL`: regional train
  *
  */
-export type Mode = 'WALK' | 'BIKE' | 'CAR' | 'BIKE_RENTAL' | 'BIKE_TO_PARK' | 'CAR_TO_PARK' | 'CAR_HAILING' | 'CAR_SHARING' | 'CAR_PICKUP' | 'CAR_RENTAL' | 'FLEXIBLE' | 'SCOOTER_RENTAL' | 'TRANSIT' | 'TRAM' | 'SUBWAY' | 'FERRY' | 'AIRPLANE' | 'METRO' | 'BUS' | 'COACH' | 'RAIL' | 'HIGHSPEED_RAIL' | 'LONG_DISTANCE' | 'NIGHT_RAIL' | 'REGIONAL_FAST_RAIL' | 'REGIONAL_RAIL' | 'OTHER';
+export type Mode = 'WALK' | 'BIKE' | 'CAR' | 'BIKE_RENTAL' | 'CAR_PARKING' | 'TRANSIT' | 'TRAM' | 'SUBWAY' | 'FERRY' | 'AIRPLANE' | 'METRO' | 'BUS' | 'COACH' | 'RAIL' | 'HIGHSPEED_RAIL' | 'LONG_DISTANCE' | 'NIGHT_RAIL' | 'REGIONAL_FAST_RAIL' | 'REGIONAL_RAIL' | 'OTHER';
 
 /**
  * - `NORMAL` - latitude / longitude coordinate or address
@@ -168,18 +162,6 @@ export type Place = {
      */
     level: number;
     /**
-     * The offset from the scheduled arrival time of the boarding stop in this leg (in milliseconds).
-     * Scheduled time of arrival at boarding stop = endTime - arrivalDelay
-     *
-     */
-    arrivalDelay?: number;
-    /**
-     * The offset from the scheduled departure time of the boarding stop in this leg (in milliseconds).
-     * Scheduled time of departure at boarding stop = startTime - departureDelay
-     *
-     */
-    departureDelay?: number;
-    /**
      * arrival time
      */
     arrival?: string;
@@ -187,6 +169,14 @@ export type Place = {
      * departure time
      */
     departure?: string;
+    /**
+     * scheduled arrival time
+     */
+    scheduledArrival?: string;
+    /**
+     * scheduled departure time
+     */
+    scheduledDeparture?: string;
     /**
      * scheduled track from the static schedule timetable dataset
      */
@@ -274,17 +264,13 @@ export type TripSegment = {
      */
     arrival: string;
     /**
-     * The offset from the scheduled departure time of the boarding stop in this leg (in milliseconds).
-     * Scheduled time of departure at boarding stop = startTime - departureDelay
-     *
+     * scheduled departure time
      */
-    departureDelay: number;
+    scheduledDeparture: string;
     /**
-     * The offset from the scheduled arrival time of the boarding stop in this leg (in milliseconds).
-     * Scheduled time of arrival at boarding stop = endTime - arrivalDelay
-     *
+     * scheduled arrival time
      */
-    arrivalDelay: number;
+    scheduledArrival: string;
     /**
      * Whether there is real-time data about this leg
      */
@@ -395,6 +381,18 @@ export type Leg = {
     to: Place;
     /**
      * Leg duration in seconds
+     *
+     * If leg is footpath:
+     * The footpath duration is derived from the default footpath
+     * duration using the query parameters `transferTimeFactor` and
+     * `additionalTransferTime` as follows:
+     * `leg.duration = defaultDuration * transferTimeFactor + additionalTransferTime.`
+     * In case the defaultDuration is needed, it can be calculated by
+     * `defaultDuration = (leg.duration - additionalTransferTime) / transferTimeFactor`.
+     * Note that the default values are `transferTimeFactor = 1` and
+     * `additionalTransferTime = 0` in case they are not explicitly
+     * provided in the query.
+     *
      */
     duration: number;
     /**
@@ -406,47 +404,36 @@ export type Leg = {
      */
     endTime: string;
     /**
-     * The offset from the scheduled departure time of the boarding stop in this leg (in milliseconds).
-     * Scheduled time of departure at boarding stop = startTime - departureDelay
-     *
+     * scheduled leg departure time
      */
-    departureDelay: number;
+    scheduledStartTime: string;
     /**
-     * The offset from the scheduled arrival time of the boarding stop in this leg (in milliseconds).
-     * Scheduled time of arrival at boarding stop = endTime - arrivalDelay
-     *
+     * scheduled leg arrival time
      */
-    arrivalDelay: number;
+    scheduledEndTime: string;
     /**
      * Whether there is real-time data about this leg
      */
     realTime: boolean;
     /**
-     * The distance traveled while traversing this leg in meters.
+     * For non-transit legs the distance traveled while traversing this leg in meters.
      */
-    distance: number;
+    distance?: number;
     /**
      * For transit legs, if the rider should stay on the vehicle as it changes route names.
      */
     interlineWithPreviousLeg?: boolean;
-    /**
-     * For transit legs, the route of the bus or train being used.
-     * For non-transit legs, the name of the street being traversed.
-     *
-     */
-    route?: string;
     /**
      * For transit legs, the headsign of the bus or train being used.
      * For non-transit legs, null
      *
      */
     headsign?: string;
-    agencyName?: string;
-    agencyUrl?: string;
     routeColor?: string;
     routeTextColor?: string;
     routeType?: string;
-    routeId?: string;
+    agencyName?: string;
+    agencyUrl?: string;
     agencyId?: string;
     tripId?: string;
     routeShortName?: string;
@@ -616,6 +603,26 @@ export type StoptimesData = {
          */
         arriveBy?: boolean;
         /**
+         * This parameter will be ignored in case `pageCursor` is set.
+         *
+         * Optional. Default is
+         * - `LATER` for `arriveBy=false`
+         * - `EARLIER` for `arriveBy=true`
+         *
+         * The response will contain the next `n` arrivals / departures
+         * in case `EARLIER` is selected and the previous `n`
+         * arrivals / departures if `LATER` is selected.
+         *
+         */
+        direction?: 'EARLIER' | 'LATER';
+        /**
+         * Optional. Default is all transit modes.
+         *
+         * Only return arrivals/departures of the given modes.
+         *
+         */
+        mode?: Array<Mode>;
+        /**
          * the number of events
          */
         n: number;
@@ -673,6 +680,13 @@ export type StoptimesError = unknown;
 export type PlanData = {
     query: {
         /**
+         * Optional. Default is 0 minutes.
+         *
+         * Additional transfer time reserved for each transfer in minutes.
+         *
+         */
+        additionalTransferTime?: number;
+        /**
          * Optional. Default is `false`.
          *
          * - `arriveBy=true`: the parameters `date` and `time` refer to the arrival time
@@ -680,6 +694,22 @@ export type PlanData = {
          *
          */
         arriveBy?: boolean;
+        /**
+         * Optional. Default is `WALK` which will compute walking routes as direct connections.
+         *
+         * Modes used for direction connections from start to destination without using transit.
+         * Results will be returned on the `direct` key.
+         *
+         * Note: Direct connections will only be returned on the first call. For paging calls, they can be omitted.
+         *
+         * Note: Transit connections that are slower than the fastest direct connection will not show up.
+         * This is being used as a cut-off during transit routing to speed up the search.
+         * To prevent this, it's possible to send two separate requests (one with only `transitModes` and one with only `directModes`).
+         *
+         * Only non-transit modes such as `WALK`, `BIKE`, `CAR`, `BIKE_SHARING`, etc. can be used.
+         *
+         */
+        directModes?: Array<Mode>;
         /**
          * \`latitude,longitude,level\` tuple in degrees OR stop id
          */
@@ -729,18 +759,12 @@ export type PlanData = {
          */
         maxTransfers?: number;
         /**
-         * Minimum transfer time for each transfer.
-         * TODO: pass parameter to nigiri
+         * Optional. Default is 0 minutes.
+         *
+         * Minimum transfer time for each transfer in minutes.
          *
          */
         minTransferTime?: number;
-        /**
-         * A comma separated list of allowed modes.
-         *
-         * Default if not provided: `WALK,TRANSIT`
-         *
-         */
-        mode?: Array<Mode>;
         /**
          * The minimum number of itineraries to compute.
          * This is only relevant if `timetableView=true`.
@@ -755,6 +779,20 @@ export type PlanData = {
          *
          */
         pageCursor?: string;
+        /**
+         * Optional. Default is `WALK`. Only applies if the `to` place is a coordinate (not a transit stop). Does not apply to direct connections (see `directModes`).
+         *
+         * A list of modes that are allowed to be used from the last transit stop to the `to` coordinate. Example: `WALK,BIKE_SHARING`.
+         *
+         */
+        postTransitModes?: Array<Mode>;
+        /**
+         * Optional. Default is `WALK`. Only applies if the `from` place is a coordinate (not a transit stop). Does not apply to direct connections (see `directModes`).
+         *
+         * A list of modes that are allowed to be used from the `from` coordinate to the first transit stop. Example: `WALK,BIKE_SHARING`.
+         *
+         */
+        preTransitModes?: Array<Mode>;
         /**
          * Optional. Default is `false`.
          *
@@ -805,11 +843,38 @@ export type PlanData = {
          */
         toPlace: string;
         /**
-         * Factor to multiply transfer times with.
-         * TODO: pass parameter to nigiri
+         * Optional. Default is 1.0
+         *
+         * Factor to multiply minimum required transfer times with.
+         * Values smaller than 1.0 are not supported.
          *
          */
         transferTimeFactor?: number;
+        /**
+         * Optional. Default is `TRANSIT` which allows all transit modes (no restriction).
+         * Allowed modes for the transit part. If empty, no transit connections will be computed.
+         * For example, this can be used to allow only `METRO,SUBWAY,TRAM`.
+         *
+         */
+        transitModes?: Array<Mode>;
+        /**
+         * List of via stops to visit (only stop IDs, no coordinates allowed for now).
+         * Also see the optional parameter `viaMinimumStay` to set a set a minimum stay duration for each via stop.
+         *
+         */
+        via?: Array<(string)>;
+        /**
+         * Optional. If not set, the default is `0,0` - no stay required.
+         *
+         * For each `via` stop a minimum stay duration in minutes.
+         *
+         * The value `0` signals that it's allowed to stay in the same trip.
+         * This enables via stays without counting a transfer and can lead
+         * to better connections with less transfers. Transfer connections can
+         * still be found with `viaMinimumStay=0`.
+         *
+         */
+        viaMinimumStay?: Array<(number)>;
         /**
          * Whether the trip must be wheelchair accessible.
          */
