@@ -9,14 +9,13 @@
 	import { Card } from '$lib/components/ui/card';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import { Coordinates } from '$lib/location';
-	import { booking } from '$lib/api';
+	import { booking, plan } from '$lib/api';
 	import { toTable } from '$lib/toTable';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import { CircleAlert, CircleCheckBig } from 'lucide-svelte/icons';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import GeoJSON from '$lib/GeoJSON.svelte';
 	import Layer from '$lib/Layer.svelte';
-	import { plan } from '$lib/api.js';
 	const { data } = $props();
 
 	let zoom = $state(10);
