@@ -105,8 +105,8 @@ export const plan = (from: Coordinates, to: Coordinates) => {
 	return planMotis({
 		baseUrl: MOTIS_BASE_URL,
 		query: {
-			fromPlace: coordinatesToPlace(new Coordinates(from.lat, from.lng)),
-			toPlace: coordinatesToPlace(new Coordinates(to.lat, to.lng)),
+			fromPlace: coordinatesToPlace(from),
+			toPlace: coordinatesToPlace(to),
 			mode: ['CAR'],
 			maxDirectTime: MAX_TRAVEL_SECONDS
 		}
