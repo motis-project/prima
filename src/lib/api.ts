@@ -1,8 +1,8 @@
 import type { Company, Vehicle } from './types';
 import { Coordinates, Location } from './location';
 import { MAX_MATCHING_DISTANCE, MAX_TRAVEL_SECONDS, MOTIS_BASE_URL } from './constants';
-import { coordinatesToStr } from './motisUtils';
-import { oneToMany as oneToManyMotis, type Duration } from './motis';
+import { coordinatesToPlace, coordinatesToStr } from './motisUtils';
+import { oneToMany as oneToManyMotis, plan as planMotis, type Duration } from './motis';
 import { secondsToMs } from './time_utils';
 
 export const getCompany = async (id: number): Promise<Company> => {
@@ -99,6 +99,18 @@ export const booking = async (
 export const reassignTour = async (tourId: number) => {
 	console.log('TODO: reassign tour:', tourId);
 	return false;
+};
+
+export const plan = (from: Coordinates, to: Coordinates) => {
+	return planMotis({
+		baseUrl: MOTIS_BASE_URL,
+		query: {
+			fromPlace: coordinatesToPlace(new Coordinates(from.lat, from.lng)),
+			toPlace: coordinatesToPlace(new Coordinates(to.lat, to.lng)),
+			mode: ['CAR'],
+			maxDirectTime: MAX_TRAVEL_SECONDS
+		}
+	});
 };
 
 export const oneToMany = async (
