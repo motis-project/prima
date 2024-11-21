@@ -23,7 +23,6 @@ export const load: PageServerLoad = async (event) => {
 		? await db.selectFrom('company').where('id', '=', companyId).selectAll().executeTakeFirst()
 		: {
 				zone: null,
-				address: null,
 				latitude: null,
 				longitude: null,
 				name: null,

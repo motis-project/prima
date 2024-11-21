@@ -65,7 +65,7 @@ export async function up(db) {
         .addColumn('first_name', 'varchar')
         .addColumn('last_name', 'varchar')
         .addColumn('phone', 'varchar')
-        .addColumn('company_id', 'integer')
+        .addColumn('company_id', 'integer', (col) => col.references('company.id'))
         .execute();
 
     await db.schema

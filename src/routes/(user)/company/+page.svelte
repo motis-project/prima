@@ -39,12 +39,12 @@
 		{/if}
 
 		<form method="POST">
-			<div class="grid w-full grid-rows-2 grid-cols-2 gap-6">
+			<div class="grid w-full grid-rows-4 grid-cols-2 gap-6">
 				<div>
 					<Label for="name">Name</Label>
 					<Input name="name" id="name" value={name} />
 				</div>
-				<div>
+				<div class="col-start-1">
 					<Label for="street">Straße</Label>
 					<Input name="street" id="street" value={street} />
 				</div>
