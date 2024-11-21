@@ -103,7 +103,7 @@ export async function routing(
 	userChosen: Coordinates,
 	companies: Company[],
 	busStops: BusStop[]
-): Promise<RoutingResults> {        
+): Promise<RoutingResults> {
 	// true = many to one
 	// false = one to many
 	const from = await oneToMany(userChosen, coordinates.userChosenBackwardMany, true);
