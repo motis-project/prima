@@ -16,6 +16,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import GeoJSON from '$lib/GeoJSON.svelte';
 	import Layer from '$lib/Layer.svelte';
+	import { polylineToGeoJSON } from '$lib/polylineToGeojson.js';
 	const { data } = $props();
 
 	let zoom = $state(10);
@@ -184,17 +185,16 @@
 	let routes = $state<Array<ColoredRoute>>([]);
 
 	const getRoutes = (companyLat: number, companyLng: number) => {
-		routes = [];
 		routes.push({
-			route: plan(new Coordinates(companyLat, companyLng), start),
+			route: plan(new Coordinates(companyLat, companyLng), start).then((d) => d.data!),
 			color: 'red'
 		});
 		routes.push({
-			route: plan(start, destination),
+			route: plan(start, destination).then((d) => d.data!),
 			color: '#42a5f5'
 		});
 		routes.push({
-			route: plan(destination, new Coordinates(companyLat, companyLng)),
+			route: plan(destination, new Coordinates(companyLat, companyLng)).then((d) => d.data!),
 			color: 'yellow'
 		});
 	};
@@ -315,39 +315,41 @@
 	</Control>
 
 	{#each routes as segment, i}
-		{#await segment.route then r}
-			{#if r.type == 'FeatureCollection'}
-				<GeoJSON id={'r_ ' + i} data={r}>
-					<Layer
-						id={'path-outline_ ' + i}
-						type="line"
-						layout={{
-							'line-join': 'round',
-							'line-cap': 'round'
-						}}
-						filter={true}
-						paint={{
-							'line-color': '#1966a4',
-							'line-width': 7.5,
-							'line-opacity': 0.8
-						}}
-					/>
-					<Layer
-						id={'path_ ' + i}
-						type="line"
-						layout={{
-							'line-join': 'round',
-							'line-cap': 'round'
-						}}
-						filter={true}
-						paint={{
-							'line-color': segment.color,
-							'line-width': 5,
-							'line-opacity': 0.8
-						}}
-					/>
-				</GeoJSON>
-			{/if}
-		{/await}
-	{/each}
+				{#await segment.route then r}
+					{#if r.direct.length != 0 && r.direct[0] != undefined}
+						{#each r.direct[0].legs as leg}
+							<GeoJSON id={'r_ ' + i} data={polylineToGeoJSON(leg.legGeometry.points)}>
+								<Layer
+									id={'path-outline_ ' + i}
+									type="line"
+									layout={{
+										'line-join': 'round',
+										'line-cap': 'round'
+									}}
+									filter={true}
+									paint={{
+										'line-color': '#1966a4',
+										'line-width': 7.5,
+										'line-opacity': 0.8
+									}}
+								/>
+								<Layer
+									id={'path_ ' + i}
+									type="line"
+									layout={{
+										'line-join': 'round',
+										'line-cap': 'round'
+									}}
+									filter={true}
+									paint={{
+										'line-color': segment.color,
+										'line-width': 5,
+										'line-opacity': 0.8
+									}}
+								/>
+							</GeoJSON>
+						{/each}
+					{/if}
+				{/await}
+			{/each}
 </Map>

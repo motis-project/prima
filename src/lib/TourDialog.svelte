@@ -16,15 +16,7 @@
 	import { type PlanResponse } from './motis';
 	import { plan } from '$lib/api.js';
 	import { Coordinates } from './location';
-	import polyline from '@mapbox/polyline';
-
-	export function polylineToGeoJSON(encodedPolyline: string): GeoJSON.LineString {
-		const coordinates = polyline.decode(encodedPolyline, 7).map(([lng, lat]) => [lat, lng]);
-		return {
-			type: 'LineString',
-			coordinates
-		};
-	}
+	import { polylineToGeoJSON } from './polylineToGeojson';
 
 	class Props {
 		open!: {
