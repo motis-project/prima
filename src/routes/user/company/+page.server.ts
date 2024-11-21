@@ -67,6 +67,8 @@ export const actions = {
 			return fail(400, { error: 'Pflichtfahrgebiet nicht gesetzt.' });
 		}
 
+		let bestAddressGuess: Coordinates|undefined=undefined;
+		try{
 		const response: GeocodeResponse = await geocode({
 			baseUrl: MOTIS_BASE_URL,
 			query: {
@@ -78,7 +80,11 @@ export const actions = {
 		if (response.length == 0) {
 			return fail(400, { error: 'Die Addresse konnte nicht gefunden werden.' });
 		}
-		const bestAddressGuess = new Coordinates(response[0].lat, response[0].lon);
+		bestAddressGuess = new Coordinates(response[0].lat, response[0].lon);
+		}catch{
+			console.log("Fehler beim Ansprechen des geocode Endpunkt von Motis");
+			return fail(400, { error: 'Die Addresse konnte nicht gefunden werden.' });
+		}
 
 		if (!(await contains(community_area, bestAddressGuess))) {
 			return fail(400, {
