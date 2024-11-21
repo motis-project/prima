@@ -8,6 +8,7 @@ import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { MAX_TRAVEL_DURATION, MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
 import { covers } from '$lib/sqlHelpers.js';
+import {v4 as uuidv4} from 'uuid';
 
 const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 	const zoneContainingStartAndDestination = await db
@@ -369,6 +370,7 @@ export const POST = async (event: RequestEvent) => {
 			})
 			.returning('id')
 			.executeTakeFirst())!.id;
+		const eventGroup = uuidv4();
 		await trx
 			.insertInto('event')
 			.values([
@@ -381,7 +383,8 @@ export const POST = async (event: RequestEvent) => {
 					address: from.address,
 					request: requestId!,
 					tour: tourId!,
-					customer: customerId
+					customer: customerId,
+					event_group: eventGroup
 				},
 				{
 					is_pickup: false,
@@ -392,7 +395,8 @@ export const POST = async (event: RequestEvent) => {
 					address: to.address,
 					request: requestId!,
 					tour: tourId!,
-					customer: customerId
+					customer: customerId,
+					event_group: eventGroup
 				}
 			])
 			.execute();
