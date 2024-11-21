@@ -315,41 +315,41 @@
 	</Control>
 
 	{#each routes as segment, i}
-				{#await segment.route then r}
-					{#if r.direct.length != 0 && r.direct[0] != undefined}
-						{#each r.direct[0].legs as leg}
-							<GeoJSON id={'r_ ' + i} data={polylineToGeoJSON(leg.legGeometry.points)}>
-								<Layer
-									id={'path-outline_ ' + i}
-									type="line"
-									layout={{
-										'line-join': 'round',
-										'line-cap': 'round'
-									}}
-									filter={true}
-									paint={{
-										'line-color': '#1966a4',
-										'line-width': 7.5,
-										'line-opacity': 0.8
-									}}
-								/>
-								<Layer
-									id={'path_ ' + i}
-									type="line"
-									layout={{
-										'line-join': 'round',
-										'line-cap': 'round'
-									}}
-									filter={true}
-									paint={{
-										'line-color': segment.color,
-										'line-width': 5,
-										'line-opacity': 0.8
-									}}
-								/>
-							</GeoJSON>
-						{/each}
-					{/if}
-				{/await}
-			{/each}
+		{#await segment.route then r}
+			{#if r.direct.length != 0 && r.direct[0] != undefined}
+				{#each r.direct[0].legs as leg}
+					<GeoJSON id={'r_ ' + i} data={polylineToGeoJSON(leg.legGeometry.points)}>
+						<Layer
+							id={'path-outline_ ' + i}
+							type="line"
+							layout={{
+								'line-join': 'round',
+								'line-cap': 'round'
+							}}
+							filter={true}
+							paint={{
+								'line-color': '#1966a4',
+								'line-width': 7.5,
+								'line-opacity': 0.8
+							}}
+						/>
+						<Layer
+							id={'path_ ' + i}
+							type="line"
+							layout={{
+								'line-join': 'round',
+								'line-cap': 'round'
+							}}
+							filter={true}
+							paint={{
+								'line-color': segment.color,
+								'line-width': 5,
+								'line-opacity': 0.8
+							}}
+						/>
+					</GeoJSON>
+				{/each}
+			{/if}
+		{/await}
+	{/each}
 </Map>
