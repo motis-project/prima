@@ -17,12 +17,14 @@
 		"test:unit": "vitest"
 	},
 	"devDependencies": {
+		"@hey-api/openapi-ts": "^0.53.11",
 		"@sveltejs/adapter-auto": "^3.2.2",
 		"@sveltejs/adapter-node": "^5.2.0",
 		"@sveltejs/kit": "^2.5.18",
 		"@sveltejs/vite-plugin-svelte": "^3.1.1",
 		"@types/eslint": "^8.56.10",
 		"@types/jsonschema": "^1.1.1",
+		"@types/mapbox__polyline": "^1.0.5",
 		"@types/pg": "^8.11.6",
 		"@typescript-eslint/eslint-plugin": "^7.16.1",
 		"@typescript-eslint/parser": "^7.16.1",
@@ -45,7 +47,9 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@hey-api/client-fetch": "^0.4.2",
 		"@lucia-auth/adapter-postgresql": "^3.1.2",
+		"@mapbox/polyline": "^1.2.1",
 		"@node-rs/argon2": "^1.8.3",
 		"@playwright/test": "^1.45.2",
 		"bits-ui": "^0.21.13",

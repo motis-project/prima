@@ -3,7 +3,6 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Card from '$lib/components/ui/card';
 	import { getStyle } from '$lib/style';
-	import { getRoute } from '$lib/api';
 	import Map from '$lib/Map.svelte';
 	import GeoJSON from '$lib/GeoJSON.svelte';
 	import Layer from '$lib/Layer.svelte';
@@ -14,6 +13,10 @@
 	import maplibregl from 'maplibre-gl';
 	import { Button } from '$lib/components/ui/button';
 	import { MIN_PREP_MINUTES } from './constants';
+	import { type PlanResponse } from './motis';
+	import { plan } from '$lib/api.js';
+	import { Coordinates } from './location';
+	import { polylineToGeoJSON } from './polylineToGeojson';
 
 	class Props {
 		open!: {
@@ -33,32 +36,18 @@
 	let tourIndex = $state(0);
 	let tour = $derived(open.tours && open.tours[tourIndex]);
 
-	const getRoutes = (tourEvents: Array<Event> | null) => {
-		// eslint-disable-next-line
-		let routes: Array<Promise<any>> = [];
+	const getRoutes = (tourEvents: Array<Event> | null): Promise<PlanResponse>[] => {
+		let routes: Array<Promise<PlanResponse>> = [];
 		if (tourEvents == null || tourEvents!.length == 0) {
 			return routes;
 		}
-
 		for (let e = 0; e < tourEvents!.length - 1; e++) {
 			let e1 = tourEvents![e];
 			let e2 = tourEvents![e + 1];
 			routes.push(
-				getRoute({
-					start: {
-						lat: e1.latitude,
-						lng: e1.longitude
-					},
-					destination: {
-						lat: e2.latitude,
-						lng: e2.longitude
-					},
-					profile: 'car',
-					direction: 'forward'
-				})
+				plan(new Coordinates(e1.latitude, e1.longitude), new Coordinates(e2.latitude, e2.longitude))
 			);
 		}
-
 		return routes;
 	};
 
@@ -192,37 +181,39 @@
 		>
 			{#each routes as segment, i}
 				{#await segment then r}
-					{#if r.type == 'FeatureCollection'}
-						<GeoJSON id={'r_ ' + i} data={r}>
-							<Layer
-								id={'path-outline_ ' + i}
-								type="line"
-								layout={{
-									'line-join': 'round',
-									'line-cap': 'round'
-								}}
-								filter={true}
-								paint={{
-									'line-color': '#1966a4',
-									'line-width': 7.5,
-									'line-opacity': 0.8
-								}}
-							/>
-							<Layer
-								id={'path_ ' + i}
-								type="line"
-								layout={{
-									'line-join': 'round',
-									'line-cap': 'round'
-								}}
-								filter={true}
-								paint={{
-									'line-color': '#42a5f5',
-									'line-width': 5,
-									'line-opacity': 0.8
-								}}
-							/>
-						</GeoJSON>
+					{#if r.direct.length != 0 && r.direct[0] != undefined}
+						{#each r.direct[0].legs as leg}
+							<GeoJSON id={'r_ ' + i} data={polylineToGeoJSON(leg.legGeometry.points)}>
+								<Layer
+									id={'path-outline_ ' + i}
+									type="line"
+									layout={{
+										'line-join': 'round',
+										'line-cap': 'round'
+									}}
+									filter={true}
+									paint={{
+										'line-color': '#1966a4',
+										'line-width': 7.5,
+										'line-opacity': 0.8
+									}}
+								/>
+								<Layer
+									id={'path_ ' + i}
+									type="line"
+									layout={{
+										'line-join': 'round',
+										'line-cap': 'round'
+									}}
+									filter={true}
+									paint={{
+										'line-color': '#42a5f5',
+										'line-width': 5,
+										'line-opacity': 0.8
+									}}
+								/>
+							</GeoJSON>
+						{/each}
 					{/if}
 				{/await}
 			{/each}

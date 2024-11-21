@@ -72,14 +72,17 @@ export async function setCompanyData(page: Page, user: UserCredentials, company:
 	await page.waitForTimeout(250);
 	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: company.zone });
 	await page.getByLabel('Gemeinde').selectOption({ label: company.community });
+	await page.screenshot({ path: 'screenshots/afterEnteringCompanyData.png', fullPage: true });
 	await page.getByRole('button', { name: 'Übernehmen' }).click();
 	await page.waitForTimeout(500);
+	await page.screenshot({ path: 'screenshots/afterSetCompany.png', fullPage: true });
 }
 
 export async function addVehicle(page: Page, licensePlate: string) {
 	await login(page, ENTREPENEUR);
-	await page.goto('/company');
+	await page.goto('/user/company');
 	await page.waitForTimeout(500);
+	await page.screenshot({ path: 'screenshots/beforeNavigateToTaxi.png', fullPage: true });
 	await page.getByRole('link', { name: 'Taxi' }).click();
 	await expect(page.getByRole('heading', { name: 'Fahrzeuge und Touren' })).toBeVisible();
 	await page.waitForTimeout(500);

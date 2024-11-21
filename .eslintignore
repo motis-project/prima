@@ -13,3 +13,5 @@ package-lock.json
 yarn.lock
 
 taxidriver-android-app
+
+/src/lib/motis
