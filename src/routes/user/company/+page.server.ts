@@ -1,9 +1,11 @@
 import type { PageServerLoad, Actions } from './$types.js';
 import { fail } from '@sveltejs/kit';
 import { db } from '$lib/database';
-import { AddressGuess, geoCode } from '$lib/api.js';
-import type { Coordinates } from '$lib/location.js';
+import { Coordinates } from '$lib/location.js';
 import { covers, intersects } from '$lib/sqlHelpers.js';
+import { geocode } from '$lib/motis/services.gen.js';
+import { MOTIS_BASE_URL } from '$lib/constants.js';
+import type { GeocodeResponse } from '$lib/motis/types.gen.js';
 
 export const load: PageServerLoad = async (event) => {
 	const companyId = event.locals.user?.company;
@@ -65,14 +67,26 @@ export const actions = {
 			return fail(400, { error: 'Pflichtfahrgebiet nicht gesetzt.' });
 		}
 
-		let bestAddressGuess: AddressGuess | undefined = undefined;
+		let bestAddressGuess: Coordinates | undefined = undefined;
 		try {
-			bestAddressGuess = await geoCode(address);
+			const response: GeocodeResponse = await geocode({
+				baseUrl: MOTIS_BASE_URL,
+				query: {
+					text: address
+				}
+			}).then((res) => {
+				return res.data!;
+			});
+			if (response.length == 0) {
+				return fail(400, { error: 'Die Addresse konnte nicht gefunden werden.' });
+			}
+			bestAddressGuess = new Coordinates(response[0].lat, response[0].lon);
 		} catch {
+			console.log('Fehler beim Ansprechen des geocode Endpunkt von Motis');
 			return fail(400, { error: 'Die Addresse konnte nicht gefunden werden.' });
 		}
 
-		if (!(await contains(community_area, bestAddressGuess.pos))) {
+		if (!(await contains(community_area, bestAddressGuess))) {
 			return fail(400, {
 				error: 'Die Addresse liegt nicht in der ausgewählten Gemeinde.'
 			});
@@ -91,8 +105,8 @@ export const actions = {
 				zone,
 				community_area,
 				address,
-				latitude: bestAddressGuess!.pos.lat,
-				longitude: bestAddressGuess!.pos.lng
+				latitude: bestAddressGuess!.lat,
+				longitude: bestAddressGuess!.lng
 			})
 			.where('id', '=', companyId)
 			.execute();

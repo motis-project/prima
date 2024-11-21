@@ -4,7 +4,7 @@ import { addVehicle } from './utils';
 test('Move tour to other vehicle', async ({ page }) => {
 	await addVehicle(page, 'GR-TU-12');
 
-	await page.goto('/taxi?offset=-120&date=2026-09-30');
+	await page.goto('/user/taxi?offset=-120&date=2026-09-30');
 	await page.waitForTimeout(500);
 
 	await expect(
