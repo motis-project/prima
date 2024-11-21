@@ -45,10 +45,7 @@
 			let e1 = tourEvents![e];
 			let e2 = tourEvents![e + 1];
 			routes.push(
-				plan(
-					new Coordinates(e1.latitude, e1.longitude),
-					new Coordinates(e2.latitude, e2.longitude)
-				).then((d) => d.data!)
+				plan(new Coordinates(e1.latitude, e1.longitude), new Coordinates(e2.latitude, e2.longitude))
 			);
 		}
 		return routes;

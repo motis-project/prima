@@ -2,7 +2,7 @@ import type { Company, Vehicle } from './types';
 import { Coordinates, Location } from './location';
 import { MAX_MATCHING_DISTANCE, MAX_TRAVEL_SECONDS, MOTIS_BASE_URL } from './constants';
 import { coordinatesToPlace, coordinatesToStr } from './motisUtils';
-import { type Duration } from './motis/types.gen';
+import { type Duration, type PlanResponse } from './motis/types.gen';
 import { oneToMany as oneToManyMotis, plan as planMotis } from './motis/services.gen';
 import { secondsToMs } from './time_utils';
 
@@ -102,7 +102,7 @@ export const reassignTour = async (tourId: number) => {
 	return false;
 };
 
-export const plan = (from: Coordinates, to: Coordinates) => {
+export const plan = (from: Coordinates, to: Coordinates): Promise<PlanResponse> => {
 	return planMotis({
 		baseUrl: MOTIS_BASE_URL,
 		query: {
@@ -112,7 +112,7 @@ export const plan = (from: Coordinates, to: Coordinates) => {
 			transitModes: [],
 			maxDirectTime: MAX_TRAVEL_SECONDS
 		}
-	});
+	}).then((d) => d.data!);
 };
 
 export const oneToMany = async (

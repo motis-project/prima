@@ -186,15 +186,15 @@
 
 	const getRoutes = (companyLat: number, companyLng: number) => {
 		routes.push({
-			route: plan(new Coordinates(companyLat, companyLng), start).then((d) => d.data!),
+			route: plan(new Coordinates(companyLat, companyLng), start),
 			color: 'red'
 		});
 		routes.push({
-			route: plan(start, destination).then((d) => d.data!),
+			route: plan(start, destination),
 			color: '#42a5f5'
 		});
 		routes.push({
-			route: plan(destination, new Coordinates(companyLat, companyLng)).then((d) => d.data!),
+			route: plan(destination, new Coordinates(companyLat, companyLng)),
 			color: 'yellow'
 		});
 	};
