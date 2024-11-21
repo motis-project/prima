@@ -1,5 +1,10 @@
 import type { Company, Vehicle } from './types';
 import { Coordinates, Location } from './location';
+import { MAX_MATCHING_DISTANCE, MAX_TRAVEL_SECONDS, MOTIS_BASE_URL } from './constants';
+import { coordinatesToPlace, coordinatesToStr } from './motisUtils';
+import { type Duration, type PlanResponse } from './motis/types.gen';
+import { oneToMany as oneToManyMotis, plan as planMotis } from './motis/services.gen';
+import { secondsToMs } from './time_utils';
 
 export const getCompany = async (id: number): Promise<Company> => {
 	const response = await fetch(`/api/company?id=${id}`);
@@ -97,92 +102,37 @@ export const reassignTour = async (tourId: number) => {
 	return false;
 };
 
-export class AddressGuess {
-	pos!: { lat: number; lng: number };
-}
-
-export async function geoCode(address: string): Promise<AddressGuess> {
-	const response = await fetch('https://europe.motis-project.de/?elm=AddressSuggestions', {
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({
-			destination: { type: 'Module', target: '/address' },
-			content_type: 'AddressRequest',
-			content: { input: address }
-		}),
-		method: 'POST',
-		mode: 'cors'
-	}).then((res) => res.json());
-	const guesses = response.content.guesses;
-	if (guesses.length == 0) {
-		throw new Error('geoCode did not return any address guesses.');
-	}
-	return guesses[0];
-}
-
-export class RoutingQuery {
-	start!: Coordinates;
-	destination!: Coordinates;
-	profile!: string;
-	direction!: string;
-}
-
-export const getRoute = async (query: RoutingQuery) => {
-	const response = await fetch(`https://osr.motis-project.de/api/route`, {
-		method: 'POST',
-		mode: 'cors',
-		headers: {
-			'Access-Control-Allow-Origin': '*',
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(query)
-	});
-	return await response.json();
-};
-
-export enum Direction {
-	Forward,
-	Backward
-}
-
-export type OneToManyResult = {
-	duration: number;
-	distance: number;
+export const plan = (from: Coordinates, to: Coordinates): Promise<PlanResponse> => {
+	return planMotis({
+		baseUrl: MOTIS_BASE_URL,
+		query: {
+			fromPlace: coordinatesToPlace(from),
+			toPlace: coordinatesToPlace(to),
+			directModes: ['CAR'],
+			transitModes: [],
+			maxDirectTime: MAX_TRAVEL_SECONDS
+		}
+	}).then((d) => d.data!);
 };
 
 export const oneToMany = async (
 	one: Coordinates,
 	many: Coordinates[],
-	direction: Direction
-): Promise<OneToManyResult[]> => {
-	const dir = direction == Direction.Forward ? 'Forward' : 'Backward';
-	const response = await fetch('https://europe.motis-project.de/', {
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({
-			destination: {
-				type: 'Module',
-				target: '/osrm/one_to_many'
-			},
-			content_type: 'OSRMOneToManyRequest',
-			content: {
-				profile: 'car',
-				direction: dir,
-				one: {
-					lat: one.lat,
-					lng: one.lng
-				},
-				many: many
-			}
-		}),
-		method: 'POST',
-		mode: 'cors'
-	}).then((res) => res.json());
-	const result = response.content.costs;
-	if (result.length == 0) {
-		throw new Error('oneToMany api did not return any distTime-object.');
-	}
-	return result;
+	arriveBy: boolean
+): Promise<number[]> => {
+	return await oneToManyMotis({
+		baseUrl: MOTIS_BASE_URL,
+		query: {
+			one: coordinatesToStr(one),
+			many: many.map(coordinatesToStr),
+			max: MAX_TRAVEL_SECONDS,
+			maxMatchingDistance: MAX_MATCHING_DISTANCE,
+			mode: 'CAR',
+			arriveBy
+		}
+	}).then((res) => {
+		return res.data!.map((d: Duration) => {
+			return secondsToMs(d.duration ?? Number.MAX_VALUE);
+		});
+	});
 };

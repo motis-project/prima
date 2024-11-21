@@ -4,41 +4,54 @@ export default defineConfig({
 	// webServer: {
 	// 	command: 'npm run dev',
 	// 	url: 'http://localhost:5173',
-	// 	timeout: 10000,
+	// 	timeout: 20000,
 	// 	reuseExistingServer: true
 	// },
 	// use: {
-	// 	baseURL: 'http://localhost:5173/'
+	// 	baseURL: 'http://localhost:5173/',
+	// 	locale: 'de-DE',
+	// 	timezoneId: 'Europe/Berlin',
 	// },
 	webServer: {
 		command: 'docker compose up prima',
-		url: 'http://127.0.0.1:8080',
-		timeout: 10000,
+		url: 'http://127.0.0.1:7777',
+		timeout: 20000,
 		reuseExistingServer: true
 	},
 	use: {
-		baseURL: 'http://localhost:8080/'
+		baseURL: 'http://localhost:7777/',
+		locale: 'de-DE',
+		timezoneId: 'Europe/Berlin',
+		screenshot: 'only-on-failure',
+		launchOptions: {
+			slowMo: 0
+		}
 	},
 	testDir: './tests',
 	projects: [
 		{
 			name: 'setup db',
-			testMatch: /db\.setup\.ts/
+			testMatch: 'db.setup.ts'
 		},
 		{
 			name: 'login',
-			testMatch: /login\.setup\.ts/,
+			testMatch: 'login.setup.ts',
 			dependencies: ['setup db']
 		},
 		{
-			name: 'company data',
-			testMatch: /companyData\.test\.ts/,
+			name: 'entrepreneurAssignsRoles',
+			testMatch: 'entrepreneurAssignsRoles.ts',
 			dependencies: ['login']
 		},
 		{
 			name: 'availability',
-			testMatch: /setAvailability\.test\.ts/,
-			dependencies: ['company data']
+			testMatch: 'availability.ts',
+			dependencies: ['login']
+		},
+		{
+			name: 'move tour',
+			testMatch: 'moveTour.ts',
+			dependencies: ['availability']
 		}
 	]
 });

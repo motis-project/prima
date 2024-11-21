@@ -33,3 +33,18 @@ export const covers = (
 ): RawBuilder<boolean> => {
 	return sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(${coordinates!.lng}, ${coordinates!.lat}),${SRID}))`;
 };
+
+export const intersects = async (compulsory: number, community: number): Promise<boolean> => {
+	return (
+		(await db
+			.selectFrom('zone as compulsory_area')
+			.where('compulsory_area.id', '=', compulsory)
+			.innerJoin(
+				(eb) => eb.selectFrom('zone').where('id', '=', community).selectAll().as('community'),
+				(join) => join.onTrue()
+			)
+			.where(sql<boolean>`ST_Area(ST_Intersection(compulsory_area.area, community.area)) >= 1`)
+			.selectAll()
+			.executeTakeFirst()) != undefined
+	);
+};

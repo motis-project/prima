@@ -7,16 +7,16 @@
 	import { Location } from '$lib/location';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Card } from '$lib/components/ui/card';
-	import DateInput from '$lib/DateInput.svelte';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import { Coordinates } from '$lib/location';
-	import { booking, getRoute } from '$lib/api';
+	import { booking, plan } from '$lib/api';
 	import { toTable } from '$lib/toTable';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import { CircleAlert, CircleCheckBig } from 'lucide-svelte/icons';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import GeoJSON from '$lib/GeoJSON.svelte';
 	import Layer from '$lib/Layer.svelte';
+	import { polylineToGeoJSON } from '$lib/polylineToGeojson.js';
 	const { data } = $props();
 
 	let zoom = $state(10);
@@ -24,12 +24,12 @@
 	let map = $state<undefined | maplibregl.Map>();
 
 	let start = $state<Coordinates>({
-		lat: 51.343543966724404,
-		lng: 14.843405973137568
+		lat: 51.526934461032994,
+		lng: 14.57712544716437
 	});
 	let destination = $state<Coordinates>({
-		lat: 51.30359310483892,
-		lng: 14.901901510528297
+		lat: 51.505730979747334,
+		lng: 14.638267982988827
 	});
 	let dummyAddress = {
 		street: '',
@@ -168,7 +168,7 @@
 	});
 
 	let timeType = $state('departure');
-	let dateTime = $state(new Date());
+	let dateTime = $state(new Date().toISOString());
 	let arriveBy = $derived(timeType === 'arrival');
 
 	let bookingResponse = $state<Array<Promise<Response>>>([]);
@@ -185,50 +185,16 @@
 	let routes = $state<Array<ColoredRoute>>([]);
 
 	const getRoutes = (companyLat: number, companyLng: number) => {
-		routes = [];
 		routes.push({
-			route: getRoute({
-				start: {
-					lat: companyLat,
-					lng: companyLng
-				},
-				destination: {
-					lat: start.lat,
-					lng: start.lng
-				},
-				profile: 'car',
-				direction: 'forward'
-			}),
+			route: plan(new Coordinates(companyLat, companyLng), start),
 			color: 'red'
 		});
 		routes.push({
-			route: getRoute({
-				start: {
-					lat: start.lat,
-					lng: start.lng
-				},
-				destination: {
-					lat: destination.lat,
-					lng: destination.lng
-				},
-				profile: 'car',
-				direction: 'forward'
-			}),
+			route: plan(start, destination),
 			color: '#42a5f5'
 		});
 		routes.push({
-			route: getRoute({
-				start: {
-					lat: destination.lat,
-					lng: destination.lng
-				},
-				destination: {
-					lat: companyLat,
-					lng: companyLng
-				},
-				profile: 'car',
-				direction: 'forward'
-			}),
+			route: plan(destination, new Coordinates(companyLat, companyLng)),
 			color: 'yellow'
 		});
 	};
@@ -251,7 +217,7 @@
 		<Card class="w-[520px] max-h-[90vh] overflow-y-auto overflow-x-hidden bg-white rounded-lg">
 			<div class="flex flex-col w-full">
 				<div class="flex flex-row space-x-4 p-4 shadow-md rounded">
-					<DateInput bind:value={dateTime} />
+					<input type="text" bind:value={dateTime} />
 					<div class="flex">
 						<RadioGroup.Root class="flex space-x-1 ml-1" bind:value={timeType}>
 							<Label
@@ -289,7 +255,7 @@
 										query.from,
 										query.to,
 										arriveBy,
-										dateTime,
+										new Date(dateTime),
 										query.numPassengers,
 										query.numWheelchairs,
 										query.numWheelchairs,
@@ -350,37 +316,39 @@
 
 	{#each routes as segment, i}
 		{#await segment.route then r}
-			{#if r.type == 'FeatureCollection'}
-				<GeoJSON id={'r_ ' + i} data={r}>
-					<Layer
-						id={'path-outline_ ' + i}
-						type="line"
-						layout={{
-							'line-join': 'round',
-							'line-cap': 'round'
-						}}
-						filter={true}
-						paint={{
-							'line-color': '#1966a4',
-							'line-width': 7.5,
-							'line-opacity': 0.8
-						}}
-					/>
-					<Layer
-						id={'path_ ' + i}
-						type="line"
-						layout={{
-							'line-join': 'round',
-							'line-cap': 'round'
-						}}
-						filter={true}
-						paint={{
-							'line-color': segment.color,
-							'line-width': 5,
-							'line-opacity': 0.8
-						}}
-					/>
-				</GeoJSON>
+			{#if r.direct.length != 0 && r.direct[0] != undefined}
+				{#each r.direct[0].legs as leg}
+					<GeoJSON id={'r_ ' + i} data={polylineToGeoJSON(leg.legGeometry.points)}>
+						<Layer
+							id={'path-outline_ ' + i}
+							type="line"
+							layout={{
+								'line-join': 'round',
+								'line-cap': 'round'
+							}}
+							filter={true}
+							paint={{
+								'line-color': '#1966a4',
+								'line-width': 7.5,
+								'line-opacity': 0.8
+							}}
+						/>
+						<Layer
+							id={'path_ ' + i}
+							type="line"
+							layout={{
+								'line-join': 'round',
+								'line-cap': 'round'
+							}}
+							filter={true}
+							paint={{
+								'line-color': segment.color,
+								'line-width': 5,
+								'line-opacity': 0.8
+							}}
+						/>
+					</GeoJSON>
+				{/each}
 			{/if}
 		{/await}
 	{/each}

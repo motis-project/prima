@@ -1,4 +1,4 @@
-import { Direction, oneToMany, type OneToManyResult } from '$lib/api';
+import { oneToMany } from '$lib/api';
 import type { BusStop } from '$lib/busStop';
 import type { Company } from '$lib/compositionTypes';
 import { Coordinates } from '$lib/location';
@@ -7,10 +7,10 @@ import type { Range } from './capacitySimulation';
 import { iterateAllInsertions } from './utils';
 
 export type InsertionRoutingResult = {
-	fromCompany: OneToManyResult[];
-	toCompany: OneToManyResult[];
-	fromPrevEvent: OneToManyResult[];
-	toNextEvent: OneToManyResult[];
+	fromCompany: number[];
+	toCompany: number[];
+	fromPrevEvent: number[];
+	toNextEvent: number[];
 };
 
 export type RoutingResults = {
@@ -103,9 +103,11 @@ export async function routing(
 	userChosen: Coordinates,
 	companies: Company[],
 	busStops: BusStop[]
-): Promise<RoutingResults> {
-	const from = await oneToMany(userChosen, coordinates.userChosenBackwardMany, Direction.Backward);
-	const to = await oneToMany(userChosen, coordinates.userChosenForwardMany, Direction.Forward);
+): Promise<RoutingResults> {        
+	// true = many to one
+	// false = one to many
+	const from = await oneToMany(userChosen, coordinates.userChosenBackwardMany, true);
+	const to = await oneToMany(userChosen, coordinates.userChosenForwardMany, false);
 	const routingResults = {
 		userChosen: {
 			fromCompany: from.slice(0, companies.length),
@@ -117,16 +119,18 @@ export async function routing(
 	};
 	for (let busStopIdx = 0; busStopIdx != busStops.length; ++busStopIdx) {
 		const busStop = busStops[busStopIdx];
-		const relevantCompanyCount = companies.filter((company)=>company.busStopFilter[busStopIdx]).length;
+		const relevantCompanyCount = companies.filter(
+			(company) => company.busStopFilter[busStopIdx]
+		).length;
 		const from = await oneToMany(
 			busStop.coordinates,
 			coordinates.busStopBackwardMany[busStopIdx],
-			Direction.Backward
+			true
 		);
 		const to = await oneToMany(
 			busStop.coordinates,
 			coordinates.busStopForwardMany[busStopIdx],
-			Direction.Forward
+			false
 		);
 		routingResults.busStops[busStopIdx] = {
 			fromCompany: from.slice(0, relevantCompanyCount),

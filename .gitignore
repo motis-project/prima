@@ -10,5 +10,8 @@ node_modules
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 booking-generator/data/stops.txt
-booking-generator/test/
+booking-generator/test
 .vscode
+/driver-app/.gradle/
+/driver-app/.idea
+/screenshots

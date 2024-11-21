@@ -5,3 +5,5 @@ yarn.lock
 src/lib/components/*
 .github/*
 migrations/*
+src/lib/motis
+taxidriver-android-app
