@@ -67,22 +67,22 @@ export const actions = {
 			return fail(400, { error: 'Pflichtfahrgebiet nicht gesetzt.' });
 		}
 
-		let bestAddressGuess: Coordinates|undefined=undefined;
-		try{
-		const response: GeocodeResponse = await geocode({
-			baseUrl: MOTIS_BASE_URL,
-			query: {
-				text: address
+		let bestAddressGuess: Coordinates | undefined = undefined;
+		try {
+			const response: GeocodeResponse = await geocode({
+				baseUrl: MOTIS_BASE_URL,
+				query: {
+					text: address
+				}
+			}).then((res) => {
+				return res.data!;
+			});
+			if (response.length == 0) {
+				return fail(400, { error: 'Die Addresse konnte nicht gefunden werden.' });
 			}
-		}).then((res) => {
-			return res.data!;
-		});
-		if (response.length == 0) {
-			return fail(400, { error: 'Die Addresse konnte nicht gefunden werden.' });
-		}
-		bestAddressGuess = new Coordinates(response[0].lat, response[0].lon);
-		}catch{
-			console.log("Fehler beim Ansprechen des geocode Endpunkt von Motis");
+			bestAddressGuess = new Coordinates(response[0].lat, response[0].lon);
+		} catch {
+			console.log('Fehler beim Ansprechen des geocode Endpunkt von Motis');
 			return fail(400, { error: 'Die Addresse konnte nicht gefunden werden.' });
 		}
 
