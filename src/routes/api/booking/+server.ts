@@ -8,7 +8,7 @@ import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
 import { MAX_TRAVEL_DURATION, MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
 import { covers } from '$lib/sqlHelpers.js';
-import {v4 as uuidv4} from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 	const zoneContainingStartAndDestination = await db
