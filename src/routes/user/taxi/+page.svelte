@@ -41,7 +41,7 @@
 
 	$effect(() => {
 		const offset = value.toDate('UTC').getTimezoneOffset();
-		goto(`/taxi?offset=${offset}&date=${value.toDate('UTC').toISOString().slice(0, 10)}`);
+		goto(`/user/taxi?offset=${offset}&date=${value.toDate('UTC').toISOString().slice(0, 10)}`);
 	});
 
 	onMount(() => {

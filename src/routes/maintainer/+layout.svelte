@@ -6,15 +6,15 @@
 	const routeLinks = [
 		{
 			name: 'Freischaltung',
-			href: '/activation'
+			href: '/maintainer/activation'
 		},
 		{
 			name: 'Abgeschlossene Fahrten',
-			href: '/completed_tours'
+			href: '/maintainer/completed_tours'
 		},
 		{
 			name: 'Abrechnung',
-			href: '/accounting'
+			href: '/maintainer/accounting'
 		}
 	];
 </script>

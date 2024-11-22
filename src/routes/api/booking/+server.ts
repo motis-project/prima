@@ -1,14 +1,13 @@
-import { oneToMany, Direction, getRoute } from '$lib/api.js';
 import { Coordinates } from '$lib/location.js';
 import { db } from '$lib/database';
 import { Interval } from '$lib/interval.js';
 import { groupBy, updateValues } from '$lib/collection_utils.js';
-import { error, json } from '@sveltejs/kit';
-import { hoursToMs, minutesToMs, secondsToMs } from '$lib/time_utils.js';
-import { MAX_TRAVEL_DURATION, MIN_PREP_MINUTES } from '$lib/constants.js';
+import { error, json, type RequestEvent } from '@sveltejs/kit';
+import { hoursToMs, minutesToMs } from '$lib/time_utils.js';
+import { MAX_TRAVEL_MS, MIN_PREP_MINUTES } from '$lib/constants.js';
 import { sql } from 'kysely';
-import { getFareEstimation } from './fare-estimation/fare_estimation.js';
 import { covers } from '$lib/sqlHelpers.js';
+import { oneToMany } from '$lib/api';
 
 const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 	const zoneContainingStartAndDestination = await db
@@ -18,7 +17,7 @@ const startAndTargetShareZone = async (from: Coordinates, to: Coordinates) => {
 	return zoneContainingStartAndDestination != undefined;
 };
 
-export const POST = async (event) => {
+export const POST = async (event: RequestEvent) => {
 	const customer = event.locals.user;
 	if (!customer) {
 		return error(403);
@@ -31,21 +30,17 @@ export const POST = async (event) => {
 	const toCoordinates: Coordinates = to.coordinates;
 	const time = new Date(timeStamp);
 
-	let travelDuration = 0;
+	let travelDuration: number | undefined = 0;
 	try {
-		travelDuration = (
-			await getRoute({
-				start: { lat: from.coordinates.lat, lng: from.coordinates.lng },
-				destination: { lat: to.coordinates.lat, lng: to.coordinates.lng },
-				profile: 'car',
-				direction: 'forward'
-			})
-		).metadata.duration;
+		travelDuration = (await oneToMany(fromCoordinates, [toCoordinates], false))[0];
+		if (travelDuration > MAX_TRAVEL_MS) {
+			throw 'keine Route gefunden';
+		}
 	} catch (e) {
 		return json(
 			{
 				status: 1,
-				message: 'Es ist ein Fehler im Routing von Start zu Ziel aufgetreten.'
+				message: `Es ist ein Fehler im Routing von Start zu Ziel aufgetreten: ${e}.`
 			},
 			{ status: 404 }
 		);
@@ -55,15 +50,15 @@ export const POST = async (event) => {
 		return json({ status: 2, message: 'Start und Ziel sind identisch.' }, { status: 404 });
 	}
 
-	if (travelDuration > MAX_TRAVEL_DURATION) {
+	if (travelDuration > MAX_TRAVEL_MS) {
 		return json(
 			{ status: 3, message: 'Die maximale Fahrtzeit wurde überschritten.' },
 			{ status: 404 }
 		);
 	}
 
-	const startTime = startFixed ? time : new Date(time.getTime() - secondsToMs(travelDuration));
-	const targetTime = startFixed ? new Date(time.getTime() + secondsToMs(travelDuration)) : time;
+	const startTime = startFixed ? time : new Date(time.getTime() - travelDuration);
+	const targetTime = startFixed ? new Date(time.getTime() + travelDuration) : time;
 	const travelInterval = new Interval(startTime, targetTime);
 
 	if (new Date(Date.now() + minutesToMs(MIN_PREP_MINUTES)) > startTime) {
@@ -229,15 +224,11 @@ export const POST = async (event) => {
 	let durationToStart: Array<number> = [];
 	let durationFromTarget: Array<number> = [];
 	try {
-		// Motis-one_to_many requests
-		durationToStart = (
-			await oneToMany(fromCoordinates, centralCoordinates, Direction.Backward)
-		).map((res) => secondsToMs(res.duration));
-		durationFromTarget = (
-			await oneToMany(toCoordinates, centralCoordinates, Direction.Forward)
-		).map((res) => secondsToMs(res.duration));
+		durationToStart = await oneToMany(fromCoordinates, centralCoordinates, false);
+
+		durationFromTarget = await oneToMany(toCoordinates, centralCoordinates, true);
 	} catch (e) {
-		return json({ status: 8, message: 'Routing Anfrage fehlgeschlagen' });
+		return json({ status: 8, message: `Routing Anfrage fehlgeschlagen: ${e}` }, { status: 500 });
 	}
 	const fullTravelIntervals = companies.map((_, index) =>
 		travelInterval.expand(durationToStart[index], durationFromTarget[index])
@@ -444,24 +435,6 @@ export const POST = async (event) => {
 			.execute();
 	});
 	if (tourId) {
-		try {
-			const fare_route = await getFareEstimation(
-				{
-					longitude: fromCoordinates.lng,
-					latitude: fromCoordinates.lat,
-					scheduled_time: startTime
-				},
-				{
-					longitude: toCoordinates.lng,
-					latitude: toCoordinates.lat,
-					scheduled_time: null
-				},
-				bestVehicle!.vehicleId
-			);
-			await db.updateTable('tour').set({ fare_route }).where('id', '=', tourId).executeTakeFirst();
-		} catch (e) {
-			console.log(e);
-		}
 		return json({
 			status: 0,
 			companyId: bestVehicle!.companyId!,

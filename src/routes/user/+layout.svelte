@@ -6,23 +6,23 @@
 	const routeLinks = [
 		{
 			name: 'Taxi',
-			href: '/taxi'
+			href: '/user/taxi'
 		},
 		{
 			name: 'Stammdaten',
-			href: '/company'
+			href: '/user/company'
 		},
 		{
 			name: 'Abgeschlossene Fahrten',
-			href: '/tours'
+			href: '/user/tours'
 		},
 		{
 			name: 'Fahrer',
-			href: '/drivers'
+			href: '/user/drivers'
 		},
 		{
 			name: 'Verwaltung',
-			href: '/administration'
+			href: '/user/administration'
 		}
 	];
 </script>

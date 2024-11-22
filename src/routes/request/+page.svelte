@@ -9,13 +9,14 @@
 	import { Card } from '$lib/components/ui/card';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import { Coordinates } from '$lib/location';
-	import { booking, getRoute } from '$lib/api';
+	import { booking, plan } from '$lib/api';
 	import { toTable } from '$lib/toTable';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import { CircleAlert, CircleCheckBig } from 'lucide-svelte/icons';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import GeoJSON from '$lib/GeoJSON.svelte';
 	import Layer from '$lib/Layer.svelte';
+	import { polylineToGeoJSON } from '$lib/polylineToGeojson.js';
 	const { data } = $props();
 
 	let zoom = $state(10);
@@ -184,50 +185,16 @@
 	let routes = $state<Array<ColoredRoute>>([]);
 
 	const getRoutes = (companyLat: number, companyLng: number) => {
-		routes = [];
 		routes.push({
-			route: getRoute({
-				start: {
-					lat: companyLat,
-					lng: companyLng
-				},
-				destination: {
-					lat: start.lat,
-					lng: start.lng
-				},
-				profile: 'car',
-				direction: 'forward'
-			}),
+			route: plan(new Coordinates(companyLat, companyLng), start),
 			color: 'red'
 		});
 		routes.push({
-			route: getRoute({
-				start: {
-					lat: start.lat,
-					lng: start.lng
-				},
-				destination: {
-					lat: destination.lat,
-					lng: destination.lng
-				},
-				profile: 'car',
-				direction: 'forward'
-			}),
+			route: plan(start, destination),
 			color: '#42a5f5'
 		});
 		routes.push({
-			route: getRoute({
-				start: {
-					lat: destination.lat,
-					lng: destination.lng
-				},
-				destination: {
-					lat: companyLat,
-					lng: companyLng
-				},
-				profile: 'car',
-				direction: 'forward'
-			}),
+			route: plan(destination, new Coordinates(companyLat, companyLng)),
 			color: 'yellow'
 		});
 	};
@@ -349,37 +316,39 @@
 
 	{#each routes as segment, i}
 		{#await segment.route then r}
-			{#if r.type == 'FeatureCollection'}
-				<GeoJSON id={'r_ ' + i} data={r}>
-					<Layer
-						id={'path-outline_ ' + i}
-						type="line"
-						layout={{
-							'line-join': 'round',
-							'line-cap': 'round'
-						}}
-						filter={true}
-						paint={{
-							'line-color': '#1966a4',
-							'line-width': 7.5,
-							'line-opacity': 0.8
-						}}
-					/>
-					<Layer
-						id={'path_ ' + i}
-						type="line"
-						layout={{
-							'line-join': 'round',
-							'line-cap': 'round'
-						}}
-						filter={true}
-						paint={{
-							'line-color': segment.color,
-							'line-width': 5,
-							'line-opacity': 0.8
-						}}
-					/>
-				</GeoJSON>
+			{#if r.direct.length != 0 && r.direct[0] != undefined}
+				{#each r.direct[0].legs as leg}
+					<GeoJSON id={'r_ ' + i} data={polylineToGeoJSON(leg.legGeometry.points)}>
+						<Layer
+							id={'path-outline_ ' + i}
+							type="line"
+							layout={{
+								'line-join': 'round',
+								'line-cap': 'round'
+							}}
+							filter={true}
+							paint={{
+								'line-color': '#1966a4',
+								'line-width': 7.5,
+								'line-opacity': 0.8
+							}}
+						/>
+						<Layer
+							id={'path_ ' + i}
+							type="line"
+							layout={{
+								'line-join': 'round',
+								'line-cap': 'round'
+							}}
+							filter={true}
+							paint={{
+								'line-color': segment.color,
+								'line-width': 5,
+								'line-opacity': 0.8
+							}}
+						/>
+					</GeoJSON>
+				{/each}
 			{/if}
 		{/await}
 	{/each}
