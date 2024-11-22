@@ -193,28 +193,24 @@
 		let newrows: TourDetails[] = [];
 		const currentDate = new Date();
 		let year = currentDate.getFullYear();
-		const isMonthOk = (time: string, row: TourDetails) => {
+		const isMonthOk = (time: string, month: number) => {
 			let result = false;
 			switch (time) {
 				case 'Quartal 1':
-					result = row.from.getMonth() == 0 || row.from.getMonth() == 1 || row.from.getMonth() == 2;
+					result = month == 0 || month == 1 || month == 2;
 					break;
 				case 'Quartal 2':
-					result = row.from.getMonth() == 3 || row.from.getMonth() == 4 || row.from.getMonth() == 5;
+					result = month == 3 || month == 4 || month == 5;
 					break;
 				case 'Quartal 3':
-					result = row.from.getMonth() == 6 || row.from.getMonth() == 7 || row.from.getMonth() == 8;
+					result = month == 6 || month == 7 || month == 8;
 					break;
 				case 'Quartal 4':
 					result =
-						row.from.getMonth() == 9 || row.from.getMonth() == 10 || row.from.getMonth() == 11;
+						month == 9 || month == 10 || month == 11;
 					break;
-				case 'Letztes Jahr':
+				default:
 					result = true;
-					break;
-				case 'Aktuelles Jahr':
-					result = true;
-					break;
 			}
 			return result;
 		};
@@ -230,7 +226,7 @@
 				row.from.getDate()
 			);
 			if (
-				(time && row.from.getFullYear() == targetYear && isMonthOk(selectedTime, row)) ||
+				(time && row.from.getFullYear() == targetYear && isMonthOk(selectedTime, row.from.getMonth())) ||
 				(span && rowDate.compare(range.start) >= 0 && rowDate.compare(range.end) <= 0) ||
 				(comp && span == false && time == false)
 			) {
