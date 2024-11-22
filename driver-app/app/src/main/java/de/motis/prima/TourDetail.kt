@@ -14,9 +14,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -54,6 +57,7 @@ import de.motis.prima.services.Tour
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import java.text.Normalizer.Form
 
 class TourDetailViewModel : ViewModel() {
     private val cookieStore: CookieStore = CookieStore(DriversApp.instance)
@@ -357,13 +361,14 @@ fun EventDetail(event: Event) {
         return
     }
 
-    Column {
+    Column (modifier = Modifier.padding(16.dp) ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
                 text = scheduledTime,
+                fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
                 textAlign = TextAlign.Center
             )
@@ -405,11 +410,45 @@ fun EventDetail(event: Event) {
 
         if (isPickup) {
             Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Localized description",
+                    modifier = Modifier.background(Color.Green)
+                )
+                Spacer(modifier = Modifier.width(20.dp))
+                Text(
+                    text = "$lastName, $firstName",
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                IconButton(
+                    onClick = { Log.d("call", "Call $phone") },
+                    Modifier
+                        .background(color = Color.White)
+                        .size(width = 34.dp, height = 34.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Call,
+                        contentDescription = "Localized description",
+                        Modifier.size(width = 32.dp, height = 32.dp)
+
+                    )
+                }
+            }
+            Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "$lastName, $firstName",
+                    text = "Rollstuhl? ${event.wheelchairs}",
                     fontSize = 24.sp,
                     textAlign = TextAlign.Center
                 )
@@ -419,7 +458,7 @@ fun EventDetail(event: Event) {
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = phone,
+                    text = "Gepäck?",
                     fontSize = 24.sp,
                     textAlign = TextAlign.Center
                 )

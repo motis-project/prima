@@ -19,6 +19,7 @@
 	import { plan, reverseGeocode } from '$lib/motis/services.gen.js';
 	import { coordinatesToPlace } from '$lib/motisUtils.js';
 	import { MOTIS_BASE_URL } from '$lib/constants.js';
+	import { polylineToGeoJSON } from '$lib/motisUtils.js';
 	const { data } = $props();
 
 	let zoom = $state(10);
@@ -26,13 +27,14 @@
 	let map = $state<undefined | maplibregl.Map>();
 
 	let start = $state<Coordinates>({
-		lat: 51.526934461032994,
-		lng: 14.57712544716437
+		lat: 51.52710240102056,
+		lng: 14.56659709649034
 	});
 	let destination = $state<Coordinates>({
 		lat: 51.505730979747334,
 		lng: 14.638267982988827
 	});
+
 	type Address = {
 		street: string;
 		house_number: string;
@@ -59,13 +61,21 @@
 		} catch (e) {
 			console.log(e);
 		}
-
 		if (addr != null) {
+			let municipality = '';
+			let areas = addr.areas.filter((a) => {
+				return a.default;
+			});
+			try {
+				municipality = areas[0].name;
+			} catch (e) {
+				console.log(e);
+			}
 			return {
-				street: addr.street ? addr.street : '-',
-				house_number: addr.houseNumber ? addr.houseNumber : '-',
-				postal_code: addr.zip ? addr.zip : '-',
-				city: addr.name ? addr.name : '-'
+				street: addr.street != null ? addr.street : '-',
+				house_number: addr.houseNumber != null ? addr.houseNumber : '-',
+				postal_code: addr.zip != null ? addr.zip : '-',
+				city: municipality
 			};
 		} else {
 			return emptyAddress;
@@ -75,7 +85,6 @@
 	let query = $derived<{
 		from: Location;
 		to: Location;
-		// startFixed true --> Abfahrtszeit
 		startFixed: boolean;
 		timeStamp: Date;
 		numPassengers: number;
@@ -145,7 +154,6 @@
 				.setLngLat([destination.lng, destination.lat])
 				.addTo(map)
 				.on('dragend', async () => {
-					console.log('Dest dragged');
 					const x = destinationMarker!.getLngLat();
 					destination.lng = x.lng;
 					destination.lat = x.lat;
@@ -228,7 +236,7 @@
 				query: {
 					fromPlace: coordinatesToPlace(new Coordinates(companyLat, companyLng)),
 					toPlace: coordinatesToPlace(new Coordinates(start.lat, start.lng)),
-					mode: ['CAR']
+					directModes: ['CAR']
 				}
 			}),
 			color: 'red'
@@ -239,7 +247,7 @@
 				query: {
 					fromPlace: coordinatesToPlace(new Coordinates(start.lat, start.lng)),
 					toPlace: coordinatesToPlace(new Coordinates(destination.lat, destination.lng)),
-					mode: ['CAR']
+					directModes: ['CAR']
 				}
 			}),
 			color: '#42a5f5'
@@ -250,7 +258,7 @@
 				query: {
 					fromPlace: coordinatesToPlace(new Coordinates(destination.lat, destination.lng)),
 					toPlace: coordinatesToPlace(new Coordinates(companyLat, companyLng)),
-					mode: ['CAR']
+					directModes: ['CAR']
 				}
 			}),
 			color: 'yellow'
@@ -266,7 +274,7 @@
 			return { url: `https://europe.motis-project.de/tiles${url}` };
 		}
 	}}
-	center={[14.889815398274935, 51.33709604007766]}
+	center={[14.56725601631797, 51.49252561487174]}
 	{zoom}
 	style={getStyle(0)}
 	className="h-screen w-screen h-full w-full rounded-lg border shadow"
@@ -308,13 +316,10 @@
 						<Button
 							variant="outline"
 							on:click={async () => {
-								let from = new Location(start, await getAddress(start));
-								let to = new Location(destination, await getAddress(destination));
-
 								bookingResponse = [
 									booking(
-										from,
-										to,
+										new Location(start, await getAddress(start)),
+										new Location(destination, await getAddress(destination)),
 										arriveBy,
 										new Date(dateTime),
 										query.numPassengers,
@@ -377,37 +382,39 @@
 
 	{#each routes as segment, i}
 		{#await segment.route then r}
-			{#if r.type == 'FeatureCollection'}
-				<GeoJSON id={'r_ ' + i} data={r}>
-					<Layer
-						id={'path-outline_ ' + i}
-						type="line"
-						layout={{
-							'line-join': 'round',
-							'line-cap': 'round'
-						}}
-						filter={true}
-						paint={{
-							'line-color': '#1966a4',
-							'line-width': 7.5,
-							'line-opacity': 0.8
-						}}
-					/>
-					<Layer
-						id={'path_ ' + i}
-						type="line"
-						layout={{
-							'line-join': 'round',
-							'line-cap': 'round'
-						}}
-						filter={true}
-						paint={{
-							'line-color': segment.color,
-							'line-width': 5,
-							'line-opacity': 0.8
-						}}
-					/>
-				</GeoJSON>
+			{#if r.data.direct.length != 0 && r.data.direct[0] != undefined}
+				{#each r.data.direct[0].legs as leg}
+					<GeoJSON id={'r_ ' + i} data={polylineToGeoJSON(leg.legGeometry.points)}>
+						<Layer
+							id={'path-outline_ ' + i}
+							type="line"
+							layout={{
+								'line-join': 'round',
+								'line-cap': 'round'
+							}}
+							filter={true}
+							paint={{
+								'line-color': '#1966a4',
+								'line-width': 7.5,
+								'line-opacity': 0.8
+							}}
+						/>
+						<Layer
+							id={'path_ ' + i}
+							type="line"
+							layout={{
+								'line-join': 'round',
+								'line-cap': 'round'
+							}}
+							filter={true}
+							paint={{
+								'line-color': segment.color,
+								'line-width': 5,
+								'line-opacity': 0.8
+							}}
+						/>
+					</GeoJSON>
+				{/each}
 			{/if}
 		{/await}
 	{/each}

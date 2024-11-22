@@ -77,6 +77,7 @@ export const GET = async (event) => {
 			.innerJoin('address', 'address.id', 'event.address')
 			.innerJoin('auth_user', 'auth_user.id', 'event.customer')
 			.innerJoin('tour', 'tour.id', 'event.tour')
+			.innerJoin('request', 'request.id', 'event.request')
 			.where((eb) =>
 				eb.and([
 					eb('tour.departure', '<', latest_displayed_time),
@@ -87,13 +88,14 @@ export const GET = async (event) => {
 			.innerJoin('company', 'company.id', 'vehicle.company')
 			.where('company', '=', company)
 			.orderBy('event.scheduled_time')
-			.selectAll(['event', 'address', 'tour', 'vehicle'])
+			.selectAll(['event', 'address', 'tour', 'vehicle', 'request'])
 			.select([
 				'company.name as company_name',
 				'company.address as company_address',
 				'auth_user.first_name as customer_first_name',
 				'auth_user.last_name as customer_last_ame',
-				'auth_user.phone as customer_phone'
+				'auth_user.phone as customer_phone',
+				'request.wheelchairs as wheelchairs'
 			])
 			.execute()
 	);

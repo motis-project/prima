@@ -16,15 +16,7 @@
 	import { plan, type PlanResponse } from './motis';
 	import { coordinatesToPlace } from './motisUtils';
 	import { Coordinates } from './location';
-	import polyline from '@mapbox/polyline';
-
-	export function polylineToGeoJSON(encodedPolyline: string): GeoJSON.LineString {
-		const coordinates = polyline.decode(encodedPolyline, 7).map(([lng, lat]) => [lat, lng]);
-		return {
-			type: 'LineString',
-			coordinates
-		};
-	}
+	import { polylineToGeoJSON } from '$lib/motisUtils.js';
 
 	class Props {
 		open!: {
@@ -59,7 +51,7 @@
 						fromPlace: coordinatesToPlace(new Coordinates(e1.latitude, e1.longitude)),
 						toPlace: coordinatesToPlace(new Coordinates(e2.latitude, e2.longitude)),
 						maxDirectTime: 3600,
-						mode: ['CAR']
+						directModes: ['CAR']
 					}
 				}).then((d) => d.data!)
 			);

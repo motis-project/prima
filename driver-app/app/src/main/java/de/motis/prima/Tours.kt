@@ -20,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
@@ -60,7 +59,6 @@ import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.text.Format
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -73,7 +71,7 @@ class ToursViewModel : ViewModel() {
     val logoutEvent = _logoutEvent.asSharedFlow()
 
     var tours = mutableStateOf<List<Tour>>(emptyList())
-        private set
+        //private set
 
     var isLoading = mutableStateOf(true)
         private set
@@ -234,132 +232,132 @@ fun Tours(
                     textAlign = TextAlign.Center
                 )
             }
-        }
-
-        val toursForVehicle = viewModel.tours.value.filter { t ->
-            t.vehicle_id == vehiclesViewModel.selectedVehicleId
-        }
-
-        if (toursForVehicle.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Keine Aufträge für dieses Fahrzeug",
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
+        } else {
+            val toursForVehicle = viewModel.tours.value.filter { t ->
+                t.vehicle_id == vehiclesViewModel.selectedVehicleId
             }
-        }
 
-        Column {
-            Row (
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(contentPadding),
-                horizontalArrangement = Arrangement.Center
-            ) {
+            if (toursForVehicle.isEmpty()) {
                 Box(
                     modifier = Modifier
-                        .padding(all = 6.dp),
-
-                    ) {
-                    IconButton(
-                        onClick = { navController.navigate("tours") },
-                        Modifier
-                            .background(color = Color.LightGray)
-                            .size(width = 26.dp, height = 26.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Localized description",
-                            //Modifier.size(width = 10.dp, height = 10.dp)
-                        )
-                    }
-                }
-                Box(
-                    modifier = Modifier
-                        .padding(all = 6.dp),
-
-                    ) {
-                    val date = Date()
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        text = date.formatTo("dd.MM.YYYY"),
+                        text = "Keine Aufträge für dieses Fahrzeug",
                         fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
                 }
-                Box(
-                    modifier = Modifier
-                        .padding(all = 6.dp),
+            }
 
-                    ) {
-                    IconButton(
-                        onClick = { navController.navigate("tours") },
-                        Modifier
-                            .background(color = Color.LightGray)
-                            .size(width = 26.dp, height = 26.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = "Localized description"
+            Column {
+                Row (
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(contentPadding),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .padding(all = 6.dp),
+
+                        ) {
+                        IconButton(
+                            onClick = { navController.navigate("tours") },
+                            Modifier
+                                .background(color = Color.LightGray)
+                                .size(width = 26.dp, height = 26.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Localized description",
+                                //Modifier.size(width = 10.dp, height = 10.dp)
+                            )
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .padding(all = 6.dp),
+
+                        ) {
+                        val date = Date()
+                        Text(
+                            text = date.formatTo("dd.MM.YYYY"),
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
                         )
                     }
-                }
-            }
-            Row {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(contentPadding)
-                ) {
-                    items(items = toursForVehicle, itemContent = { tour ->
-                        ConstraintLayout(modifier = Modifier.clickable {
-                            navController.navigate("overview/${tour.tour_id}")
-                        }) {
-                            var startAddress = ""
-                            var displayTime = ""
-                            try {
-                                val startEvent = tour.events[0]
-                                startAddress = startEvent.city + ", " + startEvent.street + " " + startEvent.house_number
-                            } catch (e: Exception) {
-                                Log.d("error", "Error: Tour has no events")
-                            }
-                            try {
-                                displayTime = tour.from
-                                    .replace("T", " ")
-                                    .toDate()
-                                    .formatTo("HH:mm")
-                            } catch (e: Exception) {
-                                Log.d("error", "Error: Could not parse display time")
-                            }
+                    Box(
+                        modifier = Modifier
+                            .padding(all = 6.dp),
 
-                            Card(
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 0.dp)
-                                    .height(100.dp)
-                            ) {
-                                Box(
+                        ) {
+                        IconButton(
+                            onClick = { navController.navigate("tours") },
+                            Modifier
+                                .background(color = Color.LightGray)
+                                .size(width = 26.dp, height = 26.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "Localized description"
+                            )
+                        }
+                    }
+                }
+                Row {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(contentPadding)
+                    ) {
+                        items(items = toursForVehicle, itemContent = { tour ->
+                            ConstraintLayout(modifier = Modifier.clickable {
+                                navController.navigate("overview/${tour.tour_id}")
+                            }) {
+                                var startAddress = ""
+                                var displayTime = ""
+                                try {
+                                    val startEvent = tour.events[0]
+                                    startAddress = startEvent.city + ", " + startEvent.street + " " + startEvent.house_number
+                                } catch (e: Exception) {
+                                    Log.d("error", "Error: Tour has no events")
+                                }
+                                try {
+                                    displayTime = tour.from
+                                        .replace("T", " ")
+                                        .toDate()
+                                        .formatTo("HH:mm")
+                                } catch (e: Exception) {
+                                    Log.d("error", "Error: Could not parse display time")
+                                }
+
+                                Card(
+                                    shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(16.dp),
-                                    contentAlignment = Alignment.TopStart
+                                        .fillMaxWidth()
+                                        .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 0.dp)
+                                        .height(100.dp)
                                 ) {
-                                    Column {
-                                        Text(displayTime, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                                        Spacer(modifier = Modifier.height(12.dp))
-                                        Text(startAddress, fontSize = 24.sp)
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.TopStart
+                                    ) {
+                                        Column {
+                                            Text(displayTime, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                            Text(startAddress, fontSize = 24.sp)
+                                        }
                                     }
                                 }
                             }
-                        }
-                    })
+                        })
+                    }
                 }
             }
         }

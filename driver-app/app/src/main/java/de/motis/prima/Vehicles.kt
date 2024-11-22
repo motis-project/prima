@@ -58,7 +58,7 @@ class VehiclesViewModel : ViewModel() {
     val logoutEvent = _logoutEvent.asSharedFlow()
 
     var vehicles = mutableStateOf<List<Vehicle>>(emptyList())
-        private set
+        //private set
 
     var isLoading = mutableStateOf(true)
         private set

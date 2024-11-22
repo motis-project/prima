@@ -58,8 +58,9 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = Api.apiService.login(email, password)
-                Log.d("Login Response", response.toString())
+                Log.d("login", response.toString())
                 if (response.status == 302) {
+                    Log.d("login response", response.toString())
                     // successful login
                     _navigationEvent.emit(true)
                 } else {
@@ -77,6 +78,7 @@ class LoginViewModel : ViewModel() {
 fun Login(
     navController: NavController,
     vehiclesViewModel: VehiclesViewModel,
+    toursViewModel: ToursViewModel,
     viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -93,7 +95,9 @@ fun Login(
     LaunchedEffect(key1 = viewModel) {
         // Catching successful login event and navigation to the next screen
         launch {
-            // vehiclesViewModel.selectedVehicleId = 0
+            vehiclesViewModel.selectedVehicleId = 0
+            vehiclesViewModel.vehicles = mutableStateOf(emptyList())
+            toursViewModel.tours = mutableStateOf(emptyList())
             viewModel.navigationEvent.collect { shouldNavigate ->
                 Log.d("Navigation event", "Navigation triggered.")
                 if (shouldNavigate) {
