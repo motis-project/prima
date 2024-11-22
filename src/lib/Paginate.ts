@@ -17,7 +17,7 @@ export function isPageValid(p: number, length: number) {
 
 // return currentPageRows
 export function setCurrentPages(p: number, totalPages: TourDetails[][]) {
-	if (isPageValid(p,totalPages.length)) {
+	if (isPageValid(p, totalPages.length)) {
 		return totalPages.length > 0 ? totalPages[p] : [];
 	}
 	return [];

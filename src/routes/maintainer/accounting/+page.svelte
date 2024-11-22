@@ -206,8 +206,7 @@
 					result = month == 6 || month == 7 || month == 8;
 					break;
 				case 'Quartal 4':
-					result =
-						month == 9 || month == 10 || month == 11;
+					result = month == 9 || month == 10 || month == 11;
 					break;
 				default:
 					result = true;
@@ -226,7 +225,9 @@
 				row.from.getDate()
 			);
 			if (
-				(time && row.from.getFullYear() == targetYear && isMonthOk(selectedTime, row.from.getMonth())) ||
+				(time &&
+					row.from.getFullYear() == targetYear &&
+					isMonthOk(selectedTime, row.from.getMonth())) ||
 				(span && rowDate.compare(range.start) >= 0 && rowDate.compare(range.end) <= 0) ||
 				(comp && span == false && time == false)
 			) {

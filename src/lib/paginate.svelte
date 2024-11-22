@@ -19,7 +19,7 @@
 	const setPage = (newPage: number) => {
 		open.page = isPageValid(newPage, open.totalPages.length) ? newPage : open.page;
 		open.currentPageRows = setCurrentPages(open.page, open.totalPages);
-	}
+	};
 </script>
 
 <div class="flex justify-center">
@@ -36,7 +36,7 @@
 		<Button
 			variant="outline"
 			on:click={() => {
-				setPage(open.page-1);
+				setPage(open.page - 1);
 			}}
 		>
 			<ChevronLeft class="h-4 w-4" />
@@ -45,7 +45,7 @@
 		<Button
 			variant="outline"
 			on:click={() => {
-				setPage(open.page+1);
+				setPage(open.page + 1);
 			}}
 		>
 			Nächste
@@ -54,7 +54,7 @@
 		<Button
 			variant="outline"
 			on:click={() => {
-				setPage(open.totalPages.length-1);
+				setPage(open.totalPages.length - 1);
 			}}
 		>
 			Letzte Seite
@@ -64,7 +64,7 @@
 		<Button
 			variant="outline"
 			on:click={() => {
-				setPage(open.page-1);
+				setPage(open.page - 1);
 			}}
 		>
 			<ChevronLeft class="h-4 w-4" />
@@ -74,7 +74,7 @@
 			<Button
 				variant="outline"
 				on:click={() => {
-				setPage(i);
+					setPage(i);
 				}}
 			>
 				{i + 1}
@@ -83,7 +83,7 @@
 		<Button
 			variant="outline"
 			on:click={() => {
-				setPage(open.page+1);
+				setPage(open.page + 1);
 			}}
 		>
 			Nächste Seite
