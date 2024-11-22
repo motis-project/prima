@@ -5,6 +5,11 @@ import { db } from '$lib/database';
 import { lucia } from '$lib/auth';
 import type { Actions } from './$types';
 
+import { Html, Head, Preview, Section, Container, Text } from 'svelte-email';
+import { render } from 'svelte-email';
+import Welcome from '$lib/WelcomeEmail.svelte';
+import nodemailer from 'nodemailer';
+
 export const actions: Actions = {
 	default: async (event) => {
 		const formData = await event.request.formData();
@@ -67,6 +72,31 @@ export const actions: Actions = {
 				message: 'An unknown error occurred'
 			});
 		}
+
+		// Error: user passwort from email
+		try {
+			const transporter = nodemailer.createTransport({
+				host: 'smtp.ethereal.email',
+				port: 587,
+				secure: false,
+				auth: {
+					user: 'my_user',
+					pass: 'my_password'
+				}
+			});
+			const mailOptions = {
+				from: 'you@example.com',
+				to: email,
+					subject: 'Welcome email',
+					Welcome
+				};
+			console.log("hi?");
+			await transporter.sendMail(mailOptions);
+			console.log("geschafft?");
+		} catch (error) {
+			console.error('Error sending welcome email:', error);
+		}
+
 		return redirect(302, '/');
 	}
 };
