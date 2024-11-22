@@ -13,14 +13,13 @@
 	import { getLocalTimeZone, today, CalendarDate } from '@internationalized/date';
 	import { RangeCalendar } from '$lib/components/ui/range-calendar/index.js';
 	import Papa from 'papaparse';
-	//--------------------------------------------------------------------------------------
-	//import { saveAs } from 'file-saver';
-	import pkg from 'file-saver';
+	import { saveAs } from 'file-saver';
+	//import pkg from 'file-saver';
 	import { isPageValid, paginate, setCurrentPages } from '$lib/Paginate';
 
 	const { data } = $props();
 
-	const { saveAs } = pkg;
+	//const { saveAs } = pkg;
 
 	const getCustomerCount = (tour: TourDetails) => {
 		let customers: Set<string> = new Set<string>();
@@ -30,7 +29,6 @@
 		return customers.size;
 	};
 
-	// fare = ÖV-Preis  ---  fare_route = Taxameterpreis
 	const getTotalPrice = (fare: number | null, fare_route: number | null) => {
 		if (fare == null || fare_route == null) {
 			return 0;
@@ -71,10 +69,6 @@
 
 	// --- Sort: ---
 	let descending = [true, true, true, true];
-
-	// -1 => a before b
-	//  1 => a after b
-	//  0 => equal
 
 	const compareDate = (a: TourDetails, b: TourDetails) => {
 		if (a.from.getFullYear() < b.from.getFullYear()) return -1;
@@ -135,7 +129,6 @@
 		if (!descending[idx]) {
 			currentRows.reverse();
 		} else {
-			// descending - reset all others
 			for (let i = 0; i < descending.length; i++) {
 				if (i != idx) descending[i] = true;
 			}
