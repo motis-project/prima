@@ -3,9 +3,7 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { type TourDetails } from '$lib/TourDetails.js';
-	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
-	import ChevronRight from 'lucide-svelte/icons/chevron-right';
-	import { ChevronsRight, ChevronsLeft, ChevronsUpDown } from 'lucide-svelte';
+	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
 	import Label from '$lib/components/ui/label/label.svelte';
@@ -13,13 +11,13 @@
 	import { getLocalTimeZone, today, CalendarDate } from '@internationalized/date';
 	import { RangeCalendar } from '$lib/components/ui/range-calendar/index.js';
 	import Papa from 'papaparse';
-	import { saveAs } from 'file-saver';
-	//import pkg from 'file-saver';
-	import { isPageValid, paginate, setCurrentPages } from '$lib/Paginate';
+	import pkg from 'file-saver';
+	import { paginate, setCurrentPages } from '$lib/Paginate';
+	import Paginate from '$lib/paginate.svelte';
 
 	const { data } = $props();
 
-	//const { saveAs } = pkg;
+	const { saveAs } = pkg;
 
 	const getCustomerCount = (tour: TourDetails) => {
 		let customers: Set<string> = new Set<string>();
@@ -54,16 +52,18 @@
 	};
 
 	let currentRows: TourDetails[] = [];
-	let page = $state(0);
 	let perPage = 5;
 	let firstPage = data.tours.slice(0, perPage);
 	let firstarray = [firstPage];
-	let totalPages = $state(firstarray);
-	let currentPageRows = $state(firstPage);
+	let paginationInfo = $state<{
+		page: number;
+		currentPageRows: TourDetails[];
+		totalPages: TourDetails[][];
+	}>({ page: 0, currentPageRows: firstPage, totalPages: firstarray });
 
 	onMount(() => {
 		currentRows = data.tours;
-		totalPages = paginate(perPage, currentRows);
+		paginationInfo.totalPages = paginate(perPage, currentRows);
 		setCompanys(currentRows);
 	});
 
@@ -134,9 +134,12 @@
 			}
 		}
 		descending[idx] = !descending[idx];
-		totalPages = paginate(perPage, currentRows);
-		page = 0;
-		currentPageRows = setCurrentPages(page, totalPages);
+		paginationInfo.totalPages = paginate(perPage, currentRows);
+		paginationInfo.page = 0;
+		paginationInfo.currentPageRows = setCurrentPages(
+			paginationInfo.page,
+			paginationInfo.totalPages
+		);
 	};
 
 	// --- Filter: ---
@@ -162,9 +165,12 @@
 		end = start.add({ days: 7 });
 		range = { start, end };
 		currentRows = data.tours;
-		totalPages = paginate(perPage, currentRows);
-		page = 0;
-		currentPageRows = setCurrentPages(page, totalPages);
+		paginationInfo.totalPages = paginate(perPage, currentRows);
+		paginationInfo.page = 0;
+		paginationInfo.currentPageRows = setCurrentPages(
+			paginationInfo.page,
+			paginationInfo.totalPages
+		);
 	};
 
 	let selectedTimespan = $state('Zeitraum');
@@ -243,9 +249,12 @@
 		end = start.add({ days: 7 });
 		range = { start, end };
 		currentRows = newrows;
-		totalPages = paginate(perPage, currentRows);
-		page = 0;
-		currentPageRows = setCurrentPages(page, totalPages);
+		paginationInfo.totalPages = paginate(perPage, currentRows);
+		paginationInfo.page = 0;
+		paginationInfo.currentPageRows = setCurrentPages(
+			paginationInfo.page,
+			paginationInfo.totalPages
+		);
 	};
 
 	// --- Summierung: ---
@@ -404,7 +413,7 @@
 						</Table.Row>
 					</Table.Header>
 					<Table.Body>
-						{#each currentPageRows as tour}
+						{#each paginationInfo.currentPageRows as tour}
 							<Table.Row>
 								<Table.Cell>{tour.company_name}</Table.Cell>
 								<Table.Cell>{tour.from.toLocaleString('de-DE').slice(0, -10)}</Table.Cell>
@@ -418,7 +427,7 @@
 								>
 							</Table.Row>
 						{/each}
-						{#if totalPages.length > 1}
+						{#if paginationInfo.totalPages.length > 1}
 							<Table.Row>
 								<Table.Cell>...</Table.Cell>
 								<Table.Cell class="text-center">...</Table.Cell>
@@ -482,7 +491,7 @@
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
-			{#each currentPageRows as tour}
+			{#each paginationInfo.currentPageRows as tour}
 				<Table.Row>
 					<Table.Cell>{tour.company_name}</Table.Cell>
 					<Table.Cell>{tour.from.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
@@ -501,83 +510,5 @@
 		</Table.Body>
 	</Table.Root>
 
-	<div class="flex justify-center">
-		{#if totalPages.length > 10}
-			<Button
-				variant="outline"
-				on:click={() => {
-					page = 0;
-					currentPageRows = setCurrentPages(page, totalPages);
-				}}
-			>
-				<ChevronsLeft class="mx-1 h-4 w-4" />
-				Erste Seite
-			</Button>
-			<Button
-				variant="outline"
-				on:click={() => {
-					page = isPageValid(page - 1, totalPages.length) ? page - 1 : page;
-					currentPageRows = setCurrentPages(page, totalPages);
-				}}
-			>
-				<ChevronLeft class="h-4 w-4" />
-				Vorherige
-			</Button>
-			<Button
-				variant="outline"
-				on:click={() => {
-					page = isPageValid(page + 1, totalPages.length) ? page + 1 : page;
-					currentPageRows = setCurrentPages(page, totalPages);
-				}}
-			>
-				Nächste
-				<ChevronRight class="h-4 w-4" />
-			</Button>
-			<Button
-				variant="outline"
-				on:click={() => {
-					page = totalPages.length - 1;
-					currentPageRows = setCurrentPages(page, totalPages);
-				}}
-			>
-				Letzte Seite
-				<ChevronsRight class="mx-1 h-4 w-4" />
-			</Button>
-		{:else}
-			<Button
-				variant="outline"
-				on:click={() => {
-					page = isPageValid(page - 1, totalPages.length) ? page - 1 : page;
-					currentPageRows = setCurrentPages(page, totalPages);
-				}}
-			>
-				<ChevronLeft class="h-4 w-4" />
-				Vorherige Seite
-			</Button>
-			{#each totalPages as _page, i}
-				<Button
-					variant="outline"
-					on:click={() => {
-						page = i;
-						currentPageRows = setCurrentPages(page, totalPages);
-					}}
-				>
-					{i + 1}
-				</Button>
-			{/each}
-			<Button
-				variant="outline"
-				on:click={() => {
-					page = isPageValid(page + 1, totalPages.length) ? page + 1 : page;
-					currentPageRows = setCurrentPages(page, totalPages);
-				}}
-			>
-				Nächste Seite
-				<ChevronRight class="h-4 w-4" />
-			</Button>
-		{/if}
-		<Label class="mx-2 mt-2.5">
-			Auf Seite {page + 1} von {totalPages.length}
-		</Label>
-	</div>
+	<Paginate bind:open={paginationInfo} />
 </Card.Content>
