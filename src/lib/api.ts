@@ -1,10 +1,11 @@
 import type { Company, Vehicle } from './types';
 import { Coordinates, Location } from './location';
 import { MAX_MATCHING_DISTANCE, MAX_TRAVEL_SECONDS, MOTIS_BASE_URL } from './constants';
-import { coordinatesToPlace, coordinatesToStr, customQuerySerializer } from './motisUtils';
+import { coordinatesToPlace, coordinatesToStr } from './motisUtils';
 import { type Duration, type PlanResponse } from './motis/types.gen';
 import { oneToMany as oneToManyMotis, plan as planMotis } from './motis/services.gen';
 import { secondsToMs } from './time_utils';
+import type { QuerySerializerOptions } from '@hey-api/client-fetch';
 
 export const getCompany = async (id: number): Promise<Company> => {
 	const response = await fetch(`/api/company?id=${id}`);
@@ -122,7 +123,7 @@ export const oneToMany = async (
 ): Promise<number[]> => {
 	return await oneToManyMotis({
 		baseUrl: MOTIS_BASE_URL,
-		querySerializer: customQuerySerializer,
+		querySerializer: { array: { explode: false } } as QuerySerializerOptions,
 		query: {
 			one: coordinatesToStr(one),
 			many: many.map(coordinatesToStr),
