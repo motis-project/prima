@@ -1,7 +1,7 @@
 import type { Company, Vehicle } from './types';
 import { Coordinates, Location } from './location';
 import { MAX_MATCHING_DISTANCE, MAX_TRAVEL_SECONDS, MOTIS_BASE_URL } from './constants';
-import { coordinatesToPlace, coordinatesToStr } from './motisUtils';
+import { coordinatesToPlace, coordinatesToStr, customQuerySerializer } from './motisUtils';
 import { type Duration, type PlanResponse } from './motis/types.gen';
 import { oneToMany as oneToManyMotis, plan as planMotis } from './motis/services.gen';
 import { secondsToMs } from './time_utils';
@@ -122,6 +122,7 @@ export const oneToMany = async (
 ): Promise<number[]> => {
 	return await oneToManyMotis({
 		baseUrl: MOTIS_BASE_URL,
+		querySerializer: customQuerySerializer,
 		query: {
 			one: coordinatesToStr(one),
 			many: many.map(coordinatesToStr),
