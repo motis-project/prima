@@ -11,10 +11,12 @@
 		{
 			name: 'Abgeschlossene Fahrten',
 			href: '/maintainer/completed_tours'
+		},
+		{
+			name: 'Abrechnung',
+			href: '/maintainer/accounting'
 		}
 	];
-
-	console.log('Hello from maintainer layout');
 </script>
 
 <div class="flex min-h-screen">

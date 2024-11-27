@@ -3,6 +3,9 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { getTourInfoShort, type TourDetails } from '$lib/TourDetails.js';
 	import TourDialog from '$lib/TourDialog.svelte';
+	import { onMount } from 'svelte';
+	import { paginate } from '$lib/Paginate';
+	import Paginate from './paginate.svelte';
 
 	type Props = {
 		isMaintainer: boolean;
@@ -20,6 +23,34 @@
 			customers.add(e.customer_id!);
 		});
 		return customers.size;
+	};
+
+	// --- Pageination ---
+	let currentRows: TourDetails[] = [];
+	let perPage = 5;
+	let firstPage = tours.slice(0, perPage);
+	let firstarray = [firstPage];
+	let paginationInfo = $state<{
+		page: number;
+		currentPageRows: TourDetails[];
+		totalPages: TourDetails[][];
+	}>({ page: 0, currentPageRows: firstPage, totalPages: firstarray });
+
+	onMount(() => {
+		currentRows = tours;
+		paginationInfo.totalPages = paginate(perPage, currentRows);
+	});
+
+	const getTotalPrice = (fare: number | null, fare_route: number | null) => {
+		if (fare == null || fare_route == null) {
+			return 0;
+		}
+		let cost = 0;
+		let diff = Math.max(0, fare_route - fare);
+		if (diff > 0) {
+			cost = (fare_route - fare) * 0.97;
+		}
+		return (Math.round(fare + cost) / 100).toFixed(2);
 	};
 </script>
 
@@ -47,7 +78,7 @@
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
-				{#each tours as tour}
+				{#each paginationInfo.currentPageRows as tour}
 					<Table.Row
 						on:click={() => {
 							selectedTour = { tours: [tour] };
@@ -63,15 +94,19 @@
 						<Table.Cell>{getTourInfoShort(tour)[1]}</Table.Cell>
 						<Table.Cell>{tour.from.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
 						<Table.Cell>{tour.to.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
-						<Table.Cell>{getCustomerCount(tour)}</Table.Cell>
+						<Table.Cell class="text-center">{getCustomerCount(tour)}</Table.Cell>
 						<Table.Cell>TODO</Table.Cell>
-						<Table.Cell>{tour.events.length}</Table.Cell>
-						<Table.Cell>TODO</Table.Cell>
+						<Table.Cell class="text-center">{tour.events.length}</Table.Cell>
+						<Table.Cell class="text-center"
+							>{getTotalPrice(tour.fare, tour.fare_route)} €</Table.Cell
+						>
 					</Table.Row>
 				{/each}
 			</Table.Body>
 		</Table.Root>
 	</Card.Content>
 </div>
+
+<Paginate bind:open={paginationInfo} />
 
 <TourDialog bind:open={selectedTour} />
