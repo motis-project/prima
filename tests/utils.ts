@@ -77,6 +77,7 @@ export async function setCompanyData(page: Page, user: UserCredentials, company:
 	await expect(page.getByRole('heading', { name: 'Stammdaten Ihres Unternehmens' })).toBeVisible();
 
 	await page.getByLabel('Name').fill(company.name);
+	await page.screenshot({ path: 'screenshots/beforeEnteringCompanyData.png', fullPage: true });
 	await page.getByLabel('Hausnummer').fill(company.houseNumber);
 	await page.getByLabel('Straße').fill(company.street);
 	await page.getByLabel('Stadt').fill(company.city);
