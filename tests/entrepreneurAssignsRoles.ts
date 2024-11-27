@@ -24,6 +24,7 @@ test('Activate drivers', async ({ page }) => {
 
 test('Deactivate driver', async ({ page }) => {
 	await login(page, ENTREPENEUR);
+	await page.screenshot({ path: 'screenshots/afterLoggingInEntrepreneur.png', fullPage: true });
 	await page.getByRole('link', { name: 'Fahrer' }).click();
 	await page
 		.getByRole('row', { name: 'driver2@test.de Zugang zum Unternehmen löschen' })
