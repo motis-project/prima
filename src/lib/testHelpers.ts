@@ -45,14 +45,12 @@ export const setTour = async (vehicle: number, departure: Date, arrival: Date) =
 };
 
 export const clearDatabase = async () => {
-	await Promise.all([
-		db.deleteFrom('availability').execute(),
-		db.deleteFrom('event').execute(),
-		db.deleteFrom('request').execute(),
-		db.deleteFrom('tour').execute(),
-		db.deleteFrom('vehicle').execute(),
-		db.deleteFrom('user_session').execute(),
-		db.deleteFrom('auth_user').execute(),
-		db.deleteFrom('company').execute()
-	]);
+	await db.deleteFrom('user_session').execute();
+	await db.deleteFrom('availability').execute();
+	await db.deleteFrom('event').execute();
+	await db.deleteFrom('request').execute();
+	await db.deleteFrom('tour').execute();
+	await db.deleteFrom('auth_user').execute();
+	await db.deleteFrom('vehicle').execute();
+	await db.deleteFrom('company').execute();
 };

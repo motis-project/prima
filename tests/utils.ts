@@ -7,7 +7,10 @@ export type UserCredentials = {
 
 export type Company = {
 	name: string;
-	address: string;
+	street: string;
+	houseNumber: string;
+	postalCode: string;
+	city: string;
 	zone: string;
 	community: string;
 };
@@ -29,14 +32,20 @@ export const ENTREPENEUR2: UserCredentials = {
 
 export const COMPANY1: Company = {
 	name: 'Taxi Weißwasser',
-	address: 'Werner-Seelenbinder-Straße 70A, 02943 Weißwasser/Oberlausitz',
+	street: 'Werner-Seelenbinder-Straße',
+	houseNumber: '70A',
+	postalCode: '02943',
+	city: 'Weißwasser/Oberlausitz',
 	zone: 'Weißwasser',
 	community: 'Weißwasser/O.L.'
 };
 
 export const COMPANY2: Company = {
 	name: 'Taxi Gablenz',
-	address: 'Schulstraße 21, 02953 Gablenz',
+	street: 'Schulstraße',
+	houseNumber: '21',
+	postalCode: '02953',
+	city: 'Gablenz',
 	zone: 'Weißwasser',
 	community: 'Gablenz'
 };
@@ -68,7 +77,10 @@ export async function setCompanyData(page: Page, user: UserCredentials, company:
 	await expect(page.getByRole('heading', { name: 'Stammdaten Ihres Unternehmens' })).toBeVisible();
 
 	await page.getByLabel('Name').fill(company.name);
-	await page.getByLabel('Unternehmenssitz').fill(company.address);
+	await page.getByLabel('Hausnummer').fill(company.houseNumber);
+	await page.getByLabel('Straße').fill(company.street);
+	await page.getByLabel('Stadt').fill(company.city);
+	await page.getByLabel('Postleitzahl').fill(company.postalCode);
 	await page.waitForTimeout(250);
 	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: company.zone });
 	await page.getByLabel('Gemeinde').selectOption({ label: company.community });

@@ -31,11 +31,11 @@ setup('setup db', async () => {
 	await migrator.migrateToLatest();
 
 	await db.deleteFrom('user_session').executeTakeFirstOrThrow();
-	await db.deleteFrom('auth_user').executeTakeFirstOrThrow();
 	await db.deleteFrom('availability').executeTakeFirstOrThrow();
 	await db.deleteFrom('event').executeTakeFirstOrThrow();
 	await db.deleteFrom('request').executeTakeFirstOrThrow();
 	await db.deleteFrom('tour').executeTakeFirstOrThrow();
+	await db.deleteFrom('auth_user').executeTakeFirstOrThrow();
 	await db.deleteFrom('vehicle').executeTakeFirstOrThrow();
 	await db.deleteFrom('company').executeTakeFirstOrThrow();
 	await db.deleteFrom('zone').executeTakeFirstOrThrow();
