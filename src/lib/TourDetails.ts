@@ -33,7 +33,10 @@ export const getTourEvents = () => {
 			'auth_user.first_name as customer_first_name',
 			'auth_user.last_name as customer_last_ame',
 			'auth_user.phone as customer_phone',
-			'request.wheelchairs as wheelchairs'
+			'request.passengers as passengers',
+			'request.wheelchairs as wheelchairs',
+			'request.luggage as luggage',
+			'request.bikes as bikes'
 		])
 		.execute();
 };
@@ -73,7 +76,10 @@ export const mapTourEvents = (events: DbTourEvents) => {
 					phone: e.customer_phone,
 					is_pickup: e.is_pickup,
 					customer_id: e.customer,
-					wheelchairs: e.wheelchairs
+					passengers: e.passengers,
+					wheelchairs: e.wheelchairs,
+					luggage: e.luggage,
+					bikes: e.bikes
 				};
 			})
 		};

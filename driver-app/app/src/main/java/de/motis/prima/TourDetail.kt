@@ -8,18 +8,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -42,40 +36,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import de.motis.prima.app.DriversApp
-import de.motis.prima.services.CookieStore
-import de.motis.prima.services.Event
-import de.motis.prima.services.Tour
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import java.text.Normalizer.Form
-
-class TourDetailViewModel : ViewModel() {
-    private val cookieStore: CookieStore = CookieStore(DriversApp.instance)
-
-    private val _logoutEvent = MutableSharedFlow<Unit>()
-    val logoutEvent = _logoutEvent.asSharedFlow()
-
-    fun logout() {
-        viewModelScope.launch {
-            try {
-                cookieStore.clearCookies()
-                _logoutEvent.emit(Unit)
-            } catch (e: Exception) {
-                Log.d("Logout", "Error while logout.")
-            }
-        }
-    }
-}
 
 @Composable
 fun PortraitLayout(
@@ -134,7 +100,7 @@ fun PortraitLayout(
                     Button(
                         modifier = Modifier.width(300.dp),
                         onClick = {
-                            navController.navigate("legs/${tour.tour_id}/${eventIndex + 1}") {}
+                            navController.navigate("legs/${tour.tour_id}/${eventIndex + 1}")
                         }
                     ) {
                         Text(
@@ -174,9 +140,6 @@ fun LandscapeLayout(
     eventIndex: Int,
     toursViewModel: ToursViewModel
 ) {
-    // Define UI elements for landscape layout
-    Log.d("rotation", "landscape")
-
     Row(
         modifier = Modifier
             .fillMaxSize()
@@ -324,145 +287,5 @@ fun TourDetail(
             modifier = Modifier
             .padding(contentPadding)
         )
-    }
-}
-
-@Composable
-fun EventDetail(event: Event) {
-    var scheduledTime = "-"
-    var city = "-"
-    var street = "-"
-    var houseNumber = "-"
-    var isPickup = false
-    var firstName = "-"
-    var lastName = "-"
-    var phone = "-"
-
-    try {
-        scheduledTime = event.scheduled_time
-            .replace("T", " ")
-            .toDate()
-            .formatTo("HH:mm")
-        if (event.city != null)
-            city = event.city
-        if (event.street != null)
-            street = event.street
-        if (event.house_number != null)
-            houseNumber = event.house_number
-        isPickup = event.is_pickup
-        if (event.first_name != null)
-            firstName = event.first_name
-        if (event.last_name != null)
-            lastName = event.last_name
-        if (event.phone != null)
-            phone = event.phone
-    } catch (e: Exception) {
-        Log.d("error", "Failed to read event details")
-        return
-    }
-
-    Column (modifier = Modifier.padding(16.dp) ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = scheduledTime,
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
-                textAlign = TextAlign.Center
-            )
-        }
-
-        if (city == "" || street == "") {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "Fehler: Keine Addresse",
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-        } else {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = city,
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "$street $houseNumber",
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-
-        if (isPickup) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Localized description",
-                    modifier = Modifier.background(Color.Green)
-                )
-                Spacer(modifier = Modifier.width(20.dp))
-                Text(
-                    text = "$lastName, $firstName",
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                IconButton(
-                    onClick = { Log.d("call", "Call $phone") },
-                    Modifier
-                        .background(color = Color.White)
-                        .size(width = 34.dp, height = 34.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Call,
-                        contentDescription = "Localized description",
-                        Modifier.size(width = 32.dp, height = 32.dp)
-
-                    )
-                }
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "Rollstuhl? ${event.wheelchairs}",
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "Gepäck?",
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
     }
 }

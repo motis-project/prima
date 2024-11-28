@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -272,8 +273,7 @@ fun Tours(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Localized description",
-                                //Modifier.size(width = 10.dp, height = 10.dp)
+                                contentDescription = "Localized description"
                             )
                         }
                     }
@@ -312,35 +312,32 @@ fun Tours(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(contentPadding)
                     ) {
                         items(items = toursForVehicle, itemContent = { tour ->
                             ConstraintLayout(modifier = Modifier.clickable {
                                 navController.navigate("overview/${tour.tour_id}")
                             }) {
-                                var startAddress = ""
-                                var displayTime = ""
+                                var city = "-"
+                                var address = "-"
+                                var displayTime = "-"
                                 try {
                                     val startEvent = tour.events[0]
-                                    startAddress = startEvent.city + ", " + startEvent.street + " " + startEvent.house_number
-                                } catch (e: Exception) {
-                                    Log.d("error", "Error: Tour has no events")
-                                }
-                                try {
-                                    displayTime = tour.from
+                                    city = startEvent.city
+                                    address = startEvent.street + " " + startEvent.house_number
+                                    displayTime = startEvent.scheduled_time
                                         .replace("T", " ")
                                         .toDate()
                                         .formatTo("HH:mm")
                                 } catch (e: Exception) {
-                                    Log.d("error", "Error: Could not parse display time")
+                                    Log.d("error", "Error: Tour has no events")
                                 }
 
                                 Card(
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 0.dp)
-                                        .height(100.dp)
+                                        .padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
+                                        .wrapContentSize()
                                 ) {
                                     Box(
                                         modifier = Modifier
@@ -351,7 +348,9 @@ fun Tours(
                                         Column {
                                             Text(displayTime, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                                             Spacer(modifier = Modifier.height(12.dp))
-                                            Text(startAddress, fontSize = 24.sp)
+                                            Text(city, fontSize = 24.sp)
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                            Text(address, fontSize = 24.sp)
                                         }
                                     }
                                 }

@@ -66,7 +66,10 @@ data class Event(
     val phone: String,
     val is_pickup: Boolean,
     val customer_id: String,
-    val wheelchairs: Int
+    val passengers: Int,
+    val wheelchairs: Int,
+    val luggage: Int,
+    val bikes: Int
 )
 
 data class Tour(

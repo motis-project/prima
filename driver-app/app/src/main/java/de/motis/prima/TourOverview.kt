@@ -1,9 +1,7 @@
 package de.motis.prima
 
-import android.graphics.Paint.Align
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,17 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -39,22 +32,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import de.motis.prima.app.DriversApp
-import de.motis.prima.services.CookieStore
-import de.motis.prima.services.Event
 import de.motis.prima.services.Tour
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -171,17 +156,21 @@ fun TourOverview(
 fun TourDetails(tourId: Int, viewModel: ToursViewModel) {
     val tour = viewModel.tours.value.filter { t: Tour ->  tourId == t.tour_id}[0]
     val events = tour.events
-    val from = tour.from
-        .replace("T", " ")
-        .toDate()
-        .formatTo("HH:mm")
-    val to = tour.to
-        .replace("T", " ")
-        .toDate()
-        .formatTo("HH:mm")
+    var lastEvent = events[0]
+    var timeBegin = "-"
+    var timeEnd = "-"
+
 
     try {
-       // TODO
+        timeBegin = events[0].scheduled_time
+            .replace("T", " ")
+            .toDate()
+            .formatTo("HH:mm")
+        lastEvent = events[events.size - 1]
+        timeEnd = lastEvent.scheduled_time
+            .replace("T", " ")
+            .toDate()
+            .formatTo("HH:mm")
     } catch (e: Exception) {
         Log.d("error", "Failed to get tour details")
         return
@@ -193,7 +182,7 @@ fun TourDetails(tourId: Int, viewModel: ToursViewModel) {
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text =  "Abfahrt: " + from,
+                text = "Beginn: $timeBegin",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
@@ -204,7 +193,7 @@ fun TourDetails(tourId: Int, viewModel: ToursViewModel) {
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Ende: " + to,
+                text = "Ende: $timeEnd",
                 fontSize = 24.sp,
                 textAlign = TextAlign.Center
             )
@@ -217,15 +206,7 @@ fun TourDetails(tourId: Int, viewModel: ToursViewModel) {
             LazyColumn(
             ) {
                 items(items = events, itemContent = { event ->
-                    Card(
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 0.dp)
-                            .wrapContentSize()
-                    ) {
-                        EventDetail(event = event)
-                    }
+                    EventDetail(event = event)
                 })
             }
         }
