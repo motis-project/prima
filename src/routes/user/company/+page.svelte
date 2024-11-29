@@ -10,7 +10,9 @@
 	import ExclamationTriangle from 'svelte-radix/ExclamationTriangle.svelte';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 
-	let { name, address, zone, community_area } = $state(data.company!);
+	let { name, zone, street, house_number, postal_code, city, community_area } = $state(
+		data.company!
+	);
 </script>
 
 <div class="w-full h-full">
@@ -37,14 +39,26 @@
 		{/if}
 
 		<form method="POST">
-			<div class="grid w-full grid-rows-2 grid-cols-2 gap-6">
+			<div class="grid w-full grid-rows-4 grid-cols-2 gap-6">
 				<div>
 					<Label for="name">Name</Label>
 					<Input name="name" id="name" value={name} />
 				</div>
+				<div class="col-start-1">
+					<Label for="street">Straße</Label>
+					<Input name="street" id="street" value={street} />
+				</div>
 				<div>
-					<Label for="address">Unternehmenssitz</Label>
-					<Input name="address" id="address" value={address} />
+					<Label for="house_number">Hausnummer</Label>
+					<Input name="house_number" id="house_number" value={house_number} />
+				</div>
+				<div>
+					<Label for="city">Stadt</Label>
+					<Input name="city" id="city" value={city} />
+				</div>
+				<div>
+					<Label for="postal_code">Postleitzahl</Label>
+					<Input name="postal_code" id="postal_code" value={postal_code} />
 				</div>
 				<div>
 					<Label for="zone">Pflichtfahrgebiet</Label>

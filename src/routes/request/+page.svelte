@@ -31,12 +31,6 @@
 		lat: 51.505730979747334,
 		lng: 14.638267982988827
 	});
-	let dummyAddress = {
-		street: '',
-		house_number: '',
-		postal_code: '',
-		city: ''
-	};
 	let query = $derived<{
 		from: Location;
 		to: Location;
@@ -48,8 +42,8 @@
 		numBikes: number;
 		luggage: number;
 	}>({
-		from: new Location(start, dummyAddress),
-		to: new Location(destination, dummyAddress),
+		from: new Location(start, ''),
+		to: new Location(destination, ''),
 		startFixed: true,
 		timeStamp: new Date(),
 		numPassengers: 3,

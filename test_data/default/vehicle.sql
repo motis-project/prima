@@ -1,5 +1,5 @@
 INSERT INTO "vehicle" ("license_plate", "company", "seats", "wheelchair_capacity", "bike_capacity", "storage_space") VALUES
-('GR-TU-11',	1,	3,	0,	0, 0),
+('GR-TU-11',	1,	3,	0,	0, 1),
 ('GR-TU-12',	1,	3,	0,	0, 0),
 ('GR-TU-21',	2,	3,	0,	0, 0),
 ('GR-TU-22',	2,	3,	0,	0, 0),
@@ -14,4 +14,4 @@ INSERT INTO "vehicle" ("license_plate", "company", "seats", "wheelchair_capacity
 ('GR-TU-71',	7,	3,	0,	0, 0),
 ('GR-TU-72',	7,	3,	0,	0, 0),
 ('GR-TU-81',	8,	3,	0,	0, 0),
-('GR-TU-82',	8,	3,	0,	0, 0);
+('GR-TU-82',	8,	3,	1,	1, 0);

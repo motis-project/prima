@@ -47,7 +47,6 @@ export async function load(event) {
 	const tours = mapTourEvents(
 		await db
 			.selectFrom('event')
-			.innerJoin('address', 'address.id', 'event.address')
 			.innerJoin('auth_user', 'auth_user.id', 'event.customer')
 			.innerJoin('tour', 'tour.id', 'event.tour')
 			.where((eb) =>
@@ -60,10 +59,13 @@ export async function load(event) {
 			.innerJoin('company', 'company.id', 'vehicle.company')
 			.where('company', '=', companyId)
 			.orderBy('event.scheduled_time')
-			.selectAll(['event', 'address', 'tour', 'vehicle'])
+			.selectAll(['event', 'tour', 'vehicle'])
 			.select([
 				'company.name as company_name',
-				'company.address as company_address',
+				'company.street as company_street',
+				'company.house_number as company_house_number',
+				'company.postal_code as company_postal_code',
+				'company.city as company_city',
 				'auth_user.first_name as customer_first_name',
 				'auth_user.last_name as customer_last_ame',
 				'auth_user.phone as customer_phone'
@@ -78,7 +80,10 @@ export async function load(event) {
 		.executeTakeFirstOrThrow();
 	const companyDataComplete =
 		company.name !== null &&
-		company.address !== null &&
+		company.street !== null &&
+		company.house_number !== null &&
+		company.postal_code !== null &&
+		company.city !== null &&
 		company.zone !== null &&
 		company.community_area !== null &&
 		company.latitude !== null &&
