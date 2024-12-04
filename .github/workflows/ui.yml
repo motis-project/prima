@@ -34,7 +34,7 @@ jobs:
 
       - name: Integration Tests
         run: |
-          docker compose down
+          docker ps -a
           docker rmi $(docker images)
           docker volume rm $(docker volume ls)
           npm run build
