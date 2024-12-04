@@ -6,6 +6,6 @@ export type InsertionInfo = {
 	prevEventIdxInRoutingResults: number;
 	nextEventIdxInRoutingResults: number;
 	vehicle: Vehicle;
-	insertionIdx: number;
+	idxInEvents: number;
 	currentRange: Range;
 };

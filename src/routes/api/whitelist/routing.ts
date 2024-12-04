@@ -7,10 +7,8 @@ import type { Range } from './capacitySimulation';
 import { iterateAllInsertions } from './utils';
 
 export type InsertionRoutingResult = {
-	fromCompany: number[];
-	toCompany: number[];
-	fromPrevEvent: number[];
-	toNextEvent: number[];
+	company: number[];
+	event: number[];
 };
 
 export type RoutingResults = {
@@ -18,126 +16,65 @@ export type RoutingResults = {
 	userChosen: InsertionRoutingResult;
 };
 
-type RoutingCoordinates = {
-	busStopForwardMany: Coordinates[][];
-	busStopBackwardMany: Coordinates[][];
-	userChosenForwardMany: Coordinates[];
-	userChosenBackwardMany: Coordinates[];
-};
-
 export function gatherRoutingCoordinates(
 	companies: Company[],
 	insertionsByVehicle: Map<VehicleId, Range[]>
-): RoutingCoordinates {
-	if (companies.length == 0 || companies[0].busStopFilter.length == 0) {
-		return {
-			busStopBackwardMany: [],
-			busStopForwardMany: [],
-			userChosenBackwardMany: [],
-			userChosenForwardMany: []
-		};
+) {
+	if (companies.length == 0) {
+		return { forward: [], backward: [] };
 	}
-	const busStopCount = companies[0].busStopFilter.length;
-	const userChosenForwardMany = new Array<Coordinates>();
-	const userChosenBackwardMany = new Array<Coordinates>();
-	const busStopForwardMany = new Array<Coordinates[]>(busStopCount);
-	const busStopBackwardMany = new Array<Coordinates[]>(busStopCount);
-	for (let busStopIdx = 0; busStopIdx != busStopCount; ++busStopIdx) {
-		busStopForwardMany[busStopIdx] = new Array<Coordinates>();
-		busStopBackwardMany[busStopIdx] = new Array<Coordinates>();
-	}
+	const backward = new Array<Coordinates>();
+	const forward = new Array<Coordinates>();
 	companies.forEach((company) => {
-		for (let busStopIdx = 0; busStopIdx != busStopCount; ++busStopIdx) {
-			if (!company.busStopFilter[busStopIdx]) {
-				continue;
-			}
-			busStopForwardMany[busStopIdx].push(company.coordinates);
-			busStopBackwardMany[busStopIdx].push(company.coordinates);
-		}
-		userChosenForwardMany.push(company.coordinates);
-		userChosenBackwardMany.push(company.coordinates);
+		forward.push(company.coordinates);
+		backward.push(company.coordinates);
 	});
-	iterateAllInsertions(
-		companies,
-		insertionsByVehicle,
-		(insertionInfo, _insertionCounter, busStopFilter) => {
-			const backwardCoordinates = (
-				insertionInfo.insertionIdx != 0
-					? insertionInfo.vehicle.events[insertionInfo.insertionIdx - 1]
-					: insertionInfo.vehicle.lastEventBefore
-			)?.coordinates;
-			const forwardCoordinates = (
-				insertionInfo.insertionIdx != insertionInfo.vehicle.events.length
-					? insertionInfo.vehicle.events[insertionInfo.insertionIdx]
-					: insertionInfo.vehicle.firstEventAfter
-			)?.coordinates;
-			if (backwardCoordinates != undefined) {
-				userChosenBackwardMany.push(backwardCoordinates);
-			}
-			if (forwardCoordinates != undefined) {
-				userChosenForwardMany.push(forwardCoordinates);
-			}
-			for (let busStopIdx = 0; busStopIdx != busStopFilter.length; ++busStopIdx) {
-				if (!busStopFilter[busStopIdx]) {
-					continue;
-				}
-				if (backwardCoordinates != undefined) {
-					busStopBackwardMany[busStopIdx].push(backwardCoordinates);
-				}
-				if (forwardCoordinates != undefined) {
-					busStopForwardMany[busStopIdx].push(forwardCoordinates);
-				}
-			}
+	iterateAllInsertions(companies, insertionsByVehicle, (insertionInfo, _insertionCounter) => {
+		const vehicle = insertionInfo.vehicle;
+		const idxInEvents = insertionInfo.idxInEvents;
+		if (idxInEvents != 0) {
+			backward.push(vehicle.events[idxInEvents - 1].coordinates);
+		} else if (vehicle.lastEventBefore != undefined) {
+			backward.push(vehicle.lastEventBefore.coordinates);
 		}
-	);
-	return {
-		busStopForwardMany,
-		busStopBackwardMany,
-		userChosenForwardMany,
-		userChosenBackwardMany
-	};
+		if (idxInEvents != vehicle.events.length) {
+			forward.push(vehicle.events[idxInEvents].coordinates);
+		} else if (vehicle.firstEventAfter != undefined) {
+			forward.push(vehicle.firstEventAfter.coordinates);
+		}
+	});
+	return { forward, backward };
 }
 
 export async function routing(
-	coordinates: RoutingCoordinates,
-	userChosen: Coordinates,
 	companies: Company[],
-	busStops: BusStop[]
+	many: { forward: Coordinates[]; backward: Coordinates[] },
+	userChosen: Coordinates,
+	busStops: BusStop[],
+	startFixed: boolean
 ): Promise<RoutingResults> {
-	// true = many to one
-	// false = one to many
-	const from = await oneToMany(userChosen, coordinates.userChosenBackwardMany, true);
-	const to = await oneToMany(userChosen, coordinates.userChosenForwardMany, false);
-	const routingResults = {
+	const userChosenResult = await oneToMany(
+		userChosen,
+		startFixed ? many.backward : many.forward,
+		!startFixed
+	);
+	const ret = {
 		userChosen: {
-			fromCompany: from.slice(0, companies.length),
-			fromPrevEvent: from.slice(companies.length),
-			toCompany: to.slice(0, companies.length),
-			toNextEvent: to.slice(companies.length)
+			company: userChosenResult.slice(0, companies.length),
+			event: userChosenResult.slice(companies.length)
 		},
 		busStops: new Array<InsertionRoutingResult>(busStops.length)
 	};
 	for (let busStopIdx = 0; busStopIdx != busStops.length; ++busStopIdx) {
-		const busStop = busStops[busStopIdx];
-		const relevantCompanyCount = companies.filter(
-			(company) => company.busStopFilter[busStopIdx]
-		).length;
-		const from = await oneToMany(
-			busStop.coordinates,
-			coordinates.busStopBackwardMany[busStopIdx],
-			true
+		const busStopResult = await oneToMany(
+			busStops[busStopIdx].coordinates,
+			!startFixed ? many.backward : many.forward,
+			startFixed
 		);
-		const to = await oneToMany(
-			busStop.coordinates,
-			coordinates.busStopForwardMany[busStopIdx],
-			false
-		);
-		routingResults.busStops[busStopIdx] = {
-			fromCompany: from.slice(0, relevantCompanyCount),
-			fromPrevEvent: from.slice(relevantCompanyCount),
-			toCompany: to.slice(0, relevantCompanyCount),
-			toNextEvent: to.slice(relevantCompanyCount)
+		ret.busStops[busStopIdx] = {
+			company: busStopResult.slice(0, companies.length),
+			event: busStopResult.slice(companies.length)
 		};
 	}
-	return routingResults;
+	return ret;
 }

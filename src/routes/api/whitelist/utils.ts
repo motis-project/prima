@@ -20,7 +20,7 @@ export function iterateAllInsertions(
 					++idxInEvents
 				) {
 					const info = {
-						insertionIdx: idxInEvents,
+						idxInEvents,
 						companyIdx,
 						vehicle,
 						prevEventIdxInRoutingResults,
