@@ -34,8 +34,7 @@ jobs:
 
       - name: Integration Tests
         run: |
-          docker ps -a
-          docker rmi $(docker images)
+          docker images -a
           docker volume rm $(docker volume ls)
           npm run build
           docker compose build prima
