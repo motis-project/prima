@@ -34,8 +34,6 @@ jobs:
 
       - name: Integration Tests
         run: |
-          docker volume ls
-          docker volume rm $(docker volume ls)
           npm run build
           docker compose build prima
           docker compose up -d pg
