@@ -125,7 +125,7 @@ export const getViableBusStops = async (
 	busStops: BusStop[],
 	startFixed: boolean,
 	capacities: Capacities
-): Promise<BlacklistingResult[]> => {
+): Promise<BlacklistingResponse[]> => {
 	if (busStops.length == 0 || !busStops.some((b) => b.times.length != 0)) {
 		return [];
 	}
@@ -160,7 +160,7 @@ export const getViableBusStops = async (
 	return dbResult;
 };
 
-type BlacklistingResult = {
+type BlacklistingResponse = {
 	timeIndex: number;
 	busstopindex: number;
 };
