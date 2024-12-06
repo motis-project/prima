@@ -5,7 +5,6 @@ import { db } from '$lib/database';
 import { lucia } from '$lib/auth';
 import type { Actions } from './$types';
 
-import Welcome from '$lib/WelcomeEmail.svelte';
 import nodemailer from 'nodemailer';
 
 export const actions: Actions = {
@@ -70,8 +69,42 @@ export const actions: Actions = {
 				message: 'An unknown error occurred'
 			});
 		}
-
-		// Send welcome email
+		// --- send welcome email --- 
+		
+		// does not work!
+		//const emailHtml = render(Welcome, {name: "John"});
+		let emailText = `
+  			<!DOCTYPE html>
+			<html lang="en">
+				<head>
+					<meta charset="UTF-8">
+					<meta name="viewport" content="width=device-width, initial-scale=1.0">
+					<title>Welcome Email</title>
+					<style>
+						body {
+							font-family: Arial, sans-serif;
+							width: 600px;
+							margin: 0 auto;
+							padding: 20px;
+							border: 1px solid #ddd;
+						}
+						h1 {
+							color: #00698f;
+							font-weight: bold;
+							margin-top: 0;
+						}
+						p {
+							margin-bottom: 20px;
+						}
+					</style>
+				</head>
+				<body>
+					<h1>Welcome to Our Email Example</h1>
+					<p>This is a simple HTML email template.</p>
+					<p>It demonstrates basic HTML and CSS usage.</p>
+					<p><a href="https://example.com">Visit our website</a></p>
+				</body>
+			</html>`;
 		try {
 			const transporter = nodemailer.createTransport({
 				host: 'smtp. .de',
@@ -87,14 +120,14 @@ export const actions: Actions = {
 				}
 			});
 			const mailOptions = {
-				from: 'mail address',
+				from: 'noreply@prima.motis-project.de',
 				to: email,
-					subject: 'Welcome email',
-					Welcome
+				subject: 'Welcome email',
+				html: emailText
 				};
-			console.log("hi?");
+			console.log("welcome");
 			await transporter.sendMail(mailOptions);
-			console.log("geschafft?");
+			console.log("welcome geschafft?");
 		} catch (error) {
 			console.error('Error sending welcome email:', error);
 		}

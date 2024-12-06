@@ -8,7 +8,7 @@
 <div class="flex min-h-screen">
 	<Card.Root class="w-fit m-auto">
 		<Card.Header class="space-y-1">
-			<Card.Title class="text-2xl">Hallo</Card.Title>
+			<Card.Title class="text-2xl">Passwort wieder herstellen</Card.Title>
 			<Card.Description>
 					Geben Sie das Einmalpasswort ein:
 			</Card.Description>
@@ -16,7 +16,7 @@
 			<Card.Content class="grid gap-4">
 				<div class="grid gap-2">
 					<Label for="password">Einmalpasswort</Label>
-					<Input id="password" name="password" type="number" />
+					<Input id="password" name="password" type="string" />
 				</div>
 			</Card.Content>
 			<Card.Footer>
