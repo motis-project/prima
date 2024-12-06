@@ -4,11 +4,43 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import type { ActionData } from './$types';
+	import { onMount } from 'svelte';
+	import * as Popover from "$lib/components/ui/popover/index.js";
 
 	export let form: ActionData;
+	
+	// TODO: sodass das popover gleich offen ist, aber einstellen nur wenn wir von otp kommen
+	// TODO: nicht wegklicken können!
+	// TODO: mittig platzieren!
+	// TODO: felht noch enter button, und serverseitig neues passwort speichern.
+	let isOpen = false;
+	function togglePopover() {
+		isOpen = !isOpen;
+	}
+	onMount(() => {
+		togglePopover();
+	});
 </script>
 
 <div class="w-full h-full">
+	
+	<Popover.Root portal={null} open={isOpen}>
+		<Popover.Trigger>
+		</Popover.Trigger>
+		<Popover.Content class="w-80">
+		  <div class="grid gap-4">
+			<div class="grid gap-2">
+				<Label for="email">Email</Label>
+				<Input id="email" name="email" type="email" />
+			</div>
+			<div class="grid gap-2">
+				<Label for="password">Password</Label>
+				<Input id="password" name="password" type="password" />
+			</div>
+		  </div>
+		</Popover.Content>
+	</Popover.Root>
+
 	<Card.Header>
 		<Card.Title>Unternehmer freischalten</Card.Title>
 	</Card.Header>

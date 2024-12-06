@@ -5,9 +5,6 @@ import type { Actions } from './$types';
 
 import nodemailer from 'nodemailer';
 
-// error, zeigt nicht die richtige seite an
-// hydration_mismatch Hydration failed because the initial UI does not match what was rendered on the server
-
 export const actions: Actions = {
 	default: async (event) => {
 		const formData = await event.request.formData();
