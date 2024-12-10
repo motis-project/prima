@@ -1,9 +1,17 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { db } from '$lib/database';
-import { lucia } from '$lib/auth';
-import type { Actions } from './$types';
-
+import type { Actions, PageServerLoad } from './$types';
 import nodemailer from 'nodemailer';
+import { updateXchange } from './otp/+page.server';
+
+export const load: PageServerLoad = async (event) => {
+    //console.log("das ist ok?");
+	// if (event.locals.user) {
+    //     
+	// 	return redirect(302, '/forgotpassword/otp');
+	// }
+	return {};
+};
 
 export const actions: Actions = {
 	default: async (event) => {
@@ -26,13 +34,7 @@ export const actions: Actions = {
 				message: 'Incorrect email'
 			});
 		}
-
-		const session = await lucia.createSession(existingUser.id, {});
-		const sessionCookie = lucia.createSessionCookie(session.id);
-		event.cookies.set(sessionCookie.name, sessionCookie.value, {
-			path: '.',
-			...sessionCookie.attributes
-		});
+		updateXchange(email);
 
         // send one time password
 		let emailText = `

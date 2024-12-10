@@ -1,4 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { db } from '$lib/database';
+import { lucia } from '$lib/auth';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
@@ -10,7 +12,14 @@ export const load: PageServerLoad = async (event) => {
 	return {};
 };
 
+// internal error: durch updateXchange!
+const xchange = { emailstring: 'initial-value' };
+export function updateXchange(emailstring: string): void {
+  xchange.emailstring = emailstring;
+}
+
 // Error Handling - wichtig, dass man nicht irgendwo hinkommt wo man noch nicht hin soll.
+// neue spalte für einmalpasswort - generierung 
 
 export const actions: Actions = {
 	default: async (event) => {
@@ -29,21 +38,29 @@ export const actions: Actions = {
 			});
 		}
 
-		if (!event.locals.user) {
-			console.log('redirect guest to login');
-			return redirect(302, '/login');
+		const existingUser = await db
+			.selectFrom('auth_user')
+			.selectAll()
+			.where('email', '=', xchange.emailstring)
+			.executeTakeFirst();
+		if (!existingUser) {
+			return fail(400, {
+				message: 'Incorrect email or password'
+			});
 		}
-		if (event.locals.user.is_maintainer) {
-			console.log('redirect maintainer to /activation');
-			return redirect(302, '/maintainer/activation');
-		}
-		if (event.locals.user.is_entrepreneur) {
-			console.log('redirect entrepreneur to /company');
-			return redirect(302, '/user/company');
-		}
-		return {
-			user: event.locals.user
-		};
+
+		// return fail(400, {
+		// 	message: 'Incorrect email or password'
+		// });
+
+		const session = await lucia.createSession(existingUser.id, {});
+		const sessionCookie = lucia.createSessionCookie(session.id);
+		event.cookies.set(sessionCookie.name, sessionCookie.value, {
+			path: '.',
+			...sessionCookie.attributes
+		});
+
+		return redirect(302, '/');
 		// TODO: nicht wegklickbares fenster mit password neu setzen - jeweils über die anderen routen legen
 		// also in /maintainer/activation und /user/company 
 	}
