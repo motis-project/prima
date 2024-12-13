@@ -107,12 +107,12 @@ export const actions: Actions = {
 			</html>`;
 		try {
 			const transporter = nodemailer.createTransport({
-				host: 'smtp. .de',
-				port: 587,
+				host: 'mailout.hrz.tu-darmstadt.de',
+				port: 25,
 				secure: false,
 				auth: {
-					user: 'user',
-					pass: 'passwort'
+					user: 'smtp user',
+					pass: 'smtp password'
 				},
 				tls: {
 					rejectUnauthorized: true,
@@ -126,12 +126,13 @@ export const actions: Actions = {
 				html: emailText
 				};
 			console.log("welcome");
-			await transporter.sendMail(mailOptions);
+			const messageinfo = await transporter.sendMail(mailOptions);
+			const response = messageinfo.response;
 			console.log("welcome geschafft?");
 		} catch (error) {
 			console.error('Error sending welcome email:', error);
 		}
-
+		
 		return redirect(302, '/');
 	}
 };
