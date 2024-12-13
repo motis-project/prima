@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { db } from '$lib/database';
 import type { Actions, PageServerLoad } from './$types';
 import nodemailer from 'nodemailer';
-import { updateXchange } from './otp/+page.server';
+import { writeEmailString } from "$lib/emailvar";
 
 export const load: PageServerLoad = async (event) => {
     //console.log("das ist ok?");
@@ -34,7 +34,7 @@ export const actions: Actions = {
 				message: 'Incorrect email'
 			});
 		}
-		updateXchange(email);
+		writeEmailString(email);
 
         // send one time password
 		let emailText = `
@@ -90,7 +90,7 @@ export const actions: Actions = {
 				html: emailText
 				};
 			console.log("otp?");
-			await transporter.sendMail(mailOptions);
+			//await transporter.sendMail(mailOptions);
 			console.log("otp geschafft?");
 		} catch (error) {
 			console.error('Error sending otp email:', error);

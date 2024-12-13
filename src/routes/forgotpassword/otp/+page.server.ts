@@ -2,6 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { db } from '$lib/database';
 import { lucia } from '$lib/auth';
 import type { Actions, PageServerLoad } from './$types';
+import { getEmailString } from "$lib/emailvar";
 
 export const load: PageServerLoad = async (event) => {
     //console.log("das ist ok?");
@@ -13,10 +14,10 @@ export const load: PageServerLoad = async (event) => {
 };
 
 // internal error: durch updateXchange!
-const xchange = { emailstring: 'initial-value' };
-export function updateXchange(emailstring: string): void {
-  xchange.emailstring = emailstring;
-}
+// const xchange = { emailstring: 'initial-value' };
+// export function updateXchange(emailstring: string): void {
+//   xchange.emailstring = emailstring;
+// }
 
 // Error Handling - wichtig, dass man nicht irgendwo hinkommt wo man noch nicht hin soll.
 // neue spalte für einmalpasswort - generierung 
@@ -41,7 +42,7 @@ export const actions: Actions = {
 		const existingUser = await db
 			.selectFrom('auth_user')
 			.selectAll()
-			.where('email', '=', xchange.emailstring)
+			.where('email', '=', getEmailString())
 			.executeTakeFirst();
 		if (!existingUser) {
 			return fail(400, {

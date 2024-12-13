@@ -110,24 +110,25 @@ export const actions: Actions = {
 				host: 'mailout.hrz.tu-darmstadt.de',
 				port: 25,
 				secure: false,
-				auth: {
-					user: 'smtp user',
-					pass: 'smtp password'
-				},
+				// auth: {
+				// 	user: 'smtp user',
+				// 	pass: 'smtp password'
+				// },
 				tls: {
 					rejectUnauthorized: true,
-					ciphers:'SSLv3'
+					//ciphers:'AES-256'
 				}
 			});
 			const mailOptions = {
-				from: 'noreply@prima.motis-project.de',
+				//from: 'noreply@prima.motis-project.de',
+				from: 'algo.informatik.tu-darmstadt.de',
 				to: email,
 				subject: 'Welcome email',
 				html: emailText
 				};
 			console.log("welcome");
-			const messageinfo = await transporter.sendMail(mailOptions);
-			const response = messageinfo.response;
+			//const messageinfo = await transporter.sendMail(mailOptions);
+			//const response = messageinfo.response;
 			console.log("welcome geschafft?");
 		} catch (error) {
 			console.error('Error sending welcome email:', error);
