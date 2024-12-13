@@ -5,8 +5,9 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 
 	import { enhance } from '$app/forms';
-
 	import type { ActionData } from './$types';
+
+	// Error Handling - wichtig, dass man nicht irgendwo hinkommt wo man noch nicht hin soll.
 
 	export let form: ActionData;
 </script>
@@ -15,27 +16,21 @@
 	<Card.Root class="w-fit m-auto">
 		<p>{form?.message ?? ''}</p>
 		<Card.Header class="space-y-1">
-			<Card.Title class="text-2xl">Login</Card.Title>
+			<Card.Title class="text-2xl">Passwort wieder herstellen</Card.Title>
 			<Card.Description>
-				Noch nicht registriert?
-				<a class="underline font-bold" href="/signup">Account erstellen</a>
+					Geben Sie das Einmalpasswort ein:
 			</Card.Description>
 		</Card.Header>
 		<form method="post" use:enhance>
 			<Card.Content class="grid gap-4">
 				<div class="grid gap-2">
-					<Label for="email">Email</Label>
-					<Input id="email" name="email" type="email" />
-				</div>
-				<div class="grid gap-2">
-					<Label for="password">Password</Label>
-					<Input id="password" name="password" type="password" />
+					<Label for="password">Einmalpasswort</Label>
+					<Input id="password" name="password" type="string" />
 				</div>
 			</Card.Content>
 			<Card.Footer>
-				<Button type="submit" class="w-full">Login</Button>
+				<Button type="submit" class="w-full">Eingabe</Button>
 			</Card.Footer>
-		</form>
-		<a class="flex justify-center text-sm underline font-bold text-muted-foreground" href="/forgotpassword">Passwort vergessen?</a>
+		</form>	
 	</Card.Root>
 </div>
