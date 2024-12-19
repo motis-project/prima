@@ -70,9 +70,6 @@ export const actions: Actions = {
 			});
 		}
 		// --- send welcome email --- 
-		
-		// does not work!
-		//const emailHtml = render(Welcome, {name: "John"});
 		let emailText = `
   			<!DOCTYPE html>
 			<html lang="en">
@@ -99,7 +96,7 @@ export const actions: Actions = {
 					</style>
 				</head>
 				<body>
-					<h1>Welcome to Our Email Example</h1>
+					<h1>Welcome to Prima</h1>
 					<p>This is a simple HTML email template.</p>
 					<p>It demonstrates basic HTML and CSS usage.</p>
 					<p><a href="https://example.com">Visit our website</a></p>
@@ -122,6 +119,7 @@ export const actions: Actions = {
 			const mailOptions = {
 				//from: 'noreply@prima.motis-project.de',
 				from: 'algo.informatik.tu-darmstadt.de',
+				//from: 'noreply@hrz.tu-darmstadt.de',
 				to: email,
 				subject: 'Welcome email',
 				html: emailText

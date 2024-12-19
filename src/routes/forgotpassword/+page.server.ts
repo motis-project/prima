@@ -2,12 +2,10 @@ import { fail, redirect } from '@sveltejs/kit';
 import { db } from '$lib/database';
 import type { Actions, PageServerLoad } from './$types';
 import nodemailer from 'nodemailer';
-import { writeEmailString } from "$lib/emailvar";
+import { writeEmailString, genOTP } from "$lib/otphelpers";
 
 export const load: PageServerLoad = async (event) => {
-    //console.log("das ist ok?");
-	// if (event.locals.user) {
-    //     
+	// if (event.locals.user) {    
 	// 	return redirect(302, '/forgotpassword/otp');
 	// }
 	return {};
@@ -34,7 +32,26 @@ export const actions: Actions = {
 				message: 'Incorrect email'
 			});
 		}
-		writeEmailString(email);
+		writeEmailString(email);  // über link lösen
+
+		const otp = genOTP(existingUser.id);
+		let otpString = (await otp).toString(); // ??
+		console.log("otp=");
+		console.log(otpString);
+		
+		//store otp in db
+		try {
+			await db
+				.updateTable("auth_user")
+				.set({otp: otpString})
+				.where('id', '=', existingUser.id)
+				.executeTakeFirst();
+		} catch {
+			return fail(500, {
+				message: 'An unknown error occurred'
+			});
+		};
+
 
         // send one time password
 		let emailText = `
