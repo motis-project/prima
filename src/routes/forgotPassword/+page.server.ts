@@ -35,7 +35,7 @@ export const actions: Actions = {
 		writeEmailString(email);  // über link lösen
 
 		const otp = genOTP(existingUser.id);
-		let otpString = (await otp).toString(); // ??
+		let otpString = (await otp).toString();
 		console.log("otp=");
 		console.log(otpString);
 		
@@ -52,6 +52,11 @@ export const actions: Actions = {
 			});
 		};
 
+		// link erstellen
+		const url = 'http://localhost:5173/forgotPassword/otp';
+		const param = existingUser.id;
+		const finalUrl = `${url}?${param}`;
+		console.log(finalUrl);
 
         // send one time password
 		let emailText = `
@@ -60,7 +65,7 @@ export const actions: Actions = {
 				<head>
 					<meta charset="UTF-8">
 					<meta name="viewport" content="width=device-width, initial-scale=1.0">
-					<title>OTP Email</title>
+					<title>Einmalpasswort PrimaÖV</title>
 					<style>
 						body {
 							font-family: Arial, sans-serif;
@@ -80,10 +85,13 @@ export const actions: Actions = {
 					</style>
 				</head>
 				<body>
-					<h1>Welcome to Our Second Email Example</h1>
-					<p>This is a simple HTML email template.</p>
-					<p>It demonstrates basic HTML and CSS usage.</p>
-					<p><a href="https://example.com">Visit our website</a></p>
+					<h1>Passwort zurücksetzen</h1>
+					<p>Geben Sie das Einmalpasswort unter folgendem Link ein.</p>
+					<p>Das Einmalpasswort lautet: ${otpString}</p>
+					<p><a href=${finalUrl}></a>'http://localhost:5173/forgotPassword/otp'</p>
+					<p>Das Einmalpasswort ist 10 Minuten gültig. Sollten Sie dies nicht veranlasst haben, 
+					ignorieren Sie diese E-Mail. Falls etwas nicht geklappt hat, zum Beispiel das mehr als 10 Minuten
+					vergangen sind, folgen Sie den Anweisungen auf der Website, um den Prozess erneut zu starten.</p>
 				</body>
 			</html>`;
         try {
@@ -113,6 +121,6 @@ export const actions: Actions = {
 			console.error('Error sending otp email:', error);
 		}
 
-		return redirect(302, '/forgotpassword/otp');
+		return redirect(302, '/forgotPassword/wait');
 	}
 };

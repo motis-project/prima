@@ -15,11 +15,10 @@
 	<Card.Root class="w-fit m-auto">
 		<p>{form?.message ?? ''}</p>
 		<Card.Header class="space-y-1">
-			<Card.Title class="text-2xl">Login</Card.Title>
-			<Card.Description>
-				Noch nicht registriert?
-				<a class="underline font-bold" href="/signup">Account erstellen</a>
-			</Card.Description>
+			<Card.Title class="text-2xl">Passwort ändern</Card.Title>
+            <Card.Description>
+                Bitte verwenden Sie dieselbe E-Mail-Adresse wie bei Ihrer Anmeldung.
+            </Card.Description>
 		</Card.Header>
 		<form method="post" use:enhance>
 			<Card.Content class="grid gap-4">
@@ -33,9 +32,8 @@
 				</div>
 			</Card.Content>
 			<Card.Footer>
-				<Button type="submit" class="w-full">Login</Button>
+				<Button type="submit" class="w-full">Passwort ändern</Button>
 			</Card.Footer>
 		</form>
-		<a class="flex justify-center text-sm underline font-bold text-muted-foreground" href="/forgotPassword">Passwort vergessen?</a>
 	</Card.Root>
 </div>

@@ -11,6 +11,8 @@ export const load: PageServerLoad = async (event) => {
 	return {};
 };
 
+// TODO: Aus dem link die id lesen und den db check anpassen
+// dann die getEmailString Funktion löschen
 // Error Handling - wichtig, dass man nicht irgendwo hinkommt wo man noch nicht hin soll.
 
 export const actions: Actions = {
@@ -31,29 +33,29 @@ export const actions: Actions = {
 			.executeTakeFirst();
 		if (!existingUser) {
 			return fail(400, {
-				message: 'Incorrect email or otp'
+				message: 'Incorrect email'
 			});
 		}
 
-		// Testen
-		// const dbotp = await db
-		// 	.selectFrom('auth_user')
-		// 	.select('otp')
-		// 	.where('id', '=', existingUser.id)
-		// 	.executeTakeFirst();
-		// if(!dbotp || dbotp == null) {
-		// 	return fail(400, {
-		// 		message: 'otp is not set'
-		// 	});
-		// }
+		const dbotp = await db
+			.selectFrom('auth_user')
+			.select('otp')
+			.where('id', '=', existingUser.id)
+			.executeTakeFirst();
+
+		if(dbotp === undefined || dbotp === null) {
+			return fail(400, {
+				message: 'OneTimePassword is not set'
+			});
+		}
 
 		const passVerify = verifyOTP(existingUser.id, password);
 		let passedVerify = (await passVerify).valueOf();
 		
-		if(!passedVerify) // || dbotp != password)
+		if(!passedVerify || dbotp.otp !== password)
 		{
 			return fail(400, {
-				message: 'Incorrect otp password'
+				message: 'Incorrect OneTimePassword'
 			});
 		}
 
@@ -67,6 +69,6 @@ export const actions: Actions = {
 			...sessionCookie.attributes
 		});
 
-		return redirect(302, '/login'); // todo: neue Maske mit passwort neu setzen, auch für "password ändern"
+		return redirect(302, '/forgotPassword/changePassword');
 	}
 }
