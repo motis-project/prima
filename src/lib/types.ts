@@ -104,6 +104,7 @@ export interface UserAuthTable {
 	last_name: string | null;
 	phone: string | null;
 	company_id: number | null;
+	otp: string | null;
 }
 
 export type UserAuth = Selectable<UserAuthTable>;
