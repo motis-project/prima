@@ -1,5 +1,6 @@
 package de.motis.prima
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -37,6 +38,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
@@ -47,6 +51,7 @@ import de.motis.prima.services.Vehicle
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -97,6 +102,16 @@ class VehiclesViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.d("Logout", "Error while logout.")
             }
+        }
+    }
+
+    // Extension property to create a DataStore instance
+    val Context.dataStore by preferencesDataStore(name = "prima_datastore")
+
+    suspend fun saveSelectedVehicleId() {
+        val dataStoreKey = stringPreferencesKey("selectedVehicleId")
+        DriversApp.instance.dataStore.edit { preferences ->
+            preferences[dataStoreKey] = selectedVehicleId.toString()
         }
     }
 }
@@ -174,6 +189,7 @@ fun Vehicles(
             items(items = viewModel.vehicles.value, itemContent = { vehicle ->
                 ConstraintLayout(modifier = Modifier.clickable {
                     viewModel.selectedVehicleId = vehicle.id
+                    runBlocking {viewModel.saveSelectedVehicleId()}
                     navController.navigate("tours")
                 }) {
                     Card(
