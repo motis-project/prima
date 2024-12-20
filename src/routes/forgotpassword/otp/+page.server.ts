@@ -48,7 +48,7 @@ export const actions: Actions = {
 		// }
 
 		const passVerify = verifyOTP(existingUser.id, password);
-		let passedVerify = (await pass).valueOf();
+		let passedVerify = (await passVerify).valueOf();
 		
 		if(!passedVerify) // || dbotp != password)
 		{
