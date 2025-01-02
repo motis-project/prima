@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { db } from '$lib/database';
 import { lucia } from '$lib/auth';
 import type { Actions, PageServerLoad } from './$types';
-import { getEmailString, verifyOTP } from "$lib/otphelpers"; // über link lösen
+import { verifyOTP } from "$lib/otphelpers";
 
 export const load: PageServerLoad = async (event) => {
 	// if (event.locals.user) {    
@@ -10,10 +10,6 @@ export const load: PageServerLoad = async (event) => {
 	// }
 	return {};
 };
-
-// TODO: Aus dem link die id lesen und den db check anpassen
-// dann die getEmailString Funktion löschen
-// Error Handling - wichtig, dass man nicht irgendwo hinkommt wo man noch nicht hin soll.
 
 export const actions: Actions = {
 	default: async (event) => {
@@ -26,21 +22,23 @@ export const actions: Actions = {
 			});
 		}
 		
+		let currenturl = event.url.toString();
+		let index = currenturl.indexOf("?", 7);
+		let suburl = currenturl.slice(index + 1);
 		const existingUser = await db
 			.selectFrom('auth_user')
 			.selectAll()
-			.where('email', '=', getEmailString())
+			.where('id', '=', suburl)
 			.executeTakeFirst();
 		if (!existingUser) {
 			return fail(400, {
 				message: 'Incorrect email'
 			});
 		}
-
 		const dbotp = await db
 			.selectFrom('auth_user')
 			.select('otp')
-			.where('id', '=', existingUser.id)
+			.where('id', '=', suburl)
 			.executeTakeFirst();
 
 		if(dbotp === undefined || dbotp === null) {
@@ -60,14 +58,6 @@ export const actions: Actions = {
 		}
 
 		console.log("verified");
-
-		// hier setzen oder erst später? 
-		const session = await lucia.createSession(existingUser.id, {});
-		const sessionCookie = lucia.createSessionCookie(session.id);
-		event.cookies.set(sessionCookie.name, sessionCookie.value, {
-			path: '.',
-			...sessionCookie.attributes
-		});
 
 		return redirect(302, '/forgotPassword/changePassword');
 	}

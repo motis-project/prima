@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { db } from '$lib/database';
 import type { Actions, PageServerLoad } from './$types';
 import nodemailer from 'nodemailer';
-import { writeEmailString, genOTP } from "$lib/otphelpers";
+import { genOTP } from "$lib/otphelpers";
 
 export const load: PageServerLoad = async (event) => {
 	// if (event.locals.user) {    
@@ -32,14 +32,12 @@ export const actions: Actions = {
 				message: 'Incorrect email'
 			});
 		}
-		writeEmailString(email);  // über link lösen
 
 		const otp = genOTP(existingUser.id);
 		let otpString = (await otp).toString();
 		console.log("otp=");
 		console.log(otpString);
 		
-		//store otp in db
 		try {
 			await db
 				.updateTable("auth_user")
@@ -52,7 +50,6 @@ export const actions: Actions = {
 			});
 		};
 
-		// link erstellen
 		const url = 'http://localhost:5173/forgotPassword/otp';
 		const param = existingUser.id;
 		const finalUrl = `${url}?${param}`;
@@ -114,9 +111,9 @@ export const actions: Actions = {
 				subject: 'OTP email',
 				html: emailText
 				};
-			console.log("otp?");
+			//console.log("otp");
 			//await transporter.sendMail(mailOptions);
-			console.log("otp geschafft?");
+			//console.log("otp geschafft?");
 		} catch (error) {
 			console.error('Error sending otp email:', error);
 		}

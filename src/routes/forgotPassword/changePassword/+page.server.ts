@@ -4,7 +4,6 @@ import type { Actions } from '././$types';
 import { hash } from '@node-rs/argon2';
 import { lucia } from '$lib/auth';
 
-
 export const actions: Actions = {
     default: async (event) => {
 		const formData = await event.request.formData();
@@ -53,8 +52,7 @@ export const actions: Actions = {
 				message: 'An unknown error occurred'
 			});
 		}
-
-		// oder hier? 
+ 
 		const session = await lucia.createSession(existingUser.id, {});
 		const sessionCookie = lucia.createSessionCookie(session.id);
 		event.cookies.set(sessionCookie.name, sessionCookie.value, {

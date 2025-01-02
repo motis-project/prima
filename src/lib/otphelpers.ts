@@ -1,16 +1,6 @@
 import { TOTPController } from "oslo/otp";
 import { TimeSpan } from 'lucia';
 
-export let emailstring = "";
-
-export const writeEmailString = (email: string) => {
-    emailstring = email;
-};
-
-export const getEmailString = (): string => {
-    return emailstring;
-};
-
 function findNumbersInString(str: string): string {
     return str.replace(/[^0-9]/g, '');
 };
