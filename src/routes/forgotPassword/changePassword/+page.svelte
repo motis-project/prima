@@ -3,12 +3,19 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
+	import { ArrowLeft } from 'lucide-svelte';
 
 	import { enhance } from '$app/forms';
 
 	import type { ActionData } from './$types';
+	import { redirect } from '@sveltejs/kit';
 
 	export let form: ActionData;
+
+	const back = () => {
+		console.log("fjdhfj");
+		return redirect(302, '/login');
+	};
 </script>
 
 <div class="flex min-h-screen">
@@ -31,9 +38,15 @@
 					<Input id="password" name="password" type="password" />
 				</div>
 			</Card.Content>
-			<Card.Footer>
-				<Button type="submit" class="w-full">Passwort ändern</Button>
+			<Card.Footer class="grid gap-4 justify-center">
+				<Button type="submit">Passwort ändern</Button>
 			</Card.Footer>
 		</form>
+		<div class="grid gap-4 justify-right">
+			<Button on:click={back} variant="outline" class="mb-4 ml-4 mr-4" href="/login">
+				<ArrowLeft />
+				zurück/abbrechen
+			</Button>
+		</div>
 	</Card.Root>
 </div>

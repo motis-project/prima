@@ -57,6 +57,11 @@
 				{/each}
 			</div>
 			<div>
+				<Button variant="ghost" data-sveltekit-preload-data="off" href="/forgotPassword/changePassword">
+					Passwort ändern
+				</Button>
+			</div>
+			<div>
 				<Button variant="ghost" data-sveltekit-preload-data="off" href="/logout">
 					<Logout class="mr-2 h-4 w-4" />
 					Ausloggen
