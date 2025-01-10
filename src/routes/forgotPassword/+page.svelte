@@ -13,12 +13,10 @@
 
 <div class="flex min-h-screen">
 	<Card.Root class="w-fit m-auto">
-        <p>{form?.message ?? ''}</p>
+		<p>{form?.message ?? ''}</p>
 		<Card.Header class="space-y-1">
 			<Card.Title class="text-2xl">Passwort vergessen</Card.Title>
-			<Card.Description>
-					Geben Sie die verwendete E-Mail Adresse ein:
-			</Card.Description>
+			<Card.Description>Geben Sie die verwendete E-Mail Adresse ein:</Card.Description>
 		</Card.Header>
 		<form method="post" use:enhance>
 			<Card.Content class="grid gap-4">

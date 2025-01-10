@@ -57,7 +57,11 @@
 				{/each}
 			</div>
 			<div>
-				<Button variant="ghost" data-sveltekit-preload-data="off" href="/forgotPassword/changePassword">
+				<Button
+					variant="ghost"
+					data-sveltekit-preload-data="off"
+					href="/forgotPassword/changePassword"
+				>
 					Passwort ändern
 				</Button>
 			</div>

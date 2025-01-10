@@ -1,15 +1,16 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { db } from '$lib/database';
-import type { Actions, PageServerLoad } from './$types';
+//import type { Actions, PageServerLoad } from './$types';
+import type { Actions } from './$types';
 import nodemailer from 'nodemailer';
-import { genOTP } from "$lib/otphelpers";
+import { genOTP } from '$lib/otphelpers';
 
-export const load: PageServerLoad = async (event) => {
-	// if (event.locals.user) {    
-	// 	return redirect(302, '/forgotpassword/otp');
-	// }
-	return {};
-};
+// export const load: PageServerLoad = async (event) => {
+// 	// if (event.locals.user) {
+// 	// 	return redirect(302, '/forgotpassword/otp');
+// 	// }
+// 	return {};
+// };
 
 export const actions: Actions = {
 	default: async (event) => {
@@ -34,29 +35,29 @@ export const actions: Actions = {
 		}
 
 		const otp = genOTP(existingUser.id);
-		let otpString = (await otp).toString();
-		console.log("otp=");
+		const otpString = (await otp).toString();
+		console.log('otp=');
 		console.log(otpString);
-		
+
 		try {
 			await db
-				.updateTable("auth_user")
-				.set({otp: otpString})
+				.updateTable('auth_user')
+				.set({ otp: otpString })
 				.where('id', '=', existingUser.id)
 				.executeTakeFirst();
 		} catch {
 			return fail(500, {
 				message: 'An unknown error occurred'
 			});
-		};
+		}
 
 		const url = 'http://localhost:5173/forgotPassword/otp';
 		const param = existingUser.id;
 		const finalUrl = `${url}?${param}`;
 		console.log(finalUrl);
 
-        // send one time password
-		let emailText = `
+		// send one time password
+		const emailText = `
   			<!DOCTYPE html>
 			<html lang="en">
 				<head>
@@ -91,7 +92,7 @@ export const actions: Actions = {
 					vergangen sind, folgen Sie den Anweisungen auf der Website, um den Prozess erneut zu starten.</p>
 				</body>
 			</html>`;
-        try {
+		try {
 			const transporter = nodemailer.createTransport({
 				host: 'smtp. .de',
 				port: 587,
@@ -102,7 +103,7 @@ export const actions: Actions = {
 				},
 				tls: {
 					rejectUnauthorized: true,
-					ciphers:'SSLv3'
+					ciphers: 'SSLv3'
 				}
 			});
 			const mailOptions = {
@@ -110,10 +111,8 @@ export const actions: Actions = {
 				to: email,
 				subject: 'OTP email',
 				html: emailText
-				};
-			//console.log("otp");
+			};
 			//await transporter.sendMail(mailOptions);
-			//console.log("otp geschafft?");
 		} catch (error) {
 			console.error('Error sending otp email:', error);
 		}

@@ -1,15 +1,15 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { db } from '$lib/database';
-import { lucia } from '$lib/auth';
-import type { Actions, PageServerLoad } from './$types';
-import { verifyOTP } from "$lib/otphelpers";
+//import type { Actions, PageServerLoad } from './$types';
+import type { Actions } from './$types';
+import { verifyOTP } from '$lib/otphelpers';
 
-export const load: PageServerLoad = async (event) => {
-	// if (event.locals.user) {    
-	// 	return redirect(302, '/forgotpassword/otp');
-	// }
-	return {};
-};
+// export const load: PageServerLoad = async (event) => {
+// 	// if (event.locals.user) {
+// 	// 	return redirect(302, '/forgotpassword/otp');
+// 	// }
+// 	return {};
+// };
 
 export const actions: Actions = {
 	default: async (event) => {
@@ -21,10 +21,10 @@ export const actions: Actions = {
 				message: 'Invalid password'
 			});
 		}
-		
-		let currenturl = event.url.toString();
-		let index = currenturl.indexOf("?", 7);
-		let suburl = currenturl.slice(index + 1);
+
+		const currenturl = event.url.toString();
+		const index = currenturl.indexOf('?', 7);
+		const suburl = currenturl.slice(index + 1);
 		const existingUser = await db
 			.selectFrom('auth_user')
 			.selectAll()
@@ -41,24 +41,23 @@ export const actions: Actions = {
 			.where('id', '=', suburl)
 			.executeTakeFirst();
 
-		if(dbotp === undefined || dbotp === null) {
+		if (dbotp === undefined || dbotp === null) {
 			return fail(400, {
 				message: 'OneTimePassword is not set'
 			});
 		}
 
 		const passVerify = verifyOTP(existingUser.id, password);
-		let passedVerify = (await passVerify).valueOf();
-		
-		if(!passedVerify || dbotp.otp !== password)
-		{
+		const passedVerify = (await passVerify).valueOf();
+
+		if (!passedVerify || dbotp.otp !== password) {
 			return fail(400, {
 				message: 'Incorrect OneTimePassword'
 			});
 		}
 
-		console.log("verified");
+		console.log('verified');
 
 		return redirect(302, '/forgotPassword/changePassword');
 	}
-}
+};

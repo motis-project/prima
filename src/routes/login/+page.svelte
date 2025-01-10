@@ -36,6 +36,9 @@
 				<Button type="submit" class="w-full">Login</Button>
 			</Card.Footer>
 		</form>
-		<a class="flex justify-center text-sm underline font-bold text-muted-foreground" href="/forgotPassword">Passwort vergessen?</a>
+		<a
+			class="flex justify-center text-sm underline font-bold text-muted-foreground"
+			href="/forgotPassword">Passwort vergessen?</a
+		>
 	</Card.Root>
 </div>

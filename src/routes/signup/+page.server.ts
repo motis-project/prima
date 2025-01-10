@@ -69,8 +69,8 @@ export const actions: Actions = {
 				message: 'An unknown error occurred'
 			});
 		}
-		// --- send welcome email --- 
-		let emailText = `
+		// --- send welcome email ---
+		const emailText = `
   			<!DOCTYPE html>
 			<html lang="en">
 				<head>
@@ -112,7 +112,7 @@ export const actions: Actions = {
 				// 	pass: 'smtp password'
 				// },
 				tls: {
-					rejectUnauthorized: true,
+					rejectUnauthorized: true
 					//ciphers:'AES-256'
 				}
 			});
@@ -123,15 +123,14 @@ export const actions: Actions = {
 				to: email,
 				subject: 'Welcome email',
 				html: emailText
-				};
-			console.log("welcome");
+			};
+			//await transporter.sendMail(mailOptions);
 			//const messageinfo = await transporter.sendMail(mailOptions);
 			//const response = messageinfo.response;
-			console.log("welcome geschafft?");
 		} catch (error) {
 			console.error('Error sending welcome email:', error);
 		}
-		
+
 		return redirect(302, '/');
 	}
 };

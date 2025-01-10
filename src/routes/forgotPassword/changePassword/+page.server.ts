@@ -5,7 +5,7 @@ import { hash } from '@node-rs/argon2';
 import { lucia } from '$lib/auth';
 
 export const actions: Actions = {
-    default: async (event) => {
+	default: async (event) => {
 		const formData = await event.request.formData();
 		const email = formData.get('email');
 		const password = formData.get('password');
@@ -19,7 +19,7 @@ export const actions: Actions = {
 				message: 'Invalid password'
 			});
 		}
-        const existingUser = await db
+		const existingUser = await db
 			.selectFrom('auth_user')
 			.selectAll()
 			.where('email', '=', email)
@@ -29,16 +29,16 @@ export const actions: Actions = {
 				message: 'Incorrect email'
 			});
 		}
-        const password_hash = await hash(password, {
+		const password_hash = await hash(password, {
 			memoryCost: 19456,
 			timeCost: 2,
 			outputLen: 32,
 			parallelism: 1
 		});
-        try {
+		try {
 			await db
-				.updateTable("auth_user")
-				.set({password_hash: password_hash})
+				.updateTable('auth_user')
+				.set({ password_hash: password_hash })
 				.where('id', '=', existingUser.id)
 				.executeTakeFirst();
 		} catch (e: unknown) {
@@ -52,7 +52,7 @@ export const actions: Actions = {
 				message: 'An unknown error occurred'
 			});
 		}
- 
+
 		const session = await lucia.createSession(existingUser.id, {});
 		const sessionCookie = lucia.createSessionCookie(session.id);
 		event.cookies.set(sessionCookie.name, sessionCookie.value, {
