@@ -166,7 +166,7 @@ fun Home(
                     try {
                         val vehicle = vehiclesViewModel.vehicles.value.filter {
                                 v -> v.id == vehiclesViewModel.selectedVehicleId
-                        }[0]
+                        }.last()
                         licensePlate = vehicle.license_plate
                     } catch (e: Exception) {
                         licensePlate = "Kein Fahrzeug ausgewählt"

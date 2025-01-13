@@ -1,7 +1,6 @@
 package de.motis.prima
 
 import android.util.Log
-import android.webkit.CookieManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -12,12 +11,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.motis.prima.app.DriversApp
 import de.motis.prima.services.CookieStore
-import de.motis.prima.BuildConfig.BASE_URL
-import okhttp3.HttpUrl
+
 
 @Composable
 fun Nav() {
-
     val navController = rememberNavController()
     val vehiclesViewModel: VehiclesViewModel = viewModel()
     val toursViewModel: ToursViewModel = viewModel()
@@ -41,14 +38,9 @@ fun Nav() {
     }
 
     NavHost(navController = navController, startDestination = startDestination) {
-
         composable(route = "login") {
             Login(navController, vehiclesViewModel, toursViewModel)
         }
-
-        /*composable(route = "logout") {
-            Login(navController, vehiclesViewModel)
-        }*/
 
         composable(route = "home") {
             Home(navController, vehiclesViewModel)
@@ -70,7 +62,6 @@ fun Nav() {
             val tourId = it.arguments?.getString("tourId")?.toInt()
             TourOverview(navController, tourId!!, toursViewModel)
         }
-
 
         composable(route = "legs/{tourId}/{eventIndex}") {
             val tourId = it.arguments?.getString("tourId")?.toInt()

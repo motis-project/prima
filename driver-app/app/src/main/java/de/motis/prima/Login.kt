@@ -1,7 +1,6 @@
 package de.motis.prima
 
 import android.app.Activity
-import android.content.Context
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
@@ -13,12 +12,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,14 +42,6 @@ import de.motis.prima.services.Api
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import de.motis.prima.app.DriversApp
-import kotlinx.coroutines.runBlocking
 
 class LoginViewModel : ViewModel() {
     // Event which will be omitted to the Login component, indicating success of the login operation
@@ -81,23 +72,6 @@ class LoginViewModel : ViewModel() {
             }
         }
     }
-
-    // Extension property to create a DataStore instance
-    val Context.dataStore by preferencesDataStore(name = "prima_datastore")
-
-    suspend fun saveToDataStore(context: Context, key: String, value: String) {
-        val dataStoreKey = stringPreferencesKey(key)
-        context.dataStore.edit { preferences ->
-            preferences[dataStoreKey] = value
-        }
-    }
-
-    fun readFromDataStore(key: String): Flow<String?> {
-        val dataStoreKey = stringPreferencesKey(key)
-        return DriversApp.instance.dataStore.data.map { preferences ->
-            preferences[dataStoreKey]
-        }
-    }
 }
 
 @Composable
@@ -119,18 +93,26 @@ fun Login(
     }
 
     LaunchedEffect(key1 = viewModel) {
-        // Catching successful login event and navigation to the next screen
         launch {
-            vehiclesViewModel.selectedVehicleId = 0
+            vehiclesViewModel.readFromDataStore().collect {id ->
+                run {
+                    if (id != null) {
+                        Log.d("store", "Read from store: "  + id)
+                        vehiclesViewModel.selectedVehicleId = id.toInt()
+
+                    }
+                }
+                Log.d("store", "Set id to:" + vehiclesViewModel.selectedVehicleId.toString())
+            }
+        }
+
+        launch {
             vehiclesViewModel.vehicles = mutableStateOf(emptyList())
             toursViewModel.tours = mutableStateOf(emptyList())
+            // Catching successful login event and navigation to the next screen
             viewModel.navigationEvent.collect { shouldNavigate ->
                 Log.d("Navigation event", "Navigation triggered.")
                 if (shouldNavigate) {
-                    runBlocking {
-                        val id = viewModel.readFromDataStore("selectedVehicleId")
-                        Log.d("dataStore", id.toString())
-                    }
                     Log.d("Navigation event", "Navigating to vehicle selection.")
                     if (vehiclesViewModel.selectedVehicleId == 0) {
                         navController.navigate("vehicles") {}
@@ -141,15 +123,15 @@ fun Login(
             }
         }
 
-        // Catching event when login failed due to incorrect login data
         launch {
+            // Catching event when login failed due to incorrect login data
             viewModel.loginErrorEvent.collect { error ->
                 isLoginFailed = error
             }
         }
 
-        // Catching event when a network error occurs and displaying of error message
         launch {
+            // Catching event when a network error occurs and displaying of error message
             viewModel.networkErrorEvent.collect {
                 snackbarHostState.showSnackbar(message = networkErrorMessage)
             }

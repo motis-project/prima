@@ -48,10 +48,11 @@ import de.motis.prima.app.DriversApp
 import de.motis.prima.services.Api
 import de.motis.prima.services.CookieStore
 import de.motis.prima.services.Vehicle
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -61,6 +62,9 @@ class VehiclesViewModel : ViewModel() {
 
     private val _logoutEvent = MutableSharedFlow<Unit>()
     val logoutEvent = _logoutEvent.asSharedFlow()
+
+    private val _vehicleSelectEvent = MutableSharedFlow<Unit>()
+    val vehicleSelectEvent = _vehicleSelectEvent.asSharedFlow()
 
     var vehicles = mutableStateOf<List<Vehicle>>(emptyList())
         //private set
@@ -93,7 +97,6 @@ class VehiclesViewModel : ViewModel() {
         }
     }
 
-
     fun logout() {
         viewModelScope.launch {
             try {
@@ -105,13 +108,33 @@ class VehiclesViewModel : ViewModel() {
         }
     }
 
-    // Extension property to create a DataStore instance
-    val Context.dataStore by preferencesDataStore(name = "prima_datastore")
+    fun selectVehicle() {
+        viewModelScope.launch {
+            try {
+                saveToDataStore(selectedVehicleId.toString())
+                _vehicleSelectEvent.emit(Unit)
+            } catch (e: Exception) {
+                Log.d("vehicleSelect", "Error while vehicleSelect.")
+            }
+        }
+    }
 
-    suspend fun saveSelectedVehicleId() {
-        val dataStoreKey = stringPreferencesKey("selectedVehicleId")
+    // Extension property to create a DataStore instance
+    private val Context.dataStore by preferencesDataStore(name = "prima_datastore")
+    private val key = stringPreferencesKey("selectedVehicleId")
+
+    fun readFromDataStore(): Flow<String?> {
+        Log.d("store", "Reading")
+        return DriversApp.instance.dataStore.data.map { preferences ->
+            val value = preferences[key]
+            value
+        }
+    }
+
+    private suspend fun saveToDataStore(value: String) {
+        Log.d("store", "Storing: $value")
         DriversApp.instance.dataStore.edit { preferences ->
-            preferences[dataStoreKey] = selectedVehicleId.toString()
+            preferences[key] = value
         }
     }
 }
@@ -124,12 +147,19 @@ fun Vehicles(
 ) {
     LaunchedEffect(key1 = viewModel) {
         viewModel.fetchVehicles()
+
         launch {
             viewModel.logoutEvent.collect {
                 Log.d("Logout", "Logout event triggered.")
                 navController.navigate("login") {
                     launchSingleTop = true
                 }
+            }
+        }
+
+        launch {
+            viewModel.vehicleSelectEvent.collect {
+                Log.d("store", "vehicleSelectEvent")
             }
         }
     }
@@ -189,7 +219,7 @@ fun Vehicles(
             items(items = viewModel.vehicles.value, itemContent = { vehicle ->
                 ConstraintLayout(modifier = Modifier.clickable {
                     viewModel.selectedVehicleId = vehicle.id
-                    runBlocking {viewModel.saveSelectedVehicleId()}
+                    viewModel.selectVehicle()
                     navController.navigate("tours")
                 }) {
                     Card(

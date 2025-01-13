@@ -54,6 +54,7 @@ import de.motis.prima.app.DriversApp
 import de.motis.prima.services.Api
 import de.motis.prima.services.CookieStore
 import de.motis.prima.services.Tour
+import de.motis.prima.services.Vehicle
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -143,6 +144,12 @@ fun Date.formatTo(
         Log.d("error", e.message.toString())
     }
     return res
+}
+
+fun getLicensePlate(vehicles: List<Vehicle>, vehicleId: Int): String {
+    return vehicles.filter { t ->
+        t.id == vehicleId
+    }.last().license_plate
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -308,6 +315,21 @@ fun Tours(
                         }
                     }
                 }
+                /*Row (
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Box() {
+                        val vehicle = getLicensePlate(vehiclesViewModel.vehicles.value, vehiclesViewModel.selectedVehicleId)
+                        Text(
+                            text = vehicle,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }*/
                 Row {
                     LazyColumn(
                         modifier = Modifier
