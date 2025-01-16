@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -48,16 +48,19 @@ import de.motis.prima.app.DriversApp
 import de.motis.prima.services.Api
 import de.motis.prima.services.CookieStore
 import de.motis.prima.services.Vehicle
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import android.app.Application
 
-class VehiclesViewModel : ViewModel() {
+class VehiclesViewModel() : ViewModel() {
     private val cookieStore: CookieStore = CookieStore(DriversApp.instance)
 
     private val _logoutEvent = MutableSharedFlow<Unit>()
@@ -71,8 +74,6 @@ class VehiclesViewModel : ViewModel() {
 
     var isLoading = mutableStateOf(true)
         private set
-
-    var selectedVehicleId = 0
 
     init {
         fetchVehicles()
@@ -108,10 +109,10 @@ class VehiclesViewModel : ViewModel() {
         }
     }
 
-    fun selectVehicle() {
+    fun selectVehicle(vehicle: Vehicle) {
         viewModelScope.launch {
             try {
-                saveToDataStore(selectedVehicleId.toString())
+                saveToDataStore(vehicle)
                 _vehicleSelectEvent.emit(Unit)
             } catch (e: Exception) {
                 Log.d("vehicleSelect", "Error while vehicleSelect.")
@@ -121,20 +122,17 @@ class VehiclesViewModel : ViewModel() {
 
     // Extension property to create a DataStore instance
     private val Context.dataStore by preferencesDataStore(name = "prima_datastore")
-    private val key = stringPreferencesKey("selectedVehicleId")
+    private val keyVehicleId = intPreferencesKey("vehicleId")
 
-    fun readFromDataStore(): Flow<String?> {
-        Log.d("store", "Reading")
-        return DriversApp.instance.dataStore.data.map { preferences ->
-            val value = preferences[key]
-            value
-        }
-    }
+    var selectedVehicle = DriversApp.instance.dataStore.data.map { preferences ->
+        Vehicle(
+            preferences[keyVehicleId]?:0,"",0,0,0,0,0
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, Vehicle(0, "", 0,0,0,0,0))
 
-    private suspend fun saveToDataStore(value: String) {
-        Log.d("store", "Storing: $value")
+    private suspend fun saveToDataStore(vehicle: Vehicle) {
         DriversApp.instance.dataStore.edit { preferences ->
-            preferences[key] = value
+            preferences[keyVehicleId] = vehicle.id
         }
     }
 }
@@ -157,11 +155,11 @@ fun Vehicles(
             }
         }
 
-        launch {
+        /*launch {
             viewModel.vehicleSelectEvent.collect {
                 Log.d("store", "vehicleSelectEvent")
             }
-        }
+        }*/
     }
 
     var dropdownExpanded by remember {
@@ -182,14 +180,14 @@ fun Vehicles(
                         overflow = TextOverflow.Ellipsis
                     )
                 },
-                navigationIcon = {
+                /*navigationIcon = {
                     IconButton(onClick = { navController.navigate("home") }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Localized description"
                         )
                     }
-                },
+                },*/
                 actions = {
                     IconButton(onClick = { dropdownExpanded = !dropdownExpanded }) {
                         Icon(Icons.Filled.MoreVert, contentDescription = "More Options")
@@ -218,8 +216,7 @@ fun Vehicles(
         ) {
             items(items = viewModel.vehicles.value, itemContent = { vehicle ->
                 ConstraintLayout(modifier = Modifier.clickable {
-                    viewModel.selectedVehicleId = vehicle.id
-                    viewModel.selectVehicle()
+                    viewModel.selectVehicle(vehicle)
                     navController.navigate("tours")
                 }) {
                     Card(

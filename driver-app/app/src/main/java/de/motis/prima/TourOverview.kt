@@ -79,7 +79,7 @@ fun TourOverview(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigate("home") }) {
+                    IconButton(onClick = { navController.navigate("tours") }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Localized description"

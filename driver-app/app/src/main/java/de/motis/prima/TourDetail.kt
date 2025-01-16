@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -245,7 +246,16 @@ fun TourDetail(
                         overflow = TextOverflow.Ellipsis
                     )
                 },
-                navigationIcon = {},
+                navigationIcon = {
+                    val destination = if(eventIndex - 1 >= 0) "legs/${tourId}/${eventIndex - 1}"
+                    else "overview/${tourId}"
+                    IconButton(onClick = { navController.navigate(destination) }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Localized description"
+                        )
+                    }
+                },
                 actions = {
                     IconButton(onClick = { dropdownExpanded = !dropdownExpanded }) {
                         Icon(Icons.Filled.MoreVert, contentDescription = "More Options")

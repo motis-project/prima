@@ -2,6 +2,7 @@ package de.motis.prima
 
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -19,6 +20,8 @@ fun Nav() {
     val vehiclesViewModel: VehiclesViewModel = viewModel()
     val toursViewModel: ToursViewModel = viewModel()
 
+    val selectedVehicle by vehiclesViewModel.selectedVehicle.collectAsState()
+
     // Before rendering any component, check whether user is authenticated.
     val startDestination by remember {
         derivedStateOf {
@@ -28,7 +31,7 @@ fun Nav() {
                 "login"
             } else {
                 Log.d("Cookie", "Cookie found. Navigating to Journeys.")
-                if (vehiclesViewModel.selectedVehicleId == 0) {
+                if (selectedVehicle.id == 0) {
                     "vehicles"
                 } else {
                     "tours"
@@ -40,10 +43,6 @@ fun Nav() {
     NavHost(navController = navController, startDestination = startDestination) {
         composable(route = "login") {
             Login(navController, vehiclesViewModel, toursViewModel)
-        }
-
-        composable(route = "home") {
-            Home(navController, vehiclesViewModel)
         }
 
         composable(route = "vehicles") {

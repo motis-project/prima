@@ -1,5 +1,7 @@
 package de.motis.prima
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +50,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
@@ -56,7 +61,10 @@ import de.motis.prima.services.CookieStore
 import de.motis.prima.services.Tour
 import de.motis.prima.services.Vehicle
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
@@ -152,6 +160,7 @@ fun getLicensePlate(vehicles: List<Vehicle>, vehicleId: Int): String {
     }.last().license_plate
 }
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Tours(
@@ -159,6 +168,8 @@ fun Tours(
     vehiclesViewModel: VehiclesViewModel,
     viewModel: ToursViewModel
 ) {
+    var licensePlate = vehiclesViewModel.selectedVehicle.value.license_plate
+
     LaunchedEffect(key1 = viewModel) {
         viewModel.fetchTours()
         launch {
@@ -190,7 +201,7 @@ fun Tours(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigate("home") }) {
+                    IconButton(onClick = { navController.navigate("vehicles") }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Localized description"
@@ -227,7 +238,7 @@ fun Tours(
 
         }
     ) { contentPadding ->
-        if (vehiclesViewModel.selectedVehicleId == 0) {
+        if (vehiclesViewModel.selectedVehicle.value.id == 0) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -242,7 +253,7 @@ fun Tours(
             }
         } else {
             val toursForVehicle = viewModel.tours.value.filter { t ->
-                t.vehicle_id == vehiclesViewModel.selectedVehicleId
+                t.vehicle_id == vehiclesViewModel.selectedVehicle.value.id
             }
 
             if (toursForVehicle.isEmpty()) {
@@ -315,21 +326,22 @@ fun Tours(
                         }
                     }
                 }
-                /*Row (
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Box() {
-                        val vehicle = getLicensePlate(vehiclesViewModel.vehicles.value, vehiclesViewModel.selectedVehicleId)
-                        Text(
-                            text = vehicle,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
+                if (licensePlate != "") {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Box {
+                            Text(
+                                text = licensePlate,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
-                }*/
+                }
                 Row {
                     LazyColumn(
                         modifier = Modifier

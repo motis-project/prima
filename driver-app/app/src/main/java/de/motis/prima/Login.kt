@@ -94,27 +94,14 @@ fun Login(
 
     LaunchedEffect(key1 = viewModel) {
         launch {
-            vehiclesViewModel.readFromDataStore().collect {id ->
-                run {
-                    if (id != null) {
-                        Log.d("store", "Read from store: "  + id)
-                        vehiclesViewModel.selectedVehicleId = id.toInt()
-
-                    }
-                }
-                Log.d("store", "Set id to:" + vehiclesViewModel.selectedVehicleId.toString())
-            }
-        }
-
-        launch {
             vehiclesViewModel.vehicles = mutableStateOf(emptyList())
             toursViewModel.tours = mutableStateOf(emptyList())
             // Catching successful login event and navigation to the next screen
             viewModel.navigationEvent.collect { shouldNavigate ->
                 Log.d("Navigation event", "Navigation triggered.")
                 if (shouldNavigate) {
-                    Log.d("Navigation event", "Navigating to vehicle selection.")
-                    if (vehiclesViewModel.selectedVehicleId == 0) {
+                    Log.d("Navigation event", "Navigating")
+                    if (vehiclesViewModel.selectedVehicle.value.id == 0) {
                         navController.navigate("vehicles") {}
                     } else {
                         navController.navigate("tours") {}
