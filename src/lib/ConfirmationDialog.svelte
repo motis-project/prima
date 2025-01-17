@@ -42,6 +42,8 @@
 	</AlertDialog.Content>
 </AlertDialog.Root>
 
+<!-- Hier die Telefonnummer des Kunden hinzufügen
+Und das Kommentarfeld -->
 <AlertDialog.Root open={showFailed}>
 	<AlertDialog.Content>
 		<AlertDialog.Header>
