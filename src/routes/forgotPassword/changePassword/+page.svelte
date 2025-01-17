@@ -3,22 +3,25 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
-
+	import { ArrowLeft } from 'lucide-svelte';
+	import { goto } from '$app/navigation';
 	import { enhance } from '$app/forms';
-
 	import type { ActionData } from './$types';
 
 	export let form: ActionData;
+
+	const back = () => {
+		goto('/login');
+	};
 </script>
 
 <div class="flex min-h-screen">
 	<Card.Root class="w-fit m-auto">
 		<p>{form?.message ?? ''}</p>
 		<Card.Header class="space-y-1">
-			<Card.Title class="text-2xl">Login</Card.Title>
+			<Card.Title class="text-2xl">Passwort ändern</Card.Title>
 			<Card.Description>
-				Noch nicht registriert?
-				<a class="underline font-bold" href="/signup">Account erstellen</a>
+				Bitte verwenden Sie dieselbe E-Mail-Adresse wie bei Ihrer Anmeldung.
 			</Card.Description>
 		</Card.Header>
 		<form method="post" use:enhance>
@@ -28,17 +31,18 @@
 					<Input id="email" name="email" type="email" />
 				</div>
 				<div class="grid gap-2">
-					<Label for="password">Password</Label>
+					<Label for="password">Passwort</Label>
 					<Input id="password" name="password" type="password" />
 				</div>
 			</Card.Content>
-			<Card.Footer>
-				<Button type="submit" class="w-full">Login</Button>
+			<Card.Footer class="grid gap-4 justify-center">
+				<Button type="submit">Passwort ändern</Button>
 			</Card.Footer>
 		</form>
-		<a
-			class="flex justify-center text-sm underline font-bold text-muted-foreground"
-			href="/forgotPassword">Passwort vergessen?</a
-		>
+		<div class="grid gap-4 justify-right">
+			<Button on:click={back} variant="outline" class="whitespace-pre mb-4 ml-4 mr-4" href="/login">
+				<ArrowLeft />zurück
+			</Button>
+		</div>
 	</Card.Root>
 </div>

@@ -30,3 +30,14 @@ test('activate taxi', async ({ page }) => {
 	await page.getByRole('button', { name: 'Unternehmer freischalten' }).click();
 	await expect(page.getByText('Freischalten erfolgreich!')).toBeVisible();
 });
+
+test('change password', async ({ page }) => {
+	await login(page, MAINTAINER);
+	await expect(page.getByRole('heading', { name: 'Unternehmer freischalten' })).toBeVisible();
+	await page.getByRole('link', { name: 'Passwort ändern' }).click();
+	await expect(page.getByRole('heading', { name: 'Passwort ändern' })).toBeVisible();
+	await page.getByLabel('Email').fill(MAINTAINER.email);
+	await page.getByLabel('Passwort').fill(MAINTAINER.password);
+	await page.getByRole('button', { name: 'Passwort ändern' }).click();
+	await expect(page.getByRole('heading', { name: 'Unternehmer freischalten' })).toBeVisible();
+});
