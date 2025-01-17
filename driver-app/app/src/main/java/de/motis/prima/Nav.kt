@@ -20,7 +20,7 @@ fun Nav() {
     val vehiclesViewModel: VehiclesViewModel = viewModel()
     val toursViewModel: ToursViewModel = viewModel()
 
-    val selectedVehicle by vehiclesViewModel.selectedVehicle.collectAsState()
+    //val selectedVehicle by vehiclesViewModel.selectedVehicle.collectAsState()
 
     // Before rendering any component, check whether user is authenticated.
     val startDestination by remember {
@@ -31,11 +31,12 @@ fun Nav() {
                 "login"
             } else {
                 Log.d("Cookie", "Cookie found. Navigating to Journeys.")
-                if (selectedVehicle.id == 0) {
+                "vehicles"
+                /*if (selectedVehicle.id == 0) {
                     "vehicles"
                 } else {
                     "tours"
-                }
+                }*/
             }
         }
     }

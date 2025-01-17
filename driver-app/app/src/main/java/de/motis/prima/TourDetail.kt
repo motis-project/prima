@@ -86,7 +86,7 @@ fun PortraitLayout(
                 modifier = Modifier
                 .padding(contentPadding)
             ) {
-                EventDetail(event)
+                EventDetail(event, true)
             }
         }
         Row(
@@ -266,7 +266,7 @@ fun TourDetail(
                     ) {
                         DropdownMenuItem(
                             onClick = {
-                                navController.navigate("home")
+                                navController.navigate("tours")
                                 dropdownExpanded = false
 
                             },

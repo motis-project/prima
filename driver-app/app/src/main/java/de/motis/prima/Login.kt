@@ -20,6 +20,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -92,6 +93,8 @@ fun Login(
         activity?.finish()
     }
 
+    val selectedVehicle by vehiclesViewModel.selectedVehicle.collectAsState()
+
     LaunchedEffect(key1 = viewModel) {
         launch {
             vehiclesViewModel.vehicles = mutableStateOf(emptyList())
@@ -101,7 +104,7 @@ fun Login(
                 Log.d("Navigation event", "Navigation triggered.")
                 if (shouldNavigate) {
                     Log.d("Navigation event", "Navigating")
-                    if (vehiclesViewModel.selectedVehicle.value.id == 0) {
+                    if (selectedVehicle.id == 0) {
                         navController.navigate("vehicles") {}
                     } else {
                         navController.navigate("tours") {}

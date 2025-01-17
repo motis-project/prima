@@ -1,6 +1,9 @@
 package de.motis.prima
 
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,8 +34,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.motis.prima.services.Event
 
+fun openGoogleMapsNavigation(latitude: Double, longitude: Double, context: android.content.Context) {
+    val gmmIntentUri = Uri.parse("google.navigation:q=$latitude,$longitude")
+    val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+    mapIntent.setPackage("com.google.android.apps.maps")
+
+    if (mapIntent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(mapIntent)
+    } else {
+        Toast.makeText(context, "Google Maps is not installed.", Toast.LENGTH_SHORT).show()
+    }
+}
+
 @Composable
-fun EventDetail(event: Event) {
+fun EventDetail(event: Event, inStep: Boolean) {
     var scheduledTime = "-"
     var city = "-"
     var street = "-"
@@ -40,6 +56,7 @@ fun EventDetail(event: Event) {
     var firstName = "-"
     var lastName = "-"
     var phone = "-"
+    val context = LocalContext.current
 
     try {
         scheduledTime = event.scheduled_time
@@ -116,6 +133,29 @@ fun EventDetail(event: Event) {
                         textAlign = TextAlign.Center
                     )
                 }
+                if (inStep && !isPickup) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp, top = 12.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        IconButton(
+                            onClick = {
+                                Log.d("test", "Navigation event")
+                                val lat = 0.0
+                                val lng = 0.0
+                                openGoogleMapsNavigation(lat, lng, context)
+                            },
+                            Modifier
+                                .background(color = Color.White)
+                                .size(width = 34.dp, height = 34.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.compass_icon),
+                                contentDescription = "Localized description"
+                            )
+                        }
+                    }
+                }
             }
 
             if (isPickup) {
@@ -182,22 +222,41 @@ fun EventDetail(event: Event) {
                     )
                 }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    IconButton(
-                        onClick = { Log.d("call", "Call $phone") },
-                        Modifier
-                            .background(color = Color.White)
-                            .size(width = 34.dp, height = 34.dp)
+                if (inStep) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Call,
-                            contentDescription = "Localized description",
-                            Modifier.size(width = 32.dp, height = 32.dp)
+                        IconButton(
+                            onClick = { Log.d("call", "Call $phone") },
+                            Modifier
+                                .background(color = Color.White)
+                                .size(width = 34.dp, height = 34.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Call,
+                                contentDescription = "Localized description",
+                                Modifier.size(width = 32.dp, height = 32.dp)
 
-                        )
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(36.dp))
+                        IconButton(
+                            onClick = {
+                                Log.d("test", "Navigation event")
+                                val lat = 0.0
+                                val lng = 0.0
+                                openGoogleMapsNavigation(lat, lng, context)
+                            },
+                            Modifier
+                                .background(color = Color.White)
+                                .size(width = 34.dp, height = 34.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.compass_icon),
+                                contentDescription = "Localized description"
+                            )
+                        }
                     }
                 }
             }

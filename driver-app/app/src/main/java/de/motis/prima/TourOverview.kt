@@ -206,7 +206,7 @@ fun TourDetails(tourId: Int, viewModel: ToursViewModel) {
             LazyColumn(
             ) {
                 items(items = events, itemContent = { event ->
-                    EventDetail(event = event)
+                    EventDetail(event = event, false)
                 })
             }
         }

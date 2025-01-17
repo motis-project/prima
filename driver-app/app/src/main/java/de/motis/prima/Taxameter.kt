@@ -123,7 +123,7 @@ fun Taxameter(
                     ) {
                         DropdownMenuItem(
                             onClick = {
-                                navController.navigate("home")
+                                navController.navigate("tours")
                                 dropdownExpanded = false
 
                             },
