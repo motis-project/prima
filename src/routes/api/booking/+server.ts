@@ -482,6 +482,7 @@ export const POST = async (event) => {
 			companyLat: bestVehicle!.companyLat!,
 			companyLng: bestVehicle!.companyLng!,
 			companyName: bestVehicle!.companyName!,
+			vehicleId: bestVehicle!.vehicleId,
 			pickupTime: startTime,
 			dropoffTime: targetTime,
 			tour_id: tourId,

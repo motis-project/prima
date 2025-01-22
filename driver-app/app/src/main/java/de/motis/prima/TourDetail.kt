@@ -44,6 +44,11 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
+data class Location(
+    val latitude: Double,
+    val longitude: Double,
+)
+
 @Composable
 fun PortraitLayout(
     navController: NavController,
@@ -56,8 +61,20 @@ fun PortraitLayout(
     val tour = toursViewModel.tours.value.filter { t -> t.tour_id == tourId }[0]
     val event = tour.events[eventIndex]
 
+    var currentLocation: Location
+
     if (eventIndex + 1 == tour.events.size) {
         isLastEvent = true
+    }
+
+    if (eventIndex == 0) {
+        // Test: Taxi company home in Weisswasser
+        // currentLocation = Location(latitude = 51.493713, longitude = 14.625855)
+        toursViewModel.fetchLocation()
+        currentLocation = toursViewModel.currentLocation
+    } else {
+        val prevEvent = tour.events[eventIndex - 1]
+        currentLocation = Location(latitude = prevEvent.latitude, longitude = prevEvent.longitude)
     }
 
     Column(
@@ -86,7 +103,7 @@ fun PortraitLayout(
                 modifier = Modifier
                 .padding(contentPadding)
             ) {
-                EventDetail(event, true)
+                EventDetail(event, true, currentLocation)
             }
         }
         Row(

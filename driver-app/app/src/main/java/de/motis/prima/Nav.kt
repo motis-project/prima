@@ -47,7 +47,7 @@ fun Nav() {
         }
 
         composable(route = "vehicles") {
-            Vehicles(navController, vehiclesViewModel)
+            Vehicles(navController, vehiclesViewModel, toursViewModel)
         }
 
         composable(route = "tours") {

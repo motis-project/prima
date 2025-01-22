@@ -43,6 +43,7 @@ import de.motis.prima.services.Api
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import java.util.Date
 
 class LoginViewModel : ViewModel() {
     // Event which will be omitted to the Login component, indicating success of the login operation
@@ -104,6 +105,7 @@ fun Login(
                 Log.d("Navigation event", "Navigation triggered.")
                 if (shouldNavigate) {
                     Log.d("Navigation event", "Navigating")
+                    toursViewModel.reset()
                     if (selectedVehicle.id == 0) {
                         navController.navigate("vehicles") {}
                     } else {

@@ -160,7 +160,6 @@ fun TourDetails(tourId: Int, viewModel: ToursViewModel) {
     var timeBegin = "-"
     var timeEnd = "-"
 
-
     try {
         timeBegin = events[0].scheduled_time
             .replace("T", " ")
@@ -206,7 +205,7 @@ fun TourDetails(tourId: Int, viewModel: ToursViewModel) {
             LazyColumn(
             ) {
                 items(items = events, itemContent = { event ->
-                    EventDetail(event = event, false)
+                    EventDetail(event = event, false, viewModel.currentLocation)
                 })
             }
         }

@@ -3,7 +3,6 @@ package de.motis.prima
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,20 +33,42 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.motis.prima.services.Event
 
-fun openGoogleMapsNavigation(latitude: Double, longitude: Double, context: android.content.Context) {
-    val gmmIntentUri = Uri.parse("google.navigation:q=$latitude,$longitude")
+
+fun openGoogleMapsNavigation(from: Location, to: Location, context: android.content.Context) {
+    val gmmIntentUri = Uri.parse("google.navigation:q=${to.latitude},${to.longitude}")
     val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
     mapIntent.setPackage("com.google.android.apps.maps")
 
+    // Check if Google Maps App is installed
     if (mapIntent.resolveActivity(context.packageManager) != null) {
         context.startActivity(mapIntent)
     } else {
-        Toast.makeText(context, "Google Maps is not installed.", Toast.LENGTH_SHORT).show()
+        // Fallback to browser
+        val googleMapsUrl =
+            "https://www.google.com/maps/dir/?api=1&origin=${from.latitude},${from.longitude}&destination=${to.latitude},${to.longitude}&travelmode=driving"
+
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.setData(Uri.parse(googleMapsUrl))
+        intent.setPackage("com.android.chrome")
+
+        // Check if Chrome is installed
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+        } else {
+            // Fallback to any browser
+            intent.setPackage(null)
+            context.startActivity(intent)
+        }
     }
 }
 
+fun phoneCall(number: String, context: android.content.Context) {
+    val intent = Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null))
+    context.startActivity(intent)
+}
+
 @Composable
-fun EventDetail(event: Event, inStep: Boolean) {
+fun EventDetail(event: Event, inStep: Boolean, currentLocation: Location) {
     var scheduledTime = "-"
     var city = "-"
     var street = "-"
@@ -56,6 +77,8 @@ fun EventDetail(event: Event, inStep: Boolean) {
     var firstName = "-"
     var lastName = "-"
     var phone = "-"
+    var eventLocation = Location(latitude = 0.0, longitude = 0.0)
+
     val context = LocalContext.current
 
     try {
@@ -76,6 +99,8 @@ fun EventDetail(event: Event, inStep: Boolean) {
             lastName = event.last_name
         if (event.phone != null)
             phone = event.phone
+        if (event.latitude != null && event.longitude != null)
+            eventLocation = Location(latitude = event.latitude, longitude = event.longitude)
     } catch (e: Exception) {
         Log.d("error", "Failed to read event details")
         return
@@ -114,7 +139,9 @@ fun EventDetail(event: Event, inStep: Boolean) {
                 }
             } else {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
@@ -135,15 +162,15 @@ fun EventDetail(event: Event, inStep: Boolean) {
                 }
                 if (inStep && !isPickup) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp, top = 12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 4.dp, top = 12.dp),
                         horizontalArrangement = Arrangement.Center
                     ) {
                         IconButton(
                             onClick = {
                                 Log.d("test", "Navigation event")
-                                val lat = 0.0
-                                val lng = 0.0
-                                openGoogleMapsNavigation(lat, lng, context)
+                                openGoogleMapsNavigation(currentLocation, eventLocation, context)
                             },
                             Modifier
                                 .background(color = Color.White)
@@ -160,7 +187,9 @@ fun EventDetail(event: Event, inStep: Boolean) {
 
             if (isPickup) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp, top = 12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp, top = 12.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(
@@ -185,7 +214,9 @@ fun EventDetail(event: Event, inStep: Boolean) {
                 }
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(
@@ -224,11 +255,13 @@ fun EventDetail(event: Event, inStep: Boolean) {
 
                 if (inStep) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
                         horizontalArrangement = Arrangement.Center
                     ) {
                         IconButton(
-                            onClick = { Log.d("call", "Call $phone") },
+                            onClick = { phoneCall(phone, context) },
                             Modifier
                                 .background(color = Color.White)
                                 .size(width = 34.dp, height = 34.dp)
@@ -244,9 +277,7 @@ fun EventDetail(event: Event, inStep: Boolean) {
                         IconButton(
                             onClick = {
                                 Log.d("test", "Navigation event")
-                                val lat = 0.0
-                                val lng = 0.0
-                                openGoogleMapsNavigation(lat, lng, context)
+                                openGoogleMapsNavigation(currentLocation, eventLocation, context)
                             },
                             Modifier
                                 .background(color = Color.White)

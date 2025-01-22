@@ -59,6 +59,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import android.app.Application
+import java.util.Date
 
 class VehiclesViewModel() : ViewModel() {
     private val cookieStore: CookieStore = CookieStore(DriversApp.instance)
@@ -141,7 +142,8 @@ class VehiclesViewModel() : ViewModel() {
 @Composable
 fun Vehicles(
     navController: NavController,
-    viewModel: VehiclesViewModel
+    viewModel: VehiclesViewModel,
+    toursViewModel: ToursViewModel
 ) {
     LaunchedEffect(key1 = viewModel) {
         viewModel.fetchVehicles()
@@ -180,14 +182,6 @@ fun Vehicles(
                         overflow = TextOverflow.Ellipsis
                     )
                 },
-                /*navigationIcon = {
-                    IconButton(onClick = { navController.navigate("home") }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Localized description"
-                        )
-                    }
-                },*/
                 actions = {
                     IconButton(onClick = { dropdownExpanded = !dropdownExpanded }) {
                         Icon(Icons.Filled.MoreVert, contentDescription = "More Options")
@@ -217,6 +211,7 @@ fun Vehicles(
             items(items = viewModel.vehicles.value, itemContent = { vehicle ->
                 ConstraintLayout(modifier = Modifier.clickable {
                     viewModel.selectVehicle(vehicle)
+                    toursViewModel.reset()
                     navController.navigate("tours")
                 }) {
                     Card(

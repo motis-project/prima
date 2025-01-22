@@ -96,7 +96,7 @@
 		to: new Location(destination, emptyAddress),
 		startFixed: true,
 		timeStamp: new Date(),
-		numPassengers: 3,
+		numPassengers: 1,
 		numWheelchairs: 0,
 		numBikes: 0,
 		luggage: 0
@@ -211,9 +211,16 @@
 		}
 	});
 
-	let timeType = $state('departure');
-	let dateTime = $state(new Date().toISOString());
-	let arriveBy = $derived(timeType === 'arrival');
+	let timeType = $state('arrival');
+	let arriveBy = $derived(timeType === 'departure');
+
+	let inputDate = $state('');
+	let inputTime = $state('');
+	let dateTime = $derived(
+		inputDate != '' && inputTime != '' ? new Date(inputDate + 'T' + inputTime).toISOString() : ''
+	);
+	//let dateTime = $derived(inputDate + 'T' + inputTime + ':00.000Z');
+	//let dateTime = $state(new Date().toISOString());
 
 	let bookingResponse = $state<Array<Promise<Response>>>([]);
 
@@ -283,7 +290,8 @@
 		<Card class="w-[520px] max-h-[90vh] overflow-y-auto overflow-x-hidden bg-white rounded-lg">
 			<div class="flex flex-col w-full">
 				<div class="flex flex-row space-x-4 p-4 shadow-md rounded">
-					<input type="text" bind:value={dateTime} />
+					<input type="date" bind:value={inputDate} />
+					<input type="time" bind:value={inputTime} />
 					<div class="flex">
 						<RadioGroup.Root class="flex space-x-1 ml-1" bind:value={timeType}>
 							<Label
@@ -362,10 +370,7 @@
 									<Alert.Root variant={r.ok ? 'default' : 'destructive'}>
 										<Alert.Description>
 											{res.companyName}<br />
-											{res.companyId}<br />
-											{res.companyLat}<br />
-											{res.companyLng}<br />
-											{start.lat}<br />
+											Fahrzeug: {res.vehicleId}<br />
 											{getRoutes(res.companyLat, res.companyLng)}
 										</Alert.Description>
 									</Alert.Root>
