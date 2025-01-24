@@ -10,7 +10,7 @@
 <Meta title="{t.account.create} | {PUBLIC_PROVIDER}" />
 
 <div>
-	<h1 class="my-6 text-center text-2xl font-semibold leading-7 tracking-tight">
+	<h1 class="my-6 text-center text-2xl font-semibold leading-8 tracking-tight">
 		{PUBLIC_PROVIDER}<br />{t.account.create}
 	</h1>
 	<Form message={form?.msg} type="signup" />

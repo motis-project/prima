@@ -3,12 +3,20 @@ import en from './en';
 import de from './de';
 
 export type Translations = {
+	msg: {
+		enterEmailAndPassword: string;
+		invalidEmail: string;
+		emailAlreadyRegistered: string;
+		weakPassword: string;
+		tooManyRequests: string;
+		failedToSendVerificationEmail: string;
+	};
 	account: {
 		name: string;
 		email: string;
 		password: string;
 		create: string;
-		enterEmailAndPassword: string;
+		login: string;
 	};
 	journeyDetails: string;
 	transfers: string;
@@ -38,10 +46,7 @@ export type Translations = {
 };
 
 const translations: Map<string, Translations> = new Map(
-	Object.entries({
-		en,
-		de
-	})
+	Object.entries({ en, de })
 );
 
 export const language = (browser ? navigator.languages.find((l) => l.length == 2) : 'de') ?? 'de';

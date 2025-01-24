@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import AddressTypeahead from './routing/AddressTypeahead.svelte';
-	import { type Location } from './routing/Location';
+	import AddressTypeahead from './AddressTypeahead.svelte';
+	import { type Location } from './Location';
 	import { Input } from '$lib/shadcn/input';
 	import { Calendar } from '$lib/shadcn/calendar';
 	import * as RadioGroup from '$lib/shadcn/radio-group';
@@ -15,10 +15,10 @@
 	import ArrowUpDown from 'lucide-svelte/icons/arrow-up-down';
 	import { ChevronDown } from 'lucide-svelte';
 	import { onMount } from 'svelte';
-	import { lngLatToStr } from './routing/lngLatToStr';
-	import ItineraryList from './routing/ItineraryList.svelte';
-	import ConnectionDetail from './routing/ConnectionDetail.svelte';
-	import StopTimes from './routing/StopTimes.svelte';
+	import { lngLatToStr } from './lngLatToStr';
+	import ItineraryList from './ItineraryList.svelte';
+	import ConnectionDetail from './ConnectionDetail.svelte';
+	import StopTimes from './StopTimes.svelte';
 	import { cn } from '$lib/shadcn/utils';
 
 	const urlParams = browser ? new URLSearchParams(window.location.search) : undefined;

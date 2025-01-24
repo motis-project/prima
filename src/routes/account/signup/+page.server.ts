@@ -15,7 +15,6 @@ import { sendMail } from '$lib/server/sendMail';
 import Welcome from '$lib/server/email/Welcome.svelte';
 import type { Actions, PageServerLoadEvent, RequestEvent } from './$types';
 import { getIp } from '$lib/server/getIp';
-import { t } from '$lib/i18n/translation';
 import { PUBLIC_PROVIDER } from '$env/static/public';
 
 const ipBucket = new RefillingTokenBucket<string>(3, 10);
@@ -51,7 +50,7 @@ export const actions: Actions = {
 	default: async (event: RequestEvent) => {
 		const clientIP = getIp(event);
 		if (!ipBucket.check(clientIP, 1)) {
-			return fail(429, { msg: msg('Too many requests'), email: '' });
+			return fail(429, { msg: msg('tooManyRequests'), email: '' });
 		}
 
 		const formData = await event.request.formData();
@@ -66,27 +65,27 @@ export const actions: Actions = {
 			typeof password !== 'string' ||
 			password.length < 3
 		) {
-			return fail(400, { msg: msg(t.account.enterEmailAndPassword), email: '' });
+			return fail(400, { msg: msg('enterEmailAndPassword'), email: '' });
 		}
 		if (!verifyEmailInput(email)) {
-			return fail(400, { msg: msg('Invalid email'), email });
+			return fail(400, { msg: msg('invalidEmail'), email });
 		}
 		if (!(await isEmailAvailable(email))) {
-			return fail(400, { msg: msg('Email is already used'), email });
+			return fail(400, { msg: msg('emailAlreadyRegistered'), email });
 		}
 		if (!(await isStrongPassword(password))) {
-			return fail(400, { msg: msg('Weak password'), email });
+			return fail(400, { msg: msg('weakPassword'), email });
 		}
 		if (!ipBucket.consume(clientIP, 1)) {
-			return fail(429, { msg: msg('Too many requests'), email });
+			return fail(429, { msg: msg('tooManyRequests'), email });
 		}
 		const user = await createUser(name, email, password);
 		try {
-			await sendMail(Welcome, `Willkommen to ${PUBLIC_PROVIDER}`, email, {
+			await sendMail(Welcome, `Willkommen zu ${PUBLIC_PROVIDER}`, email, {
 				code: user.emailVerificationCode
 			});
 		} catch {
-			return fail(500, { msg: msg('Failed to send verification email'), email });
+			return fail(500, { msg: msg('failedToSendVerificationEmail'), email });
 		}
 		const sessionToken = generateSessionToken();
 		const session = await createSession(sessionToken, user.id);

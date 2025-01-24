@@ -1,12 +1,20 @@
 import type { Translations } from './translation';
 
 const translations: Translations = {
+	msg: {
+		enterEmailAndPassword: 'Please enter your email and password.',
+		invalidEmail: 'Invalid email address.',
+		emailAlreadyRegistered: 'E-Mail already registered.',
+		weakPassword: 'Weak password.',
+		tooManyRequests: 'Too many requests.',
+		failedToSendVerificationEmail: 'Failed to send the verification e-mail',
+	},
 	account: {
 		name: 'Name',
 		email: 'E-Mail',
 		password: 'Password',
 		create: 'Create Account',
-		enterEmailAndPassword: 'Please enter your email and password.'
+		login: 'Login',
 	},
 	journeyDetails: 'Journey Details',
 	transfers: 'transfers',

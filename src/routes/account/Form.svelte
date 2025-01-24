@@ -1,17 +1,17 @@
 <script lang="ts">
+	import { PUBLIC_PROVIDER } from '$env/static/public';
+	import ChevronRightIcon from 'lucide-svelte/icons/chevron-right';
 	import { Button } from '$lib/shadcn/button';
 	import { Input } from '$lib/shadcn/input';
-	import ChevronRightIcon from 'lucide-svelte/icons/chevron-right';
 	import type { Msg } from '$lib/msg';
-	import { t } from '$lib/i18n/translation';
 	import Message from '$lib/Message.svelte';
-	import { PUBLIC_PROVIDER } from '$env/static/public';
+	import { t } from '$lib/i18n/translation';
 	import { Label } from '$lib/shadcn/label';
 
 	const { message, type }: { message?: Msg; type: 'signup' | 'login' } = $props();
 </script>
 
-<div class="mx-auto flex flex-col md:items-center">
+<div class="mx-auto flex flex-col">
 	<form method="post" class="flex flex-col gap-6">
 		{#if message}
 			<Message class="mb-6" msg={message} />
@@ -35,7 +35,7 @@
 		</div>
 
 		<Button type="submit" class="w-full" variant="outline">
-			{type == 'signup' ? 'Account erstellen' : 'Login'}
+			{type == 'signup' ? t.account.create : t.account.login}
 			<ChevronRightIcon />
 		</Button>
 	</form>

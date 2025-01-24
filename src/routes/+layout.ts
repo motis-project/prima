@@ -2,12 +2,10 @@ import { client } from '$lib/openapi';
 import { browser } from '$app/environment';
 import type { QuerySerializerOptions } from '@hey-api/client-fetch';
 
-export const prerender = true;
-
 if (browser) {
 	const params = new URL(window.location.href).searchParams;
 	const defaultProtocol = 'https:';
-	const defaultHost = 'europe.motis-project.de';
+	const defaultHost = 'api.transitous.org';
 	const defaultPort = '443';
 	const motisParam = params.get('motis');
 	let baseUrl = String(defaultProtocol + '//' + defaultHost + ':' + defaultPort);

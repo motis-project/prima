@@ -1,12 +1,20 @@
 import type { Translations } from './translation';
 
 const translations: Translations = {
+	msg: {
+		enterEmailAndPassword: 'Bitte gibt Deine E-Mail und Dein Passwort ein.',
+		invalidEmail: 'Ungültige E-Mail Adresse.',
+		emailAlreadyRegistered: 'Diese E-Mail Adresse ist bereits registriert.',
+		weakPassword: 'Bitte wähle ein stärkeres Passwort.',
+		tooManyRequests: 'Zu viele Anfragen.',
+		failedToSendVerificationEmail: 'E-Mail zur Verifikation konnte nicht gesendet werden.',
+	},
 	account: {
 		name: 'Name',
 		email: 'E-Mail',
 		password: 'Passwort',
 		create: 'Nutzerkonto erstellen',
-		enterEmailAndPassword: 'Bitte gibt Deine E-Mail und Dein Passwort ein.'
+		login: 'Login',
 	},
 	journeyDetails: 'Verbindungsdetails',
 	transfers: 'Umstiege',
