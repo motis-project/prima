@@ -85,6 +85,7 @@ export interface AvailabilityTable {
 	start_time: Date;
 	end_time: Date;
 	vehicle: number;
+	cap: number;
 }
 
 export type Availability = Selectable<AvailabilityTable>;
