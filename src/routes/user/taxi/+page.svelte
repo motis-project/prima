@@ -159,7 +159,7 @@
 				to: new Date(Math.max(selection.start.to.getTime(), selection.end.to.getTime()))
 			};
 			const cap = MsToHours(selectedRange.to.getTime() - selectedRange.from.getTime()) * VOLUME_CAP;
-			console.log("cap is: %d", cap);
+			console.log('cap is: %d', cap);
 			const vehicle_id = selection.id;
 			const available = selection.available;
 			let response;

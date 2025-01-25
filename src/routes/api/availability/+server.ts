@@ -4,20 +4,27 @@ import { sql } from 'kysely';
 import type { NewAvailability, Availability } from '$lib/types.js';
 import { Interval } from '$lib/interval.js';
 
-const toAvailability = (interval: Interval, id: number, vehicle: number): Availability => {
+const toAvailability = (
+	interval: Interval,
+	id: number,
+	vehicle: number,
+	cap: number
+): Availability => {
 	return {
 		start_time: interval.startTime,
 		end_time: interval.endTime,
 		vehicle: vehicle,
-		id: id
+		id: id,
+		cap: cap
 	};
 };
 
-const toNewAvailability = (interval: Interval, vehicle: number): NewAvailability => {
+const toNewAvailability = (interval: Interval, vehicle: number, cap: number): NewAvailability => {
 	return {
 		start_time: interval.startTime,
 		end_time: interval.endTime,
-		vehicle: vehicle
+		vehicle: vehicle,
+		cap: cap
 	};
 };
 
@@ -63,10 +70,10 @@ export const DELETE = async (event) => {
 			} else if (availability.contains(toRemove) && !availability.eitherEndIsEqual(toRemove)) {
 				toRemoveIds.push(a.id);
 				const [left, right] = availability.split(toRemove);
-				create.push(toNewAvailability(left, a.vehicle));
-				create.push(toNewAvailability(right, a.vehicle));
+				create.push(toNewAvailability(left, a.vehicle, 0));
+				create.push(toNewAvailability(right, a.vehicle, 0));
 			} else {
-				cut.push(toAvailability(availability.cut(toRemove), a.id, a.vehicle));
+				cut.push(toAvailability(availability.cut(toRemove), a.id, a.vehicle, 0));
 			}
 		});
 		const promises = [];
