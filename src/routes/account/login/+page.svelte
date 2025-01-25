@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import { t } from '$lib/i18n/translation';
-	import Message from '$lib/Message.svelte';
 	import Meta from '$lib/Meta.svelte';
 	import * as Alert from '$lib/shadcn/alert';
 	import Form from '../Form.svelte';
