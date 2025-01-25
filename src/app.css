@@ -73,3 +73,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+.link {
+  @apply border-b border-dotted border-muted-foreground;
+}

@@ -27,7 +27,7 @@ export async function up(db) {
 		.createTable('session')
 		.addColumn('id', 'varchar', (col) => col.primaryKey())
 		.addColumn('expires_at', 'timestamp', (col) => col.notNull())
-		.addColumn('user_id', 'number', (col) =>
+		.addColumn('user_id', 'integer', (col) =>
 			col.references('user.id').onDelete('cascade').notNull()
 		)
 		.execute();
@@ -108,7 +108,7 @@ export async function up(db) {
 			col.references('address.id').onDelete('cascade').notNull()
 		)
 		.addColumn('tour', 'integer', (col) => col.references('tour.id').onDelete('cascade').notNull())
-		.addColumn('customer', 'varchar', (col) =>
+		.addColumn('customer', 'integer', (col) =>
 			col.references('user.id').onDelete('cascade').notNull()
 		)
 		.execute();

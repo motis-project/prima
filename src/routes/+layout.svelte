@@ -4,7 +4,7 @@
 	let { children } = $props();
 </script>
 
-<div class="p-4 md:flex md:h-full md:items-center md:justify-center">
+<div class="p-4 pb-16 md:flex md:h-full md:items-center md:justify-center">
 	{@render children()}
 </div>
 <Menu />

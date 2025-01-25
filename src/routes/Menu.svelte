@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { t } from '$lib/i18n/translation';
 	import ChevronsRight from 'lucide-svelte/icons/chevrons-right';
 	import TicketCheck from 'lucide-svelte/icons/ticket-check';
 	import UserRound from 'lucide-svelte/icons/user-round';
@@ -30,9 +31,9 @@
 {/snippet}
 
 <div
-	class="fixed bottom-0 grid h-16 w-full grid-cols-3 grid-rows-1 rounded-xl border bg-background text-xs"
+	class="fixed bottom-0 grid h-16 w-full grid-cols-3 grid-rows-1 rounded-t-xl border bg-background text-xs"
 >
-	{@render menuItem('Verbindungen', '/routing', ChevronsRight)}
-	{@render menuItem('Buchungen', '/bookings', TicketCheck)}
-	{@render menuItem('Account', '/account/signup', UserRound)}
+	{@render menuItem(t.menu.connections, '/routing', ChevronsRight)}
+	{@render menuItem(t.menu.bookings, '/bookings', TicketCheck)}
+	{@render menuItem(t.menu.account, '/account', UserRound)}
 </div>

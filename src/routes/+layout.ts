@@ -20,7 +20,6 @@ if (browser) {
 			baseUrl = motisParam;
 		}
 	}
-	console.log({ baseUrl, defaultProtocol, defaultHost, defaultPort, motisParam });
 	const querySerializer = { array: { explode: false } } as QuerySerializerOptions;
-	client.setConfig({ baseUrl, querySerializer }); //`${window.location}`
+	client.setConfig({ baseUrl, querySerializer });
 }

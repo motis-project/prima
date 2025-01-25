@@ -1,0 +1,17 @@
+version: '3'
+services:
+  pg:
+    image: postgis/postgis:16-3.4
+    restart: always
+    container_name: pg
+    ports:
+      - '6500:5432'
+    env_file:
+      - ./.env
+    volumes:
+      - type: volume
+        source: data-volume
+        target: /var/lib/postgresql/data
+
+volumes:
+  data-volume:

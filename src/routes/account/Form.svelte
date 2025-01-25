@@ -51,7 +51,10 @@
 			</a>
 			von {PUBLIC_PROVIDER} zu.
 		{:else}
-			<a href="/request-password-reset" class="border-b border-dotted border-muted-foreground">
+			<a
+				href="/account/request-password-reset"
+				class="border-b border-dotted border-muted-foreground"
+			>
 				Passwort vergessen?
 			</a>
 		{/if}

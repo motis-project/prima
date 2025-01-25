@@ -1,13 +1,31 @@
 import type { Translations } from './translation';
 
 const translations: Translations = {
+	menu: {
+		connections: 'Verbindungen',
+		bookings: 'Buchungen',
+		account: 'Konto'
+	},
 	msg: {
-		enterEmailAndPassword: 'Bitte gibt Deine E-Mail und Dein Passwort ein.',
+		enterEmailAndPassword: 'Bitte gib Deine E-Mail und Dein Passwort ein.',
 		invalidEmail: 'Ungültige E-Mail Adresse.',
 		emailAlreadyRegistered: 'Diese E-Mail Adresse ist bereits registriert.',
 		weakPassword: 'Bitte wähle ein stärkeres Passwort.',
 		tooManyRequests: 'Zu viele Anfragen.',
 		failedToSendVerificationEmail: 'E-Mail zur Verifikation konnte nicht gesendet werden.',
+		accountDoesNotExist: 'Nutzerkonto existiert nicht.',
+		invalidPassword: 'Ungültiges Passwort.',
+		new: 'Neu hier? <a href="/account/signup" class="link">Erstelle ein neues Nutzerkonto!</a>',
+		enterYourCode: 'Bitte gib den Code ein.',
+		codeExpiredSentAnother: 'Dieser Code ist abgelaufen. Wir haben Dir einen neuen Code geschickt.',
+		incorrectCode: 'Falscher Code.',
+		newCodeSent: 'Wir haben einen neuen Code an Deine E-Mail Adresse geschickt.',
+		enterNewPassword: 'Bitte gib Dein neues Passwort ein.',
+		passwordChanged: 'Passwort erfolgreich geändert.',
+		enterEmail: 'Gib deine E-Mail Adresse ein.',
+		oldEmail: 'Dies ist die bereits verwendete E-Mail Adresse.',
+		checkInboxToVerify:
+			'Bitte prüfe Dein E-Mail Postfach um Deine neue E-Mail Adresse zu verifizieren.'
 	},
 	account: {
 		name: 'Name',
@@ -15,6 +33,19 @@ const translations: Translations = {
 		password: 'Passwort',
 		create: 'Nutzerkonto erstellen',
 		login: 'Login',
+		sentAnEmailTo: 'Wir haben Dir einen Code an folgende E-Mail Adresse geschickt:',
+		changeYourEmail:
+			'Die E-Mail Adresse kann in den <a href="/account/settings">Kontoeinstellungen</a> geändert werden',
+		emailVerification: 'E-Mail Verifikation',
+		verifySubtitle: 'Verifiziere Deine E-Mail Adresse mit dem Code, den wir Dir geschickt haben.',
+		resetPassword: 'Passwort zurücksetzen',
+		resetPasswordSubtitle: 'Passwort ändern',
+		changeEmail: 'E-Mail Adresse ändern',
+		changeEmailSubtitle:
+			'Ändere Deine E-Mail Adresse. Wir werden Dir einen neuen Code zur Verifizierung senden.',
+		logout: 'Abmelden',
+		logoutSubtitle: 'Aus dem Konto abmelden. Du kannst Dich jederzeit wieder anmelden.',
+		code: 'Code'
 	},
 	journeyDetails: 'Verbindungsdetails',
 	transfers: 'Umstiege',

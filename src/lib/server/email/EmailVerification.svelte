@@ -8,7 +8,7 @@
 	Guten Tag {name},
 	<p>
 		Bitte verifiziere Deine E-Mail Addresse:<br />
-		<a href="{ORIGIN}/user/verify-email/?code={code}" target="_blank">
+		<a href="{ORIGIN}/account/verify-email/?code={code}" target="_blank">
 			{ORIGIN}/verify-email/?code={code}
 		</a>
 	</p>

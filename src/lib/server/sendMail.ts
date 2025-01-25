@@ -1,6 +1,7 @@
 import { render } from 'svelte/server';
 import { convert } from 'html-to-text';
-import { SCW_DEFAULT_PROJECT_ID, SCW_SECRET_KEY } from '$env/static/private';
+import { EMAIL_SENDER, SCW_DEFAULT_PROJECT_ID, SCW_SECRET_KEY } from '$env/static/private';
+import { PUBLIC_PROVIDER } from '$env/static/public';
 
 export type EmailContent = {
 	text: string;
@@ -29,8 +30,8 @@ async function send(subject: string, email: string, content: EmailContent) {
 		body: JSON.stringify({
 			project_id: SCW_DEFAULT_PROJECT_ID,
 			from: {
-				name: 'triptix.tech',
-				email: 'noreply@triptix.tech'
+				name: PUBLIC_PROVIDER,
+				email: EMAIL_SENDER
 			},
 			to: [{ email }],
 			subject,

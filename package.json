@@ -4,6 +4,7 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
+		"kysely": "kysely",
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
@@ -52,10 +53,12 @@
 		"@node-rs/argon2": "^2.0.2",
 		"@oslojs/crypto": "^1.0.1",
 		"@oslojs/encoding": "^1.1.0",
+		"@tailwindcss/typography": "^0.5.16",
 		"@types/html-to-text": "^9.0.4",
 		"@types/pg": "^8.11.11",
 		"html-to-text": "^9.0.5",
 		"kysely": "^0.27.5",
+		"kysely-ctl": "^0.10.1",
 		"maplibre-gl": "^5.0.1",
 		"pg": "^8.13.1"
 	}
