@@ -4,7 +4,7 @@
 	import Meta from '$lib/Meta.svelte';
 	import * as Alert from '$lib/shadcn/alert';
 	import Form from '../Form.svelte';
-	const { form } = $props();
+	const { form, data } = $props();
 </script>
 
 <Meta title="Login | {PUBLIC_PROVIDER}" />
@@ -15,10 +15,14 @@
 	</h1>
 
 	<Alert.Root variant="default" class="my-6">
-		<Alert.Title>
-			{@html t.msg['new']}
-		</Alert.Title>
+		{@html t.msg['new']}
 	</Alert.Root>
+
+	{#if data.passwordResetSuccess}
+		<Alert.Root variant="default" class="my-6">
+			{@html t.msg['passwordResetSuccess']}
+		</Alert.Root>
+	{/if}
 
 	<Form message={form?.msg} type="login" />
 </div>

@@ -42,6 +42,12 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		) {
 			return redirect(302, '/account/verify-email');
 		}
+		if (
+			event.url.pathname.startsWith('/account/login') ||
+			event.url.pathname.startsWith('/account/signup')
+		) {
+			return redirect(302, '/account');
+		}
 	} else {
 		if (
 			event.url.pathname.startsWith('/account') &&

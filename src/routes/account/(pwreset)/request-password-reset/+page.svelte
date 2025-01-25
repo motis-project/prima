@@ -6,22 +6,23 @@
 	import Message from '$lib/Message.svelte';
 	import { enhance } from '$app/forms';
 	import Panel from '$lib/Panel.svelte';
+	import { t } from '$lib/i18n/translation.js';
 	const { form } = $props();
 </script>
 
-<Panel title="Request Password Reset" subtitle="We will send a reset code to this e-mail.">
+<Panel title={t.account.passwordResetRequest} subtitle={t.account.passwordResetRequestSubtitle}>
 	<form method="post" class="flex flex-col gap-6" use:enhance>
 		{#if form?.msg}
 			<Message class="mb-4" msg={form.msg} />
 		{/if}
 
-		<div class="flex flex-col gap-2">
-			<Label>E-Mail</Label>
-			<Input name="email" type="email" placeholder="Email" />
+		<div class="field">
+			<Label>{t.account.email}</Label>
+			<Input name="email" type="email" placeholder={t.account.email} />
 		</div>
 
 		<Button type="submit" class="w-full" variant="outline">
-			Request Reset
+			{t.account.passwordResetRequest}
 			<ChevronRightIcon />
 		</Button>
 	</form>

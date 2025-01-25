@@ -25,7 +25,9 @@ const translations: Translations = {
 		enterEmail: 'Gib deine E-Mail Adresse ein.',
 		oldEmail: 'Dies ist die bereits verwendete E-Mail Adresse.',
 		checkInboxToVerify:
-			'Bitte prüfe Dein E-Mail Postfach um Deine neue E-Mail Adresse zu verifizieren.'
+			'Bitte prüfe Dein E-Mail Postfach um Deine neue E-Mail Adresse zu verifizieren.',
+		passwordResetSuccess:
+			'Passwort erfolgreich zurückgesetzt. Du kannst Dich jetzt mit dem neuen Passwort anmelden.'
 	},
 	account: {
 		name: 'Name',
@@ -45,7 +47,12 @@ const translations: Translations = {
 			'Ändere Deine E-Mail Adresse. Wir werden Dir einen neuen Code zur Verifizierung senden.',
 		logout: 'Abmelden',
 		logoutSubtitle: 'Aus dem Konto abmelden. Du kannst Dich jederzeit wieder anmelden.',
-		code: 'Code'
+		code: 'Code',
+		passwordReset: 'Passwort zurücksetzen',
+		passwordResetSubtitle: 'Hier kannst Du ein neues Passwort festlegen.',
+		passwordResetRequest: 'Passwort zurücksetzen',
+		passwordResetRequestSubtitle: 'Wir schicken Dir einen Code an Deine E-Mail Adresse.',
+		newPassword: 'Neues Passwort'
 	},
 	journeyDetails: 'Verbindungsdetails',
 	transfers: 'Umstiege',

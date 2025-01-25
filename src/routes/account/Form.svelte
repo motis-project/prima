@@ -18,19 +18,19 @@
 		{/if}
 
 		{#if type === 'signup'}
-			<div class="flex flex-col gap-2">
-				<Label>Name</Label>
+			<div class="field">
+				<Label>{t.account.name}</Label>
 				<Input name="name" type="text" placeholder={t.account.name} />
 			</div>
 		{/if}
 
-		<div class="flex flex-col gap-2">
-			<Label>E-Mail</Label>
+		<div class="field">
+			<Label>{t.account.email}</Label>
 			<Input name="email" type="email" placeholder={t.account.email} />
 		</div>
 
-		<div class="flex flex-col gap-2">
-			<Label>Passwort</Label>
+		<div class="field">
+			<Label>{t.account.password}</Label>
 			<Input name="password" type="password" placeholder={t.account.password} />
 		</div>
 

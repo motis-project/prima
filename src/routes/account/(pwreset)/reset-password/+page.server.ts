@@ -28,6 +28,7 @@ export const actions: Actions = {
 		const email = formData.get('email');
 		const code = formData.get('code');
 		const password = formData.get('password');
+
 		if (typeof code !== 'string') {
 			return fail(400, { msg: msg('enterYourCode'), email });
 		}
@@ -63,6 +64,6 @@ export const actions: Actions = {
 			return fail(400, { msg: msg('incorrectCode'), email, code });
 		}
 
-		return redirect(302, '/user');
+		return redirect(302, '/account/login?passwordResetSuccess');
 	}
 };

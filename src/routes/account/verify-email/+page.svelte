@@ -14,7 +14,7 @@
 
 <Panel title={t.account.emailVerification} subtitle={t.account.verifySubtitle}>
 	<div class="flex flex-col">
-		<div class="prose dark:prose-invert mb-8 max-w-none">
+		<div class="prose mb-8 max-w-none dark:prose-invert">
 			<p>
 				{t.account.sentAnEmailTo} <b>{data.email}</b>.<br />
 			</p>
@@ -27,7 +27,7 @@
 			{#if form?.msg}
 				<Message msg={form.msg} class="mb-6" />
 			{/if}
-			<div class="flex flex-col gap-2">
+			<div class="field">
 				<Label for="form-verify.code">Code</Label>
 				<Input id="form-verify.code" name="code" value={data.code} />
 			</div>

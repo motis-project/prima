@@ -45,6 +45,12 @@ export type Translations = {
 		logout: string;
 		logoutSubtitle: string;
 		code: string;
+		passwordReset: string;
+		passwordResetSubtitle: string;
+		passwordResetRequest: string;
+		passwordResetRequestSubtitle: string;
+		newPassword: string;
+		passwordResetSuccess: string;
 	};
 	journeyDetails: string;
 	transfers: string;

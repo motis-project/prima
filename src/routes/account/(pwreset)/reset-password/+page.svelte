@@ -10,32 +10,29 @@
 	const { form, data } = $props();
 </script>
 
-<Panel
-	title="Password Reset"
-	subtitle="We sent you a password reset code. Please enter your e-mail address and the code we sent you."
->
+<Panel title={t.account.passwordReset} subtitle={t.account.passwordResetSubtitle}>
 	<form method="post" class="flex flex-col gap-6" use:enhance>
 		{#if form?.msg}
 			<Message class="mb-4" msg={form.msg} />
 		{/if}
 
-		<div class="flex flex-col gap-2">
+		<div class="field">
 			<Label>{t.account.code}</Label>
-			<Input name="code" placeholder="Code" value={data.code} disabled />
+			<Input name="code" value={data.code} />
 		</div>
 
-		<div class="flex flex-col gap-2">
-			<Label>E-Mail</Label>
-			<Input name="email" placeholder="Email" value={data.email} disabled />
+		<div class="field">
+			<Label>{t.account.email}</Label>
+			<Input name="email" value={data.email} />
 		</div>
 
-		<div class="flex flex-col gap-2">
-			<Label>New Password</Label>
+		<div class="field">
+			<Label>{t.account.newPassword}</Label>
 			<Input name="password" type="password" placeholder="New Password" />
 		</div>
 
 		<Button type="submit" variant="outline">
-			Reset Password
+			{t.account.passwordReset}
 			<ChevronRightIcon />
 		</Button>
 	</form>

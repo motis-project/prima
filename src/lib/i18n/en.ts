@@ -24,7 +24,9 @@ const translations: Translations = {
 		passwordChanged: 'Password changed successfully.',
 		enterEmail: 'Enter your e-mail address.',
 		oldEmail: 'This is your old e-mail address.',
-		checkInboxToVerify: 'Please check your inbox to verify your new e-mail address.'
+		checkInboxToVerify: 'Please check your inbox to verify your new e-mail address.',
+		passwordResetSuccess:
+			'Your password has been reset successfully. Please login with your new password.'
 	},
 	account: {
 		name: 'Name',
@@ -43,7 +45,12 @@ const translations: Translations = {
 			'Change your e-mail address. We will send you a email with a verification code.',
 		logout: 'Logout',
 		logoutSubtitle: 'Log out of your account. You can login later any time.',
-		code: 'Code'
+		code: 'Code',
+		passwordReset: 'Reset Password',
+		passwordResetSubtitle: 'Choose a new passwort.',
+		passwordResetRequest: 'Request Password Reset',
+		passwordResetRequestSubtitle: 'We will send a reset code to this e-mail.',
+		newPassword: 'New Password'
 	},
 	journeyDetails: 'Journey Details',
 	transfers: 'transfers',
