@@ -1,5 +1,6 @@
 package de.motis.prima
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -9,18 +10,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -31,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.NavOptions
 import de.motis.prima.services.Event
 
 
@@ -67,16 +73,129 @@ fun phoneCall(number: String, context: android.content.Context) {
     context.startActivity(intent)
 }
 
+data class EventGroup(
+    val id: Int,
+    val events: List<Event>,
+)
+
 @Composable
-fun EventDetail(event: Event, inStep: Boolean, currentLocation: Location) {
+fun showCustomerDetails(event: Event, context: Context, navController: NavController) {
+    var firstName = "-"
+    var lastName = "-"
+    var phone = "-"
+
+    try {
+        if (event.first_name != null)
+            firstName = event.first_name
+        if (event.last_name != null)
+            lastName = event.last_name
+        if (event.phone != null)
+            phone = event.phone
+    } catch (e: Exception) {
+        Log.d("error", "showCustomerDetails: Failed to read event details")
+        return
+    }
+
+    Card (
+        modifier = Modifier.padding(top = 10.dp).padding(horizontal = 10.dp)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Localized description",
+                    modifier = Modifier.background(Color.Green)
+                )
+                if (event.wheelchairs > 0) {
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_wheelchair),
+                        contentDescription = "Localized description"
+                    )
+                }
+                Spacer(modifier = Modifier.width(20.dp))
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Localized description"
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "${event.passengers}",
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.width(36.dp))
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_luggage),
+                    contentDescription = "Localized description"
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "${event.luggage}",
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.width(36.dp))
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_bike),
+                    contentDescription = "Localized description"
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "${event.bikes}",
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+            ) {
+                Text(
+                    text = "$lastName, $firstName",
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            if (event.is_pickup) {
+                Spacer(modifier = Modifier.height(20.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                        .padding(bottom = 4.dp),
+                ) {
+                    Button(
+                        onClick = { phoneCall(phone, context) },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Call,
+                            contentDescription = "Localized description",
+                            Modifier.size(width = 26.dp, height = 26.dp)
+
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun EventDetail(tourId : Int, eventIndex : Int, event: Event, inStep: Boolean, currentLocation: Location, navController: NavController) {
     var scheduledTime = "-"
     var city = "-"
     var street = "-"
     var houseNumber = "-"
     var isPickup = false
-    var firstName = "-"
-    var lastName = "-"
-    var phone = "-"
     var eventLocation = Location(latitude = 0.0, longitude = 0.0)
 
     val context = LocalContext.current
@@ -93,12 +212,6 @@ fun EventDetail(event: Event, inStep: Boolean, currentLocation: Location) {
         if (event.house_number != null)
             houseNumber = event.house_number
         isPickup = event.is_pickup
-        if (event.first_name != null)
-            firstName = event.first_name
-        if (event.last_name != null)
-            lastName = event.last_name
-        if (event.phone != null)
-            phone = event.phone
         if (event.latitude != null && event.longitude != null)
             eventLocation = Location(latitude = event.latitude, longitude = event.longitude)
     } catch (e: Exception) {
@@ -113,7 +226,7 @@ fun EventDetail(event: Event, inStep: Boolean, currentLocation: Location) {
             .padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
             .wrapContentSize()
     ) {
-        Column (modifier = Modifier.padding(16.dp) ) {
+        Column (modifier = Modifier.padding(10.dp) ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -150,144 +263,73 @@ fun EventDetail(event: Event, inStep: Boolean, currentLocation: Location) {
                         textAlign = TextAlign.Center
                     )
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "$street $houseNumber",
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-                if (inStep && !isPickup) {
+                if (inStep) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 4.dp, top = 12.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        IconButton(
-                            onClick = {
-                                Log.d("test", "Navigation event")
-                                openGoogleMapsNavigation(currentLocation, eventLocation, context)
-                            },
-                            Modifier
-                                .background(color = Color.White)
-                                .size(width = 34.dp, height = 34.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.compass_icon),
-                                contentDescription = "Localized description"
-                            )
-                        }
+                        Text(
+                            text = "$street $houseNumber",
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }
 
-            if (isPickup) {
+            if (inStep && isPickup) {
+                val eventGroup = EventGroup(0, listOf(event))
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.padding(top = 20.dp)
+                ) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .height(510.dp)
+                            .background(color = Color.White)
+                    ) {
+                        items(items = eventGroup.events, itemContent = { event ->
+                            showCustomerDetails(event, context, navController)
+                        })
+                    }
+                }
+            }
+
+            if (inStep) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 4.dp, top = 12.dp),
+                        .padding(top = 8.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Localized description",
-                        modifier = Modifier.background(Color.Green)
-                    )
-                    if (event.wheelchairs > 0) {
-                        Spacer(modifier = Modifier.width(16.dp))
+                    Button(
+                        onClick = {
+                            openGoogleMapsNavigation(currentLocation, eventLocation, context)
+                        }
+                    ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_wheelchair),
-                            contentDescription = "Localized description"
+                            painter = painterResource(id = R.drawable.compass_icon),
+                            contentDescription = "Localized description",
+                            Modifier
+                                .size(width = 32.dp, height = 32.dp)
                         )
                     }
+                    Spacer(modifier = Modifier.width(12.dp))
 
-                    Spacer(modifier = Modifier.width(20.dp))
-                    Text(
-                        text = "$lastName, $firstName",
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Localized description"
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "${event.passengers}",
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.width(36.dp))
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_luggage),
-                        contentDescription = "Localized description"
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "${event.luggage}",
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.width(36.dp))
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_bike),
-                        contentDescription = "Localized description"
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "${event.bikes}",
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                if (inStep) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        horizontalArrangement = Arrangement.Center
+                    val navOptions = NavOptions.Builder()
+                        .setEnterAnim(0)
+                        .setExitAnim(0)
+                        .setPopEnterAnim(0)
+                        .setPopExitAnim(0)
+                        .build()
+                    Button(
+                        onClick = { navController.navigate("scan/$tourId/$eventIndex", navOptions) },
                     ) {
-                        IconButton(
-                            onClick = { phoneCall(phone, context) },
-                            Modifier
-                                .background(color = Color.White)
-                                .size(width = 34.dp, height = 34.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Call,
-                                contentDescription = "Localized description",
-                                Modifier.size(width = 32.dp, height = 32.dp)
-
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(36.dp))
-                        IconButton(
-                            onClick = {
-                                Log.d("test", "Navigation event")
-                                openGoogleMapsNavigation(currentLocation, eventLocation, context)
-                            },
-                            Modifier
-                                .background(color = Color.White)
-                                .size(width = 34.dp, height = 34.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.compass_icon),
-                                contentDescription = "Localized description"
-                            )
-                        }
+                        Text(
+                            text = "QR",
+                            fontSize = 27.sp,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }

@@ -19,8 +19,9 @@ fun Nav() {
     val navController = rememberNavController()
     val vehiclesViewModel: VehiclesViewModel = viewModel()
     val toursViewModel: ToursViewModel = viewModel()
+    val scanViewModel: ScanViewModel = viewModel()
 
-    //val selectedVehicle by vehiclesViewModel.selectedVehicle.collectAsState()
+    val selectedVehicle by vehiclesViewModel.selectedVehicle.collectAsState()
 
     // Before rendering any component, check whether user is authenticated.
     val startDestination by remember {
@@ -32,11 +33,6 @@ fun Nav() {
             } else {
                 Log.d("Cookie", "Cookie found. Navigating to Journeys.")
                 "vehicles"
-                /*if (selectedVehicle.id == 0) {
-                    "vehicles"
-                } else {
-                    "tours"
-                }*/
             }
         }
     }
@@ -66,7 +62,13 @@ fun Nav() {
         composable(route = "legs/{tourId}/{eventIndex}") {
             val tourId = it.arguments?.getString("tourId")?.toInt()
             val eventIndex = it.arguments?.getString("eventIndex")?.toInt()
-            TourDetail(navController,  tourId!!, eventIndex!!, toursViewModel)
+            TourDetail(navController,  tourId!!, eventIndex!!, toursViewModel, scanViewModel)
+        }
+
+        composable(route = "scan/{tourId}/{eventIndex}") {
+            val tourId = it.arguments?.getString("tourId")?.toInt()
+            val eventIndex = it.arguments?.getString("eventIndex")?.toInt()
+            ScanTicketView(navController,  tourId!!, eventIndex!!, scanViewModel)
         }
     }
 }

@@ -55,6 +55,7 @@ fun PortraitLayout(
     tourId: Int,
     eventIndex: Int,
     toursViewModel: ToursViewModel,
+    scanViewModel: ScanViewModel,
     contentPadding: PaddingValues
 ) {
     var isLastEvent = false
@@ -76,6 +77,9 @@ fun PortraitLayout(
         val prevEvent = tour.events[eventIndex - 1]
         currentLocation = Location(latitude = prevEvent.latitude, longitude = prevEvent.longitude)
     }
+
+    // test
+    Log.d("test", "In TourDetail: ${scanViewModel.ticket.value}")
 
     Column(
         modifier = Modifier
@@ -99,11 +103,8 @@ fun PortraitLayout(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
-            Box(
-                modifier = Modifier
-                .padding(contentPadding)
-            ) {
-                EventDetail(event, true, currentLocation)
+            Box {
+                EventDetail(tourId, eventIndex, event, true, currentLocation, navController)
             }
         }
         Row(
@@ -111,18 +112,15 @@ fun PortraitLayout(
             horizontalArrangement = Arrangement.Center
         ) {
             if (!isLastEvent) {
-                Box(
-                    modifier = Modifier
-                    .padding(contentPadding)
-                ) {
+                Box {
                     Button(
-                        modifier = Modifier.width(300.dp),
+                        modifier = Modifier.width(250.dp),
                         onClick = {
                             navController.navigate("legs/${tour.tour_id}/${eventIndex + 1}")
                         }
                     ) {
                         Text(
-                            text = "Weiter",
+                            text = "Nächstes Ziel",
                             fontSize = 24.sp,
                             textAlign = TextAlign.Center
                         )
@@ -204,6 +202,7 @@ fun HandleOrientationChanges(
     tourId: Int,
     eventIndex: Int,
     toursViewModel: ToursViewModel,
+    scanViewModel: ScanViewModel,
     contentPadding: PaddingValues
 ) {
     val configuration = LocalConfiguration.current
@@ -221,6 +220,7 @@ fun HandleOrientationChanges(
             tourId,
             eventIndex,
             toursViewModel,
+            scanViewModel,
             contentPadding
         )
     }
@@ -232,7 +232,8 @@ fun TourDetail(
     navController: NavController,
     tourId: Int,
     eventIndex: Int,
-    toursViewModel: ToursViewModel
+    toursViewModel: ToursViewModel,
+    scanViewModel: ScanViewModel
 ) {
     LaunchedEffect(key1 = toursViewModel) {
         launch {
@@ -308,6 +309,7 @@ fun TourDetail(
             tourId,
             eventIndex,
             toursViewModel,
+            scanViewModel,
             contentPadding
         )
         Box(

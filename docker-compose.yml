@@ -26,7 +26,7 @@ services:
       - 7777:3000
     environment:
       - DATABASE_URL=postgresql://postgres:pw@pg/prima
-      - ORIGIN=http://localhost:7777
+      - ORIGIN=http://130.83.165.211:7777
     build:
       context: .
 

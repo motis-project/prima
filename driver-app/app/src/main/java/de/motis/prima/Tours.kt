@@ -119,7 +119,6 @@ class ToursViewModel : ViewModel() {
     }
 
     fun fetchTours() {
-
         viewModelScope.launch {
             while (true) {
                 Api.apiService.getTours(SimpleDateFormat("yyyy-MM-dd").format(displayDate)).enqueue(object : Callback<List<Tour>> {
@@ -438,10 +437,11 @@ fun Tours(
                         IconButton(
                             onClick = {
                                 val nextDate = decrementDate(viewModel.displayDate)
+                                viewModel.showAllTours.value = true
                                 viewModel.displayDate = nextDate
                                 navController.navigate("tours") },
                             Modifier
-                                .background(color = Color.LightGray)
+                                .background(color = Color.Transparent)
                                 .size(width = 26.dp, height = 26.dp)
                         ) {
                             Icon(
@@ -473,7 +473,7 @@ fun Tours(
                                 viewModel.displayDate = nextDate
                                 navController.navigate("tours") },
                             Modifier
-                                .background(color = Color.LightGray)
+                                .background(color = Color.Transparent)
                                 .size(width = 26.dp, height = 26.dp)
                         ) {
                             Icon(
@@ -500,10 +500,11 @@ fun Tours(
                     }
                 }
 
-                if (!viewModel.showAllTours.value) {
+                if (!viewModel.showAllTours.value && toursFuture.isNotEmpty()) {
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Box {
@@ -512,11 +513,11 @@ fun Tours(
                                 viewModel.showAllTours.value = true
                                 navController.navigate("tours")
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray)
+                            //colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
                         ) {
                             Text(
                                 text = "frühere Fahrten",
-                                fontSize = 20.sp,
+                                fontSize = 18.sp,
                                 textAlign = TextAlign.Center
                             )
                         }

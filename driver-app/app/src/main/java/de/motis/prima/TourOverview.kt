@@ -123,10 +123,10 @@ fun TourOverview(
         ) {
             Spacer(modifier = Modifier.height(42.dp))
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(650.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
-                TourDetails(tourId = tourId, viewModel = viewModel)
+                TourDetails(tourId = tourId, viewModel = viewModel, navController)
             }
 
             Spacer(modifier = Modifier.height(48.dp))
@@ -153,7 +153,7 @@ fun TourOverview(
 }
 
 @Composable
-fun TourDetails(tourId: Int, viewModel: ToursViewModel) {
+fun TourDetails(tourId: Int, viewModel: ToursViewModel, navController: NavController) {
     val tour = viewModel.tours.value.filter { t: Tour ->  tourId == t.tour_id}[0]
     val events = tour.events
     var lastEvent = events[0]
@@ -188,7 +188,7 @@ fun TourDetails(tourId: Int, viewModel: ToursViewModel) {
             )
         }
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
@@ -205,7 +205,7 @@ fun TourDetails(tourId: Int, viewModel: ToursViewModel) {
             LazyColumn(
             ) {
                 items(items = events, itemContent = { event ->
-                    EventDetail(event = event, false, viewModel.currentLocation)
+                    EventDetail(0,0, event, false, viewModel.currentLocation, navController)
                 })
             }
         }
