@@ -51,6 +51,7 @@ export const updateTour = async (tourId: number, vehicleId: number) => {
 	});
 };
 
+// add here too?
 export const removeAvailability = async (vehicleId: number, from: Date, to: Date) => {
 	return await fetch('/api/availability', {
 		method: 'DELETE',
@@ -62,13 +63,15 @@ export const removeAvailability = async (vehicleId: number, from: Date, to: Date
 	});
 };
 
-export const addAvailability = async (vehicleId: number, from: Date, to: Date) => {
+// not working yet
+export const addAvailability = async (vehicleId: number, from: Date, to: Date, cap: number) => {
 	return await fetch('/api/availability', {
 		method: 'POST',
 		body: JSON.stringify({
 			vehicleId,
 			from,
-			to
+			to,
+			cap
 		})
 	});
 };
