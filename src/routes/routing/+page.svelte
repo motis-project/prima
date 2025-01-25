@@ -20,6 +20,8 @@
 	import ConnectionDetail from './ConnectionDetail.svelte';
 	import StopTimes from './StopTimes.svelte';
 	import { cn } from '$lib/shadcn/utils';
+	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
+	import Separator from '$lib/shadcn/separator/separator.svelte';
 
 	const urlParams = browser ? new URLSearchParams(window.location.search) : undefined;
 
@@ -101,6 +103,13 @@
 {:else if page.state.selectTo}
 	<AddressTypeahead placeholder={t.to} bind:selected={to} items={toItems} />
 {:else if page.state.selectedItinerary}
+	<div class="flex items-center justify-between gap-4">
+		<Button variant="outline" size="icon" onclick={() => window.history.back()}>
+			<ChevronLeft />
+		</Button>
+		<span>Verbindungsdetails</span>
+	</div>
+	<Separator class="my-4" />
 	<ConnectionDetail
 		itinerary={page.state.selectedItinerary}
 		onClickStop={(name: string, stopId: string, time: Date) =>

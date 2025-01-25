@@ -1,11 +1,23 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { t } from '$lib/i18n/translation';
+	import { cn } from '$lib/shadcn/utils';
 	import ChevronsRight from 'lucide-svelte/icons/chevrons-right';
-	import TicketCheck from 'lucide-svelte/icons/ticket-check';
-	import UserRound from 'lucide-svelte/icons/user-round';
 	import { cubicInOut } from 'svelte/easing';
 	import { crossfade } from 'svelte/transition';
+
+	export type Item = {
+		href: string;
+		title: string;
+		Icon: typeof ChevronsRight;
+	};
+
+	let {
+		items,
+		class: className
+	}: {
+		items: Item[];
+		class?: string;
+	} = $props();
 
 	const [send, receive] = crossfade({
 		duration: 250,
@@ -13,9 +25,12 @@
 	});
 </script>
 
-{#snippet menuItem(name: string, href: string, Icon: typeof ChevronsRight)}
-	{@const isActive = page.url.pathname.startsWith(href)}
-	<a class="relative m-2 flex flex-col items-center justify-center gap-1 rounded-xl py-6" {href}>
+{#snippet menuItem(item: Item)}
+	{@const isActive = page.url.pathname.startsWith(item.href)}
+	<a
+		class="relative m-2 flex flex-col items-center justify-center gap-1 rounded-xl py-6"
+		href={item.href}
+	>
 		{#if isActive}
 			<div
 				class="absolute inset-0 rounded-full bg-muted"
@@ -24,16 +39,19 @@
 			></div>
 		{/if}
 		<div class="relative flex flex-col items-center justify-center">
-			<svelte:component this={Icon} class="size-5 shrink-0" />
-			{name}
+			<item.Icon class="size-5 shrink-0" />
+			{item.title}
 		</div>
 	</a>
 {/snippet}
 
 <div
-	class="fixed bottom-0 grid h-16 w-full grid-cols-3 grid-rows-1 rounded-t-xl border bg-background text-xs"
+	class={cn(
+		'grid h-16 w-full grid-cols-3 grid-rows-1 rounded-t-xl border bg-background text-xs md:hidden',
+		className
+	)}
 >
-	{@render menuItem(t.menu.connections, '/routing', ChevronsRight)}
-	{@render menuItem(t.menu.bookings, '/bookings', TicketCheck)}
-	{@render menuItem(t.menu.account, '/account', UserRound)}
+	{#each items as item}
+		{@render menuItem(item)}
+	{/each}
 </div>

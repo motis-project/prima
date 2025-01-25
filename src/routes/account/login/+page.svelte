@@ -11,7 +11,7 @@
 
 <div>
 	<h1 class="my-6 text-center text-2xl font-semibold leading-8 tracking-tight">
-		{PUBLIC_PROVIDER}<br />{t.account.login}
+		{t.account.login}
 	</h1>
 
 	<Alert.Root variant="default" class="my-6">

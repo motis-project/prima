@@ -27,6 +27,7 @@ export type Translations = {
 		enterEmail: string;
 		oldEmail: string;
 		checkInboxToVerify: string;
+		passwordResetSuccess: string;
 	};
 	account: {
 		name: string;
@@ -50,7 +51,6 @@ export type Translations = {
 		passwordResetRequest: string;
 		passwordResetRequestSubtitle: string;
 		newPassword: string;
-		passwordResetSuccess: string;
 	};
 	journeyDetails: string;
 	transfers: string;

@@ -1,10 +1,22 @@
 <script lang="ts">
 	import '../app.css';
-	import Menu from './Menu.svelte';
+	import Menu, { type Item } from './Menu.svelte';
+	import { t } from '$lib/i18n/translation';
+	import ChevronsRight from 'lucide-svelte/icons/chevrons-right';
+	import TicketCheck from 'lucide-svelte/icons/ticket-check';
+	import UserRound from 'lucide-svelte/icons/user-round';
 	let { children } = $props();
+
+	const items: Array<Item> = [
+		{ title: t.menu.connections, href: '/routing', Icon: ChevronsRight },
+		{ title: t.menu.bookings, href: '/bookings', Icon: TicketCheck },
+		{ title: t.menu.account, href: '/account', Icon: UserRound }
+	];
 </script>
 
-<div class="p-4 pb-16 md:flex md:h-full md:items-center md:justify-center">
-	{@render children()}
+<div class="flex h-full flex-col">
+	<div class="grow overflow-y-auto p-2">
+		{@render children()}
+	</div>
+	<Menu class="shrink" {items} />
 </div>
-<Menu />
