@@ -4,9 +4,15 @@ const translations: Translations = {
 	menu: {
 		connections: 'Verbindungen',
 		bookings: 'Buchungen',
-		account: 'Konto'
+		account: 'Konto',
+		availability: 'Taxi-Verfügbarkeit',
+		company: 'Stammdaten Unternehmen',
+		completedTours: 'Fahrten',
+		employees: 'Mitarbeiter',
+		companies: 'Unternehmen'
 	},
 	msg: {
+		// Account
 		enterEmailAndPassword: 'Bitte gib Deine E-Mail und Dein Passwort ein.',
 		invalidEmail: 'Ungültige E-Mail Adresse.',
 		emailAlreadyRegistered: 'Diese E-Mail Adresse ist bereits registriert.',
@@ -27,7 +33,16 @@ const translations: Translations = {
 		checkInboxToVerify:
 			'Bitte prüfe Dein E-Mail Postfach um Deine neue E-Mail Adresse zu verifizieren.',
 		passwordResetSuccess:
-			'Passwort erfolgreich zurückgesetzt. Du kannst Dich jetzt mit dem neuen Passwort anmelden.'
+			'Passwort erfolgreich zurückgesetzt. Du kannst Dich jetzt mit dem neuen Passwort anmelden.',
+
+		// Admin
+		userDoesNotExist: 'Nutzer existiert nicht.',
+		activationSuccess: 'Nutzer freigeschaltet.',
+		userAlreadyActivated: 'Nutzer war bereits freigeschaltet.'
+	},
+	admin: {
+		completedToursSubtitle: 'Abgeschlossene Fahrten',
+		activateTaxiOwners: 'Taxiunternehmer freischalten'
 	},
 	account: {
 		name: 'Name',

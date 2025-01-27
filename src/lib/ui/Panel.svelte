@@ -16,7 +16,7 @@
 	} = $props();
 </script>
 
-<div class={cn('w-full space-y-6 rounded-xl pb-6 md:w-[65ch] md:px-8', className)}>
+<div class={cn('w-full space-y-6 rounded-xl pb-6 md:w-[96ch] md:px-8', className)}>
 	<div class="space-y-1 text-left">
 		<h3 class="text-xl font-medium">{title}</h3>
 		<p class="text-sm text-muted-foreground">{subtitle}</p>

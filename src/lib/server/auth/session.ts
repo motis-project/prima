@@ -3,7 +3,7 @@ import { sha256 } from '@oslojs/crypto/sha2';
 
 import type { RequestEvent } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { DAY, secondToMilli } from '$lib/server/time';
+import { DAY, secondToMilli } from '$lib/util/time';
 
 export type Session = Awaited<ReturnType<typeof validateSessionToken>>;
 
@@ -24,7 +24,9 @@ export async function validateSessionToken(token: string | undefined) {
 			'user.email',
 			'user.isEmailVerified',
 			'user.emailVerificationCode',
-			'user.emailVerificationExpiresAt'
+			'user.emailVerificationExpiresAt',
+			'user.isAdmin',
+			'user.isTaxiOwner'
 		])
 		.where('session.id', '=', sessionId)
 		.executeTakeFirst();

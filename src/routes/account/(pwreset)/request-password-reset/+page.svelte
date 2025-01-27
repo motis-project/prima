@@ -3,9 +3,9 @@
 	import { Input } from '$lib/shadcn/input';
 	import { Label } from '$lib/shadcn/label';
 	import ChevronRightIcon from 'lucide-svelte/icons/chevron-right';
-	import Message from '$lib/Message.svelte';
+	import Message from '$lib/ui/Message.svelte';
 	import { enhance } from '$app/forms';
-	import Panel from '$lib/Panel.svelte';
+	import Panel from '$lib/ui/Panel.svelte';
 	import { t } from '$lib/i18n/translation.js';
 	const { form } = $props();
 </script>
