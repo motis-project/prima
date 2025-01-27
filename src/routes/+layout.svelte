@@ -15,7 +15,7 @@
 </script>
 
 <div class="flex h-full flex-col">
-	<div class="grow overflow-y-auto p-2">
+	<div class="grow overflow-y-auto p-2 pb-6">
 		{@render children()}
 	</div>
 	<Menu class="shrink" {items} />

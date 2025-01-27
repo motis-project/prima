@@ -52,7 +52,9 @@ const translations: Translations = {
 		passwordResetSubtitle: 'Hier kannst Du ein neues Passwort festlegen.',
 		passwordResetRequest: 'Passwort zurücksetzen',
 		passwordResetRequestSubtitle: 'Wir schicken Dir einen Code an Deine E-Mail Adresse.',
-		newPassword: 'Neues Passwort'
+		newPassword: 'Neues Passwort',
+		resendCode: 'Code erneut senden',
+		verify: 'Verifizieren'
 	},
 	journeyDetails: 'Verbindungsdetails',
 	transfers: 'Umstiege',

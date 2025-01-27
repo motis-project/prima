@@ -18,12 +18,12 @@
 
 		<div class="field">
 			<Label>{t.account.code}</Label>
-			<Input name="code" value={data.code} />
+			<Input name="code" value={data.code} autocapitalize="off" />
 		</div>
 
 		<div class="field">
 			<Label>{t.account.email}</Label>
-			<Input name="email" value={data.email} />
+			<Input name="email" value={data.email} autocapitalize="off" />
 		</div>
 
 		<div class="field">

@@ -32,8 +32,10 @@
 				<Input id="form-verify.code" name="code" value={data.code} />
 			</div>
 			<div class="mt-6 flex justify-end gap-4 text-xs md:text-base">
-				<Button type="submit" variant="outline" formaction="?/resend">Resend code</Button>
-				<Button type="submit" formaction="?/verify">Verify</Button>
+				<Button type="submit" variant="outline" formaction="?/resend">
+					{t.account.resendCode}
+				</Button>
+				<Button type="submit" formaction="?/verify">{t.account.verify}</Button>
 			</div>
 		</form>
 	</div>

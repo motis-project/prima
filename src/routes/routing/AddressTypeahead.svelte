@@ -4,9 +4,9 @@
 	import Bus from 'lucide-svelte/icons/bus-front';
 	import House from 'lucide-svelte/icons/map-pin-house';
 	import Place from 'lucide-svelte/icons/map-pin';
-	import { language } from '$lib/i18n/translation';
 	import { posToLocation, type Location } from './Location';
 	import { GEOCODER_PRECISION } from './Precision';
+	import { language } from '$lib/i18n/translation';
 
 	const COORD_LVL_REGEX = /^([+-]?\d+(\.\d+)?)\s*,\s*([+-]?\d+(\.\d+)?)\s*,\s*([+-]?\d+(\.\d+)?)$/;
 	const COORD_REGEX = /^([+-]?\d+(\.\d+)?)\s*,\s*([+-]?\d+(\.\d+)?)$/;
@@ -23,7 +23,6 @@
 		name?: string;
 	} = $props();
 
-	let open = true;
 	let inputValue = $state('');
 	let value = $state('');
 
@@ -88,6 +87,7 @@
 			shown.add(entry);
 			return true;
 		});
+		preventClickthrough(!!items.length && comboOpen);
 	};
 
 	const deserialize = (s: string): Location => {
@@ -108,9 +108,6 @@
 		if (ref && inputValue) {
 			(ref as HTMLInputElement).value = inputValue;
 		}
-		if (ref) {
-			ref.focus();
-		}
 	});
 
 	let timer: number;
@@ -122,12 +119,22 @@
 			}, 150);
 		}
 	});
+
+	let comboOpen = false;
+	const preventClickthrough = (prevent: boolean) => {
+		const ctr = document.getElementById('searchmask-container')!;
+		if (prevent) {
+			ctr.style.pointerEvents = 'none';
+		} else {
+			window.setTimeout(() => (ctr.style.pointerEvents = 'auto'), 1);
+		}
+	};
 </script>
 
 <Combobox.Root
 	type="single"
 	allowDeselect={false}
-	{open}
+	{value}
 	onValueChange={(e: string) => {
 		if (e) {
 			selected = deserialize(e);
@@ -135,7 +142,10 @@
 			history.back();
 		}
 	}}
-	{value}
+	onOpenChange={(open) => {
+		comboOpen = open;
+		preventClickthrough(open);
+	}}
 >
 	<Combobox.Input
 		{placeholder}
@@ -148,36 +158,33 @@
 		data-combobox-input={inputValue}
 	/>
 	{#if items.length !== 0}
-		<Combobox.ContentStatic
-			class="mt-2 w-[var(--bits-combobox-anchor-width)] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md outline-none"
-		>
-			{#snippet child({ props, open })}
-				{#if open}
-					<div {...props}>
-						{#each items as item (item.value)}
-							<Combobox.Item
-								class="flex w-full cursor-default select-none items-center rounded-sm py-4 pl-4 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50"
-								value={JSON.stringify(item.value)}
-								label={item.label}
-							>
-								{#if item.value.match?.type == 'STOP'}
-									<Bus />
-								{:else if item.value.match?.type == 'ADDRESS'}
-									<House />
-								{:else if item.value.match?.type == 'PLACE'}
-									<Place />
-								{/if}
-								<span class="ml-4 overflow-hidden text-ellipsis text-nowrap font-semibold">
-									{item.value.match?.name}
-								</span>
-								<span class="ml-2 overflow-hidden text-ellipsis text-nowrap text-muted-foreground">
-									{getDisplayArea(item.value.match)}
-								</span>
-							</Combobox.Item>
-						{/each}
-					</div>
-				{/if}
-			{/snippet}
-		</Combobox.ContentStatic>
+		<Combobox.Portal>
+			<Combobox.Content
+				align="start"
+				class="absolute top-2 z-10 w-[var(--bits-combobox-anchor-width)] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md outline-none"
+			>
+				{#each items as item (item.value)}
+					<Combobox.Item
+						class="flex w-full cursor-default select-none items-center rounded-sm py-4 pl-4 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50"
+						value={JSON.stringify(item.value)}
+						label={item.label}
+					>
+						{#if item.value.match?.type == 'STOP'}
+							<Bus />
+						{:else if item.value.match?.type == 'ADDRESS'}
+							<House />
+						{:else if item.value.match?.type == 'PLACE'}
+							<Place />
+						{/if}
+						<span class="ml-4 overflow-hidden text-ellipsis text-nowrap font-semibold">
+							{item.value.match?.name}
+						</span>
+						<span class="ml-2 overflow-hidden text-ellipsis text-nowrap text-muted-foreground">
+							{getDisplayArea(item.value.match)}
+						</span>
+					</Combobox.Item>
+				{/each}
+			</Combobox.Content>
+		</Combobox.Portal>
 	{/if}
 </Combobox.Root>

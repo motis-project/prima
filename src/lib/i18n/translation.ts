@@ -51,6 +51,8 @@ export type Translations = {
 		passwordResetRequest: string;
 		passwordResetRequestSubtitle: string;
 		newPassword: string;
+		resendCode: string;
+		verify: string;
 	};
 	journeyDetails: string;
 	transfers: string;

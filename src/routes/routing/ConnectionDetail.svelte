@@ -47,9 +47,7 @@
 		<Button
 			class="justify-normal overflow-hidden text-ellipsis text-wrap text-left text-[length:inherit] leading-5"
 			variant="link"
-			onclick={() => {
-				onClickStop(name, stopId, new Date(timestamp));
-			}}
+			onclick={() => onClickStop(name, stopId, new Date(timestamp))}
 		>
 			{name}
 		</Button>

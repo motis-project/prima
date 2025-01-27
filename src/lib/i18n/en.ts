@@ -50,7 +50,9 @@ const translations: Translations = {
 		passwordResetSubtitle: 'Choose a new passwort.',
 		passwordResetRequest: 'Request Password Reset',
 		passwordResetRequestSubtitle: 'We will send a reset code to this e-mail.',
-		newPassword: 'New Password'
+		newPassword: 'New Password',
+		resendCode: 'Resend code',
+		verify: 'Verify'
 	},
 	journeyDetails: 'Journey Details',
 	transfers: 'transfers',

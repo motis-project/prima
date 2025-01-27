@@ -47,7 +47,7 @@
 
 <div
 	class={cn(
-		'grid h-16 w-full grid-cols-3 grid-rows-1 rounded-t-xl border bg-background text-xs md:hidden',
+		'grid h-16 w-full grid-cols-3 grid-rows-1 rounded-t-xl border-x border-t bg-background text-xs md:hidden',
 		className
 	)}
 >
