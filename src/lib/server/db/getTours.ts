@@ -1,12 +1,20 @@
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { db } from '.';
 
-export const getTours = async (companyId?: number) => {
+export const getTours = async (companyId?: number, timeRange?: [Date, Date]) => {
 	return await db
 		.selectFrom('tour')
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 		.innerJoin('company', 'company.id', 'vehicle.company')
 		.$if(typeof companyId === 'number', (qb) => qb.where('company', '=', companyId!))
+		.$if(!!timeRange, (qb) =>
+			qb.where((eb) =>
+				eb.and([
+					eb('tour.departure', '<', timeRange![0]),
+					eb('tour.arrival', '>', timeRange![1])
+				])
+			)
+		)
 		.selectAll(['tour', 'vehicle', 'company'])
 		.select((eb) => [
 			'company.name as companyName',

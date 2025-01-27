@@ -26,7 +26,8 @@ export async function validateSessionToken(token: string | undefined) {
 			'user.emailVerificationCode',
 			'user.emailVerificationExpiresAt',
 			'user.isAdmin',
-			'user.isTaxiOwner'
+			'user.isTaxiOwner',
+			'user.companyId'
 		])
 		.where('session.id', '=', sessionId)
 		.executeTakeFirst();
