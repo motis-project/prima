@@ -4,9 +4,15 @@ const translations: Translations = {
 	menu: {
 		connections: 'Connections',
 		bookings: 'Bookings',
-		account: 'Account'
+		account: 'Account',
+		availability: 'Taxi Availability',
+		company: 'Company',
+		completedTours: 'Tours',
+		employees: 'Employees',
+		companies: 'Companies'
 	},
 	msg: {
+		// Account
 		enterEmailAndPassword: 'Please enter your email and password.',
 		invalidEmail: 'Invalid email address.',
 		emailAlreadyRegistered: 'E-Mail already registered.',
@@ -26,7 +32,16 @@ const translations: Translations = {
 		oldEmail: 'This is your old e-mail address.',
 		checkInboxToVerify: 'Please check your inbox to verify your new e-mail address.',
 		passwordResetSuccess:
-			'Your password has been reset successfully. Please login with your new password.'
+			'Your password has been reset successfully. Please login with your new password.',
+
+		// Admin
+		userDoesNotExist: 'User does not exist.',
+		activationSuccess: 'User already activated.',
+		userAlreadyActivated: 'User has already been activated.'
+	},
+	admin: {
+		completedToursSubtitle: 'Completed Tours',
+		activateTaxiOwners: 'Activate taxi owner'
 	},
 	account: {
 		name: 'Name',

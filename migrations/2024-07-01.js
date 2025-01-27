@@ -1,19 +1,22 @@
 import { sql } from 'kysely';
 
 export async function up(db) {
-	await sql`CREATE EXTENSION postgis`.execute(db);
-	await sql`CREATE TABLE zone(id SERIAL PRIMARY KEY, area geography(MULTIPOLYGON,4326) NOT NULL, name varchar NOT NULL, is_community bool NOT NULL)`.execute(
-		db
-	);
+	await sql`CREATE EXTENSION IF NOT EXISTS postgis`.execute(db);
+	await sql`
+		CREATE TABLE zone(
+			id SERIAL PRIMARY KEY,
+			area geography(MULTIPOLYGON,4326) NOT NULL,
+			name varchar NOT NULL
+		)`.execute(db);
 
 	await db.schema
 		.createTable('user')
 		.addColumn('id', 'serial', (col) => col.primaryKey())
 		.addColumn('name', 'varchar', (col) => col.notNull())
 		.addColumn('email', 'varchar', (col) => col.unique())
-		.addColumn('is_entrepreneur', 'boolean', (col) => col.notNull())
-		.addColumn('is_maintainer', 'boolean', (col) => col.notNull())
 		.addColumn('password_hash', 'varchar', (col) => col.notNull())
+		.addColumn('is_taxi_owner', 'boolean', (col) => col.notNull())
+		.addColumn('is_admin', 'boolean', (col) => col.notNull())
 		.addColumn('is_email_verified', 'boolean', (col) => col.notNull().defaultTo(false))
 		.addColumn('email_verification_code', 'varchar')
 		.addColumn('email_verification_expires_at', 'timestamp')
@@ -74,6 +77,7 @@ export async function up(db) {
 		.addColumn('vehicle', 'integer', (col) =>
 			col.references('vehicle.id').onDelete('cascade').notNull()
 		)
+		.addColumn('fare', 'integer')
 		.execute();
 
 	await db.schema

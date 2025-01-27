@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { verifyEmailInput } from '$lib/server/auth/email';
 import { RefillingTokenBucket } from '$lib/server/auth/rate-limit';
 import { generateRandomOTP } from '$lib/server/auth/utils';
-import { MINUTE } from '$lib/server/time';
+import { MINUTE } from '$lib/util/time';
 import { msg } from '$lib/msg';
 import { getIp } from '$lib/server/getIp';
 import { db } from '$lib/server/db';

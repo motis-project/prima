@@ -15,7 +15,7 @@
 	import ArrowUpDown from 'lucide-svelte/icons/arrow-up-down';
 	import { ChevronDown } from 'lucide-svelte';
 	import { onMount } from 'svelte';
-	import { lngLatToStr } from './lngLatToStr';
+	import { lngLatToStr } from '../../../lib/util/lngLatToStr';
 	import ItineraryList from './ItineraryList.svelte';
 	import ConnectionDetail from './ConnectionDetail.svelte';
 	import StopTimes from './StopTimes.svelte';

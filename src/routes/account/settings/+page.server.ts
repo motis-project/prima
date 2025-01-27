@@ -5,7 +5,7 @@ import { hashPassword, isStrongPassword } from '$lib/server/auth/password';
 import { isEmailAvailable } from '$lib/server/auth/email';
 import { db } from '$lib/server/db';
 import { generateRandomOTP } from '$lib/server/auth/utils';
-import { MINUTE } from '$lib/server/time';
+import { MINUTE } from '$lib/util/time';
 import { sendMail } from '$lib/server/sendMail';
 import EmailVerification from '$lib/server/email/EmailVerification.svelte';
 import { deleteSessionTokenCookie, invalidateSession } from '$lib/server/auth/session';

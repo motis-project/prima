@@ -4,14 +4,14 @@
 	import { Button } from '$lib/shadcn/button';
 	import { Input } from '$lib/shadcn/input';
 	import type { Msg } from '$lib/msg';
-	import Message from '$lib/Message.svelte';
+	import Message from '$lib/ui/Message.svelte';
 	import { t } from '$lib/i18n/translation';
 	import { Label } from '$lib/shadcn/label';
 
 	const { message, type }: { message?: Msg; type: 'signup' | 'login' } = $props();
 </script>
 
-<div class="mx-auto flex flex-col">
+<div class="flex flex-col">
 	<form method="post" class="flex flex-col gap-6">
 		{#if message}
 			<Message class="mb-6" msg={message} />
@@ -19,18 +19,18 @@
 
 		{#if type === 'signup'}
 			<div class="field">
-				<Label>{t.account.name}</Label>
+				<Label for="name">{t.account.name}</Label>
 				<Input name="name" type="text" placeholder={t.account.name} />
 			</div>
 		{/if}
 
 		<div class="field">
-			<Label>{t.account.email}</Label>
+			<Label for="email">{t.account.email}</Label>
 			<Input name="email" type="email" placeholder={t.account.email} />
 		</div>
 
 		<div class="field">
-			<Label>{t.account.password}</Label>
+			<Label for="password">{t.account.password}</Label>
 			<Input name="password" type="password" placeholder={t.account.password} />
 		</div>
 

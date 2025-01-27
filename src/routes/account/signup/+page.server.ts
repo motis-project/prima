@@ -6,7 +6,7 @@ import {
 	generateSessionToken,
 	setSessionTokenCookie
 } from '$lib/server/auth/session';
-import { MINUTE } from '$lib/server/time';
+import { MINUTE } from '$lib/util/time';
 import { db } from '$lib/server/db';
 import { generateRandomOTP } from '$lib/server/auth/utils';
 import { verifyEmailInput, isEmailAvailable } from '$lib/server/auth/email';
@@ -33,8 +33,8 @@ async function createUser(name: string, email: string, password: string) {
 			passwordResetCode: null,
 			phone: null,
 			companyId: null,
-			isEntrepreneur: false,
-			isMaintainer: false
+			isTaxiOwner: false,
+			isAdmin: false
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();

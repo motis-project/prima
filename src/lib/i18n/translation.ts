@@ -7,8 +7,14 @@ export type Translations = {
 		connections: string;
 		bookings: string;
 		account: string;
+		availability: string;
+		company: string;
+		completedTours: string;
+		employees: string;
+		companies: string;
 	};
 	msg: {
+		// Account
 		enterEmailAndPassword: string;
 		invalidEmail: string;
 		emailAlreadyRegistered: string;
@@ -28,6 +34,15 @@ export type Translations = {
 		oldEmail: string;
 		checkInboxToVerify: string;
 		passwordResetSuccess: string;
+
+		// Admin
+		userDoesNotExist: string;
+		activationSuccess: string;
+		userAlreadyActivated: string;
+	};
+	admin: {
+		completedToursSubtitle: string;
+		activateTaxiOwners: string;
 	};
 	account: {
 		name: string;

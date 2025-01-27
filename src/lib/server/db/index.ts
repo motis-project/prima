@@ -13,8 +13,8 @@ export interface Database {
 		emailVerificationExpiresAt: Date | null;
 		passwordResetCode: string | null;
 		passwordResetExpiresAt: Date | null;
-		isEntrepreneur: boolean;
-		isMaintainer: boolean;
+		isTaxiOwner: boolean;
+		isAdmin: boolean;
 		phone: string | null;
 		companyId: number | null;
 	};
@@ -53,7 +53,6 @@ export interface Database {
 		arrival: Date;
 		vehicle: number;
 		fare: number | null;
-		fareRoute: number | null;
 	};
 	availability: {
 		id: Generated<number>;

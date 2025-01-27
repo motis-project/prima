@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { ExpiringTokenBucket } from '$lib/server/auth/rate-limit';
 import type { Actions, RequestEvent } from './$types';
-import { MINUTE } from '$lib/server/time';
+import { MINUTE } from '$lib/util/time';
 import { db } from '$lib/server/db';
 import { generateRandomOTP } from '$lib/server/auth/utils';
 import { msg } from '$lib/msg';

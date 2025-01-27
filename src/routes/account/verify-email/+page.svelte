@@ -2,9 +2,9 @@
 	import { Label } from '$lib/shadcn/label';
 	import { Input } from '$lib/shadcn/input';
 	import { Button } from '$lib/shadcn/button';
-	import Meta from '$lib/Meta.svelte';
-	import Message from '$lib/Message.svelte';
-	import Panel from '$lib/Panel.svelte';
+	import Meta from '$lib/ui/Meta.svelte';
+	import Message from '$lib/ui/Message.svelte';
+	import Panel from '$lib/ui/Panel.svelte';
 	import { t } from '$lib/i18n/translation.js';
 
 	const { data, form } = $props();

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import Panel from '$lib/Panel.svelte';
 	import { Button } from '$lib/shadcn/button';
 	import { Input } from '$lib/shadcn/input';
-	import Message from '$lib/Message.svelte';
-	import Meta from '$lib/Meta.svelte';
+	import Panel from '$lib/ui/Panel.svelte';
+	import Message from '$lib/ui/Message.svelte';
+	import Meta from '$lib/ui/Meta.svelte';
 	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import { t } from '$lib/i18n/translation';
 

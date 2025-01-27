@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { Msg } from '$lib/msg';
 	import CircleAlert from 'lucide-svelte/icons/circle-alert';
 	import * as Alert from '$lib/shadcn/alert';
-	import { t } from './i18n/translation';
+	import { type Msg } from '$lib/msg';
+	import { t } from '$lib/i18n/translation';
 
 	const { msg, class: className }: { msg: Msg; class?: string } = $props();
 </script>
