@@ -40,7 +40,7 @@ export interface Database {
 	};
 	vehicle: {
 		id: Generated<number>;
-		license_plate: string;
+		licensePlate: string;
 		company: number;
 		seats: number;
 		wheelchairCapacity: number;
