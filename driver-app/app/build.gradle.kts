@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "de.motis.prima"
-        minSdk = 25
+        minSdk = 27
         //noinspection OldTargetApi
         targetSdk = 34
         versionCode = 1

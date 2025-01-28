@@ -38,20 +38,66 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
+import de.motis.prima.app.DriversApp
+import de.motis.prima.services.Event
 import de.motis.prima.services.Tour
 import kotlinx.coroutines.launch
 
+data class Location(
+    val latitude: Double,
+    val longitude: Double,
+)
+
+class TourViewModel(tour: Tour) : ViewModel() {
+    var id_: Int = tour.tour_id
+    var tour_: Tour = tour
+    var eventGroups: MutableMap<String, MutableList<Event>> = hashMapOf()
+
+    private val locationUpdate = LocationUpdate.getInstance(DriversApp.instance)
+
+    var currentLocation = Location(0.0, 0.0)
+
+    private fun buildEventGroups(events: List<Event>) {
+        val eventGroups = eventGroups
+        for ((i, event) in events.withIndex()) {
+            val groupId = i.toString() // event.groupId
+            if (eventGroups[groupId] == null) {
+                eventGroups[groupId] = mutableListOf(event)
+            } else {
+                eventGroups[groupId]?.add(event)
+            }
+        }
+    }
+
+    fun fetchLocation() {
+        locationUpdate.getCurrentLocation { latitude, longitude ->
+            if (latitude != null && longitude != null) {
+                currentLocation = Location(latitude, longitude)
+                Log.d("location", currentLocation.toString())
+            } else {
+                Log.d("location", "Unable to fetch location.")
+            }
+        }
+    }
+
+    init {
+        buildEventGroups(tour.events)
+        fetchLocation()
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TourOverview(
+fun TourView(
     navController: NavController,
-    tourId: Int,
-    viewModel: ToursViewModel
+    userViewModel: UserViewModel,
+    tourViewModel: TourViewModel
 ) {
-    LaunchedEffect(key1 = viewModel) {
+    LaunchedEffect(key1 = userViewModel) {
         launch {
-            viewModel.logoutEvent.collect {
+            userViewModel.logoutEvent.collect {
                 Log.d("Logout", "Logout event triggered.")
                 navController.navigate("login") {
                     launchSingleTop = true
@@ -104,7 +150,7 @@ fun TourOverview(
                         )
                         DropdownMenuItem(
                             onClick = {
-                                viewModel.logout()
+                                userViewModel.logout()
                                 dropdownExpanded = false
 
                             },
@@ -126,7 +172,7 @@ fun TourOverview(
                 modifier = Modifier.fillMaxWidth().height(650.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
-                TourDetails(tourId = tourId, viewModel = viewModel, navController)
+                WayPointsView(tourViewModel, navController)
             }
 
             Spacer(modifier = Modifier.height(48.dp))
@@ -138,7 +184,8 @@ fun TourOverview(
                 Button(
                     modifier = Modifier.width(300.dp),
                     onClick = {
-                        navController.navigate("legs/${tourId}/0")
+                        // LegView
+                        navController.navigate("legs/${tourViewModel.id_}/0")
                     }
                 ) {
                     Text(
@@ -153,9 +200,11 @@ fun TourOverview(
 }
 
 @Composable
-fun TourDetails(tourId: Int, viewModel: ToursViewModel, navController: NavController) {
-    val tour = viewModel.tours.value.filter { t: Tour ->  tourId == t.tour_id}[0]
-    val events = tour.events
+fun WayPointsView(
+    tourViewModel: TourViewModel,
+    navController: NavController) {
+
+    val events = tourViewModel.tour_.events
     var lastEvent = events[0]
     var timeBegin = "-"
     var timeEnd = "-"
@@ -205,7 +254,7 @@ fun TourDetails(tourId: Int, viewModel: ToursViewModel, navController: NavContro
             LazyColumn(
             ) {
                 items(items = events, itemContent = { event ->
-                    EventDetail(0,0, event, false, viewModel.currentLocation, navController)
+                    EventDetail(0,0, event, false, tourViewModel.currentLocation, "", navController)
                 })
             }
         }

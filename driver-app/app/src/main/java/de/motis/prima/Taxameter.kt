@@ -1,19 +1,15 @@
 package de.motis.prima
 
 import android.util.Log
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -39,15 +35,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import de.motis.prima.services.Api
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -62,7 +55,8 @@ class TaxameterViewModel : ViewModel() {
 fun Taxameter(
     navController: NavController,
     toursViewModel: ToursViewModel,
-    viewModel: TaxameterViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    userViewModel: UserViewModel,
+    viewModel: TaxameterViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
 ) {
     var entryCorrect by remember { mutableStateOf(false) }
     var fare by remember { mutableStateOf("") }
@@ -71,7 +65,7 @@ fun Taxameter(
 
     LaunchedEffect(key1 = toursViewModel) {
         launch {
-            toursViewModel.logoutEvent.collect {
+            userViewModel.logoutEvent.collect {
                 Log.d("Logout", "Logout event triggered.")
                 navController.navigate("login") {
                     launchSingleTop = true
@@ -131,7 +125,7 @@ fun Taxameter(
                         )
                         DropdownMenuItem(
                             onClick = {
-                                toursViewModel.logout()
+                                userViewModel.logout()
                                 dropdownExpanded = false
 
                             },

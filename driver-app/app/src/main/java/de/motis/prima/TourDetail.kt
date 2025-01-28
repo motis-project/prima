@@ -44,12 +44,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
-data class Location(
-    val latitude: Double,
-    val longitude: Double,
-)
 
-@Composable
+
+/*@Composable
 fun PortraitLayout(
     navController: NavController,
     tourId: Int,
@@ -69,8 +66,6 @@ fun PortraitLayout(
     }
 
     if (eventIndex == 0) {
-        // Test: Taxi company home in Weisswasser
-        // currentLocation = Location(latitude = 51.493713, longitude = 14.625855)
         toursViewModel.fetchLocation()
         currentLocation = toursViewModel.currentLocation
     } else {
@@ -78,8 +73,7 @@ fun PortraitLayout(
         currentLocation = Location(latitude = prevEvent.latitude, longitude = prevEvent.longitude)
     }
 
-    // test
-    Log.d("test", "In TourDetail: ${scanViewModel.ticket.value}")
+    var ticket = scanViewModel.ticket.value
 
     Column(
         modifier = Modifier
@@ -104,7 +98,7 @@ fun PortraitLayout(
             horizontalArrangement = Arrangement.Center
         ) {
             Box {
-                EventDetail(tourId, eventIndex, event, true, currentLocation, navController)
+                EventDetail(tourId, eventIndex, event, true, currentLocation, ticket, navController)
             }
         }
         Row(
@@ -233,7 +227,8 @@ fun TourDetail(
     tourId: Int,
     eventIndex: Int,
     toursViewModel: ToursViewModel,
-    scanViewModel: ScanViewModel
+    scanViewModel: ScanViewModel,
+    userViewModel: UserViewModel
 ) {
     LaunchedEffect(key1 = toursViewModel) {
         launch {
@@ -292,7 +287,7 @@ fun TourDetail(
                         )
                         DropdownMenuItem(
                             onClick = {
-                                toursViewModel.logout()
+                                userViewModel.logout()
                                 dropdownExpanded = false
 
                             },
@@ -317,4 +312,4 @@ fun TourDetail(
             .padding(contentPadding)
         )
     }
-}
+}*/

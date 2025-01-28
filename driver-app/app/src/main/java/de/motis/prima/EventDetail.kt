@@ -6,6 +6,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,6 +28,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -35,162 +37,42 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import de.motis.prima.services.Event
+import de.motis.prima.services.Tour
+import java.util.Date
 
+class EventDetailViewModel : ViewModel() {
+    var eventGroup = mutableStateOf<List<Event>>(emptyList<Event>())
 
-fun openGoogleMapsNavigation(from: Location, to: Location, context: android.content.Context) {
-    val gmmIntentUri = Uri.parse("google.navigation:q=${to.latitude},${to.longitude}")
-    val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
-    mapIntent.setPackage("com.google.android.apps.maps")
-
-    // Check if Google Maps App is installed
-    if (mapIntent.resolveActivity(context.packageManager) != null) {
-        context.startActivity(mapIntent)
-    } else {
-        // Fallback to browser
-        val googleMapsUrl =
-            "https://www.google.com/maps/dir/?api=1&origin=${from.latitude},${from.longitude}&destination=${to.latitude},${to.longitude}&travelmode=driving"
-
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.setData(Uri.parse(googleMapsUrl))
-        intent.setPackage("com.android.chrome")
-
-        // Check if Chrome is installed
-        if (intent.resolveActivity(context.packageManager) != null) {
-            context.startActivity(intent)
-        } else {
-            // Fallback to any browser
-            intent.setPackage(null)
-            context.startActivity(intent)
+    private fun buildEventGroup(events: List<Event>) {
+        for (event in events) {
+            Log.d("test", event.customer_id)
         }
     }
-}
 
-fun phoneCall(number: String, context: android.content.Context) {
-    val intent = Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null))
-    context.startActivity(intent)
-}
-
-data class EventGroup(
-    val id: Int,
-    val events: List<Event>,
-)
-
-@Composable
-fun showCustomerDetails(event: Event, context: Context, navController: NavController) {
-    var firstName = "-"
-    var lastName = "-"
-    var phone = "-"
-
-    try {
-        if (event.first_name != null)
-            firstName = event.first_name
-        if (event.last_name != null)
-            lastName = event.last_name
-        if (event.phone != null)
-            phone = event.phone
-    } catch (e: Exception) {
-        Log.d("error", "showCustomerDetails: Failed to read event details")
-        return
+    init {
+        // TODO
     }
 
-    Card (
-        modifier = Modifier.padding(top = 10.dp).padding(horizontal = 10.dp)
-    ) {
-        Column {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Localized description",
-                    modifier = Modifier.background(Color.Green)
-                )
-                if (event.wheelchairs > 0) {
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_wheelchair),
-                        contentDescription = "Localized description"
-                    )
-                }
-                Spacer(modifier = Modifier.width(20.dp))
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Localized description"
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "${event.passengers}",
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.width(36.dp))
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_luggage),
-                    contentDescription = "Localized description"
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "${event.luggage}",
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.width(36.dp))
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_bike),
-                    contentDescription = "Localized description"
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "${event.bikes}",
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-            ) {
-                Text(
-                    text = "$lastName, $firstName",
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            if (event.is_pickup) {
-                Spacer(modifier = Modifier.height(20.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                        .padding(bottom = 4.dp),
-                ) {
-                    Button(
-                        onClick = { phoneCall(phone, context) },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Call,
-                            contentDescription = "Localized description",
-                            Modifier.size(width = 26.dp, height = 26.dp)
-
-                        )
-                    }
-                }
-            }
-        }
+    fun reset() {
+        // TODO
     }
 }
 
 @Composable
-fun EventDetail(tourId : Int, eventIndex : Int, event: Event, inStep: Boolean, currentLocation: Location, navController: NavController) {
+fun EventDetail(
+    tourId : Int,
+    eventIndex : Int,
+    event: Event,
+    inStep: Boolean,
+    currentLocation: Location,
+    ticket: String,
+    navController: NavController,
+    viewModel: EventDetailViewModel = EventDetailViewModel()
+) {
     var scheduledTime = "-"
     var city = "-"
     var street = "-"
@@ -278,7 +160,6 @@ fun EventDetail(tourId : Int, eventIndex : Int, event: Event, inStep: Boolean, c
             }
 
             if (inStep && isPickup) {
-                val eventGroup = EventGroup(0, listOf(event))
                 Card(
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.padding(top = 20.dp)
@@ -288,8 +169,8 @@ fun EventDetail(tourId : Int, eventIndex : Int, event: Event, inStep: Boolean, c
                             .height(510.dp)
                             .background(color = Color.White)
                     ) {
-                        items(items = eventGroup.events, itemContent = { event ->
-                            showCustomerDetails(event, context, navController)
+                        items(items = viewModel.eventGroup.value, itemContent = { event ->
+                            ShowCustomerDetails(event, ticket, context, navController)
                         })
                     }
                 }
@@ -335,4 +216,10 @@ fun EventDetail(tourId : Int, eventIndex : Int, event: Event, inStep: Boolean, c
             }
         }
     }
+}
+
+
+
+private fun reportTicketScan(ticket: String) {
+    Log.d("test", "Ticket scanned: $ticket")
 }

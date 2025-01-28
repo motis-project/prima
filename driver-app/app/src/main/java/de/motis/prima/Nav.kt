@@ -2,7 +2,6 @@ package de.motis.prima
 
 import android.util.Log
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -20,8 +19,7 @@ fun Nav() {
     val vehiclesViewModel: VehiclesViewModel = viewModel()
     val toursViewModel: ToursViewModel = viewModel()
     val scanViewModel: ScanViewModel = viewModel()
-
-    val selectedVehicle by vehiclesViewModel.selectedVehicle.collectAsState()
+    val userViewModel: UserViewModel = viewModel()
 
     // Before rendering any component, check whether user is authenticated.
     val startDestination by remember {
@@ -47,28 +45,32 @@ fun Nav() {
         }
 
         composable(route = "tours") {
-            Tours(navController, vehiclesViewModel, toursViewModel)
+            Tours(navController, vehiclesViewModel, toursViewModel, userViewModel)
         }
 
-        composable(route = "taxameter") {
-            Taxameter(navController, toursViewModel)
-        }
-
-        composable(route = "overview/{tourId}") {
+        composable(route = "tour/{tourId}") {
             val tourId = it.arguments?.getString("tourId")?.toInt()
-            TourOverview(navController, tourId!!, toursViewModel)
+            var tour = toursViewModel.tours.value.find { tour -> tour.tour_id == tourId }
+            TourView(navController, userViewModel, TourViewModel(tour!!))
         }
 
         composable(route = "legs/{tourId}/{eventIndex}") {
             val tourId = it.arguments?.getString("tourId")?.toInt()
-            val eventIndex = it.arguments?.getString("eventIndex")?.toInt()
-            TourDetail(navController,  tourId!!, eventIndex!!, toursViewModel, scanViewModel)
+            val stopIndex = it.arguments?.getString("eventIndex")?.toInt()
+            var tour = toursViewModel.tours.value.find { tour -> tour.tour_id == tourId }
+            //val events = tour!!.events
+            //TourDetail(navController,  tourId!!, eventIndex!!, TourViewModel(tourId!!, events), scanViewModel)
+            LegView(stopIndex!!, TourViewModel(tour!!), scanViewModel, userViewModel, navController)
         }
 
         composable(route = "scan/{tourId}/{eventIndex}") {
             val tourId = it.arguments?.getString("tourId")?.toInt()
             val eventIndex = it.arguments?.getString("eventIndex")?.toInt()
             ScanTicketView(navController,  tourId!!, eventIndex!!, scanViewModel)
+        }
+
+        composable(route = "taxameter") {
+            Taxameter(navController, toursViewModel, userViewModel)
         }
     }
 }

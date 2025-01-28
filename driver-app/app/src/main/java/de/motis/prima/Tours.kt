@@ -26,7 +26,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
@@ -61,7 +60,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import de.motis.prima.app.DriversApp
 import de.motis.prima.services.Api
-import de.motis.prima.services.CookieStore
 import de.motis.prima.services.Tour
 import de.motis.prima.services.Vehicle
 import kotlinx.coroutines.delay
@@ -77,20 +75,11 @@ import java.util.Locale
 import java.util.TimeZone
 
 class ToursViewModel : ViewModel() {
-    private val cookieStore: CookieStore = CookieStore(DriversApp.instance)
-
-    private val _logoutEvent = MutableSharedFlow<Unit>()
-    val logoutEvent = _logoutEvent.asSharedFlow()
-
     var tours = mutableStateOf<List<Tour>>(emptyList())
-        //private set
+    //private set
 
     var isLoading = mutableStateOf(true)
         private set
-
-    private val locationUpdate = LocationUpdate.getInstance(DriversApp.instance)
-
-    var currentLocation = Location(0.0, 0.0)
 
     var displayDate = Date()
 
@@ -98,7 +87,6 @@ class ToursViewModel : ViewModel() {
 
     init {
         fetchTours()
-        fetchLocation()
     }
 
     fun reset() {
@@ -107,22 +95,16 @@ class ToursViewModel : ViewModel() {
         showAllTours = mutableStateOf(false)
     }
 
-    fun fetchLocation() {
-        locationUpdate.getCurrentLocation { latitude, longitude ->
-            if (latitude != null && longitude != null) {
-                currentLocation = Location(latitude, longitude)
-                Log.d("location", currentLocation.toString())
-            } else {
-                Log.d("location", "Unable to fetch location.")
-            }
-        }
-    }
-
     fun fetchTours() {
         viewModelScope.launch {
             while (true) {
-                Api.apiService.getTours(SimpleDateFormat("yyyy-MM-dd").format(displayDate)).enqueue(object : Callback<List<Tour>> {
-                    override fun onResponse(call: Call<List<Tour>>, response: Response<List<Tour>>) {
+                Api.apiService.getTours(
+                    SimpleDateFormat("yyyy-MM-dd").format(displayDate)
+                ).enqueue(object : Callback<List<Tour>> {
+                    override fun onResponse(
+                        call: Call<List<Tour>>,
+                        response: Response<List<Tour>>
+                    ) {
                         if (response.isSuccessful) {
                             val newTours = response.body() ?: emptyList()
                             Log.d("fetch", "Fetched tours")
@@ -133,7 +115,10 @@ class ToursViewModel : ViewModel() {
                                 val newItem = newTours.last()
                                 val pickup = newItem.events.first()
                                 val today = Date().formatTo("yyyy-MM-dd")
-                                val pickupDate = pickup.scheduled_time.replace("T", " ").toDate()
+                                val pickupDate = pickup
+                                    .scheduled_time
+                                    .replace("T", " ")
+                                    .toDate()
 
                                 if (pickupDate.formatTo("yyyy-MM-dd") == today) {
                                     showNotification(
@@ -180,25 +165,17 @@ class ToursViewModel : ViewModel() {
                 // for ActivityCompat#requestPermissions for more details.
                 return
             }
-            notify(System.currentTimeMillis().toInt(), builder.build()) // Unique ID for each notification
-        }
-    }
-
-    fun logout() {
-        viewModelScope.launch {
-            try {
-                cookieStore.clearCookies()
-                _logoutEvent.emit(Unit)
-            } catch (e: Exception) {
-                Log.d("Logout", "Error while logout.")
-            }
+            notify(
+                System.currentTimeMillis().toInt(),
+                builder.build()
+            ) // Unique ID for each notification
         }
     }
 }
 
 fun String.toDate(
     dateFormat: String = "yyyy-MM-dd HH:mm:ss",
-        timeZone: TimeZone = TimeZone.getTimeZone("Europe/Berlin"),
+    timeZone: TimeZone = TimeZone.getTimeZone("Europe/Berlin"),
 ): Date {
     var res = Date()
     try {
@@ -257,7 +234,7 @@ fun showTours(tours: List<Tour>, navController: NavController) {
         ) {
             items(items = tours, itemContent = { tour ->
                 ConstraintLayout(modifier = Modifier.clickable {
-                    navController.navigate("overview/${tour.tour_id}")
+                    navController.navigate("tour/${tour.tour_id}")
                 }) {
                     var city = "-"
                     var address = "-"
@@ -307,14 +284,15 @@ fun showTours(tours: List<Tour>, navController: NavController) {
 fun Tours(
     navController: NavController,
     vehiclesViewModel: VehiclesViewModel,
-    viewModel: ToursViewModel
+    viewModel: ToursViewModel,
+    userViewModel: UserViewModel
 ) {
     var licensePlate = vehiclesViewModel.selectedVehicle.value.license_plate
 
     LaunchedEffect(key1 = viewModel) {
         viewModel.fetchTours()
         launch {
-            viewModel.logoutEvent.collect {
+            userViewModel.logoutEvent.collect {
                 Log.d("Logout", "Logout event triggered.")
                 navController.navigate("login") {
                     launchSingleTop = true
@@ -363,11 +341,11 @@ fun Tours(
                                 navController.navigate("vehicles")
 
                             },
-                            text = {Text("Fahrzeug wechseln")}
+                            text = { Text("Fahrzeug wechseln") }
                         )
                         DropdownMenuItem(
                             onClick = {
-                                viewModel.logout()
+                                userViewModel.logout()
                                 dropdownExpanded = false
 
                             },
@@ -423,7 +401,7 @@ fun Tours(
             }
 
             Column {
-                Row (
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(contentPadding),
@@ -439,7 +417,8 @@ fun Tours(
                                 val nextDate = decrementDate(viewModel.displayDate)
                                 viewModel.showAllTours.value = true
                                 viewModel.displayDate = nextDate
-                                navController.navigate("tours") },
+                                navController.navigate("tours")
+                            },
                             Modifier
                                 .background(color = Color.Transparent)
                                 .size(width = 26.dp, height = 26.dp)
@@ -471,7 +450,8 @@ fun Tours(
                             onClick = {
                                 val nextDate = incrementDate(viewModel.displayDate)
                                 viewModel.displayDate = nextDate
-                                navController.navigate("tours") },
+                                navController.navigate("tours")
+                            },
                             Modifier
                                 .background(color = Color.Transparent)
                                 .size(width = 26.dp, height = 26.dp)
@@ -501,28 +481,28 @@ fun Tours(
                 }
 
                 if (!viewModel.showAllTours.value && toursFuture.isNotEmpty()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 20.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Box {
-                        Button(
-                            onClick = {
-                                viewModel.showAllTours.value = true
-                                navController.navigate("tours")
-                            },
-                            //colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
-                        ) {
-                            Text(
-                                text = "frühere Fahrten",
-                                fontSize = 18.sp,
-                                textAlign = TextAlign.Center
-                            )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 20.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Box {
+                            Button(
+                                onClick = {
+                                    viewModel.showAllTours.value = true
+                                    navController.navigate("tours")
+                                },
+                                //colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+                            ) {
+                                Text(
+                                    text = "frühere Fahrten",
+                                    fontSize = 18.sp,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
-                }
                 }
 
                 if (viewModel.showAllTours.value) {
