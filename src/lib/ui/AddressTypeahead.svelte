@@ -1,12 +1,42 @@
 <script lang="ts">
-	import { Combobox } from 'bits-ui';
-	import { geocode, type Match } from '$lib/openapi';
 	import Bus from 'lucide-svelte/icons/bus-front';
 	import House from 'lucide-svelte/icons/map-pin-house';
 	import Place from 'lucide-svelte/icons/map-pin';
-	import { posToLocation, type Location } from './Location';
-	import { GEOCODER_PRECISION } from './Precision';
+
+	import { Combobox } from 'bits-ui';
+	import { geocode, type Match } from '$lib/openapi';
 	import { language } from '$lib/i18n/translation';
+	import maplibregl from 'maplibre-gl';
+
+	export type Location = {
+		label?: string;
+		value: {
+			match?: Match;
+			precision?: number;
+		};
+	};
+
+	export function posToLocation(pos: maplibregl.LngLatLike, level: number): Location {
+		const { lat, lng } = maplibregl.LngLat.convert(pos);
+		const label = `${lat},${lng},${level}`;
+		return {
+			label,
+			value: {
+				match: {
+					lat,
+					lon: lng,
+					level,
+					id: '',
+					areas: [],
+					type: 'PLACE',
+					name: label,
+					tokens: [],
+					score: 0
+				},
+				precision: 100
+			}
+		};
+	}
 
 	const COORD_LVL_REGEX = /^([+-]?\d+(\.\d+)?)\s*,\s*([+-]?\d+(\.\d+)?)\s*,\s*([+-]?\d+(\.\d+)?)$/;
 	const COORD_REGEX = /^([+-]?\d+(\.\d+)?)\s*,\s*([+-]?\d+(\.\d+)?)$/;
@@ -75,7 +105,7 @@
 		items = matches!.map((match: Match): Location => {
 			return {
 				label: getLabel(match),
-				value: { match, precision: GEOCODER_PRECISION }
+				value: { match }
 			};
 		});
 		const shown = new Set<string>();
@@ -139,7 +169,6 @@
 		if (e) {
 			selected = deserialize(e);
 			inputValue = selected.label!;
-			history.back();
 		}
 	}}
 	onOpenChange={(open) => {

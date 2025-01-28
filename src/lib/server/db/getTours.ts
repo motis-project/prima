@@ -9,16 +9,18 @@ export const getTours = async (companyId?: number, timeRange?: [Date, Date]) => 
 		.$if(typeof companyId === 'number', (qb) => qb.where('company', '=', companyId!))
 		.$if(!!timeRange, (qb) =>
 			qb.where((eb) =>
-				eb.and([eb('tour.departure', '<', timeRange![0]), eb('tour.arrival', '>', timeRange![1])])
+				eb.and([eb('tour.departure', '<', timeRange![1]), eb('tour.arrival', '>', timeRange![0])])
 			)
 		)
-		.selectAll(['tour', 'vehicle', 'company'])
 		.select((eb) => [
+			'tour.id as tourId',
+			'tour.fare as fare',
 			'tour.departure as startTime',
 			'tour.arrival as endTime',
 			'company.name as companyName',
 			'company.address as companyAddress',
 			'vehicle.id as vehicleId',
+			'vehicle.licensePlate as licensePlate',
 			jsonArrayFrom(
 				eb
 					.selectFrom('event')

@@ -36,35 +36,24 @@
 	// ===
 	// API
 	// ---
-	export const updateTour = async (tourId: number, vehicleId: number) => {
-		return await fetch('/taxi/availability/api', {
+	const updateTour = async (tourId: number, vehicleId: number) => {
+		return await fetch('/taxi/availability/api/tour', {
 			method: 'POST',
-			body: JSON.stringify({
-				tour_id: tourId,
-				vehicleId: vehicleId
-			})
+			body: JSON.stringify({ tourId, vehicleId })
 		});
 	};
 
-	export const removeAvailability = async (vehicleId: number, from: Date, to: Date) => {
-		return await fetch('/taxi/availability/api', {
+	const removeAvailability = async (vehicleId: number, from: Date, to: Date) => {
+		return await fetch('/taxi/availability/api/availability', {
 			method: 'DELETE',
-			body: JSON.stringify({
-				vehicleId,
-				from,
-				to
-			})
+			body: JSON.stringify({ vehicleId, from, to })
 		});
 	};
 
-	export const addAvailability = async (vehicleId: number, from: Date, to: Date) => {
-		return await fetch('/taxi/availability/api', {
+	const addAvailability = async (vehicleId: number, from: Date, to: Date) => {
+		return await fetch('/taxi/availability/api/availability', {
 			method: 'POST',
-			body: JSON.stringify({
-				vehicleId,
-				from,
-				to
-			})
+			body: JSON.stringify({ vehicleId, from, to })
 		});
 	};
 
@@ -104,23 +93,23 @@
 	});
 
 	// 8 am today
-	let today_morning = $derived.by(() => {
+	let todayMorning = $derived.by(() => {
 		let copy = new Date(base);
 		copy.setHours(base.getHours() + 9);
 		return copy;
 	});
 
 	// 5 pm today
-	let today_day = $derived.by(() => {
-		let copy = new Date(today_morning);
-		copy.setHours(today_morning.getHours() + 9);
+	let todayDay = $derived.by(() => {
+		let copy = new Date(todayMorning);
+		copy.setHours(todayMorning.getHours() + 9);
 		return copy;
 	});
 
 	// 1 am tomorrow
 	let tomorrow_night = $derived.by(() => {
-		let copy = new Date(today_day);
-		copy.setHours(today_day.getHours() + 8);
+		let copy = new Date(todayDay);
+		copy.setHours(todayDay.getHours() + 8);
 		return copy;
 	});
 
@@ -180,6 +169,7 @@
 	};
 
 	const selectionStart = (id: number, vehicle: Vehicle, cell: Range) => {
+		console.log('selectionStart', id);
 		if (selection === null) {
 			selection = {
 				id,
@@ -273,7 +263,9 @@
 			});
 			let responses;
 			try {
-				responses = await Promise.all(draggedTours.tours.map((t) => updateTour(t.id, t.vehicleId)));
+				responses = await Promise.all(
+					draggedTours.tours.map((t) => updateTour(t.tourId, t.vehicleId))
+				);
 			} catch {
 				alert('Der Server konnte nicht erreicht werden.');
 				return;
@@ -335,7 +327,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each data.vehicles.entries() as [id, v]}
+			{#each data.vehicles as v}
 				<tr>
 					<td
 						class="h-full pr-2 align-middle font-mono text-sm font-semibold leading-none tracking-tight"
@@ -350,20 +342,20 @@
 										{#each split(x, 15) as cell}
 											<td
 												class="cell"
-												draggable={hasTour(id, cell)}
-												ondragstart={() => dragStart(id, cell)}
-												ondragover={() => dragOver(id)}
+												draggable={hasTour(v.id, cell)}
+												ondragstart={() => dragStart(v.id, cell)}
+												ondragover={() => dragOver(v.id)}
 												ondragend={() => onDrop()}
-												onmousedown={() => !hasTour(id, cell) && selectionStart(id, v, cell)}
+												onmousedown={() => !hasTour(v.id, cell) && selectionStart(v.id, v, cell)}
 												onmouseover={() => selectionContinue(cell)}
 												onfocus={() => {}}
 											>
-												{#if hasTour(id, cell)}
+												{#if hasTour(v.id, cell)}
 													<!-- svelte-ignore a11y_click_events_have_key_events -->
 													<!-- svelte-ignore a11y_no_static_element_interactions -->
 													<div
 														onclick={() => {
-															selectedTour.tours = getTours(id, cell);
+															selectedTour.tours = getTours(v.id, cell);
 														}}
 														class={[
 															'cursor-pointer',
@@ -371,7 +363,7 @@
 															'h-8',
 															'border',
 															'rounded-md',
-															cellColor(id, v, cell)
+															cellColor(v.id, v, cell)
 														].join(' ')}
 													></div>
 												{:else}
@@ -381,7 +373,7 @@
 															'h-8',
 															'border',
 															'rounded-md',
-															cellColor(id, v, cell)
+															cellColor(v.id, v, cell)
 														].join(' ')}
 													></div>
 												{/if}
@@ -452,9 +444,9 @@
 				</p>
 			</div>
 		{:else}
-			{@render availabilityTable({ startTime: base, endTime: today_morning })}
-			{@render availabilityTable({ startTime: today_morning, endTime: today_day })}
-			{@render availabilityTable({ startTime: today_day, endTime: tomorrow_night })}
+			{@render availabilityTable({ startTime: base, endTime: todayMorning })}
+			{@render availabilityTable({ startTime: todayMorning, endTime: todayDay })}
+			{@render availabilityTable({ startTime: todayDay, endTime: tomorrow_night })}
 		{/if}
 	</Card.Content>
 </Card.Root>

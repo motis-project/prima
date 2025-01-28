@@ -129,16 +129,16 @@
 				{#if tour}
 					<div class="rounded bg-primary-foreground p-2">Startzeit</div>
 					<div class="rounded bg-primary-foreground p-2">
-						{tour!.departure.toLocaleString('de-DE').slice(0, -3)}
+						{tour!.startTime.toLocaleString('de-DE').slice(0, -3)}
 					</div>
 
 					<div class="rounded bg-primary-foreground p-2">Endzeit</div>
 					<div class="rounded bg-primary-foreground p-2">
-						{tour!.arrival.toLocaleString('de-DE').slice(0, -3)}
+						{tour!.endTime.toLocaleString('de-DE').slice(0, -3)}
 					</div>
 
 					<div class="rounded bg-primary-foreground p-2">Kennzeichen</div>
-					<div class="rounded bg-primary-foreground p-2 text-right">{tour!.license_plate}</div>
+					<div class="rounded bg-primary-foreground p-2 text-right">{tour!.licensePlate}</div>
 
 					<div class="rounded bg-primary-foreground p-2">Preis</div>
 					<div class="rounded bg-primary-foreground p-2 text-right">

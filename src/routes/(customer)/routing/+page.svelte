@@ -1,27 +1,33 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import AddressTypeahead from './AddressTypeahead.svelte';
-	import { type Location } from './Location';
-	import { Input } from '$lib/shadcn/input';
-	import { Calendar } from '$lib/shadcn/calendar';
-	import * as RadioGroup from '$lib/shadcn/radio-group';
-	import * as Drawer from '$lib/shadcn/drawer';
-	import { Label } from '$lib/shadcn/label';
-	import { t } from '$lib/i18n/translation';
-	import { plan, trip, type Match, type PlanData, type PlanResponse } from '$lib/openapi';
 	import { pushState } from '$app/navigation';
 	import { page } from '$app/state';
-	import { Button, buttonVariants } from '$lib/shadcn/button';
-	import ArrowUpDown from 'lucide-svelte/icons/arrow-up-down';
-	import { ChevronDown } from 'lucide-svelte';
 	import { onMount } from 'svelte';
-	import { lngLatToStr } from '../../../lib/util/lngLatToStr';
+
+	import ArrowUpDown from 'lucide-svelte/icons/arrow-up-down';
+	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
+
+	import { cn } from '$lib/shadcn/utils';
+	import { Button, buttonVariants } from '$lib/shadcn/button';
+	import Separator from '$lib/shadcn/separator/separator.svelte';
+	import * as RadioGroup from '$lib/shadcn/radio-group';
+	import { Input } from '$lib/shadcn/input';
+	import { Label } from '$lib/shadcn/label';
+	import * as Drawer from '$lib/shadcn/drawer';
+	import { Calendar } from '$lib/shadcn/calendar';
+
+	import { plan, trip, type Match, type PlanData, type PlanResponse } from '$lib/openapi';
+
+	import { t } from '$lib/i18n/translation';
+	import { lngLatToStr } from '$lib/util/lngLatToStr';
+
+	import AddressTypeahead from '$lib/ui/AddressTypeahead.svelte';
+	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
+
 	import ItineraryList from './ItineraryList.svelte';
 	import ConnectionDetail from './ConnectionDetail.svelte';
 	import StopTimes from './StopTimes.svelte';
-	import { cn } from '$lib/shadcn/utils';
-	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
-	import Separator from '$lib/shadcn/separator/separator.svelte';
 
 	const urlParams = browser ? new URLSearchParams(window.location.search) : undefined;
 

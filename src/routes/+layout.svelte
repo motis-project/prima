@@ -22,11 +22,11 @@
 	const taxiOwnerItems: Array<MenuItem> = [
 		{ title: t.menu.availability, href: '/taxi/availability', Icon: CarTaxiFront },
 		{ title: t.menu.company, href: '/taxi/company', Icon: Building2 },
-		{ title: t.menu.completedTours, href: '/taxi/completed-tours', Icon: ListChecks },
-		{ title: t.menu.employees, href: '/taxi/employees', Icon: UsersRound }
+		{ title: t.menu.completedTours, href: '/taxi/tours', Icon: ListChecks },
+		{ title: t.menu.employees, href: '/taxi/members', Icon: UsersRound }
 	];
 	const adminItems: Array<MenuItem> = [
-		{ title: t.menu.completedTours, href: '/admin/completed-tours', Icon: ListChecks },
+		{ title: t.menu.completedTours, href: '/admin/tours', Icon: ListChecks },
 		{ title: t.menu.companies, href: '/admin/taxi-owners', Icon: CarTaxiFront }
 	];
 

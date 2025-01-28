@@ -50,12 +50,12 @@
 					{#if isAdmin}
 						<Table.Cell>{tour.companyName}</Table.Cell>
 					{:else}
-						<Table.Cell>{tour.license_plate}</Table.Cell>
+						<Table.Cell>{tour.licensePlate}</Table.Cell>
 					{/if}
 					<Table.Cell>{getTourInfoShort(tour).from}</Table.Cell>
 					<Table.Cell>{getTourInfoShort(tour).to}</Table.Cell>
-					<Table.Cell>{tour.departure.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
-					<Table.Cell>{tour.arrival.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
+					<Table.Cell>{tour.startTime.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
+					<Table.Cell>{tour.endTime.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
 					<Table.Cell>{getCustomerCount(tour)}</Table.Cell>
 					<Table.Cell>TODO</Table.Cell>
 					<Table.Cell>{tour.events.length}</Table.Cell>

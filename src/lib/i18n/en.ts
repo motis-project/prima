@@ -5,7 +5,7 @@ const translations: Translations = {
 		connections: 'Connections',
 		bookings: 'Bookings',
 		account: 'Account',
-		availability: 'Taxi Availability',
+		availability: 'Availability',
 		company: 'Company',
 		completedTours: 'Tours',
 		employees: 'Employees',

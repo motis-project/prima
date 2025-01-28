@@ -40,9 +40,6 @@ export async function load(event) {
 		])
 		.execute();
 
-	console.log('company', companyId);
-	console.log('vehicles', await vehicles);
-
 	const tours = getTours(companyId, [fromTime, toTime]);
 
 	const company = await db
@@ -80,14 +77,6 @@ export const actions: Actions = {
 		const wheelchairCapacity = formData.get('wheelchair');
 		const storageSpace = formData.get('storageSpace');
 		const seats = formData.get('seats');
-
-		console.log('add vehicle', {
-			licensePlate,
-			nPassengers,
-			bikeCapacity,
-			wheelchairCapacity,
-			storageSpace
-		});
 
 		if (
 			typeof licensePlate !== 'string' ||

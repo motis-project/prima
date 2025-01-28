@@ -4,7 +4,7 @@ import {
 	deleteSessionTokenCookie
 } from '$lib/server/auth/session';
 import { sequence } from '@sveltejs/kit/hooks';
-import { redirect, type Handle } from '@sveltejs/kit';
+import { fail, redirect, type Handle } from '@sveltejs/kit';
 
 const authHandle: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get('session');
@@ -33,6 +33,12 @@ const authHandle: Handle = async ({ event, resolve }) => {
 			event.url.pathname !== '/account/request-password-reset'
 		) {
 			return redirect(302, '/account/login');
+		}
+		if (
+			(!session?.isAdmin && event.url.pathname.startsWith('/admin')) ||
+			(!session?.companyId && event.url.pathname.startsWith('/taxi'))
+		) {
+			return fail(403);
 		}
 		deleteSessionTokenCookie(event);
 	}

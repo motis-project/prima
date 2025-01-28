@@ -5,8 +5,8 @@ const translations: Translations = {
 		connections: 'Verbindungen',
 		bookings: 'Buchungen',
 		account: 'Konto',
-		availability: 'Taxi-Verfügbarkeit',
-		company: 'Stammdaten Unternehmen',
+		availability: 'Verfügbarkeit',
+		company: 'Unternehmen',
 		completedTours: 'Fahrten',
 		employees: 'Mitarbeiter',
 		companies: 'Unternehmen'

@@ -35,7 +35,7 @@ export const DELETE = async (event) => {
 	const end = new Date(to);
 	const toRemove = new Interval(start, end);
 	await db.transaction().execute(async (trx) => {
-		sql`LOCK TABLE availability IN ACCESS EXCLUSIVE MODE;`.execute(trx);
+		await sql`LOCK TABLE availability IN ACCESS EXCLUSIVE MODE;`.execute(trx);
 		const overlapping = await trx
 			.selectFrom('availability')
 			.where(({ eb }) =>
@@ -104,7 +104,14 @@ export const POST = async (event) => {
 	}
 	const request = event.request;
 	const { vehicleId, from, to } = await request.json();
-	console.log('add availability', { vehicleId, from, to });
+	if (typeof vehicleId !== 'number' || typeof from !== 'string' || typeof to !== 'string') {
+		throw 'invalid params';
+	}
+	const fromDate = new Date(from);
+	const toDate = new Date(to);
+	if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime)) {
+		throw 'invalid params';
+	}
 	await db
 		.insertInto('availability')
 		.columns(['startTime', 'endTime', 'vehicle'])
@@ -112,8 +119,8 @@ export const POST = async (event) => {
 			eb
 				.selectFrom('vehicle')
 				.select((eb) => [
-					eb.val(new Date(from)).as('startTime'),
-					eb.val(new Date(to)).as('endTime'),
+					eb.val(fromDate).as('startTime'),
+					eb.val(toDate).as('endTime'),
 					'vehicle.id as vehicle'
 				])
 				.where(({ eb }) =>
