@@ -85,11 +85,11 @@ export const actions: Actions = {
 				code: user.emailVerificationCode
 			});
 		} catch {
-			return fail(500, { msg: msg('failedToSendVerificationEmail'), email });
+			console.log('failed to send email');
 		}
 		const sessionToken = generateSessionToken();
 		const session = await createSession(sessionToken, user.id);
 		setSessionTokenCookie(event, sessionToken, session.expiresAt);
-		return redirect(302, '/user');
+		return redirect(302, '/account');
 	}
 };

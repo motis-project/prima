@@ -38,6 +38,6 @@ export const actions = {
 			.where('email', '=', email)
 			.executeTakeFirst();
 
-		return { msg: msg('activationSuccess') };
+		return { msg: msg('activationSuccess', 'success') };
 	}
 };

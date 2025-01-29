@@ -10,7 +10,7 @@
 </script>
 
 <Panel title={t.menu.companies} subtitle={t.admin.activateTaxiOwners}>
-	<Message msg={form.msg} />
+	<Message msg={form?.msg} />
 	<form method="post">
 		<div class="col flex flex-col gap-4">
 			<div class="field">
