@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import de.motis.prima.services.Event
 import androidx.compose.foundation.background
@@ -31,7 +30,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -42,14 +40,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 
-class EventGroupViewModel(
-    groupId: String,
-    tour: TourViewModel,
-    stopIndex: Int,
-    inStep: Boolean,
-    ticket: String) : ViewModel() {
+class EventGroupViewModel(stopIndex: String, groupId: String, tour: TourViewModel) : ViewModel() {
 
     var scheduledTime = "-"
     var city = "-"
@@ -57,16 +51,18 @@ class EventGroupViewModel(
     var houseNumber = "-"
     var isPickup = false
 
-    var currentLocation = tour.currentLocation
     var eventLocation = Location(latitude = 0.0, longitude = 0.0)
 
-    var eventGroup: MutableList<Event>? = null
+    var eventGroup: MutableList<Event> = mutableListOf()
 
-    var inStep = inStep
+    var tour = tour
+    var tourId = tour.id_
+
+    var stopIndex = stopIndex
 
     init {
         try {
-            eventGroup = tour.eventGroups[groupId]
+            eventGroup = tour.eventGroups[groupId]!!
             var event = eventGroup?.first() // TODO
 
             if (event != null) {
@@ -83,6 +79,14 @@ class EventGroupViewModel(
         } catch (e: Exception) {
             Log.d("error", "Failed to read event details")
         }
+    }
+
+    fun isTicketValid(customerId: String): Boolean {
+        return tour.validTickets.get(customerId)!!
+    }
+
+    fun setTicketValid(customerId: String) {
+        tour.validTickets.put(customerId, true)
     }
 }
 
@@ -114,7 +118,7 @@ fun openGoogleMapsNavigation(from: Location, to: Location, context: android.cont
     }
 }
 
-fun phoneCall(number: String, context: android.content.Context) {
+fun phoneCall(number: String, context: Context) {
     val intent = Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null))
     context.startActivity(intent)
 }
@@ -122,9 +126,13 @@ fun phoneCall(number: String, context: android.content.Context) {
 @Composable
 fun EventGroup(
     viewModel: EventGroupViewModel,
-    navController: NavController
+    navController: NavController,
+    scanViewModel: ScanViewModel = viewModel(),
+    locationViewModel: LocationViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    var ticket = scanViewModel.ticket.value
+
     Card(
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
@@ -169,21 +177,19 @@ fun EventGroup(
                         textAlign = TextAlign.Center
                     )
                 }
-                if (viewModel.inStep) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "${viewModel.street} ${viewModel.houseNumber}",
-                            fontSize = 24.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "${viewModel.street} ${viewModel.houseNumber}",
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
 
-            if (viewModel.inStep && viewModel.isPickup) {
+            if (viewModel.isPickup) {
                 Card(
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.padding(top = 20.dp)
@@ -193,65 +199,51 @@ fun EventGroup(
                             .height(510.dp)
                             .background(color = Color.White)
                     ) {
-                        items(items = listOf(viewModel.eventGroup), itemContent = { event ->
-                            //ShowCustomerDetails(event, ticket, context, navController)
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    text = "TEST",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 24.sp,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
+                        items(items = viewModel.eventGroup, itemContent = { event ->
+                            ShowCustomerDetails(event, scanViewModel, context)
                         })
                     }
                 }
             }
 
-            if (viewModel.inStep) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.Center
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button(
+                    onClick = {
+                        openGoogleMapsNavigation(
+                            locationViewModel.currentLocation,
+                            viewModel.eventLocation, context)
+                    }
                 ) {
-                    Button(
-                        onClick = {
-                            openGoogleMapsNavigation(
-                                viewModel.currentLocation,
-                                viewModel.eventLocation, context)
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.compass_icon),
-                            contentDescription = "Localized description",
-                            Modifier
-                                .size(width = 32.dp, height = 32.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Icon(
+                        painter = painterResource(id = R.drawable.compass_icon),
+                        contentDescription = "Localized description",
+                        Modifier
+                            .size(width = 32.dp, height = 32.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
 
-                    val navOptions = NavOptions.Builder()
-                        .setEnterAnim(0)
-                        .setExitAnim(0)
-                        .setPopEnterAnim(0)
-                        .setPopExitAnim(0)
-                        .build()
-                    Button(
-                        onClick = {
-                            Log.d("test", "scan clicked")
-                            //navController.navigate("scan/$tourId/$eventIndex", navOptions)
-                                  },
-                    ) {
-                        Text(
-                            text = "QR",
-                            fontSize = 27.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                val navOptions = NavOptions.Builder()
+                    .setEnterAnim(0)
+                    .setExitAnim(0)
+                    .setPopEnterAnim(0)
+                    .setPopExitAnim(0)
+                    .build()
+                Button(
+                    onClick = {
+                        navController.navigate("scan/${viewModel.tourId}/${viewModel.stopIndex}", navOptions)
+                    },
+                ) {
+                    Text(
+                        text = "QR",
+                        fontSize = 27.sp,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }
@@ -259,7 +251,7 @@ fun EventGroup(
 }
 
 @Composable
-fun ShowCustomerDetails(event: Event, ticket: String, context: Context, navController: NavController) {
+fun ShowCustomerDetails(event: Event, scanViewModel: ScanViewModel, context: Context) {
     var firstName = "-"
     var lastName = "-"
     var phone = "-"
@@ -366,18 +358,20 @@ fun ShowCustomerDetails(event: Event, ticket: String, context: Context, navContr
                         )
                     }
                     Spacer(modifier = Modifier.width(200.dp))
-                    if ("$lastName, $firstName" == ticket) {
+                    if ("$lastName, $firstName" == scanViewModel.ticket.value) {
                         Box(
                             modifier = Modifier.padding(top = 8.dp)
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_check),
                                 contentDescription = "Localized description",
-                                Modifier.size(width = 36.dp, height = 36.dp).background(color = Color.Green)
+                                Modifier
+                                    .size(width = 36.dp, height = 36.dp)
+                                    .background(color = Color.Green)
 
                             )
                         }
-                        reportTicketScan(ticket)
+                        reportTicketScan(event.ticket)
                     } else {
                         Box(
                             modifier = Modifier.padding(top = 8.dp)

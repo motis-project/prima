@@ -73,6 +73,10 @@ class ScanViewModel : ViewModel() {
     fun getTicketInfo(): String {
         return ticket.value
     }
+
+    private fun isTicketValid(): Boolean {
+        return true
+    }
 }
 
 class QRCodeScannerActivity : ComponentActivity() {

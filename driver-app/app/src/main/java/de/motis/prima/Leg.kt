@@ -31,52 +31,31 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
-import de.motis.prima.services.Event
 
-class LegViewModel : ViewModel() {
-    var eventGroup = mutableStateOf<List<Event>>(emptyList<Event>())
-    var tourId = 0
-    var legIndex = 0
-
-    init {
-        // TODO
-    }
-
-    fun reset() {
-        // TODO
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LegView(
     stopIndex: Int,
     tourViewModel: TourViewModel,
-    scanViewModel: ScanViewModel,
     userViewModel: UserViewModel,
     navController: NavController,
 ) {
     var isLastEvent = false
     val tour = tourViewModel.tour_
-    val event = tour.events[stopIndex]
-
-    var currentLocation: Location
 
     if (stopIndex + 1 == tour.events.size) {
         isLastEvent = true
     }
 
-    if (stopIndex == 0) {
+    /*if (stopIndex == 0) {
         tourViewModel.fetchLocation()
         currentLocation = tourViewModel.currentLocation
     } else {
         val prevEvent = tour.events[stopIndex - 1]
         currentLocation = Location(latitude = prevEvent.latitude, longitude = prevEvent.longitude)
-    }
-
-    var ticket = scanViewModel.ticket.value
+    }*/
 
     var dropdownExpanded by remember {
         mutableStateOf(false)
@@ -160,22 +139,11 @@ fun LegView(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Box {
-                    /*EventDetail(
-                        tourViewModel.id_,
-                        stopIndex,
-                        event,
-                        true,
-                        currentLocation,
-                        ticket,
-                        navController
-                    )*/
                     EventGroup(
                         EventGroupViewModel(
                             stopIndex.toString(),
-                            tourViewModel,
-                            stopIndex,
-                            true,
-                            ticket
+                            stopIndex.toString(), // TODO: group ID
+                            tourViewModel
                             ),
                         navController)
                 }

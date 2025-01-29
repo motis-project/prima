@@ -10,12 +10,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -33,6 +36,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
-import de.motis.prima.app.DriversApp
 import de.motis.prima.services.Event
 import de.motis.prima.services.Tour
 import kotlinx.coroutines.launch
@@ -55,9 +58,7 @@ class TourViewModel(tour: Tour) : ViewModel() {
     var tour_: Tour = tour
     var eventGroups: MutableMap<String, MutableList<Event>> = hashMapOf()
 
-    private val locationUpdate = LocationUpdate.getInstance(DriversApp.instance)
-
-    var currentLocation = Location(0.0, 0.0)
+    var validTickets: HashMap<String, Boolean> = hashMapOf()
 
     private fun buildEventGroups(events: List<Event>) {
         val eventGroups = eventGroups
@@ -71,20 +72,11 @@ class TourViewModel(tour: Tour) : ViewModel() {
         }
     }
 
-    fun fetchLocation() {
-        locationUpdate.getCurrentLocation { latitude, longitude ->
-            if (latitude != null && longitude != null) {
-                currentLocation = Location(latitude, longitude)
-                Log.d("location", currentLocation.toString())
-            } else {
-                Log.d("location", "Unable to fetch location.")
-            }
-        }
-    }
-
     init {
         buildEventGroups(tour.events)
-        fetchLocation()
+        for (event in tour.events) {
+            validTickets.put(event.customer_id, false)
+        }
     }
 }
 
@@ -253,9 +245,68 @@ fun WayPointsView(
         ) {
             LazyColumn(
             ) {
-                items(items = events, itemContent = { event ->
-                    EventDetail(0,0, event, false, tourViewModel.currentLocation, "", navController)
+                items(items = events, itemContent = { event -> // TODO: change to event groups
+                    WayPointPreview(event)
                 })
+            }
+        }
+    }
+}
+
+@Composable
+fun WayPointPreview(
+    event: Event
+) {
+    var scheduledTime = "-"
+    var city = "-"
+
+    val context = LocalContext.current
+
+    try {
+        scheduledTime = event.scheduled_time
+            .replace("T", " ")
+            .toDate()
+            .formatTo("HH:mm")
+        if (event.city != null)
+            city = event.city + ", " + event.postal_code
+    } catch (e: Exception) {
+        Log.d("error", "Failed to read event details")
+        return
+    }
+
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
+            .wrapContentSize()
+    ) {
+        Column (modifier = Modifier.padding(10.dp) ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = scheduledTime,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            if (city != "") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = city,
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }
