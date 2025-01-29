@@ -3,21 +3,14 @@ import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
 
 export const load: PageServerLoad = async (event) => {
-	const owners = await db
+	const people = await db
 		.selectFrom('user')
 		.where('companyId', '=', event.locals.session!.companyId!)
-		.where('isTaxiOwner', '=', true)
-		.selectAll()
-		.execute();
-	const drivers = await db
-		.selectFrom('user')
-		.where('companyId', '=', event.locals.session!.companyId!)
-		.where('isTaxiOwner', '=', false)
 		.selectAll()
 		.execute();
 	return {
-		owners,
-		drivers,
+		owners: people.filter((p) => p.isTaxiOwner),
+		drivers: people.filter((p) => !p.isTaxiOwner),
 		userEmail: event.locals.session?.email
 	};
 };

@@ -24,5 +24,5 @@
 		</Alert.Root>
 	{/if}
 
-	<Form message={form?.msg} type="login" />
+	<Form msg={form?.msg} type="login" />
 </div>

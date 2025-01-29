@@ -38,7 +38,14 @@ const translations: Translations = {
 		// Admin
 		userDoesNotExist: 'Nutzer existiert nicht.',
 		activationSuccess: 'Nutzer freigeschaltet.',
-		userAlreadyActivated: 'Nutzer war bereits freigeschaltet.'
+		userAlreadyActivated: 'Nutzer war bereits freigeschaltet.',
+
+		// Company
+		nameTooShort: 'Name zu kurz.',
+		addressTooShort: 'Adresse zu kurz.',
+		zoneNotSet: 'Pflichtfahrgebiet nicht gesetzt.',
+		addressNotInZone: 'Die Adresse liegt nicht im Pflichtfahrgebiet.',
+		companyUpdateSuccessful: 'Unternehmensdaten erfolgreich aktualisiert.'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',

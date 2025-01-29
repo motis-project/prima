@@ -24,9 +24,7 @@
 		</div>
 
 		<form method="post">
-			{#if form?.msg}
-				<Message msg={form.msg} class="mb-6" />
-			{/if}
+			<Message msg={form?.msg} class="mb-6" />
 			<div class="field">
 				<Label for="form-verify.code">Code</Label>
 				<Input id="form-verify.code" name="code" value={data.code} />

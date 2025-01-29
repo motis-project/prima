@@ -12,9 +12,7 @@
 
 <Panel title={t.account.passwordReset} subtitle={t.account.passwordResetSubtitle}>
 	<form method="post" class="flex flex-col gap-6" use:enhance>
-		{#if form?.msg}
-			<Message class="mb-4" msg={form.msg} />
-		{/if}
+		<Message class="mb-4" msg={form.msg} />
 
 		<div class="field">
 			<Label>{t.account.code}</Label>

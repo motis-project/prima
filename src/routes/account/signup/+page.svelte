@@ -13,5 +13,5 @@
 	<h1 class="my-6 text-center text-2xl font-semibold leading-8 tracking-tight">
 		{t.account.create}
 	</h1>
-	<Form message={form?.msg} type="signup" />
+	<Form msg={form?.msg} type="signup" />
 </div>

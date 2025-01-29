@@ -37,7 +37,14 @@ const translations: Translations = {
 		// Admin
 		userDoesNotExist: 'User does not exist.',
 		activationSuccess: 'User already activated.',
-		userAlreadyActivated: 'User has already been activated.'
+		userAlreadyActivated: 'User has already been activated.',
+
+		// Company
+		nameTooShort: 'Name too short.',
+		addressTooShort: 'Address too short.',
+		zoneNotSet: 'Zone not set.',
+		addressNotInZone: 'Address not in zone.',
+		companyUpdateSuccessful: 'Company data updated successfully.'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',

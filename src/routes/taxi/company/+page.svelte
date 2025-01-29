@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import { Input } from '$lib/shadcn/input';
 	import { Label } from '$lib/shadcn/label/index.js';
 	import { Button, buttonVariants } from '$lib/shadcn/button';
@@ -12,13 +13,13 @@
 	import { getStyle } from '$lib/map/style';
 	import Map from '$lib/map/Map.svelte';
 	import { MOTIS_BASE_URL } from '$lib/constants.js';
+	import Message from '$lib/ui/Message.svelte';
 
 	const { data, form } = $props();
 
-	console.log(data.company);
 	let center = $state<[number, number]>([
-		data.company.longitude ?? 14.664324861365413,
-		data.company.latitude ?? 51.19750601369781
+		data.company.lng ?? 14.664324861365413,
+		data.company.lat ?? 51.19750601369781
 	]);
 	let companyAddress = $state<Location>({
 		label: data.company.address ?? '',
@@ -35,13 +36,15 @@
 			}
 		}
 	});
+
 	let zone = $state(data.company.zone);
 	let map = $state<maplibregl.Map>();
 	let startMarker: maplibregl.Marker | null = null;
 	let init = false;
 	$effect(() => {
 		if (map && !init) {
-			startMarker = new maplibregl.Marker({ draggable: true, color: 'green' })
+			startMarker = new maplibregl.Marker({ draggable: true, color: 'green' });
+			startMarker
 				.setLngLat([companyAddress.value!.match!.lon, companyAddress.value!.match!.lat])
 				.addTo(map)
 				.on('dragend', async () => {
@@ -62,12 +65,12 @@
 			startMarker.setLngLat(coord);
 			const box = new maplibregl.LngLatBounds(coord, coord);
 			const padding = {
-				top: Math.max(window.innerHeight / 2, 400),
-				right: 96,
-				bottom: 96,
-				left: 96
+				top: 16,
+				right: 16,
+				bottom: 16,
+				left: 16
 			};
-			map.flyTo({ ...map.cameraForBounds(box), padding });
+			map.flyTo({ ...map.cameraForBounds(box), padding, zoom: 15 });
 		}
 	});
 </script>
@@ -81,13 +84,21 @@
 	>
 		<form method="POST">
 			<div class="flex flex-col gap-6" id="searchmask-container">
+				<Message msg={form?.msg} />
 				<div>
 					<Label for="name">Name</Label>
 					<Input name="name" id="name" value={data.company.name} />
 				</div>
 				<div>
 					<Label for="address">Unternehmenssitz</Label>
-					<AddressTypeahead placeholder={'Unternehmenssitz'} bind:selected={companyAddress} />
+					<AddressTypeahead
+						name="address"
+						onValueChange={(l: Location) => (companyAddress = l)}
+						placeholder={'Unternehmenssitz'}
+						bind:selected={companyAddress}
+					/>
+					<input type="hidden" name="lat" value={companyAddress.value.match?.lat} />
+					<input type="hidden" name="lng" value={companyAddress.value.match?.lon} />
 				</div>
 				<div>
 					<Label for="zone">Pflichtfahrgebiet</Label>

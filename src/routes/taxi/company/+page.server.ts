@@ -1,6 +1,8 @@
 import { fail } from '@sveltejs/kit';
 import { db } from '$lib/server/db/index.js';
-import type { PageServerLoad, Actions } from './$types.js';
+import type { PageServerLoad } from './$types.js';
+import { covers } from '$lib/server/db/covers.js';
+import { msg } from '$lib/msg.js';
 
 export const load: PageServerLoad = async (event) => {
 	const companyId = event.locals.session!.companyId!;
@@ -18,57 +20,50 @@ export const actions = {
 		const readInt = (x: FormDataEntryValue | null) => {
 			return x === null ? NaN : parseInt(x.toString());
 		};
+		const readFloat = (x: FormDataEntryValue | null) => {
+			return x === null ? NaN : parseFloat(x.toString());
+		};
 
 		const companyId = event.locals.session!.companyId!;
+
 		const data = await event.request.formData();
 		const address = data.get('address')?.toString();
 		const name = data.get('name')?.toString();
-		const community_area = readInt(data.get('community_area'));
 		const zone = readInt(data.get('zone'));
+		const lat = readFloat(data.get('lat'));
+		const lng = readFloat(data.get('lng'));
 
-		if (!name || name.length < 2) {
-			return fail(400, { error: 'Name zu kurz.' });
+		if (typeof name !== 'string' || name.length < 2) {
+			return fail(400, { msg: msg('nameTooShort') });
 		}
 
-		if (!address || address.length < 2) {
-			return fail(400, { error: 'Adresse zu kurz.' });
-		}
-
-		if (isNaN(community_area) || community_area < 1) {
-			return fail(400, { error: 'Gemeinde nicht gesetzt.' });
+		if (typeof address !== 'string' || address.length < 2) {
+			return fail(400, { msg: msg('addressTooShort') });
 		}
 
 		if (isNaN(zone) || zone < 1) {
-			return fail(400, { error: 'Pflichtfahrgebiet nicht gesetzt.' });
+			return fail(400, { msg: msg('zoneNotSet') });
 		}
 
-		if (!(await contains(zone, bestAddressGuess))) {
-			return fail(400, {
-				error: 'Die Addresse liegt nicht in der ausgewählten Gemeinde.'
-			});
+		if (isNaN(lng) || isNaN(lat) || !(await contains(zone, { lng, lat }))) {
+			return fail(400, { msg: msg('addressNotInZone') });
 		}
 
 		await db
 			.updateTable('company')
-			.set({
-				name,
-				zone,
-				address,
-				latitude: bestAddressGuess!.lat,
-				longitude: bestAddressGuess!.lng
-			})
+			.set({ name, zone, address, lat, lng })
 			.where('id', '=', companyId)
 			.execute();
 
-		return { success: true };
+		return { msg: msg('companyUpdateSuccessful', 'success') };
 	}
 };
 
-const contains = async (community: number, coordinates: Coordinates): Promise<boolean> => {
+const contains = async (zoneId: number, c: maplibregl.LngLatLike): Promise<boolean> => {
 	return (
 		(await db
 			.selectFrom('zone')
-			.where((eb) => eb.and([eb('zone.id', '=', community), covers(eb, coordinates!)]))
+			.where((eb) => eb.and([eb('zone.id', '=', zoneId), covers(c)]))
 			.executeTakeFirst()) != undefined
 	);
 };

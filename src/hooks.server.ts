@@ -3,8 +3,7 @@ import {
 	setSessionTokenCookie,
 	deleteSessionTokenCookie
 } from '$lib/server/auth/session';
-import { sequence } from '@sveltejs/kit/hooks';
-import { fail, redirect, type Handle } from '@sveltejs/kit';
+import { error, redirect, type Handle } from '@sveltejs/kit';
 
 const authHandle: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get('session');
@@ -38,7 +37,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 			(!session?.isAdmin && event.url.pathname.startsWith('/admin')) ||
 			(!session?.companyId && event.url.pathname.startsWith('/taxi'))
 		) {
-			return fail(403);
+			return error(403);
 		}
 		deleteSessionTokenCookie(event);
 	}
@@ -48,4 +47,4 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-export const handle = sequence(authHandle);
+export const handle = authHandle;

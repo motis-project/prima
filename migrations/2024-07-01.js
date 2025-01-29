@@ -38,8 +38,8 @@ export async function up(db) {
 	await db.schema
 		.createTable('company')
 		.addColumn('id', 'serial', (col) => col.primaryKey())
-		.addColumn('latitude', 'real')
-		.addColumn('longitude', 'real')
+		.addColumn('lat', 'real')
+		.addColumn('lng', 'real')
 		.addColumn('name', 'varchar')
 		.addColumn('address', 'varchar')
 		.addColumn('zone', 'integer', (col) => col.references('zone.id').onDelete('cascade'))

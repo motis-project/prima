@@ -44,11 +44,13 @@
 	let {
 		items = $bindable([]),
 		selected = $bindable(),
+		onValueChange,
 		placeholder,
 		name
 	}: {
 		items?: Array<Location>;
-		selected: Location;
+		selected?: Location;
+		onValueChange?: (m: Location) => void;
 		placeholder?: string;
 		name?: string;
 	} = $props();
@@ -169,6 +171,9 @@
 		if (e) {
 			selected = deserialize(e);
 			inputValue = selected.label!;
+			if (onValueChange) {
+				onValueChange(selected);
+			}
 		}
 	}}
 	onOpenChange={(open) => {

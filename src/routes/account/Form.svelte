@@ -8,14 +8,12 @@
 	import { t } from '$lib/i18n/translation';
 	import { Label } from '$lib/shadcn/label';
 
-	const { message, type }: { message?: Msg; type: 'signup' | 'login' } = $props();
+	const { msg, type }: { msg?: Msg; type: 'signup' | 'login' } = $props();
 </script>
 
 <div class="flex flex-col">
 	<form method="post" class="flex flex-col gap-6">
-		{#if message}
-			<Message class="mb-6" msg={message} />
-		{/if}
+		<Message class="mb-6" {msg} />
 
 		{#if type === 'signup'}
 			<div class="field">

@@ -31,12 +31,11 @@ export interface Database {
 	};
 	company: {
 		id: Generated<number>;
-		latitude: number | null;
-		longitude: number | null;
+		lat: number | null;
+		lng: number | null;
 		name: string | null;
 		address: string | null;
 		zone: number | null;
-		communityArea: number | null;
 	};
 	vehicle: {
 		id: Generated<number>;

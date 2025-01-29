@@ -12,9 +12,7 @@
 
 <Meta title="Account | {PUBLIC_PROVIDER}" />
 
-{#if form?.msg}
-	<Message msg={form.msg} class="mb-4" />
-{/if}
+<Message msg={form?.msg} class="mb-4" />
 
 <div class="flex flex-col gap-10">
 	<Panel title={t.account.resetPassword} subtitle={t.account.resetPasswordSubtitle}>

@@ -1,4 +1,4 @@
-INSERT INTO "company" ("latitude", "longitude", "name", "address", "zone") VALUES
+INSERT INTO "company" ("lat", "lng", "name", "address", "zone") VALUES
 (51.493713,	14.625855,	'Taxi Weißwasser',	'Werner-Seelenbinder-Straße 70A, 02943 Weißwasser/Oberlausitz',	2),
 (51.532974,	14.660599,	'Taxi Gablenz',	'Schulstraße 21, 02953 Gablenz',	2),
 (51.38096,	14.666578,	'Taxi Reichwalde',	'Robert-Koch-Straße 45, 02943 Boxberg/Oberlausitz',	3),

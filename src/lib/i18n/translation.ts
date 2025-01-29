@@ -39,6 +39,13 @@ export type Translations = {
 		userDoesNotExist: string;
 		activationSuccess: string;
 		userAlreadyActivated: string;
+
+		// Company
+		nameTooShort: string;
+		addressTooShort: string;
+		zoneNotSet: string;
+		addressNotInZone: string;
+		companyUpdateSuccessful: string;
 	};
 	admin: {
 		completedToursSubtitle: string;

@@ -27,14 +27,7 @@ export const actions = {
 		// Create new company.
 		const companyId = (await db
 			.insertInto('company')
-			.values({
-				latitude: null,
-				longitude: null,
-				name: null,
-				address: null,
-				zone: null,
-				communityArea: null
-			})
+			.values({ lat: null, lng: null, name: null, address: null, zone: null })
 			.returning('company.id')
 			.executeTakeFirst())!.id;
 
