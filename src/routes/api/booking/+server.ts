@@ -128,6 +128,7 @@ export const POST = async (event: RequestEvent) => {
 		])
 		.execute();
 
+	console.log('db results', dbResults);
 	if (dbResults.length == 0) {
 		if (!(await startAndTargetShareZone(from.coordinates, to.coordinates))) {
 			return json(
@@ -162,7 +163,7 @@ export const POST = async (event: RequestEvent) => {
 
 	console.assert(
 		Math.max(...[...mergedAvailabilites.values()].map((availabilities) => availabilities.length)) <=
-			1
+		1
 	);
 
 	const availableVehicles = [...mergedAvailabilites.entries()]
@@ -266,6 +267,7 @@ export const POST = async (event: RequestEvent) => {
 	let tourId: number | undefined = undefined;
 	let bestVehicle = undefined;
 
+	console.log('getting viable vehicles');
 	await db.transaction().execute(async (trx) => {
 		sql`LOCK TABLE tour, request, event IN ACCESS EXCLUSIVE MODE;`.execute(trx);
 		// Fetch data of tours corresponding to the remaining vehicles
@@ -308,6 +310,7 @@ export const POST = async (event: RequestEvent) => {
 				])
 				.execute()
 		).map((v) => {
+			console.log('viable vehicle: ', v);
 			const companyIdx = companies.indexOf(v.company);
 			return {
 				companyName: v.companyName,
@@ -380,7 +383,10 @@ export const POST = async (event: RequestEvent) => {
 			])
 			.execute();
 	});
+
+
 	if (tourId) {
+		console.log('booking successful: ', tourId);
 		return json({
 			status: 0,
 			companyId: bestVehicle!.companyId!,
@@ -393,6 +399,8 @@ export const POST = async (event: RequestEvent) => {
 			message: 'Die Buchung war erfolgreich.'
 		});
 	}
+
+	console.log('booking failed');
 	return json(
 		{
 			status: 10,

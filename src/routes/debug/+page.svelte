@@ -154,11 +154,7 @@
 	let dateTime = $state(new Date().toISOString());
 	let arriveBy = $derived(timeType === 'arrival');
 
-	let bookingResponse = $state<Array<Promise<Response>>>([]);
-
-	// client ID: a9b1f1ad1051790a9c6970db85710986
-	// client Secret: df987129855de70a804f146718aac956
-	// client Secret: 30dee8771d325304274b7c2555fae33e
+	let bookingResponse = $state<Promise<Response>>();
 
 	type ColoredRoute = {
 		/* eslint-disable-next-line */
@@ -180,6 +176,14 @@
 			route: carRouting(destination, { lat, lng }),
 			color: 'yellow'
 		});
+	};
+
+	const getResponse = async () => {
+		if (bookingResponse) {
+			return await (await bookingResponse).json();
+		} else {
+			return '';
+		}
 	};
 </script>
 
@@ -234,65 +238,53 @@
 						<Button
 							variant="outline"
 							onclick={() => {
-								bookingResponse = [
-									booking(
-										query.from,
-										query.to,
-										arriveBy,
-										new Date(dateTime),
-										query.numPassengers,
-										query.numWheelchairs,
-										query.numWheelchairs,
-										query.luggage
-									)
-								];
+								bookingResponse = booking(
+									query.from,
+									query.to,
+									arriveBy,
+									new Date(dateTime),
+									query.numPassengers,
+									query.numWheelchairs,
+									query.numWheelchairs,
+									query.luggage
+								);
 							}}>Suchen</Button
 						>
 					</div>
 				</div>
 				<div class="flex h-[45vh] flex-col space-y-8 overflow-y-auto px-4 py-8">
-					{#each bookingResponse as bookingResponse}
-						{#await bookingResponse}
+					{#if bookingResponse !== undefined}
+						{#await getResponse()}
 							<div class="flex w-full items-center justify-center">
+								JSON lädt...
 								<LoaderCircle class="m-20 h-12 w-12 animate-spin" />
 							</div>
-						{:then r}
-							{#await r.json()}
-								<div class="flex w-full items-center justify-center">
-									<LoaderCircle class="m-20 h-12 w-12 animate-spin" />
-								</div>
-							{:then res}
-								<div class="flex w-full items-center justify-between space-x-4">
-									<Alert.Root variant={r.ok ? 'default' : 'destructive'}>
-										{#if r.ok}
-											<CircleCheckBig class="h-4 w-4" />
-										{:else}
-											<CircleAlert class="h-4 w-4" />
-										{/if}
-										<Alert.Title class="text-base font-bold">{r.status}: {r.statusText}</Alert.Title
-										>
-										<Alert.Description>
-											{res.status}: {res.message}
-										</Alert.Description>
-									</Alert.Root>
-								</div>
-								{#if r.ok}
-									<Alert.Root variant={r.ok ? 'default' : 'destructive'}>
-										<Alert.Description>
-											{res.companyName}<br />
-											{res.companyId}<br />
-											{res.companyLat}<br />
-											{res.companyLng}<br />
-											{start.lat}<br />
-											{getRoutes(res.companyLat, res.companyLng)}
-										</Alert.Description>
-									</Alert.Root>
-								{/if}
-							{/await}
-						{:catch e}
-							<div>Error: {e}</div>
+						{:then res}
+							<div class="flex w-full items-center justify-between space-x-4">
+								<Alert.Root variant={res.status == 0 ? 'default' : 'destructive'}>
+									{#if res.status == 0}
+										<CircleCheckBig class="h-4 w-4" />
+									{:else}
+										<CircleAlert class="h-4 w-4" />
+									{/if}
+									<Alert.Title class="text-base font-bold">
+										{res.status}: {res.statusText}
+									</Alert.Title>
+									<Alert.Description>
+										{res.status}: {res.message}
+									</Alert.Description>
+								</Alert.Root>
+							</div>
+							{#if res.status == 0}
+								{res.companyName}<br />
+								{res.companyId}<br />
+								{res.companyLat}<br />
+								{res.companyLng}<br />
+								{start.lat}<br />
+								{getRoutes(res.companyLat, res.companyLng)}
+							{/if}
 						{/await}
-					{/each}
+					{/if}
 				</div>
 			</div>
 		</Card>
