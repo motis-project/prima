@@ -1,40 +1,50 @@
-import { migrateToLatest } from '$lib/migrate';
-import { lucia } from '$lib/auth';
-import { db } from '$lib/database';
-import { redirect, type Handle } from '@sveltejs/kit';
+import {
+	validateSessionToken,
+	setSessionTokenCookie,
+	deleteSessionTokenCookie
+} from '$lib/server/auth/session';
+import { error, redirect, type Handle } from '@sveltejs/kit';
 
-migrateToLatest(db);
-
-export const handle: Handle = async ({ event, resolve }) => {
-	const sessionId = event.cookies.get(lucia.sessionCookieName);
-	if (!sessionId) {
-		event.locals.user = null;
-		event.locals.session = null;
-		return resolve(event);
+const authHandle: Handle = async ({ event, resolve }) => {
+	const token = event.cookies.get('session');
+	const session = await validateSessionToken(token);
+	if (token && session) {
+		setSessionTokenCookie(event, token, session.expiresAt);
+		if (
+			!session.isEmailVerified &&
+			!event.url.pathname.startsWith('/account/verify-email') &&
+			!event.url.pathname.startsWith('/account/settings')
+		) {
+			return redirect(302, '/account/verify-email');
+		}
+		if (
+			event.url.pathname.startsWith('/account/login') ||
+			event.url.pathname.startsWith('/account/signup')
+		) {
+			return redirect(302, '/account');
+		}
+		if (
+			(!session?.isAdmin && event.url.pathname.startsWith('/admin')) ||
+			(!session?.companyId && event.url.pathname.startsWith('/taxi'))
+		) {
+			return error(403);
+		}
+	} else {
+		if (
+			event.url.pathname.startsWith('/account') &&
+			event.url.pathname !== '/account/login' &&
+			event.url.pathname !== '/account/signup' &&
+			event.url.pathname !== '/account/reset-password' &&
+			event.url.pathname !== '/account/request-password-reset'
+		) {
+			return redirect(302, '/account/login');
+		}
+		deleteSessionTokenCookie(event);
 	}
 
-	const { session, user } = await lucia.validateSession(sessionId);
-	if (session && session.fresh) {
-		const sessionCookie = lucia.createSessionCookie(session.id);
-		event.cookies.set(sessionCookie.name, sessionCookie.value, {
-			path: '.',
-			...sessionCookie.attributes
-		});
-	}
-	if (!session) {
-		const sessionCookie = lucia.createBlankSessionCookie();
-		event.cookies.set(sessionCookie.name, sessionCookie.value, {
-			path: '.',
-			...sessionCookie.attributes
-		});
-	}
-
-	event.locals.user = user;
 	event.locals.session = session;
-
-	if (event.route.id?.startsWith('/(user)') && (!user || !user.is_entrepreneur || !user.company)) {
-		return redirect(302, '/login');
-	}
 
 	return resolve(event);
 };
+
+export const handle = authHandle;

@@ -13,22 +13,5 @@ services:
         source: data-volume
         target: /var/lib/postgresql/data
 
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 6501:8080
-
-  prima:
-    image: prima
-    restart: always
-    ports:
-      - 7777:3000
-    environment:
-      - DATABASE_URL=postgresql://postgres:pw@pg/prima
-      - ORIGIN=http://localhost:7777
-    build:
-      context: .
-
 volumes:
   data-volume:
