@@ -8,16 +8,17 @@ export default defineConfig({
 	// 	timeout: 20000,
 	// 	reuseExistingServer: true
 	// },
-	// use: {
-	// 	baseURL: 'http://localhost:5173/',
-	// 	locale: 'de-DE',
-	// 	timezoneId: 'Europe/Berlin',
-	// },
 	webServer: {
 		command: 'docker compose up prima',
 		url: 'http://127.0.0.1:7777',
 		timeout: 20000,
 		reuseExistingServer: true
+	},
+
+	use: {
+		baseURL: 'http://localhost:5173/',
+		locale: 'de-DE',
+		timezoneId: 'Europe/Berlin'
 	},
 
 	testDir: 'e2e',
