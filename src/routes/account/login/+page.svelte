@@ -15,11 +15,13 @@
 	</h1>
 
 	<Alert.Root variant="default" class="my-6">
+		<!-- eslint-disable svelte/no-at-html-tags -->
 		{@html t.msg['new']}
 	</Alert.Root>
 
 	{#if data.passwordResetSuccess}
 		<Alert.Root variant="default" class="my-6">
+			<!-- eslint-disable svelte/no-at-html-tags -->
 			{@html t.msg['passwordResetSuccess']}
 		</Alert.Root>
 	{/if}

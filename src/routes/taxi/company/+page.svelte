@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { Input } from '$lib/shadcn/input';
 	import { Label } from '$lib/shadcn/label/index.js';
 	import { Button, buttonVariants } from '$lib/shadcn/button';

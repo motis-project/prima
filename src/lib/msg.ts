@@ -1,4 +1,4 @@
-import { type Translations, t } from './i18n/translation';
+import { type Translations } from './i18n/translation';
 
 export type Msg = { type: 'success' | 'error'; text: keyof Translations['msg'] };
 

@@ -48,7 +48,7 @@ export const actions: Actions = {
 				name: user.name,
 				email
 			});
-		} catch (e) {
+		} catch {
 			return fail(500, { msg: msg('failedToSendVerificationEmail'), email });
 		}
 

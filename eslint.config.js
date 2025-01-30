@@ -7,6 +7,20 @@ import { fileURLToPath } from 'node:url';
 import ts from 'typescript-eslint';
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 
+const RULES = {
+	ts: {
+		'@typescript-eslint/no-unused-vars': [
+			'error',
+			{
+				argsIgnorePattern: '^_',
+				varsIgnorePattern: '^_',
+				caughtErrorsIgnorePattern: '^_',
+				destructuredArrayIgnorePattern: '^_'
+			}
+		]
+	}
+};
+
 export default ts.config(
 	includeIgnoreFile(gitignorePath),
 	js.configs.recommended,
@@ -20,7 +34,9 @@ export default ts.config(
 				...globals.browser,
 				...globals.node
 			}
-		}
+		},
+
+		rules: RULES.ts
 	},
 	{
 		files: ['**/*.svelte'],
@@ -29,6 +45,8 @@ export default ts.config(
 			parserOptions: {
 				parser: ts.parser
 			}
-		}
+		},
+
+		rules: RULES.ts
 	}
 );

@@ -19,6 +19,7 @@
 				{t.account.sentAnEmailTo} <b>{data.email}</b>.<br />
 			</p>
 			<p>
+				<!-- eslint-disable svelte/no-at-html-tags -->
 				{@html t.account.changeYourEmail}
 			</p>
 		</div>

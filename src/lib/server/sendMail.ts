@@ -1,3 +1,5 @@
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+
 import { render } from 'svelte/server';
 import { convert } from 'html-to-text';
 import { EMAIL_SENDER, SCW_DEFAULT_PROJECT_ID, SCW_SECRET_KEY } from '$env/static/private';
