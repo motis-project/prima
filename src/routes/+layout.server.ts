@@ -1,8 +1,8 @@
-import type { PageServerLoadEvent } from './$types';
+import type { LayoutServerLoad } from './$types';
 
-export function load(event: PageServerLoadEvent) {
+export const load: LayoutServerLoad = ({ locals }) => {
 	return {
-		isAdmin: event.locals.session?.isAdmin,
-		isTaxiOwner: event.locals.session?.isTaxiOwner
+		isAdmin: locals.session?.isAdmin,
+		isTaxiOwner: locals.session?.isTaxiOwner
 	};
-}
+};

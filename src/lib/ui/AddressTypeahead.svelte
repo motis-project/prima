@@ -131,8 +131,10 @@
 	};
 
 	$effect(() => {
-		value = JSON.stringify(selected.value);
-		inputValue = selected.label!;
+		if (selected) {
+			value = JSON.stringify(selected.value);
+			inputValue = selected.label!;
+		}
 	});
 
 	let ref = $state<HTMLElement | null>(null);
@@ -142,7 +144,7 @@
 		}
 	});
 
-	let timer: number;
+	let timer: ReturnType<typeof setTimeout> = setTimeout(() => {});
 	$effect(() => {
 		if (inputValue) {
 			clearTimeout(timer);

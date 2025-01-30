@@ -42,6 +42,10 @@ const translations: Translations = {
 		activationSuccess: 'Nutzer freigeschaltet.',
 		userAlreadyActivated: 'Nutzer war bereits freigeschaltet.',
 
+		// Taxi Members
+		driverAddedSuccessfully: 'Fahrer erfolgreich hinzugefügt.',
+		ownerAddedSucessfully: 'Verwaltungsnutzer erfolgreich hinzugefügt.',
+
 		// Company
 		nameTooShort: 'Name zu kurz.',
 		addressTooShort: 'Adresse zu kurz.',
@@ -54,7 +58,17 @@ const translations: Translations = {
 		invalidLicensePlate: 'Ungültiges Kennzeichen.',
 		invalidStorage: 'Ungültiger Stauraum.',
 		duplicateLicensePlate: 'Kennzeichen existiert bereits.',
-		vehicleAddedSuccessfully: 'Fahrzeug erfolgreich angelegt.'
+		vehicleAddedSuccessfully: 'Fahrzeug erfolgreich angelegt.',
+
+		// Booking
+		noRouteFound: 'Keine Route gefunden.',
+		distanceTooLong: 'Distanz zu lang.',
+		startDestTooClose: 'Distanz zu kurz.',
+		maxTravelTimeExceeded: 'Fahrstrecke zu lang.',
+		minPrepTime: 'Vorlaufzeit unterschritten.',
+		startDestNotInSameZone: 'Start und Ziel nicht im selben Pflichtfahrgebiet.',
+		noVehicle: 'Kein Fahrzeug verfügbar.',
+		routingRequestFailed: 'Routinganfrage fehlgeschlagen.'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',

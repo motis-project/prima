@@ -42,6 +42,10 @@ const translations: Translations = {
 		activationSuccess: 'User already activated.',
 		userAlreadyActivated: 'User has already been activated.',
 
+		// Taxi Members
+		driverAddedSuccessfully: 'Driver added successfully.',
+		ownerAddedSucessfully: 'Company admin added successfully.',
+
 		// Company
 		nameTooShort: 'Name too short.',
 		addressTooShort: 'Address too short.',
@@ -54,7 +58,17 @@ const translations: Translations = {
 		invalidLicensePlate: 'Invalid license plate.',
 		invalidStorage: 'Invalid storage space.',
 		duplicateLicensePlate: 'Duplicate license plate.',
-		vehicleAddedSuccessfully: 'Vehicle added successfully.'
+		vehicleAddedSuccessfully: 'Vehicle added successfully.',
+
+		// Booking
+		noRouteFound: 'No route found.',
+		distanceTooLong: 'Distance too long.',
+		startDestTooClose: 'Distance too short.',
+		maxTravelTimeExceeded: 'Maximum travel time exceeded.',
+		minPrepTime: 'Not enough preparation time.',
+		startDestNotInSameZone: 'Start and destination not in the same zone.',
+		noVehicle: 'No vehicle available.',
+		routingRequestFailed: 'Routing request failed.'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',

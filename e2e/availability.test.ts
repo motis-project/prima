@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { login, setCompanyData, addVehicle, TAXI_OWNER, COMPANY1 } from './utils';
+import { login, setCompanyData, addVehicle, TAXI_OWNER, COMPANY1, moveMouse } from './utils';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -7,18 +7,11 @@ export async function setAvailability(page: Page) {
 	await login(page, TAXI_OWNER);
 	await page.goto('/taxi/availability?offset=-120&date=2026-09-30');
 	await page.waitForTimeout(500);
-	{
-		const element = page.getByTestId('GR-TU-11-2026-09-30T08:00:00.000Z').locator('div');
-		const { x, y, width, height } = await element.boundingBox();
-		await page.mouse.move(x + width / 2, y + height / 2);
-		await page.mouse.down();
-	}
-	{
-		const element = await page.getByTestId('GR-TU-11-2026-09-30T08:45:00.000Z').locator('div');
-		const { x, y, width, height } = await element.boundingBox();
-		await page.mouse.move(x + width / 2, y + height / 2);
-		await page.mouse.up();
-	}
+
+	await moveMouse(page, 'GR-TU-11-2026-09-30T08:00:00.000Z');
+	await page.mouse.down();
+	await moveMouse(page, 'GR-TU-11-2026-09-30T08:45:00.000Z');
+	await page.mouse.up();
 }
 
 export async function requestRide(page: Page) {
@@ -26,9 +19,9 @@ export async function requestRide(page: Page) {
 	await page.goto('/debug');
 	await page.waitForTimeout(1000);
 
-	await page.getByRole('textbox').fill('2026-09-30T08:40:00Z');
+	await page.getByRole('textbox').fill('2026-09-30T08:30:00Z');
 	await page.getByRole('button', { name: 'Suchen' }).click();
-	await expect(page.getByRole('heading', { name: ': OK' })).toHaveText('200: OK');
+	await expect(page.getByText('Tour ID: ')).toBeVisible();
 }
 
 test('Set company data', async ({ page }) => {
@@ -80,40 +73,30 @@ test('Set availability', async ({ page }) => {
 
 test('Request ride', async ({ page }) => {
 	await requestRide(page);
-	await page.goto('/user/taxi?offset=-120&date=2026-09-30');
+	await page.goto('/taxi/availability?offset=-120&date=2026-09-30');
 	await page.waitForTimeout(500);
-	await expect(
-		page.locator(
-			'table:nth-child(2) > tbody > tr > td:nth-child(3) > .w-full > tbody > tr > td:nth-child(4) > .w-8'
-		)
-	).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-	await expect(
-		page
-			.locator(
-				'table:nth-child(2) > tbody > tr > td:nth-child(4) > .w-full > tbody > tr > td > .w-8'
-			)
-			.first()
-	).toHaveCSS('background-color', 'rgb(251, 146, 60)');
-	await expect(
-		page.locator(
-			'table:nth-child(2) > tbody > tr > td:nth-child(4) > .w-full > tbody > tr > td:nth-child(2) > .w-8'
-		)
-	).toHaveCSS('background-color', 'rgb(251, 146, 60)');
-	await expect(
-		page.locator(
-			'table:nth-child(2) > tbody > tr > td:nth-child(4) > .w-full > tbody > tr > td:nth-child(3) > .w-8'
-		)
-	).toHaveCSS('background-color', 'rgb(251, 146, 60)');
-	await expect(
-		page.locator(
-			'table:nth-child(2) > tbody > tr > td:nth-child(4) > .w-full > tbody > tr > td:nth-child(4) > .w-8'
-		)
-	).toHaveCSS('background-color', 'rgb(254, 249, 195)');
-	await expect(
-		page
-			.locator(
-				'table:nth-child(2) > tbody > tr > td:nth-child(5) > .w-full > tbody > tr > td > .w-8'
-			)
-			.first()
-	).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+	await expect(page.getByTestId('GR-TU-11-2026-09-30T07:45:00.000Z').locator('div')).toHaveCSS(
+		'background-color',
+		'rgba(0, 0, 0, 0)'
+	);
+	await expect(page.getByTestId('GR-TU-11-2026-09-30T08:00:00.000Z').locator('div')).toHaveCSS(
+		'background-color',
+		'rgb(251, 146, 60)'
+	);
+	await expect(page.getByTestId('GR-TU-11-2026-09-30T08:15:00.000Z').locator('div')).toHaveCSS(
+		'background-color',
+		'rgb(251, 146, 60)'
+	);
+	await expect(page.getByTestId('GR-TU-11-2026-09-30T08:30:00.000Z').locator('div')).toHaveCSS(
+		'background-color',
+		'rgb(251, 146, 60)'
+	);
+	await expect(page.getByTestId('GR-TU-11-2026-09-30T08:45:00.000Z').locator('div')).toHaveCSS(
+		'background-color',
+		'rgb(251, 146, 60)'
+	);
+	await expect(page.getByTestId('GR-TU-11-2026-09-30T09:00:00.000Z').locator('div')).toHaveCSS(
+		'background-color',
+		'rgba(0, 0, 0, 0)'
+	);
 });

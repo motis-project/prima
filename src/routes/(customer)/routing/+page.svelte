@@ -194,7 +194,7 @@
 							</Label>
 						</RadioGroup.Root>
 						<div class="flex w-full justify-center">
-							<Calendar class="w-fit" />
+							<Calendar type="single" class="w-fit" />
 						</div>
 					</Drawer.Content>
 				</Drawer.Portal>

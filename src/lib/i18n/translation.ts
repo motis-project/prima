@@ -42,6 +42,10 @@ export type Translations = {
 		activationSuccess: string;
 		userAlreadyActivated: string;
 
+		// Taxi Members
+		driverAddedSuccessfully: string;
+		ownerAddedSucessfully: string;
+
 		// Company
 		nameTooShort: string;
 		addressTooShort: string;
@@ -55,6 +59,16 @@ export type Translations = {
 		invalidStorage: string;
 		duplicateLicensePlate: string;
 		vehicleAddedSuccessfully: string;
+
+		// Booking
+		noRouteFound: string;
+		distanceTooLong: string;
+		startDestTooClose: string;
+		maxTravelTimeExceeded: string;
+		minPrepTime: string;
+		startDestNotInSameZone: string;
+		noVehicle: string;
+		routingRequestFailed: string;
 	};
 	admin: {
 		completedToursSubtitle: string;

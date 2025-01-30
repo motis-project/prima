@@ -19,7 +19,7 @@
 	}>({ tours: undefined });
 
 	const getCustomerCount = (tour: Tour) => {
-		let customers: Set<string> = new Set<string>();
+		let customers: Set<number> = new Set<number>();
 		tour.events.forEach((e: TourEvent) => customers.add(e.customer));
 		return customers.size;
 	};

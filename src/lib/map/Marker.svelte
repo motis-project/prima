@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { posToLocation, type Location } from '$lib/Location';
+	import { posToLocation, type Location } from '$lib/map/Location';
 	import maplibregl from 'maplibre-gl';
 	import { getContext, onDestroy } from 'svelte';
 
@@ -27,7 +27,8 @@
 				marker = new maplibregl.Marker({
 					draggable,
 					color
-				})
+				});
+				marker
 					.setLngLat(location.value.match)
 					.addTo(ctx.map)
 					.on('dragend', () => {
