@@ -12,6 +12,8 @@ const translations: Translations = {
 		companies: 'Unternehmen'
 	},
 	msg: {
+		unkownError: 'Unbekannter Fehler.',
+
 		// Account
 		enterEmailAndPassword: 'Bitte gib Deine E-Mail und Dein Passwort ein.',
 		invalidEmail: 'Ungültige E-Mail Adresse.',
@@ -45,7 +47,14 @@ const translations: Translations = {
 		addressTooShort: 'Adresse zu kurz.',
 		zoneNotSet: 'Pflichtfahrgebiet nicht gesetzt.',
 		addressNotInZone: 'Die Adresse liegt nicht im Pflichtfahrgebiet.',
-		companyUpdateSuccessful: 'Unternehmensdaten erfolgreich aktualisiert.'
+		companyUpdateSuccessful: 'Unternehmensdaten erfolgreich aktualisiert.',
+
+		// AddVehicle
+		invalidSeats: 'Ungültige Sitzzahl,',
+		invalidLicensePlate: 'Ungültiges Kennzeichen.',
+		invalidStorage: 'Ungültiger Stauraum.',
+		duplicateLicensePlate: 'Kennzeichen existiert bereits.',
+		vehicleAddedSuccessfully: 'Fahrzeug erfolgreich angelegt.'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',

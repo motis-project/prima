@@ -3,6 +3,7 @@ import { db } from '$lib/server/db/index.js';
 import type { PageServerLoad } from './$types.js';
 import { covers } from '$lib/server/db/covers.js';
 import { msg } from '$lib/msg.js';
+import { readFloat, readInt } from '$lib/util/readForm.js';
 
 export const load: PageServerLoad = async (event) => {
 	const companyId = event.locals.session!.companyId!;
@@ -17,13 +18,6 @@ export const load: PageServerLoad = async (event) => {
 
 export const actions = {
 	default: async (event) => {
-		const readInt = (x: FormDataEntryValue | null) => {
-			return x === null ? NaN : parseInt(x.toString());
-		};
-		const readFloat = (x: FormDataEntryValue | null) => {
-			return x === null ? NaN : parseFloat(x.toString());
-		};
-
 		const companyId = event.locals.session!.companyId!;
 
 		const data = await event.request.formData();

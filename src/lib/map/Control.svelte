@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils';
+	import { cn } from '$lib/shadcn/utils';
 	import type { Map, ControlPosition, IControl } from 'maplibre-gl';
 	import { getContext, onDestroy, type Snippet } from 'svelte';
 
@@ -42,7 +42,7 @@
 
 <div
 	class:hidden={!initialized}
-	class={cn('clear-both pointer-events-auto pt-2 md:pt-4 px-2 md:px-4 max-w-full', className)}
+	class={cn('pointer-events-auto clear-both max-w-full px-2 pt-2 md:px-4 md:pt-4', className)}
 	bind:this={el}
 >
 	{#if children}

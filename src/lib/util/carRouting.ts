@@ -1,5 +1,5 @@
 import { plan, type PlanResponse } from '$lib/openapi';
-import { MAX_TRAVEL_SECONDS, MOTIS_BASE_URL } from '$lib/constants';
+import { MAX_TRAVEL, MOTIS_BASE_URL } from '$lib/constants';
 import { lngLatToStr } from './lngLatToStr';
 
 export const carRouting = (
@@ -13,7 +13,7 @@ export const carRouting = (
 			toPlace: lngLatToStr(to),
 			directModes: ['CAR'],
 			transitModes: [],
-			maxDirectTime: MAX_TRAVEL_SECONDS
+			maxDirectTime: MAX_TRAVEL
 		}
 	}).then((d) => d.data!);
 };

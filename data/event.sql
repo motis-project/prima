@@ -1,4 +1,4 @@
-INSERT INTO "event" ("is_pickup", "latitude", "longitude", "scheduled_time", "communicated_time", "address", "tour", "customer") VALUES
+INSERT INTO "event" ("is_pickup", "lat", "lng", "scheduled_time", "communicated_time", "address", "tour", "customer") VALUES
 ('t',	51.139587,	14.802482,	'2024-06-09 20:10:00',	'2024-06-09 20:10:00',	3,	3, 1),
 ('t',	51.093586,	14.867332,	'2024-06-09 20:30:00',	'2024-06-09 20:30:00',	5,	3, 1),
 ('f',	51.152386,	14.991259,	'2024-06-09 21:30:00',	'2024-06-09 21:30:00',	6,	3, 1),

@@ -4,6 +4,7 @@ import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import type { Actions, RequestEvent } from './$types';
 import { fail } from '@sveltejs/kit';
 import { msg } from '$lib/msg';
+import { readInt } from '$lib/util/readForm';
 
 export async function load(event) {
 	const companyId = event.locals.session?.companyId;
@@ -72,20 +73,24 @@ export const actions: Actions = {
 
 		const formData = await event.request.formData();
 		const licensePlate = formData.get('licensePlate');
-		const nPassengers = formData.get('nPassengers');
-		const bikeCapacity = formData.get('bike');
-		const wheelchairCapacity = formData.get('wheelchair');
-		const storageSpace = formData.get('storageSpace');
-		const seats = formData.get('seats');
+		const bike = formData.get('bike');
+		const wheelchair = formData.get('wheelchair');
+		const storageSpace = readInt(formData.get('storageSpace'));
+		const seats = readInt(formData.get('seats'));
+
+		if (seats !== 3 && seats !== 5 && seats !== 7) {
+			return fail(400, { msg: msg('invalidSeats') });
+		}
 
 		if (
 			typeof licensePlate !== 'string' ||
-			typeof nPassengers !== 'string' ||
-			typeof bikeCapacity !== 'string' ||
-			typeof wheelchairCapacity !== 'string' ||
-			typeof storageSpace !== 'string'
+			!/^([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})$/.test(licensePlate)
 		) {
-			throw 'invalid parameters';
+			return fail(400, { msg: msg('invalidLicensePlate') });
+		}
+
+		if (isNaN(storageSpace) || storageSpace <= 0 || storageSpace >= 11) {
+			return fail(400, { msg: msg('invalidStorage') });
 		}
 
 		try {
@@ -94,20 +99,20 @@ export const actions: Actions = {
 				.values({
 					licensePlate,
 					company,
-					seats: Number(seats),
-					wheelchairCapacity: wheelchairCapacity == 'on' ? 1 : 0,
-					bikeCapacity: bikeCapacity == 'on' ? 1 : 0,
-					storageSpace: Number(storageSpace)
+					seats,
+					storageSpace,
+					wheelchairCapacity: !wheelchair ? 0 : 1,
+					bikeCapacity: !bike ? 0 : 1
 				})
 				.execute();
 		} catch (e) {
 			// @ts-expect-error: 'e' is of type 'unknown'
 			if (e.constraint == 'vehicle_license_plate_key') {
-				return fail(400, { msg: msg('enterEmailAndPassword') });
+				return fail(400, { msg: msg('duplicateLicensePlate') });
 			}
-			return fail(400, { msg: msg('enterEmailAndPassword') });
+			return fail(400, { msg: msg('unkownError') });
 		}
 
-		return { msg: msg('activationSuccess') };
+		return { msg: msg('vehicleAddedSuccessfully', 'success') };
 	}
 };

@@ -62,21 +62,14 @@ export interface Database {
 	event: {
 		id: Generated<number>;
 		isPickup: boolean;
-		latitude: number;
-		longitude: number;
+		lat: number;
+		lng: number;
 		scheduledTime: Date;
 		communicatedTime: Date;
-		address: number;
+		address: string;
 		tour: number;
-		customer: string;
+		customer: number;
 		request: number;
-	};
-	address: {
-		id: Generated<number>;
-		street: string;
-		houseNumber: string;
-		postalCode: string;
-		city: string;
 	};
 	request: {
 		id: Generated<number>;

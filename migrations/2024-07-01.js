@@ -81,15 +81,6 @@ export async function up(db) {
 		.execute();
 
 	await db.schema
-		.createTable('address')
-		.addColumn('id', 'serial', (col) => col.primaryKey())
-		.addColumn('street', 'varchar', (col) => col.notNull())
-		.addColumn('house_number', 'varchar', (col) => col.notNull())
-		.addColumn('postal_code', 'varchar', (col) => col.notNull())
-		.addColumn('city', 'varchar', (col) => col.notNull())
-		.execute();
-
-	await db.schema
 		.createTable('request')
 		.addColumn('id', 'serial', (col) => col.primaryKey())
 		.addColumn('passengers', 'integer', (col) => col.notNull())
@@ -103,14 +94,12 @@ export async function up(db) {
 		.createTable('event')
 		.addColumn('id', 'serial', (col) => col.primaryKey())
 		.addColumn('is_pickup', 'boolean', (col) => col.notNull())
-		.addColumn('latitude', 'real', (col) => col.notNull())
-		.addColumn('longitude', 'real', (col) => col.notNull())
+		.addColumn('lat', 'real', (col) => col.notNull())
+		.addColumn('lng', 'real', (col) => col.notNull())
 		.addColumn('scheduled_time', 'timestamp', (col) => col.notNull())
 		.addColumn('communicated_time', 'timestamp', (col) => col.notNull())
 		.addColumn('request', 'integer', (col) => col.references('request.id').onDelete('cascade'))
-		.addColumn('address', 'integer', (col) =>
-			col.references('address.id').onDelete('cascade').notNull()
-		)
+		.addColumn('address', 'varchar', (col) => col.notNull())
 		.addColumn('tour', 'integer', (col) => col.references('tour.id').onDelete('cascade').notNull())
 		.addColumn('customer', 'integer', (col) =>
 			col.references('user.id').onDelete('cascade').notNull()

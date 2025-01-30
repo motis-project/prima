@@ -85,26 +85,21 @@ export async function setCompanyData(page: Page, user: UserCredentials, company:
 	await expect(page.getByRole('heading', { name: 'Stammdaten Ihres Unternehmens' })).toBeVisible();
 
 	await page.getByLabel('Name').fill(company.name);
-	await page.getByLabel('Unternehmenssitz').fill(company.address);
+	await page.getByLabel('Unternehmenssitz').pressSequentially(company.address, { delay: 10 });
+	await page.getByText('Werner-Seelenbinder-Straße 70a').click();
+
 	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: company.zone });
-	await page.waitForTimeout(5000);
 	await page.getByRole('button', { name: 'Übernehmen' }).click();
+	await expect(page.getByText('Unternehmensdaten erfolgreich aktualisiert.')).toBeVisible();
 }
 
 export async function addVehicle(page: Page, licensePlate: string) {
 	await login(page, TAXI_OWNER);
-	await page.goto('/taxi/company');
+	await page.goto('/taxi/availability');
 	await page.waitForTimeout(500);
-	await page.screenshot({ path: 'screenshots/beforeNavigateToTaxi.png', fullPage: true });
-	await page.getByRole('link', { name: 'Taxi' }).click();
-	await expect(page.getByRole('heading', { name: 'Fahrzeuge und Touren' })).toBeVisible();
+	await page.getByTestId('add-vehicle').click();
 	await page.waitForTimeout(500);
-	await page.getByRole('button', { name: 'Fahrzeug hinzufügen' }).click();
 	await page.getByPlaceholder('DA-AB-1234').fill(licensePlate);
 	await page.getByLabel('3 Passagiere').check();
-	await page
-		.locator('button')
-		.filter({ hasText: /^Fahrzeug hinzufügen$/ })
-		.click();
-	await page.waitForTimeout(500);
+	await page.getByTestId('create-vehicle').click();
 }

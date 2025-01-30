@@ -14,6 +14,8 @@ export type Translations = {
 		companies: string;
 	};
 	msg: {
+		unkownError: string;
+
 		// Account
 		enterEmailAndPassword: string;
 		invalidEmail: string;
@@ -46,6 +48,13 @@ export type Translations = {
 		zoneNotSet: string;
 		addressNotInZone: string;
 		companyUpdateSuccessful: string;
+
+		// AddVehicle
+		invalidSeats: string;
+		invalidLicensePlate: string;
+		invalidStorage: string;
+		duplicateLicensePlate: string;
+		vehicleAddedSuccessfully: string;
 	};
 	admin: {
 		completedToursSubtitle: string;

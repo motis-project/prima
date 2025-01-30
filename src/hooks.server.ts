@@ -23,6 +23,12 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		) {
 			return redirect(302, '/account');
 		}
+		if (
+			(!session?.isAdmin && event.url.pathname.startsWith('/admin')) ||
+			(!session?.companyId && event.url.pathname.startsWith('/taxi'))
+		) {
+			return error(403);
+		}
 	} else {
 		if (
 			event.url.pathname.startsWith('/account') &&
@@ -32,12 +38,6 @@ const authHandle: Handle = async ({ event, resolve }) => {
 			event.url.pathname !== '/account/request-password-reset'
 		) {
 			return redirect(302, '/account/login');
-		}
-		if (
-			(!session?.isAdmin && event.url.pathname.startsWith('/admin')) ||
-			(!session?.companyId && event.url.pathname.startsWith('/taxi'))
-		) {
-			return error(403);
 		}
 		deleteSessionTokenCookie(event);
 	}

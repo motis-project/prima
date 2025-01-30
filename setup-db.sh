@@ -12,7 +12,6 @@ echo "CREATE DATABASE prima;" | psql $DB
 
 pnpm run kysely migrate:latest
 
-psql $DATABASE_URL --user postgres < data/address.sql
 psql $DATABASE_URL --user postgres < data/zone.sql
 psql $DATABASE_URL --user postgres < data/company.sql
 psql $DATABASE_URL --user postgres < data/vehicle.sql

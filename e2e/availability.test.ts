@@ -1,28 +1,35 @@
 import { expect, test, type Page } from '@playwright/test';
 import { login, setCompanyData, addVehicle, TAXI_OWNER, COMPANY1 } from './utils';
 
+test.describe.configure({ mode: 'serial' });
+
 export async function setAvailability(page: Page) {
 	await login(page, TAXI_OWNER);
-	await page.goto('/user/taxi?offset=-120&date=2026-09-30');
+	await page.goto('/taxi/availability?offset=-120&date=2026-09-30');
 	await page.waitForTimeout(500);
-
-	await page.mouse.move(425, 465);
-	await page.mouse.down();
-	await page.mouse.move(525, 465);
-	await page.mouse.up();
+	{
+		const element = page.getByTestId('GR-TU-11-2026-09-30T08:00:00.000Z').locator('div');
+		const { x, y, width, height } = await element.boundingBox();
+		await page.mouse.move(x + width / 2, y + height / 2);
+		await page.mouse.down();
+	}
+	{
+		const element = await page.getByTestId('GR-TU-11-2026-09-30T08:45:00.000Z').locator('div');
+		const { x, y, width, height } = await element.boundingBox();
+		await page.mouse.move(x + width / 2, y + height / 2);
+		await page.mouse.up();
+	}
 }
 
 export async function requestRide(page: Page) {
 	await login(page, TAXI_OWNER);
-	await page.goto('/request');
+	await page.goto('/debug');
 	await page.waitForTimeout(1000);
 
 	await page.getByRole('textbox').fill('2026-09-30T08:40:00Z');
 	await page.getByRole('button', { name: 'Suchen' }).click();
 	await expect(page.getByRole('heading', { name: ': OK' })).toHaveText('200: OK');
 }
-
-test.describe.configure({ mode: 'serial' });
 
 test('Set company data', async ({ page }) => {
 	await setCompanyData(page, TAXI_OWNER, COMPANY1);

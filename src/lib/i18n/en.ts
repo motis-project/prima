@@ -12,6 +12,9 @@ const translations: Translations = {
 		companies: 'Companies'
 	},
 	msg: {
+		// Unknown error
+		unkownError: 'Unbekannter Fehler',
+
 		// Account
 		enterEmailAndPassword: 'Please enter your email and password.',
 		invalidEmail: 'Invalid email address.',
@@ -44,7 +47,14 @@ const translations: Translations = {
 		addressTooShort: 'Address too short.',
 		zoneNotSet: 'Zone not set.',
 		addressNotInZone: 'Address not in zone.',
-		companyUpdateSuccessful: 'Company data updated successfully.'
+		companyUpdateSuccessful: 'Company data updated successfully.',
+
+		// AddVehicle
+		invalidSeats: 'Invalid number of seats',
+		invalidLicensePlate: 'Invalid license plate.',
+		invalidStorage: 'Invalid storage space.',
+		duplicateLicensePlate: 'Duplicate license plate.',
+		vehicleAddedSuccessfully: 'Vehicle added successfully.'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',

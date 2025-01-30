@@ -6,10 +6,12 @@
 	import Label from '$lib/shadcn/label/label.svelte';
 	import * as Popover from '$lib/shadcn/popover';
 	import { Button, buttonVariants } from '$lib/shadcn/button';
+	import { enhance } from '$app/forms';
 </script>
 
 <Popover.Root>
 	<Popover.Trigger
+		data-testid="add-vehicle"
 		class={buttonVariants({
 			variant: 'outline',
 			class: 'w-fit justify-start text-left font-normal'
@@ -19,7 +21,7 @@
 		Fahrzeug hinzufügen
 	</Popover.Trigger>
 	<Popover.Content>
-		<form method="post" action="?/addVehicle" class="flex flex-col gap-4">
+		<form method="post" action="?/addVehicle" class="flex flex-col gap-4" use:enhance>
 			<h2 class="font-medium leading-none">Neues Fahrzeug</h2>
 
 			<div class="field">
@@ -29,17 +31,17 @@
 
 			<div>
 				<h6 class="mb-1">Maximale Passagieranzahl:</h6>
-				<RadioGroup.Root name="nPassengers" value="3">
+				<RadioGroup.Root name="seats" value="3">
 					<div class="flex items-center gap-2">
-						<RadioGroup.Item value="3" />
+						<RadioGroup.Item value="3" id="r1" />
 						<Label for="r1">3 Passagiere</Label>
 					</div>
 					<div class="flex items-center gap-2">
-						<RadioGroup.Item value="5" />
+						<RadioGroup.Item value="5" id="r2" />
 						<Label for="r2">5 Passagiere</Label>
 					</div>
 					<div class="flex items-center gap-2">
-						<RadioGroup.Item value="7" />
+						<RadioGroup.Item value="7" id="r3" />
 						<Label for="r3">7 Passagiere</Label>
 					</div>
 				</RadioGroup.Root>
@@ -61,10 +63,10 @@
 
 			<div class="field">
 				<Label for="storageSpace">Gepäckstücke:</Label>
-				<Input name="storageSpace" type="number" placeholder="4" />
+				<Input name="storageSpace" type="number" placeholder="4" value="4" />
 			</div>
 
-			<Button type="submit" variant="outline">Fahrzeug hinzufügen</Button>
+			<Button type="submit" variant="outline" data-testid="create-vehicle">Fahrzeug anlegen</Button>
 		</form>
 	</Popover.Content>
 </Popover.Root>

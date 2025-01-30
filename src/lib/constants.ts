@@ -1,9 +1,8 @@
-import { MINUTE, secondToMilli } from '$lib/util/time';
+import { HOUR, MINUTE } from '$lib/util/time';
 
 export const TZ = 'Europe/Berlin';
-export const MIN_PREP_MINUTES = 30;
-export const MAX_TRAVEL_SECONDS = 3600;
-export const MAX_TRAVEL_MS = secondToMilli(MAX_TRAVEL_SECONDS);
+export const MIN_PREP = 30 * MINUTE;
+export const MAX_TRAVEL = 1 * HOUR;
 export const MAX_PASSENGER_WAITING_TIME_PICKUP = 10 * MINUTE;
 export const MAX_PASSENGER_WAITING_TIME_DROPOFF = 10 * MINUTE;
 export const WGS84 = 4326;

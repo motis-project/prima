@@ -15,7 +15,7 @@
 
 	import type { TourEvent, Tours } from '$lib/server/db/getTours';
 	import type { PlanResponse } from '$lib/openapi';
-	import { MIN_PREP_MINUTES, MOTIS_BASE_URL } from '$lib/constants';
+	import { MIN_PREP, MOTIS_BASE_URL } from '$lib/constants';
 	import { carRouting } from '$lib/util/carRouting';
 	import { polylineToGeoJSON } from '$lib/util/polylineToGeoJSON';
 	import { getTourInfoShort } from '$lib/util/getTourInfoShort';
@@ -45,20 +45,15 @@
 		for (let e = 0; e < tourEvents!.length - 1; e++) {
 			let e1 = tourEvents![e];
 			let e2 = tourEvents![e + 1];
-			routes.push(
-				carRouting(
-					{ lat: e1.latitude, lon: e1.longitude }, //
-					{ lat: e2.latitude, lon: e2.longitude }
-				)
-			);
+			routes.push(carRouting(e1, e2));
 		}
 		return routes;
 	};
 
 	const getCenter = (tourEvents: Array<TourEvent>): [number, number] => {
 		return [
-			tourEvents.map((e) => e.longitude).reduce((e, c) => e + c, 0) / tourEvents.length,
-			tourEvents.map((e) => e.latitude).reduce((e, c) => e + c, 0) / tourEvents.length
+			tourEvents.map((e) => e.lng).reduce((e, c) => e + c, 0) / tourEvents.length,
+			tourEvents.map((e) => e.lat).reduce((e, c) => e + c, 0) / tourEvents.length
 		];
 	};
 
@@ -76,7 +71,7 @@
 	});
 
 	const threshold = new Date();
-	threshold.setMinutes(threshold.getMinutes() + MIN_PREP_MINUTES);
+	threshold.setMinutes(threshold.getMinutes() + MIN_PREP);
 </script>
 
 <Dialog.Root
@@ -218,9 +213,7 @@
 				<Table.Header>
 					<Table.Row>
 						<Table.Head>Abfahrt</Table.Head>
-						<Table.Head>Straße</Table.Head>
-						<Table.Head>Hausnr.</Table.Head>
-						<Table.Head>Ort</Table.Head>
+						<Table.Head>Addresse</Table.Head>
 						<Table.Head>Kunde</Table.Head>
 						<Table.Head>Tel. Kunde</Table.Head>
 						<Table.Head>Ein-/Ausstieg</Table.Head>
@@ -234,9 +227,7 @@
 								<Table.Cell>
 									{event.scheduledTime.toLocaleString('de-DE').slice(0, -3).replace(',', ' ')}
 								</Table.Cell>
-								<Table.Cell>{event.street}</Table.Cell>
-								<Table.Cell>{event.houseNumber}</Table.Cell>
-								<Table.Cell>{event.postalCode} {event.city}</Table.Cell>
+								<Table.Cell>{event.address}</Table.Cell>
 								<Table.Cell>
 									{event.customerName},
 								</Table.Cell>

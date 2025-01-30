@@ -23,8 +23,9 @@
 	import AddVehicle from './AddVehicle.svelte';
 	import { onMount } from 'svelte';
 	import type { Tours } from '$lib/server/db/getTours';
+	import Message from '$lib/ui/Message.svelte';
 
-	const { data } = $props();
+	const { data, form } = $props();
 
 	type Vehicle = NonNullable<typeof data.vehicles>[0];
 
@@ -341,6 +342,7 @@
 									<tr>
 										{#each split(x, 15) as cell}
 											<td
+												data-testid="{v.licensePlate}-{cell.startTime.toISOString()}"
 												class="cell"
 												draggable={hasTour(v.id, cell)}
 												ondragstart={() => dragStart(v.id, cell)}
@@ -425,6 +427,8 @@
 	</div>
 
 	<Card.Content class="mt-8">
+		<Message msg={form?.msg} />
+
 		{#if !data.companyDataComplete}
 			<div class="flex min-h-[45vh] w-full flex-col items-center justify-center">
 				<h2 class="mb-4 text-xl font-semibold leading-none tracking-tight">

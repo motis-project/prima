@@ -25,9 +25,8 @@ export const getTours = async (companyId?: number, timeRange?: [Date, Date]) => 
 				eb
 					.selectFrom('event')
 					.whereRef('event.tour', '=', 'tour.id')
-					.innerJoin('address', 'address.id', 'event.address')
 					.innerJoin('user', 'user.id', 'event.customer')
-					.selectAll(['event', 'address', 'tour', 'vehicle'])
+					.selectAll(['event', 'tour', 'vehicle'])
 					.select(['user.name as customerName', 'user.phone as customerPhone'])
 					.orderBy('event.scheduledTime')
 			).as('events')
