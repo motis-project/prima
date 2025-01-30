@@ -38,7 +38,7 @@ jobs:
           docker compose build prima
           docker compose up -d pg
           sleep 5
-          echo "CREATE DATABASE prima;" | PGPASSWORD=pw psql postgresql://localhost:6500 --user postgres
+          ./setup-db.sh
           npx playwright test
 
       - name: Unit Tests
