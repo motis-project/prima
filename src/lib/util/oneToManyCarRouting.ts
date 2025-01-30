@@ -1,7 +1,7 @@
 import { MAX_MATCHING_DISTANCE, MAX_TRAVEL, MOTIS_BASE_URL } from '$lib/constants';
 import { oneToMany, type Duration } from '$lib/openapi';
 import type { QuerySerializerOptions } from '@hey-api/client-fetch';
-import { secondToMilli } from './time';
+import { SECOND, secondToMilli } from './time';
 import maplibregl from 'maplibre-gl';
 
 function lngLatToStr(pos: maplibregl.LngLatLike) {
@@ -20,7 +20,7 @@ export const oneToManyCarRouting = async (
 		query: {
 			one: lngLatToStr(one),
 			many: many.map(lngLatToStr),
-			max: MAX_TRAVEL / 1000,
+			max: MAX_TRAVEL / SECOND,
 			maxMatchingDistance: MAX_MATCHING_DISTANCE,
 			mode: 'CAR',
 			arriveBy
