@@ -1,10 +1,23 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
+	// test for development version
+	// webServer: {
+	// 	command: 'npm run dev',
+	// 	url: 'http://localhost:5173',
+	// 	timeout: 20000,
+	// 	reuseExistingServer: true
+	// },
+	// use: {
+	// 	baseURL: 'http://localhost:5173/',
+	// 	locale: 'de-DE',
+	// 	timezoneId: 'Europe/Berlin',
+	// },
 	webServer: {
-		command: 'pnpm run dev',
-		reuseExistingServer: true,
-		port: 5173
+		command: 'docker compose up prima',
+		url: 'http://127.0.0.1:7777',
+		timeout: 20000,
+		reuseExistingServer: true
 	},
 
 	testDir: 'e2e',
