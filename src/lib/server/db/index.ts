@@ -1,5 +1,5 @@
 import { type Generated, CamelCasePlugin, PostgresDialect, Kysely, type LogEvent } from 'kysely';
-import { DATABASE_URL } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import pg from 'pg';
 
 export interface Database {
@@ -81,7 +81,9 @@ export interface Database {
 	};
 }
 
-export const pool = new pg.Pool({ connectionString: DATABASE_URL });
+console.log('connecting to database ', env.DATABASE_URL);
+
+export const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
 export const dialect = new PostgresDialect({ pool });
 export const db = new Kysely<Database>({
 	dialect,

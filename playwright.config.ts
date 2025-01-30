@@ -10,13 +10,13 @@ export default defineConfig({
 	// },
 	webServer: {
 		command: 'docker compose up prima',
-		url: 'http://127.0.0.1:7777',
+		url: 'http://localhost:7777',
 		timeout: 20000,
 		reuseExistingServer: true
 	},
 
 	use: {
-		baseURL: 'http://127.0.0.1:7777',
+		baseURL: 'http://localhost:7777',
 		locale: 'de-DE',
 		timezoneId: 'Europe/Berlin'
 	},
