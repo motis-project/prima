@@ -1,0 +1,99 @@
+name: UI
+
+defaults:
+  run:
+    shell: bash -ieo pipefail {0}
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ['self-hosted', 'prima', 'Linux', 'X64']
+    permissions: write-all
+    env:
+      DATABASE_URL: postgresql://postgres:pw@localhost:6500/prima
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: npm install -f
+
+      - name: Code Lint
+        run: npm run lint
+
+      - name: Svelte Check
+        run: npm run check
+
+      - name: Install Playwright Dependencies
+        run: npx playwright install
+
+      - name: Integration Tests
+        run: |
+          npm run build
+          docker compose build prima
+          docker compose up -d pg
+          sleep 5
+          echo "CREATE DATABASE prima;" | PGPASSWORD=pw psql postgresql://localhost:6500 --user postgres
+          npx playwright test
+
+      - name: Unit Tests
+        run: npm run test:unit
+
+      - name: Upload screenshots
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: screenshots
+          path: screenshots/
+
+      - name: Docker setup-buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=edge
+
+      - name: Docker build and push
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          context: .
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+
+  deploy:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ['self-hosted', 'prima', 'Linux', 'X64']
+    needs: build
+    steps:
+      - name: Deploy
+        run: |
+          cd /home/prima
+          docker compose pull
+          docker compose down
+          docker compose up -d
