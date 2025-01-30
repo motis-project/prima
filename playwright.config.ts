@@ -16,7 +16,7 @@ export default defineConfig({
 	},
 
 	use: {
-		baseURL: 'http://localhost:5173/',
+		baseURL: 'http://127.0.0.1:7777',
 		locale: 'de-DE',
 		timezoneId: 'Europe/Berlin'
 	},
