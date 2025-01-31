@@ -28,9 +28,6 @@ const dateInXMinutes = (x: number): Date => {
 const dateInXMinutesYMs = (x: number, y: number): Date => {
 	return new Date(BASE_DATE_MS + minutesToMs(x) + y);
 };
-const getCap = (from: Date, to: Date): number => {
-	return MsToHours(to.getTime() - from.getTime()) * VOLUME_CAP;
-};
 
 describe('blacklisting test', () => {
 	beforeEach(async () => {
@@ -41,9 +38,8 @@ describe('blacklisting test', () => {
 		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
 		const company = await addCompany(Zone.NIESKY);
 		const taxi = await addTaxi(company, capacities);
-		const cap = getCap(dateInXMinutes(0), dateInXMinutes(90));
 
-		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), cap);
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), 0);
 		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(90));
 
 		const r: CheckBookingValidityParameters = {
@@ -60,9 +56,8 @@ describe('blacklisting test', () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 3 };
 		const company = await addCompany(Zone.NIESKY);
 		const taxi = await addTaxi(company, capacities);
-		const cap = getCap(dateInXMinutes(0), dateInXMinutes(90));
 
-		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), cap);
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), 0);
 
 		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
@@ -349,9 +344,8 @@ describe('blacklisting test', () => {
 		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
 		const company = await addCompany(Zone.NIESKY);
 		const taxi = await addTaxi(company, capacities);
-		const cap = getCap(dateInXMinutes(0), dateInXMinutes(90));
 
-		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), cap);
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), 0);
 
 		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
@@ -372,9 +366,8 @@ describe('blacklisting test', () => {
 		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
 		const company = await addCompany(Zone.NIESKY);
 		const taxi = await addTaxi(company, capacities);
-		const cap = getCap(dateInXMinutes(0), dateInXMinutes(90));
 
-		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), cap);
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), 0);
 
 		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
@@ -395,9 +388,8 @@ describe('blacklisting test', () => {
 		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
 		const company = await addCompany(Zone.NIESKY);
 		const taxi = await addTaxi(company, capacities);
-		const cap = getCap(dateInXMinutes(0), dateInXMinutes(90));
 
-		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), cap);
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), 0);
 
 		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
@@ -415,9 +407,8 @@ describe('blacklisting test', () => {
 		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
 		const company = await addCompany(Zone.NIESKY);
 		const taxi = await addTaxi(company, capacities);
-		const cap = getCap(dateInXMinutes(0), dateInXMinutes(90));
 
-		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), cap);
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), 0);
 
 		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,

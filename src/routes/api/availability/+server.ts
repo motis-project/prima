@@ -111,17 +111,18 @@ export const POST = async (event) => {
 		});
 	}
 	const request = event.request;
-	const { vehicleId, from, to } = await request.json();
+	const { vehicleId, from, to, cap } = await request.json();
 	await db
 		.insertInto('availability')
-		.columns(['start_time', 'end_time', 'vehicle'])
+		.columns(['start_time', 'end_time', 'vehicle', 'cap'])
 		.expression((eb) =>
 			eb
 				.selectFrom('vehicle')
 				.select((eb) => [
 					eb.val(new Date(from)).as('start_time'),
 					eb.val(new Date(to)).as('end_time'),
-					'vehicle.id as vehicle'
+					'vehicle.id as vehicle',
+					eb.val(cap).as('cap')
 				])
 				.where(({ eb }) =>
 					eb.and([eb('vehicle.company', '=', companyId), eb('vehicle.id', '=', vehicleId)])
