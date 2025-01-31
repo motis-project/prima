@@ -2,6 +2,7 @@ import type { PageServerLoad } from './$types.js';
 import { db } from '$lib/server/db';
 import { readFloat } from '$lib/server/util/readForm.js';
 import { bookRide } from '$lib/server/bookRide.js';
+import { sql } from 'kysely';
 
 export const actions = {
 	default: async ({ request, locals }) => {
@@ -49,6 +50,20 @@ export const actions = {
 	}
 };
 
+const areasGeoJSON = async () => {
+	return await sql`
+		SELECT 'FeatureCollection' AS TYPE,
+			array_to_json(array_agg(f)) AS features
+		FROM
+			(SELECT 'Feature' AS TYPE,
+				ST_AsGeoJSON(lg.area, 15, 0)::json As geometry,
+				json_build_object('id', id, 'name', name) AS properties
+			FROM zone AS lg) AS f`.execute(db);
+};
+
 export const load: PageServerLoad = async () => {
-	return { companies: await db.selectFrom('company').select(['id', 'lat', 'lng']).execute() };
+	return {
+		companies: await db.selectFrom('company').select(['id', 'lat', 'lng']).execute(),
+		areas: (await areasGeoJSON()).rows[0]
+	};
 };

@@ -5,8 +5,10 @@
 	import Control from '$lib/map/Control.svelte';
 	import { getStyle } from '$lib/map/style.js';
 	import Map from '$lib/map/Map.svelte';
+	import GeoJSON from '$lib/map/GeoJSON.svelte';
 	import Message from '$lib/ui/Message.svelte';
 	import { enhance } from '$app/forms';
+	import Layer from '$lib/map/Layer.svelte';
 
 	const { data, form } = $props();
 
@@ -129,4 +131,44 @@
 			</div>
 		</Card>
 	</Control>
+
+	<GeoJSON id="route" data={data.areas as GeoJSON.GeoJSON}>
+		<Layer
+			id="areas"
+			type="fill"
+			layout={{}}
+			filter={['literal', true]}
+			paint={{
+				'fill-color': '#088',
+				'fill-opacity': 0.4,
+				'fill-outline-color': '#000'
+			}}
+		/>
+		<Layer
+			id="areas-outline"
+			type="line"
+			layout={{}}
+			filter={['literal', true]}
+			paint={{
+				'line-color': '#000',
+				'line-width': 2
+			}}
+		/>
+		<Layer
+			id="areas-labels"
+			type="symbol"
+			layout={{
+				'symbol-placement': 'point',
+				'text-field': ['get', 'name'],
+				'text-font': ['Noto Sans Display Regular'],
+				'text-size': 16
+			}}
+			filter={['literal', true]}
+			paint={{
+				'text-halo-width': 12,
+				'text-halo-color': '#fff',
+				'text-color': '#f00'
+			}}
+		/>
+	</GeoJSON>
 </Map>
