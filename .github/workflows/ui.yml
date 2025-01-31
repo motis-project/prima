@@ -35,6 +35,7 @@ jobs:
       - name: Integration Tests
         run: |
           pnpm run build
+          docker compose down
           docker compose build prima
           docker compose up -d pg
           sleep 5
