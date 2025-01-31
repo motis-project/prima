@@ -67,8 +67,6 @@ export async function login(page: Page, credentials: UserCredentials) {
 
 export async function signup(page: Page, credentials: UserCredentials) {
 	await page.goto('/account/signup');
-	await page.waitForTimeout(1000);
-	await page.screenshot({ path: 'screenshots/beforeSignup.png', fullPage: true });
 	await expect(page.getByRole('heading', { name: 'Nutzerkonto erstellen' })).toBeVisible();
 	await page.getByRole('textbox', { name: 'E-Mail' }).fill(credentials.email);
 	await page.getByRole('textbox', { name: 'Passwort' }).fill(credentials.password);
@@ -78,6 +76,8 @@ export async function signup(page: Page, credentials: UserCredentials) {
 	await execSQL(sql`UPDATE "user" SET is_email_verified = true WHERE email = ${credentials.email}`);
 
 	await page.goto('/account/settings');
+	await page.waitForTimeout(1000);
+	await page.screenshot({ path: 'screenshots/beforeLogout.png', fullPage: true });
 	await page.getByRole('button', { name: 'Abmelden' }).click();
 }
 
