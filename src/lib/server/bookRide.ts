@@ -6,7 +6,7 @@ import { Interval } from '$lib/server/util/interval';
 import { db } from './db';
 import { covers } from './db/covers';
 import { groupBy } from '$lib/server/util/groupBy';
-import { updateValues } from '$lib/util/updateValues';
+import { updateValues } from '$lib/server/util/updateValues';
 import { sql } from 'kysely';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
