@@ -2,8 +2,8 @@
 pnpm-lock.yaml
 package-lock.json
 yarn.lock
-src/lib/components/*
+src/lib/shadcn/*
 .github/*
 migrations/*
-src/lib/motis
+src/lib/openapi
 taxidriver-android-app
