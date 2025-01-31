@@ -8,6 +8,7 @@ import { covers } from './db/covers';
 import { groupBy } from '$lib/util/groupBy';
 import { updateValues } from '$lib/util/updateValues';
 import { sql } from 'kysely';
+import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
 export type LngLatAddress = {
 	lat: number;
@@ -20,7 +21,7 @@ export type BookingRequest = {
 	from: LngLatAddress;
 	to: LngLatAddress;
 	startFixed: boolean;
-	time: Date;
+	time: UnixtimeMs;
 	nPassengers: number;
 	nWheelchairs: number;
 	nBikes: number;
@@ -35,8 +36,8 @@ export type Booking = {
 		lat: number;
 		lng: number;
 	};
-	pickupTime: Date;
-	dropoffTime: Date;
+	pickupTime: UnixtimeMs;
+	dropoffTime: UnixtimeMs;
 };
 
 export type BookingError = { msg: keyof Translations['msg'] };
@@ -71,11 +72,11 @@ export const bookRide = async (req: BookingRequest): Promise<Booking | BookingEr
 		return { msg: 'maxTravelTimeExceeded' };
 	}
 
-	const startTime = req.startFixed ? req.time : new Date(req.time.getTime() - travelDuration);
-	const targetTime = req.startFixed ? new Date(req.time.getTime() + travelDuration) : req.time;
-	const travelInterval = new Interval(startTime, targetTime);
+	const startTime = req.startFixed ? req.time : req.time - travelDuration;
+	const targetTime = req.startFixed ? req.time + travelDuration : req.time;
+	const travelInterval = new Interval(new Date(startTime), new Date(targetTime));
 
-	if (new Date(Date.now() + MIN_PREP) > startTime) {
+	if (Date.now() + MIN_PREP > startTime) {
 		return { msg: 'minPrepTime' };
 	}
 	const expandedTravelInterval = travelInterval.expand(24 * HOUR, 24 * HOUR);
@@ -123,8 +124,8 @@ export const bookRide = async (req: BookingRequest): Promise<Booking | BookingEr
 					.selectAll()
 					.where((eb) =>
 						eb.and([
-							eb('availability.startTime', '<=', expandedTravelInterval.endTime),
-							eb('availability.endTime', '>=', expandedTravelInterval.startTime)
+							eb('availability.startTime', '<=', expandedTravelInterval.endTime.getTime()),
+							eb('availability.endTime', '>=', expandedTravelInterval.startTime.getTime())
 						])
 					)
 					.as('availability'),
@@ -153,8 +154,8 @@ export const bookRide = async (req: BookingRequest): Promise<Booking | BookingEr
 	// filter out vehicles which don't have any availabilities left.
 	const mergedAvailabilites = groupBy(
 		dbResults,
-		(element) => element.vehicle,
-		(element) => new Interval(element.startTime, element.endTime)
+		(a) => a.vehicle,
+		(a) => new Interval(new Date(a.startTime), new Date(a.endTime))
 	);
 	updateValues(mergedAvailabilites, (entry) =>
 		Interval.merge(entry).filter((i) => i.contains(travelInterval))
@@ -281,12 +282,16 @@ export const bookRide = async (req: BookingRequest): Promise<Booking | BookingEr
 										eb(
 											'tour.departure',
 											'<',
-											fullTravelIntervals.at(eb.ref('vehicle.company').expressionType!)!.endTime
+											fullTravelIntervals
+												.at(eb.ref('vehicle.company').expressionType!)!
+												.endTime.getTime()
 										),
 										eb(
 											'tour.arrival',
 											'>',
-											fullTravelIntervals.at(eb.ref('vehicle.company').expressionType!)!.startTime
+											fullTravelIntervals
+												.at(eb.ref('vehicle.company').expressionType!)!
+												.startTime.getTime()
 										)
 									])
 								)
@@ -332,8 +337,8 @@ export const bookRide = async (req: BookingRequest): Promise<Booking | BookingEr
 			await trx
 				.insertInto('tour')
 				.values({
-					departure: bestVehicle.departure,
-					arrival: bestVehicle.arrival,
+					departure: bestVehicle.departure.getTime(),
+					arrival: bestVehicle.arrival.getTime(),
 					vehicle: bestVehicle.vehicleId!
 				})
 				.returning('id')

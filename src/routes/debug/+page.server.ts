@@ -40,7 +40,7 @@ export const actions = {
 			from: { lat: fromLat, lng: fromLng, address: '' },
 			to: { lat: toLat, lng: toLng, address: '' },
 			startFixed: true,
-			time,
+			time: time.getTime(),
 			nPassengers: 1,
 			nWheelchairs: 0,
 			nBikes: 0,
