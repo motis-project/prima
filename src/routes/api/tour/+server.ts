@@ -98,10 +98,9 @@ export const GET = async (event) => {
 				'request.passengers as passengers',
 				'request.wheelchairs as wheelchairs',
 				'request.luggage as luggage',
-				'request.bikes as bikes'
+				'request.bikes as bikes',
 			])
 			.execute()
 	);
-
 	return json(tours);
 }

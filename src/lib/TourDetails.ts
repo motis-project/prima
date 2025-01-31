@@ -7,6 +7,7 @@ import {
 	PostgresIntrospector,
 	PostgresQueryCompiler
 } from 'kysely';
+import md5 from 'blueimp-md5';
 
 const db = new Kysely<Database>({
 	dialect: {
@@ -79,7 +80,9 @@ export const mapTourEvents = (events: DbTourEvents) => {
 					passengers: e.passengers,
 					wheelchairs: e.wheelchairs,
 					luggage: e.luggage,
-					bikes: e.bikes
+					bikes: e.bikes,
+					ticket_hash: md5(e.ticket_code),
+					event_id: e.id,
 				};
 			})
 		};

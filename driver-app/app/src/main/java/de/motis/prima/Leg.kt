@@ -1,5 +1,6 @@
 package de.motis.prima
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +42,7 @@ fun LegView(
     stopIndex: Int,
     tourViewModel: TourViewModel,
     userViewModel: UserViewModel,
+    scanViewModel: ScanViewModel,
     navController: NavController,
 ) {
     var isLastEvent = false
@@ -56,6 +59,8 @@ fun LegView(
         val prevEvent = tour.events[stopIndex - 1]
         currentLocation = Location(latitude = prevEvent.latitude, longitude = prevEvent.longitude)
     }*/
+
+    val validTickets by scanViewModel.validTickets.collectAsState()
 
     var dropdownExpanded by remember {
         mutableStateOf(false)
@@ -145,7 +150,8 @@ fun LegView(
                             stopIndex.toString(), // TODO: group ID
                             tourViewModel
                             ),
-                        navController)
+                        navController,
+                        scanViewModel)
                 }
             }
             Row(
@@ -175,6 +181,7 @@ fun LegView(
                         Button(
                             modifier = Modifier.width(300.dp),
                             onClick = {
+                                Log.d("test", validTickets.toString())
                                 navController.navigate("taxameter") {}
                             }
                         ) {

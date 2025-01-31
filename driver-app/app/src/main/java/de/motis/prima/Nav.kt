@@ -58,7 +58,7 @@ fun Nav() {
             val tourId = it.arguments?.getString("tourId")?.toInt()
             val stopIndex = it.arguments?.getString("eventIndex")?.toInt()
             var tour = toursViewModel.tours.value.find { tour -> tour.tour_id == tourId }
-            LegView(stopIndex!!, TourViewModel(tour!!), userViewModel, navController)
+            LegView(stopIndex!!, TourViewModel(tour!!), userViewModel, scanViewModel, navController)
         }
 
         composable(route = "scan/{tourId}/{eventIndex}") {

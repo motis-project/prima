@@ -3,7 +3,12 @@ package de.motis.prima
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import de.motis.prima.services.Event
 import androidx.compose.foundation.background
@@ -30,21 +35,30 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.Navigation.findNavController
+import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 
 class EventGroupViewModel(stopIndex: String, groupId: String, tour: TourViewModel) : ViewModel() {
-
     var scheduledTime = "-"
     var city = "-"
     var street = "-"
@@ -79,14 +93,6 @@ class EventGroupViewModel(stopIndex: String, groupId: String, tour: TourViewMode
         } catch (e: Exception) {
             Log.d("error", "Failed to read event details")
         }
-    }
-
-    fun isTicketValid(customerId: String): Boolean {
-        return tour.validTickets.get(customerId)!!
-    }
-
-    fun setTicketValid(customerId: String) {
-        tour.validTickets.put(customerId, true)
     }
 }
 
@@ -131,7 +137,6 @@ fun EventGroup(
     locationViewModel: LocationViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    var ticket = scanViewModel.ticket.value
 
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -268,6 +273,8 @@ fun ShowCustomerDetails(event: Event, scanViewModel: ScanViewModel, context: Con
         return
     }
 
+    val validTickets by scanViewModel.validTickets.collectAsState()
+
     Card (
         modifier = Modifier
             .padding(top = 10.dp)
@@ -358,7 +365,8 @@ fun ShowCustomerDetails(event: Event, scanViewModel: ScanViewModel, context: Con
                         )
                     }
                     Spacer(modifier = Modifier.width(200.dp))
-                    if ("$lastName, $firstName" == scanViewModel.ticket.value) {
+
+                    if (validTickets.contains(event.ticket_hash)) {
                         Box(
                             modifier = Modifier.padding(top = 8.dp)
                         ) {
@@ -371,7 +379,7 @@ fun ShowCustomerDetails(event: Event, scanViewModel: ScanViewModel, context: Con
 
                             )
                         }
-                        reportTicketScan(event.ticket)
+                        reportTicketScan(event.event_id, event.ticket_hash)
                     } else {
                         Box(
                             modifier = Modifier.padding(top = 8.dp)
@@ -390,6 +398,7 @@ fun ShowCustomerDetails(event: Event, scanViewModel: ScanViewModel, context: Con
     }
 }
 
-private fun reportTicketScan(ticket: String) {
-    Log.d("test", "Ticket scanned: $ticket")
+private fun reportTicketScan(eventId: Int, ticketHash: String) {
+    Log.d("test", "Ticket scanned: eventId=$eventId, ticketHash=$ticketHash")
+    // TODO: call backend api
 }

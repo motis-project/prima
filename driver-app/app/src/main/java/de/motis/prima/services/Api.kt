@@ -24,6 +24,13 @@ interface ApiService {
 
     @GET("api/tour")
     fun getTours(@Query("date") currentDate: String) : Call<List<Tour>>
+
+    @POST("api/ticket")
+    @FormUrlEncoded
+    suspend fun validateTicket(
+        @Field("eventId") eventId: Int,
+        @Field("ticketHash") ticketHash: String
+    ): TicketValidationResponse
 }
 
 object Api {
@@ -42,6 +49,10 @@ data class LoginResponse(
     val data: String
 )
 
+data class TicketValidationResponse(
+    val status: Int,
+)
+
 data class Vehicle(
     val id: Int,
     val license_plate: String,
@@ -53,6 +64,7 @@ data class Vehicle(
 )
 
 data class Event(
+    val event_id: Int,
     val address: Int,
     val latitude: Double,
     val longitude: Double,
@@ -70,7 +82,7 @@ data class Event(
     val wheelchairs: Int,
     val luggage: Int,
     val bikes: Int,
-    val ticket: String,
+    val ticket_hash: String
 )
 
 data class Tour(

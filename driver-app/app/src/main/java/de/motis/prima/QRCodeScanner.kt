@@ -47,6 +47,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.BinaryBitmap
@@ -57,25 +58,46 @@ import com.google.zxing.WriterException
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.qrcode.QRCodeReader
 import com.google.zxing.qrcode.QRCodeWriter
+import de.motis.prima.services.Api
+import de.motis.prima.services.Event
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
+import java.security.MessageDigest
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 
 class ScanViewModel : ViewModel() {
-    var ticket = mutableStateOf("")
-        private set
+    private val _validTickets = MutableStateFlow(hashSetOf<String>())
+    val validTickets = _validTickets.asStateFlow()
 
-    private fun setTicket(scanInfo: String) {
-        ticket = mutableStateOf(scanInfo)
+    fun updateValidTickets(ticketCode: String) {
+        _validTickets.value.add(md5(ticketCode))
     }
 
-    fun getTicketInfo(): String {
-        return ticket.value
+    private fun md5(input: String): String {
+        val bytes = MessageDigest.getInstance("MD5").digest(input.toByteArray())
+        return bytes.joinToString("") { "%02x".format(it) } // Convert to hex string
     }
 
-    private fun isTicketValid(): Boolean {
-        return true
+    fun reportTicketScan(eventId: Int, ticketHash: String) {
+        viewModelScope.launch {
+            try {
+                val response = Api.apiService.validateTicket(eventId, ticketHash)
+                if (response.status == 302) {
+                    Log.d("login response", response.toString())
+                    // successful login
+                    //_navigationEvent.emit(true)
+                } else {
+                    //_loginErrorEvent.emit(true)
+                }
+            } catch (e: Exception) {
+                Log.d("Login Response Network Error", e.message!!)
+                //_networkErrorEvent.emit(Unit)
+            }
+        }
     }
 }
 
@@ -283,7 +305,7 @@ fun ScanTicketView(
             ) {
                 QRCodeScannerView(
                     onQRCodeScanned = { result ->
-                        viewModel.ticket.value = result
+                        viewModel.updateValidTickets(result)
                         isScanning = false
                     })
             }

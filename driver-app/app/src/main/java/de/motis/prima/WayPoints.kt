@@ -58,8 +58,6 @@ class TourViewModel(tour: Tour) : ViewModel() {
     var tour_: Tour = tour
     var eventGroups: MutableMap<String, MutableList<Event>> = hashMapOf()
 
-    var validTickets: HashMap<String, Boolean> = hashMapOf()
-
     private fun buildEventGroups(events: List<Event>) {
         val eventGroups = eventGroups
         for ((i, event) in events.withIndex()) {
@@ -74,9 +72,6 @@ class TourViewModel(tour: Tour) : ViewModel() {
 
     init {
         buildEventGroups(tour.events)
-        for (event in tour.events) {
-            validTickets.put(event.customer_id, false)
-        }
     }
 }
 
