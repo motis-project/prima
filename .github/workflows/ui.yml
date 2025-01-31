@@ -41,6 +41,7 @@ jobs:
           sleep 5
           ./setup-db.sh
           npx playwright test
+          docker compose down
 
       - name: Unit Tests
         run: pnpm run test:unit
