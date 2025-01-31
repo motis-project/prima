@@ -53,8 +53,8 @@ export async function load(event) {
 		company.name !== null &&
 		company.address !== null &&
 		company.zone !== null &&
-		company.latitude !== null &&
-		company.longitude !== null;
+		company.lat !== null &&
+		company.lng !== null;
 
 	return {
 		tours: await tours,
