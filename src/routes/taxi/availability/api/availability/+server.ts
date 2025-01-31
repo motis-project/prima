@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { Interval } from '$lib/util/interval';
+import { Interval } from '$lib/server/util/interval';
 import { json } from '@sveltejs/kit';
 import { sql, type Insertable, type Selectable } from 'kysely';
 import type Database from 'lucide-svelte/icons/database';
