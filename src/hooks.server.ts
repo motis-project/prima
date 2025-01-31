@@ -9,7 +9,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get('session');
 	const session = await validateSessionToken(token);
 	if (token && session) {
-		setSessionTokenCookie(event, token, session.expiresAt);
+		setSessionTokenCookie(event, token, new Date(session.expiresAt));
 		if (
 			!session.isEmailVerified &&
 			!event.url.pathname.startsWith('/account/verify-email') &&

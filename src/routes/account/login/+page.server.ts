@@ -60,7 +60,7 @@ export const actions: Actions = {
 		throttler.reset(user.id);
 		const sessionToken = generateSessionToken();
 		const session = await createSession(sessionToken, user.id);
-		setSessionTokenCookie(event, sessionToken, session.expiresAt);
+		setSessionTokenCookie(event, sessionToken, new Date(session.expiresAt));
 
 		return redirect(302, '/account');
 	}

@@ -1,16 +1,15 @@
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { db } from '.';
+import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
-export const getTours = async (companyId?: number, timeRange?: [Date, Date]) => {
+export const getTours = async (companyId?: number, timeRange?: [UnixtimeMs, UnixtimeMs]) => {
 	return await db
 		.selectFrom('tour')
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 		.innerJoin('company', 'company.id', 'vehicle.company')
 		.$if(typeof companyId === 'number', (qb) => qb.where('company', '=', companyId!))
 		.$if(!!timeRange, (qb) =>
-			qb.where((eb) =>
-				eb.and([eb('tour.departure', '<', timeRange![1]), eb('tour.arrival', '>', timeRange![0])])
-			)
+			qb.where('tour.departure', '<', timeRange![1]).where('tour.arrival', '>', timeRange![0])
 		)
 		.select((eb) => [
 			'tour.id as tourId',

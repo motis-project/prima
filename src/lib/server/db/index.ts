@@ -10,9 +10,9 @@ export interface Database {
 		passwordHash: string;
 		isEmailVerified: boolean;
 		emailVerificationCode: string | null;
-		emailVerificationExpiresAt: Date | null;
+		emailVerificationExpiresAt: number | null;
 		passwordResetCode: string | null;
-		passwordResetExpiresAt: Date | null;
+		passwordResetExpiresAt: number | null;
 		isTaxiOwner: boolean;
 		isAdmin: boolean;
 		phone: string | null;
@@ -20,7 +20,7 @@ export interface Database {
 	};
 	session: {
 		id: string;
-		expiresAt: Date;
+		expiresAt: number;
 		userId: number;
 	};
 	zone: {
@@ -48,15 +48,15 @@ export interface Database {
 	};
 	tour: {
 		id: Generated<number>;
-		departure: Date;
-		arrival: Date;
+		departure: number;
+		arrival: number;
 		vehicle: number;
 		fare: number | null;
 	};
 	availability: {
 		id: Generated<number>;
-		startTime: Date;
-		endTime: Date;
+		startTime: number;
+		endTime: number;
 		vehicle: number;
 	};
 	event: {
@@ -64,8 +64,8 @@ export interface Database {
 		isPickup: boolean;
 		lat: number;
 		lng: number;
-		scheduledTime: Date;
-		communicatedTime: Date;
+		scheduledTime: number;
+		communicatedTime: number;
 		address: string;
 		tour: number;
 		customer: number;
@@ -81,10 +81,12 @@ export interface Database {
 	};
 }
 
-console.log('connecting to database ', env.DATABASE_URL);
-
 export const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
 export const dialect = new PostgresDialect({ pool });
+
+// Map int8 to number.
+pg.types.setTypeParser(20, (val) => parseInt(val));
+
 export const db = new Kysely<Database>({
 	dialect,
 	plugins: [new CamelCasePlugin()],

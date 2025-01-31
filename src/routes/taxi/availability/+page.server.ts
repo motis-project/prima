@@ -33,15 +33,15 @@ export async function load(event) {
 				eb
 					.selectFrom('availability')
 					.whereRef('availability.vehicle', '=', 'vehicle.id')
-					.where('availability.startTime', '<', toTime)
-					.where('availability.endTime', '>', fromTime)
+					.where('availability.startTime', '<', toTime.getTime())
+					.where('availability.endTime', '>', fromTime.getTime())
 					.select(['availability.id', 'availability.startTime', 'availability.endTime'])
 					.orderBy('availability.startTime')
 			).as('availability')
 		])
 		.execute();
 
-	const tours = getTours(companyId, [fromTime, toTime]);
+	const tours = getTours(companyId, [fromTime.getTime(), toTime.getTime()]);
 
 	const company = await db
 		.selectFrom('company')

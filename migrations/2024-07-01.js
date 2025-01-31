@@ -19,9 +19,9 @@ export async function up(db) {
 		.addColumn('is_admin', 'boolean', (col) => col.notNull())
 		.addColumn('is_email_verified', 'boolean', (col) => col.notNull().defaultTo(false))
 		.addColumn('email_verification_code', 'varchar')
-		.addColumn('email_verification_expires_at', 'timestamp')
+		.addColumn('email_verification_expires_at', 'bigint')
 		.addColumn('password_reset_code', 'varchar')
-		.addColumn('password_reset_expires_at', 'timestamp')
+		.addColumn('password_reset_expires_at', 'bigint')
 		.addColumn('phone', 'varchar')
 		.addColumn('company_id', 'integer')
 		.execute();
@@ -29,7 +29,7 @@ export async function up(db) {
 	await db.schema
 		.createTable('session')
 		.addColumn('id', 'varchar', (col) => col.primaryKey())
-		.addColumn('expires_at', 'timestamp', (col) => col.notNull())
+		.addColumn('expires_at', 'bigint', (col) => col.notNull())
 		.addColumn('user_id', 'integer', (col) =>
 			col.references('user.id').onDelete('cascade').notNull()
 		)
@@ -62,8 +62,8 @@ export async function up(db) {
 	await db.schema
 		.createTable('availability')
 		.addColumn('id', 'serial', (col) => col.primaryKey())
-		.addColumn('start_time', 'timestamp', (col) => col.notNull())
-		.addColumn('end_time', 'timestamp', (col) => col.notNull())
+		.addColumn('start_time', 'bigint', (col) => col.notNull())
+		.addColumn('end_time', 'bigint', (col) => col.notNull())
 		.addColumn('vehicle', 'integer', (col) =>
 			col.references('vehicle.id').onDelete('cascade').notNull()
 		)
@@ -72,8 +72,8 @@ export async function up(db) {
 	await db.schema
 		.createTable('tour')
 		.addColumn('id', 'serial', (col) => col.primaryKey())
-		.addColumn('departure', 'timestamp', (col) => col.notNull())
-		.addColumn('arrival', 'timestamp', (col) => col.notNull())
+		.addColumn('departure', 'bigint', (col) => col.notNull())
+		.addColumn('arrival', 'bigint', (col) => col.notNull())
 		.addColumn('vehicle', 'integer', (col) =>
 			col.references('vehicle.id').onDelete('cascade').notNull()
 		)
@@ -96,8 +96,8 @@ export async function up(db) {
 		.addColumn('is_pickup', 'boolean', (col) => col.notNull())
 		.addColumn('lat', 'real', (col) => col.notNull())
 		.addColumn('lng', 'real', (col) => col.notNull())
-		.addColumn('scheduled_time', 'timestamp', (col) => col.notNull())
-		.addColumn('communicated_time', 'timestamp', (col) => col.notNull())
+		.addColumn('scheduled_time', 'bigint', (col) => col.notNull())
+		.addColumn('communicated_time', 'bigint', (col) => col.notNull())
 		.addColumn('request', 'integer', (col) => col.references('request.id').onDelete('cascade'))
 		.addColumn('address', 'varchar', (col) => col.notNull())
 		.addColumn('tour', 'integer', (col) => col.references('tour.id').onDelete('cascade').notNull())

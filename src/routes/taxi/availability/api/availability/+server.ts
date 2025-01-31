@@ -24,16 +24,20 @@ const toNewAvailability = (interval: Interval, vehicle: number): NewAvailability
 	};
 };
 
-export const DELETE = async (event) => {
-	const companyId = event.locals.session?.companyId;
+export const DELETE = async ({ locals, request }) => {
+	const companyId = locals.session?.companyId;
 	if (!companyId) {
 		throw 'not allowed';
 	}
-	const request = event.request;
+
 	const { vehicleId, from, to } = await request.json();
-	const start = new Date(from);
-	const end = new Date(to);
-	const toRemove = new Interval(start, end);
+	if (typeof vehicleId !== 'number' || typeof from !== 'number' || typeof to !== 'number') {
+		console.log('remove availability invalid params: ', { vehicleId, from, to });
+		throw 'invalid params';
+	}
+
+	const toRemove = new Interval(new Date(from), new Date(to));
+	console.log('remove availability vehicle=', vehicleId, 'toRemove=', toRemove);
 	await db.transaction().execute(async (trx) => {
 		await sql`LOCK TABLE availability IN ACCESS EXCLUSIVE MODE;`.execute(trx);
 		const overlapping = await trx
@@ -41,8 +45,8 @@ export const DELETE = async (event) => {
 			.where(({ eb }) =>
 				eb.and([
 					eb('vehicle', '=', vehicleId),
-					eb('availability.startTime', '<', end),
-					eb('availability.endTime', '>', start),
+					eb('availability.startTime', '<', to),
+					eb('availability.endTime', '>', from),
 					eb.exists(
 						eb
 							.selectFrom('vehicle')
@@ -58,7 +62,7 @@ export const DELETE = async (event) => {
 		const cut: Array<Availability> = [];
 		const create: Array<NewAvailability> = [];
 		overlapping.forEach((a) => {
-			const availability = new Interval(a.startTime, a.endTime);
+			const availability = new Interval(new Date(a.startTime), new Date(a.endTime));
 			if (toRemove.contains(availability)) {
 				toRemoveIds.push(a.id);
 			} else if (availability.contains(toRemove) && !availability.eitherEndIsEqual(toRemove)) {
@@ -97,21 +101,18 @@ export const DELETE = async (event) => {
 	return json({});
 };
 
-export const POST = async (event) => {
-	const companyId = event.locals.session?.companyId;
+export const POST = async ({ locals, request }) => {
+	const companyId = locals.session?.companyId;
 	if (!companyId) {
 		throw 'no company';
 	}
-	const request = event.request;
+
 	const { vehicleId, from, to } = await request.json();
-	if (typeof vehicleId !== 'number' || typeof from !== 'string' || typeof to !== 'string') {
+	if (typeof vehicleId !== 'number' || typeof from !== 'number' || typeof to !== 'number') {
+		console.log('add availability invalid params: ', { vehicleId, from, to });
 		throw 'invalid params';
 	}
-	const fromDate = new Date(from);
-	const toDate = new Date(to);
-	if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime)) {
-		throw 'invalid params';
-	}
+
 	await db
 		.insertInto('availability')
 		.columns(['startTime', 'endTime', 'vehicle'])
@@ -119,14 +120,14 @@ export const POST = async (event) => {
 			eb
 				.selectFrom('vehicle')
 				.select((eb) => [
-					eb.val(fromDate).as('startTime'),
-					eb.val(toDate).as('endTime'),
+					eb.val(from).as('startTime'),
+					eb.val(to).as('endTime'),
 					'vehicle.id as vehicle'
 				])
-				.where(({ eb }) =>
-					eb.and([eb('vehicle.company', '=', companyId), eb('vehicle.id', '=', vehicleId)])
-				)
+				.where('vehicle.company', '=', companyId)
+				.where('vehicle.id', '=', vehicleId)
 		)
 		.execute();
+
 	return json({});
 };

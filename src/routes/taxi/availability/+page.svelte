@@ -24,14 +24,15 @@
 	import { onMount } from 'svelte';
 	import type { Tours } from '$lib/server/db/getTours';
 	import Message from '$lib/ui/Message.svelte';
+	import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
 	const { data, form } = $props();
 
 	type Vehicle = NonNullable<typeof data.vehicles>[0];
 
 	type Range = {
-		startTime: Date;
-		endTime: Date;
+		startTime: UnixtimeMs;
+		endTime: UnixtimeMs;
 	};
 
 	// ===
@@ -44,14 +45,14 @@
 		});
 	};
 
-	const removeAvailability = async (vehicleId: number, from: Date, to: Date) => {
+	const removeAvailability = async (vehicleId: number, from: UnixtimeMs, to: UnixtimeMs) => {
 		return await fetch('/taxi/availability/api/availability', {
 			method: 'DELETE',
 			body: JSON.stringify({ vehicleId, from, to })
 		});
 	};
 
-	const addAvailability = async (vehicleId: number, from: Date, to: Date) => {
+	const addAvailability = async (vehicleId: number, from: UnixtimeMs, to: UnixtimeMs) => {
 		return await fetch('/taxi/availability/api/availability', {
 			method: 'POST',
 			body: JSON.stringify({ vehicleId, from, to })
@@ -108,16 +109,13 @@
 	});
 
 	// 1 am tomorrow
-	let tomorrow_night = $derived.by(() => {
+	let tomorrowNight = $derived.by(() => {
 		let copy = new Date(todayDay);
 		copy.setHours(todayDay.getHours() + 8);
 		return copy;
 	});
 
-	const asDate = (x: Date | string): Date => (typeof x === 'string' ? new Date(x) : x);
-
-	const overlaps = (a: Range, b: Range) =>
-		asDate(a.startTime) < asDate(b.endTime) && asDate(a.endTime) > asDate(b.startTime);
+	const overlaps = (a: Range, b: Range) => a.startTime < b.endTime && a.endTime > b.startTime;
 
 	const hasTour = (vehicleId: number, cell: Range) =>
 		data.tours.some((t) => vehicleId == t.vehicleId && overlaps(t, cell));
@@ -132,8 +130,8 @@
 		let prev = new Date(range.startTime);
 		let t = new Date(range.startTime);
 		t.setMinutes(t.getMinutes() + size);
-		for (; t <= range.endTime; t.setMinutes(t.getMinutes() + size)) {
-			cells.push({ startTime: new Date(prev), endTime: new Date(t) });
+		for (; t.getTime() <= range.endTime; t.setMinutes(t.getMinutes() + size)) {
+			cells.push({ startTime: prev.getTime(), endTime: t.getTime() });
 			prev = new Date(t);
 		}
 		return cells;
@@ -156,12 +154,8 @@
 		return selection == null
 			? null
 			: {
-					startTime: new Date(
-						Math.min(selection.start.startTime.getTime(), selection.end.endTime.getTime())
-					),
-					endTime: new Date(
-						Math.max(selection.start.endTime.getTime(), selection.end.endTime.getTime())
-					)
+					startTime: Math.min(selection.start.startTime, selection.end.endTime),
+					endTime: Math.max(selection.start.endTime, selection.end.endTime)
 				};
 	};
 
@@ -191,12 +185,8 @@
 	const selectionFinish = async () => {
 		if (selection !== null) {
 			const selectedRange: Range = {
-				startTime: new Date(
-					Math.min(selection.start.startTime.getTime(), selection.end.startTime.getTime())
-				),
-				endTime: new Date(
-					Math.max(selection.start.endTime.getTime(), selection.end.endTime.getTime())
-				)
+				startTime: Math.min(selection.start.startTime, selection.end.startTime),
+				endTime: Math.max(selection.start.endTime, selection.end.endTime)
 			};
 			const vehicleId = selection.id;
 			const available = selection.available;
@@ -312,7 +302,7 @@
 				<td><!--Fahrzeug--></td>
 				{#each split(range, 60) as x}
 					<td>
-						{('0' + x.startTime.getHours()).slice(-2)}:00
+						{('0' + new Date(x.startTime).getHours()).slice(-2)}:00
 						<table>
 							<tbody>
 								<tr class="text-sm text-muted-foreground">
@@ -342,7 +332,7 @@
 									<tr>
 										{#each split(x, 15) as cell}
 											<td
-												data-testid="{v.licensePlate}-{cell.startTime.toISOString()}"
+												data-testid="{v.licensePlate}-{new Date(cell.startTime).toISOString()}"
 												class="cell"
 												draggable={hasTour(v.id, cell)}
 												ondragstart={() => dragStart(v.id, cell)}
@@ -448,9 +438,15 @@
 				</p>
 			</div>
 		{:else}
-			{@render availabilityTable({ startTime: base, endTime: todayMorning })}
-			{@render availabilityTable({ startTime: todayMorning, endTime: todayDay })}
-			{@render availabilityTable({ startTime: todayDay, endTime: tomorrow_night })}
+			{@render availabilityTable({ startTime: base.getTime(), endTime: todayMorning.getTime() })}
+			{@render availabilityTable({
+				startTime: todayMorning.getTime(),
+				endTime: todayDay.getTime()
+			})}
+			{@render availabilityTable({
+				startTime: todayDay.getTime(),
+				endTime: tomorrowNight.getTime()
+			})}
 		{/if}
 	</Card.Content>
 </Card.Root>
