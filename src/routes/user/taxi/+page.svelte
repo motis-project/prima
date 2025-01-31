@@ -21,7 +21,7 @@
 	import Sun from 'lucide-svelte/icons/sun';
 	import Moon from 'lucide-svelte/icons/moon';
 	import { goto, invalidateAll } from '$app/navigation';
-	import { TZ } from '$lib/constants.js';
+	import { TZ, VOLUME_CAP } from '$lib/constants.js';
 	import { addAvailability, removeAvailability, updateTour } from '$lib/api.js';
 
 	import TourDialog from '$lib/TourDialog.svelte';
@@ -29,6 +29,7 @@
 	import type { TourDetails } from '$lib/TourDetails';
 	import { onMount } from 'svelte';
 	import type { Range, Tour, Vehicle } from './types';
+	import { MsToHours } from '$lib/time_utils';
 
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
@@ -157,12 +158,14 @@
 				from: new Date(Math.min(selection.start.from.getTime(), selection.end.from.getTime())),
 				to: new Date(Math.max(selection.start.to.getTime(), selection.end.to.getTime()))
 			};
+			const cap = MsToHours(selectedRange.to.getTime() - selectedRange.from.getTime()) * VOLUME_CAP;
+			console.log('cap is: %d', cap);
 			const vehicle_id = selection.id;
 			const available = selection.available;
 			let response;
 			try {
 				if (available) {
-					response = await addAvailability(vehicle_id, selectedRange.from, selectedRange.to);
+					response = await addAvailability(vehicle_id, selectedRange.from, selectedRange.to, cap);
 				} else {
 					response = await removeAvailability(vehicle_id, selectedRange.from, selectedRange.to);
 				}

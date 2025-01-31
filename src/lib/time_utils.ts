@@ -9,3 +9,7 @@ export function minutesToMs(minutes: number) {
 export function hoursToMs(hours: number) {
 	return hours * 3600000;
 }
+
+export function MsToHours(ms: number) {
+	return ms / 3600000;
+}

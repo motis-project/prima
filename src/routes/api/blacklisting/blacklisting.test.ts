@@ -3,7 +3,7 @@ import { Coordinates } from '$lib/location';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { getViableBusStops } from './viableBusStops';
 import type { Capacities } from '$lib/capacities';
-import { minutesToMs } from '$lib/time_utils';
+import { minutesToMs, MsToHours } from '$lib/time_utils';
 import {
 	addCompany,
 	addTaxi,
@@ -14,7 +14,8 @@ import {
 } from '$lib/testHelpers';
 import {
 	MAX_PASSENGER_WAITING_TIME_DROPOFF,
-	MAX_PASSENGER_WAITING_TIME_PICKUP
+	MAX_PASSENGER_WAITING_TIME_PICKUP,
+	VOLUME_CAP
 } from '$lib/constants';
 
 const inNiesky = new Coordinates(51.292260904642916, 14.822263713757678);
@@ -27,6 +28,9 @@ const dateInXMinutes = (x: number): Date => {
 const dateInXMinutesYMs = (x: number, y: number): Date => {
 	return new Date(BASE_DATE_MS + minutesToMs(x) + y);
 };
+const getCap = (from: Date, to: Date): number => {
+	return MsToHours(to.getTime() - from.getTime()) * VOLUME_CAP;
+};
 
 describe('blacklisting test', () => {
 	beforeEach(async () => {
@@ -37,8 +41,9 @@ describe('blacklisting test', () => {
 		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
 		const company = await addCompany(Zone.NIESKY);
 		const taxi = await addTaxi(company, capacities);
+		const cap = getCap(dateInXMinutes(0), dateInXMinutes(90));
 
-		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), cap);
 		await setTour(taxi, dateInXMinutes(0), dateInXMinutes(90));
 
 		const r: CheckBookingValidityParameters = {
@@ -55,8 +60,9 @@ describe('blacklisting test', () => {
 		const capacities: Capacities = { passengers: 3, bikes: 3, wheelchairs: 3, luggage: 3 };
 		const company = await addCompany(Zone.NIESKY);
 		const taxi = await addTaxi(company, capacities);
+		const cap = getCap(dateInXMinutes(0), dateInXMinutes(90));
 
-		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), cap);
 
 		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
@@ -343,8 +349,9 @@ describe('blacklisting test', () => {
 		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
 		const company = await addCompany(Zone.NIESKY);
 		const taxi = await addTaxi(company, capacities);
+		const cap = getCap(dateInXMinutes(0), dateInXMinutes(90));
 
-		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), cap);
 
 		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
@@ -365,8 +372,9 @@ describe('blacklisting test', () => {
 		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
 		const company = await addCompany(Zone.NIESKY);
 		const taxi = await addTaxi(company, capacities);
+		const cap = getCap(dateInXMinutes(0), dateInXMinutes(90));
 
-		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), cap);
 
 		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
@@ -387,8 +395,9 @@ describe('blacklisting test', () => {
 		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
 		const company = await addCompany(Zone.NIESKY);
 		const taxi = await addTaxi(company, capacities);
+		const cap = getCap(dateInXMinutes(0), dateInXMinutes(90));
 
-		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), cap);
 
 		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
@@ -406,8 +415,9 @@ describe('blacklisting test', () => {
 		const capacities: Capacities = { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 };
 		const company = await addCompany(Zone.NIESKY);
 		const taxi = await addTaxi(company, capacities);
+		const cap = getCap(dateInXMinutes(0), dateInXMinutes(90));
 
-		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90));
+		await setAvailability(taxi, dateInXMinutes(0), dateInXMinutes(90), cap);
 
 		const r: CheckBookingValidityParameters = {
 			userChosen: inNiesky,
