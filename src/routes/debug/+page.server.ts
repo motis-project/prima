@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types.js';
 import { db } from '$lib/server/db';
-import { readFloat } from '$lib/util/readForm.js';
+import { readFloat } from '$lib/server/util/readForm.js';
 import { bookRide } from '$lib/server/bookRide.js';
 
 export const actions = {

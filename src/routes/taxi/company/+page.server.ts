@@ -3,7 +3,7 @@ import { db } from '$lib/server/db/index.js';
 import type { PageServerLoad } from './$types.js';
 import { covers } from '$lib/server/db/covers.js';
 import { msg } from '$lib/msg.js';
-import { readFloat, readInt } from '$lib/util/readForm.js';
+import { readFloat, readInt } from '$lib/server/util/readForm.js';
 
 export const load: PageServerLoad = async (event) => {
 	const companyId = event.locals.session!.companyId!;

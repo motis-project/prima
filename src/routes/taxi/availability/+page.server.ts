@@ -4,7 +4,7 @@ import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import type { Actions, RequestEvent } from './$types';
 import { fail } from '@sveltejs/kit';
 import { msg } from '$lib/msg';
-import { readInt } from '$lib/util/readForm';
+import { readInt } from '$lib/server/util/readForm';
 
 export async function load(event) {
 	const companyId = event.locals.session?.companyId;

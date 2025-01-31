@@ -2,11 +2,11 @@ import { MAX_TRAVEL, MIN_PREP } from '$lib/constants';
 import { oneToManyCarRouting } from '$lib/util/oneToManyCarRouting';
 import type { Translations } from '$lib/i18n/translation';
 import { HOUR, SECOND } from '$lib/util/time';
-import { Interval } from '$lib/util/interval';
+import { Interval } from '$lib/server/util/interval';
 import { db } from './db';
 import { covers } from './db/covers';
-import { groupBy } from '$lib/util/groupBy';
-import { updateValues } from '$lib/util/updateValues';
+import { groupBy } from '$lib/server/util/groupBy';
+import { updateValues } from '$lib/server/util/updateValues';
 import { sql } from 'kysely';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
