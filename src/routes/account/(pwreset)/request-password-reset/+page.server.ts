@@ -33,7 +33,7 @@ export const actions: Actions = {
 			.updateTable('user')
 			.set({
 				passwordResetCode: generateRandomOTP(),
-				passwordResetExpiresAt: new Date(Date.now() + 10 * MINUTE)
+				passwordResetExpiresAt: Date.now() + 10 * MINUTE
 			})
 			.where('email', '=', email)
 			.returningAll()

@@ -29,7 +29,7 @@ async function createUser(name: string, email: string, password: string) {
 			passwordHash,
 			isEmailVerified: false,
 			emailVerificationCode: generateRandomOTP(),
-			emailVerificationExpiresAt: new Date(Date.now() + 10 * MINUTE),
+			emailVerificationExpiresAt: Date.now() + 10 * MINUTE,
 			passwordResetCode: null,
 			phone: null,
 			companyId: null,
@@ -89,7 +89,7 @@ export const actions: Actions = {
 		}
 		const sessionToken = generateSessionToken();
 		const session = await createSession(sessionToken, user.id);
-		setSessionTokenCookie(event, sessionToken, session.expiresAt);
+		setSessionTokenCookie(event, sessionToken, new Date(session.expiresAt));
 		return redirect(302, '/account');
 	}
 };

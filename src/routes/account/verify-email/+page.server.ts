@@ -47,7 +47,7 @@ export const actions: Actions = {
 			return fail(400, { msg: msg('enterYourCode') });
 		}
 
-		if (Date.now() >= event.locals.session!.expiresAt.getTime()) {
+		if (Date.now() >= event.locals.session!.expiresAt) {
 			const code = await updateEmailVerificationCode(event.locals.session!.userId);
 			try {
 				await sendMail(Welcome, `Willkommen zu ${PUBLIC_PROVIDER}`, event.locals.session!.email, {

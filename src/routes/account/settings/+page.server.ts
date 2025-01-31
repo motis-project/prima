@@ -47,7 +47,7 @@ export const actions: Actions = {
 			.set({
 				email,
 				emailVerificationCode: generateRandomOTP(),
-				emailVerificationExpiresAt: new Date(Date.now() + 10 * MINUTE),
+				emailVerificationExpiresAt: Date.now() + 10 * MINUTE,
 				isEmailVerified: false
 			})
 			.where('id', '=', event.locals.session!.userId)

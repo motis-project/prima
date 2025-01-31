@@ -50,9 +50,8 @@ export const DELETE = async ({ locals, request }) => {
 					eb.exists(
 						eb
 							.selectFrom('vehicle')
-							.where(({ eb }) =>
-								eb.and([eb('vehicle.id', '=', vehicleId), eb('vehicle.company', '=', companyId)])
-							)
+							.where('vehicle.id', '=', vehicleId)
+							.where('vehicle.company', '=', companyId)
 					)
 				])
 			)
