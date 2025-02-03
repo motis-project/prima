@@ -66,9 +66,11 @@ export interface Database {
 		lng: number;
 		scheduledTime: number;
 		communicatedTime: number;
+		directDuration: number | null;
+		prevLegDuration: number;
+		nextLegDuration: number;
+		eventGroup: string;
 		address: string;
-		tour: number;
-		customer: number;
 		request: number;
 	};
 	request: {
@@ -78,6 +80,7 @@ export interface Database {
 		bikes: number;
 		luggage: number;
 		tour: number;
+		customer: number;
 	};
 }
 
@@ -90,13 +93,19 @@ pg.types.setTypeParser(20, (val) => parseInt(val));
 export const db = new Kysely<Database>({
 	dialect,
 	plugins: [new CamelCasePlugin()],
-	log(event: LogEvent) {
-		if (event.level === 'error') {
-			console.error('Query failed : ', {
+	log(event) {
+		if (event.level === "error") {
+			console.error("Query failed : ", {
 				durationMs: event.queryDurationMillis,
 				error: event.error,
 				sql: event.query.sql,
-				params: event.query.parameters
+				params: event.query.parameters,
+			});
+		} else { // `'query'`
+			console.log("Query executed : ", {
+				durationMs: event.queryDurationMillis,
+				sql: event.query.sql,
+				params: event.query.parameters,
 			});
 		}
 	}
