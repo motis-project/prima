@@ -23,10 +23,30 @@ export const getTours = async (companyId?: number, timeRange?: [UnixtimeMs, Unix
 			jsonArrayFrom(
 				eb
 					.selectFrom('event')
-					.whereRef('event.tour', '=', 'tour.id')
-					.innerJoin('user', 'user.id', 'event.customer')
-					.selectAll(['event', 'tour', 'vehicle'])
-					.select(['user.name as customerName', 'user.phone as customerPhone'])
+					.innerJoin('request', 'request.id', 'event.request')
+					.whereRef('tour.id', '=', 'request.tour')
+					.innerJoin('user', 'user.id', 'request.customer')
+					.select([
+						'tour.id as tour',
+						'user.name as customerName',
+						'user.phone as customerPhone',
+						'event.id',
+						'event.communicatedTime',
+						'event.address',
+						'event.directDuration',
+						'event.eventGroup',
+						'event.isPickup',
+						'event.lat',
+						'event.lng',
+						'event.nextLegDuration',
+						'event.prevLegDuration',
+						'event.scheduledTime',
+						'request.bikes',
+						'request.customer',
+						'request.luggage',
+						'request.passengers',
+						'request.wheelchairs'
+					])
 					.orderBy('event.scheduledTime')
 			).as('events')
 		])

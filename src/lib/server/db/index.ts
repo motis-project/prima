@@ -41,10 +41,10 @@ export interface Database {
 		id: Generated<number>;
 		licensePlate: string;
 		company: number;
-		seats: number;
-		wheelchairCapacity: number;
-		bikeCapacity: number;
-		storageSpace: number;
+		passengers: number;
+		wheelchairs: number;
+		bikes: number;
+		luggage: number;
 	};
 	tour: {
 		id: Generated<number>;

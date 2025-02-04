@@ -98,10 +98,10 @@ const doesVehicleExist = (
 			.whereRef('vehicle.company', '=', 'company.id')
 			.where((eb) =>
 				eb.and([
-					eb('vehicle.seats', '>=', capacities.passengers),
-					eb('vehicle.bikeCapacity', '>=', capacities.bikes),
-					eb('vehicle.wheelchairCapacity', '>=', capacities.wheelchairs),
-					sql<boolean>`"vehicle"."storage_space" >= cast(${capacities.luggage} as integer) + cast(${capacities.passengers} as integer) - cast(${eb.ref('vehicle.seats')} as integer)`,
+					eb('vehicle.passengers', '>=', capacities.passengers),
+					eb('vehicle.bikes', '>=', capacities.bikes),
+					eb('vehicle.wheelchairs', '>=', capacities.wheelchairs),
+					sql<boolean>`"vehicle"."luggage" >= cast(${capacities.luggage} as integer) + cast(${capacities.passengers} as integer) - cast(${eb.ref('vehicle.passengers')} as integer)`,
 					eb.or([doesAvailabilityExist(eb), doesTourExist(eb)])
 				])
 			)

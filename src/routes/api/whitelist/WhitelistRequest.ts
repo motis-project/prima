@@ -62,12 +62,9 @@ export const schemaDefinitions = {
 			items: {
 				type: 'object',
 				properties: {
-					allOf: [
-						{ $ref: '#/definitions/coordinates' },
-						{
-							times: { $ref: '#/definitions/times' }
-						}
-					]
+					lat: { type: 'number', minimum: -90, maximum: 90 },
+					lng: { type: 'number', minimum: -180, maximum: 180 },
+					times: { $ref: '#/definitions/times' }
 				},
 				required: ['lat', 'lng', 'times']
 			}

@@ -39,10 +39,10 @@ export const addTaxi = async (company: number, capacities: Capacities): Promise<
 			.values({
 				licensePlate: uuidv4(),
 				company,
-				seats: capacities.passengers,
-				wheelchairCapacity: capacities.wheelchairs,
-				bikeCapacity: capacities.bikes,
-				storageSpace: capacities.luggage
+				passengers: capacities.passengers,
+				wheelchairs: capacities.wheelchairs,
+				bikes: capacities.bikes,
+				luggage: capacities.luggage
 			})
 			.returning('id')
 			.executeTakeFirstOrThrow()

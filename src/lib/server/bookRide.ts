@@ -108,10 +108,10 @@ export const bookRide = async (req: BookingRequest): Promise<Booking | BookingEr
 					.selectAll()
 					.where((eb) =>
 						eb.and([
-							eb('vehicle.wheelchairCapacity', '>=', req.nWheelchairs),
-							eb('vehicle.bikeCapacity', '>=', req.nBikes),
-							eb('vehicle.seats', '>=', req.nPassengers),
-							eb('vehicle.storageSpace', '>=', req.nLuggage)
+							eb('vehicle.wheelchairs', '>=', req.nWheelchairs),
+							eb('vehicle.bikes', '>=', req.nBikes),
+							eb('vehicle.passengers', '>=', req.nPassengers),
+							eb('vehicle.luggage', '>=', req.nLuggage)
 						])
 					)
 					.as('vehicle'),
@@ -163,7 +163,7 @@ export const bookRide = async (req: BookingRequest): Promise<Booking | BookingEr
 
 	console.assert(
 		Math.max(...[...mergedAvailabilites.values()].map((availabilities) => availabilities.length)) <=
-			1
+		1
 	);
 
 	const availableVehicles = [...mergedAvailabilites.entries()]

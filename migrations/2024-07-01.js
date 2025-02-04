@@ -50,10 +50,10 @@ export async function up(db) {
 		.addColumn('id', 'serial', (col) => col.primaryKey())
 		.addColumn('license_plate', 'varchar', (col) => col.notNull().unique())
 		.addColumn('company', 'integer', (col) => col.references('company.id').notNull())
-		.addColumn('seats', 'integer', (col) => col.notNull())
-		.addColumn('wheelchair_capacity', 'integer', (col) => col.notNull())
-		.addColumn('bike_capacity', 'integer', (col) => col.notNull())
-		.addColumn('storage_space', 'integer', (col) => col.notNull())
+		.addColumn('passengers', 'integer', (col) => col.notNull())
+		.addColumn('wheelchairs', 'integer', (col) => col.notNull())
+		.addColumn('bikes', 'integer', (col) => col.notNull())
+		.addColumn('luggage', 'integer', (col) => col.notNull())
 		.execute();
 
 	await db.schema

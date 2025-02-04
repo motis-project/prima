@@ -75,10 +75,10 @@ export const actions: Actions = {
 		const licensePlate = formData.get('licensePlate');
 		const bike = formData.get('bike');
 		const wheelchair = formData.get('wheelchair');
-		const storageSpace = readInt(formData.get('storageSpace'));
-		const seats = readInt(formData.get('seats'));
+		const luggage = readInt(formData.get('luggage'));
+		const passengers = readInt(formData.get('passengers'));
 
-		if (seats !== 3 && seats !== 5 && seats !== 7) {
+		if (passengers !== 3 && passengers !== 5 && passengers !== 7) {
 			return fail(400, { msg: msg('invalidSeats') });
 		}
 
@@ -89,7 +89,7 @@ export const actions: Actions = {
 			return fail(400, { msg: msg('invalidLicensePlate') });
 		}
 
-		if (isNaN(storageSpace) || storageSpace <= 0 || storageSpace >= 11) {
+		if (isNaN(luggage) || luggage <= 0 || luggage >= 11) {
 			return fail(400, { msg: msg('invalidStorage') });
 		}
 
@@ -99,10 +99,10 @@ export const actions: Actions = {
 				.values({
 					licensePlate,
 					company,
-					seats,
-					storageSpace,
-					wheelchairCapacity: !wheelchair ? 0 : 1,
-					bikeCapacity: !bike ? 0 : 1
+					passengers,
+					luggage,
+					wheelchairs: !wheelchair ? 0 : 1,
+					bikes: !bike ? 0 : 1
 				})
 				.execute();
 		} catch (e) {
