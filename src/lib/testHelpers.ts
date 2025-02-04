@@ -49,7 +49,11 @@ export const addTaxi = async (company: number, capacities: Capacities): Promise<
 	).id;
 };
 
-export const setAvailability = async (vehicle: number, startTime: UnixtimeMs, endTime: UnixtimeMs) => {
+export const setAvailability = async (
+	vehicle: number,
+	startTime: UnixtimeMs,
+	endTime: UnixtimeMs
+) => {
 	await db.insertInto('availability').values({ vehicle, startTime, endTime }).execute();
 };
 

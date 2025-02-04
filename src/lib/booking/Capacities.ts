@@ -1,6 +1,6 @@
 export type Capacities = {
-  wheelchairs: number;
-  bikes: number;
-  passengers: number;
-  luggage: number;
+	wheelchairs: number;
+	bikes: number;
+	passengers: number;
+	luggage: number;
 };

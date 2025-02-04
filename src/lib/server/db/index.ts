@@ -94,18 +94,19 @@ export const db = new Kysely<Database>({
 	dialect,
 	plugins: [new CamelCasePlugin()],
 	log(event) {
-		if (event.level === "error") {
-			console.error("Query failed : ", {
+		if (event.level === 'error') {
+			console.error('Query failed : ', {
 				durationMs: event.queryDurationMillis,
 				error: event.error,
 				sql: event.query.sql,
-				params: event.query.parameters,
+				params: event.query.parameters
 			});
-		} else { // `'query'`
-			console.log("Query executed : ", {
+		} else {
+			// `'query'`
+			console.log('Query executed : ', {
 				durationMs: event.queryDurationMillis,
 				sql: event.query.sql,
-				params: event.query.parameters,
+				params: event.query.parameters
 			});
 		}
 	}
