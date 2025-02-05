@@ -30,7 +30,6 @@ const selectEvents = (eb: ExpressionBuilder<Database, 'tour'>) => {
 				'event.isPickup',
 				'event.prevLegDuration',
 				'event.nextLegDuration',
-				'event.directDuration',
 				'event.eventGroup'
 			])
 	).as('events');

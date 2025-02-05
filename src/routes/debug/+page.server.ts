@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types.js';
 import { db } from '$lib/server/db';
 import { readFloat } from '$lib/server/util/readForm.js';
-import { bookRide } from '$lib/server/bookRide.js';
+import { bookRide } from '$lib/server/booking/bookRide.js';
 import { sql } from 'kysely';
 
 export const actions = {

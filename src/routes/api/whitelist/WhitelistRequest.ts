@@ -8,7 +8,7 @@ export type WhitelistRequest = {
 	target: Coordinates;
 	startBusStops: BusStop[];
 	targetBusStops: BusStop[];
-	times: UnixtimeMs[];
+	directTimes: UnixtimeMs[];
 	startFixed: boolean;
 	capacities: Capacities;
 };
@@ -67,6 +67,21 @@ export const schemaDefinitions = {
 			}
 		}
 	}
+};
+
+export const bookingSchema = {
+	$schema: 'http://json-schema.org/draft-07/schema#',
+	type: 'object',
+	properties: {
+		connection1: {
+			oneOf: [{ $ref: '/schemaDefinitions#/definitions/connection' }, { type: 'null' }]
+		},
+		connection2: {
+			oneOf: [{ $ref: '/schemaDefinitions#/definitions/connection' }, { type: 'null' }]
+		},
+		capacities: { $ref: '/schemaDefinitions#/definitions/capacities' }
+	},
+	required: ['connection1', 'capacities']
 };
 
 export const whitelistSchema = {

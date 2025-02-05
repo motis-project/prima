@@ -13,6 +13,25 @@ services:
         source: data-volume
         target: /var/lib/postgresql/data
 
+  motis-import:
+    image: ghcr.io/motis-project/motis:2.0
+    volumes:
+      - ./GTFS.zip:/input/GTFS.zip
+      - ./osm.pbf:/input/osm.pbf
+      - ./config.yml:/config.yml
+      - motis-data:/data:rw
+    command: /bin/sh -c "./motis import"
+
+  motis-server:
+    image: ghcr.io/motis-project/motis:2.0
+    depends_on:
+      - motis-import
+    volumes:
+      - motis-data:/data:rw
+    ports:
+      - 8080:8080
+    command: /bin/sh -c "cd / && /motis server"
+
   adminer:
     image: adminer
     restart: always
@@ -32,3 +51,4 @@ services:
 
 volumes:
   data-volume:
+  motis-data:

@@ -33,7 +33,6 @@ export const getTours = async (companyId?: number, timeRange?: [UnixtimeMs, Unix
 						'event.id',
 						'event.communicatedTime',
 						'event.address',
-						'event.directDuration',
 						'event.eventGroup',
 						'event.isPickup',
 						'event.lat',

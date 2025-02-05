@@ -1,0 +1,11 @@
+osm: /input/osm.pbf
+tiles:
+  profile: tiles-profiles/full.lua
+timetable:
+  datasets:
+    GTFS:
+      path: /input/GTFS.zip
+street_routing: true
+osr_footpath: false
+geocoding: true
+reverse_geocoding: true

@@ -3,14 +3,17 @@ import { getBookingAvailability } from '$lib/server/booking/getBookingAvailabili
 import { MAX_TRAVEL } from '$lib/constants';
 import { Interval } from '$lib/server/util/interval';
 import type { Coordinates } from '$lib/util/Coordinates';
-import type { BusStop } from './WhitelistRequest';
+import { evaluateRequest } from '$lib/server/booking/evaluateRequest';
+import type { BusStop } from '$lib/server/booking/BusStop';
+import type { Insertion, InsertionEvaluation } from '$lib/server/booking/insertion';
+import { InsertHow, printInsertionType } from '$lib/server/booking/insertionTypes';
 
 export async function whitelist(
 	userChosen: Coordinates,
 	busStops: BusStop[],
 	required: Capacities,
 	startFixed: boolean
-) {
+): Promise<Array<(Insertion | undefined)[]>> {
 	if (busStops.length == 0) {
 		return [];
 	}
@@ -50,12 +53,9 @@ export async function whitelist(
 		userChosen,
 		validBusStops,
 		required,
-		startFixed,
-		undefined
+		startFixed
 	);
-	const ret: (InsertionEvaluation | undefined)[][] = new Array<(InsertionEvaluation | undefined)[]>(
-		filteredBusStops.length
-	);
+	const ret = new Array<(Insertion | undefined)[]>(filteredBusStops.length);
 	for (let i = 0; i != filteredBusStops.length; ++i) {
 		if (filteredBusStops[i] == undefined) {
 			ret[i] = new Array<undefined>(busStops[i].times.length);
@@ -67,7 +67,7 @@ export async function whitelist(
 	return ret;
 }
 
-export function printMsg(b: InsertionEvaluation | undefined) {
+export function printMsg(b: Insertion | undefined) {
 	if (b == undefined) {
 		console.log('    not possible');
 		return;
@@ -83,9 +83,9 @@ export function printMsg(b: InsertionEvaluation | undefined) {
 	}
 	console.assert(
 		b.pickupIdx != undefined &&
-			b.dropoffIdx != undefined &&
-			b.pickupCase.how != InsertHow.NEW_TOUR &&
-			b.dropoffCase.how != InsertHow.NEW_TOUR,
+		b.dropoffIdx != undefined &&
+		b.pickupCase.how != InsertHow.NEW_TOUR &&
+		b.dropoffCase.how != InsertHow.NEW_TOUR,
 		'defined pickupIdx has unexpected behaviour'
 	);
 	if (b.pickupIdx == b.dropoffIdx) {

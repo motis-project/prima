@@ -1,4 +1,3 @@
-import type { BusStop } from '../whitelist/WhitelistRequest';
 import {
 	MAX_PASSENGER_WAITING_TIME_PICKUP,
 	MAX_PASSENGER_WAITING_TIME_DROPOFF,
@@ -10,6 +9,7 @@ import type { ExpressionBuilder } from 'kysely';
 import { sql, type RawBuilder } from 'kysely';
 import type { Coordinates } from '$lib/util/Coordinates';
 import type { Capacities } from '$lib/server/booking/Capacities';
+import type { BusStop } from '$lib/server/booking/BusStop';
 
 interface CoordinatesTable {
 	busStopIndex: number;

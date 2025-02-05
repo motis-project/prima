@@ -85,7 +85,8 @@ export const setEvent = async (
 		.values({
 			request: requestId,
 			communicatedTime: t,
-			scheduledTime: t,
+			scheduledTimeStart: t,
+			scheduledTimeEnd: t,
 			prevLegDuration: 0,
 			nextLegDuration: 0,
 			eventGroup: '',
@@ -98,7 +99,7 @@ export const setEvent = async (
 };
 
 export const addTestUser = async () => {
-	await db
+	return await db
 		.insertInto('user')
 		.values({
 			email: 'test@user.de',
@@ -109,7 +110,8 @@ export const addTestUser = async () => {
 			passwordHash:
 				'$argon2id$v=19$m=19456,t=2,p=1$4lXilBjWTY+DsYpN0eATrw$imFLatxSsy9WjMny7MusOJeAJE5ZenrOEqD88YsZv8o'
 		})
-		.execute();
+		.returning('id')
+		.executeTakeFirstOrThrow();
 };
 
 export const clearDatabase = async () => {

@@ -9,8 +9,8 @@ import type { Coordinates } from "$lib/util/Coordinates";
 import { evaluateRequest } from "$lib/server/booking/evaluateRequest";
 import { InsertHow } from "$lib/server/booking/insertionTypes";
 import { getEventGroupInfo } from "$lib/server/booking/getEventGroupInfo";
-import { getDirectDurations } from "./booking/getDirectDrivingDurations";
-import { getMergeTourList } from "./booking/getMergeToorList";
+import { getDirectDurations } from "./getDirectDrivingDurations";
+import { getMergeTourList } from "./getMergeToorList";
 
 export type ExpectedConnection = {
 	start: Coordinates;
@@ -99,7 +99,8 @@ export async function bookRide(
 		best,
 		prevEventInOtherTour,
 		nextEventInOtherTour,
-		c
+		c,
+		events[best.pickupIdx ?? -1]?.tourId
 	);
 	console.log('BE');
 	const prevPickupEvent = best.pickupIdx == undefined ? undefined : events[best.pickupIdx - 1];

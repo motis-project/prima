@@ -52,6 +52,7 @@ export interface Database {
 		arrival: number;
 		vehicle: number;
 		fare: number | null;
+		directDuration: number | null;
 	};
 	availability: {
 		id: Generated<number>;
@@ -67,7 +68,6 @@ export interface Database {
 		scheduledTimeStart: number;
 		scheduledTimeEnd: number;
 		communicatedTime: number;
-		directDuration: number | null;
 		prevLegDuration: number;
 		nextLegDuration: number;
 		eventGroup: string;

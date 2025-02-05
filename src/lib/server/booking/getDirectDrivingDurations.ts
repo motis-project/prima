@@ -1,12 +1,13 @@
-import type { ExpectedConnection } from "../bookRide";
+import type { ExpectedConnection } from "./bookRide";
 import { oneToManyCarRouting } from "../util/oneToManyCarRouting";
-import type { InsertionEvaluation } from "./insertion";
+import type { Insertion } from "./insertion";
 import { InsertHow } from "./insertionTypes";
 import { type Event } from './getBookingAvailability';
 
 export type DirectDrivingDurations = {
   thisTour?: {
     directDrivingDuration: number;
+    tourId: number | null;
   },
   nextTour?: {
     directDrivingDuration: number;
@@ -15,10 +16,11 @@ export type DirectDrivingDurations = {
 };
 
 export const getDirectDurations = async (
-  best: InsertionEvaluation,
+  best: Insertion,
   pickupPredEvent: Event | undefined,
   dropOffSuccEvent: Event | undefined,
-  c: ExpectedConnection
+  c: ExpectedConnection,
+  tourIdPickup: number | undefined
 ): Promise<DirectDrivingDurations> => {
   const direct: DirectDrivingDurations = {};
 
@@ -28,6 +30,7 @@ export const getDirectDurations = async (
   ) {
     direct.thisTour = {
       directDrivingDuration: (await oneToManyCarRouting(pickupPredEvent, [c.start], false))[0] ?? null,
+      tourId: tourIdPickup ?? null
     };
   }
 

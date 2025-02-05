@@ -4,7 +4,7 @@ import type { RequestEvent } from './$types';
 import { json } from '@sveltejs/kit';
 import { schemaDefinitions, whitelistSchema } from '../whitelist/WhitelistRequest';
 import { type WhitelistRequest as BlacklistRequest } from '../whitelist/WhitelistRequest';
-import type { BusStop } from '../whitelist/WhitelistRequest';
+import type { BusStop } from '$lib/server/booking/BusStop';
 
 export const POST = async (event: RequestEvent) => {
 	// Validate parameters.
@@ -19,7 +19,7 @@ export const POST = async (event: RequestEvent) => {
 	// Add direct lookup to either start or target.
 	const directAsBusStop = {
 		...(parameters.startFixed ? parameters.start : parameters.target),
-		times: parameters.times
+		times: parameters.directTimes
 	};
 	if (parameters.startFixed) {
 		parameters.targetBusStops.push(directAsBusStop);
@@ -38,6 +38,9 @@ export const POST = async (event: RequestEvent) => {
 		const response = new Array<boolean[]>(busStops.length);
 		for (let i = 0; i != response.length; ++i) {
 			response[i] = new Array<boolean>(busStops[i].times.length);
+			for (let j = 0; j != response[i].length; ++j) {
+				response[i][j] = false;
+			}
 		}
 		allowedConnections.forEach((s) => {
 			response[s.busStopIndex][s.timeIndex] = true;
@@ -57,5 +60,6 @@ export const POST = async (event: RequestEvent) => {
 		startResponse = startResponse.slice(0, startResponse.length - 1);
 	}
 
+	console.log({ startResponse, targetResponse, directResponse });
 	return json({ start: startResponse, target: targetResponse, direct: directResponse });
 };
