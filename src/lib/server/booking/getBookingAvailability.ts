@@ -241,6 +241,9 @@ export const getBookingAvailability = async (
 		busStops,
 		trx
 	);
+
+	console.log("getBookingAvailabilty: dbResult=", JSON.stringify(dbResult, null, "\t"));
+
 	if (!dbResult) {
 		return {
 			companies: [],

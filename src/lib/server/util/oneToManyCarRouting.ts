@@ -26,7 +26,8 @@ export const oneToManyCarRouting = async (
 			arriveBy
 		}
 	}).then((res) => {
-		return res.data!.map((d: Duration) => {
+		return res.data!.map((d: Duration, i) => {
+			console.log("ROUTING: ", lngLatToStr(one), lngLatToStr(many[i]), new Date(secondToMilli(d.duration ?? 0)).toISOString());
 			return secondToMilli(d.duration ?? Number.MAX_VALUE);
 		});
 	});

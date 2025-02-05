@@ -28,7 +28,7 @@ async function updateEmailVerificationCode(userId: number) {
 
 export async function load(event: RequestEvent) {
 	if (event.locals.session!.isEmailVerified) {
-		return redirect(302, '/user');
+		return redirect(302, '/account');
 	}
 	return {
 		email: event.locals.session!.email,

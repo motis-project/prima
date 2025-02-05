@@ -125,12 +125,12 @@
 				{#if tour}
 					<div class="rounded bg-primary-foreground p-2">Startzeit</div>
 					<div class="rounded bg-primary-foreground p-2">
-						{tour!.startTime.toLocaleString('de-DE').slice(0, -3)}
+						{new Date(tour!.startTime).toLocaleString('de-DE').slice(0, -3)}
 					</div>
 
 					<div class="rounded bg-primary-foreground p-2">Endzeit</div>
 					<div class="rounded bg-primary-foreground p-2">
-						{tour!.endTime.toLocaleString('de-DE').slice(0, -3)}
+						{new Date(tour!.endTime).toLocaleString('de-DE').slice(0, -3)}
 					</div>
 
 					<div class="rounded bg-primary-foreground p-2">Kennzeichen</div>
@@ -226,7 +226,7 @@
 						{#each tour!.events as event}
 							<Table.Row>
 								<Table.Cell>
-									{getScheduledEventTime(event)
+									{new Date(getScheduledEventTime(event))
 										.toLocaleString('de-DE')
 										.slice(0, -3)
 										.replace(',', ' ')}

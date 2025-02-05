@@ -23,7 +23,7 @@ export async function bookRide(
 	c: ExpectedConnection,
 	required: Capacities,
 	startFixed: boolean,
-	trx: Transaction<Database>
+	trx?: Transaction<Database>
 ) {
 	console.log('BS');
 	const searchInterval = new Interval(c.startTime, c.targetTime);

@@ -14,6 +14,12 @@ export async function whitelist(
 	required: Capacities,
 	startFixed: boolean
 ): Promise<Array<(Insertion | undefined)[]>> {
+	console.log("Whitelist Request: ", JSON.stringify({
+		userChosen, busStops: busStops.map((b) => { return { ...b, times: b.times.map((t) => new Date(t).toISOString()) } }),
+		required,
+		startFixed
+	}, null, "\t"));
+
 	if (busStops.length == 0) {
 		return [];
 	}
@@ -40,6 +46,7 @@ export async function whitelist(
 		searchInterval,
 		busStops
 	);
+	console.log("Whitelist Request: ", JSON.stringify({ companies, filteredBusStops }, null, "\t"));
 
 	const validBusStops = new Array<BusStop>();
 	for (let i = 0; i != filteredBusStops.length; ++i) {

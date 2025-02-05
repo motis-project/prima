@@ -101,7 +101,7 @@ export async function up(db) {
 		.addColumn('next_leg_duration', 'integer', (col) => col.notNull())
 		// all successive events taking place at the same physical location share the same event group
 		.addColumn('event_group', 'varchar', (col) => col.notNull())
-		.addColumn('request', 'integer', (col) => col.references('request.id'))
+		.addColumn('request', 'integer', (col) => col.references('request.id').notNull())
 		.addColumn('address', 'varchar', (col) => col.notNull())
 		.execute();
 
