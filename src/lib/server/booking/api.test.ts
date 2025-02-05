@@ -69,6 +69,7 @@ beforeEach(async () => {
 	await clearDatabase();
 	mockUserId = (await addTestUser()).id;
 	sessionToken = 'generateSessionToken()';
+	console.log('Creating session for user ', mockUserId);
 	await createSession(sessionToken, mockUserId);
 });
 
@@ -99,6 +100,7 @@ describe('Whitelist and Booking API Tests', () => {
 		expect(blackResponse.direct[0]).toBe(false);
 
 		const whiteResponse = await white(body).then((r) => r.json());
+		console.log('whiteResponse', whiteResponse);
 		expect(whiteResponse.start.length).toBe(0);
 		expect(whiteResponse.target.length).toBe(1);
 		for (let i = 0; i != whiteResponse.target.length; ++i) {
