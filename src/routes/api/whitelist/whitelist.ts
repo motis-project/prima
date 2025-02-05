@@ -5,7 +5,7 @@ import { Interval } from '$lib/server/util/interval';
 import type { Coordinates } from '$lib/util/Coordinates';
 import { evaluateRequest } from '$lib/server/booking/evaluateRequest';
 import type { BusStop } from '$lib/server/booking/BusStop';
-import type { Insertion, InsertionEvaluation } from '$lib/server/booking/insertion';
+import type { Insertion } from '$lib/server/booking/insertion';
 import { InsertHow, printInsertionType } from '$lib/server/booking/insertionTypes';
 
 export async function whitelist(
@@ -14,11 +14,21 @@ export async function whitelist(
 	required: Capacities,
 	startFixed: boolean
 ): Promise<Array<(Insertion | undefined)[]>> {
-	console.log("Whitelist Request: ", JSON.stringify({
-		userChosen, busStops: busStops.map((b) => { return { ...b, times: b.times.map((t) => new Date(t).toISOString()) } }),
-		required,
-		startFixed
-	}, null, "\t"));
+	console.log(
+		'Whitelist Request: ',
+		JSON.stringify(
+			{
+				userChosen,
+				busStops: busStops.map((b) => {
+					return { ...b, times: b.times.map((t) => new Date(t).toISOString()) };
+				}),
+				required,
+				startFixed
+			},
+			null,
+			'\t'
+		)
+	);
 
 	if (busStops.length == 0) {
 		return [];
@@ -46,7 +56,7 @@ export async function whitelist(
 		searchInterval,
 		busStops
 	);
-	console.log("Whitelist Request: ", JSON.stringify({ companies, filteredBusStops }, null, "\t"));
+	console.log('Whitelist Request: ', JSON.stringify({ companies, filteredBusStops }, null, '\t'));
 
 	const validBusStops = new Array<BusStop>();
 	for (let i = 0; i != filteredBusStops.length; ++i) {
@@ -90,9 +100,9 @@ export function printMsg(b: Insertion | undefined) {
 	}
 	console.assert(
 		b.pickupIdx != undefined &&
-		b.dropoffIdx != undefined &&
-		b.pickupCase.how != InsertHow.NEW_TOUR &&
-		b.dropoffCase.how != InsertHow.NEW_TOUR,
+			b.dropoffIdx != undefined &&
+			b.pickupCase.how != InsertHow.NEW_TOUR &&
+			b.dropoffCase.how != InsertHow.NEW_TOUR,
 		'defined pickupIdx has unexpected behaviour'
 	);
 	if (b.pickupIdx == b.dropoffIdx) {

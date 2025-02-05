@@ -47,7 +47,7 @@ export const actions = {
 			luggage: 0,
 			passengers: 1,
 			wheelchairs: 0
-		}
+		};
 		const start = { lat: fromLat, lng: fromLng, address: '' };
 		const target = { lat: toLat, lng: toLng, address: '' };
 		const whitelistResult = await whitelist(
@@ -57,22 +57,26 @@ export const actions = {
 			false
 		);
 
-		console.log("whitelistResult: ", JSON.stringify(whitelistResult, null, '\t'));
+		console.log('whitelistResult: ', JSON.stringify(whitelistResult, null, '\t'));
 
 		const result = whitelistResult[0][0];
 		if (result == undefined) {
 			return { msg: 'noVehicle' };
 		}
 
-		const connection = { start, target, startTime: result.pickupTime, targetTime: result.dropoffTime };
+		const connection = {
+			start,
+			target,
+			startTime: result.pickupTime,
+			targetTime: result.dropoffTime
+		};
 		const booking = await bookRide(connection, capacities, true);
 
-		console.log("booking: ", JSON.stringify(booking, null, '\t'));
+		console.log('booking: ', JSON.stringify(booking, null, '\t'));
 
 		if (booking == undefined) {
 			return { msg: 'noVehicle' };
 		}
-
 
 		await db.transaction().execute(async (trx) => {
 			await insertRequest(

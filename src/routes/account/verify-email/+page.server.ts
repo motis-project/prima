@@ -18,7 +18,7 @@ async function updateEmailVerificationCode(userId: number) {
 			.updateTable('user')
 			.set({
 				emailVerificationCode: generateRandomOTP(),
-				emailVerificationExpiresAt: new Date(Date.now() + 10 * MINUTE)
+				emailVerificationExpiresAt: Date.now() + 10 * MINUTE
 			})
 			.where('id', '=', userId)
 			.returning('emailVerificationCode')

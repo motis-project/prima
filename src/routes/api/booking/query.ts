@@ -7,47 +7,47 @@ import type { Database } from '$lib/server/db';
 import { sql, Transaction } from 'kysely';
 
 export async function insertRequest(
-  connection: Insertion,
-  capacities: Capacities,
-  c: ExpectedConnection,
-  customer: number,
-  updateEventGroupList: EventGroupUpdate[],
-  mergeTourList: number[],
-  startEventGroup: string,
-  targetEventGroup: string,
-  neighbourIds: NeighbourIds,
-  direct: DirectDrivingDurations,
-  trx: Transaction<Database>
+	connection: Insertion,
+	capacities: Capacities,
+	c: ExpectedConnection,
+	customer: number,
+	updateEventGroupList: EventGroupUpdate[],
+	mergeTourList: number[],
+	startEventGroup: string,
+	targetEventGroup: string,
+	neighbourIds: NeighbourIds,
+	direct: DirectDrivingDurations,
+	trx: Transaction<Database>
 ) {
-  mergeTourList = mergeTourList.filter((id) => id != connection.tour);
-  const approachDurations = new Array<{ id: number; approach_duration: number }>();
-  if (neighbourIds.nextDropoff != neighbourIds.nextPickup && neighbourIds.nextPickup) {
-    approachDurations.push({
-      id: neighbourIds.nextPickup,
-      approach_duration: connection.pickupNextLegDuration
-    });
-  }
-  if (neighbourIds.nextDropoff) {
-    approachDurations.push({
-      id: neighbourIds.nextDropoff,
-      approach_duration: connection.dropoffNextLegDuration
-    });
-  }
+	mergeTourList = mergeTourList.filter((id) => id != connection.tour);
+	const approachDurations = new Array<{ id: number; approach_duration: number }>();
+	if (neighbourIds.nextDropoff != neighbourIds.nextPickup && neighbourIds.nextPickup) {
+		approachDurations.push({
+			id: neighbourIds.nextPickup,
+			approach_duration: connection.pickupNextLegDuration
+		});
+	}
+	if (neighbourIds.nextDropoff) {
+		approachDurations.push({
+			id: neighbourIds.nextDropoff,
+			approach_duration: connection.dropoffNextLegDuration
+		});
+	}
 
-  const returnDurations = new Array<{ id: number; return_duration: number }>();
-  if (neighbourIds.prevPickup) {
-    returnDurations.push({
-      id: neighbourIds.prevPickup,
-      return_duration: connection.pickupPrevLegDuration
-    });
-  }
-  if (neighbourIds.prevDropoff != neighbourIds.prevPickup && neighbourIds.prevDropoff) {
-    returnDurations.push({
-      id: neighbourIds.prevDropoff,
-      return_duration: connection.dropoffPrevLegDuration
-    });
-  }
-  await sql`
+	const returnDurations = new Array<{ id: number; return_duration: number }>();
+	if (neighbourIds.prevPickup) {
+		returnDurations.push({
+			id: neighbourIds.prevPickup,
+			return_duration: connection.pickupPrevLegDuration
+		});
+	}
+	if (neighbourIds.prevDropoff != neighbourIds.prevPickup && neighbourIds.prevDropoff) {
+		returnDurations.push({
+			id: neighbourIds.prevDropoff,
+			return_duration: connection.dropoffPrevLegDuration
+		});
+	}
+	await sql`
         CALL create_and_merge_tours(
             ROW(${capacities.passengers}, ${capacities.wheelchairs}, ${capacities.bikes}, ${capacities.luggage}, ${customer}),
             ROW(${true}, ${c.start.lat}, ${c.start.lng}, ${connection.pickupTime}, ${connection.pickupTime}, ${connection.pickupTime}, ${connection.pickupPrevLegDuration}, ${connection.pickupNextLegDuration}, ${c.start.address}, ${startEventGroup}),

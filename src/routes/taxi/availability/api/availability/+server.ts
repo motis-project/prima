@@ -1,8 +1,7 @@
-import { db } from '$lib/server/db';
+import { db, type Database } from '$lib/server/db';
 import { Interval } from '$lib/server/util/interval';
 import { json } from '@sveltejs/kit';
 import { sql, type Insertable, type Selectable } from 'kysely';
-import type Database from 'lucide-svelte/icons/database';
 
 type Availability = Selectable<Database['availability']>;
 type NewAvailability = Insertable<Database['availability']>;
@@ -36,7 +35,7 @@ export const DELETE = async ({ locals, request }) => {
 		throw 'invalid params';
 	}
 
-	const toRemove = new Interval(new Date(from), new Date(to));
+	const toRemove = new Interval(from, to);
 	console.log('remove availability vehicle=', vehicleId, 'toRemove=', toRemove);
 	await db.transaction().execute(async (trx) => {
 		await sql`LOCK TABLE availability IN ACCESS EXCLUSIVE MODE;`.execute(trx);
@@ -61,7 +60,7 @@ export const DELETE = async ({ locals, request }) => {
 		const cut: Array<Availability> = [];
 		const create: Array<NewAvailability> = [];
 		overlapping.forEach((a) => {
-			const availability = new Interval(new Date(a.startTime), new Date(a.endTime));
+			const availability = new Interval(a.startTime, a.endTime);
 			if (toRemove.contains(availability)) {
 				toRemoveIds.push(a.id);
 			} else if (availability.contains(toRemove) && !availability.eitherEndIsEqual(toRemove)) {

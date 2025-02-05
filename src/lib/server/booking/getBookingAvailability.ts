@@ -155,26 +155,26 @@ const createVehicle = (v: DbVehicle, expandedSearchInterval: Interval) => {
 			toursBefore.length == 0
 				? undefined
 				: toursBefore
-					.flatMap((tour) => tour.events.map((event) => createEvent(event)))
-					.reduce((max, current) => {
-						return max == undefined
-							? current
-							: current.communicatedTime > max.communicatedTime
+						.flatMap((tour) => tour.events.map((event) => createEvent(event)))
+						.reduce((max, current) => {
+							return max == undefined
 								? current
-								: max;
-					}),
+								: current.communicatedTime > max.communicatedTime
+									? current
+									: max;
+						}),
 		firstEventAfter:
 			toursAfter.length == 0
 				? undefined
 				: toursAfter
-					.flatMap((tour) => tour.events.map((event) => createEvent(event)))
-					.reduce((min, current) => {
-						return min == undefined
-							? current
-							: current.communicatedTime < min.communicatedTime
+						.flatMap((tour) => tour.events.map((event) => createEvent(event)))
+						.reduce((min, current) => {
+							return min == undefined
 								? current
-								: min;
-					})
+								: current.communicatedTime < min.communicatedTime
+									? current
+									: min;
+						})
 	};
 };
 
@@ -242,7 +242,7 @@ export const getBookingAvailability = async (
 		trx
 	);
 
-	console.log("getBookingAvailabilty: dbResult=", JSON.stringify(dbResult, null, "\t"));
+	console.log('getBookingAvailabilty: dbResult=', JSON.stringify(dbResult, null, '\t'));
 
 	if (!dbResult) {
 		return {

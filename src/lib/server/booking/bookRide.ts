@@ -1,16 +1,16 @@
-import type { Transaction } from "kysely";
-import type { Capacities } from "$lib/server/booking/Capacities";
-import type { Database } from "$lib/server/db";
-import { Interval } from "$lib/server/util/interval";
-import type { UnixtimeMs } from "$lib/util/UnixtimeMs";
-import { MAX_TRAVEL } from "$lib/constants";
-import { getBookingAvailability } from "$lib/server/booking/getBookingAvailability";
-import type { Coordinates } from "$lib/util/Coordinates";
-import { evaluateRequest } from "$lib/server/booking/evaluateRequest";
-import { InsertHow } from "$lib/server/booking/insertionTypes";
-import { getEventGroupInfo } from "$lib/server/booking/getEventGroupInfo";
-import { getDirectDurations } from "./getDirectDrivingDurations";
-import { getMergeTourList } from "./getMergeToorList";
+import type { Transaction } from 'kysely';
+import type { Capacities } from '$lib/server/booking/Capacities';
+import type { Database } from '$lib/server/db';
+import { Interval } from '$lib/server/util/interval';
+import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
+import { MAX_TRAVEL } from '$lib/constants';
+import { getBookingAvailability } from '$lib/server/booking/getBookingAvailability';
+import type { Coordinates } from '$lib/util/Coordinates';
+import { evaluateRequest } from '$lib/server/booking/evaluateRequest';
+import { InsertHow } from '$lib/server/booking/insertionTypes';
+import { getEventGroupInfo } from '$lib/server/booking/getEventGroupInfo';
+import { getDirectDurations } from './getDirectDrivingDurations';
+import { getMergeTourList } from './getMergeToorList';
 
 export type ExpectedConnection = {
 	start: Coordinates;
