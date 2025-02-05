@@ -1,4 +1,4 @@
-import { type Generated, CamelCasePlugin, PostgresDialect, Kysely, type LogEvent } from 'kysely';
+import { type Generated, CamelCasePlugin, PostgresDialect, Kysely } from 'kysely';
 import { env } from '$env/dynamic/private';
 import pg from 'pg';
 
@@ -64,7 +64,8 @@ export interface Database {
 		isPickup: boolean;
 		lat: number;
 		lng: number;
-		scheduledTime: number;
+		scheduledTimeStart: number;
+		scheduledTimeEnd: number;
 		communicatedTime: number;
 		directDuration: number | null;
 		prevLegDuration: number;

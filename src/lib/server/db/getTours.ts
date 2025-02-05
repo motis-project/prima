@@ -40,14 +40,15 @@ export const getTours = async (companyId?: number, timeRange?: [UnixtimeMs, Unix
 						'event.lng',
 						'event.nextLegDuration',
 						'event.prevLegDuration',
-						'event.scheduledTime',
+						'event.scheduledTimeStart',
+						'event.scheduledTimeEnd',
 						'request.bikes',
 						'request.customer',
 						'request.luggage',
 						'request.passengers',
 						'request.wheelchairs'
 					])
-					.orderBy('event.scheduledTime')
+					.orderBy('event.scheduledTimeStart')
 			).as('events')
 		])
 		.execute();

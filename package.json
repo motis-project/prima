@@ -9,7 +9,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
-		"check": "svelte-kit sync && svelte-check --no-tsconfig --ignore \"src/lib/openapi,src/lib/shadcn\"",
+		"check": "svelte-kit sync && svelte-check --tsconfig tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --no-tsconfig --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint . --ignore-pattern src/lib/openapi",

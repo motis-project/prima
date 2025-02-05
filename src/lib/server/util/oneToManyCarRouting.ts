@@ -1,7 +1,7 @@
 import { MAX_MATCHING_DISTANCE, MAX_TRAVEL, MOTIS_BASE_URL } from '$lib/constants';
 import { oneToMany, type Duration } from '$lib/openapi';
 import type { QuerySerializerOptions } from '@hey-api/client-fetch';
-import { SECOND, secondToMilli } from './time';
+import { SECOND, secondToMilli } from '../../util/time';
 import maplibregl from 'maplibre-gl';
 
 function lngLatToStr(pos: maplibregl.LngLatLike) {

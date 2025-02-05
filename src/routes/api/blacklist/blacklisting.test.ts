@@ -14,7 +14,7 @@ import {
 } from '$lib/constants';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import { MINUTE } from '$lib/util/time';
-import type { Capacities } from '$lib/booking/Capacities';
+import type { Capacities } from '$lib/server/booking/Capacities';
 
 const inNiesky = { lat: 51.292260904642916, lng: 14.822263713757678 };
 const inZittau = { lat: 50.89857713197384, lng: 14.8098212004343 };

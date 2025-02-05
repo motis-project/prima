@@ -8,8 +8,8 @@ import { db, type Database } from '$lib/server/db';
 import { covers } from '$lib/server/db/covers';
 import type { ExpressionBuilder } from 'kysely';
 import { sql, type RawBuilder } from 'kysely';
-import type { Coordinates } from '$lib/util/Location';
-import type { Capacities } from '$lib/booking/Capacities';
+import type { Coordinates } from '$lib/util/Coordinates';
+import type { Capacities } from '$lib/server/booking/Capacities';
 
 interface CoordinatesTable {
 	busStopIndex: number;
@@ -45,7 +45,7 @@ const withBusStops = (busStops: BusStop[], startFixed: boolean) => {
 				.selectAll();
 		})
 		.with('times', (db) => {
-			let busStopIntervals: RawBuilder<string>[] = busStops.flatMap((busStop, i) =>
+			const busStopIntervals: RawBuilder<string>[] = busStops.flatMap((busStop, i) =>
 				busStop.times.map((t, j) => {
 					const startTime = startFixed ? t : t - MAX_PASSENGER_WAITING_TIME_DROPOFF;
 					const endTime = !startFixed ? t : t + MAX_PASSENGER_WAITING_TIME_PICKUP;

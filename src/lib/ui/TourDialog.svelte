@@ -19,6 +19,7 @@
 	import { carRouting } from '$lib/util/carRouting';
 	import { polylineToGeoJSON } from '$lib/util/polylineToGeoJSON';
 	import { getTourInfoShort } from '$lib/util/getTourInfoShort';
+	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 
 	const {
 		open = $bindable()
@@ -225,7 +226,10 @@
 						{#each tour!.events as event}
 							<Table.Row>
 								<Table.Cell>
-									{event.scheduledTime.toLocaleString('de-DE').slice(0, -3).replace(',', ' ')}
+									{getScheduledEventTime(event)
+										.toLocaleString('de-DE')
+										.slice(0, -3)
+										.replace(',', ' ')}
 								</Table.Cell>
 								<Table.Cell>{event.address}</Table.Cell>
 								<Table.Cell>

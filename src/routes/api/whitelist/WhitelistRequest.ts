@@ -1,10 +1,7 @@
-import type { Capacities } from '$lib/booking/Capacities';
-import type { Coordinates } from '$lib/util/Location';
+import type { BusStop } from '$lib/server/booking/BusStop';
+import type { Capacities } from '$lib/server/booking/Capacities';
+import type { Coordinates } from '$lib/util/Coordinates';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
-
-export type BusStop = Coordinates & {
-	times: UnixtimeMs[];
-};
 
 export type WhitelistRequest = {
 	start: Coordinates;

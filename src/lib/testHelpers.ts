@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
-import type { Coordinates } from '$lib/util/Location';
+import type { Coordinates } from '$lib/util/Coordinates';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
-import type { Capacities } from '$lib/booking/Capacities';
+import type { Capacities } from '$lib/server/booking/Capacities';
 import { db } from '$lib/server/db';
 
 export enum Zone {

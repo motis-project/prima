@@ -92,7 +92,8 @@ export async function up(db) {
 		.addColumn('is_pickup', 'boolean', (col) => col.notNull())
 		.addColumn('lat', 'real', (col) => col.notNull())
 		.addColumn('lng', 'real', (col) => col.notNull())
-		.addColumn('scheduled_time', 'bigint', (col) => col.notNull())
+		.addColumn('scheduled_time_start', 'bigint', (col) => col.notNull())
+		.addColumn('scheduled_time_end', 'bigint', (col) => col.notNull())
 		.addColumn('communicated_time', 'bigint', (col) => col.notNull())
 		// direct duration from last leg of previous tour
 		.addColumn('direct_duration', 'integer')
