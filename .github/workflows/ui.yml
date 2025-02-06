@@ -49,6 +49,7 @@ jobs:
           docker compose up -d pg
           sleep 5
           ./setup-db.sh
+          pnpm run dev &
           pnpm run test:unit
 
       - name: Shutdown
