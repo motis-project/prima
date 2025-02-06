@@ -47,27 +47,44 @@ import androidx.navigation.NavController
 import de.motis.prima.services.Event
 import de.motis.prima.services.Tour
 import kotlinx.coroutines.launch
+import java.util.Date
 
 data class Location(
     val latitude: Double,
     val longitude: Double,
 )
 
+data class EventGroup(
+    val id: String,
+    val scheduledTime: String,
+    val events: MutableList<Event>,
+)
+
 class TourViewModel(tour: Tour) : ViewModel() {
     var id_: Int = tour.tour_id
     var tour_: Tour = tour
-    var eventGroups: MutableMap<String, MutableList<Event>> = hashMapOf()
+    var eventGroups: MutableList<EventGroup> = mutableListOf()
 
     private fun buildEventGroups(events: List<Event>) {
-        val eventGroups = eventGroups
-        for ((i, event) in events.withIndex()) {
-            val groupId = i.toString() // event.groupId
-            if (eventGroups[groupId] == null) {
-                eventGroups[groupId] = mutableListOf(event)
-            } else {
-                eventGroups[groupId]?.add(event)
+        for (event in events) {
+            if (event.group != null) {
+                var matchGroups = eventGroups.filter { group -> group.id == event.group }
+                if (matchGroups.isEmpty()) {
+                    eventGroups.add(
+                        EventGroup(
+                            event.group,
+                            event.scheduled_time,
+                            mutableListOf(event)
+                        )
+                    )
+                } else if (matchGroups.size == 1) {
+                    matchGroups[0].events.add(event)
+                } else {
+                    Log.d("test", "buildEventGroups: groupId not unique")
+                }
             }
         }
+        Log.d("test", eventGroups.toString())
     }
 
     init {

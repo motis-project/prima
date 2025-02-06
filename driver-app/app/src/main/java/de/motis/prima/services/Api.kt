@@ -82,7 +82,8 @@ data class Event(
     val wheelchairs: Int,
     val luggage: Int,
     val bikes: Int,
-    val ticket_hash: String
+    val ticket_hash: String,
+    val group: String
 )
 
 data class Tour(

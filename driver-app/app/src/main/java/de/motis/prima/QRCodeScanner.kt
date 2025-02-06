@@ -83,18 +83,20 @@ class ScanViewModel : ViewModel() {
     }
 
     fun reportTicketScan(eventId: Int, ticketHash: String) {
+        Log.d("test", eventId.toString())
+        Log.d("test", ticketHash)
         viewModelScope.launch {
             try {
                 val response = Api.apiService.validateTicket(eventId, ticketHash)
-                if (response.status == 302) {
-                    Log.d("login response", response.toString())
-                    // successful login
+                if (response.status == 200) {
+                    Log.d("test", response.toString())
                     //_navigationEvent.emit(true)
                 } else {
+                    Log.d("test", response.toString())
                     //_loginErrorEvent.emit(true)
                 }
             } catch (e: Exception) {
-                Log.d("Login Response Network Error", e.message!!)
+                Log.d("test", "Ticket Validation Network Error: ${e.message!!}")
                 //_networkErrorEvent.emit(Unit)
             }
         }

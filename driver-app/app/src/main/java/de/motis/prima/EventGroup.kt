@@ -3,14 +3,7 @@ package de.motis.prima
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModel
-import de.motis.prima.services.Event
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,26 +32,20 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.Navigation.findNavController
-import androidx.navigation.fragment.findNavController
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import de.motis.prima.services.Event
 
 
-class EventGroupViewModel(stopIndex: String, groupId: String, tour: TourViewModel) : ViewModel() {
+class EventGroupViewModel(stopIndex: Int, groupId: String, tour: TourViewModel) : ViewModel() {
     var scheduledTime = "-"
     var city = "-"
     var street = "-"
@@ -67,17 +54,15 @@ class EventGroupViewModel(stopIndex: String, groupId: String, tour: TourViewMode
 
     var eventLocation = Location(latitude = 0.0, longitude = 0.0)
 
-    var eventGroup: MutableList<Event> = mutableListOf()
-
     var tour = tour
     var tourId = tour.id_
+    var eventGroup = tour.eventGroups[stopIndex]
 
     var stopIndex = stopIndex
 
     init {
         try {
-            eventGroup = tour.eventGroups[groupId]!!
-            var event = eventGroup?.first() // TODO
+            var event = eventGroup.events.first()
 
             if (event != null) {
                 scheduledTime = event.scheduled_time
@@ -204,7 +189,7 @@ fun EventGroup(
                             .height(510.dp)
                             .background(color = Color.White)
                     ) {
-                        items(items = viewModel.eventGroup, itemContent = { event ->
+                        items(items = viewModel.eventGroup.events, itemContent = { event ->
                             ShowCustomerDetails(event, scanViewModel, context)
                         })
                     }
@@ -379,7 +364,7 @@ fun ShowCustomerDetails(event: Event, scanViewModel: ScanViewModel, context: Con
 
                             )
                         }
-                        reportTicketScan(event.event_id, event.ticket_hash)
+                        scanViewModel.reportTicketScan(event.event_id, event.ticket_hash)
                     } else {
                         Box(
                             modifier = Modifier.padding(top = 8.dp)
@@ -396,9 +381,4 @@ fun ShowCustomerDetails(event: Event, scanViewModel: ScanViewModel, context: Con
             }
         }
     }
-}
-
-private fun reportTicketScan(eventId: Int, ticketHash: String) {
-    Log.d("test", "Ticket scanned: eventId=$eventId, ticketHash=$ticketHash")
-    // TODO: call backend api
 }

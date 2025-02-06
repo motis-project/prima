@@ -271,6 +271,15 @@
 			color: 'yellow'
 		});
 	};
+
+	const testPost = () => {
+		fetch(
+			'http://localhost:5173/api/ticket?eventId=13&ticketHash=0e53ad8d61364341e44e032042f16bb1',
+			{
+				method: 'POST'
+			}
+		).then((response) => console.log(response));
+	};
 </script>
 
 <Map

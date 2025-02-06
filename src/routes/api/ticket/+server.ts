@@ -1,17 +1,18 @@
-import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/database';
+import { json } from '@sveltejs/kit';
 import md5 from 'blueimp-md5';
 
 export const POST = async (event) => {
-    const companyId = event.locals.user?.company;
+    /*const companyId = event.locals.user?.company;
     if (!companyId) {
         error(400, {
             message: 'not allowed without write access to company'
         });
-    }
+    }*/
     const url = event.url;
     const eventId = url.searchParams.get('eventId');
     const ticketHash = url.searchParams.get('ticketHash');
+    var status = 500;
 
     if (eventId != null && ticketHash != null) {
         try {
@@ -21,21 +22,18 @@ export const POST = async (event) => {
                 .select('event.ticket_code')
                 .executeTakeFirstOrThrow();
 
-            if (md5(ticketCode) == ticketHash) {
+            if (md5(ticketCode['ticket_code']) == ticketHash) {
                 await db
                     .updateTable('event')
                     .set({ ticket_valid: 'true' })
                     .where('id', '=', parseInt(eventId))
                     .execute();
+                status = 200;
             }
         } catch (e) {
-            /*error(500, {
-                message: 'An unknown error occurred'
-            });*/
+            status = 500;
         }
     }
 
-
-
-    return json({});
+    return json({ "status": status });
 }

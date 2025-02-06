@@ -83,6 +83,7 @@ export const mapTourEvents = (events: DbTourEvents) => {
 					bikes: e.bikes,
 					ticket_hash: md5(e.ticket_code),
 					event_id: e.id,
+					group: e.group,
 				};
 			})
 		};

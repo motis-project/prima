@@ -39,24 +39,25 @@ import androidx.navigation.NavController
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LegView(
-    stopIndex: Int,
+    eventGroupIndex: Int,
     tourViewModel: TourViewModel,
     userViewModel: UserViewModel,
     scanViewModel: ScanViewModel,
     navController: NavController,
 ) {
-    var isLastEvent = false
+    var isLastStop = false
     val tour = tourViewModel.tour_
+    val eventGroups = tourViewModel.eventGroups
 
-    if (stopIndex + 1 == tour.events.size) {
-        isLastEvent = true
+    if (eventGroupIndex + 1 == eventGroups.size) {
+        isLastStop = true
     }
 
-    /*if (stopIndex == 0) {
+    /*if (eventGroupIndex == 0) {
         tourViewModel.fetchLocation()
         currentLocation = tourViewModel.currentLocation
     } else {
-        val prevEvent = tour.events[stopIndex - 1]
+        val prevEvent = tour.events[eventGroupIndex - 1]
         currentLocation = Location(latitude = prevEvent.latitude, longitude = prevEvent.longitude)
     }*/
 
@@ -82,7 +83,7 @@ fun LegView(
                 },
                 navigationIcon = {
                     val destination =
-                        if (stopIndex - 1 >= 0) "legs/${tourViewModel.id_}/${stopIndex - 1}"
+                        if (eventGroupIndex - 1 >= 0) "legs/${tourViewModel.id_}/${eventGroupIndex - 1}"
                         else "tour/${tourViewModel.id_}"
                     IconButton(onClick = { navController.navigate(destination) }) {
                         Icon(
@@ -133,7 +134,7 @@ fun LegView(
                         .padding(contentPadding)
                 ) {
                     Text(
-                        text = "${stopIndex + 1} / ${tour.events.size}",
+                        text = "${eventGroupIndex + 1} / ${eventGroups.size}",
                         fontSize = 24.sp,
                         textAlign = TextAlign.Center
                     )
@@ -146,8 +147,8 @@ fun LegView(
                 Box {
                     EventGroup(
                         EventGroupViewModel(
-                            stopIndex.toString(),
-                            stopIndex.toString(), // TODO: group ID
+                            eventGroupIndex,
+                            "", // TODO: group ID
                             tourViewModel
                             ),
                         navController,
@@ -158,12 +159,12 @@ fun LegView(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                if (!isLastEvent) {
+                if (!isLastStop) {
                     Box {
                         Button(
                             modifier = Modifier.width(250.dp),
                             onClick = {
-                                navController.navigate("legs/${tour.tour_id}/${stopIndex + 1}")
+                                navController.navigate("legs/${tour.tour_id}/${eventGroupIndex + 1}")
                             }
                         ) {
                             Text(
