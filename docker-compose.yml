@@ -5,7 +5,7 @@ services:
     restart: always
     container_name: pg
     ports:
-      - '6500:5432'
+      - 6500:5432
     env_file:
       - ./.env
     volumes:
@@ -29,7 +29,7 @@ services:
     volumes:
       - motis-data:/data:rw
     ports:
-      - 8080:8080
+      - 6499:8080
     command: /bin/sh -c "cd / && /motis server"
 
   adminer:
