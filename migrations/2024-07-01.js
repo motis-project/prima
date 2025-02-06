@@ -9,6 +9,17 @@ export async function up(db) {
 			name varchar NOT NULL
 		)`.execute(db);
 
+
+	await db.schema
+		.createTable('company')
+		.addColumn('id', 'serial', (col) => col.primaryKey())
+		.addColumn('lat', 'real')
+		.addColumn('lng', 'real')
+		.addColumn('name', 'varchar')
+		.addColumn('address', 'varchar')
+		.addColumn('zone', 'integer', (col) => col.references('zone.id'))
+		.execute();
+
 	await db.schema
 		.createTable('user')
 		.addColumn('id', 'serial', (col) => col.primaryKey())
@@ -23,7 +34,7 @@ export async function up(db) {
 		.addColumn('password_reset_code', 'varchar')
 		.addColumn('password_reset_expires_at', 'bigint')
 		.addColumn('phone', 'varchar')
-		.addColumn('company_id', 'integer', (col) => col.references('user.id'))
+		.addColumn('company_id', 'integer', (col) => col.references('company.id'))
 		.execute();
 
 	await db.schema
@@ -33,16 +44,6 @@ export async function up(db) {
 		.addColumn('user_id', 'integer', (col) =>
 			col.references('user.id').onDelete('cascade').notNull()
 		)
-		.execute();
-
-	await db.schema
-		.createTable('company')
-		.addColumn('id', 'serial', (col) => col.primaryKey())
-		.addColumn('lat', 'real')
-		.addColumn('lng', 'real')
-		.addColumn('name', 'varchar')
-		.addColumn('address', 'varchar')
-		.addColumn('zone', 'integer', (col) => col.references('zone.id'))
 		.execute();
 
 	await db.schema

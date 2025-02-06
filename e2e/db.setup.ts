@@ -36,6 +36,7 @@ setup('setup db', async () => {
 	await db.deleteFrom('session').executeTakeFirstOrThrow();
 	await db.deleteFrom('user').executeTakeFirstOrThrow();
 	await db.deleteFrom('company').executeTakeFirstOrThrow();
+	await db.deleteFrom('zone').executeTakeFirstOrThrow();
 
 	const zonesSqlPath = path.join(__dirname, '../data/zone.sql');
 	const zonesQuery = fs.readFileSync(zonesSqlPath).toString();

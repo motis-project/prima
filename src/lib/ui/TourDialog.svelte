@@ -15,11 +15,12 @@
 
 	import type { TourEvent, Tours } from '$lib/server/db/getTours';
 	import type { PlanResponse } from '$lib/openapi';
-	import { MIN_PREP, MOTIS_BASE_URL } from '$lib/constants';
+	import { MIN_PREP } from '$lib/constants';
 	import { carRouting } from '$lib/util/carRouting';
 	import { polylineToGeoJSON } from '$lib/util/polylineToGeoJSON';
 	import { getTourInfoShort } from '$lib/util/getTourInfoShort';
 	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
+	import { PUBLIC_MOTIS_URL } from '$env/static/public';
 
 	const {
 		open = $bindable()
@@ -153,7 +154,7 @@
 			{center}
 			transformRequest={(url) => {
 				if (url.startsWith('/')) {
-					return { url: `${MOTIS_BASE_URL}/tiles${url}` };
+					return { url: `${PUBLIC_MOTIS_URL}/tiles${url}` };
 				}
 			}}
 			style={getStyle('light', 0)}
