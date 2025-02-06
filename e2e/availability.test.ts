@@ -8,9 +8,9 @@ export async function setAvailability(page: Page) {
 	await page.goto('/taxi/availability?offset=-120&date=2026-09-30');
 	await page.waitForTimeout(500);
 
-	await moveMouse(page, 'GR-TU-11-2026-09-30T08:00:00.000Z');
+	await moveMouse(page, 'GR-TU-11-2026-09-30T07:00:00.000Z');
 	await page.mouse.down();
-	await moveMouse(page, 'GR-TU-11-2026-09-30T08:45:00.000Z');
+	await moveMouse(page, 'GR-TU-11-2026-09-30T09:45:00.000Z');
 	await page.mouse.up();
 }
 
@@ -21,7 +21,7 @@ export async function requestRide(page: Page) {
 
 	await page.getByRole('textbox').fill('2026-09-30T08:30:00Z');
 	await page.getByRole('button', { name: 'Suchen' }).click();
-	await expect(page.getByText('Tour ID: ')).toBeVisible();
+	await expect(page.getByText('Vehicle: ')).toBeVisible();
 }
 
 test('Set company data', async ({ page }) => {
@@ -35,40 +35,30 @@ test('Add vehicle', async ({ page }) => {
 
 test('Set availability', async ({ page }) => {
 	await setAvailability(page);
-	await expect(
-		page.locator(
-			'table:nth-child(2) > tbody > tr > td:nth-child(3) > .w-full > tbody > tr > td:nth-child(4) > .w-8'
-		)
-	).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-	await expect(
-		page
-			.locator(
-				'table:nth-child(2) > tbody > tr > td:nth-child(4) > .w-full > tbody > tr > td > .w-8'
-			)
-			.first()
-	).toHaveCSS('background-color', 'rgb(254, 249, 195)');
-	await expect(
-		page.locator(
-			'table:nth-child(2) > tbody > tr > td:nth-child(4) > .w-full > tbody > tr > td:nth-child(2) > .w-8'
-		)
-	).toHaveCSS('background-color', 'rgb(254, 249, 195)');
-	await expect(
-		page.locator(
-			'table:nth-child(2) > tbody > tr > td:nth-child(4) > .w-full > tbody > tr > td:nth-child(3) > .w-8'
-		)
-	).toHaveCSS('background-color', 'rgb(254, 249, 195)');
-	await expect(
-		page.locator(
-			'table:nth-child(2) > tbody > tr > td:nth-child(4) > .w-full > tbody > tr > td:nth-child(4) > .w-8'
-		)
-	).toHaveCSS('background-color', 'rgb(254, 249, 195)');
-	await expect(
-		page
-			.locator(
-				'table:nth-child(2) > tbody > tr > td:nth-child(5) > .w-full > tbody > tr > td > .w-8'
-			)
-			.first()
-	).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+	await expect(page.getByTestId('GR-TU-11-2026-09-30T06:45:00.000Z').locator('div')).toHaveCSS(
+		'background-color',
+		'rgba(0, 0, 0, 0)'
+	);
+	await expect(page.getByTestId('GR-TU-11-2026-09-30T07:00:00.000Z').locator('div')).toHaveCSS(
+		'background-color',
+		'rgb(254, 249, 195)'
+	);
+	await expect(page.getByTestId('GR-TU-11-2026-09-30T07:15:00.000Z').locator('div')).toHaveCSS(
+		'background-color',
+		'rgb(254, 249, 195)'
+	);
+	await expect(page.getByTestId('GR-TU-11-2026-09-30T09:30:00.000Z').locator('div')).toHaveCSS(
+		'background-color',
+		'rgb(254, 249, 195)'
+	);
+	await expect(page.getByTestId('GR-TU-11-2026-09-30T09:45:00.000Z').locator('div')).toHaveCSS(
+		'background-color',
+		'rgb(254, 249, 195)'
+	);
+	await expect(page.getByTestId('GR-TU-11-2026-09-30T10:00:00.000Z').locator('div')).toHaveCSS(
+		'background-color',
+		'rgba(0, 0, 0, 0)'
+	);
 });
 
 test('Request ride', async ({ page }) => {
@@ -77,7 +67,7 @@ test('Request ride', async ({ page }) => {
 	await page.waitForTimeout(500);
 	await expect(page.getByTestId('GR-TU-11-2026-09-30T07:45:00.000Z').locator('div')).toHaveCSS(
 		'background-color',
-		'rgba(0, 0, 0, 0)'
+		'rgb(251, 146, 60)'
 	);
 	await expect(page.getByTestId('GR-TU-11-2026-09-30T08:00:00.000Z').locator('div')).toHaveCSS(
 		'background-color',
@@ -90,13 +80,5 @@ test('Request ride', async ({ page }) => {
 	await expect(page.getByTestId('GR-TU-11-2026-09-30T08:30:00.000Z').locator('div')).toHaveCSS(
 		'background-color',
 		'rgb(251, 146, 60)'
-	);
-	await expect(page.getByTestId('GR-TU-11-2026-09-30T08:45:00.000Z').locator('div')).toHaveCSS(
-		'background-color',
-		'rgb(251, 146, 60)'
-	);
-	await expect(page.getByTestId('GR-TU-11-2026-09-30T09:00:00.000Z').locator('div')).toHaveCSS(
-		'background-color',
-		'rgba(0, 0, 0, 0)'
 	);
 });

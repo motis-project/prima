@@ -1,4 +1,4 @@
-INSERT INTO "vehicle" ("license_plate", "company", "seats", "wheelchair_capacity", "bike_capacity", "storage_space") VALUES
+INSERT INTO "vehicle" ("license_plate", "company", "passengers", "wheelchairs", "bikes", "luggage") VALUES
 ('GR-TU-11',	1,	3,	0,	0, 0),
 ('GR-TU-12',	1,	3,	0,	0, 0),
 ('GR-TU-21',	2,	3,	0,	0, 0),

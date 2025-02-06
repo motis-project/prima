@@ -18,4 +18,5 @@ psql $DATABASE_URL --user postgres < data/vehicle.sql
 psql $DATABASE_URL --user postgres < data/availability.sql
 psql $DATABASE_URL --user postgres < data/tour.sql
 psql $DATABASE_URL --user postgres < data/user.sql
+psql $DATABASE_URL --user postgres < data/request.sql
 psql $DATABASE_URL --user postgres < data/event.sql

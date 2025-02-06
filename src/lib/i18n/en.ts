@@ -54,7 +54,7 @@ const translations: Translations = {
 		companyUpdateSuccessful: 'Company data updated successfully.',
 
 		// AddVehicle
-		invalidSeats: 'Invalid number of seats',
+		invalidSeats: 'Invalid number of passengers',
 		invalidLicensePlate: 'Invalid license plate.',
 		invalidStorage: 'Invalid storage space.',
 		duplicateLicensePlate: 'Duplicate license plate.',

@@ -1,4 +1,4 @@
-import { type Generated, CamelCasePlugin, PostgresDialect, Kysely, type LogEvent } from 'kysely';
+import { type Generated, CamelCasePlugin, PostgresDialect, Kysely } from 'kysely';
 import { env } from '$env/dynamic/private';
 import pg from 'pg';
 
@@ -41,10 +41,10 @@ export interface Database {
 		id: Generated<number>;
 		licensePlate: string;
 		company: number;
-		seats: number;
-		wheelchairCapacity: number;
-		bikeCapacity: number;
-		storageSpace: number;
+		passengers: number;
+		wheelchairs: number;
+		bikes: number;
+		luggage: number;
 	};
 	tour: {
 		id: Generated<number>;
@@ -52,6 +52,7 @@ export interface Database {
 		arrival: number;
 		vehicle: number;
 		fare: number | null;
+		directDuration: number | null;
 	};
 	availability: {
 		id: Generated<number>;
@@ -64,11 +65,13 @@ export interface Database {
 		isPickup: boolean;
 		lat: number;
 		lng: number;
-		scheduledTime: number;
+		scheduledTimeStart: number;
+		scheduledTimeEnd: number;
 		communicatedTime: number;
+		prevLegDuration: number;
+		nextLegDuration: number;
+		eventGroup: string;
 		address: string;
-		tour: number;
-		customer: number;
 		request: number;
 	};
 	request: {
@@ -78,6 +81,7 @@ export interface Database {
 		bikes: number;
 		luggage: number;
 		tour: number;
+		customer: number;
 	};
 }
 
@@ -90,11 +94,18 @@ pg.types.setTypeParser(20, (val) => parseInt(val));
 export const db = new Kysely<Database>({
 	dialect,
 	plugins: [new CamelCasePlugin()],
-	log(event: LogEvent) {
+	log(event) {
 		if (event.level === 'error') {
 			console.error('Query failed : ', {
 				durationMs: event.queryDurationMillis,
 				error: event.error,
+				sql: event.query.sql,
+				params: event.query.parameters
+			});
+		} else {
+			// `'query'`
+			console.log('Query executed : ', {
+				durationMs: event.queryDurationMillis,
 				sql: event.query.sql,
 				params: event.query.parameters
 			});

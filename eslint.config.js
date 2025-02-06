@@ -39,7 +39,7 @@ export default ts.config(
 		rules: RULES.ts
 	},
 	{
-		files: ['**/*.svelte'],
+		files: ['**/*.svelte', 'lib/**/*.ts'],
 
 		languageOptions: {
 			parserOptions: {

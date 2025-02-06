@@ -9,6 +9,7 @@
 	import Message from '$lib/ui/Message.svelte';
 	import { enhance } from '$app/forms';
 	import Layer from '$lib/map/Layer.svelte';
+	import { PUBLIC_MOTIS_URL } from '$env/static/public';
 
 	const { data, form } = $props();
 
@@ -99,7 +100,7 @@
 	bind:map
 	transformRequest={(url, _resourceType) => {
 		if (url.startsWith('/')) {
-			return { url: `https://europe.motis-project.de/tiles${url}` };
+			return { url: `${PUBLIC_MOTIS_URL}/tiles${url}` };
 		}
 	}}
 	center={[14.5771254, 51.5269344]}
@@ -124,9 +125,8 @@
 						<Button type="submit">Suchen</Button>
 					</form>
 				</div>
-				{#if form?.company}
-					<div>Tour ID: {form.tourId}</div>
-					<div><pre>{JSON.stringify(form.company)}</pre></div>
+				{#if form?.vehicle}
+					<div>Vehicle: {form.vehicle}</div>
 				{/if}
 			</div>
 		</Card>

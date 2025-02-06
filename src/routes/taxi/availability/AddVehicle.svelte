@@ -31,7 +31,7 @@
 
 			<div>
 				<h6 class="mb-1">Maximale Passagieranzahl:</h6>
-				<RadioGroup.Root name="seats" value="3">
+				<RadioGroup.Root name="passengers" value="3">
 					<div class="flex items-center gap-2">
 						<RadioGroup.Item value="3" id="r1" />
 						<Label for="r1">3 Passagiere</Label>
@@ -62,8 +62,8 @@
 			</div>
 
 			<div class="field">
-				<Label for="storageSpace">Gepäckstücke:</Label>
-				<Input name="storageSpace" type="number" placeholder="4" value="4" />
+				<Label for="luggage">Gepäckstücke:</Label>
+				<Input name="luggage" type="number" placeholder="4" value="4" />
 			</div>
 
 			<Button type="submit" variant="outline" data-testid="create-vehicle">Fahrzeug anlegen</Button>

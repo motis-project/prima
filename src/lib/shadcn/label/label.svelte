@@ -1,4 +1,5 @@
 <script lang="ts">
+	// @ts-nocheck
 	import { Label as LabelPrimitive } from 'bits-ui';
 	import { cn } from '$lib/shadcn/utils.js';
 

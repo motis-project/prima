@@ -11,8 +11,8 @@
 	import maplibregl from 'maplibre-gl';
 	import { getStyle } from '$lib/map/style';
 	import Map from '$lib/map/Map.svelte';
-	import { MOTIS_BASE_URL } from '$lib/constants.js';
 	import Message from '$lib/ui/Message.svelte';
+	import { PUBLIC_MOTIS_URL } from '$env/static/public';
 
 	const { data, form } = $props();
 
@@ -131,7 +131,7 @@
 			{center}
 			transformRequest={(url) => {
 				if (url.startsWith('/')) {
-					return { url: `${MOTIS_BASE_URL}/tiles${url}` };
+					return { url: `${PUBLIC_MOTIS_URL}/tiles${url}` };
 				}
 			}}
 			style={getStyle('light', 0)}
