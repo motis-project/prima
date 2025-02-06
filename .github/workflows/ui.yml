@@ -44,12 +44,16 @@ jobs:
           ./setup-db.sh
           npx playwright test
 
+      - name: Unit Tests
+        run: |
+          docker compose up -d pg
+          sleep 5
+          ./setup-db.sh
+          pnpm run test:unit
+
       - name: Shutdown
         if: always()
         run: docker compose down
-
-      - name: Unit Tests
-        run: pnpm run test:unit
 
       - name: Upload screenshots
         if: failure()
