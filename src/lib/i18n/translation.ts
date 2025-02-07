@@ -107,6 +107,7 @@ export type Translations = {
 	scooterStanding: string;
 	scooterSeated: string;
 	car: string;
+	taxi: string;
 	moped: string;
 	from: string;
 	to: string;
