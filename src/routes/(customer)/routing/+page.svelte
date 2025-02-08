@@ -66,7 +66,10 @@
 						time: new Date().toISOString(),
 						fromPlace: toPlaceString(from),
 						toPlace: toPlaceString(to),
-						timetableView: true
+						timetableView: true,
+						preTransitModes: ['WALK', 'ODM'],
+						postTransitModes: ['WALK', 'ODM'],
+						directModes: ['WALK', 'ODM']
 					}
 				} as PlanData)
 			: undefined

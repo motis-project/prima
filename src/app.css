@@ -69,6 +69,7 @@
 	* {
 		@apply border-border;
 	}
+
 	body {
 		@apply bg-background text-foreground;
 	}
@@ -88,4 +89,8 @@ input {
 
 details summary::-webkit-details-marker {
 	display: none;
+}
+
+.equal-col-size {
+	grid-auto-columns: 1fr;
 }
