@@ -1,11 +1,33 @@
-osm: /input/osm.pbf
+server:
+  web_folder: /home/felix/code/motis/ui/build
+osm: /home/felix/osm.pbf
 tiles:
-  profile: tiles-profiles/full.lua
+  profile: /home/felix/code/motis/deps/tiles/profile/full.lua
+  db_size: 274877906944
+  flush_threshold: 100000
 timetable:
+  first_day: TODAY
+  num_days: 365
+  railviz: true
+  with_shapes: true
+  ignore_errors: false
+  adjust_footpaths: true
+  merge_dupes_intra_src: false
+  merge_dupes_inter_src: false
+  link_stop_distance: 100
+  update_interval: 60
+  http_timeout: 10
+  incremental_rt_update: false
+  use_osm_stop_coordinates: false
+  extend_missing_footpaths: false
+  max_footpath_length: 15
   datasets:
     GTFS:
-      path: /input/GTFS.zip
+      path: /home/felix/GTFS.zip
+      default_bikes_allowed: false
 street_routing: true
 osr_footpath: false
+elevators: false
 geocoding: true
 reverse_geocoding: true
+odm: http://localhost:5173

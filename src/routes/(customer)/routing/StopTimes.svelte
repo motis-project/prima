@@ -1,39 +1,58 @@
 <script lang="ts">
-	import { stoptimes, type StoptimesResponse } from '$lib/openapi';
-	import { Button } from '$lib/shadcn/button';
+	import { stoptimes, type StoptimesError, type StoptimesResponse } from '$lib/openapi';
 	import LoaderCircle from 'lucide-svelte/icons/loader-circle';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import { t } from '$lib/i18n/translation';
-
-	import Time from './Time.svelte';
+	import type { RequestResult } from '@hey-api/client-fetch';
 	import Route from './Route.svelte';
+	import Time from './Time.svelte';
+	import ErrorMessage from './ErrorMessage.svelte';
+	import { Button } from '$lib/shadcn/button';
 
 	let {
 		stopId,
 		time: queryTime,
-		arriveBy = $bindable(),
+		stopNameFromResponse = $bindable(),
+		arriveBy,
+		setArriveBy,
 		onClickTrip
 	}: {
 		stopId: string;
 		time: Date;
 		arriveBy?: boolean;
+		stopNameFromResponse: string;
+		setArriveBy: (arriveBy: boolean) => void;
 		onClickTrip: (tripId: string) => void;
 	} = $props();
 
 	let query = $derived({ stopId, time: queryTime.toISOString(), arriveBy, n: 10 });
 	let responses = $state<Array<Promise<StoptimesResponse>>>([]);
 	$effect(() => {
-		responses = [stoptimes({ query }).then((r) => r.data!)];
+		responses = [throwOnError(stoptimes({ query }))];
 	});
+
+	const throwOnError = (promise: RequestResult<StoptimesResponse, StoptimesError, false>) =>
+		promise.then((response) => {
+			if (response.error) {
+				console.log(response.error);
+				throw new Error('HTTP ' + response.response?.status);
+			}
+			stopNameFromResponse =
+				(response.data?.stopTimes.length && response.data?.stopTimes[0].place?.name) || '';
+			return response.data!;
+		});
+	stop;
 </script>
 
-<div class="grid auto-rows-fr grid-cols-10 items-center gap-y-2 text-base">
+<div
+	class="grid auto-rows-fr grid-cols-[repeat(3,max-content)_auto] items-center gap-x-2 gap-y-2 text-base"
+>
 	<div class="col-span-full flex w-full items-center justify-center">
 		<Button
 			class="font-bold"
 			variant="outline"
 			onclick={() => {
-				arriveBy = !arriveBy;
+				setArriveBy(!arriveBy);
 			}}
 		>
 			{#if arriveBy}
@@ -57,12 +76,10 @@
 							responses.splice(
 								0,
 								0,
-								stoptimes({ query: { ...query, pageCursor: r.previousPageCursor } }).then(
-									(x) => x.data!
-								)
+								throwOnError(stoptimes({ query: { ...query, pageCursor: r.previousPageCursor } }))
 							);
 						}}
-						class="rounded-lg border bg-blue-600 px-2 py-1 text-sm font-bold text-white hover:!bg-blue-700"
+						class="text-nowrap rounded-lg border bg-blue-600 px-2 py-1 text-sm font-bold text-white hover:!bg-blue-700"
 					>
 						{t.earlier}
 					</button>
@@ -75,28 +92,12 @@
 				{@const scheduledTimestamp = arriveBy
 					? t.place.scheduledArrival!
 					: t.place.scheduledDeparture!}
-				<Route
-					class="col-span-3 w-fit max-w-28 overflow-hidden text-ellipsis"
-					l={t}
-					{onClickTrip}
-				/>
-				<Time
-					class="ml-1"
-					variant="schedule"
-					isRealtime={t.realTime}
-					{timestamp}
-					{scheduledTimestamp}
-				/>
-				<Time
-					class="ml-2"
-					variant="realtime"
-					isRealtime={t.realTime}
-					{timestamp}
-					{scheduledTimestamp}
-				/>
-				<div class="col-span-5 ml-4 flex items-center text-muted-foreground">
+				<Route class="w-fit max-w-32 overflow-hidden text-ellipsis" l={t} {onClickTrip} />
+				<Time variant="schedule" isRealtime={t.realTime} {timestamp} {scheduledTimestamp} />
+				<Time variant="realtime" isRealtime={t.realTime} {timestamp} {scheduledTimestamp} />
+				<div class="flex min-w-0 items-center text-muted-foreground">
 					<div><ArrowRight class="h-4 w-4 stroke-muted-foreground" /></div>
-					<span class="ml-1 overflow-hidden text-ellipsis text-nowrap">{t.headsign}</span>
+					<span class="ml-1 overflow-hidden text-ellipsis leading-tight">{t.headsign}</span>
 				</div>
 			{/each}
 
@@ -106,18 +107,20 @@
 					<button
 						onclick={() => {
 							responses.push(
-								stoptimes({ query: { ...query, pageCursor: r.nextPageCursor } }).then(
-									(x) => x.data!
-								)
+								throwOnError(stoptimes({ query: { ...query, pageCursor: r.nextPageCursor } }))
 							);
 						}}
-						class="rounded-lg border bg-blue-600 px-2 py-1 text-sm font-bold text-white hover:!bg-blue-700"
+						class="text-nowrap rounded-lg border bg-blue-600 px-2 py-1 text-sm font-bold text-white hover:!bg-blue-700"
 					>
 						{t.later}
 					</button>
 					<div class="h-0 w-full border-t"></div>
 				</div>
 			{/if}
+		{:catch e}
+			<div class="col-span-full flex w-full items-center justify-center">
+				<ErrorMessage {e} />
+			</div>
 		{/await}
 	{/each}
 </div>

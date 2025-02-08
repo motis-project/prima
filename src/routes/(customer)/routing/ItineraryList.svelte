@@ -1,14 +1,22 @@
 <script lang="ts">
-	import * as Card from '$lib/shadcn/card';
-	import { Separator } from '$lib/shadcn/separator';
-	import { Button } from '$lib/shadcn/button';
-	import { plan, type Itinerary, type Leg, type PlanData, type PlanResponse } from '$lib/openapi';
 	import LoaderCircle from 'lucide-svelte/icons/loader-circle';
-	import { t } from '$lib/i18n/translation';
-
-	import Time from './Time.svelte';
+	import { Card } from '$lib/shadcn/card';
+	import ErrorMessage from './ErrorMessage.svelte';
+	import { Separator } from '$lib/shadcn/separator';
 	import { formatDurationSec } from './formatDuration';
 	import { getModeStyle, routeColor } from './modeStyle';
+	import {
+		plan,
+		type Itinerary,
+		type Leg,
+		type PlanData,
+		type PlanError,
+		type PlanResponse
+	} from '$lib/openapi';
+	import Time from './Time.svelte';
+	import { t } from '$lib/i18n/translation';
+	import DirectConnection from './DirectConnection.svelte';
+	import type { RequestResult } from '@hey-api/client-fetch';
 
 	let {
 		routingResponses,
@@ -21,6 +29,16 @@
 		baseQuery: PlanData | undefined;
 		selectItinerary: (it: Itinerary) => void;
 	} = $props();
+
+	const throwOnError = (promise: RequestResult<PlanResponse, PlanError, false>) =>
+		promise.then((response) => {
+			console.log(response.error);
+			if (response.error)
+				throw new Error(
+					String((response.error as Record<string, unknown>).error ?? response.error)
+				);
+			return response.data!;
+		});
 </script>
 
 {#snippet legSummary(l: Leg)}
@@ -45,8 +63,21 @@
 			<LoaderCircle class="m-20 h-12 w-12 animate-spin" />
 		</div>
 	{:then r}
+		{#if r.direct.length !== 0}
+			<div class="my-4 flex flex-wrap gap-x-3 gap-y-3">
+				{#each r.direct as d}
+					<DirectConnection
+						{d}
+						onclick={() => {
+							selectItinerary(d);
+						}}
+					/>
+				{/each}
+			</div>
+		{/if}
+
 		{#if r.itineraries.length !== 0}
-			<div class="flex flex-col gap-4">
+			<div class="flex flex-col space-y-6 px-4 py-8">
 				{#each routingResponses as r, rI}
 					{#await r}
 						<div class="flex w-full items-center justify-center">
@@ -56,82 +87,103 @@
 						{#if rI === 0 && baseQuery}
 							<div class="flex w-full items-center justify-between space-x-4">
 								<div class="h-0 w-full border-t"></div>
-								<Button
-									class="h-8"
-									variant="outline"
+								<button
 									onclick={() => {
 										routingResponses.splice(
 											0,
 											0,
-											plan({
-												query: { ...baseQuery.query, pageCursor: r.previousPageCursor }
-											}).then((x) => x.data!)
+											throwOnError(
+												plan({
+													query: { ...baseQuery.query, pageCursor: r.previousPageCursor }
+												})
+											)
 										);
 									}}
+									class="text-nowrap rounded-lg border bg-blue-600 px-2 py-1 text-sm font-bold text-white hover:!bg-blue-700"
 								>
 									{t.earlier}
-								</Button>
+								</button>
 								<div class="h-0 w-full border-t"></div>
 							</div>
 						{/if}
 						{#each r.itineraries as it}
-							<button onclick={() => selectItinerary(it)}>
-								<Card.Root class="border-input">
-									<Card.Content class="flex flex-col gap-4 p-4">
-										<div class="flex gap-4">
-											<span>{formatDurationSec(it.duration)}</span>
-											<Separator orientation="vertical" />
-											{it.transfers}
-											{t.transfers}
-										</div>
-										<span class="text-left">
+							<button
+								onclick={() => {
+									selectItinerary(it);
+								}}
+							>
+								<Card class="p-4">
+									<div class="flex h-8 w-full items-center justify-around space-x-1 text-base">
+										<div class="basis-1/4 overflow-hidden">
+											<div class="text-xs font-bold uppercase text-slate-400">{t.departure}</div>
 											<Time
-												class="inline"
 												isRealtime={it.legs[0].realTime}
 												timestamp={it.startTime}
 												scheduledTimestamp={it.legs[0].scheduledStartTime}
 												variant={'realtime-show-always'}
-											/> - <Time
-												class="inline"
+											/>
+										</div>
+										<Separator orientation="vertical" />
+										<div class="basis-1/4 overflow-hidden">
+											<div class="text-xs font-bold uppercase text-slate-400">{t.arrival}</div>
+											<Time
 												isRealtime={it.legs[it.legs.length - 1].realTime}
 												timestamp={it.endTime}
 												scheduledTimestamp={it.legs[it.legs.length - 1].scheduledEndTime}
-												variant="realtime-show-always"
+												variant={'realtime-show-always'}
 											/>
-										</span>
-										<div class="flex flex-wrap gap-x-3 gap-y-3">
-											{#each it.legs.filter((l, i) => (i == 0 && l.duration > 1) || (i == it.legs.length - 1 && l.duration > 1) || l.routeShortName || l.mode != 'WALK') as l}
-												{@render legSummary(l)}
-											{/each}
 										</div>
-									</Card.Content>
-								</Card.Root>
+										<Separator orientation="vertical" />
+										<div class="basis-1/4 overflow-hidden">
+											<div class="text-xs font-bold uppercase text-slate-400">{t.transfers}</div>
+											<div class="text-center">{it.transfers}</div>
+										</div>
+										<Separator orientation="vertical" />
+										<div class="basis-1/4 overflow-hidden">
+											<div class="text-xs font-bold uppercase text-slate-400">{t.duration}</div>
+											<div class="text-nowrap text-center">
+												{formatDurationSec(it.duration)}
+											</div>
+										</div>
+									</div>
+									<Separator class="my-2" />
+									<div class="mt-4 flex flex-wrap gap-x-3 gap-y-3">
+										{#each it.legs.filter((l, i) => (i == 0 && l.duration > 1) || (i == it.legs.length - 1 && l.duration > 1) || l.routeShortName || l.mode != 'WALK') as l}
+											{@render legSummary(l)}
+										{/each}
+									</div>
+								</Card>
 							</button>
 						{/each}
 						{#if rI === routingResponses.length - 1 && baseQuery}
 							<div class="flex w-full items-center justify-between space-x-4">
 								<div class="h-0 w-full border-t"></div>
-								<Button
-									class="h-8"
-									variant="outline"
+								<button
 									onclick={() => {
 										routingResponses.push(
-											plan({ query: { ...baseQuery.query, pageCursor: r.nextPageCursor } }).then(
-												(x) => x.data!
+											throwOnError(
+												plan({
+													query: { ...baseQuery.query, pageCursor: r.nextPageCursor }
+												})
 											)
 										);
 									}}
+									class="text-nowrap rounded-lg border bg-blue-600 px-2 py-1 text-sm font-bold text-white hover:!bg-blue-700"
 								>
 									{t.later}
-								</Button>
+								</button>
 								<div class="h-0 w-full border-t"></div>
 							</div>
 						{/if}
 					{:catch e}
-						<div>Error: {e}</div>
+						<ErrorMessage {e} />
 					{/await}
 				{/each}
 			</div>
+		{:else if r.direct.length === 0}
+			<ErrorMessage e={t.noItinerariesFound} />
 		{/if}
+	{:catch e}
+		<ErrorMessage {e} />
 	{/await}
 {/if}

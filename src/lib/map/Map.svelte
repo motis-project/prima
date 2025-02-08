@@ -7,6 +7,7 @@
 	let {
 		map = $bindable(),
 		zoom = $bindable(),
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		bounds = $bindable(),
 		style,
 		attribution,

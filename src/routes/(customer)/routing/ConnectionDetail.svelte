@@ -1,13 +1,13 @@
 <script lang="ts">
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import type { Itinerary, Leg } from '$lib/openapi';
-	import { Button } from '$lib/shadcn/button';
 	import { t } from '$lib/i18n/translation';
 	import Time from './Time.svelte';
+	import { Button } from '$lib/shadcn/button';
 	import { formatDistanceMeters, formatDurationSec } from './formatDuration';
 	import { getModeName } from './getModeName';
-	import Route from './Route.svelte';
 	import { routeBorderColor, routeColor } from './modeStyle';
+	import Route from './Route.svelte';
 
 	const {
 		itinerary,
@@ -45,9 +45,11 @@
 	/>
 	{#if stopId}
 		<Button
-			class="justify-normal overflow-hidden text-ellipsis text-wrap text-left text-[length:inherit] leading-5"
+			class="justify-normal text-wrap text-left text-[length:inherit] leading-none"
 			variant="link"
-			onclick={() => onClickStop(name, stopId, new Date(timestamp))}
+			onclick={() => {
+				onClickStop(name, stopId, new Date(timestamp));
+			}}
 		>
 			{name}
 		</Button>
@@ -76,7 +78,7 @@
 	</div>
 {/snippet}
 
-<div class="overflow-x-hidden text-lg">
+<div class="text-lg">
 	{#each itinerary.legs as l, i}
 		{@const isLast = i == itinerary.legs.length - 1}
 		{@const isLastPred = i == itinerary.legs.length - 2}
@@ -93,10 +95,10 @@
 							{t.arrivalOnTrack} {pred.from.track}{pred.duration ? ',' : ''}
 						{/if}
 						{#if pred.duration}
-							<span class="text-nowrap">{formatDurationSec(pred.duration)} {t.walk}</span>
+							{formatDurationSec(pred.duration)} {t.walk}
 						{/if}
 						{#if pred.distance}
-							<span class="text-nowrap">({Math.round(pred.distance)} m)</span>
+							({Math.round(pred.distance)} m)
 						{/if}
 					</div>
 				{/if}
@@ -145,7 +147,7 @@
 							</svg>
 							<span class="ml-2 cursor-pointer">
 								{t.tripIntermediateStops(l.intermediateStops?.length ?? 0)}
-								<span class="text-nowrap">({formatDurationSec(l.duration)})</span>
+								({formatDurationSec(l.duration)})
 							</span>
 						</summary>
 						<div class="mb-1 grid grid-cols-[max-content_max-content_auto] items-center gap-y-4">

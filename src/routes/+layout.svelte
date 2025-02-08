@@ -38,8 +38,9 @@
 	]);
 </script>
 
+<!-- {@render children()} -->
 <div class="flex h-full flex-col">
-	<div class="grow overflow-y-auto p-2 pb-6 md:flex md:items-center md:justify-center">
+	<div class="grow overflow-y-auto">
 		{@render children()}
 	</div>
 	<Menu class="shrink" {items} />
