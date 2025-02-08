@@ -45,9 +45,11 @@
 	/>
 	{#if stopId}
 		<Button
-			class="justify-normal overflow-hidden text-ellipsis text-wrap text-left text-[length:inherit] leading-5"
+			class="justify-normal text-wrap text-left text-[length:inherit] leading-none"
 			variant="link"
-			onclick={() => onClickStop(name, stopId, new Date(timestamp))}
+			onclick={() => {
+				onClickStop(name, stopId, new Date(timestamp));
+			}}
 		>
 			{name}
 		</Button>

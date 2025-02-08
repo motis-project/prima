@@ -1,4 +1,5 @@
 import type { Session } from '$lib/server/auth/session';
+import type { Itinerary } from '$lib/openapi';
 
 declare global {
 	namespace App {
@@ -8,10 +9,10 @@ declare global {
 		}
 		// interface PageData {}
 		interface PageState {
-			selectFrom?: boolean;
-			selectTo?: boolean;
-			selectedItinerary?: Itinerary | null;
-			stop?: { name: string; stopId: string; time: Date };
+			selectedItinerary?: Itinerary;
+			selectedStop?: { name: string; stopId: string; time: Date };
+			stopArriveBy?: boolean;
+			tripId?: string;
 		}
 		// interface Platform {}
 	}

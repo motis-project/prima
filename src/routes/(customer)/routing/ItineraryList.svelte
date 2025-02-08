@@ -45,6 +45,19 @@
 			<LoaderCircle class="m-20 h-12 w-12 animate-spin" />
 		</div>
 	{:then r}
+		{#if r.direct.length !== 0}
+			<div class="my-4 flex flex-wrap gap-x-3 gap-y-3">
+				{#each r.direct as d}
+					<DirectConnection
+						{d}
+						onclick={() => {
+							selectItinerary(d);
+						}}
+					/>
+				{/each}
+			</div>
+		{/if}
+
 		{#if r.itineraries.length !== 0}
 			<div class="flex flex-col gap-4">
 				{#each routingResponses as r, rI}
