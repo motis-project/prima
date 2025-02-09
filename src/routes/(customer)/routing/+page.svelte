@@ -105,116 +105,132 @@
 		}
 		pushState('', { selectedItinerary: itinerary });
 	};
+
+	const focus = (el) => el.focus();
 </script>
 
-{#if page.state.selectFrom}
-	<AddressTypeahead placeholder={t.from} bind:selected={from} items={fromItems} />
-{:else if page.state.selectTo}
-	<AddressTypeahead placeholder={t.to} bind:selected={to} items={toItems} />
-{:else if page.state.selectedItinerary}
-	<div class="flex items-center justify-between gap-4">
-		<Button variant="outline" size="icon" onclick={() => window.history.back()}>
-			<ChevronLeft />
-		</Button>
-		<span>Verbindungsdetails</span>
-	</div>
-	<Separator class="my-4" />
-	<ConnectionDetail
-		itinerary={page.state.selectedItinerary}
-		onClickStop={(name: string, stopId: string, time: Date) =>
-			pushState('', { stop: { name, stopId, time } })}
-		{onClickTrip}
-	/>
-{:else if page.state.stop}
-	<StopTimes
-		arriveBy={false}
-		time={page.state.stop.time}
-		stopId={page.state.stop.stopId}
-		{onClickTrip}
-	/>
-{:else}
-	<div class="flex h-full flex-col gap-4">
-		<div class="relative flex flex-col gap-4">
-			<Input
-				placeholder={t.from}
-				class="text-sm"
-				onfocus={() => pushState('', { selectFrom: true })}
-				value={from.label}
-			/>
-			<Input
-				placeholder={t.to}
-				class="text-sm"
-				onfocus={() => pushState('', { selectTo: true })}
-				value={to.label}
-			/>
-			<Button
-				class="absolute right-4 top-6 z-10 rounded-full"
-				size="icon"
-				onclick={() => {
-					const tmp = to;
-					to = from;
-					from = tmp;
-
-					const tmpItems = toItems;
-					toItems = fromItems;
-					fromItems = tmpItems;
-				}}
-			>
-				<ArrowUpDown class="size-2" />
+<div id="searchmask-container">
+	{#if page.state.selectFrom}
+		<AddressTypeahead
+			use:focus
+			placeholder={t.from}
+			bind:selected={from}
+			items={fromItems}
+			onValueChange={() => history.back()}
+		/>
+	{:else if page.state.selectTo}
+		<AddressTypeahead
+			use:focus
+			placeholder={t.to}
+			bind:selected={to}
+			items={toItems}
+			onValueChange={() => history.back()}
+		/>
+	{:else if page.state.selectedItinerary}
+		<div class="flex items-center justify-between gap-4">
+			<Button variant="outline" size="icon" onclick={() => window.history.back()}>
+				<ChevronLeft />
 			</Button>
+			<span>Verbindungsdetails</span>
 		</div>
-		<div class="flex gap-4">
-			<Drawer.Root>
-				<Drawer.Trigger
-					class={cn(
-						buttonVariants({ variant: 'default' }),
-						'h-8 grow gap-1 text-center text-sm font-medium'
-					)}
+		<Separator class="my-4" />
+		<ConnectionDetail
+			itinerary={page.state.selectedItinerary}
+			onClickStop={(name: string, stopId: string, time: Date) =>
+				pushState('', { stop: { name, stopId, time } })}
+			{onClickTrip}
+		/>
+	{:else if page.state.stop}
+		<StopTimes
+			arriveBy={false}
+			time={page.state.stop.time}
+			stopId={page.state.stop.stopId}
+			{onClickTrip}
+		/>
+	{:else}
+		<div class="flex h-full flex-col gap-4">
+			<div class="relative flex flex-col gap-4">
+				<Input
+					placeholder={t.from}
+					class="text-sm"
+					onfocus={() => pushState('', { selectFrom: true })}
+					value={from.label}
+				/>
+				<Input
+					placeholder={t.to}
+					class="text-sm"
+					onfocus={() => pushState('', { selectTo: true })}
+					value={to.label}
+				/>
+				<Button
+					class="absolute right-4 top-6 z-10 rounded-full"
+					size="icon"
+					onclick={() => {
+						const tmp = to;
+						to = from;
+						from = tmp;
+
+						const tmpItems = toItems;
+						toItems = fromItems;
+						fromItems = tmpItems;
+					}}
 				>
-					Abfahrt Do, Jan 12, 14:21
-					<ChevronDown />
-				</Drawer.Trigger>
-				<Drawer.Portal>
-					<Drawer.Overlay class="fixed inset-0 bg-black/40" />
-					<Drawer.Content>
-						<RadioGroup.Root
-							value="card"
-							class="grid h-9 grid-cols-2 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground"
-						>
-							<Label
-								for="card"
-								class="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&:has([data-state=checked])]:bg-background [&:has([data-state=checked])]:text-foreground [&:has([data-state=checked])]:shadow"
+					<ArrowUpDown class="size-2" />
+				</Button>
+			</div>
+			<div class="flex gap-4">
+				<Drawer.Root>
+					<Drawer.Trigger
+						class={cn(
+							buttonVariants({ variant: 'default' }),
+							'h-8 grow gap-1 text-center text-sm font-medium'
+						)}
+					>
+						Abfahrt Do, Jan 12, 14:21
+						<ChevronDown />
+					</Drawer.Trigger>
+					<Drawer.Portal>
+						<Drawer.Overlay class="fixed inset-0 bg-black/40" />
+						<Drawer.Content>
+							<RadioGroup.Root
+								value="card"
+								class="grid h-9 grid-cols-2 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground"
 							>
-								<RadioGroup.Item value="card" id="card" class="sr-only" aria-label="Card" />
-								{t.departure}
-							</Label>
-							<Label
-								for="paypal"
-								class="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&:has([data-state=checked])]:bg-background [&:has([data-state=checked])]:text-foreground [&:has([data-state=checked])]:shadow"
-							>
-								<RadioGroup.Item value="paypal" id="paypal" class="sr-only" aria-label="Paypal" />
-								{t.arrival}
-							</Label>
-						</RadioGroup.Root>
-						<div class="flex w-full justify-center">
-							<Calendar type="single" class="w-fit" />
-						</div>
-					</Drawer.Content>
-				</Drawer.Portal>
-			</Drawer.Root>
+								<Label
+									for="card"
+									class="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&:has([data-state=checked])]:bg-background [&:has([data-state=checked])]:text-foreground [&:has([data-state=checked])]:shadow"
+								>
+									<RadioGroup.Item value="card" id="card" class="sr-only" aria-label="Card" />
+									{t.departure}
+								</Label>
+								<Label
+									for="paypal"
+									class="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&:has([data-state=checked])]:bg-background [&:has([data-state=checked])]:text-foreground [&:has([data-state=checked])]:shadow"
+								>
+									<RadioGroup.Item value="paypal" id="paypal" class="sr-only" aria-label="Paypal" />
+									{t.arrival}
+								</Label>
+							</RadioGroup.Root>
+							<div class="flex w-full justify-center">
+								<Calendar type="single" class="w-fit" />
+							</div>
+						</Drawer.Content>
+					</Drawer.Portal>
+				</Drawer.Root>
 
-			<Button class="h-8  gap-1 text-center text-sm font-medium">
-				All Modes
-				<ChevronDown />
-			</Button>
+				<Button class="h-8  gap-1 text-center text-sm font-medium">
+					All Modes
+					<ChevronDown />
+				</Button>
+			</div>
+			<div bind:this={connectionsEl} class="flex grow flex-col gap-4 overflow-y-auto">
+				<ItineraryList
+					{baseQuery}
+					{baseResponse}
+					{routingResponses}
+					selectItinerary={(selectedItinerary) => pushState('', { selectedItinerary })}
+				/>
+			</div>
 		</div>
-		<div bind:this={connectionsEl} class="flex grow flex-col gap-4 overflow-y-auto">
-			<ItineraryList
-				{baseQuery}
-				{baseResponse}
-				{routingResponses}
-				selectItinerary={(selectedItinerary) => pushState('', { selectedItinerary })}
-			/>
-		</div>
-	</div>
-{/if}
+	{/if}
+</div>
