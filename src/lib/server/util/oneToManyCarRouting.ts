@@ -14,7 +14,7 @@ export const oneToManyCarRouting = async (
 	one: maplibregl.LngLatLike,
 	many: maplibregl.LngLatLike[],
 	arriveBy: boolean
-): Promise<number[]> => {
+): Promise<(number|undefined)[]> => {
 	return await oneToMany({
 		baseUrl: PUBLIC_MOTIS_URL,
 		querySerializer: { array: { explode: false } } as QuerySerializerOptions,
