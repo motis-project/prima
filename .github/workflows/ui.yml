@@ -105,7 +105,7 @@ jobs:
     steps:
       - name: Deploy
         run: |
-          cd /home/prima
+          cd /home/prima/prima-staging
           docker compose pull
           docker compose down
           docker compose up -d

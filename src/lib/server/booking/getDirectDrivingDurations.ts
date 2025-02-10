@@ -6,11 +6,11 @@ import { type Event } from './getBookingAvailability';
 
 export type DirectDrivingDurations = {
 	thisTour?: {
-		directDrivingDuration: number;
+		directDrivingDuration: number | null;
 		tourId: number | null;
 	};
 	nextTour?: {
-		directDrivingDuration: number;
+		directDrivingDuration: number | null;
 		tourId: number | null;
 	};
 };

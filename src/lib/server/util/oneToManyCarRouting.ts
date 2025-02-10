@@ -14,7 +14,7 @@ export const oneToManyCarRouting = async (
 	one: maplibregl.LngLatLike,
 	many: maplibregl.LngLatLike[],
 	arriveBy: boolean
-): Promise<number[]> => {
+): Promise<(number | undefined)[]> => {
 	return await oneToMany({
 		baseUrl: PUBLIC_MOTIS_URL,
 		querySerializer: { array: { explode: false } } as QuerySerializerOptions,
@@ -34,7 +34,7 @@ export const oneToManyCarRouting = async (
 				lngLatToStr(many[i]),
 				new Date(secondToMilli(d.duration ?? 0)).toISOString()
 			);
-			return secondToMilli(d.duration ?? Number.MAX_VALUE);
+			return d.duration != undefined && d.duration != null ? secondToMilli(d.duration) : undefined;
 		});
 	});
 };
