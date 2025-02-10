@@ -15,7 +15,8 @@ export const carRouting = (
 			toPlace: lngLatToStr(to),
 			directModes: ['CAR'],
 			transitModes: [],
-			maxDirectTime: MAX_TRAVEL / SECOND
+			maxDirectTime: MAX_TRAVEL / SECOND,
+			detailedTransfers: false
 		}
 	}).then((d) => d.data!);
 };

@@ -83,7 +83,6 @@
 			open.tours = undefined;
 		}
 	}}
-	on:close={() => history.back()}
 >
 	<Dialog.Content class="container max-h-screen">
 		<Dialog.Header>
