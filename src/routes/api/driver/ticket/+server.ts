@@ -10,12 +10,12 @@ export const POST = async ({ url }) => {
 		throw 'bad params';
 	}
 
-	await db
+	const result = await db
 		.updateTable('request')
 		.set({ ticketChecked: true })
 		.where('id', '=', requestId)
 		.where('ticketCode', '=', ticketCode)
-		.execute();
+		.executeTakeFirst();
 
-	return json({ success: true });
+	return json({ success: result.numChangedRows !== BigInt(0) });
 };
