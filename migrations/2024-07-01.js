@@ -97,7 +97,6 @@ export async function up(db) {
 		.addColumn('scheduled_time_start', 'bigint', (col) => col.notNull())
 		.addColumn('scheduled_time_end', 'bigint', (col) => col.notNull())
 		.addColumn('communicated_time', 'bigint', (col) => col.notNull())
-		// direct duration from last leg of previous tour
 		.addColumn('prev_leg_duration', 'integer', (col) => col.notNull())
 		.addColumn('next_leg_duration', 'integer', (col) => col.notNull())
 		// all successive events taking place at the same physical location share the same event group
@@ -106,6 +105,14 @@ export async function up(db) {
 		.addColumn('address', 'varchar', (col) => col.notNull())
 		.execute();
 
+	await db.schema
+		.createTable('journey')
+		.addColumn('id', 'serial', (col) => col.primaryKey())
+		.addColumn('json', 'varchar', (col) => col.notNull())
+		.addColumn('user', 'integer', (col) => col.references('user.id').notNull())
+		.addColumn('request1', 'integer', (col) => col.references('request.id').notNull())
+		.addColumn('request2', 'integer', (col) => col.references('request.id'))
+		.execute();
 
 	// =======
 	// Indices

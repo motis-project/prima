@@ -83,6 +83,12 @@ export interface Database {
 		tour: number;
 		customer: number;
 	};
+	journey: {
+		id: Generated<number>;
+		json: string;
+		request1: number;
+		request2: number | null;
+	};
 }
 
 export const pool = new pg.Pool({ connectionString: env.DATABASE_URL });

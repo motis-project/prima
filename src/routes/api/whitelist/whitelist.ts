@@ -18,19 +18,19 @@ export async function whitelist(
 		'Whitelist Request: ',
 		JSON.stringify(
 			{
+				startFixed,
 				userChosen,
 				busStops: busStops.map((b) => {
 					return { ...b, times: b.times.map((t) => new Date(t).toISOString()) };
 				}),
-				required,
-				startFixed
+				required
 			},
 			null,
 			'\t'
 		)
 	);
 
-	if (busStops.length == 0) {
+	if (busStops.length == 0 || !busStops.some((b) => b.times.length !== 0)) {
 		return [];
 	}
 
@@ -47,6 +47,16 @@ export async function whitelist(
 			}
 		}
 	}
+
+	console.log('BUS STOPS', JSON.stringify(busStops));
+	console.log(
+		'INTERVAL',
+		JSON.stringify({
+			firstTime: new Date(firstTime).toISOString(),
+			lastTime: new Date(lastTime).toISOString()
+		})
+	);
+
 	const searchInterval = new Interval(firstTime, lastTime);
 	const expandedSearchInterval = searchInterval.expand(MAX_TRAVEL * 6, MAX_TRAVEL * 6);
 
@@ -56,7 +66,14 @@ export async function whitelist(
 		searchInterval,
 		busStops
 	);
-	console.log('Whitelist Request: ', JSON.stringify({ companies, filteredBusStops }, null, '\t'));
+	console.log(
+		'Whitelist Request: ',
+		JSON.stringify(
+			{ searchInterval, expandedSearchInterval, companies, filteredBusStops },
+			null,
+			'\t'
+		)
+	);
 
 	const validBusStops = new Array<BusStop>();
 	for (let i = 0; i != filteredBusStops.length; ++i) {

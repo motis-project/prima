@@ -9,3 +9,4 @@ street_routing: true
 osr_footpath: false
 geocoding: true
 reverse_geocoding: true
+odm: http://localhost:5173
