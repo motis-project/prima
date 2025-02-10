@@ -32,12 +32,6 @@ services:
       - 6499:8080
     command: /bin/sh -c "cd / && /motis server"
 
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 6501:8080
-
   prima:
     image: prima
     restart: always
