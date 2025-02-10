@@ -34,7 +34,7 @@ export const oneToManyCarRouting = async (
 				lngLatToStr(many[i]),
 				new Date(secondToMilli(d.duration ?? 0)).toISOString()
 			);
-			return secondToMilli(d.duration ?? Number.MAX_VALUE);
+			return (d.duration != undefined && d.duration != null) ? secondToMilli(d.duration) : undefined;
 		});
 	});
 };
