@@ -47,7 +47,8 @@ export async function insertRequest(
 			return_duration: connection.dropoffPrevLegDuration
 		});
 	}
-	return (await sql<{ request: number}>`
+	return (
+		await sql<{ request: number }>`
         SELECT create_and_merge_tours(
             ROW(${capacities.passengers}, ${capacities.wheelchairs}, ${capacities.bikes}, ${capacities.luggage}, ${customer}),
             ROW(${true}, ${c.start.lat}, ${c.start.lng}, ${connection.pickupTime}, ${connection.pickupTime}, ${connection.pickupTime}, ${connection.pickupPrevLegDuration}, ${connection.pickupNextLegDuration}, ${c.start.address}, ${startEventGroup}),
@@ -59,7 +60,8 @@ export async function insertRequest(
             ${JSON.stringify(approachDurations)}::jsonb,
             ROW(${direct.nextTour?.tourId ?? null}, ${direct.nextTour?.directDrivingDuration ?? null}),
             ROW(${direct.thisTour?.tourId ?? null}, ${direct.thisTour?.directDrivingDuration ?? null})
-       ) AS request`.execute(trx)).rows[0].request;
+       ) AS request`.execute(trx)
+	).rows[0].request;
 }
 //TODOS:
 // communicated/scheduled times

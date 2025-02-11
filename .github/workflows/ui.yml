@@ -16,6 +16,7 @@ jobs:
     permissions: write-all
     env:
       DATABASE_URL: postgresql://postgres:pw@localhost:6500/prima
+      PUBLIC_MOTIS_URL: http://prima-motis.motis-project.de
     steps:
       - name: Checkout
         uses: actions/checkout@v4
