@@ -37,7 +37,7 @@ jobs:
         run: |
           pnpm run build
           docker compose down
-          docker compose pull
+          docker compose pull motis-server pg
           ./motis-import.sh
           docker compose up -d motis-server pg
           sleep 5
