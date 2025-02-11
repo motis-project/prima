@@ -45,6 +45,14 @@ export const actions = {
     const startTime2 = readInt(formData.get('startTime2'));
     const endTime2 = readInt(formData.get('endTime2'));
 
+    console.log('BOOKING PARAMS =', {
+      startFixed1, startFixed2,
+      fromAddress1, toAddress1,
+      fromAddress2, toAddress2,
+      fromLat1, fromLng1, toLat1, toLng1, startTime1, endTime1,
+      fromLat2, fromLng2, toLat2, toLng2, startTime2, endTime2
+    });
+
     if (
       typeof json !== 'string' ||
       typeof startFixed1 !== 'string' ||
@@ -66,13 +74,6 @@ export const actions = {
       isNaN(startTime2) ||
       isNaN(endTime2)
     ) {
-      console.log('invalid booking params', {
-        startFixed1, startFixed2,
-        fromAddress1, toAddress1,
-        fromAddress2, toAddress2,
-        fromLat1, fromLng1, toLat1, toLng1, startTime1, endTime1,
-        fromLat2, fromLng2, toLat2, toLng2, startTime2, endTime2
-      });
       throw 'invalid booking params';
     }
 
@@ -91,7 +92,7 @@ export const actions = {
       start: start1,
       target: target1,
       startTime: startTime1,
-      endTime: endTime1
+      targetTime: endTime1
     };
 
     const onlyOne = startFixed1 === startFixed2;
@@ -99,7 +100,7 @@ export const actions = {
       start: start2,
       target: target2,
       startTime: startTime2,
-      endTime: endTime2
+      targetTime: endTime2
     };
 
     console.log('BOOKING: C1=', JSON.stringify(connection1, null, '\t'));
@@ -117,6 +118,7 @@ export const actions = {
       if (connection1 != null) {
         firstBooking = await bookRide(connection1, capacities, startFixed1 === '1', trx);
         if (firstBooking == undefined) {
+          console.log('FIRST BOOKING FAILED');
           message = onlyOne ? msg('bookingError') : msg('bookingError1');
           return;
         }
@@ -124,6 +126,7 @@ export const actions = {
       if (connection2 != null) {
         secondBooking = await bookRide(connection2, capacities, startFixed2 === '1', trx);
         if (secondBooking == undefined) {
+          console.log('SECOND BOOKING FAILED');
           message = msg('bookingError2');
           return;
         }
@@ -173,11 +176,15 @@ export const actions = {
           trx
         );
       }
+
+      console.log('INSERTION DONE, SETTING SUCCESS=TRUE - REQUIESTS:', { request1, request2 });
+
       success = true;
       return;
     });
 
     if (success) {
+      console.log('SAVING JOURNEY');
       const id = (await db
         .insertInto('journey')
         .values({
