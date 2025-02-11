@@ -163,12 +163,14 @@ export function evaluateBothInsertion(
 	if (arrivalWindow == undefined) {
 		return undefined;
 	}
+	/*
 	if (
 		promisedTimes != undefined &&
 		!keepsPromises(insertionCase, arrivalWindow, passengerDuration, promisedTimes)
 	) {
 		return undefined;
 	}
+	*/
 	const taxiDuration =
 		prevLegDuration +
 		nextLegDuration +

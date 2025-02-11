@@ -3,6 +3,8 @@
 	import ConnectionDetail from '../../routing/ConnectionDetail.svelte';
 
 	const { data } = $props();
+
+	console.log(data);
 </script>
 
 <ConnectionDetail
