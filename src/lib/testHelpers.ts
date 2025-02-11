@@ -115,6 +115,7 @@ export const addTestUser = async () => {
 };
 
 export const clearDatabase = async () => {
+	await db.deleteFrom('journey').execute();
 	await db.deleteFrom('availability').execute();
 	await db.deleteFrom('event').execute();
 	await db.deleteFrom('request').execute();
