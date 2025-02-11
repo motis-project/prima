@@ -5,7 +5,7 @@ import { readFloat, readInt } from "$lib/server/util/readForm";
 import { sql } from "kysely";
 import { insertRequest } from "../../api/booking/query";
 import { msg, type Msg } from "$lib/msg";
-import { fromDate } from "@internationalized/date";
+import { redirect } from "@sveltejs/kit";
 
 const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
   for (const e of l1) {
@@ -18,14 +18,14 @@ const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 
 export const actions = {
   default: async ({ request, locals }): Promise<Msg> => {
-    const customer = locals.session?.userId;
-    if (!customer) {
+    const user = locals.session?.userId;
+    if (!user) {
       throw 'not logged in';
     }
 
     const formData = await request.formData();
 
-    const journeyJson = formData.get('json');
+    const json = formData.get('json');
     const startFixed1 = formData.get('startFixed1');
     const startFixed2 = formData.get('startFixed2');
     const fromAddress1 = formData.get('fromAddress1');
@@ -46,6 +46,7 @@ export const actions = {
     const targetTime2 = readInt(formData.get('targetTime2'));
 
     if (
+      typeof json !== 'string' ||
       typeof startFixed1 !== 'string' ||
       typeof startFixed2 !== 'string' ||
       typeof fromAddress1 !== 'string' ||
@@ -101,7 +102,10 @@ export const actions = {
       targetTime: targetTime2
     };
 
+    let success = false;
     let message: Msg | undefined = undefined;
+    let request1: number | null = null;
+    let request2: number | null = null;
     await db.transaction().execute(async (trx) => {
       await sql`LOCK TABLE tour, request, event, availability IN ACCESS EXCLUSIVE MODE;`.execute(trx);
 
@@ -110,14 +114,14 @@ export const actions = {
       if (connection1 != null) {
         firstBooking = await bookRide(connection1, capacities, startFixed1 === '1', trx);
         if (firstBooking == undefined) {
-          message = msg('nameTooShort');
+          message = onlyOne ? msg('bookingError') : msg('bookingError1');
           return;
         }
       }
       if (connection2 != null) {
         secondBooking = await bookRide(connection2, capacities, startFixed2 === '1', trx);
         if (secondBooking == undefined) {
-          message = msg('nameTooShort');
+          message = msg('bookingError2');
           return;
         }
       }
@@ -137,11 +141,11 @@ export const actions = {
         }
       }
       if (connection1 != null) {
-        insertRequest(
+        request1 = await insertRequest(
           firstBooking!.best,
           capacities,
           connection1,
-          customer,
+          user,
           firstBooking!.eventGroupUpdateList,
           [...firstBooking!.mergeTourList],
           firstBooking!.pickupEventGroup,
@@ -152,11 +156,11 @@ export const actions = {
         );
       }
       if (connection2 != null) {
-        insertRequest(
+        request2 = await insertRequest(
           secondBooking!.best,
           capacities,
           connection2,
-          customer,
+          user,
           secondBooking!.eventGroupUpdateList,
           [...secondBooking!.mergeTourList],
           secondBooking!.pickupEventGroup,
@@ -166,9 +170,23 @@ export const actions = {
           trx
         );
       }
-      message = msg('activationSuccess', 'success');
+      success = true;
       return;
     });
+
+    if (success) {
+      const id = (await db
+        .insertInto('journey')
+        .values({
+          user,
+          json,
+          request1: request1!,
+          request2
+        })
+        .returning('id')
+        .executeTakeFirstOrThrow()).id;
+      return redirect(302, `/bookings/${id}`);
+    }
 
     return message!;
   }

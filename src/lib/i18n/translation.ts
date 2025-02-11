@@ -71,6 +71,7 @@ export type Translations = {
 		routingRequestFailed: string;
 
 		// Booking
+		bookingError: string;
 		bookingError1: string;
 		bookingError2: string;
 		bookingSuccess: string;

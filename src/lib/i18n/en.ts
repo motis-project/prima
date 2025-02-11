@@ -68,7 +68,12 @@ const translations: Translations = {
 		minPrepTime: 'Not enough preparation time.',
 		startDestNotInSameZone: 'Start and destination not in the same zone.',
 		noVehicle: 'No vehicle available.',
-		routingRequestFailed: 'Routing request failed.'
+		routingRequestFailed: 'Routing request failed.',
+
+		// Booking
+		bookingError: 'The ride could not be booked.',
+		bookingError1: 'First section could not be booked.',
+		bookingError2: 'Last section could not be booked.'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',
