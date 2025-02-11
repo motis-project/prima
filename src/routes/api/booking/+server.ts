@@ -49,7 +49,11 @@ export const POST = async (event: RequestEvent) => {
 			}
 		}
 		if (p.connection2 != null) {
-			secondConnection = await bookRide(p.connection2, p.capacities, true, trx);
+			let blockedVehicleId: number | undefined = undefined;
+			if(firstConnection != undefined) {
+				blockedVehicleId = firstConnection.best.vehicle;
+			}
+			secondConnection = await bookRide(p.connection2, p.capacities, true, trx, blockedVehicleId);
 			if (secondConnection == undefined) {
 				message = 'Die zweite Anfrage kann nicht erfüllt werden.';
 				return;
