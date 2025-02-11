@@ -33,6 +33,9 @@ export const POST = async (event: RequestEvent) => {
 	if (!result.valid) {
 		return json({ message: result.errors }, { status: 400 });
 	}
+	if(p.connection1 == null && p.connection2 == null) {
+		return json({ message: 'Es wurde weder eine Anfrage für die erste noch für die letzte Meile gestellt.' }, { status: 200 });
+	}
 	let firstMileRequestId: number | undefined = undefined;
 	let lastMileRequestId: number | undefined = undefined;
 	let message: string | undefined = undefined;
@@ -44,7 +47,7 @@ export const POST = async (event: RequestEvent) => {
 		if (p.connection1 != null) {
 			firstConnection = await bookRide(p.connection1, p.capacities, false, trx);
 			if (firstConnection == undefined) {
-				message = 'Die erste Anfrage kann nicht erfüllt werden.';
+				message = 'Die Anfrage für die erste Meile kann nicht erfüllt werden.';
 				return;
 			}
 		}
@@ -55,7 +58,7 @@ export const POST = async (event: RequestEvent) => {
 			}
 			secondConnection = await bookRide(p.connection2, p.capacities, true, trx, blockedVehicleId);
 			if (secondConnection == undefined) {
-				message = 'Die zweite Anfrage kann nicht erfüllt werden.';
+				message = 'Die Anfrage für die zweite Meile kann nicht erfüllt werden.';
 				return;
 			}
 		}
