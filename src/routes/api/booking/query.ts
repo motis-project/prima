@@ -18,7 +18,7 @@ export async function insertRequest(
 	neighbourIds: NeighbourIds,
 	direct: DirectDrivingDurations,
 	trx: Transaction<Database>
-) {
+): Promise<number> {
 	mergeTourList = mergeTourList.filter((id) => id != connection.tour);
 	const approachDurations = new Array<{ id: number; approach_duration: number }>();
 	if (neighbourIds.nextDropoff != neighbourIds.nextPickup && neighbourIds.nextPickup) {
@@ -47,8 +47,8 @@ export async function insertRequest(
 			return_duration: connection.dropoffPrevLegDuration
 		});
 	}
-	await sql`
-        CALL create_and_merge_tours(
+	return (await sql<{ request: number}>`
+        SELECT create_and_merge_tours(
             ROW(${capacities.passengers}, ${capacities.wheelchairs}, ${capacities.bikes}, ${capacities.luggage}, ${customer}),
             ROW(${true}, ${c.start.lat}, ${c.start.lng}, ${connection.pickupTime}, ${connection.pickupTime}, ${connection.pickupTime}, ${connection.pickupPrevLegDuration}, ${connection.pickupNextLegDuration}, ${c.start.address}, ${startEventGroup}),
             ROW(${false}, ${c.target.lat}, ${c.target.lng}, ${connection.dropoffTime}, ${connection.dropoffTime}, ${connection.dropoffTime}, ${connection.dropoffPrevLegDuration}, ${connection.dropoffNextLegDuration}, ${c.target.address}, ${targetEventGroup}),
@@ -59,7 +59,7 @@ export async function insertRequest(
             ${JSON.stringify(approachDurations)}::jsonb,
             ROW(${direct.nextTour?.tourId ?? null}, ${direct.nextTour?.directDrivingDuration ?? null}),
             ROW(${direct.thisTour?.tourId ?? null}, ${direct.thisTour?.directDrivingDuration ?? null})
-        )`.execute(trx);
+       ) AS request`.execute(trx)).rows[0].request;
 }
 //TODOS:
 // communicated/scheduled times
