@@ -102,6 +102,9 @@ export const actions = {
       targetTime: targetTime2
     };
 
+    console.log('BOOKING: C1=', JSON.stringify(connection1, null, '\t'));
+    console.log('BOOKING: C2=', JSON.stringify(connection2, null, '\t'));
+
     let success = false;
     let message: Msg | undefined = undefined;
     let request1: number | null = null;
