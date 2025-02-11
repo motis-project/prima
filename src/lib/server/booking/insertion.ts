@@ -378,10 +378,19 @@ const keepsPromises = (
 				checkDropoff = true;
 			}
 	}
+	console.log('KEEPS PROMISE', { checkPickup, checkDropoff });
 	if (checkPickup && !pickupWindow.covers(promisedTimes.pickup)) {
+		console.log('PROMISE CHECK: PICKUP WINDOW FAILED', {
+			pickupWindow: pickupWindow.toString(),
+			pickup: new Date(promisedTimes.pickup).toISOString()
+		});
 		return false;
 	}
 	if (checkDropoff && !dropoffWindow.covers(promisedTimes.dropoff)) {
+		console.log('PROMISE CHECK: DROPOFF WINDOW FAILED', {
+			dropoffWindow: dropoffWindow.toString(),
+			dropoff: new Date(promisedTimes.dropoff).toISOString()
+		});
 		return false;
 	}
 	return true;
