@@ -9,7 +9,7 @@ import { insertRequest } from './query';
 import { json } from '@sveltejs/kit';
 
 export type BookingParameters = {
-	connection1: ExpectedConnection;
+	connection1: ExpectedConnection | null;
 	connection2: ExpectedConnection | null;
 	capacities: Capacities;
 };
