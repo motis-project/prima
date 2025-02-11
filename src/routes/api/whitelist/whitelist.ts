@@ -4,7 +4,7 @@ import { MAX_TRAVEL } from '$lib/constants';
 import { Interval } from '$lib/server/util/interval';
 import type { Coordinates } from '$lib/util/Coordinates';
 import { evaluateRequest } from '$lib/server/booking/evaluateRequest';
-import type { BusStop } from '$lib/server/booking/BusStop';
+import { toBusStopWithISOStrings, type BusStop } from '$lib/server/booking/BusStop';
 import type { Insertion } from '$lib/server/booking/insertion';
 import { InsertHow, printInsertionType } from '$lib/server/booking/insertionTypes';
 
@@ -20,9 +20,7 @@ export async function whitelist(
 			{
 				startFixed,
 				userChosen,
-				busStops: busStops.map((b) => {
-					return { ...b, times: b.times.map((t) => new Date(t).toISOString()) };
-				}),
+				busStops: busStops.map((b) => toBusStopWithISOStrings(b)),
 				required
 			},
 			null,
@@ -67,9 +65,9 @@ export async function whitelist(
 		busStops
 	);
 	console.log(
-		'Whitelist Request: ',
+		'Whitelist Request: getBookingAvailability results\n',
 		JSON.stringify(
-			{ searchInterval, expandedSearchInterval, companies, filteredBusStops },
+			{ searchInterval: searchInterval.toString(), expandedSearchInterval: expandedSearchInterval.toString(), companies, filteredBusStops },
 			null,
 			'\t'
 		)

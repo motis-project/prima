@@ -19,6 +19,21 @@ export type ExpectedConnection = {
 	targetTime: UnixtimeMs;
 };
 
+export type ExpectedConnectionWithISoStrings = {
+	start: Coordinates;
+	target: Coordinates;
+	startTime: string;
+	targetTime: string;
+}
+
+export function toExpectedConnectionWithISOStrings(c: ExpectedConnection | null): ExpectedConnectionWithISoStrings | null {
+	return c == null ? null : {
+		...c,
+		startTime: new Date(c.startTime).toISOString(),
+		targetTime: new Date(c.targetTime).toISOString()
+	}
+}
+
 export async function bookRide(
 	c: ExpectedConnection,
 	required: Capacities,

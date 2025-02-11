@@ -2,7 +2,7 @@ import type { RequestEvent } from './$types';
 import { Validator } from 'jsonschema';
 import { json } from '@sveltejs/kit';
 import { whitelist } from './whitelist';
-import { schemaDefinitions, whitelistSchema, type WhitelistRequest } from './WhitelistRequest';
+import { schemaDefinitions, toWhitelistRequestWithISOStrings, whitelistSchema, type WhitelistRequest } from './WhitelistRequest';
 import type { Insertion } from '$lib/server/booking/insertion';
 
 export type WhitelistResponse = {
@@ -20,7 +20,7 @@ export async function POST(event: RequestEvent) {
 		return json({ message: result.errors }, { status: 400 });
 	}
 
-	console.log('WHITE LIST REQUEST PARAMS', JSON.stringify(p, null, '\t'));
+	console.log('WHITELIST REQUEST PARAMS', JSON.stringify(toWhitelistRequestWithISOStrings(p), null, '\t'));
 	let direct: (Insertion | undefined)[] = [];
 	if(p.directTimes.length != 0) {
 		if (p.startFixed) {
