@@ -108,7 +108,7 @@ export const actions = {
 			targetTime: endTime1
 		};
 
-		const onlyOne = startFixed1 === startFixed2;
+		const onlyOne = start1.lat === start2.lat && start1.lng === start2.lng;
 		const connection2 = onlyOne
 			? null
 			: {
