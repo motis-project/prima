@@ -151,7 +151,7 @@
 				<input type="hidden" name="endTime1" value={first.scheduledEndTime} />
 				<input type="hidden" name="startTime2" value={last.scheduledStartTime} />
 				<input type="hidden" name="endTime2" value={last.scheduledEndTime} />
-				<Button variant="outline">Fahrt kostenpflichtig buchen</Button>
+				<Button type="submit" variant="outline">Fahrt kostenpflichtig buchen</Button>
 			</form>
 		{/if}
 	</div>
