@@ -27,6 +27,13 @@ export const queryCompletedTours = async (companyId: number | undefined) => {
 		.execute();
 };
 
+export const queryAvailabilities = async () => {
+	return await db
+		.selectFrom('availability')
+		.selectAll()
+		.execute()
+};
+
 export const covers = (
 	eb: ExpressionBuilder<Database, 'zone'>,
 	coordinates: Coordinates

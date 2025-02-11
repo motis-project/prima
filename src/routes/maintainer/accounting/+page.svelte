@@ -14,6 +14,7 @@
 	import pkg from 'file-saver';
 	import { paginate, setCurrentPages } from '$lib/Paginate';
 	import Paginate from '$lib/paginate.svelte';
+	import { Vehicle } from '../../user/taxi/types.js';
 
 	const { data } = $props();
 
@@ -254,7 +255,54 @@
 		);
 	};
 
-	// --- Summierung: ---
+	// --- summation: per day per vehicle --- 
+
+	// TODO: TESTEN
+	let sumsPerDay: (number | undefined)[][] = [];
+	let capSumPerDay: (number | undefined)[][] = [];
+
+	const createCapSum = () => {
+		let capSum = 0;
+		let thisVehicle = data.availabilities.at(0)?.vehicle;
+		let dateTemp = data.tours.at(0)?.from.getDate();
+		for (let avail of data.availabilities) {
+			if(avail.start_time.getDate() == dateTemp && avail.start_time.getDate() == avail.end_time.getDate() && avail.vehicle == thisVehicle)
+			{
+				capSum += avail.cap;	
+			}
+			else {
+				dateTemp = avail.start_time.getDate();
+				capSumPerDay.push([capSum, thisVehicle]);
+				thisVehicle = avail.vehicle;
+				capSum = avail.cap;
+			}
+		}
+	};
+
+	const createSumForEveryDay = () => {
+		let daySum = 0;
+		let thisVehicle = data.tours.at(0)?.vehicle_id;
+		let dateTemp = data.tours.at(0)?.from.getDate();
+		for (let row of data.tours) {
+			if(row.from.getDate() == dateTemp && thisVehicle == row.vehicle_id) {
+				daySum += getCost(row.fare, row.fare_route);
+			}
+			else {
+				dateTemp = row.from.getDate();
+				sumsPerDay.push([daySum, thisVehicle]);
+				thisVehicle = row.vehicle_id;
+				daySum = getCost(row.fare, row.fare_route);
+			}
+		}
+	};
+
+	const computeCost = () => {
+		// verrechne die beiden Arrays miteinander.
+		
+	};
+
+
+	// --- summation: ---
 	let filterString = $state('keine Filter ausgewählt');
 	let sum = $state(0);
 
