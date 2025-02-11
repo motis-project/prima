@@ -1,0 +1,9 @@
+trip_id,arrival_time,departure_time,stop_id,stop_sequence,pickup_type,drop_off_type
+RB-1,00:00:00,00:00:00,G-BHF,1,0,0
+RB-1,01:20:00,01:20:00,S-BHF,2,0,0
+BUS-1,00:00:00,00:00:00,S-BHF,1,0,0
+BUS-1,00:30:00,00:30:00,S-BUS,2,0,0
+RB-2,00:00:00,00:00:00,S-BHF,1,0,0
+RB-2,01:20:00,01:20:00,G-BHF,2,0,0
+BUS-2,00:00:00,00:00:00,S-BUS,1,0,0
+BUS-2,00:30:00,00:30:00,S-BHF,2,0,0

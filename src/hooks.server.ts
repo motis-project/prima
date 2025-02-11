@@ -31,11 +31,12 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		}
 	} else {
 		if (
-			event.url.pathname.startsWith('/account') &&
-			event.url.pathname !== '/account/login' &&
-			event.url.pathname !== '/account/signup' &&
-			event.url.pathname !== '/account/reset-password' &&
-			event.url.pathname !== '/account/request-password-reset'
+			event.url.pathname.startsWith('/bookings') ||
+			(event.url.pathname.startsWith('/account') &&
+				event.url.pathname !== '/account/login' &&
+				event.url.pathname !== '/account/signup' &&
+				event.url.pathname !== '/account/reset-password' &&
+				event.url.pathname !== '/account/request-password-reset')
 		) {
 			return redirect(302, '/account/login');
 		}

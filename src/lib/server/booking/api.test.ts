@@ -266,14 +266,15 @@ describe('Whitelist and Booking API Tests', () => {
 			capacities
 		});
 
-		await booking(bookingBody);
+		const bookingResponse = await booking(bookingBody);
 		const tours = await getTours();
 		expect(tours.length).toBe(1);
 		expect(tours[0].requests.length).toBe(1);
 		expect(tours[0].requests[0].events.length).toBe(2);
 		expect(tours[0].requests[0].customer).toBe(mockUserId);
-		const event1 = tours[0].requests[0].events[0];
-		const event2 = tours[0].requests[0].events[1];
+		const requests = tours[0].requests;
+		const event1 = requests[0].events[0];
+		const event2 = requests[0].events[1];
 		expect(event1.isPickup).not.toBe(event2.isPickup);
 		const pickup = event1.isPickup ? event1 : event2;
 		const dropoff = !event1.isPickup ? event1 : event2;
@@ -297,5 +298,8 @@ describe('Whitelist and Booking API Tests', () => {
 		expect(
 			Math.abs(inNiesky2.lat - dropoff.lat) + Math.abs(inNiesky2.lng - dropoff.lng)
 		).toBeLessThan(COORDINATE_ROUNDING_ERROR_THRESHOLD);
+
+		const response = await bookingResponse.json();
+		requests.some((r) => r.id == response.firstMileRequestId);
 	}, 30000);
 });
