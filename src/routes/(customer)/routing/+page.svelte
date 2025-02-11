@@ -129,25 +129,28 @@
 		</Button>
 
 		{#if page.state.selectedItinerary.legs.some((l: Leg) => l.mode === 'ODM')}
-			{@const leg1 = page.state.selectedItinerary.legs.find((l: Leg) => l.mode === 'ODM')}
-			{@const leg2 = page.state.selectedItinerary.legs.findLast((l: Leg) => l.mode === 'ODM')}
+			{@const first = page.state.selectedItinerary.legs.find((l: Leg) => l.mode === 'ODM')}
+			{@const last = page.state.selectedItinerary.legs.findLast((l: Leg) => l.mode === 'ODM')}
 			<form method="post" use:enhance>
+				<input type="hidden" name="json" value={JSON.stringify(page.state.selectedItinerary)} />
+				<input type="hidden" name="startFixed1" value={first.from.name === 'END' ? '1' : '0'} />
+				<input type="hidden" name="startFixed2" value={last.to.name === 'END' ? '1' : '0'} />
 				<input type="hidden" name="fromAddress1" value={from.label} />
-				<input type="hidden" name="toAddress1" value={leg1.to.name} />
-				<input type="hidden" name="fromAddress2" value={leg2.from.name} />
+				<input type="hidden" name="toAddress1" value={first.to.name} />
+				<input type="hidden" name="fromAddress2" value={last.from.name} />
 				<input type="hidden" name="toAddress2" value={to.label} />
-				<input type="hidden" name="fromLat1" value={leg1.from.lat} />
-				<input type="hidden" name="fromLng1" value={leg1.from.lng} />
-				<input type="hidden" name="fromLat2" value={leg2.from.lat} />
-				<input type="hidden" name="fromLng2" value={leg2.from.lng} />
-				<input type="hidden" name="toLat1" value={leg1.to.lat} />
-				<input type="hidden" name="toLng1" value={leg1.to.lng} />
-				<input type="hidden" name="toLat2" value={leg2.to.lat} />
-				<input type="hidden" name="toLng2" value={leg2.to.lng} />
-				<input type="hidden" name="startTime1" value={leg1.scheduledStartTime} />
-				<input type="hidden" name="endTime1" value={leg1.scheduledEndTime} />
-				<input type="hidden" name="startTime2" value={leg2.scheduledStartTime} />
-				<input type="hidden" name="endTime2" value={leg2.scheduledEndTime} />
+				<input type="hidden" name="fromLat1" value={first.from.lat} />
+				<input type="hidden" name="fromLng1" value={first.from.lng} />
+				<input type="hidden" name="toLat1" value={first.to.lat} />
+				<input type="hidden" name="toLng1" value={first.to.lng} />
+				<input type="hidden" name="fromLat2" value={last.from.lat} />
+				<input type="hidden" name="fromLng2" value={last.from.lng} />
+				<input type="hidden" name="toLat2" value={last.to.lat} />
+				<input type="hidden" name="toLng2" value={last.to.lng} />
+				<input type="hidden" name="startTime1" value={first.scheduledStartTime} />
+				<input type="hidden" name="endTime1" value={first.scheduledEndTime} />
+				<input type="hidden" name="startTime2" value={last.scheduledStartTime} />
+				<input type="hidden" name="endTime2" value={last.scheduledEndTime} />
 				<Button variant="outline">Fahrt kostenpflichtig buchen</Button>
 			</form>
 		{/if}

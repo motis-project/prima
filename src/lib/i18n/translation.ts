@@ -69,6 +69,11 @@ export type Translations = {
 		startDestNotInSameZone: string;
 		noVehicle: string;
 		routingRequestFailed: string;
+
+		// Booking
+		bookingError1: string;
+		bookingError2: string;
+		bookingSuccess: string;
 	};
 	admin: {
 		completedToursSubtitle: string;

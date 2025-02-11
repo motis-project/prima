@@ -86,6 +86,7 @@ export interface Database {
 	journey: {
 		id: Generated<number>;
 		json: string;
+		user: number;
 		request1: number;
 		request2: number | null;
 	};
