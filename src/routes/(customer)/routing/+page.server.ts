@@ -41,9 +41,9 @@ export const actions = {
     const toLat2 = readFloat(formData.get('toLat2'));
     const toLng2 = readFloat(formData.get('toLng2'));
     const startTime1 = readInt(formData.get('startTime1'));
-    const targetTime1 = readInt(formData.get('targetTime1'));
+    const endTime1 = readInt(formData.get('endTime1'));
     const startTime2 = readInt(formData.get('startTime2'));
-    const targetTime2 = readInt(formData.get('targetTime2'));
+    const endTime2 = readInt(formData.get('endTime2'));
 
     if (
       typeof json !== 'string' ||
@@ -58,20 +58,20 @@ export const actions = {
       isNaN(toLat1) ||
       isNaN(toLng1) ||
       isNaN(startTime1) ||
-      isNaN(targetTime1) ||
+      isNaN(endTime1) ||
       isNaN(fromLat2) ||
       isNaN(fromLng2) ||
       isNaN(toLat2) ||
       isNaN(toLng2) ||
       isNaN(startTime2) ||
-      isNaN(targetTime2)
+      isNaN(endTime2)
     ) {
       console.log('invalid booking params', {
         startFixed1, startFixed2,
         fromAddress1, toAddress1,
         fromAddress2, toAddress2,
-        fromLat1, fromLng1, toLat1, toLng1, startTime1, targetTime1,
-        fromLat2, fromLng2, toLat2, toLng2, startTime2, targetTime2
+        fromLat1, fromLng1, toLat1, toLng1, startTime1, endTime1,
+        fromLat2, fromLng2, toLat2, toLng2, startTime2, endTime2
       });
       throw 'invalid booking params';
     }
@@ -91,7 +91,7 @@ export const actions = {
       start: start1,
       target: target1,
       startTime: startTime1,
-      targetTime: targetTime1
+      endTime: endTime1
     };
 
     const onlyOne = startFixed1 === startFixed2;
@@ -99,7 +99,7 @@ export const actions = {
       start: start2,
       target: target2,
       startTime: startTime2,
-      targetTime: targetTime2
+      endTime: endTime2
     };
 
     console.log('BOOKING: C1=', JSON.stringify(connection1, null, '\t'));
