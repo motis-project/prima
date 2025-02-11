@@ -17,10 +17,10 @@ const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 };
 
 export const actions = {
-	default: async ({ request, locals }): Promise<Msg> => {
+	default: async ({ request, locals }): Promise<{ msg: Msg }> => {
 		const user = locals.session?.userId;
 		if (!user) {
-			throw 'not logged in';
+			return { msg: msg('accountDoesNotExist') };
 		}
 
 		const formData = await request.formData();
@@ -112,11 +112,11 @@ export const actions = {
 		const connection2 = onlyOne
 			? null
 			: {
-					start: start2,
-					target: target2,
-					startTime: startTime2,
-					targetTime: endTime2
-				};
+				start: start2,
+				target: target2,
+				startTime: startTime2,
+				targetTime: endTime2
+			};
 
 		console.log('BOOKING: C1=', JSON.stringify(connection1, null, '\t'));
 		console.log('BOOKING: C2=', JSON.stringify(connection2, null, '\t'));

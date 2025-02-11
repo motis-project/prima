@@ -29,6 +29,9 @@
 	import ConnectionDetail from './ConnectionDetail.svelte';
 	import StopTimes from './StopTimes.svelte';
 	import { enhance } from '$app/forms';
+	import Message from '$lib/ui/Message.svelte';
+
+	const { form } = $props();
 
 	const urlParams = browser ? new URLSearchParams(window.location.search) : undefined;
 
@@ -107,6 +110,8 @@
 		pushState('', { selectedItinerary: itinerary });
 	};
 </script>
+
+<Message msg={form?.msg} />
 
 {#if page.state.selectFrom}
 	<AddressTypeahead
