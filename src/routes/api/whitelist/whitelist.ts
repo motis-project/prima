@@ -30,8 +30,8 @@ export async function whitelist(
 		)
 	);
 
-	if (busStops.length == 0 || !busStops.some((b) => b.times.length !== 0)) {
-		return [];
+	if(!busStops.some((b) => b.times.length !== 0)) {
+		return new Array<(Insertion | undefined)[]>(busStops.length);
 	}
 
 	let lastTime = 0;
