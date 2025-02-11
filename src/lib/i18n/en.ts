@@ -73,7 +73,8 @@ const translations: Translations = {
 		// Booking
 		bookingError: 'The ride could not be booked.',
 		bookingError1: 'First section could not be booked.',
-		bookingError2: 'Last section could not be booked.'
+		bookingError2: 'Last section could not be booked.',
+		bookingSuccess: 'Booking successful.'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',
