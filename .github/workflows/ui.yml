@@ -37,10 +37,9 @@ jobs:
         run: |
           pnpm run build
           docker compose down
-          docker compose build prima
+          docker compose pull
           ./motis-import.sh
-          docker compose up -d motis-server
-          docker compose up -d pg
+          docker compose up -d motis-server pg
           sleep 5
           ./setup-db.sh
           npx playwright test
