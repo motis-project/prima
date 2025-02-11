@@ -127,7 +127,7 @@ export function evaluateBothInsertion(
 	busStopIdx: number | undefined,
 	prev: Event | undefined,
 	next: Event | undefined,
-	promisedTimes?: PromisedTimes
+	_promisedTimes?: PromisedTimes // TODO
 ): InsertionEvaluation | undefined {
 	console.assert(
 		insertionCase.what == InsertWhat.BOTH,
@@ -344,7 +344,8 @@ const getOldDrivingTime = (
 	return prev.nextLegDuration;
 };
 
-const keepsPromises = (
+// TODO
+const _keepsPromises = (
 	insertionCase: InsertionType,
 	arrivalWindow: Interval,
 	directDuration: number,
