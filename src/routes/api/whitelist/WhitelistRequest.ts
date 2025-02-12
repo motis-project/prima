@@ -62,7 +62,8 @@ export const schemaDefinitions = {
 			properties: {
 				coordinates: { $ref: '#/definitions/coordinates' },
 				address: { type: 'string' }
-			}
+			},
+			required: ['coordinates', 'address']
 		},
 		connection: {
 			type: 'object',
@@ -71,7 +72,8 @@ export const schemaDefinitions = {
 				target: { $ref: '#/definitions/location' },
 				startTime: { type: 'integer' },
 				targetTime: { type: 'integer' }
-			}
+			},
+			required: ['start', 'target', 'startTime', 'targetTime']
 		},
 		busStops: {
 			type: 'array',
@@ -100,7 +102,7 @@ export const bookingSchema = {
 		},
 		capacities: { $ref: '/schemaDefinitions#/definitions/capacities' }
 	},
-	required: ['connection1', 'capacities']
+	required: ['capacities']
 };
 
 export const whitelistSchema = {
