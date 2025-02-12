@@ -112,11 +112,11 @@ export const actions = {
 		const connection2 = onlyOne
 			? null
 			: {
-					start: start2,
-					target: target2,
-					startTime: startTime2,
-					targetTime: endTime2
-				};
+				start: start2,
+				target: target2,
+				startTime: startTime2,
+				targetTime: endTime2
+			};
 
 		console.log('BOOKING: C1=', JSON.stringify(connection1, null, '\t'));
 		console.log('BOOKING: C2=', JSON.stringify(connection2, null, '\t'));
@@ -214,6 +214,6 @@ export const actions = {
 			return redirect(302, `/bookings/${id}`);
 		}
 
-		return message!;
+		return { msg: message! };
 	}
 };

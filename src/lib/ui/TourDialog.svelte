@@ -59,7 +59,7 @@
 		];
 	};
 
-	const routes = $derived(tour && getRoutes(tour.events));
+	const routes = $derived(tour && tour.events.length !== 0 && getRoutes(tour.events));
 	const center = $derived(tour && getCenter(tour.events));
 
 	let map = $state<undefined | maplibregl.Map>();
@@ -148,7 +148,7 @@
 {/snippet}
 
 {#snippet mapView()}
-	{#if center && routes != null}
+	{#if center && routes}
 		<Map
 			bind:map
 			{center}
