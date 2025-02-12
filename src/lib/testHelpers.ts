@@ -65,10 +65,10 @@ export const setTour = async (vehicle: number, departure: UnixtimeMs, arrival: U
 		.executeTakeFirst();
 };
 
-export const setRequest = async (tour: number, customer: number) => {
+export const setRequest = async (tour: number, customer: number, ticketCode: string) => {
 	return await db
 		.insertInto('request')
-		.values({ passengers: 1, bikes: 0, luggage: 0, wheelchairs: 0, tour, customer })
+		.values({ passengers: 1, bikes: 0, luggage: 0, wheelchairs: 0, tour, customer, ticketCode, ticketChecked: false })
 		.returning('id')
 		.executeTakeFirstOrThrow();
 };

@@ -46,7 +46,8 @@ export const getTours = async (companyId?: number, timeRange?: [UnixtimeMs, Unix
 						'request.customer',
 						'request.luggage',
 						'request.passengers',
-						'request.wheelchairs'
+						'request.wheelchairs',
+						'request.id as requestId',
 					])
 					.select(sql<string>`md5(request.ticket_code)`.as('ticketHash'))
 					.orderBy('event.scheduledTimeStart')

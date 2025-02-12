@@ -6,5 +6,5 @@ export const GET = async ({ locals, url }) => {
 	const companyId = locals.session!.companyId!;
 	const fromTime = readInt(url.searchParams.get('fromTime'));
 	const toTime = readInt(url.searchParams.get('toTime'));
-	return json(getTours(companyId, [fromTime, toTime]));
+	return json(await getTours(companyId, [fromTime, toTime]));
 };

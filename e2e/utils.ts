@@ -108,6 +108,6 @@ export async function addVehicle(page: Page, licensePlate: string) {
 
 export async function moveMouse(page: Page, id: string) {
 	const element = page.getByTestId(id).locator('div');
-	const { x, y, width, height } = await element.boundingBox();
+	const { x, y, width, height } = (await element.boundingBox())!;
 	await page.mouse.move(x + width / 2, y + height / 2);
 }
