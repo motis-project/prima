@@ -125,12 +125,12 @@
 			<div class="grid grid-flow-row grid-cols-2 flex-col gap-2">
 				{#if tour}
 					<div class="rounded bg-primary-foreground p-2">Startzeit</div>
-					<div class="rounded bg-primary-foreground p-2">
+					<div class="rounded bg-primary-foreground p-2 text-right">
 						{new Date(tour!.startTime).toLocaleString('de-DE').slice(0, -3)}
 					</div>
 
 					<div class="rounded bg-primary-foreground p-2">Endzeit</div>
-					<div class="rounded bg-primary-foreground p-2">
+					<div class="rounded bg-primary-foreground p-2 text-right">
 						{new Date(tour!.endTime).toLocaleString('de-DE').slice(0, -3)}
 					</div>
 
