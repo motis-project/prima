@@ -238,9 +238,9 @@ export const getBookingAvailability = async (
 		'getBookingAvailability params: ',
 		JSON.stringify(
 			{
-				searchInterval,
-				expandedSearchInterval,
-				twiceExpandedSearchInterval,
+				searchInterval: searchInterval.toString(),
+				expandedSearchInterval: expandedSearchInterval.toString(),
+				twiceExpandedSearchInterval: twiceExpandedSearchInterval.toString(),
 				userChosen,
 				requestCapacities,
 				busStops

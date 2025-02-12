@@ -1,4 +1,4 @@
-import { bookRide } from '$lib/server/booking/bookRide';
+import { bookRide, toExpectedConnectionWithISOStrings } from '$lib/server/booking/bookRide';
 import type { Capacities } from '$lib/server/booking/Capacities';
 import { db } from '$lib/server/db';
 import { readFloat, readInt } from '$lib/server/util/readForm';
@@ -118,8 +118,14 @@ export const actions = {
 					targetTime: endTime2
 				};
 
-		console.log('BOOKING: C1=', JSON.stringify(connection1, null, '\t'));
-		console.log('BOOKING: C2=', JSON.stringify(connection2, null, '\t'));
+		console.log(
+			'BOOKING: C1=',
+			JSON.stringify(toExpectedConnectionWithISOStrings(connection1), null, '\t')
+		);
+		console.log(
+			'BOOKING: C2=',
+			JSON.stringify(toExpectedConnectionWithISOStrings(connection2), null, '\t')
+		);
 
 		let success = false;
 		let message: Msg | undefined = undefined;
@@ -214,6 +220,6 @@ export const actions = {
 			return redirect(302, `/bookings/${id}`);
 		}
 
-		return message!;
+		return { msg: message! };
 	}
 };
