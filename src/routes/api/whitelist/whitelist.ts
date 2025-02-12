@@ -28,7 +28,7 @@ export async function whitelist(
 		)
 	);
 
-	if(!busStops.some((b) => b.times.length !== 0)) {
+	if (!busStops.some((b) => b.times.length !== 0)) {
 		return new Array<(Insertion | undefined)[]>(busStops.length);
 	}
 
@@ -67,7 +67,12 @@ export async function whitelist(
 	console.log(
 		'Whitelist Request: getBookingAvailability results\n',
 		JSON.stringify(
-			{ searchInterval: searchInterval.toString(), expandedSearchInterval: expandedSearchInterval.toString(), companies, filteredBusStops },
+			{
+				searchInterval: searchInterval.toString(),
+				expandedSearchInterval: expandedSearchInterval.toString(),
+				companies,
+				filteredBusStops
+			},
 			null,
 			'\t'
 		)

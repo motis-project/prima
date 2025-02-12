@@ -7,7 +7,7 @@ export type BusStop = Coordinates & {
 
 export type BusStopWithISOStrings = Coordinates & {
 	times: string[];
-}
+};
 
 export function toBusStopWithISOStrings(busStop: BusStop): BusStopWithISOStrings {
 	return {

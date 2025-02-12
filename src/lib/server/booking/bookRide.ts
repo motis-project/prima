@@ -24,14 +24,18 @@ export type ExpectedConnectionWithISoStrings = {
 	target: Coordinates;
 	startTime: string;
 	targetTime: string;
-}
+};
 
-export function toExpectedConnectionWithISOStrings(c: ExpectedConnection | null): ExpectedConnectionWithISoStrings | null {
-	return c == null ? null : {
-		...c,
-		startTime: new Date(c.startTime).toISOString(),
-		targetTime: new Date(c.targetTime).toISOString()
-	}
+export function toExpectedConnectionWithISOStrings(
+	c: ExpectedConnection | null
+): ExpectedConnectionWithISoStrings | null {
+	return c == null
+		? null
+		: {
+				...c,
+				startTime: new Date(c.startTime).toISOString(),
+				targetTime: new Date(c.targetTime).toISOString()
+			};
 }
 
 export async function bookRide(
@@ -55,10 +59,14 @@ export async function bookRide(
 	if (companies.length == 0 || filteredBusStops[0] == undefined) {
 		return undefined;
 	}
-	if(blockedVehicleId != undefined && blockedVehicleId != null) {
-		const blockedVehicleCompanyIdx = companies.findIndex((c) => c.vehicles.some((v) => v.id == blockedVehicleId));
-		if(blockedVehicleCompanyIdx != -1) {
-			companies[blockedVehicleCompanyIdx].vehicles = companies[blockedVehicleCompanyIdx].vehicles.filter((v) => v.id != blockedVehicleId);
+	if (blockedVehicleId != undefined && blockedVehicleId != null) {
+		const blockedVehicleCompanyIdx = companies.findIndex((c) =>
+			c.vehicles.some((v) => v.id == blockedVehicleId)
+		);
+		if (blockedVehicleCompanyIdx != -1) {
+			companies[blockedVehicleCompanyIdx].vehicles = companies[
+				blockedVehicleCompanyIdx
+			].vehicles.filter((v) => v.id != blockedVehicleId);
 		}
 	}
 	const userChosen = !startFixed ? c.start : c.target;

@@ -6,7 +6,6 @@ import type { Capacities } from './Capacities';
 import { db, type Database } from '$lib/server/db';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { covers } from '$lib/server/db/covers';
-import { toBusStopWithISOStrings } from './BusStop';
 
 const selectEvents = (eb: ExpressionBuilder<Database, 'tour'>) => {
 	return jsonArrayFrom(

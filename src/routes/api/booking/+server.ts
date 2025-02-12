@@ -33,8 +33,11 @@ export const POST = async (event: RequestEvent) => {
 	if (!result.valid) {
 		return json({ message: result.errors }, { status: 400 });
 	}
-	if(p.connection1 == null && p.connection2 == null) {
-		return json({ message: 'Es wurde weder eine Anfrage für die erste noch für die letzte Meile gestellt.' }, { status: 200 });
+	if (p.connection1 == null && p.connection2 == null) {
+		return json(
+			{ message: 'Es wurde weder eine Anfrage für die erste noch für die letzte Meile gestellt.' },
+			{ status: 200 }
+		);
 	}
 	let firstMileRequestId: number | undefined = undefined;
 	let lastMileRequestId: number | undefined = undefined;
@@ -53,7 +56,7 @@ export const POST = async (event: RequestEvent) => {
 		}
 		if (p.connection2 != null) {
 			let blockedVehicleId: number | undefined = undefined;
-			if(firstConnection != undefined) {
+			if (firstConnection != undefined) {
 				blockedVehicleId = firstConnection.best.vehicle;
 			}
 			secondConnection = await bookRide(p.connection2, p.capacities, true, trx, blockedVehicleId);

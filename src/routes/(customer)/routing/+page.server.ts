@@ -118,8 +118,14 @@ export const actions = {
 					targetTime: endTime2
 				};
 
-		console.log('BOOKING: C1=', JSON.stringify(toExpectedConnectionWithISOStrings(connection1), null, '\t'));
-		console.log('BOOKING: C2=', JSON.stringify(toExpectedConnectionWithISOStrings(connection2), null, '\t'));
+		console.log(
+			'BOOKING: C1=',
+			JSON.stringify(toExpectedConnectionWithISOStrings(connection1), null, '\t')
+		);
+		console.log(
+			'BOOKING: C2=',
+			JSON.stringify(toExpectedConnectionWithISOStrings(connection2), null, '\t')
+		);
 
 		let success = false;
 		let message: Msg | undefined = undefined;
