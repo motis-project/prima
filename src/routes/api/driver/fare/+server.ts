@@ -10,11 +10,7 @@ export const POST = async ({ url }) => {
 		throw 'bad params';
 	}
 
-	await db
-		.updateTable('tour')
-		.set({ fare: fare })
-		.where('id', '=', tourId)
-		.execute();
+	await db.updateTable('tour').set({ fare: fare }).where('id', '=', tourId).execute();
 
 	return json({ success: true });
 };
