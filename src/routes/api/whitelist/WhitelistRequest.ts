@@ -60,10 +60,11 @@ export const schemaDefinitions = {
 		location: {
 			type: 'object',
 			properties: {
-				coordinates: { $ref: '#/definitions/coordinates' },
+				lat: { type: 'number', minimum: -90, maximum: 90 },
+				lng: { type: 'number', minimum: -180, maximum: 180 },
 				address: { type: 'string' }
 			},
-			required: ['coordinates', 'address']
+			required: ['lat', 'lng', 'address']
 		},
 		connection: {
 			type: 'object',
