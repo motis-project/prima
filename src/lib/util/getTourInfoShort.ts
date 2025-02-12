@@ -8,4 +8,4 @@ export const getTourInfoShort = (tour: Tour) => {
 		from: tour.events[0].address,
 		to: tour.events[tour.events.length - 1].address
 	};
-}
+};
