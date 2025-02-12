@@ -31,7 +31,7 @@
 	import { enhance } from '$app/forms';
 	import Message from '$lib/ui/Message.svelte';
 
-	const { form } = $props();
+	const { form, data } = $props();
 
 	const urlParams = browser ? new URLSearchParams(window.location.search) : undefined;
 
@@ -134,30 +134,34 @@
 		</Button>
 
 		{#if page.state.selectedItinerary.legs.some((l: Leg) => l.mode === 'ODM')}
-			{@const first = page.state.selectedItinerary.legs.find((l: Leg) => l.mode === 'ODM')}
-			{@const last = page.state.selectedItinerary.legs.findLast((l: Leg) => l.mode === 'ODM')}
-			<form method="post" use:enhance>
-				<input type="hidden" name="json" value={JSON.stringify(page.state.selectedItinerary)} />
-				<input type="hidden" name="startFixed1" value={first.from.name === 'END' ? '1' : '0'} />
-				<input type="hidden" name="startFixed2" value={last.to.name === 'END' ? '1' : '0'} />
-				<input type="hidden" name="fromAddress1" value={from.label} />
-				<input type="hidden" name="toAddress1" value={first.to.name} />
-				<input type="hidden" name="fromAddress2" value={last.from.name} />
-				<input type="hidden" name="toAddress2" value={to.label} />
-				<input type="hidden" name="fromLat1" value={first.from.lat} />
-				<input type="hidden" name="fromLng1" value={first.from.lon} />
-				<input type="hidden" name="toLat1" value={first.to.lat} />
-				<input type="hidden" name="toLng1" value={first.to.lon} />
-				<input type="hidden" name="fromLat2" value={last.from.lat} />
-				<input type="hidden" name="fromLng2" value={last.from.lon} />
-				<input type="hidden" name="toLat2" value={last.to.lat} />
-				<input type="hidden" name="toLng2" value={last.to.lon} />
-				<input type="hidden" name="startTime1" value={new Date(first.startTime).getTime()} />
-				<input type="hidden" name="endTime1" value={new Date(first.endTime).getTime()} />
-				<input type="hidden" name="startTime2" value={new Date(last.startTime).getTime()} />
-				<input type="hidden" name="endTime2" value={new Date(last.endTime).getTime()} />
-				<Button type="submit" variant="outline">Fahrt kostenpflichtig buchen</Button>
-			</form>
+			{#if data.isLoggedIn}
+				{@const first = page.state.selectedItinerary.legs.find((l: Leg) => l.mode === 'ODM')}
+				{@const last = page.state.selectedItinerary.legs.findLast((l: Leg) => l.mode === 'ODM')}
+				<form method="post" use:enhance>
+					<input type="hidden" name="json" value={JSON.stringify(page.state.selectedItinerary)} />
+					<input type="hidden" name="startFixed1" value={first.from.name === 'END' ? '1' : '0'} />
+					<input type="hidden" name="startFixed2" value={last.to.name === 'END' ? '1' : '0'} />
+					<input type="hidden" name="fromAddress1" value={from.label} />
+					<input type="hidden" name="toAddress1" value={first.to.name} />
+					<input type="hidden" name="fromAddress2" value={last.from.name} />
+					<input type="hidden" name="toAddress2" value={to.label} />
+					<input type="hidden" name="fromLat1" value={first.from.lat} />
+					<input type="hidden" name="fromLng1" value={first.from.lon} />
+					<input type="hidden" name="toLat1" value={first.to.lat} />
+					<input type="hidden" name="toLng1" value={first.to.lon} />
+					<input type="hidden" name="fromLat2" value={last.from.lat} />
+					<input type="hidden" name="fromLng2" value={last.from.lon} />
+					<input type="hidden" name="toLat2" value={last.to.lat} />
+					<input type="hidden" name="toLng2" value={last.to.lon} />
+					<input type="hidden" name="startTime1" value={new Date(first.startTime).getTime()} />
+					<input type="hidden" name="endTime1" value={new Date(first.endTime).getTime()} />
+					<input type="hidden" name="startTime2" value={new Date(last.startTime).getTime()} />
+					<input type="hidden" name="endTime2" value={new Date(last.endTime).getTime()} />
+					<Button type="submit" variant="outline">Fahrt kostenpflichtig buchen</Button>
+				</form>
+			{:else}
+				<Button href="/account" variant="outline">Anmelden zur Buchung</Button>
+			{/if}
 		{/if}
 	</div>
 	<Separator class="my-4" />
