@@ -165,6 +165,9 @@ export function evaluateBothInsertion(
 		return undefined;
 	}
 	arrivalWindow.startTime = roundToNextFullMinute(arrivalWindow.startTime);
+	if(arrivalWindow.startTime >=  arrivalWindow.endTime) {
+		return undefined;
+	}
 	/* TODO: reactivate!
 	if (
 		promisedTimes != undefined &&
