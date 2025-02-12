@@ -28,6 +28,7 @@ import type { Company, Event } from './getBookingAvailability';
 import type { Capacities } from './Capacities';
 import { isValid } from './getPossibleInsertions';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
+import { roundToNextFullMinute } from '../util/roundToNextFullMinute';
 
 export type InsertionEvaluation = {
 	pickupTime: number;
@@ -163,6 +164,7 @@ export function evaluateBothInsertion(
 	if (arrivalWindow == undefined) {
 		return undefined;
 	}
+	arrivalWindow.startTime = roundToNextFullMinute(arrivalWindow.startTime);
 	/* TODO: reactivate!
 	if (
 		promisedTimes != undefined &&
