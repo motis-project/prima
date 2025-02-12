@@ -6,6 +6,7 @@ import type { Capacities } from './Capacities';
 import { db, type Database } from '$lib/server/db';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { covers } from '$lib/server/db/covers';
+import { toBusStopWithISOStrings } from './BusStop';
 
 const selectEvents = (eb: ExpressionBuilder<Database, 'tour'>) => {
 	return jsonArrayFrom(
@@ -238,9 +239,9 @@ export const getBookingAvailability = async (
 		'getBookingAvailability params: ',
 		JSON.stringify(
 			{
-				searchInterval,
-				expandedSearchInterval,
-				twiceExpandedSearchInterval,
+				searchInterval: searchInterval.toString(),
+				expandedSearchInterval: expandedSearchInterval.toString(),
+				twiceExpandedSearchInterval: twiceExpandedSearchInterval.toString(),
 				userChosen,
 				requestCapacities,
 				busStops

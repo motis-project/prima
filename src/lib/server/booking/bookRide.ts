@@ -19,11 +19,27 @@ export type ExpectedConnection = {
 	targetTime: UnixtimeMs;
 };
 
+export type ExpectedConnectionWithISoStrings = {
+	start: Coordinates;
+	target: Coordinates;
+	startTime: string;
+	targetTime: string;
+}
+
+export function toExpectedConnectionWithISOStrings(c: ExpectedConnection | null): ExpectedConnectionWithISoStrings | null {
+	return c == null ? null : {
+		...c,
+		startTime: new Date(c.startTime).toISOString(),
+		targetTime: new Date(c.targetTime).toISOString()
+	}
+}
+
 export async function bookRide(
 	c: ExpectedConnection,
 	required: Capacities,
 	startFixed: boolean,
-	trx?: Transaction<Database>
+	trx?: Transaction<Database>,
+	blockedVehicleId?: number
 ) {
 	console.log('BS');
 	const searchInterval = new Interval(c.startTime, c.targetTime);
@@ -38,6 +54,12 @@ export async function bookRide(
 	);
 	if (companies.length == 0 || filteredBusStops[0] == undefined) {
 		return undefined;
+	}
+	if(blockedVehicleId != undefined && blockedVehicleId != null) {
+		const blockedVehicleCompanyIdx = companies.findIndex((c) => c.vehicles.some((v) => v.id == blockedVehicleId));
+		if(blockedVehicleCompanyIdx != -1) {
+			companies[blockedVehicleCompanyIdx].vehicles = companies[blockedVehicleCompanyIdx].vehicles.filter((v) => v.id != blockedVehicleId);
+		}
 	}
 	const userChosen = !startFixed ? c.start : c.target;
 	const busStop = startFixed ? c.start : c.target;
