@@ -33,6 +33,8 @@ export const POST = async (event: RequestEvent) => {
 	if (!result.valid) {
 		return json({ message: result.errors }, { status: 400 });
 	}
+	let firstMileRequestId: number | undefined = undefined;
+	let lastMileRequestId: number | undefined = undefined;
 	let message: string | undefined = undefined;
 	let success = false;
 	await db.transaction().execute(async (trx) => {
@@ -69,34 +71,36 @@ export const POST = async (event: RequestEvent) => {
 			}
 		}
 		if (p.connection1 != null) {
-			insertRequest(
-				firstConnection!.best,
-				p.capacities,
-				p.connection1,
-				customer,
-				firstConnection!.eventGroupUpdateList,
-				[...firstConnection!.mergeTourList],
-				firstConnection!.pickupEventGroup,
-				firstConnection!.dropoffEventGroup,
-				firstConnection!.neighbourIds,
-				firstConnection!.directDurations,
-				trx
-			);
+			firstMileRequestId =
+				(await insertRequest(
+					firstConnection!.best,
+					p.capacities,
+					p.connection1,
+					customer,
+					firstConnection!.eventGroupUpdateList,
+					[...firstConnection!.mergeTourList],
+					firstConnection!.pickupEventGroup,
+					firstConnection!.dropoffEventGroup,
+					firstConnection!.neighbourIds,
+					firstConnection!.directDurations,
+					trx
+				)) ?? null;
 		}
 		if (p.connection2 != null) {
-			insertRequest(
-				secondConnection!.best,
-				p.capacities,
-				p.connection2,
-				customer,
-				secondConnection!.eventGroupUpdateList,
-				[...secondConnection!.mergeTourList],
-				secondConnection!.pickupEventGroup,
-				secondConnection!.dropoffEventGroup,
-				secondConnection!.neighbourIds,
-				secondConnection!.directDurations,
-				trx
-			);
+			lastMileRequestId =
+				(await insertRequest(
+					secondConnection!.best,
+					p.capacities,
+					p.connection2,
+					customer,
+					secondConnection!.eventGroupUpdateList,
+					[...secondConnection!.mergeTourList],
+					secondConnection!.pickupEventGroup,
+					secondConnection!.dropoffEventGroup,
+					secondConnection!.neighbourIds,
+					secondConnection!.directDurations,
+					trx
+				)) ?? null;
 		}
 		message = 'Die Anfrage wurde erfolgreich bearbeitet.';
 		success = true;
@@ -105,5 +109,5 @@ export const POST = async (event: RequestEvent) => {
 	if (message == undefined) {
 		return json({ status: 500 });
 	}
-	return json({ message }, { status: success ? 200 : 400 });
+	return json({ message, firstMileRequestId, lastMileRequestId }, { status: success ? 200 : 400 });
 };

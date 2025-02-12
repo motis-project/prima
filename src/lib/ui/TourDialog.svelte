@@ -91,6 +91,7 @@
 				<div>
 					{#if open!.tours && open.tours.length > 1}
 						{#each open.tours as tour, i}
+							{@const tourInfo = getTourInfoShort(tour)}
 							<Button
 								onclick={() => {
 									tourIndex = i;
@@ -98,7 +99,7 @@
 								variant={tourIndex === i ? 'default' : 'outline'}
 								class="mx-2"
 							>
-								{getTourInfoShort(tour)}
+								{tourInfo.from} - {tourInfo.to}
 							</Button>
 						{/each}
 					{/if}
@@ -124,12 +125,12 @@
 			<div class="grid grid-flow-row grid-cols-2 flex-col gap-2">
 				{#if tour}
 					<div class="rounded bg-primary-foreground p-2">Startzeit</div>
-					<div class="rounded bg-primary-foreground p-2">
+					<div class="rounded bg-primary-foreground p-2 text-right">
 						{new Date(tour!.startTime).toLocaleString('de-DE').slice(0, -3)}
 					</div>
 
 					<div class="rounded bg-primary-foreground p-2">Endzeit</div>
-					<div class="rounded bg-primary-foreground p-2">
+					<div class="rounded bg-primary-foreground p-2 text-right">
 						{new Date(tour!.endTime).toLocaleString('de-DE').slice(0, -3)}
 					</div>
 
@@ -233,7 +234,7 @@
 								</Table.Cell>
 								<Table.Cell>{event.address}</Table.Cell>
 								<Table.Cell>
-									{event.customerName},
+									{event.customerName}
 								</Table.Cell>
 								<Table.Cell>
 									{event.customerPhone}

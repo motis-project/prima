@@ -85,6 +85,13 @@ export interface Database {
 		ticketCode: string;
 		ticketChecked: boolean;
 	};
+	journey: {
+		id: Generated<number>;
+		json: string;
+		user: number;
+		request1: number;
+		request2: number | null;
+	};
 }
 
 export const pool = new pg.Pool({ connectionString: env.DATABASE_URL });

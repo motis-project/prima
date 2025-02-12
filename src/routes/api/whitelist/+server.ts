@@ -20,6 +20,8 @@ export async function POST(event: RequestEvent) {
 		return json({ message: result.errors }, { status: 400 });
 	}
 
+	console.log('WHITE LIST REQUEST PARAMS', JSON.stringify(p, null, '\t'));
+
 	if (p.startFixed) {
 		p.targetBusStops.push({
 			...p.start,

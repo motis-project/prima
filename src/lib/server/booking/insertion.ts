@@ -127,7 +127,7 @@ export function evaluateBothInsertion(
 	busStopIdx: number | undefined,
 	prev: Event | undefined,
 	next: Event | undefined,
-	promisedTimes?: PromisedTimes
+	_promisedTimes?: PromisedTimes // TODO
 ): InsertionEvaluation | undefined {
 	console.assert(
 		insertionCase.what == InsertWhat.BOTH,
@@ -163,12 +163,14 @@ export function evaluateBothInsertion(
 	if (arrivalWindow == undefined) {
 		return undefined;
 	}
+	/* TODO: reactivate!
 	if (
 		promisedTimes != undefined &&
 		!keepsPromises(insertionCase, arrivalWindow, passengerDuration, promisedTimes)
 	) {
 		return undefined;
 	}
+	*/
 	const taxiDuration =
 		prevLegDuration +
 		nextLegDuration +
@@ -342,7 +344,8 @@ const getOldDrivingTime = (
 	return prev.nextLegDuration;
 };
 
-const keepsPromises = (
+// TODO
+const _keepsPromises = (
 	insertionCase: InsertionType,
 	arrivalWindow: Interval,
 	directDuration: number,
@@ -378,10 +381,19 @@ const keepsPromises = (
 				checkDropoff = true;
 			}
 	}
+	console.log('KEEPS PROMISE', { checkPickup, checkDropoff });
 	if (checkPickup && !pickupWindow.covers(promisedTimes.pickup)) {
+		console.log('PROMISE CHECK: PICKUP WINDOW FAILED', {
+			pickupWindow: pickupWindow.toString(),
+			pickup: new Date(promisedTimes.pickup).toISOString()
+		});
 		return false;
 	}
 	if (checkDropoff && !dropoffWindow.covers(promisedTimes.dropoff)) {
+		console.log('PROMISE CHECK: DROPOFF WINDOW FAILED', {
+			dropoffWindow: dropoffWindow.toString(),
+			dropoff: new Date(promisedTimes.dropoff).toISOString()
+		});
 		return false;
 	}
 	return true;

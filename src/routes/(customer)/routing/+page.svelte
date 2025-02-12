@@ -17,7 +17,7 @@
 	import * as Drawer from '$lib/shadcn/drawer';
 	import { Calendar } from '$lib/shadcn/calendar';
 
-	import { plan, trip, type Match, type PlanData, type PlanResponse } from '$lib/openapi';
+	import { plan, trip, type Leg, type Match, type PlanData, type PlanResponse } from '$lib/openapi';
 
 	import { t } from '$lib/i18n/translation';
 	import { lngLatToStr } from '$lib/util/lngLatToStr';
@@ -28,6 +28,10 @@
 	import ItineraryList from './ItineraryList.svelte';
 	import ConnectionDetail from './ConnectionDetail.svelte';
 	import StopTimes from './StopTimes.svelte';
+	import { enhance } from '$app/forms';
+	import Message from '$lib/ui/Message.svelte';
+
+	const { form } = $props();
 
 	const urlParams = browser ? new URLSearchParams(window.location.search) : undefined;
 
@@ -107,16 +111,54 @@
 	};
 </script>
 
+<Message msg={form?.msg} />
+
 {#if page.state.selectFrom}
-	<AddressTypeahead placeholder={t.from} bind:selected={from} items={fromItems} />
+	<AddressTypeahead
+		placeholder={t.from}
+		bind:selected={from}
+		items={fromItems}
+		onValueChange={() => history.back()}
+	/>
 {:else if page.state.selectTo}
-	<AddressTypeahead placeholder={t.to} bind:selected={to} items={toItems} />
+	<AddressTypeahead
+		placeholder={t.to}
+		bind:selected={to}
+		items={toItems}
+		onValueChange={() => history.back()}
+	/>
 {:else if page.state.selectedItinerary}
 	<div class="flex items-center justify-between gap-4">
 		<Button variant="outline" size="icon" onclick={() => window.history.back()}>
 			<ChevronLeft />
 		</Button>
-		<span>Verbindungsdetails</span>
+
+		{#if page.state.selectedItinerary.legs.some((l: Leg) => l.mode === 'ODM')}
+			{@const first = page.state.selectedItinerary.legs.find((l: Leg) => l.mode === 'ODM')}
+			{@const last = page.state.selectedItinerary.legs.findLast((l: Leg) => l.mode === 'ODM')}
+			<form method="post" use:enhance>
+				<input type="hidden" name="json" value={JSON.stringify(page.state.selectedItinerary)} />
+				<input type="hidden" name="startFixed1" value={first.from.name === 'END' ? '1' : '0'} />
+				<input type="hidden" name="startFixed2" value={last.to.name === 'END' ? '1' : '0'} />
+				<input type="hidden" name="fromAddress1" value={from.label} />
+				<input type="hidden" name="toAddress1" value={first.to.name} />
+				<input type="hidden" name="fromAddress2" value={last.from.name} />
+				<input type="hidden" name="toAddress2" value={to.label} />
+				<input type="hidden" name="fromLat1" value={first.from.lat} />
+				<input type="hidden" name="fromLng1" value={first.from.lon} />
+				<input type="hidden" name="toLat1" value={first.to.lat} />
+				<input type="hidden" name="toLng1" value={first.to.lon} />
+				<input type="hidden" name="fromLat2" value={last.from.lat} />
+				<input type="hidden" name="fromLng2" value={last.from.lon} />
+				<input type="hidden" name="toLat2" value={last.to.lat} />
+				<input type="hidden" name="toLng2" value={last.to.lon} />
+				<input type="hidden" name="startTime1" value={new Date(first.startTime).getTime()} />
+				<input type="hidden" name="endTime1" value={new Date(first.endTime).getTime()} />
+				<input type="hidden" name="startTime2" value={new Date(last.startTime).getTime()} />
+				<input type="hidden" name="endTime2" value={new Date(last.endTime).getTime()} />
+				<Button type="submit" variant="outline">Fahrt kostenpflichtig buchen</Button>
+			</form>
+		{/if}
 	</div>
 	<Separator class="my-4" />
 	<ConnectionDetail

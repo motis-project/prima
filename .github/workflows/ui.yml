@@ -34,12 +34,10 @@ jobs:
 
       - name: Integration Tests
         run: |
-          pnpm run build
           docker compose down
-          docker compose build prima
+          docker compose pull motis-server pg
           ./motis-import.sh
-          docker compose up -d motis-server
-          docker compose up -d pg
+          docker compose up -d motis-server pg
           sleep 5
           ./setup-db.sh
           npx playwright test
@@ -62,6 +60,9 @@ jobs:
         with:
           name: screenshots
           path: screenshots/
+
+      - name: Release Build
+        run: PUBLIC_MOTIS_URL=https://prima-motis.motis-project.de pnpm run build
 
       - name: Docker setup-buildx
         uses: docker/setup-buildx-action@v3

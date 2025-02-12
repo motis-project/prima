@@ -233,6 +233,23 @@ export const getBookingAvailability = async (
 ) => {
 	const expandedSearchInterval = searchInterval.expand(MAX_TRAVEL * 3, MAX_TRAVEL * 3);
 	const twiceExpandedSearchInterval = searchInterval.expand(MAX_TRAVEL * 6, MAX_TRAVEL * 6);
+
+	console.log(
+		'getBookingAvailability params: ',
+		JSON.stringify(
+			{
+				searchInterval,
+				expandedSearchInterval,
+				twiceExpandedSearchInterval,
+				userChosen,
+				requestCapacities,
+				busStops
+			},
+			null,
+			'\t'
+		)
+	);
+
 	const dbResult = await dbQuery(
 		userChosen,
 		requestCapacities,

@@ -1,0 +1,3 @@
+route_id,agency_id,route_short_name,route_long_name,route_desc,route_type
+RB,DB,RB,,,109
+BUS,DB,BUS,,,402
