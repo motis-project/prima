@@ -100,7 +100,7 @@ export async function addVehicle(page: Page, licensePlate: string) {
 	await page.goto('/taxi/availability');
 	await page.waitForTimeout(500);
 	await page.getByTestId('add-vehicle').click();
-	await page.waitForTimeout(500);
+	await page.waitForTimeout(1000);
 	await page.getByPlaceholder('DA-AB-1234').fill(licensePlate);
 	await page.getByLabel('3 Passagiere').check();
 	await page.getByTestId('create-vehicle').click();
