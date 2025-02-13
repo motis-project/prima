@@ -25,7 +25,8 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		}
 		if (
 			(!session?.isAdmin && event.url.pathname.startsWith('/admin')) ||
-			(!session?.companyId && event.url.pathname.startsWith('/taxi'))
+			(!session?.companyId && event.url.pathname.startsWith('/taxi')) ||
+			(!session?.companyId && event.url.pathname.startsWith('/api/driver'))
 		) {
 			return error(403);
 		}
@@ -40,6 +41,11 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		) {
 			return redirect(302, '/account/login');
 		}
+
+		if (event.url.pathname.startsWith('/api/driver')) {
+			return error(403);
+		}
+
 		deleteSessionTokenCookie(event);
 	}
 
