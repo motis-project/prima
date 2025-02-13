@@ -86,6 +86,8 @@ export async function up(db) {
 		.addColumn('luggage', 'integer', (col) => col.notNull())
 		.addColumn('tour', 'integer', (col) => col.references('tour.id').notNull())
 		.addColumn('customer', 'integer', (col) => col.references('user.id').notNull())
+		.addColumn('ticket_code', 'varchar', (col) => col.notNull())
+		.addColumn('ticket_checked', 'boolean', (col) => col.notNull())
 		.execute();
 
 	await db.schema
@@ -304,8 +306,8 @@ export async function up(db) {
 		OUT v_request_id INTEGER
 	) AS $$
 	BEGIN
-		INSERT INTO request (passengers, wheelchairs, bikes, luggage, customer, tour)
-		VALUES (p_request.passengers, p_request.wheelchairs, p_request.bikes, p_request.luggage, p_request.customer, p_tour_id)
+		INSERT INTO request (passengers, wheelchairs, bikes, luggage, customer, tour, ticket_code, ticket_checked)
+		VALUES (p_request.passengers, p_request.wheelchairs, p_request.bikes, p_request.luggage, p_request.customer, p_tour_id, md5(random()::text), FALSE)
 		RETURNING id INTO v_request_id;
 	END;
 	$$ LANGUAGE plpgsql;

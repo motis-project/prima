@@ -6,4 +6,4 @@ src/lib/shadcn/*
 .github/*
 migrations/*
 src/lib/openapi
-taxidriver-android-app
+driver-app
