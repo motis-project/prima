@@ -30,3 +30,5 @@ vite.config.ts.timestamp-*
 GTFS.zip
 osm.pbf
 /motis
+
+/package-lock.json
