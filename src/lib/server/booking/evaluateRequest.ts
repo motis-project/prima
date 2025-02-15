@@ -10,11 +10,16 @@ import type { Range } from './getPossibleInsertions';
 import { gatherRoutingCoordinates, routing } from './routing';
 import {
 	BUFFER_TIME,
+	EARLIEST_SHIFT_START,
+	LATEST_SHIFT_END,
 	MAX_PASSENGER_WAITING_TIME_DROPOFF,
 	MAX_PASSENGER_WAITING_TIME_PICKUP,
-	PASSENGER_CHANGE_DURATION
+	PASSENGER_CHANGE_DURATION,
+	TZ
 } from '$lib/constants';
 import { evaluateNewTours } from './insertion';
+import { HOUR } from '$lib/util/time';
+import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
 export async function evaluateRequest(
 	companies: Company[],
@@ -54,6 +59,35 @@ export async function evaluateRequest(
 				)
 		)
 	);
+	let earliest = Number.MAX_VALUE;
+	let latest = 0;
+	companies.forEach((c) =>
+		c.vehicles.forEach((v) => {
+			v.availabilities.forEach((a) => {
+				if (a.startTime < earliest) {
+					earliest = a.startTime;
+				}
+				if (a.endTime > latest) {
+					latest = a.endTime;
+				}
+			});
+			v.tours.forEach((t) => {
+				if (t.departure < earliest) {
+					earliest = t.departure;
+				}
+				if (t.arrival > latest) {
+					latest = t.arrival;
+				}
+			});
+		})
+	);
+	console.log(
+		'WHITELIST REQUEST: ALLOWED TIMES (RESTRICTION FROM 6 TO 21):\n',
+		getAllowedTimes(earliest, latest).map((i) => i.toString())
+	);
+	if (earliest >= latest) {
+		return busStops.map((bs) => bs.times.map((_) => undefined));
+	}
 	const newTourEvaluations = evaluateNewTours(
 		companies,
 		required,
@@ -62,7 +96,44 @@ export async function evaluateRequest(
 		busStopTimes,
 		routingResults,
 		directDurations,
+		getAllowedTimes(earliest, latest),
 		promisedTimes
 	);
 	return newTourEvaluations;
+}
+function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs): Interval[] {
+	const formatter = new Intl.DateTimeFormat('en-US', {
+		timeZone: TZ,
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit',
+		second: '2-digit',
+		hour12: false
+	});
+	latest = latest + 24 * HOUR;
+	let currentTime = earliest - 24 * HOUR;
+	let previousStartOfDay = -1;
+	const allowedTimes: Interval[] = [];
+	do {
+		const currentAsDate = new Date(currentTime);
+		const startOfDay = new Date(
+			currentAsDate.getUTCFullYear(),
+			currentAsDate.getUTCMonth(),
+			currentAsDate.getUTCDate()
+		).getTime();
+		const shiftStart = new Date(
+			new Date(formatter.format(startOfDay + EARLIEST_SHIFT_START)).toUTCString()
+		).getTime();
+		const shiftEnd = new Date(
+			new Date(formatter.format(startOfDay + LATEST_SHIFT_END)).toUTCString()
+		).getTime();
+		if (startOfDay != previousStartOfDay) {
+			allowedTimes.push(new Interval(shiftStart, shiftEnd));
+		}
+		previousStartOfDay = startOfDay;
+		currentTime += 12 * HOUR;
+	} while (currentTime <= latest);
+	return allowedTimes;
 }
