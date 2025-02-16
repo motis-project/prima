@@ -213,7 +213,28 @@ describe('Whitelist and Booking API Tests', () => {
 		expect(whiteResponse.direct[0]).toBe(null);
 	});
 
-	it('fail because request would require taxi to operate outside of defined shift (6:00-21:00)', async () => {
+	it('blacklist fail because request would require taxi to operate outside of defined shift (6:00-21:00)', async () => {
+		const company = await addCompany(Zone.NIESKY, inNiesky3);
+		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
+		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));
+		const body = JSON.stringify({
+			start: inNiesky1,
+			target: inNiesky2,
+			startBusStops: [],
+			targetBusStops: [],
+			directTimes: [inXMinutes(240)],
+			startFixed: true,
+			capacities
+		});
+
+		const blackResponse = await black(body).then((r) => r.json());
+		expect(blackResponse.start.length).toBe(0);
+		expect(blackResponse.target.length).toBe(0);
+		expect(blackResponse.direct.length).toBe(1);
+		expect(blackResponse.direct[0]).toBe(false);
+	});
+
+	it('whitelist fail because request would require taxi to operate outside of defined shift (6:00-21:00)', async () => {
 		const company = await addCompany(Zone.NIESKY, inNiesky3);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));

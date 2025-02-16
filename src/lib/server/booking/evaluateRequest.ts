@@ -18,7 +18,7 @@ import {
 	TZ
 } from '$lib/constants';
 import { evaluateNewTours } from './insertion';
-import { HOUR } from '$lib/util/time';
+import { DAY, HOUR } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
 export async function evaluateRequest(
@@ -59,6 +59,7 @@ export async function evaluateRequest(
 				)
 		)
 	);
+	// Find the smallest Interval containing all availabilities and tours of the companies received as a parameter.
 	let earliest = Number.MAX_VALUE;
 	let latest = 0;
 	companies.forEach((c) =>
@@ -103,7 +104,9 @@ export async function evaluateRequest(
 	return newTourEvaluations;
 }
 
-function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs): Interval[] {
+export function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs): Interval[] {
+	// Compute the Intervals corresponding to 6:00-21:00 in the Berlin Timezone on a set of days, which
+	// contains all days occuring in the interval containing all availabilities and tours.
 	const formatter = new Intl.DateTimeFormat('en-US', {
 		timeZone: TZ,
 		year: 'numeric',
@@ -114,8 +117,8 @@ function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs): Interval[] {
 		second: '2-digit',
 		hour12: false
 	});
-	latest = latest + 24 * HOUR;
-	let currentTime = earliest - 24 * HOUR;
+	latest = latest + DAY;
+	let currentTime = earliest - DAY;
 	let previousStartOfDay = -1;
 	const allowedTimes: Interval[] = [];
 	do {
