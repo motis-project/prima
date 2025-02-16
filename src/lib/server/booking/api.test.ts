@@ -91,8 +91,6 @@ describe('Whitelist and Booking API Tests', () => {
 		});
 		const blackResponse = await black(body).then((r) => r.json());
 
-		console.log('blackResponse', blackResponse);
-
 		expect(blackResponse.start.length).toBe(0);
 		expect(blackResponse.target.length).toBe(1);
 		expect(blackResponse.direct.length).toBe(1);
@@ -100,7 +98,6 @@ describe('Whitelist and Booking API Tests', () => {
 		expect(blackResponse.direct[0]).toBe(false);
 
 		const whiteResponse = await white(body).then((r) => r.json());
-		console.log('whiteResponse', whiteResponse);
 		expect(whiteResponse.start.length).toBe(0);
 		expect(whiteResponse.target.length).toBe(1);
 		for (let i = 0; i != whiteResponse.target.length; ++i) {
@@ -216,6 +213,33 @@ describe('Whitelist and Booking API Tests', () => {
 		expect(whiteResponse.direct[0]).toBe(null);
 	});
 
+	it('fail because request would require taxi to operate outside of defined shift (6:00-21:00)', async () => {
+		const company = await addCompany(Zone.NIESKY, inNiesky3);
+		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
+		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));
+		const body = JSON.stringify({
+			start: inNiesky1,
+			target: inNiesky2,
+			startBusStops: [],
+			targetBusStops: [],
+			directTimes: [inXMinutes(226)],
+			startFixed: true,
+			capacities
+		});
+
+		const blackResponse = await black(body).then((r) => r.json());
+		expect(blackResponse.start.length).toBe(0);
+		expect(blackResponse.target.length).toBe(0);
+		expect(blackResponse.direct.length).toBe(1);
+		expect(blackResponse.direct[0]).toBe(true);
+
+		const whiteResponse = await white(body).then((r) => r.json());
+		expect(whiteResponse.start.length).toBe(0);
+		expect(whiteResponse.target.length).toBe(0);
+		expect(whiteResponse.direct.length).toBe(1);
+		expect(whiteResponse.direct[0]).toBe(null);
+	});
+
 	it('simple success case', async () => {
 		const company = await addCompany(Zone.NIESKY, inNiesky3);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
@@ -224,7 +248,7 @@ describe('Whitelist and Booking API Tests', () => {
 		for (let i = 0; i != 1; i++) {
 			busStops.push({
 				...inNiesky3,
-				times: [inXMinutes(580)]
+				times: [inXMinutes(100)]
 			});
 		}
 		const body = JSON.stringify({
@@ -232,7 +256,7 @@ describe('Whitelist and Booking API Tests', () => {
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: busStops,
-			directTimes: [inXMinutes(550)],
+			directTimes: [inXMinutes(70)],
 			startFixed: true,
 			capacities
 		});
@@ -288,7 +312,7 @@ describe('Whitelist and Booking API Tests', () => {
 			Math.abs(inNiesky1.lat - pickup.lat) + Math.abs(inNiesky1.lng - pickup.lng)
 		).toBeLessThan(COORDINATE_ROUNDING_ERROR_THRESHOLD);
 		expect(new Date(pickup.scheduledTimeStart).toISOString()).toBe(
-			dateInXMinutes(550).toISOString()
+			dateInXMinutes(70).toISOString()
 		);
 
 		expect(new Date(dropoff.communicatedTime).toISOString()).toBe(

@@ -81,13 +81,14 @@ export async function evaluateRequest(
 			});
 		})
 	);
-	console.log(
-		'WHITELIST REQUEST: ALLOWED TIMES (RESTRICTION FROM 6 TO 21):\n',
-		getAllowedTimes(earliest, latest).map((i) => i.toString())
-	);
 	if (earliest >= latest) {
 		return busStops.map((bs) => bs.times.map((_) => undefined));
 	}
+	const allowedTimes = getAllowedTimes(earliest, latest);
+	console.log(
+		'WHITELIST REQUEST: ALLOWED TIMES (RESTRICTION FROM 6 TO 21):\n',
+		allowedTimes.map((i) => i.toString())
+	);
 	const newTourEvaluations = evaluateNewTours(
 		companies,
 		required,
@@ -96,11 +97,12 @@ export async function evaluateRequest(
 		busStopTimes,
 		routingResults,
 		directDurations,
-		getAllowedTimes(earliest, latest),
+		allowedTimes,
 		promisedTimes
 	);
 	return newTourEvaluations;
 }
+
 function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs): Interval[] {
 	const formatter = new Intl.DateTimeFormat('en-US', {
 		timeZone: TZ,
