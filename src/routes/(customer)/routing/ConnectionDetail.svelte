@@ -119,10 +119,12 @@
 						l.from.stopId
 					)}
 				</div>
-				<div class="mt-2 flex items-center leading-none text-muted-foreground">
-					<ArrowRight class="h-4 w-4 stroke-muted-foreground" />
-					<span class="ml-1">{l.headsign}</span>
-				</div>
+				{#if l.headsign}
+					<div class="mt-2 flex items-center leading-none text-muted-foreground">
+						<ArrowRight class="h-4 w-4 stroke-muted-foreground" />
+						<span class="ml-1">{l.headsign}</span>
+					</div>
+				{/if}
 				{#if l.intermediateStops?.length === 0}
 					<div class="flex items-center py-8 pl-1 text-muted-foreground md:pl-4">
 						{t.tripIntermediateStops(0)}
