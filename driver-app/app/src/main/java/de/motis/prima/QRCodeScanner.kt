@@ -69,6 +69,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 data class Ticket(
+    val requestId: Int,
     val hash: String,
     val code: String
 )

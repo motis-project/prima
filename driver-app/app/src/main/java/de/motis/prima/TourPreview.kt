@@ -53,10 +53,6 @@ data class Location(
     val longitude: Double,
 )
 
-data class Tour(
-    val stops: List<EventGroup>
-)
-
 data class EventGroup(
     val id: String,
     val arrivalTime: String,
@@ -72,8 +68,9 @@ class TourViewModel(tour: Tour) : ViewModel() {
 
     private fun buildEventGroups(events: List<Event>) {
         for (event in events) {
-            val matchGroups = eventGroups.filter { group -> group.id == event.eventGroup }
-            if (matchGroups.isEmpty()) {
+            val matchingGroups = eventGroups.filter { group -> group.id == event.eventGroup }
+            // size of matchingGroups should be 0 or 1
+            if (matchingGroups.isEmpty()) {
                 eventGroups.add(
                     EventGroup(
                         event.eventGroup,
@@ -83,8 +80,8 @@ class TourViewModel(tour: Tour) : ViewModel() {
                         emptyList()
                     )
                 )
-            } else if (matchGroups.size == 1) {
-                matchGroups[0].events.add(event)
+            } else if (matchingGroups.size == 1) {
+                matchingGroups[0].events.add(event)
             } else {
                 Log.d("error", "buildEventGroups: groupId not unique")
             }
