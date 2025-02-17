@@ -100,7 +100,7 @@ export async function addVehicle(page: Page, licensePlate: string) {
 	await page.goto('/taxi/availability');
 	await page.waitForTimeout(500);
 	await page.getByTestId('add-vehicle').click();
-	await page.waitForTimeout(500);
+	await page.waitForTimeout(1000);
 	await page.getByPlaceholder('DA-AB-1234').fill(licensePlate);
 	await page.getByLabel('3 Passagiere').check();
 	await page.getByTestId('create-vehicle').click();
@@ -108,6 +108,6 @@ export async function addVehicle(page: Page, licensePlate: string) {
 
 export async function moveMouse(page: Page, id: string) {
 	const element = page.getByTestId(id).locator('div');
-	const { x, y, width, height } = await element.boundingBox();
+	const { x, y, width, height } = (await element.boundingBox())!;
 	await page.mouse.move(x + width / 2, y + height / 2);
 }

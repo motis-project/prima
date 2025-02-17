@@ -86,6 +86,8 @@ export async function up(db) {
 		.addColumn('luggage', 'integer', (col) => col.notNull())
 		.addColumn('tour', 'integer', (col) => col.references('tour.id').notNull())
 		.addColumn('customer', 'integer', (col) => col.references('user.id').notNull())
+		.addColumn('ticket_code', 'varchar', (col) => col.notNull())
+		.addColumn('ticket_checked', 'boolean', (col) => col.notNull())
 		.execute();
 
 	await db.schema
@@ -97,7 +99,6 @@ export async function up(db) {
 		.addColumn('scheduled_time_start', 'bigint', (col) => col.notNull())
 		.addColumn('scheduled_time_end', 'bigint', (col) => col.notNull())
 		.addColumn('communicated_time', 'bigint', (col) => col.notNull())
-		// direct duration from last leg of previous tour
 		.addColumn('prev_leg_duration', 'integer', (col) => col.notNull())
 		.addColumn('next_leg_duration', 'integer', (col) => col.notNull())
 		// all successive events taking place at the same physical location share the same event group
@@ -106,6 +107,14 @@ export async function up(db) {
 		.addColumn('address', 'varchar', (col) => col.notNull())
 		.execute();
 
+	await db.schema
+		.createTable('journey')
+		.addColumn('id', 'serial', (col) => col.primaryKey())
+		.addColumn('json', 'varchar', (col) => col.notNull())
+		.addColumn('user', 'integer', (col) => col.references('user.id').notNull())
+		.addColumn('request1', 'integer', (col) => col.references('request.id').notNull())
+		.addColumn('request2', 'integer', (col) => col.references('request.id'))
+		.execute();
 
 	// =======
 	// Indices
@@ -297,8 +306,8 @@ export async function up(db) {
 		OUT v_request_id INTEGER
 	) AS $$
 	BEGIN
-		INSERT INTO request (passengers, wheelchairs, bikes, luggage, customer, tour)
-		VALUES (p_request.passengers, p_request.wheelchairs, p_request.bikes, p_request.luggage, p_request.customer, p_tour_id)
+		INSERT INTO request (passengers, wheelchairs, bikes, luggage, customer, tour, ticket_code, ticket_checked)
+		VALUES (p_request.passengers, p_request.wheelchairs, p_request.bikes, p_request.luggage, p_request.customer, p_tour_id, md5(random()::text), FALSE)
 		RETURNING id INTO v_request_id;
 	END;
 	$$ LANGUAGE plpgsql;
@@ -360,40 +369,42 @@ END;
 $$ LANGUAGE plpgsql;
 `.execute(db);
 
-	await sql`
-	CREATE OR REPLACE PROCEDURE create_and_merge_tours(
-		p_request request_type,
-		p_event1 event_type,
-		p_event2 event_type,
-		p_merge_tour_list INTEGER[],
-		p_tour tour_type,
-		p_update_event_groups jsonb,
-		p_update_next_leg_durations jsonb,
-		p_update_prev_leg_durations jsonb,
-		p_update_direct_duration_dropoff direct_duration_type,
-		p_update_direct_duration_pickup direct_duration_type
-	) AS $$
-	DECLARE
-		v_request_id INTEGER;
-		v_tour_id INTEGER;
-	BEGIN
-		CALL update_event_groups(p_update_event_groups);
-		CALL update_direct_duration(p_update_direct_duration_dropoff);
-		CALL update_next_leg_durations(p_update_next_leg_durations);
-		CALL update_prev_leg_durations(p_update_prev_leg_durations);
-		IF p_tour.id IS NULL THEN
-				CALL insert_tour(p_tour, v_tour_id);
-		ELSE
-			v_tour_id := p_tour.id;
-			CALL merge_tours(p_merge_tour_list, v_tour_id, p_tour.arrival, p_tour.departure);
-			CALL update_direct_duration(p_update_direct_duration_pickup);
-		END IF;
-		CALL insert_request(p_request, v_tour_id, v_request_id);
-		CALL insert_event(p_event1, v_request_id);
-		CALL insert_event(p_event2, v_request_id);
-	END;
-	$$ LANGUAGE plpgsql;
-	`.execute(db);
+await sql`
+CREATE OR REPLACE FUNCTION create_and_merge_tours(
+	p_request request_type,
+	p_event1 event_type,
+	p_event2 event_type,
+	p_merge_tour_list INTEGER[],
+	p_tour tour_type,
+	p_update_event_groups jsonb,
+	p_update_next_leg_durations jsonb,
+	p_update_prev_leg_durations jsonb,
+	p_update_direct_duration_dropoff direct_duration_type,
+	p_update_direct_duration_pickup direct_duration_type
+) RETURNS INTEGER AS $$
+DECLARE
+	v_request_id INTEGER;
+	v_tour_id INTEGER;
+BEGIN
+	CALL update_event_groups(p_update_event_groups);
+	CALL update_direct_duration(p_update_direct_duration_dropoff);
+	CALL update_next_leg_durations(p_update_next_leg_durations);
+	CALL update_prev_leg_durations(p_update_prev_leg_durations);
+	IF p_tour.id IS NULL THEN
+			CALL insert_tour(p_tour, v_tour_id);
+	ELSE
+		v_tour_id := p_tour.id;
+		CALL merge_tours(p_merge_tour_list, v_tour_id, p_tour.arrival, p_tour.departure);
+		CALL update_direct_duration(p_update_direct_duration_pickup);
+	END IF;
+	CALL insert_request(p_request, v_tour_id, v_request_id);
+	CALL insert_event(p_event1, v_request_id);
+	CALL insert_event(p_event2, v_request_id);
+
+	RETURN v_request_id;
+END;
+$$ LANGUAGE plpgsql;
+`.execute(db);
 }
 
 export async function down() { }

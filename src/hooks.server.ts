@@ -8,6 +8,13 @@ import { error, redirect, type Handle } from '@sveltejs/kit';
 const authHandle: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get('session');
 	const session = await validateSessionToken(token);
+	if (
+		(!session?.isAdmin && event.url.pathname.startsWith('/admin')) ||
+		(!session?.companyId && event.url.pathname.startsWith('/taxi')) ||
+		(!session?.companyId && event.url.pathname.startsWith('/api/driver'))
+	) {
+		return error(403);
+	}
 	if (token && session) {
 		setSessionTokenCookie(event, token, new Date(session.expiresAt));
 		if (
@@ -23,19 +30,14 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		) {
 			return redirect(302, '/account');
 		}
-		if (
-			(!session?.isAdmin && event.url.pathname.startsWith('/admin')) ||
-			(!session?.companyId && event.url.pathname.startsWith('/taxi'))
-		) {
-			return error(403);
-		}
 	} else {
 		if (
-			event.url.pathname.startsWith('/account') &&
-			event.url.pathname !== '/account/login' &&
-			event.url.pathname !== '/account/signup' &&
-			event.url.pathname !== '/account/reset-password' &&
-			event.url.pathname !== '/account/request-password-reset'
+			event.url.pathname.startsWith('/bookings') ||
+			(event.url.pathname.startsWith('/account') &&
+				event.url.pathname !== '/account/login' &&
+				event.url.pathname !== '/account/signup' &&
+				event.url.pathname !== '/account/reset-password' &&
+				event.url.pathname !== '/account/request-password-reset')
 		) {
 			return redirect(302, '/account/login');
 		}

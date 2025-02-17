@@ -82,6 +82,15 @@ export interface Database {
 		luggage: number;
 		tour: number;
 		customer: number;
+		ticketCode: string;
+		ticketChecked: boolean;
+	};
+	journey: {
+		id: Generated<number>;
+		json: string;
+		user: number;
+		request1: number;
+		request2: number | null;
 	};
 }
 

@@ -52,6 +52,11 @@ export default defineConfig({
 			name: 'move tour',
 			testMatch: 'moveTour.test.ts',
 			dependencies: ['availability']
+		},
+		{
+			name: 'driver app',
+			testMatch: 'driver.test.ts',
+			dependencies: ['availability']
 		}
 	]
 });

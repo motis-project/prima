@@ -120,3 +120,7 @@ details summary::-webkit-details-marker {
 	flex-direction: column;
 	z-index: 3;
 }
+
+.equal-col-size {
+	grid-auto-columns: 1fr;
+}

@@ -54,8 +54,8 @@
 					{/if}
 					<Table.Cell>{getTourInfoShort(tour).from}</Table.Cell>
 					<Table.Cell>{getTourInfoShort(tour).to}</Table.Cell>
-					<Table.Cell>{tour.startTime.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
-					<Table.Cell>{tour.endTime.toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
+					<Table.Cell>{new Date(tour.startTime).toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
+					<Table.Cell>{new Date(tour.endTime).toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
 					<Table.Cell>{getCustomerCount(tour)}</Table.Cell>
 					<Table.Cell>TODO</Table.Cell>
 					<Table.Cell>{tour.events.length}</Table.Cell>

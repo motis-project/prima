@@ -7,6 +7,7 @@
 	import { geocode, type Match } from '$lib/openapi';
 	import { language } from '$lib/i18n/translation';
 	import maplibregl from 'maplibre-gl';
+	import { onMount } from 'svelte';
 
 	export type Location = {
 		label?: string;
@@ -163,6 +164,8 @@
 			window.setTimeout(() => (ctr.style.pointerEvents = 'auto'), 1);
 		}
 	};
+
+	onMount(() => ref?.focus());
 </script>
 
 <Combobox.Root

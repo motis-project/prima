@@ -9,7 +9,7 @@ import { insertRequest } from './query';
 import { json } from '@sveltejs/kit';
 
 export type BookingParameters = {
-	connection1: ExpectedConnection;
+	connection1: ExpectedConnection | null;
 	connection2: ExpectedConnection | null;
 	capacities: Capacities;
 };
@@ -33,6 +33,14 @@ export const POST = async (event: RequestEvent) => {
 	if (!result.valid) {
 		return json({ message: result.errors }, { status: 400 });
 	}
+	if (p.connection1 == null && p.connection2 == null) {
+		return json(
+			{ message: 'Es wurde weder eine Anfrage für die erste noch für die letzte Meile gestellt.' },
+			{ status: 200 }
+		);
+	}
+	let firstMileRequestId: number | undefined = undefined;
+	let lastMileRequestId: number | undefined = undefined;
 	let message: string | undefined = undefined;
 	let success = false;
 	await db.transaction().execute(async (trx) => {
@@ -42,14 +50,18 @@ export const POST = async (event: RequestEvent) => {
 		if (p.connection1 != null) {
 			firstConnection = await bookRide(p.connection1, p.capacities, false, trx);
 			if (firstConnection == undefined) {
-				message = 'Die erste Anfrage kann nicht erfüllt werden.';
+				message = 'Die Anfrage für die erste Meile kann nicht erfüllt werden.';
 				return;
 			}
 		}
 		if (p.connection2 != null) {
-			secondConnection = await bookRide(p.connection2, p.capacities, true, trx);
+			let blockedVehicleId: number | undefined = undefined;
+			if (firstConnection != undefined) {
+				blockedVehicleId = firstConnection.best.vehicle;
+			}
+			secondConnection = await bookRide(p.connection2, p.capacities, true, trx, blockedVehicleId);
 			if (secondConnection == undefined) {
-				message = 'Die zweite Anfrage kann nicht erfüllt werden.';
+				message = 'Die Anfrage für die zweite Meile kann nicht erfüllt werden.';
 				return;
 			}
 		}
@@ -69,34 +81,36 @@ export const POST = async (event: RequestEvent) => {
 			}
 		}
 		if (p.connection1 != null) {
-			insertRequest(
-				firstConnection!.best,
-				p.capacities,
-				p.connection1,
-				customer,
-				firstConnection!.eventGroupUpdateList,
-				[...firstConnection!.mergeTourList],
-				firstConnection!.pickupEventGroup,
-				firstConnection!.dropoffEventGroup,
-				firstConnection!.neighbourIds,
-				firstConnection!.directDurations,
-				trx
-			);
+			firstMileRequestId =
+				(await insertRequest(
+					firstConnection!.best,
+					p.capacities,
+					p.connection1,
+					customer,
+					firstConnection!.eventGroupUpdateList,
+					[...firstConnection!.mergeTourList],
+					firstConnection!.pickupEventGroup,
+					firstConnection!.dropoffEventGroup,
+					firstConnection!.neighbourIds,
+					firstConnection!.directDurations,
+					trx
+				)) ?? null;
 		}
 		if (p.connection2 != null) {
-			insertRequest(
-				secondConnection!.best,
-				p.capacities,
-				p.connection2,
-				customer,
-				secondConnection!.eventGroupUpdateList,
-				[...secondConnection!.mergeTourList],
-				secondConnection!.pickupEventGroup,
-				secondConnection!.dropoffEventGroup,
-				secondConnection!.neighbourIds,
-				secondConnection!.directDurations,
-				trx
-			);
+			lastMileRequestId =
+				(await insertRequest(
+					secondConnection!.best,
+					p.capacities,
+					p.connection2,
+					customer,
+					secondConnection!.eventGroupUpdateList,
+					[...secondConnection!.mergeTourList],
+					secondConnection!.pickupEventGroup,
+					secondConnection!.dropoffEventGroup,
+					secondConnection!.neighbourIds,
+					secondConnection!.directDurations,
+					trx
+				)) ?? null;
 		}
 		message = 'Die Anfrage wurde erfolgreich bearbeitet.';
 		success = true;
@@ -105,5 +119,5 @@ export const POST = async (event: RequestEvent) => {
 	if (message == undefined) {
 		return json({ status: 500 });
 	}
-	return json({ message }, { status: success ? 200 : 400 });
+	return json({ message, firstMileRequestId, lastMileRequestId }, { status: success ? 200 : 400 });
 };
