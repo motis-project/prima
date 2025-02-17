@@ -105,6 +105,37 @@ export async function evaluateRequest(
 }
 
 export function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs): Interval[] {
+	console.log(new Interval(earliest, latest));
+
+	if (earliest >= latest) {
+		return [];
+	}
+
+	const earliestDay = (earliest / DAY) * DAY;
+	const latestDay = (latest / DAY) * DAY + DAY;
+
+	const noonEarliestDay = new Date(earliestDay + 12 * HOUR);
+
+	const allowedTimes: Array<Interval> = [];
+	for (let t = earliestDay; t < latestDay; t += DAY) {
+		const offset =
+			parseInt(
+				noonEarliestDay.toLocaleString('de-DE', {
+					hour: '2-digit',
+					hour12: false,
+					timeZone: 'Europe/Berlin'
+				})
+			) - 12;
+		allowedTimes.push(
+			new Interval(t + EARLIEST_SHIFT_START - offset, t + LATEST_SHIFT_END - offset)
+		);
+		noonEarliestDay.setHours(noonEarliestDay.getHours() + 24);
+	}
+	return allowedTimes;
+}
+
+/*
+export function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs): Interval[] {
 	// Compute the Intervals corresponding to 6:00-21:00 in the Berlin Timezone on a set of days, which
 	// contains all days occuring in the interval containing all availabilities and tours.
 	const formatter = new Intl.DateTimeFormat('en-US', {
@@ -142,3 +173,4 @@ export function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs): Inter
 	} while (currentTime <= latest);
 	return allowedTimes;
 }
+*/
