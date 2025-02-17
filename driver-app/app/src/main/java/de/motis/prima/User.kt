@@ -20,7 +20,7 @@ class UserViewModel : ViewModel() {
                 cookieStore.clearCookies()
                 _logoutEvent.emit(Unit)
             } catch (e: Exception) {
-                Log.d("Logout", "Error while logout.")
+                Log.d("user", "Error while logout.")
             }
         }
     }

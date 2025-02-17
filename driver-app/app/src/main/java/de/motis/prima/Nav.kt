@@ -50,25 +50,26 @@ fun Nav() {
 
         composable(route = "tour/{tourId}") {
             val tourId = it.arguments?.getString("tourId")?.toInt()
-            var tour = toursViewModel.tours.value.find { tour -> tour.tour_id == tourId }
-            TourView(navController, userViewModel, TourViewModel(tour!!))
+            var tour = toursViewModel.tours.value.find { tour -> tour.tourId == tourId }
+            TourPreview(navController, userViewModel, TourViewModel(tour!!))
         }
 
         composable(route = "legs/{tourId}/{eventGroupIndex}") {
             val tourId = it.arguments?.getString("tourId")?.toInt()
             val stopIndex = it.arguments?.getString("eventGroupIndex")?.toInt()
-            var tour = toursViewModel.tours.value.find { tour -> tour.tour_id == tourId }
-            LegView(stopIndex!!, TourViewModel(tour!!), userViewModel, scanViewModel, navController)
+            var tour = toursViewModel.tours.value.find { tour -> tour.tourId == tourId }
+            Leg(stopIndex!!, TourViewModel(tour!!), userViewModel, scanViewModel, navController)
         }
 
         composable(route = "scan/{tourId}/{eventIndex}") {
             val tourId = it.arguments?.getString("tourId")?.toInt()
             val eventIndex = it.arguments?.getString("eventIndex")?.toInt()
-            ScanTicketView(navController,  tourId!!, eventIndex!!, scanViewModel)
+            ScanTicket(navController,  tourId!!, eventIndex!!, scanViewModel)
         }
 
-        composable(route = "taxameter") {
-            Taxameter(navController, toursViewModel, userViewModel)
+        composable(route = "taxameter/{tourId}") {
+            val tourId = it.arguments?.getString("tourId")?.toInt()
+            Taxameter(navController, toursViewModel, userViewModel, tourId!!)
         }
     }
 }

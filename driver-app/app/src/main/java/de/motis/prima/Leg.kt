@@ -1,11 +1,16 @@
 package de.motis.prima
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -28,41 +33,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LegView(
+fun Leg(
     eventGroupIndex: Int,
     tourViewModel: TourViewModel,
     userViewModel: UserViewModel,
     scanViewModel: ScanViewModel,
     navController: NavController,
 ) {
-    var isLastStop = false
-    val tour = tourViewModel.tour_
-    val eventGroups = tourViewModel.eventGroups
-
-    if (eventGroupIndex + 1 == eventGroups.size) {
-        isLastStop = true
-    }
-
-    /*if (eventGroupIndex == 0) {
-        tourViewModel.fetchLocation()
-        currentLocation = tourViewModel.currentLocation
-    } else {
-        val prevEvent = tour.events[eventGroupIndex - 1]
-        currentLocation = Location(latitude = prevEvent.latitude, longitude = prevEvent.longitude)
-    }*/
-
-    val validTickets by scanViewModel.validTickets.collectAsState()
-
     var dropdownExpanded by remember {
         mutableStateOf(false)
     }
@@ -76,7 +64,7 @@ fun LegView(
                 ),
                 title = {
                     Text(
-                        "Fahrt",
+                        "Fahrtabschnitt",
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -119,81 +107,135 @@ fun LegView(
                     }
                 }
             )
-
         }
     ) { contentPadding ->
-        Column(
-            modifier = Modifier
+        Content(
+            eventGroupIndex = eventGroupIndex,
+            tourViewModel = tourViewModel,
+            scanViewModel = scanViewModel,
+            navController = navController,
+            contentPadding = contentPadding
+        )
+    }
+}
+
+@Composable
+fun Content(
+    eventGroupIndex: Int,
+    tourViewModel: TourViewModel,
+    scanViewModel: ScanViewModel,
+    navController: NavController,
+    contentPadding: PaddingValues
+) {
+    var isLastStop = false
+    val tour = tourViewModel.tour_
+    val eventGroups = tourViewModel.eventGroups
+    val validTickets by scanViewModel.validTickets.collectAsState()
+
+    if (eventGroupIndex + 1 == eventGroups.size) {
+        isLastStop = true
+    }
+
+    Column(Modifier.fillMaxHeight()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+            Box(
+                modifier = Modifier
+                    .padding(contentPadding)
             ) {
-                Box(
-                    modifier = Modifier
-                        .padding(contentPadding)
-                ) {
-                    Text(
-                        text = "${eventGroupIndex + 1} / ${eventGroups.size}",
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
+                Text(
+                    text = "${eventGroupIndex + 1} / ${eventGroups.size}",
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Box {
-                    EventGroup(
-                        EventGroupViewModel(
-                            eventGroupIndex,
-                            "", // TODO: group ID
-                            tourViewModel
-                            ),
-                        navController,
-                        scanViewModel)
-                }
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            ShowEventGroup(
+                eventGroupIndex,
+                tourViewModel,
+                navController
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.Top
+        ) {
+            Box(
+                modifier = Modifier
+                    .padding(top = 64.dp)
             ) {
                 if (!isLastStop) {
-                    Box {
-                        Button(
-                            modifier = Modifier.width(250.dp),
-                            onClick = {
-                                navController.navigate("legs/${tour.tour_id}/${eventGroupIndex + 1}")
-                            }
-                        ) {
-                            Text(
-                                text = "Nächstes Ziel",
-                                fontSize = 24.sp,
-                                textAlign = TextAlign.Center
-                            )
+                    Button(
+                        modifier = Modifier.width(300.dp),
+                        onClick = {
+                            navController.navigate("legs/${tour.tourId}/${eventGroupIndex + 1}")
                         }
+                    ) {
+                        Text(
+                            text = "Nächstes Ziel",
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 } else {
-                    Box(
-                        modifier = Modifier
-                            .padding(contentPadding)
-                    ) {
-                        Button(
-                            modifier = Modifier.width(300.dp),
-                            onClick = {
-                                Log.d("test", validTickets.toString())
-                                navController.navigate("taxameter") {}
-                            }
-                        ) {
-                            Text(
-                                text = "Fahrt abgeschlossen",
-                                fontSize = 24.sp,
-                                textAlign = TextAlign.Center
-                            )
+                    Button(
+                        modifier = Modifier.width(300.dp),
+                        onClick = {
+                            Log.d("test", validTickets.toString())
+                            navController.navigate("taxameter/${tour.tourId}") {}
                         }
+                    ) {
+                        Text(
+                            text = "Fahrt abgeschlossen",
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun ShowEventGroup(
+    eventGroupIndex: Int,
+    tourViewModel: TourViewModel,
+    navController: NavController
+) {
+    BoxWithConstraints {
+        val screenWidth = maxWidth
+        val screenHeight = maxHeight
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            val height = screenHeight * 0.75f
+            Box(
+                modifier = Modifier
+                    .height(height)
+                    .width(screenWidth * 0.9f)
+            ) {
+                EventGroup(
+                    EventGroupViewModel(
+                        eventGroupIndex,
+                        tourViewModel
+                    ),
+                    navController,
+                    height
+                )
             }
         }
     }

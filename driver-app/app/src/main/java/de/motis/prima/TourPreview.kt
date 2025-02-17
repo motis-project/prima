@@ -36,7 +36,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -54,37 +53,43 @@ data class Location(
     val longitude: Double,
 )
 
+data class Tour(
+    val stops: List<EventGroup>
+)
+
 data class EventGroup(
     val id: String,
-    val scheduledTime: String,
+    val arrivalTime: String,
+    val location: Location,
     val events: MutableList<Event>,
+    val tickets: List<Ticket>
 )
 
 class TourViewModel(tour: Tour) : ViewModel() {
-    var id_: Int = tour.tour_id
+    var id_: Int = tour.tourId
     var tour_: Tour = tour
     var eventGroups: MutableList<EventGroup> = mutableListOf()
 
     private fun buildEventGroups(events: List<Event>) {
         for (event in events) {
-            if (event.group != null) {
-                var matchGroups = eventGroups.filter { group -> group.id == event.group }
-                if (matchGroups.isEmpty()) {
-                    eventGroups.add(
-                        EventGroup(
-                            event.group,
-                            event.scheduled_time,
-                            mutableListOf(event)
-                        )
+            val matchGroups = eventGroups.filter { group -> group.id == event.eventGroup }
+            if (matchGroups.isEmpty()) {
+                eventGroups.add(
+                    EventGroup(
+                        event.eventGroup,
+                        event.scheduledTimeStart.toString(),
+                        Location(event.lat, event.lng),
+                        mutableListOf(event),
+                        emptyList()
                     )
-                } else if (matchGroups.size == 1) {
-                    matchGroups[0].events.add(event)
-                } else {
-                    Log.d("test", "buildEventGroups: groupId not unique")
-                }
+                )
+            } else if (matchGroups.size == 1) {
+                matchGroups[0].events.add(event)
+            } else {
+                Log.d("error", "buildEventGroups: groupId not unique")
             }
         }
-        Log.d("test", eventGroups.toString())
+        Log.d("groups", eventGroups.toString())
     }
 
     init {
@@ -94,7 +99,7 @@ class TourViewModel(tour: Tour) : ViewModel() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TourView(
+fun TourPreview(
     navController: NavController,
     userViewModel: UserViewModel,
     tourViewModel: TourViewModel
@@ -173,10 +178,10 @@ fun TourView(
         ) {
             Spacer(modifier = Modifier.height(42.dp))
             Row(
-                modifier = Modifier.fillMaxWidth().height(650.dp),
+                //modifier = Modifier.fillMaxWidth().height(650.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
-                WayPointsView(tourViewModel, navController)
+                WayPointsView(tourViewModel)
             }
 
             Spacer(modifier = Modifier.height(48.dp))
@@ -204,60 +209,15 @@ fun TourView(
 }
 
 @Composable
-fun WayPointsView(
-    tourViewModel: TourViewModel,
-    navController: NavController) {
-
-    val events = tourViewModel.tour_.events
-    var lastEvent = events[0]
-    var timeBegin = "-"
-    var timeEnd = "-"
-
-    try {
-        timeBegin = events[0].scheduled_time
-            .replace("T", " ")
-            .toDate()
-            .formatTo("HH:mm")
-        lastEvent = events[events.size - 1]
-        timeEnd = lastEvent.scheduled_time
-            .replace("T", " ")
-            .toDate()
-            .formatTo("HH:mm")
-    } catch (e: Exception) {
-        Log.d("error", "Failed to get tour details")
-        return
-    }
-
+fun WayPointsView(tourViewModel: TourViewModel) {
     Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "Beginn: $timeBegin",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "Ende: $timeEnd",
-                fontSize = 24.sp,
-                textAlign = TextAlign.Center
-            )
-        }
-        Spacer(modifier = Modifier.height(24.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
             LazyColumn(
             ) {
-                items(items = events, itemContent = { event -> // TODO: change to event groups
+                items(items = tourViewModel.tour_.events, itemContent = { event -> // TODO: change to event groups
                     WayPointPreview(event)
                 })
             }
@@ -269,18 +229,17 @@ fun WayPointsView(
 fun WayPointPreview(
     event: Event
 ) {
-    var scheduledTime = "-"
-    var city = "-"
-
-    val context = LocalContext.current
+    val scheduledTime: String
+    var city = "GPS Navigation"
 
     try {
-        scheduledTime = event.scheduled_time
-            .replace("T", " ")
-            .toDate()
-            .formatTo("HH:mm")
-        if (event.city != null)
-            city = event.city + ", " + event.postal_code
+        scheduledTime = Date(event.scheduledTimeStart).formatTo("HH:mm")
+        if (event.address != "") {
+            val parts = event.address.split(',')
+            if (parts.size == 2) {
+                city = parts[1]
+            }
+        }
     } catch (e: Exception) {
         Log.d("error", "Failed to read event details")
         return
@@ -305,20 +264,18 @@ fun WayPointPreview(
                     textAlign = TextAlign.Center
                 )
             }
-
-            if (city != "") {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = city,
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = city,
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }

@@ -68,13 +68,17 @@ import java.security.MessageDigest
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+data class Ticket(
+    val hash: String,
+    val code: String
+)
 
 class ScanViewModel : ViewModel() {
-    private val _validTickets = MutableStateFlow(hashSetOf<String>())
+    private val _validTickets = MutableStateFlow(mutableMapOf<String, String>())
     val validTickets = _validTickets.asStateFlow()
 
     fun updateValidTickets(ticketCode: String) {
-        _validTickets.value.add(md5(ticketCode))
+        _validTickets.value.put(md5(ticketCode), ticketCode)
     }
 
     private fun md5(input: String): String {
@@ -82,22 +86,16 @@ class ScanViewModel : ViewModel() {
         return bytes.joinToString("") { "%02x".format(it) } // Convert to hex string
     }
 
-    fun reportTicketScan(eventId: Int, ticketHash: String) {
-        Log.d("test", eventId.toString())
-        Log.d("test", ticketHash)
+    fun reportTicketScan(requestId: Int, ticketCode: String) {
+        Log.d("ticket", "Validating ticket code: $ticketCode")
         viewModelScope.launch {
             try {
-                val response = Api.apiService.validateTicket(eventId, ticketHash)
-                if (response.status == 200) {
-                    Log.d("test", response.toString())
-                    //_navigationEvent.emit(true)
-                } else {
-                    Log.d("test", response.toString())
-                    //_loginErrorEvent.emit(true)
+                val response = Api.apiService.validateTicket(requestId, ticketCode)
+                if (!response.success) {
+                    Log.d("ticket", response.toString())
                 }
             } catch (e: Exception) {
-                Log.d("test", "Ticket Validation Network Error: ${e.message!!}")
-                //_networkErrorEvent.emit(Unit)
+                Log.d("ticket", "Network Error: ${e.message!!}")
             }
         }
     }
@@ -245,7 +243,7 @@ private fun setupQRCodeAnalyzer(
 }
 
 @Composable
-fun QRCodeScannerView(onQRCodeScanned: (String) -> Unit) {
+fun QRCodeScanner(onQRCodeScanned: (String) -> Unit) {
     val cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 
     AndroidView(
@@ -284,7 +282,7 @@ fun QRCodeScannerView(onQRCodeScanned: (String) -> Unit) {
 }
 
 @Composable
-fun ScanTicketView(
+fun ScanTicket(
     navController: NavController,
     tourId: Int,
     eventIndex: Int,
@@ -305,7 +303,7 @@ fun ScanTicketView(
                     .width(300.dp)
                     .height(300.dp)
             ) {
-                QRCodeScannerView(
+                QRCodeScanner(
                     onQRCodeScanned = { result ->
                         viewModel.updateValidTickets(result)
                         isScanning = false
@@ -346,7 +344,7 @@ fun generateQRCodeBitmap(data: String): Bitmap? {
 }
 
 @Composable
-fun GeneratedQRCodeView(data: String) {
+fun GeneratedQRCode(data: String) {
     val qrCodeBitmap = remember(data) {
         generateQRCodeBitmap(data)
     }

@@ -13,7 +13,6 @@ class LocationViewModel() : ViewModel() {
         locationUpdate.getCurrentLocation { latitude, longitude ->
             if (latitude != null && longitude != null) {
                 currentLocation = Location(latitude, longitude)
-                Log.d("location", currentLocation.toString())
             } else {
                 Log.d("location", "Unable to fetch location.")
             }

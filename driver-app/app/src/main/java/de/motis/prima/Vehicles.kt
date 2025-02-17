@@ -67,14 +67,9 @@ class VehiclesViewModel() : ViewModel() {
     val vehicleSelectEvent = _vehicleSelectEvent.asSharedFlow()
 
     var vehicles = mutableStateOf<List<Vehicle>>(emptyList())
-        //private set
 
     var isLoading = mutableStateOf(true)
         private set
-
-    init {
-        fetchVehicles()
-    }
 
     fun fetchVehicles() {
         viewModelScope.launch {
@@ -101,7 +96,7 @@ class VehiclesViewModel() : ViewModel() {
                 cookieStore.clearCookies()
                 _logoutEvent.emit(Unit)
             } catch (e: Exception) {
-                Log.d("Logout", "Error while logout.")
+                Log.d("error", "Error while logout.")
             }
         }
     }
@@ -112,7 +107,7 @@ class VehiclesViewModel() : ViewModel() {
                 saveToDataStore(vehicle)
                 _vehicleSelectEvent.emit(Unit)
             } catch (e: Exception) {
-                Log.d("vehicleSelect", "Error while vehicleSelect.")
+                Log.d("error", "Error while vehicleSelect.")
             }
         }
     }
@@ -146,18 +141,18 @@ fun Vehicles(
 
         launch {
             viewModel.logoutEvent.collect {
-                Log.d("Logout", "Logout event triggered.")
                 navController.navigate("login") {
                     launchSingleTop = true
                 }
             }
         }
 
-        /*launch {
+        launch {
             viewModel.vehicleSelectEvent.collect {
-                Log.d("store", "vehicleSelectEvent")
+                toursViewModel.reset()
+                navController.navigate("tours")
             }
-        }*/
+        }
     }
 
     var dropdownExpanded by remember {
@@ -207,8 +202,6 @@ fun Vehicles(
             items(items = viewModel.vehicles.value, itemContent = { vehicle ->
                 ConstraintLayout(modifier = Modifier.clickable {
                     viewModel.selectVehicle(vehicle)
-                    toursViewModel.reset()
-                    navController.navigate("tours")
                 }) {
                     Card(
                         shape = RoundedCornerShape(12.dp),
@@ -221,7 +214,7 @@ fun Vehicles(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center // Center content within the Box
                         ) {
-                            Text(vehicle.license_plate, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                            Text(vehicle.licensePlate, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

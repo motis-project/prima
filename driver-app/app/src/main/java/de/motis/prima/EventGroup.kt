@@ -2,6 +2,7 @@ package de.motis.prima
 
 import android.content.Context
 import android.content.Intent
+import android.health.connect.datatypes.HeightRecord
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.background
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -36,6 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -43,40 +46,32 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import de.motis.prima.services.Event
+import java.util.Date
 
-
-class EventGroupViewModel(stopIndex: Int, groupId: String, tour: TourViewModel) : ViewModel() {
+class EventGroupViewModel(var stopIndex: Int, tour: TourViewModel) : ViewModel() {
     var scheduledTime = "-"
     var city = "-"
-    var street = "-"
-    var houseNumber = "-"
-    var isPickup = false
-
+    var stopDesc = "-"
+    var hasPickup = false
     var eventLocation = Location(latitude = 0.0, longitude = 0.0)
-
-    var tour = tour
     var tourId = tour.id_
     var eventGroup = tour.eventGroups[stopIndex]
 
-    var stopIndex = stopIndex
-
     init {
         try {
-            var event = eventGroup.events.first()
-
-            if (event != null) {
-                scheduledTime = event.scheduled_time
-                    .replace("T", " ")
-                    .toDate()
-                    .formatTo("HH:mm")
-                city = event.city + ", " + event.postal_code
-                street = event.street
-                houseNumber = event.house_number
-                isPickup = event.is_pickup
-                eventLocation = Location(latitude = event.latitude, longitude = event.longitude)
+            val event = eventGroup.events.first()
+            stopDesc = event.address
+            scheduledTime = Date(event.scheduledTimeStart).formatTo("HH:mm")
+            val parts = event.address.split(',')
+            if (parts.size == 2) {
+                city = parts[1]
+                stopDesc = parts[0]
             }
+            val pickupEvent = eventGroup.events.find { e -> e.isPickup }
+            hasPickup = (pickupEvent != null)
+            eventLocation = Location(latitude = event.lat, longitude = event.lng)
         } catch (e: Exception) {
-            Log.d("error", "Failed to read event details")
+            Log.d("error", "EventGroup: failed to read event details")
         }
     }
 }
@@ -118,8 +113,9 @@ fun phoneCall(number: String, context: Context) {
 fun EventGroup(
     viewModel: EventGroupViewModel,
     navController: NavController,
+    height: Dp,
     scanViewModel: ScanViewModel = viewModel(),
-    locationViewModel: LocationViewModel = viewModel()
+    locationViewModel: LocationViewModel = viewModel(),
 ) {
     val context = LocalContext.current
 
@@ -127,10 +123,9 @@ fun EventGroup(
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
-            .wrapContentSize()
+            .fillMaxHeight()
     ) {
-        Column (modifier = Modifier.padding(10.dp) ) {
+        Column (modifier = Modifier.padding(10.dp).fillMaxHeight() ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -143,16 +138,29 @@ fun EventGroup(
                 )
             }
 
-            if (viewModel.city == "" || viewModel.street == "") {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "Fehler: Keine Addresse",
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
+            if (viewModel.city == "-") {
+                if (viewModel.eventLocation != Location(latitude = 0.0, longitude = 0.0)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "GPS Navigation",
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Fehler: Keine Navigation möglich",
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             } else {
                 Row(
@@ -167,39 +175,39 @@ fun EventGroup(
                         textAlign = TextAlign.Center
                     )
                 }
+                Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "${viewModel.street} ${viewModel.houseNumber}",
+                        text = viewModel.stopDesc,
                         fontSize = 24.sp,
                         textAlign = TextAlign.Center
                     )
                 }
             }
 
-            if (viewModel.isPickup) {
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.padding(top = 20.dp)
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.padding(top = 20.dp).height(height * 0.75f)
+            ) {
+                LazyColumn(
+                    modifier = Modifier
+                        .height(height * 0.75f)
+                        .background(Color.White)
                 ) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .height(510.dp)
-                            .background(color = Color.White)
-                    ) {
-                        items(items = viewModel.eventGroup.events, itemContent = { event ->
-                            ShowCustomerDetails(event, scanViewModel, context)
-                        })
-                    }
+                    items(items = viewModel.eventGroup.events, itemContent = { event ->
+                        ShowCustomerDetails(event, scanViewModel, context)
+                    })
                 }
             }
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
+                    .height(height * 0.25f)
+                    .padding(top = 16.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
                 Button(
@@ -216,24 +224,27 @@ fun EventGroup(
                             .size(width = 32.dp, height = 32.dp)
                     )
                 }
+
                 Spacer(modifier = Modifier.width(12.dp))
 
-                val navOptions = NavOptions.Builder()
-                    .setEnterAnim(0)
-                    .setExitAnim(0)
-                    .setPopEnterAnim(0)
-                    .setPopExitAnim(0)
-                    .build()
-                Button(
-                    onClick = {
-                        navController.navigate("scan/${viewModel.tourId}/${viewModel.stopIndex}", navOptions)
-                    },
-                ) {
-                    Text(
-                        text = "QR",
-                        fontSize = 27.sp,
-                        textAlign = TextAlign.Center
-                    )
+                if (viewModel.hasPickup) {
+                    val navOptions = NavOptions.Builder()
+                        .setEnterAnim(0)
+                        .setExitAnim(0)
+                        .setPopEnterAnim(0)
+                        .setPopExitAnim(0)
+                        .build()
+                    Button(
+                        onClick = {
+                            navController.navigate("scan/${viewModel.tourId}/${viewModel.stopIndex}", navOptions)
+                        },
+                    ) {
+                        Text(
+                            text = "QR",
+                            fontSize = 27.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -242,17 +253,12 @@ fun EventGroup(
 
 @Composable
 fun ShowCustomerDetails(event: Event, scanViewModel: ScanViewModel, context: Context) {
-    var firstName = "-"
-    var lastName = "-"
-    var phone = "-"
+    val customerName: String
+    val phone: String
 
     try {
-        if (event.first_name != null)
-            firstName = event.first_name
-        if (event.last_name != null)
-            lastName = event.last_name
-        if (event.phone != null)
-            phone = event.phone
+        customerName = event.customerName
+        phone = event.customerPhone
     } catch (e: Exception) {
         Log.d("error", "ShowCustomerDetails: Failed to read event details")
         return
@@ -275,7 +281,9 @@ fun ShowCustomerDetails(event: Event, scanViewModel: ScanViewModel, context: Con
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Localized description",
-                    modifier = Modifier.background(Color.Green)
+                    modifier = Modifier.background(
+                        if (event.isPickup) Color.Green else Color.Red
+                    )
                 )
                 if (event.wheelchairs > 0) {
                     Spacer(modifier = Modifier.width(12.dp))
@@ -322,16 +330,17 @@ fun ShowCustomerDetails(event: Event, scanViewModel: ScanViewModel, context: Con
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 8.dp),
             ) {
                 Text(
-                    text = "$lastName, $firstName",
+                    text = customerName,
                     fontSize = 24.sp,
                     textAlign = TextAlign.Center
                 )
             }
 
-            if (event.is_pickup) {
+            if (event.isPickup) {
                 Spacer(modifier = Modifier.height(20.dp))
                 Row(
                     modifier = Modifier
@@ -351,7 +360,8 @@ fun ShowCustomerDetails(event: Event, scanViewModel: ScanViewModel, context: Con
                     }
                     Spacer(modifier = Modifier.width(200.dp))
 
-                    if (validTickets.contains(event.ticket_hash)) {
+                    val ticketCode = validTickets[event.ticketHash]
+                    if (ticketCode != null) {
                         Box(
                             modifier = Modifier.padding(top = 8.dp)
                         ) {
@@ -364,7 +374,7 @@ fun ShowCustomerDetails(event: Event, scanViewModel: ScanViewModel, context: Con
 
                             )
                         }
-                        scanViewModel.reportTicketScan(event.event_id, event.ticket_hash)
+                        scanViewModel.reportTicketScan(event.requestId, ticketCode)
                     } else {
                         Box(
                             modifier = Modifier.padding(top = 8.dp)

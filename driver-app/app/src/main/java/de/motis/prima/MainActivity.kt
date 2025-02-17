@@ -27,9 +27,8 @@ class MainActivity : AppCompatActivity() {
         createNotificationChannel(this)
         setContent {
             Nav()
-            //GeneratedQRCodeView("djsjdk2349484hdhdf93hddg38d")
-            //GeneratedQRCodeView("kjlaa928cvos7qocb909309ti89")
-            //TestView(viewModel = TestViewModel())
+            //GeneratedQRCode("djsjdk2349484hdhdf93hddg38d")
+            //GeneratedQRCode("kjlaa928cvos7qocb909309ti89")
         }
     }
 

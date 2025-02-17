@@ -40,7 +40,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import de.motis.prima.services.Api
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -48,6 +50,43 @@ import kotlinx.coroutines.launch
 class TaxameterViewModel : ViewModel() {
     private val _networkErrorEvent = MutableSharedFlow<Unit>()
     val networkErrorEvent = _networkErrorEvent.asSharedFlow()
+
+    private val _conversionErrorEvent = MutableSharedFlow<Unit>()
+    val conversionErrorEvent = _conversionErrorEvent.asSharedFlow()
+
+    private val _reportSuccessEvent = MutableSharedFlow<Unit>()
+    val reportSuccessEvent = _reportSuccessEvent.asSharedFlow()
+
+    fun reportFare(tourId: Int, fare: String) {
+        Log.d("fare", "Reporting fare: $fare")
+
+        viewModelScope.launch {
+            var fareCent = 0
+            try {
+                fareCent = fare.replace(",", "").toInt()
+            } catch (e: Exception) {
+                _conversionErrorEvent.emit(Unit)
+                Log.d("fare", "Fare conversion Error: ${e.message!!}")
+            }
+
+            if (fareCent > 0) {
+                Log.d("fare", fareCent.toString())
+                Log.d("fare", "tourId: $tourId")
+                try {
+                    val response = Api.apiService.reportFare(tourId, fareCent)
+                    if (!response.success) {
+                        _networkErrorEvent.emit(Unit)
+                        Log.d("fare", response.toString())
+                    } else {
+                        _reportSuccessEvent.emit(Unit)
+                    }
+                } catch (e: Exception) {
+                    _networkErrorEvent.emit(Unit)
+                    Log.d("fare", "Network Error: ${e.message!!}")
+                }
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,6 +95,7 @@ fun Taxameter(
     navController: NavController,
     toursViewModel: ToursViewModel,
     userViewModel: UserViewModel,
+    tourId: Int,
     viewModel: TaxameterViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
 ) {
     var entryCorrect by remember { mutableStateOf(false) }
@@ -73,10 +113,25 @@ fun Taxameter(
             }
         }
 
+        launch {
+            viewModel.reportSuccessEvent.collect {
+                navController.navigate("tours") {
+                    launchSingleTop = true
+                }
+            }
+        }
+
         // Catching event when a network error occurs and displaying of error message
         launch {
             viewModel.networkErrorEvent.collect {
                 snackbarHostState.showSnackbar(message = networkErrorMessage)
+            }
+        }
+
+        // Catching event when the input fare string cannot be converted to integer
+        launch {
+            viewModel.conversionErrorEvent.collect {
+                snackbarHostState.showSnackbar(message = "Die Eingabe konnte nicht verarbeitet werden.")
             }
         }
     }
@@ -169,17 +224,15 @@ fun Taxameter(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     isError = entryCorrect
                 )
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(40.dp))
                 Button(
                     onClick = {
                         entryCorrect = false
-                        Log.d("Taxameter", "Fare: ${fare}")
-                        // TODO: send fare to API
-                        navController.navigate("tours")
+                        viewModel.reportFare(tourId, fare)
                     }
                 ) {
                     Text(
-                        text = stringResource(id = R.string.send_fare_button_text), fontSize = 18.sp
+                        text = stringResource(id = R.string.send_fare_button_text), fontSize = 20.sp
                     )
                 }
             }

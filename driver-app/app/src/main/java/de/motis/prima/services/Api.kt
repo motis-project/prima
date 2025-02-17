@@ -12,25 +12,30 @@ import retrofit2.http.Query
 import java.util.Date
 
 interface ApiService {
-    @POST("login")
+    @POST("account/login")
     @FormUrlEncoded
     suspend fun login(
         @Field("email") email: String,
         @Field("password") password: String
     ): LoginResponse
 
-    @GET("api/vehicle")
+    @GET("api/driver/vehicle")
     fun getVehicles() : Call<List<Vehicle>>
 
-    @GET("api/tour")
-    fun getTours(@Query("date") currentDate: String) : Call<List<Tour>>
+    @GET("api/driver/tour")
+    fun getTours(@Query("fromTime") fromTime: Long, @Query("toTime") toTime: Long) : Call<List<Tour>>
 
-    @POST("api/ticket")
-    @FormUrlEncoded
+    @POST("api/driver/ticket")
     suspend fun validateTicket(
-        @Field("eventId") eventId: Int,
-        @Field("ticketHash") ticketHash: String
-    ): TicketValidationResponse
+        @Query("requestId") requestId: Int,
+        @Query("ticketCode") ticketCode: String
+    ): APIResponse
+
+    @POST("api/driver/fare")
+    suspend fun reportFare(
+        @Query("tourId") tourId: Int,
+        @Query("fare") fare: Int
+    ): APIResponse
 }
 
 object Api {
@@ -49,52 +54,52 @@ data class LoginResponse(
     val data: String
 )
 
-data class TicketValidationResponse(
-    val status: Int,
+data class APIResponse(
+    val success: Boolean,
 )
 
 data class Vehicle(
     val id: Int,
-    val license_plate: String,
+    val licensePlate: String,
     val company: Int,
-    val seats: Int,
-    val wheelchair_capacity: Int,
-    val bike_capacity: Int,
-    val storage_space: Int
+    val passengers: Int,
+    val wheelchairs: Int,
+    val bikes: Int,
+    val luggage: Int
 )
 
 data class Event(
-    val event_id: Int,
-    val address: Int,
-    val latitude: Double,
-    val longitude: Double,
-    val street: String,
-    val postal_code: String,
-    val city: String,
-    val scheduled_time: String,
-    val house_number: String,
-    val first_name: String,
-    val last_name: String,
-    val phone: String,
-    val is_pickup: Boolean,
-    val customer_id: String,
+    val tour: Int,
+    val customerName: String,
+    val customerPhone: String,
+    val id: Int,
+    val communicatedTime: Long,
+    val address: String,
+    val eventGroup: String,
+    val isPickup: Boolean,
+    val lat: Double,
+    val lng: Double,
+    val nextLegDuration: Long,
+    val prevLegDuration: Long,
+    val scheduledTimeStart: Long,
+    val scheduledTimeEnd: Long,
+    val bikes: Int,
+    val customer: Int,
+    val luggage: Int,
     val passengers: Int,
     val wheelchairs: Int,
-    val luggage: Int,
-    val bikes: Int,
-    val ticket_hash: String,
-    val group: String
+    val requestId: Int,
+    val ticketHash: String
 )
 
 data class Tour(
-    val tour_id: Int,
-    val from: String,
-    val to: String,
-    val vehicle_id: Int,
-    val license_plate: String,
-    val company_id: Int,
+    val tourId: Int,
     val fare: Int,
-    val fare_route: Int,
-    val company_name: String,
+    val startTime: String,
+    val endTime: String,
+    val companyName: String,
+    val companyAddress: String,
+    val vehicleId: Int,
+    val licensePlate: String,
     val events: List<Event>
 )

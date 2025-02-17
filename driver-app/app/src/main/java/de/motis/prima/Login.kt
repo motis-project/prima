@@ -59,16 +59,14 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = Api.apiService.login(email, password)
-                Log.d("login", response.toString())
+                Log.d("login", response.status.toString())
                 if (response.status == 302) {
-                    Log.d("login response", response.toString())
-                    // successful login
                     _navigationEvent.emit(true)
                 } else {
                     _loginErrorEvent.emit(true)
                 }
             } catch (e: Exception) {
-                Log.d("Login Response Network Error", e.message!!)
+                Log.d("Network Error", e.message!!)
                 _networkErrorEvent.emit(Unit)
             }
         }
@@ -98,13 +96,13 @@ fun Login(
     LaunchedEffect(key1 = viewModel) {
         launch {
             vehiclesViewModel.vehicles = mutableStateOf(emptyList())
-            toursViewModel.tours = mutableStateOf(emptyList())
+            toursViewModel.reset()
+
             // Catching successful login event and navigation to the next screen
             viewModel.navigationEvent.collect { shouldNavigate ->
                 Log.d("Navigation event", "Navigation triggered.")
                 if (shouldNavigate) {
                     Log.d("Navigation event", "Navigating")
-                    toursViewModel.reset()
                     if (selectedVehicle.id == 0) {
                         navController.navigate("vehicles") {}
                     } else {
