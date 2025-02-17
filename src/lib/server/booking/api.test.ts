@@ -56,7 +56,7 @@ const inNiesky1 = { lat: 51.29468377345111, lng: 14.833542206420248 };
 const inNiesky2 = { lat: 51.29544187321241, lng: 14.820560314788537 };
 const inNiesky3 = { lat: 51.294046423258095, lng: 14.820774891510126 };
 
-const BASE_DATE = new Date('2050-09-23T17:00').getTime();
+const BASE_DATE = new Date('2050-09-23T17:00Z').getTime();
 const dateInXMinutes = (x: number) => new Date(BASE_DATE + x * MINUTE);
 const inXMinutes = (x: number) => BASE_DATE + x * MINUTE;
 let mockUserId = -1;
