@@ -81,6 +81,7 @@ const doesTourExist = (eb: ExpressionBuilder<TmpDatabase, 'vehicle' | 'times'>) 
 			.whereRef('tour.vehicle', '=', 'vehicle.id')
 			.where((eb) =>
 				eb.and([
+					eb('tour.cancelled', '=', false),
 					sql<boolean>`tour.departure <= times.end_time`,
 					sql<boolean>`tour.arrival >= times.start_time`
 				])

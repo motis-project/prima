@@ -12,6 +12,7 @@ const selectEvents = (eb: ExpressionBuilder<Database, 'tour'>) => {
 		eb
 			.selectFrom('event')
 			.innerJoin('request', 'event.request', 'request.id')
+			.where('event.cancelled', '=', false)
 			.whereRef('request.tour', '=', 'tour.id')
 			.select([
 				'tour.id as tourId',
@@ -42,6 +43,7 @@ const selectTours = (eb: ExpressionBuilder<Database, 'vehicle'>, interval: Inter
 			.whereRef('tour.vehicle', '=', 'vehicle.id')
 			.where((eb) =>
 				eb.and([
+					eb('tour.cancelled', '=', false),
 					eb('tour.departure', '<=', interval.endTime),
 					eb('tour.arrival', '>=', interval.startTime)
 				])
