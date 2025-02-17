@@ -14,8 +14,7 @@ import {
 	LATEST_SHIFT_END,
 	MAX_PASSENGER_WAITING_TIME_DROPOFF,
 	MAX_PASSENGER_WAITING_TIME_PICKUP,
-	PASSENGER_CHANGE_DURATION,
-	TZ
+	PASSENGER_CHANGE_DURATION
 } from '$lib/constants';
 import { evaluateNewTours } from './insertion';
 import { DAY, HOUR } from '$lib/util/time';
@@ -105,14 +104,12 @@ export async function evaluateRequest(
 }
 
 export function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs): Interval[] {
-	console.log(new Interval(earliest, latest));
-
 	if (earliest >= latest) {
 		return [];
 	}
 
-	const earliestDay = (earliest / DAY) * DAY;
-	const latestDay = (latest / DAY) * DAY + DAY;
+	const earliestDay = Math.floor(earliest / DAY) * DAY;
+	const latestDay = Math.floor(latest / DAY) * DAY + DAY;
 
 	const noonEarliestDay = new Date(earliestDay + 12 * HOUR);
 
@@ -127,50 +124,9 @@ export function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs): Inter
 				})
 			) - 12;
 		allowedTimes.push(
-			new Interval(t + EARLIEST_SHIFT_START - offset, t + LATEST_SHIFT_END - offset)
+			new Interval(t + EARLIEST_SHIFT_START - offset * HOUR, t + LATEST_SHIFT_END - offset * HOUR)
 		);
 		noonEarliestDay.setHours(noonEarliestDay.getHours() + 24);
 	}
 	return allowedTimes;
 }
-
-/*
-export function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs): Interval[] {
-	// Compute the Intervals corresponding to 6:00-21:00 in the Berlin Timezone on a set of days, which
-	// contains all days occuring in the interval containing all availabilities and tours.
-	const formatter = new Intl.DateTimeFormat('en-US', {
-		timeZone: TZ,
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit',
-		hour: '2-digit',
-		minute: '2-digit',
-		second: '2-digit',
-		hour12: false
-	});
-	latest = latest + DAY;
-	let currentTime = earliest - DAY;
-	let previousStartOfDay = -1;
-	const allowedTimes: Interval[] = [];
-	do {
-		const currentAsDate = new Date(currentTime);
-		const startOfDay = new Date(
-			currentAsDate.getUTCFullYear(),
-			currentAsDate.getUTCMonth(),
-			currentAsDate.getUTCDate()
-		).getTime();
-		const shiftStart = new Date(
-			new Date(formatter.format(startOfDay + EARLIEST_SHIFT_START)).toUTCString()
-		).getTime();
-		const shiftEnd = new Date(
-			new Date(formatter.format(startOfDay + LATEST_SHIFT_END)).toUTCString()
-		).getTime();
-		if (startOfDay != previousStartOfDay) {
-			allowedTimes.push(new Interval(shiftStart, shiftEnd));
-		}
-		previousStartOfDay = startOfDay;
-		currentTime += 12 * HOUR;
-	} while (currentTime <= latest);
-	return allowedTimes;
-}
-*/
