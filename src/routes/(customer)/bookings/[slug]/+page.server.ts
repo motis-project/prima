@@ -40,17 +40,3 @@ export const actions = {
 		return { msg: msg('requestCancelled') };
 	}
 };
-
-export const actions = {
-	default: async ({ request, locals }): Promise<{ msg: Msg }> => {
-		const user = locals.session?.userId;
-		const formData = await request.formData();
-		const customer: number = formData.get('customerId');
-		if (!user || user != customer) {
-			return { msg: msg('accountDoesNotExist') };
-		}
-		const requestId = readInt(formData.get('requestId'));
-		cancelRequest(requestId);
-		return { msg: msg('requestCancelled') };
-	}
-};
