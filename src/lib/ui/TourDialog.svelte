@@ -21,7 +21,6 @@
 	import { getTourInfoShort } from '$lib/util/getTourInfoShort';
 	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 	import { PUBLIC_MOTIS_URL } from '$env/static/public';
-	import { cancelTour } from '$lib/cancelTour';
 	import CancelMessage from './cancelMessage.svelte';
 
 	const {
@@ -29,13 +28,6 @@
 	}: {
 		open: { tours: Tours | undefined; isAdmin: boolean };
 	} = $props();
-
-	const handleCancelTour = async (reason: string) => {
-		if (!tour) {
-			return;
-		}
-		await cancelTour(tour.tourId, reason);
-	};
 
 	const displayFare = (fare: number | null) => {
 		if (!fare) {
@@ -135,7 +127,7 @@
 			<div class="flex w-full items-center justify-between">
 				<Card.Title>Übersicht</Card.Title>
 				{#if tour && !tour.cancelled && !isAdmin && tour.endTime > Date.now()}
-					<CancelMessage onConfirm={handleCancelTour} />
+					<CancelMessage tourId={tour.tourId} />
 				{/if}
 			</div>
 		</Card.Header>

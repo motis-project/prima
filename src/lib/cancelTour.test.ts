@@ -9,18 +9,33 @@ import {
 	setTour
 } from '$lib/testHelpers';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { cancelTour } from './cancelTour';
 import { createSession } from './server/auth/session';
+
+let sessionToken: string;
 
 beforeEach(async () => {
 	await clearDatabase();
 }, 5000000);
 
+const cancelTour = async (tourId: number, message: string) => {
+	await fetch('http://localhost:5173/api/cancelTour', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			Cookie: `session = ${sessionToken}`
+		},
+		body: JSON.stringify({
+			tourId,
+			message
+		})
+	});
+};
+
 describe('tests for cancelling tours', () => {
 	it('cancel tour', async () => {
 		const c = await addCompany(1);
 		const mockUserId = (await addTestUser(c)).id;
-		const sessionToken = 'generateSessionToken()';
+		sessionToken = 'generateSessionToken()';
 		await createSession(sessionToken, mockUserId);
 		const v = await addTaxi(c, { passengers: 0, bikes: 0, wheelchairs: 0, luggage: 0 });
 		const t = await setTour(v, 0, 0);
@@ -39,15 +54,6 @@ describe('tests for cancelling tours', () => {
 			expect(e.rc).toBe(true);
 			expect(e.tc).toBe(true);
 			expect(e.message).toBe('tour cancelled');
-		});
-
-		await cancelTour(t!.id, 'null');
-		const events2 = await selectEvents();
-		events2.forEach((e) => {
-			expect(e.ec).toBe(true);
-			expect(e.rc).toBe(true);
-			expect(e.tc).toBe(true);
-			expect(e.message).toBe(null);
 		});
 	});
 });

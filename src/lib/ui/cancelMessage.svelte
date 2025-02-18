@@ -9,8 +9,9 @@
 	} from '$lib/shadcn/dialog';
 	import { Button } from '$lib/shadcn/button';
 	import { Input } from '$lib/shadcn/input';
+	import { cancelTour } from '$lib/cancelTour';
 
-	export let onConfirm: (reason: string) => void;
+	export let tourId: number | undefined;
 	let open = false;
 	let reason = '';
 
@@ -18,9 +19,9 @@
 		open = false;
 	}
 
-	function handleConfirm() {
-		if (onConfirm) {
-			onConfirm(reason);
+	async function handleConfirm() {
+		if (tourId != undefined && reason != '') {
+			await cancelTour(tourId, reason);
 		}
 		open = false;
 	}
