@@ -14,7 +14,7 @@
 	import pkg from 'file-saver';
 	import { paginate, setCurrentPages } from '$lib/Paginate';
 	import Paginate from '$lib/paginate.svelte';
-	import { Vehicle } from '../../user/taxi/types.js';
+	import type { Availability } from '$lib/types.js';
 
 	const { data } = $props();
 
@@ -78,6 +78,16 @@
 		if (a.from.getMonth() > b.from.getMonth()) return 1;
 		if (a.from.getDate() < b.from.getDate()) return -1;
 		if (a.from.getDate() > b.from.getDate()) return 1;
+		return 0;
+	};
+
+	const compareDateAvailibility = (a: Availability, b: Availability) => {
+		if (a.start_time.getFullYear() < b.start_time.getFullYear()) return -1;
+		if (a.start_time.getFullYear() > b.start_time.getFullYear()) return 1;
+		if (a.start_time.getMonth() < b.start_time.getMonth()) return -1;
+		if (a.start_time.getMonth() > b.start_time.getMonth()) return 1;
+		if (a.start_time.getDate() < b.start_time.getDate()) return -1;
+		if (a.start_time.getDate() > b.start_time.getDate()) return 1;
 		return 0;
 	};
 
@@ -255,54 +265,49 @@
 		);
 	};
 
-	// --- summation: per day per vehicle --- 
+	// --- Summation: per day per vehicle --- 
 
 	// TODO: TESTEN
-	let sumsPerDay: (number | undefined)[][] = [];
-	let capSumPerDay: (number | undefined)[][] = [];
 
-	const createCapSum = () => {
-		let capSum = 0;
-		let thisVehicle = data.availabilities.at(0)?.vehicle;
-		let dateTemp = data.tours.at(0)?.from.getDate();
+	const createCapForDay = (day: Date) => {
+		let capSumPerDay: number[] = [];
+		//let availabilities = data.availabilities;
+		//availabilities.sort(compareDateAvailibility);
 		for (let avail of data.availabilities) {
-			if(avail.start_time.getDate() == dateTemp && avail.start_time.getDate() == avail.end_time.getDate() && avail.vehicle == thisVehicle)
+			// was wenn die Tour über den Tag drüber geht?
+			if(avail.start_time.getTime() === day.getTime()) // keine avaiabilities in der DB!!!
+			// frage: wenn eine tour eingetragen wird wird die availability automatsich eingetragen?
 			{
-				capSum += avail.cap;	
-			}
-			else {
-				dateTemp = avail.start_time.getDate();
-				capSumPerDay.push([capSum, thisVehicle]);
-				thisVehicle = avail.vehicle;
-				capSum = avail.cap;
+				console.log("capSum: %d", avail.vehicle);
+				capSumPerDay[avail.vehicle] += avail.cap;
 			}
 		}
+		return capSumPerDay;
 	};
 
-	const createSumForEveryDay = () => {
-		let daySum = 0;
-		let thisVehicle = data.tours.at(0)?.vehicle_id;
-		let dateTemp = data.tours.at(0)?.from.getDate();
-		for (let row of data.tours) {
-			if(row.from.getDate() == dateTemp && thisVehicle == row.vehicle_id) {
-				daySum += getCost(row.fare, row.fare_route);
-			}
-			else {
-				dateTemp = row.from.getDate();
-				sumsPerDay.push([daySum, thisVehicle]);
-				thisVehicle = row.vehicle_id;
-				daySum = getCost(row.fare, row.fare_route);
-			}
+	const createSumForDay = (oneDay: TourDetails[]) => {
+		let sumsPerDay: number[] = [];
+		for (let tour of oneDay) {
+			console.log("sumsPerDay: %d", tour.vehicle_id);
+			sumsPerDay[tour.vehicle_id] += tour.fare_route ? tour.fare_route : 0;
 		}
+		return sumsPerDay;
 	};
 
-	const computeCost = () => {
-		// verrechne die beiden Arrays miteinander.
-		
+	const computeDayCost = (oneDay: TourDetails[], day: Date) => {
+		//350€ + (400€-350€)*0.25 = 362.5€
+		let sums = createSumForDay(oneDay); // 400
+		let caps = createCapForDay(day);    // 350
+		const accu = sums.map((item, idx) => item + (caps[idx] - item) * 0.25);
+		let dayCost = 0;
+		for (let i of accu) {
+    		dayCost += i;
+		}
+		return dayCost;
 	};
 
 
-	// --- summation: ---
+	// --- Summation: ---
 	let filterString = $state('keine Filter ausgewählt');
 	let sum = $state(0);
 
@@ -340,9 +345,27 @@
 	};
 
 	const csvExport = (currentTourData: TourDetails[], filename: string) => {
+		currentTourData.sort(compareDate);
+		let thisDay = new Date();
+		let oneDayTours: TourDetails[] = [];
+		let daySum = 0;
 		let data = [];
+		let isFirst = true;
 		data.push(['Unternehmen', 'Tag', 'Taxameterpreis', 'ÖV-Preis', 'Gesamtpreis', 'Kosten']);
 		for (let row of currentTourData) {
+			if(isFirst) {
+				thisDay = row.from;
+				isFirst = false;
+			}
+			if(thisDay.getTime() !== row.from.getTime())
+			{
+				daySum = computeDayCost(oneDayTours, thisDay);
+				// -- pro vehicle aber eine Summe anzeigen?
+				data.push(['Summe Tag', thisDay.toLocaleString('de-DE').slice(0, -10), '', '', '', getEuroString(daySum)]);
+				thisDay = row.from;
+				daySum = 0;
+				oneDayTours.length = 0;
+			}
 			data.push([
 				row.company_name,
 				row.from.toLocaleString('de-DE').slice(0, -10),
@@ -351,8 +374,12 @@
 				getEuroString(getTotalPrice(row.fare, row.fare_route)),
 				getEuroString(getCost(row.fare, row.fare_route))
 			]);
+			oneDayTours.push(row);
 		}
-		data.push(['Summe', '', '', '', '', getEuroString(sum)]);
+		// last "oneDayTours"
+		daySum = computeDayCost(oneDayTours, thisDay);
+		data.push(['Summe Tag', thisDay.toLocaleString('de-DE').slice(0, -10), '', '', '', getEuroString(daySum)]);
+		data.push(['Summe insgesamt', '', '', '', '', getEuroString(sum)]);
 		const csvContent = Papa.unparse(data, { header: true });
 		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 		saveAs(blob, filename);
@@ -483,7 +510,7 @@
 							</Table.Row>
 						{/if}
 						<Table.Row>
-							<Table.Cell>Summe</Table.Cell>
+							<Table.Cell>Summe insgesamt</Table.Cell>
 							<Table.Cell></Table.Cell>
 							<Table.Cell></Table.Cell>
 							<Table.Cell></Table.Cell>
