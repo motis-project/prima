@@ -137,14 +137,35 @@
 				{#if data.isLoggedIn}
 					{@const first = page.state.selectedItinerary.legs.find((l: Leg) => l.mode === 'ODM')}
 					{@const last = page.state.selectedItinerary.legs.findLast((l: Leg) => l.mode === 'ODM')}
+					{@const isSpecial = (stopName: string) => stopName === 'START' || stopName === 'END'}
 					<form method="post" use:enhance>
 						<input type="hidden" name="json" value={JSON.stringify(page.state.selectedItinerary)} />
-						<input type="hidden" name="startFixed1" value={first.from.name === 'END' ? '1' : '0'} />
-						<input type="hidden" name="startFixed2" value={last.to.name === 'END' ? '1' : '0'} />
-						<input type="hidden" name="fromAddress1" value={from.label} />
-						<input type="hidden" name="toAddress1" value={first.to.name} />
-						<input type="hidden" name="fromAddress2" value={last.from.name} />
-						<input type="hidden" name="toAddress2" value={to.label} />
+						<input
+							type="hidden"
+							name="startFixed1"
+							value={isSpecial(first.from.name) ? '1' : '0'}
+						/>
+						<input type="hidden" name="startFixed2" value={isSpecial(last.to.name) ? '1' : '0'} />
+						<input
+							type="hidden"
+							name="fromAddress1"
+							value={isSpecial(first.from.name) ? from.label : first.from.name}
+						/>
+						<input
+							type="hidden"
+							name="toAddress1"
+							value={isSpecial(first.to.name) ? to.label : first.to.name}
+						/>
+						<input
+							type="hidden"
+							name="fromAddress2"
+							value={isSpecial(last.from.name) ? from.label : last.from.name}
+						/>
+						<input
+							type="hidden"
+							name="toAddress2"
+							value={isSpecial(last.to.name) ? to.label : last.to.name}
+						/>
 						<input type="hidden" name="fromLat1" value={first.from.lat} />
 						<input type="hidden" name="fromLng1" value={first.from.lon} />
 						<input type="hidden" name="toLat1" value={first.to.lat} />
