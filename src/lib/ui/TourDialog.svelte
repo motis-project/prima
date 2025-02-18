@@ -134,7 +134,7 @@
 		<Card.Header>
 			<div class="flex w-full items-center justify-between">
 				<Card.Title>Übersicht</Card.Title>
-				{#if tour && !tour.cancelled && !isAdmin}
+				{#if tour && !tour.cancelled && !isAdmin && tour.endTime > Date.now()}
 					<CancelMessage onConfirm={handleCancelTour} />
 				{/if}
 			</div>

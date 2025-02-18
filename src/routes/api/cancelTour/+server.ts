@@ -3,8 +3,13 @@ import { json, type RequestEvent } from '@sveltejs/kit';
 import { sql } from 'kysely';
 
 export const POST = async (event: RequestEvent) => {
+	if(!event.locals.session) {
+		console.log("no session");
+		return json({});
+	}
 	const taxiOwner = event.locals.session!.userId!;
 	const p = await event.request.json();
+	console.log("taxiOwner: ", taxiOwner);
 	if (!taxiOwner || !p.tourId || p.message == null || p.message == undefined) {
 		return json({});
 	}
