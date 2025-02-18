@@ -60,6 +60,9 @@ const translations: Translations = {
 		duplicateLicensePlate: 'Duplicate license plate.',
 		vehicleAddedSuccessfully: 'Vehicle added successfully.',
 
+		//Request
+		requestCancelled: 'Ride cancelled',
+
 		// Booking
 		noRouteFound: 'No route found.',
 		distanceTooLong: 'Distance too long.',
