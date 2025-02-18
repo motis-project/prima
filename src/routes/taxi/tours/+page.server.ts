@@ -6,5 +6,5 @@ export const load: PageServerLoad = async (event) => {
 	if (!companyId) {
 		throw 'not allowed';
 	}
-	return { tours: await getTours(companyId) };
+	return { tours: await getTours(true, companyId) };
 };
