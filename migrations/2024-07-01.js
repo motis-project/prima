@@ -412,12 +412,21 @@ $$ LANGUAGE plpgsql;
 
 await sql`
 CREATE OR REPLACE PROCEDURE cancel_request(
-	p_request_id INTEGER
+	p_request_id INTEGER,
+	p_customer INTEGER
 ) AS $$
 DECLARE
 	v_tour_id INTEGER;
 	v_all_requests_cancelled BOOLEAN;
 BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM request r
+        WHERE r.id = p_request_id AND r.customer = p_customer
+    ) THEN
+        RETURN;
+    END IF;
+
 	UPDATE request r
 	SET cancelled = true
 	WHERE r.id = p_request_id;
@@ -446,9 +455,22 @@ $$ LANGUAGE plpgsql;
 await sql`
 CREATE OR REPLACE PROCEDURE cancel_tour(
 	p_tour_id INTEGER,
+	p_taxi_owner INTEGER,
 	p_message VARCHAR
 ) AS $$
 BEGIN
+	IF NOT EXISTS (
+	    SELECT 1
+	    FROM tour t
+	    JOIN vehicle v ON v.id = t.vehicle
+	    JOIN company c ON c.id = v.company
+	    JOIN "user" u ON u.company_id = c.id
+	    WHERE t.id = p_tour_id
+	    AND u.id = p_taxi_owner
+	) THEN
+	    RETURN;
+	END IF;
+
 	UPDATE tour t
 	SET cancelled = TRUE,
 		message = p_message

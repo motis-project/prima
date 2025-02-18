@@ -8,7 +8,7 @@ import {
 	setTour
 } from '$lib/testHelpers';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { cancelRequest, cancelTour } from './cancel';
+import { cancelRequest, cancelTour } from '$lib/api';
 import { db } from '.';
 
 const selectEvents = async () => {
@@ -94,7 +94,7 @@ describe('tests for cancelling tours or requests', () => {
 			expect(e.message).toBe('tour cancelled');
 		});
 
-		await cancelTour(t!.id, null);
+		await cancelTour(t!.id, 'null');
 		const events2 = await selectEvents();
 		events2.forEach((e) => {
 			expect(e.ec).toBe(true);

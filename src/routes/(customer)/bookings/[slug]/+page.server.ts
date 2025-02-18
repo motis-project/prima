@@ -2,9 +2,9 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import type { Itinerary } from '$lib/openapi';
-import { cancelRequest } from '$lib/server/db/cancel';
 import { msg, type Msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
+import { cancelRequest } from '$lib/api';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const journey = await db
@@ -32,6 +32,20 @@ export const actions = {
 		const user = locals.session?.userId;
 		const formData = await request.formData();
 		const customer = readInt(formData.get('customerId'));
+		if (!user || user != customer) {
+			return { msg: msg('accountDoesNotExist') };
+		}
+		const requestId = readInt(formData.get('requestId'));
+		cancelRequest(requestId);
+		return { msg: msg('requestCancelled') };
+	}
+};
+
+export const actions = {
+	default: async ({ request, locals }): Promise<{ msg: Msg }> => {
+		const user = locals.session?.userId;
+		const formData = await request.formData();
+		const customer: number = formData.get('customerId');
 		if (!user || user != customer) {
 			return { msg: msg('accountDoesNotExist') };
 		}
