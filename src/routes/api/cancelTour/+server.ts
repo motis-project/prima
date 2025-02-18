@@ -4,11 +4,6 @@ import { json } from '@sveltejs/kit';
 import { sql } from 'kysely';
 
 export const POST = async (event: RequestEvent) => {
-	console.log('Session in handle:', event.locals.session);
-	if (!event.locals.session) {
-		console.log('no session');
-		return json({});
-	}
 	const taxiOwner = event.locals.session!.userId!;
 	const p = await event.request.json();
 	console.log('taxiOwner: ', taxiOwner);

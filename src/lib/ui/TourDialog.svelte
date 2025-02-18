@@ -21,7 +21,7 @@
 	import { getTourInfoShort } from '$lib/util/getTourInfoShort';
 	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 	import { PUBLIC_MOTIS_URL } from '$env/static/public';
-	import CancelMessage from './cancelMessage.svelte';
+	import CancelMessageDialog from './CancelMessageDialog.svelte';
 
 	const {
 		open = $bindable()
@@ -127,7 +127,7 @@
 			<div class="flex w-full items-center justify-between">
 				<Card.Title>Übersicht</Card.Title>
 				{#if tour && !tour.cancelled && !isAdmin && tour.endTime > Date.now()}
-					<CancelMessage tourId={tour.tourId} />
+					<CancelMessageDialog bind:tour={open.tours![tourIndex]} />
 				{/if}
 			</div>
 		</Card.Header>
