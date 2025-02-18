@@ -49,6 +49,11 @@ export default defineConfig({
 			dependencies: ['login']
 		},
 		{
+			name: 'booking',
+			testMatch: 'booking.test.ts',
+			dependencies: ['login']
+		},
+		{
 			name: 'move tour',
 			testMatch: 'moveTour.test.ts',
 			dependencies: ['availability']

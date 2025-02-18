@@ -65,6 +65,12 @@ export async function login(page: Page, credentials: UserCredentials) {
 	await page.waitForTimeout(500);
 }
 
+export async function logout(page: Page) {
+	await page.getByRole('link', { name: 'Konto' }).click();
+	await page.getByRole('button', { name: 'Abmelden' }).click();
+	await expect(page.locator('#searchmask-container')).toBeVisible();
+}
+
 export async function signup(page: Page, credentials: UserCredentials) {
 	await page.goto('/account/signup');
 	await expect(page.getByRole('heading', { name: 'Nutzerkonto erstellen' })).toBeVisible();
