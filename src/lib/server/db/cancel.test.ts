@@ -42,8 +42,8 @@ describe('tests for cancelling tours or requests', () => {
 		const e1 = await setEvent(r, 0, true, 1, 1);
 		const e2 = await setEvent(r, 0, false, 1, 1);
 		const r2 = (await setRequest(t!.id, u.id, '')).id;
-		const e3 = await setEvent(r2, 0, true, 1, 1);
-		const e4 = await setEvent(r2, 0, false, 1, 1);
+		await setEvent(r2, 0, true, 1, 1);
+		await setEvent(r2, 0, false, 1, 1);
 
 		await cancelRequest(r);
 		const events = await selectEvents();
@@ -77,13 +77,13 @@ describe('tests for cancelling tours or requests', () => {
 		const c = await addCompany(1);
 		const v = await addTaxi(c, { passengers: 0, bikes: 0, wheelchairs: 0, luggage: 0 });
 		const t = await setTour(v, 0, 0);
-		const t2 = await setTour(v, 0, 0);
+		await setTour(v, 0, 0);
 		const r = (await setRequest(t!.id, u.id, '')).id;
-		const e1 = await setEvent(r, 0, true, 1, 1);
-		const e2 = await setEvent(r, 0, false, 1, 1);
+		await setEvent(r, 0, true, 1, 1);
+		await setEvent(r, 0, false, 1, 1);
 		const r2 = (await setRequest(t!.id, u.id, '')).id;
-		const e3 = await setEvent(r2, 0, true, 1, 1);
-		const e4 = await setEvent(r2, 0, false, 1, 1);
+		await setEvent(r2, 0, true, 1, 1);
+		await setEvent(r2, 0, false, 1, 1);
 
 		await cancelTour(t!.id, 'tour cancelled');
 		const events = await selectEvents();

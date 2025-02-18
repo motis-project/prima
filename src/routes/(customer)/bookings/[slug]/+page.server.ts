@@ -21,7 +21,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	return {
 		journey: JSON.parse(journey.json) as Itinerary,
 		ticketCode: journey.ticketCode,
-		requestId:journey.requestId,
+		requestId: journey.requestId,
 		customerId: journey.customer
 	};
 };

@@ -3,7 +3,11 @@ import { db } from '.';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import { sql } from 'kysely';
 
-export const getTours = async (selectCancelled: boolean, companyId?: number, timeRange?: [UnixtimeMs, UnixtimeMs]) => {
+export const getTours = async (
+	selectCancelled: boolean,
+	companyId?: number,
+	timeRange?: [UnixtimeMs, UnixtimeMs]
+) => {
 	return await db
 		.selectFrom('tour')
 		.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
