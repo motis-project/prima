@@ -18,6 +18,7 @@ export const getTours = async (selectCancelled: boolean, companyId?: number, tim
 			'tour.fare as fare',
 			'tour.departure as startTime',
 			'tour.arrival as endTime',
+			'tour.cancelled',
 			'company.name as companyName',
 			'company.address as companyAddress',
 			'vehicle.id as vehicleId',
