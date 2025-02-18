@@ -101,6 +101,7 @@ export async function addVehicle(page: Page, licensePlate: string) {
 	await page.waitForTimeout(500);
 	await page.getByTestId('add-vehicle').click();
 	await page.waitForTimeout(1000);
+	await page.screenshot({ path: 'screenshots/afterAddVehicleButton.png', fullPage: true });
 	await page.getByPlaceholder('DA-AB-1234').fill(licensePlate);
 	await page.getByLabel('3 Passagiere').check();
 	await page.getByTestId('create-vehicle').click();
