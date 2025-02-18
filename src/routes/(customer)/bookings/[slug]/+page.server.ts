@@ -4,7 +4,7 @@ import { db } from '$lib/server/db';
 import type { Itinerary } from '$lib/openapi';
 import { msg, type Msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
-import { cancelRequest } from '$lib/api';
+import { cancelRequest } from '$lib/server/db/cancelRequest';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const journey = await db
@@ -36,7 +36,7 @@ export const actions = {
 			return { msg: msg('accountDoesNotExist') };
 		}
 		const requestId = readInt(formData.get('requestId'));
-		cancelRequest(requestId);
+		await cancelRequest(requestId);
 		return { msg: msg('requestCancelled') };
 	}
 };

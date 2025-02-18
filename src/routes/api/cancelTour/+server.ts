@@ -8,7 +8,6 @@ export const POST = async (event: RequestEvent) => {
 	if (!taxiOwner || !p.tourId || p.message == null || p.message == undefined) {
 		return json({});
 	}
-	const m = 'eklrjhnl';
-	await sql`CALL cancel_tour(${p.tourId}, ${taxiOwner}, ${m})`.execute(db);
+	await sql`CALL cancel_tour(${p.tourId}, ${taxiOwner}, ${p.message})`.execute(db);
 	return json({});
 };

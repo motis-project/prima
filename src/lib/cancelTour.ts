@@ -10,15 +10,3 @@ export async function cancelTour(tourId: number, message: string) {
 		})
 	});
 }
-
-export async function cancelRequest(requestId: number) {
-	await fetch('/api/cancelRequest', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({
-			requestId
-		})
-	});
-}

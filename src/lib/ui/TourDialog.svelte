@@ -21,7 +21,8 @@
 	import { getTourInfoShort } from '$lib/util/getTourInfoShort';
 	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 	import { PUBLIC_MOTIS_URL } from '$env/static/public';
-	import { cancelTour } from '$lib/api';
+	import { cancelTour } from '$lib/cancelTour';
+	import CancelMessage from './cancelMessage.svelte';
 
 	const {
 		open = $bindable()
@@ -29,12 +30,11 @@
 		open: { tours: Tours | undefined; isAdmin: boolean };
 	} = $props();
 
-	const handleCancelTour = async () => {
-		console.log('trying to cancel tour');
+	const handleCancelTour = async (reason: string) => {
 		if (!tour) {
 			return;
 		}
-		await cancelTour(tour.tourId, '');
+		await cancelTour(tour.tourId, reason);
 	};
 
 	const displayFare = (fare: number | null) => {
@@ -135,10 +135,9 @@
 			<div class="flex w-full items-center justify-between">
 				<Card.Title>Übersicht</Card.Title>
 				{#if tour && !tour.cancelled && !isAdmin}
-					<form>
-						<input type="hidden" name="tourId" value={tour.tourId} />
-						<Button onclick={() => handleCancelTour()} variant="destructive">Stornieren</Button>
-					</form>
+				<CancelMessage onConfirm={handleCancelTour}/>
+
+				
 				{/if}
 			</div>
 		</Card.Header>

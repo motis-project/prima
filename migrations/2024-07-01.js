@@ -412,21 +412,12 @@ $$ LANGUAGE plpgsql;
 
 await sql`
 CREATE OR REPLACE PROCEDURE cancel_request(
-	p_request_id INTEGER,
-	p_customer INTEGER
+	p_request_id INTEGER
 ) AS $$
 DECLARE
 	v_tour_id INTEGER;
 	v_all_requests_cancelled BOOLEAN;
 BEGIN
-    IF NOT EXISTS (
-        SELECT 1
-        FROM request r
-        WHERE r.id = p_request_id AND r.customer = p_customer
-    ) THEN
-        RETURN;
-    END IF;
-
 	UPDATE request r
 	SET cancelled = true
 	WHERE r.id = p_request_id;

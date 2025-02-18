@@ -165,3 +165,20 @@ export const getTours = async () => {
 		])
 		.execute();
 };
+
+export const selectEvents = async () => {
+	return await db
+		.selectFrom('tour')
+		.innerJoin('request', 'tour.id', 'request.tour')
+		.innerJoin('event', 'event.request', 'request.id')
+		.select([
+			'event.id as eventid',
+			'request.id as requestid',
+			'tour.id as tourid',
+			'event.cancelled as ec',
+			'request.cancelled as rc',
+			'tour.cancelled as tc',
+			'tour.message'
+		])
+		.execute();
+};
