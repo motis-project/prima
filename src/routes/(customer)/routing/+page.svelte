@@ -209,7 +209,7 @@
 					<ArrowUpDown class="size-2" />
 				</Button>
 			</div>
-			<div class="flex gap-4">
+			<div class="flex gap-2">
 				<DateInput bind:value={time} />
 				<RadioGroup.Root class="flex" bind:value={timeType}>
 					<Label

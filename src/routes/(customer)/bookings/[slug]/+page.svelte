@@ -14,7 +14,7 @@
 	let showTicket = $state(false);
 </script>
 
-<div class="flex flex-col gap-4 md:h-[80%] md:w-96">
+<div class="flex h-full flex-col gap-4 md:h-[80%] md:w-96">
 	<div class="flex items-center justify-between gap-4">
 		<Button variant="outline" size="icon" onclick={() => window.history.back()}>
 			<ChevronLeft />
