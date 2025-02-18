@@ -68,6 +68,7 @@
 		"kysely-ctl": "^0.11.0",
 		"maplibre-gl": "^5.0.1",
 		"pg": "^8.13.1",
+		"svelte-qrcode": "^1.0.1",
 		"uuid": "^11.0.5"
 	}
 }

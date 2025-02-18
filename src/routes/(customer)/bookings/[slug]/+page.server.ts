@@ -6,8 +6,9 @@ import type { Itinerary } from '$lib/openapi';
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const journey = await db
 		.selectFrom('journey')
-		.select('json')
-		.where('id', '=', parseInt(params.slug))
+		.innerJoin('request', 'journey.request1', 'request.id')
+		.select(['json', 'request.ticketCode'])
+		.where('journey.id', '=', parseInt(params.slug))
 		.where('user', '=', locals.session!.userId!)
 		.executeTakeFirst();
 
@@ -15,5 +16,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		error(404, 'Not found');
 	}
 
-	return { journey: JSON.parse(journey.json) as Itinerary };
+	return {
+		journey: JSON.parse(journey.json) as Itinerary,
+		ticketCode: journey.ticketCode
+	};
 };
