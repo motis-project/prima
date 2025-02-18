@@ -3,11 +3,18 @@
 	import * as Card from '$lib/shadcn/card';
 	import { formatDurationSec } from './formatDuration';
 	import Time from './Time.svelte';
-	import type { Itinerary, Leg } from '$lib/openapi';
+	import type { Itinerary, Leg, PlanData } from '$lib/openapi';
 	import { getModeStyle, routeColor } from './modeStyle';
 	import { t } from '$lib/i18n/translation';
 
-	const { it }: { it: Itinerary } = $props();
+	const { it, baseQuery }: { it: Itinerary; baseQuery: PlanData | undefined} = $props();
+
+	string weekday_note(time: string) {
+		if(baseQuery === undefined || baseQuery.query.time === undefined) {
+			return "";
+		}
+		return "";
+	}
 </script>
 
 {#snippet legSummary(l: Leg)}
