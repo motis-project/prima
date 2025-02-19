@@ -12,7 +12,6 @@ import { COORDINATE_ROUNDING_ERROR_THRESHOLD } from '$lib/constants';
 import { createSession } from '../auth/session';
 import { MINUTE } from '$lib/util/time';
 import type { ExpectedConnection } from './bookRide';
-import { getAllowedTimes } from './evaluateRequest';
 
 const black = async (body: string) => {
 	return await fetch('http://localhost:5173/api/blacklist', {
