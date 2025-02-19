@@ -77,7 +77,10 @@ const translations: Translations = {
 		bookingError: 'Die Fahrt konnte nicht gebucht werden.',
 		bookingError1: 'Erster Abschnitt konnte nicht gebucht werden.',
 		bookingError2: 'Zweiter Abschnitt konnte nicht gebucht werden.',
-		bookingSuccess: 'Buchung erfolgreich.'
+		bookingSuccess: 'Buchung erfolgreich.',
+
+		// Journey
+		cancelled: 'Diese Fahrt wurde storniert.'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',

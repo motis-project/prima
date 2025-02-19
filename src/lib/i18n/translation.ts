@@ -78,6 +78,9 @@ export type Translations = {
 		bookingError1: string;
 		bookingError2: string;
 		bookingSuccess: string;
+
+		// Journey
+		cancelled: string;
 	};
 	admin: {
 		completedToursSubtitle: string;
@@ -141,5 +144,5 @@ const translationsKey = browser
 	? navigator.languages.find((l) => translations.has(l.slice(0, 2)))
 	: undefined;
 
-export const t = translationsKey ? translations.get(translationsKey) : de;
 export const language = translationsKey ?? (browser ? navigator.language : 'de');
+export const t = translationsKey ? translations.get(translationsKey) : de;

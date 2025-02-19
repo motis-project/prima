@@ -95,7 +95,8 @@ export function getAllowedOperationTimes(
 	next: DbEvent | undefined,
 	expandedSearchInterval: Interval,
 	prepTime: UnixtimeMs,
-	vehicle: VehicleWithInterval
+	vehicle: VehicleWithInterval,
+	allowedTimes: Interval[]
 ): Interval[] {
 	console.assert(
 		implication(!returnsToCompany(insertionCase), next !== undefined),
@@ -156,9 +157,12 @@ export function getAllowedOperationTimes(
 		!(insertionCase.how != InsertHow.NEW_TOUR && relevantAvailabilities.length > 1),
 		`Found ${relevantAvailabilities.length} intervals, which are supposed to be disjoint, containing the same timestamp.`
 	);
-	return relevantAvailabilities
-		.map((availability) => new Interval(availability).intersect(window))
-		.filter((availability) => availability != undefined);
+	return Interval.intersect(
+		relevantAvailabilities
+			.map((availability) => new Interval(availability).intersect(window))
+			.filter((availability) => availability != undefined),
+		allowedTimes
+	);
 }
 
 export function getArrivalWindow(
