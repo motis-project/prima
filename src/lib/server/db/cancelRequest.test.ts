@@ -13,7 +13,7 @@ import { cancelRequest } from './cancelRequest';
 
 beforeEach(async () => {
 	await clearDatabase();
-}, 5000000);
+}, 60000);
 
 describe('tests for cancelling requests', () => {
 	it('cancel request', async () => {

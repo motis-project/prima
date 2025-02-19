@@ -446,7 +446,7 @@ $$ LANGUAGE plpgsql;
 await sql`
 CREATE OR REPLACE PROCEDURE cancel_tour(
 	p_tour_id INTEGER,
-	p_taxi_owner INTEGER,
+	p_company_id INTEGER,
 	p_message VARCHAR
 ) AS $$
 BEGIN
@@ -454,10 +454,8 @@ BEGIN
 	    SELECT 1
 	    FROM tour t
 	    JOIN vehicle v ON v.id = t.vehicle
-	    JOIN company c ON c.id = v.company
-	    JOIN "user" u ON u.company_id = c.id
 	    WHERE t.id = p_tour_id
-	    AND u.id = p_taxi_owner
+	    AND v.company = p_company_id
 	) THEN
 	    RETURN;
 	END IF;
