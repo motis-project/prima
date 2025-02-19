@@ -5,4 +5,6 @@
     <string name="email_label">E-Mail</string>
     <string name="password_label">Passwort</string>
     <string name="network_error_message">Etwas ist schiefgelaufen. Bitte versuchen Sie es später erneut.</string>
+    <string name="fare_label">Fahrpreis</string>
+    <string name="send_fare_button_text">Speichern</string>
 </resources>

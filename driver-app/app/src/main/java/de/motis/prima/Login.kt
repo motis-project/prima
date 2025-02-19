@@ -12,14 +12,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,7 +45,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
-    // Event which will be omitted to the Login component, indicating success of the login operation
     private val _navigationEvent = MutableSharedFlow<Boolean>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
@@ -58,15 +58,12 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = Api.apiService.login(email, password)
-                Log.d("login", response.toString())
                 if (response.status == 302) {
-                    // successful login
                     _navigationEvent.emit(true)
                 } else {
                     _loginErrorEvent.emit(true)
                 }
             } catch (e: Exception) {
-                Log.d("login", e.message!!)
                 _networkErrorEvent.emit(Unit)
             }
         }
@@ -76,6 +73,7 @@ class LoginViewModel : ViewModel() {
 @Composable
 fun Login(
     navController: NavController,
+    userViewModel: UserViewModel,
     viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -89,31 +87,31 @@ fun Login(
         activity?.finish()
     }
 
+    val selectedVehicle by userViewModel.selectedVehicle.collectAsState()
+
     LaunchedEffect(key1 = viewModel) {
-        // Catching successful login event and navigation to the next screen
         launch {
+            // Catching successful login event and navigation to the next screen
             viewModel.navigationEvent.collect { shouldNavigate ->
-                Log.d("Navigation event", "Navigation triggered.")
                 if (shouldNavigate) {
-                    Log.d("Navigation event", "Navigating to vehicle selection.")
-                    navController.navigate("home") {
-                        popUpTo("login") {
-                            inclusive = true
-                        }
+                    if (selectedVehicle.id == 0) {
+                        navController.navigate("vehicles")
+                    } else {
+                        //navController.navigate("tours")
                     }
                 }
             }
         }
 
-        // Catching event when login failed due to incorrect login data
         launch {
+            // Catching event when login failed due to incorrect login data
             viewModel.loginErrorEvent.collect { error ->
                 isLoginFailed = error
             }
         }
 
-        // Catching event when a network error occurs and displaying of error message
         launch {
+            // Catching event when a network error occurs and displaying of error message
             viewModel.networkErrorEvent.collect {
                 snackbarHostState.showSnackbar(message = networkErrorMessage)
             }
@@ -189,7 +187,6 @@ fun Login(
                 Button(
                     onClick = {
                         isLoginFailed = false
-                        Log.d("Login", "E-Mail: ${email}, Password: $password")
                         viewModel.login(email, password)
                     }
                 ) {
