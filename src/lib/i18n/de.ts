@@ -110,6 +110,11 @@ const translations: Translations = {
 		resendCode: 'Code erneut senden',
 		verify: 'Verifizieren'
 	},
+	rating: {
+		good: 'gut',
+		bad: 'schlecht',
+		sendFeedback: 'Feedback abschicken'
+	},
 	journeyDetails: 'Verbindungsdetails',
 	transfers: 'Umstiege',
 	walk: 'Fußweg',

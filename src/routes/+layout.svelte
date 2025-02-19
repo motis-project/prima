@@ -8,6 +8,9 @@
 	import Building2 from 'lucide-svelte/icons/building-2';
 	import ListChecks from 'lucide-svelte/icons/list-checks';
 	import UsersRound from 'lucide-svelte/icons/users-round';
+	import CircleAlert from 'lucide-svelte/icons/circle-alert';
+
+	import * as Alert from '$lib/shadcn/alert';
 
 	import Menu, { type Item as MenuItem } from './Menu.svelte';
 	import { t } from '$lib/i18n/translation';
@@ -39,6 +42,19 @@
 </script>
 
 <div class="flex h-full flex-col">
+	{#if data.pendingRating}
+		<Alert.Root class="p">
+			<CircleAlert class="size-4" />
+			<Alert.Title></Alert.Title>
+			<Alert.Description>
+				Vielen Dank dass Sie das ÖPNV Taxi benutzt haben. <br />
+				Wie war es?
+				<a class="font-bold underline" href="/rating/{data.pendingRating.id}">
+					Geben Sie uns Ihr Feedback.
+				</a>
+			</Alert.Description>
+		</Alert.Root>
+	{/if}
 	<div
 		id="searchmask-container"
 		class="grow overflow-y-auto p-2 pb-6 md:flex md:items-center md:justify-center"

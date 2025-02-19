@@ -108,6 +108,11 @@ export type Translations = {
 		resendCode: string;
 		verify: string;
 	};
+	rating: {
+		good: string;
+		bad: string;
+		sendFeedback: string;
+	};
 	journeyDetails: string;
 	transfers: string;
 	walk: string;

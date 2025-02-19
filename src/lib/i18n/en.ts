@@ -109,6 +109,11 @@ const translations: Translations = {
 		resendCode: 'Resend code',
 		verify: 'Verify'
 	},
+	rating: {
+		good: 'good',
+		bad: 'bad',
+		sendFeedback: 'Send feedback'
+	},
 	journeyDetails: 'Journey Details',
 	transfers: 'transfers',
 	walk: 'Walk',
