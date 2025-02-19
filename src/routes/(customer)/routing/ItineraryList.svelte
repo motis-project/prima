@@ -55,7 +55,7 @@
 						{/if}
 						{#each r.itineraries as it}
 							<button onclick={() => selectItinerary(it)}>
-								<ItinerarySummary {it} />
+								<ItinerarySummary {it} {baseQuery} />
 							</button>
 						{/each}
 						{#if rI === routingResponses.length - 1 && baseQuery}
