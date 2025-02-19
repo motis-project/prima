@@ -28,16 +28,10 @@
 		if (queriedTime === undefined) {
 			return '';
 		}
-
 		const base = new Date(queriedTime);
-
-		if (base.toLocaleDateString() === time.toLocaleDateString()) {
-			return '';
-		}
-
-		const weekday = time.toLocaleString(navigator.language, { weekday: 'long' });
-
-		return `(${weekday})`;
+		return base.toLocaleDateString() === time.toLocaleDateString()
+			? ''
+			: `(${time.toLocaleString(navigator.language, { weekday: 'long' })})`;
 	}
 </script>
 
