@@ -6,6 +6,7 @@
 
 	import ArrowUpDown from 'lucide-svelte/icons/arrow-up-down';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
+	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 
 	import Separator from '$lib/shadcn/separator/separator.svelte';
 	import * as RadioGroup from '$lib/shadcn/radio-group';
@@ -26,7 +27,8 @@
 	import { enhance } from '$app/forms';
 	import Message from '$lib/ui/Message.svelte';
 	import DateInput from './DateInput.svelte';
-	import { Button } from '$lib/shadcn/button';
+	import { Button, buttonVariants } from '$lib/shadcn/button';
+	import * as Dialog from '$lib/shadcn/dialog';
 
 	const { form, data } = $props();
 
@@ -231,6 +233,35 @@
 				</Button>
 			</div>
 			<div class="flex gap-2">
+				<Dialog.Root>
+					<Dialog.Trigger class={buttonVariants({ variant: 'default' })}>
+						{timeType == 'departure' ? 'Los um ' : 'Ankunft um '}
+						{time.toLocaleString('de-DE')}
+						<ChevronDown />
+					</Dialog.Trigger>
+					<Dialog.Content class="sm:max-w-[425px]">
+						<Dialog.Header>
+							<Dialog.Title>Edit profile</Dialog.Title>
+							<Dialog.Description>
+								Make changes to your profile here. Click save when you're done.
+							</Dialog.Description>
+						</Dialog.Header>
+						<div class="grid gap-4 py-4">
+							<div class="grid grid-cols-4 items-center gap-4">
+								<Label for="name" class="text-right">Name</Label>
+								<Input id="name" value="Pedro Duarte" class="col-span-3" />
+							</div>
+							<div class="grid grid-cols-4 items-center gap-4">
+								<Label for="username" class="text-right">Username</Label>
+								<Input id="username" value="@peduarte" class="col-span-3" />
+							</div>
+						</div>
+						<Dialog.Footer>
+							<Button type="submit">Save changes</Button>
+						</Dialog.Footer>
+					</Dialog.Content>
+				</Dialog.Root>
+
 				<DateInput bind:value={time} />
 				<RadioGroup.Root class="flex" bind:value={timeType}>
 					<Label
