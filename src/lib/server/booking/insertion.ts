@@ -226,6 +226,7 @@ export function evaluateNewTours(
 	busStopTimes: Interval[][],
 	routingResults: RoutingResults,
 	travelDurations: (number | undefined)[],
+	allowedTimes: Interval[],
 	promisedTimes?: PromisedTimes
 ): (Insertion | undefined)[][] {
 	const bestEvaluations = new Array<(Insertion | undefined)[]>(busStopTimes.length);
@@ -258,7 +259,8 @@ export function evaluateNewTours(
 				undefined,
 				expandedSearchInterval,
 				prepTime,
-				vehicle
+				vehicle,
+				allowedTimes
 			);
 			for (let busStopIdx = 0; busStopIdx != busStopTimes.length; ++busStopIdx) {
 				for (let busTimeIdx = 0; busTimeIdx != busStopTimes[busStopIdx].length; ++busTimeIdx) {

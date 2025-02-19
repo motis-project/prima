@@ -112,7 +112,7 @@ describe('blacklisting test', () => {
 			userChosen: inNiesky,
 			busStops: [
 				{ times: [dateInXMinutes(50), dateInXMinutes(10)], ...inNiesky },
-				{ times: [dateInXMinutes(150), dateInXMinutes(200)], ...inNiesky }
+				{ times: [dateInXMinutes(70), dateInXMinutes(100)], ...inNiesky }
 			],
 			startFixed: true,
 			capacities: { passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }
