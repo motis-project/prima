@@ -58,7 +58,7 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = Api.apiService.login(email, password)
-                Log.d("Login Response", response.toString())
+                Log.d("login", response.toString())
                 if (response.status == 302) {
                     // successful login
                     _navigationEvent.emit(true)
@@ -66,7 +66,7 @@ class LoginViewModel : ViewModel() {
                     _loginErrorEvent.emit(true)
                 }
             } catch (e: Exception) {
-                Log.d("Login Response Network Error", e.message!!)
+                Log.d("login", e.message!!)
                 _networkErrorEvent.emit(Unit)
             }
         }

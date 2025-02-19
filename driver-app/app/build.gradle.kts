@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "de.motis.prima"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "de.motis.prima"
