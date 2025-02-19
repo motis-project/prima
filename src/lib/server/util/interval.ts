@@ -110,6 +110,79 @@ export class Interval {
 		return new Interval(this.startTime + x, this.endTime + x);
 	}
 
+	static intersect(a: Interval[], b: Interval[]): Interval[] {
+		a.sort((i1, i2) => i1.startTime - i2.startTime);
+		b.sort((i1, i2) => i1.startTime - i2.startTime);
+		const ret: Interval[] = [];
+		let aPos = 0;
+		let bPos = 0;
+		let aCurrent = a[aPos];
+		let bCurrent = b[bPos];
+		const maxIterations = a.length + b.length + 10;
+		let i = 0;
+		while (aPos != a.length && bPos != b.length) {
+			if (++i > maxIterations) {
+				throw 'subtract error';
+			}
+			switch (aCurrent.getRelation(bCurrent)) {
+				case INTERVAL_RELATION.EQUAL: {
+					ret.push(bCurrent);
+					aCurrent = a[++aPos];
+					bCurrent = b[++bPos];
+					break;
+				}
+
+				case INTERVAL_RELATION.TOUCH_B_BEFORE_A: {
+					bCurrent = b[++bPos];
+					break;
+				}
+
+				case INTERVAL_RELATION.TOUCH_A_BEFORE_B: {
+					aCurrent = a[++aPos];
+					break;
+				}
+
+				case INTERVAL_RELATION.B_BEFORE_A: {
+					bCurrent = b[++bPos];
+					break;
+				}
+
+				case INTERVAL_RELATION.A_BEFORE_B: {
+					aCurrent = a[++aPos];
+					break;
+				}
+
+				case INTERVAL_RELATION.A_CONTAINS_B: {
+					ret.push(bCurrent);
+					bCurrent = b[++bPos];
+					break;
+				}
+
+				case INTERVAL_RELATION.B_CONTAINS_A: {
+					ret.push(aCurrent);
+					aCurrent = a[++aPos];
+					break;
+				}
+
+				case INTERVAL_RELATION.OVERLAPPING_B_EARLIER: {
+					ret.push(new Interval(aCurrent.startTime, bCurrent.endTime));
+					bCurrent = b[++bPos];
+					break;
+				}
+
+				case INTERVAL_RELATION.OVERLAPPING_A_EARLIER: {
+					ret.push(new Interval(bCurrent.startTime, aCurrent.endTime));
+					aCurrent = a[++aPos];
+					break;
+				}
+
+				default:
+					break;
+			}
+		}
+		return ret;
+	}
+
 	static subtract(minuend: Interval[], subtrahend: Interval[]): Interval[] {
 		subtrahend.sort((s1, s2) => s1.startTime - s2.startTime);
 		minuend.sort((m1, m2) => m1.startTime - m2.startTime);

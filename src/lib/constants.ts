@@ -13,3 +13,5 @@ export const TAXI_DRIVING_TIME_COST_FACTOR = 1;
 export const TAXI_WAITING_TIME_COST_FACTOR = 0.5;
 export const PASSENGER_TIME_COST_FACTOR = 0;
 export const BUFFER_TIME = 4 * MINUTE;
+export const EARLIEST_SHIFT_START = 6 * HOUR;
+export const LATEST_SHIFT_END = 21 * HOUR;

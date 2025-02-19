@@ -60,6 +60,9 @@ const translations: Translations = {
 		duplicateLicensePlate: 'Kennzeichen existiert bereits.',
 		vehicleAddedSuccessfully: 'Fahrzeug erfolgreich angelegt.',
 
+		//Request
+		requestCancelled: 'Fahrt storniert',
+
 		// Booking
 		noRouteFound: 'Keine Route gefunden.',
 		distanceTooLong: 'Distanz zu lang.',

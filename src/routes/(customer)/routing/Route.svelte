@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '$lib/i18n/translation';
 	import { getModeStyle, routeColor, type LegLike } from './modeStyle';
 	import { cn } from './utils';
 
@@ -17,7 +18,7 @@
 
 <button
 	class={cn(
-		'flex h-8 items-center text-nowrap rounded-full pl-2 pr-1 font-bold',
+		'flex h-8 items-center text-nowrap rounded-full pl-2 pr-2 font-bold',
 		className,
 		l.routeShortName ? 'pr-3' : undefined
 	)}
@@ -35,5 +36,8 @@
 	</svg>
 	<div class="text-center">
 		{l.routeShortName}
+		{#if l.mode === 'ODM'}
+			{t.taxi}
+		{/if}
 	</div>
 </button>
