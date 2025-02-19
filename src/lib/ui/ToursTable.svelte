@@ -16,7 +16,8 @@
 
 	let selectedTour = $state<{
 		tours: Array<Tour> | undefined;
-	}>({ tours: undefined });
+		isAdmin: boolean;
+	}>({ tours: undefined, isAdmin });
 
 	const getCustomerCount = (tour: Tour) => {
 		let customers: Set<number> = new Set<number>();
@@ -47,7 +48,7 @@
 		<Table.Body>
 			{#each tours as tour}
 				<Table.Row
-					onclick={() => (selectedTour = { tours: [tour] })}
+					onclick={() => (selectedTour = { tours: [tour], isAdmin })}
 					class={`cursor-pointer ${tour.cancelled ? 'bg-red-500' : 'bg-white-0'}`}
 				>
 					{#if isAdmin}
