@@ -12,6 +12,7 @@ import { COORDINATE_ROUNDING_ERROR_THRESHOLD } from '$lib/constants';
 import { createSession } from '../auth/session';
 import { MINUTE } from '$lib/util/time';
 import type { ExpectedConnection } from './bookRide';
+import { getAllowedTimes } from './evaluateRequest';
 
 const black = async (body: string) => {
 	return await fetch('http://localhost:5173/api/blacklist', {
@@ -222,11 +223,10 @@ describe('Whitelist and Booking API Tests', () => {
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(240)],
+			directTimes: [inXMinutes(120)],
 			startFixed: true,
 			capacities
 		});
-
 		const blackResponse = await black(body).then((r) => r.json());
 		expect(blackResponse.start.length).toBe(0);
 		expect(blackResponse.target.length).toBe(0);
@@ -243,7 +243,7 @@ describe('Whitelist and Booking API Tests', () => {
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(226)],
+			directTimes: [inXMinutes(106)],
 			startFixed: true,
 			capacities
 		});
