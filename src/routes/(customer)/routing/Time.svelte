@@ -35,7 +35,7 @@
 			return '';
 		}
 		
-		const weekday_str = time.toLocaleString('de-DE', {weekday: 'long'});
+		const weekday_str = time.toLocaleString(navigator.language, {weekday: 'long'});
 
 		return `(${weekday_str})`
 	}
