@@ -10,7 +10,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const journey = await db
 		.selectFrom('journey')
 		.innerJoin('request', 'journey.request1', 'request.id')
-		.select(['json', 'request.ticketCode', 'request.customer', 'request.id as requestId'])
+		.select([
+			'json',
+			'request.cancelled',
+			'request.ticketCode',
+			'request.customer',
+			'request.id as requestId'
+		])
 		.where('journey.id', '=', parseInt(params.slug))
 		.where('user', '=', locals.session!.userId!)
 		.executeTakeFirst();
@@ -23,7 +29,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		journey: JSON.parse(journey.json) as Itinerary,
 		ticketCode: journey.ticketCode,
 		requestId: journey.requestId,
-		customerId: journey.customer
+		customerId: journey.customer,
+		cancelled: journey.cancelled
 	};
 };
 

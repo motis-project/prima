@@ -78,6 +78,9 @@ export type Translations = {
 		bookingError1: string;
 		bookingError2: string;
 		bookingSuccess: string;
+
+		// Journey
+		cancelled: string;
 	};
 	admin: {
 		completedToursSubtitle: string;
