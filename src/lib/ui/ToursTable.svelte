@@ -46,7 +46,10 @@
 		</Table.Header>
 		<Table.Body>
 			{#each tours as tour}
-				<Table.Row onclick={() => (selectedTour = { tours: [tour] })} class="cursor-pointer">
+				<Table.Row
+					onclick={() => (selectedTour = { tours: [tour] })}
+					class={`cursor-pointer ${tour.cancelled ? 'bg-red-500' : 'bg-white-0'}`}
+				>
 					{#if isAdmin}
 						<Table.Cell>{tour.companyName}</Table.Cell>
 					{:else}

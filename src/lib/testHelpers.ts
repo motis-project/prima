@@ -60,7 +60,7 @@ export const setAvailability = async (
 export const setTour = async (vehicle: number, departure: UnixtimeMs, arrival: UnixtimeMs) => {
 	return await db
 		.insertInto('tour')
-		.values({ vehicle, arrival, departure })
+		.values({ vehicle, arrival, departure, cancelled: false })
 		.returning('tour.id')
 		.executeTakeFirst();
 };
@@ -76,7 +76,8 @@ export const setRequest = async (tour: number, customer: number, ticketCode: str
 			tour,
 			customer,
 			ticketCode,
-			ticketChecked: false
+			ticketChecked: false,
+			cancelled: false
 		})
 		.returning('id')
 		.executeTakeFirstOrThrow();
@@ -89,22 +90,26 @@ export const setEvent = async (
 	lat: number,
 	lng: number
 ) => {
-	await db
-		.insertInto('event')
-		.values({
-			request: requestId,
-			communicatedTime: t,
-			scheduledTimeStart: t,
-			scheduledTimeEnd: t,
-			prevLegDuration: 0,
-			nextLegDuration: 0,
-			eventGroup: '',
-			lat,
-			lng,
-			isPickup,
-			address: ''
-		})
-		.execute();
+	return (
+		await db
+			.insertInto('event')
+			.values({
+				request: requestId,
+				communicatedTime: t,
+				scheduledTimeStart: t,
+				scheduledTimeEnd: t,
+				prevLegDuration: 0,
+				nextLegDuration: 0,
+				eventGroup: '',
+				lat,
+				lng,
+				isPickup,
+				address: '',
+				cancelled: false
+			})
+			.returning('id')
+			.executeTakeFirstOrThrow()
+	).id;
 };
 
 export const addTestUser = async () => {

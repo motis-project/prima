@@ -3,9 +3,14 @@ import { db } from '.';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import { sql } from 'kysely';
 
-export const getTours = async (companyId?: number, timeRange?: [UnixtimeMs, UnixtimeMs]) => {
+export const getTours = async (
+	selectCancelled: boolean,
+	companyId?: number,
+	timeRange?: [UnixtimeMs, UnixtimeMs]
+) => {
 	return await db
 		.selectFrom('tour')
+		.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 		.innerJoin('company', 'company.id', 'vehicle.company')
 		.$if(typeof companyId === 'number', (qb) => qb.where('company', '=', companyId!))
@@ -17,6 +22,7 @@ export const getTours = async (companyId?: number, timeRange?: [UnixtimeMs, Unix
 			'tour.fare as fare',
 			'tour.departure as startTime',
 			'tour.arrival as endTime',
+			'tour.cancelled',
 			'company.name as companyName',
 			'company.address as companyAddress',
 			'vehicle.id as vehicleId',
@@ -24,6 +30,7 @@ export const getTours = async (companyId?: number, timeRange?: [UnixtimeMs, Unix
 			jsonArrayFrom(
 				eb
 					.selectFrom('event')
+					.$if(!selectCancelled, (qb) => qb.where('event.cancelled', '=', false))
 					.innerJoin('request', 'request.id', 'event.request')
 					.whereRef('tour.id', '=', 'request.tour')
 					.innerJoin('user', 'user.id', 'request.customer')
@@ -42,6 +49,7 @@ export const getTours = async (companyId?: number, timeRange?: [UnixtimeMs, Unix
 						'event.prevLegDuration',
 						'event.scheduledTimeStart',
 						'event.scheduledTimeEnd',
+						'event.cancelled',
 						'request.bikes',
 						'request.customer',
 						'request.luggage',

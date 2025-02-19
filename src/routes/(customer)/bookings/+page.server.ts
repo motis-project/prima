@@ -6,6 +6,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const journeys = await db
 		.selectFrom('journey')
 		.innerJoin('request', 'journey.request1', 'request.id')
+		.where('request.cancelled', '=', false)
 		.select(['json', 'journey.id as journeyId', 'request.ticketCode'])
 		.where('user', '=', locals.session!.userId!)
 		.execute();

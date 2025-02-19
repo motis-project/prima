@@ -225,7 +225,7 @@
 				<Table.Body>
 					{#if tour?.events}
 						{#each tour!.events as event}
-							<Table.Row>
+							<Table.Row class={`${tour.cancelled ? 'bg-red-500' : 'bg-white-0'}`}>
 								<Table.Cell>
 									{new Date(getScheduledEventTime(event))
 										.toLocaleString('de-DE')

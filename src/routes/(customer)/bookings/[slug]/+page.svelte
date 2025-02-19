@@ -8,6 +8,7 @@
 
 	// @ts-expect-error Cannot find module 'svelte-qrcode'
 	import QrCode from 'svelte-qrcode';
+	import { enhance } from '$app/forms';
 
 	const { data } = $props();
 
@@ -38,7 +39,11 @@
 					<QrCodeIcon class="mr-1 size-4" />Ticket
 				</Button>
 			{/if}
-			<Button href="/account" variant="destructive">Stornieren</Button>
+			<form method="post" use:enhance>
+				<input type="hidden" name="requestId" value={data.requestId} />
+				<input type="hidden" name="customerId" value={data.customerId} />
+				<Button type="submit" variant="destructive">Stornieren</Button>
+			</form>
 		</div>
 	</div>
 

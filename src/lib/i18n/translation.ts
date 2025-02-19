@@ -60,6 +60,9 @@ export type Translations = {
 		duplicateLicensePlate: string;
 		vehicleAddedSuccessfully: string;
 
+		// Request
+		requestCancelled: string;
+
 		// Booking
 		noRouteFound: string;
 		distanceTooLong: string;
