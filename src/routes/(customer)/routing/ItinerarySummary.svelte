@@ -6,7 +6,6 @@
 	import type { Itinerary, Leg, PlanData } from '$lib/openapi';
 	import { getModeStyle, routeColor } from './modeStyle';
 	import { t } from '$lib/i18n/translation';
-	import DateInput from './DateInput.svelte';
 
 	const { it, baseQuery }: { it: Itinerary; baseQuery: PlanData | undefined } = $props();
 </script>
