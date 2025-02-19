@@ -6,15 +6,9 @@
 	import type { Itinerary, Leg, PlanData } from '$lib/openapi';
 	import { getModeStyle, routeColor } from './modeStyle';
 	import { t } from '$lib/i18n/translation';
+	import DateInput from './DateInput.svelte';
 
 	const { it, baseQuery }: { it: Itinerary; baseQuery: PlanData | undefined} = $props();
-
-	string weekday_note(time: string) {
-		if(baseQuery === undefined || baseQuery.query.time === undefined) {
-			return "";
-		}
-		return "";
-	}
 </script>
 
 {#snippet legSummary(l: Leg)}
@@ -48,12 +42,14 @@
 				timestamp={it.startTime}
 				scheduledTimestamp={it.legs[0].scheduledStartTime}
 				variant={'realtime-show-always'}
+				queriedTime={baseQuery?.query.time}
 			/> - <Time
 				class="inline"
 				isRealtime={it.legs[it.legs.length - 1].realTime}
 				timestamp={it.endTime}
 				scheduledTimestamp={it.legs[it.legs.length - 1].scheduledEndTime}
 				variant="realtime-show-always"
+				queriedTime={baseQuery?.query.time}
 			/>
 		</span>
 		<div class="flex flex-wrap gap-x-3 gap-y-3">
