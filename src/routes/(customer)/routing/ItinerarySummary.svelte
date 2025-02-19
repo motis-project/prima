@@ -57,7 +57,7 @@
 				timestamp={it.endTime}
 				scheduledTimestamp={it.legs[it.legs.length - 1].scheduledEndTime}
 				variant="realtime-show-always"
-				queriedTime={baseQuery?.query.time}
+				queriedTime={it.startTime}
 			/>
 		</span>
 		<div class="flex flex-wrap gap-x-3 gap-y-3">

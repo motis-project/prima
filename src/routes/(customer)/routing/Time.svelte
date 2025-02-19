@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { language } from '$lib/i18n/translation';
 	import { formatTime } from './toDateTime';
 	import { cn } from './utils';
 
@@ -26,12 +27,12 @@
 
 	function weekday(time: Date) {
 		if (queriedTime === undefined) {
-			return '';
+			return time.toLocaleDateString(language);
 		}
 		const base = new Date(queriedTime);
 		return base.toLocaleDateString() === time.toLocaleDateString()
 			? ''
-			: `(${time.toLocaleString(navigator.language, { weekday: 'long' })})`;
+			: `(${time.toLocaleString(language, { weekday: 'long' })})`;
 	}
 </script>
 
