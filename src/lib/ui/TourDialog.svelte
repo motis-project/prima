@@ -235,7 +235,7 @@
 				<Table.Body>
 					{#if tour?.events}
 						{#each tour!.events as event}
-							<Table.Row class={`${tour.cancelled ? 'bg-red-500' : 'bg-white-0'}`}>
+							<Table.Row class={`${tour.cancelled ? "bg-red-500" : "bg-primary-background"}`}>
 								<Table.Cell>
 									{new Date(getScheduledEventTime(event))
 										.toLocaleString('de-DE')
@@ -273,7 +273,7 @@
 			<Card.Title>Stornierungsnachricht</Card.Title>
 		</Card.Header>
 		<Card.Content>
-			<div class="text-gray-700">
+			<div class="bg-primary-foreground">
 				{tour!.message}
 			</div>
 		</Card.Content>

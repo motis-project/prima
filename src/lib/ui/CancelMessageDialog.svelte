@@ -44,7 +44,7 @@
 		<DialogHeader>
 			<DialogTitle>Tour stornieren</DialogTitle>
 		</DialogHeader>
-		<div class="mb-2 text-gray-500">Bitte geben Sie den Stornierungsgrund an.</div>
+		<div class="mb-2 bg-primary-foreground">Bitte geben Sie den Stornierungsgrund an.</div>
 		<Input type="text" bind:value={reason} />
 		{#if errorMessage != undefined}
 			<div class="text-red-500">{errorMessage}</div>
