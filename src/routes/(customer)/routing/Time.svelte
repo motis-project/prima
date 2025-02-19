@@ -16,7 +16,7 @@
 		scheduledTimestamp: string;
 		isRealtime: boolean;
 		variant: 'schedule' | 'realtime' | 'realtime-show-always';
-		queriedTime: string | undefined;
+		queriedTime?: string | undefined;
 	} = $props();
 
 	const t = $derived(new Date(timestamp));

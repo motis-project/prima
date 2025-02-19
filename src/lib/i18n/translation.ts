@@ -142,7 +142,7 @@ export type Translations = {
 const translations: Map<string, Translations> = new Map(Object.entries({ en, de }));
 const translationsKey = browser
 	? navigator.languages.find((l) => translations.has(l.slice(0, 2)))
-	: undefined;
+	: 'de';
 
 export const language = translationsKey ?? (browser ? navigator.language : 'de');
-export const t = translationsKey ? translations.get(translationsKey) : de;
+export const t = translationsKey ? translations.get(translationsKey)! : de;
