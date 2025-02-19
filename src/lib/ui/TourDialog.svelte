@@ -21,11 +21,12 @@
 	import { getTourInfoShort } from '$lib/util/getTourInfoShort';
 	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 	import { PUBLIC_MOTIS_URL } from '$env/static/public';
+	import CancelMessageDialog from './CancelMessageDialog.svelte';
 
 	const {
 		open = $bindable()
 	}: {
-		open: { tours: Tours | undefined };
+		open: { tours: Tours | undefined; isAdmin: boolean };
 	} = $props();
 
 	const displayFare = (fare: number | null) => {
@@ -38,6 +39,7 @@
 
 	let tourIndex = $state(0);
 	let tour = $derived(open.tours && open.tours[tourIndex]);
+	const isAdmin = open.isAdmin;
 
 	const getRoutes = (tourEvents: Array<TourEvent> | null): Promise<PlanResponse>[] => {
 		let routes: Array<Promise<PlanResponse>> = [];
@@ -111,6 +113,9 @@
 				{@render overview()}
 				{@render mapView()}
 				<div class="col-span-2">{@render details()}</div>
+				{#if tour?.message != null}
+					<div class="col-span-2">{@render message()}</div>
+				{/if}
 			</div>
 		</Dialog.Description>
 	</Dialog.Content>
@@ -119,7 +124,12 @@
 {#snippet overview()}
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Übersicht</Card.Title>
+			<div class="flex w-full items-center justify-between">
+				<Card.Title>Übersicht</Card.Title>
+				{#if tour && !tour.cancelled && !isAdmin && tour.endTime > Date.now()}
+					<CancelMessageDialog bind:tour={open.tours![tourIndex]} />
+				{/if}
+			</div>
 		</Card.Header>
 		<Card.Content>
 			<div class="grid grid-flow-row grid-cols-2 flex-col gap-2">
@@ -225,7 +235,7 @@
 				<Table.Body>
 					{#if tour?.events}
 						{#each tour!.events as event}
-							<Table.Row class={`${tour.cancelled ? 'bg-red-500' : 'bg-white-0'}`}>
+							<Table.Row class={`${tour.cancelled ? 'bg-red-500' : 'bg-primary-background'}`}>
 								<Table.Cell>
 									{new Date(getScheduledEventTime(event))
 										.toLocaleString('de-DE')
@@ -253,6 +263,19 @@
 					{/if}
 				</Table.Body>
 			</Table.Root>
+		</Card.Content>
+	</Card.Root>
+{/snippet}
+
+{#snippet message()}
+	<Card.Root class="max-h-80 overflow-y-auto">
+		<Card.Header>
+			<Card.Title>Stornierungsnachricht</Card.Title>
+		</Card.Header>
+		<Card.Content>
+			<div class="bg-primary-foreground">
+				{tour!.message}
+			</div>
 		</Card.Content>
 	</Card.Root>
 {/snippet}

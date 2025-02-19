@@ -66,7 +66,8 @@
 
 	let selectedTour = $state<{
 		tours: Tours | undefined;
-	}>({ tours: undefined });
+		isAdmin: boolean;
+	}>({ tours: undefined, isAdmin: false });
 
 	let value = $state<DateValue>(toCalendarDate(fromDate(data.utcDate!, TZ)));
 	let day = $derived(new SvelteDate(value));
