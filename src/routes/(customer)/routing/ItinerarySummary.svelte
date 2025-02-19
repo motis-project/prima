@@ -8,7 +8,7 @@
 	import { t } from '$lib/i18n/translation';
 	import DateInput from './DateInput.svelte';
 
-	const { it, baseQuery }: { it: Itinerary; baseQuery: PlanData | undefined} = $props();
+	const { it, baseQuery }: { it: Itinerary; baseQuery: PlanData | undefined } = $props();
 </script>
 
 {#snippet legSummary(l: Leg)}

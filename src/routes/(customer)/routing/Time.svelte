@@ -25,19 +25,19 @@
 	const lowDelay = $derived(isRealtime && delayMinutes <= 3);
 
 	function weekday(time: Date) {
-		if(queriedTime === undefined) {
+		if (queriedTime === undefined) {
 			return '';
 		}
 
 		const base = new Date(queriedTime);
 
-		if(base.toLocaleDateString() === time.toLocaleDateString()) {
+		if (base.toLocaleDateString() === time.toLocaleDateString()) {
 			return '';
 		}
-		
-		const weekday_str = time.toLocaleString(navigator.language, {weekday: 'long'});
 
-		return `(${weekday_str})`
+		const weekday_str = time.toLocaleString(navigator.language, { weekday: 'long' });
+
+		return `(${weekday_str})`;
 	}
 </script>
 
@@ -51,5 +51,4 @@
 		</span>
 		{weekday(t)}
 	{/if}
-	
 </div>
