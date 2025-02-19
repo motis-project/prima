@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "de.motis.prima"
-        minSdk = 24
+        minSdk = 27
         //noinspection OldTargetApi
         targetSdk = 34
         versionCode = 1
@@ -21,6 +21,7 @@ android {
     buildTypes {
         debug {
             buildConfigField("String", "BASE_URL", "\"http://130.83.165.211:7777\"")
+            //buildConfigField("String", "BASE_URL", "\"https://prima.motis-project.de\"")
         }
         release {
             isMinifyEnabled = false
@@ -48,16 +49,34 @@ android {
 }
 
 dependencies {
+    implementation(libs.core)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.material)
     implementation(libs.androidx.runtime.android)
+
     implementation(libs.androidx.navigation.compose)
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation (libs.androidx.activity.compose)
+    implementation(libs.androidx.constraintlayout.compose)
     implementation(libs.androidx.material3.android)
+    implementation(libs.material)
+
+    implementation(libs.okhttp)
+    implementation(libs.retrofit)
+
+    implementation(libs.androidx.datastore.preferences.core.jvm)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.converter.gson)
+
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.mlkit.barcode.scanning)
+
+    implementation(libs.play.services.location)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
