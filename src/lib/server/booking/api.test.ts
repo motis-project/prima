@@ -233,7 +233,7 @@ describe('Whitelist and Booking API Tests', () => {
 		expect(blackResponse.direct[0]).toBe(false);
 	});
 
-	it.only('whitelist fail because request would require taxi to operate outside of defined shift (6:00-21:00)', async () => {
+	it('whitelist fail because request would require taxi to operate outside of defined shift (6:00-21:00)', async () => {
 		const company = await addCompany(Zone.NIESKY, inNiesky3);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));
