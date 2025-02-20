@@ -262,7 +262,7 @@
 				<Table.Body>
 					{#if tour?.events}
 						{#each tour!.events as event}
-							<Table.Row class={`${tour.cancelled ? 'bg-red-500' : 'bg-primary-background'}`}>
+							<Table.Row class={`${tour.cancelled ? 'bg-destructive' : 'bg-primary-background'}`}>
 								<Table.Cell>
 									{new Date(getScheduledEventTime(event))
 										.toLocaleString('de-DE')
