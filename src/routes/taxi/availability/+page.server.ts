@@ -61,10 +61,12 @@ export async function load(event) {
 		vehicles: await vehicles,
 		utcDate,
 		companyDataComplete,
-		companyCoordinates: companyDataComplete ? {
-			lat: company.lat!,
-			lng: company.lng!
-		} : null
+		companyCoordinates: companyDataComplete
+			? {
+					lat: company.lat!,
+					lng: company.lng!
+				}
+			: null
 	};
 }
 

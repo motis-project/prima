@@ -10,13 +10,13 @@
 	import * as Table from '$lib/shadcn/table';
 	import * as Card from '$lib/shadcn/card';
 
-	import maplibregl, { type LngLatLike } from 'maplibre-gl';
+	import maplibregl from 'maplibre-gl';
 	import { getStyle } from '$lib/map/style';
 	import Map from '$lib/map/Map.svelte';
 	import GeoJSON from '$lib/map/GeoJSON.svelte';
 	import Layer from '$lib/map/Layer.svelte';
 
-	import type { TourEvent, Tours, Tour } from '$lib/server/db/getTours';
+	import type { Tours } from '$lib/server/db/getTours';
 	import type { PlanResponse } from '$lib/openapi';
 	import { MIN_PREP } from '$lib/constants';
 	import { carRouting } from '$lib/util/carRouting';

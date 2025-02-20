@@ -5,7 +5,6 @@
 	import { t } from '$lib/i18n/translation';
 	import TourDialog from '$lib/ui/TourDialog.svelte';
 	import { getTourInfoShort } from '$lib/util/getTourInfoShort';
-	import type { LngLatLike } from 'maplibre-gl';
 
 	let {
 		isAdmin,
@@ -18,8 +17,7 @@
 	let selectedTour = $state<{
 		tours: Array<Tour> | undefined;
 		isAdmin: boolean;
-		companyCoordinates: LngLatLike | undefined;
-	}>({ tours: undefined, isAdmin, companyCoordinates: undefined });
+	}>({ tours: undefined, isAdmin });
 
 	const getCustomerCount = (tour: Tour) => {
 		let customers: Set<number> = new Set<number>();
