@@ -26,6 +26,9 @@
 	const lowDelay = $derived(isRealtime && delayMinutes <= 3);
 
 	function weekday(time: Date) {
+		if (variant === 'realtime') {
+			return '';
+		}
 		if (queriedTime === undefined) {
 			return time.toLocaleDateString(language);
 		}
