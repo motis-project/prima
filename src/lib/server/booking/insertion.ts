@@ -140,6 +140,7 @@ export function evaluateBothInsertion(
 	busStopIdx: number | undefined,
 	prev: Event | undefined,
 	next: Event | undefined,
+	allowedTimes: Interval[],
 	_promisedTimes?: PromisedTimes // TODO
 ): InsertionEvaluation | undefined {
 	console.assert(
@@ -171,7 +172,8 @@ export function evaluateBothInsertion(
 		passengerDuration,
 		busStopWindow,
 		prevLegDuration,
-		nextLegDuration
+		nextLegDuration,
+		allowedTimes
 	);
 	if (arrivalWindow == undefined) {
 		return undefined;
@@ -271,8 +273,7 @@ export function evaluateNewTours(
 				undefined,
 				expandedSearchInterval,
 				prepTime,
-				vehicle,
-				allowedTimes
+				vehicle
 			);
 			for (let busStopIdx = 0; busStopIdx != busStopTimes.length; ++busStopIdx) {
 				for (let busTimeIdx = 0; busTimeIdx != busStopTimes[busStopIdx].length; ++busTimeIdx) {
@@ -286,6 +287,7 @@ export function evaluateNewTours(
 						busStopIdx,
 						undefined,
 						undefined,
+						allowedTimes,
 						promisedTimes
 					);
 					if (
