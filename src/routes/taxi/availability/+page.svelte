@@ -428,7 +428,7 @@
 	</div>
 
 	<Card.Content class="mt-8">
-		<Message msg={form?.msg} />
+		<Message msg={form?.msg} class="mb-4" />
 
 		{#if !data.companyDataComplete}
 			<div class="flex min-h-[45vh] w-full flex-col items-center justify-center">

@@ -1,6 +1,9 @@
 <script lang="ts">
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import LuggageIcon from 'lucide-svelte/icons/luggage';
+	import WheelchairIcon from 'lucide-svelte/icons/accessibility';
+	import PersonIcon from 'lucide-svelte/icons/user';
 
 	import { Button } from '$lib/shadcn/button';
 	import * as Dialog from '$lib/shadcn/dialog';
@@ -250,12 +253,42 @@
 									{event.customerPhone}
 								</Table.Cell>
 								{#if event.isPickup}
-									<Table.Cell class="text-green-500">
-										<ArrowRight class="h-4 w-4" />
+									<Table.Cell class="flex gap-2 text-green-500">
+										<ArrowRight class="size-4" />
+										{#if event.wheelchairs}
+											<WheelchairIcon class="size-4" />
+										{/if}
+										<span class="flex">
+											<PersonIcon class="size-4" />
+											{event.passengers}
+										</span>
+										<span class="flex">
+											{#if event.luggage === 1}
+												<LuggageIcon class="size-4" />
+											{:else if event.luggage === 3}
+												<LuggageIcon class="size-4" />
+												<LuggageIcon class="size-4" />
+											{/if}
+										</span>
 									</Table.Cell>
 								{:else}
-									<Table.Cell class="text-red-500">
-										<ArrowLeft class="h-4 w-4" />
+									<Table.Cell class="flex gap-2 text-red-500">
+										<ArrowLeft class="size-4" />
+										{#if event.wheelchairs}
+											<WheelchairIcon class="size-4" />
+										{/if}
+										<span class="flex">
+											<PersonIcon class="size-4" />
+											{event.passengers}
+										</span>
+										<span class="flex">
+											{#if event.luggage === 1}
+												<LuggageIcon class="size-4" />
+											{:else if event.luggage === 3}
+												<LuggageIcon class="size-4" />
+												<LuggageIcon class="size-4" />
+											{/if}
+										</span>
 									</Table.Cell>
 								{/if}
 							</Table.Row>
