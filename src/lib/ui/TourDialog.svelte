@@ -272,16 +272,16 @@
 										</span>
 									</Table.Cell>
 								{:else}
-									<Table.Cell class="flex gap-2 text-red-500">
+									<Table.Cell class="flex items-center gap-2 text-red-500">
 										<ArrowLeft class="size-4" />
 										{#if event.wheelchairs}
 											<WheelchairIcon class="size-4" />
 										{/if}
-										<span class="flex">
+										<span class="flex items-center">
 											<PersonIcon class="size-4" />
 											{event.passengers}
 										</span>
-										<span class="flex">
+										<span class="flex items-center">
 											{#if event.luggage === 1}
 												<LuggageIcon class="size-4" />
 											{:else if event.luggage === 3}
