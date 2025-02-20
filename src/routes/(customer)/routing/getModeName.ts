@@ -28,6 +28,8 @@ export const getModeName = (l: Leg) => {
 		case 'CAR':
 		case 'CAR_PARKING':
 			return t.car;
+		case 'ODM':
+			return t.odm;
 		default:
 			return `${l.mode}`;
 	}
