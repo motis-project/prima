@@ -1,1 +1,1 @@
-export const pad = (x: number) => ('0' + x).slice(-2)
+export const pad = (x: number) => ('0' + x).slice(-2);

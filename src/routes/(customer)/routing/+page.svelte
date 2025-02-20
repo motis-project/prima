@@ -169,25 +169,23 @@
 						</Dialog.Trigger>
 						<Dialog.Content class="w-[80%] flex-col md:w-96">
 							<Dialog.Header>
-								<Dialog.Title>{t.bookingHeader}</Dialog.Title>
-								<Dialog.Description>
-									{t.bookingHeaderInfo}
-								</Dialog.Description>
+								<Dialog.Title>{t.booking.header}</Dialog.Title>
+								<Dialog.Description>{t.booking.info}</Dialog.Description>
 							</Dialog.Header>
 
 							{t.booking.summary}:
 							<ul class="flex list-inside list-disc flex-col gap-2">
 								<li>
-									Gesamtpreis (zu zahlen im Taxi):
+									{t.booking.totalPrice}:
 									<span class="font-bold">
 										{odmPrice(page.state.selectedItinerary, passengers)} €
 									</span>
 								</li>
 
-								<li>Buchung für {passengers} Personen</li>
+								<li>{t.booking.bookingFor(passengers)}</li>
 
 								{#if wheelchair}
-									<li>Mit faltbarem Rollstuhl</li>
+									<li>{t.booking.withFoldableWheelchair}</li>
 								{/if}
 
 								{#if luggage == 'none'}

@@ -1,4 +1,3 @@
-import { pad } from '$lib/util/pad';
 import type { Translations } from './translation';
 
 const translations: Translations = {
@@ -116,7 +115,7 @@ const translations: Translations = {
 	},
 
 	atDateTime: (timeType, t: Date, isToday: boolean) =>
-		`${timeType === 'departure' ? "Los um " : "Ankunft um "} ` +
+		`${timeType === 'departure' ? 'Los um ' : 'Ankunft um '} ` +
 		t.toLocaleString('de', {
 			hour: '2-digit',
 			minute: '2-digit',
@@ -167,17 +166,25 @@ const translations: Translations = {
 	bookingInfo: 'Buchungsangaben',
 	changeBookingInfo: 'Ändern Sie Ihre Such- und Buchungsangaben.',
 
-	bookingHeader: 'Kostenpflichtig buchen',
-	bookingHeaderInfo: '',
-
 	booking: {
 		summary: 'Buchungszusammenfassung',
 		header: 'Kostenpflichtig buchen',
 		info: '',
-		disclaimer: 'Stornieren Sie die Fahrt mind. 24h vorher, falls sie die Fahrt nicht wahrnehmen können. Sollten Sie nicht rechtzeitig stornieren wird Ihnen die Taxi-Fahrt voll in Rechnung gestellt.',
+		disclaimer:
+			'Stornieren Sie die Fahrt mind. 24h vorher, falls sie die Fahrt nicht wahrnehmen können. Sollten Sie nicht rechtzeitig stornieren wird Ihnen die Taxi-Fahrt voll in Rechnung gestellt.',
 		noLuggage: 'Kein Gepäck',
 		handLuggage: 'Handgepäck',
-		heavyLuggage: 'Schweres Gepäck'
+		heavyLuggage: 'Schweres Gepäck',
+		withFoldableWheelchair: 'Mit faltbarem Rollstuhl',
+		bookingFor: (passengers: number) => {
+			switch (passengers) {
+				case 1:
+					return 'Buchung für eine Person';
+				default:
+					return `Buchung für ${passengers} Personen`;
+			}
+		},
+		totalPrice: 'Gesamptpreis (Bezahlung im Taxi)'
 	}
 };
 

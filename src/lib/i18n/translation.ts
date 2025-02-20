@@ -144,7 +144,6 @@ export type Translations = {
 	roundtripStationReturnConstraint: string;
 	bookingInfo: string;
 	changeBookingInfo: string;
-
 	booking: {
 		summary: string;
 		header: string;
@@ -153,9 +152,10 @@ export type Translations = {
 		noLuggage: string;
 		handLuggage: string;
 		heavyLuggage: string;
-	}
-	bookingHeader: string;
-	bookingHeaderInfo: string;
+		totalPrice: string;
+		withFoldableWheelchair: string;
+		bookingFor: (passengers: number) => string;
+	};
 };
 
 const translations: Map<string, Translations> = new Map(Object.entries({ en, de }));

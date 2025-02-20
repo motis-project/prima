@@ -1,4 +1,3 @@
-import { pad } from '$lib/util/pad';
 import type { Translations } from './translation';
 
 const translations: Translations = {
@@ -115,7 +114,7 @@ const translations: Translations = {
 	},
 
 	atDateTime: (timeType, t: Date, isToday: boolean) =>
-		`${timeType === 'departure' ? "Depart at " : "Arrive at "} ` +
+		`${timeType === 'departure' ? 'Depart at ' : 'Arrive at '} ` +
 		t.toLocaleString('en', {
 			hour: '2-digit',
 			minute: '2-digit',
@@ -169,10 +168,21 @@ const translations: Translations = {
 		summary: 'Booking summary',
 		header: 'Book ride (incurs cost)',
 		info: '',
-		disclaimer: 'Cancel your ride 24h early if you don\'t want to take it. In case you do not cancel your ride in time or don\'t show up, you are liable to pay the full costs of the taxi.',
+		disclaimer:
+			"Cancel your ride 24h early if you don't want to take it. In case you do not cancel your ride in time or don't show up, you are liable to pay the full costs of the taxi.",
 		noLuggage: 'No luggage',
 		handLuggage: 'Handluggage',
-		heavyLuggage: 'Heavy luggage'
+		heavyLuggage: 'Heavy luggage',
+		withFoldableWheelchair: 'With foldable wheelchair',
+		bookingFor: (passengers: number) => {
+			switch (passengers) {
+				case 1:
+					return 'One person';
+				default:
+					return `${passengers} persons`;
+			}
+		},
+		totalPrice: 'Total price (payable in the tax)'
 	}
 };
 
