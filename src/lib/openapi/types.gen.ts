@@ -778,6 +778,13 @@ export type PlanData = {
          */
         directRentalProviders?: Array<(string)>;
         /**
+         * Optional. Experimental. Default is `1.0`.
+         * Factor with which the duration of the fastest direct connection is multiplied.
+         * Values > 1.0 allow connections that are slower than the fastest direct connection to be found.
+         *
+         */
+        fastestDirectFactor?: number;
+        /**
          * \`latitude,longitude,level\` tuple in degrees OR stop id
          */
         fromPlace: string;
