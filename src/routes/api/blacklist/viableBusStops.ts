@@ -50,10 +50,10 @@ const withBusStops = (busStops: BusStop[], busStopIntervals: Interval[][]) => {
 			const busStopIntervalSelect: RawBuilder<string>[] = busStopIntervals.flatMap((busStop, i) =>
 				busStop.map((t, j) => {
 					return sql<string>`SELECT
-                    cast(${i} as INTEGER) AS bus_stop_index,
-                    cast(${j} as INTEGER) AS time_index,
-                    cast(${t.startTime} as BIGINT) AS start_time,
-                    cast(${t.endTime} as BIGINT) AS end_time`;
+					 cast(${i} as INTEGER) AS bus_stop_index,
+					 cast(${j} as INTEGER) AS time_index,
+					 cast(${t.startTime} as BIGINT) AS start_time,
+					 cast(${t.endTime} as BIGINT) AS end_time`;
 				})
 			);
 			return db
@@ -205,20 +205,20 @@ export const getViableBusStops = async (
 			createBatchQuery(
 				userChosen,
 				busStops.slice(currentPos, Math.min(currentPos + batchSize, busStops.length)),
-				busStopIntervals,
+				busStopIntervals.slice(currentPos, Math.min(currentPos + batchSize, busStops.length)),
 				capacities
 			)
 		);
 		currentPos += batchSize;
 	}
 	const batchResponses = await Promise.all(batches);
-	console.log(batchResponses);
-	return batchResponses.flatMap((batchResponse, idx) =>
+	const response = batchResponses.flatMap((batchResponse, idx) =>
 		batchResponse.map((r) => {
-			console.log(r);
 			return { timeIndex: r.timeIndex, busStopIndex: r.busStopIndex + idx * batchSize };
 		})
 	);
+	console.log('BLACKLIST QUERY RESULT: ', JSON.stringify(response, null, '\t'));
+	return response;
 };
 
 export type BlacklistingResult = {
