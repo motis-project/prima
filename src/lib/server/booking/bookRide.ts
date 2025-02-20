@@ -48,12 +48,13 @@ export async function bookRide(
 	console.log('BS');
 	const searchInterval = new Interval(c.startTime, c.targetTime);
 	const expandedSearchInterval = searchInterval.expand(MAX_TRAVEL * 6, MAX_TRAVEL * 6);
-	const targetCoordinates = [c.target];
+	const userChosen = !startFixed ? c.start : c.target;
+	const busStop = startFixed ? c.start : c.target;
 	const { companies, filteredBusStops } = await getBookingAvailability(
-		c.start,
+		userChosen,
 		required,
 		searchInterval,
-		targetCoordinates,
+		[busStop],
 		trx
 	);
 	if (companies.length == 0 || filteredBusStops[0] == undefined) {
@@ -69,8 +70,6 @@ export async function bookRide(
 			].vehicles.filter((v) => v.id != blockedVehicleId);
 		}
 	}
-	const userChosen = !startFixed ? c.start : c.target;
-	const busStop = startFixed ? c.start : c.target;
 	const busTime = startFixed ? c.startTime : c.targetTime;
 	const best = (
 		await evaluateRequest(
