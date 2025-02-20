@@ -157,8 +157,8 @@ export function getAllowedOperationTimes(
 		`Found ${relevantAvailabilities.length} intervals, which are supposed to be disjoint, containing the same timestamp.`
 	);
 	return relevantAvailabilities
-			.map((availability) => new Interval(availability).intersect(window))
-			.filter((availability) => availability != undefined)
+		.map((availability) => new Interval(availability).intersect(window))
+		.filter((availability) => availability != undefined);
 }
 
 export function getArrivalWindow(
@@ -170,11 +170,19 @@ export function getArrivalWindow(
 	nextLegDuration: number,
 	allowedTimes: Interval[]
 ): Interval | undefined {
-	const directWindows = Interval.intersect(allowedTimes, windows
-		.map((window) => window.shrink(prevLegDuration, nextLegDuration))
-		.filter((window) => window != undefined));
-	let arrivalWindows = windows
-		.map((window) => window.shrink(insertionCase.direction == InsertDirection.BUS_STOP_DROPOFF ? directDuration : 0, insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? directDuration : 0))
+	const directWindows = Interval.intersect(
+		allowedTimes,
+		windows
+			.map((window) => window.shrink(prevLegDuration, nextLegDuration))
+			.filter((window) => window != undefined)
+	);
+	let arrivalWindows = directWindows
+		.map((window) =>
+			window.shrink(
+				insertionCase.direction == InsertDirection.BUS_STOP_DROPOFF ? directDuration : 0,
+				insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? directDuration : 0
+			)
+		)
 		.filter((window) => window != undefined);
 	if (busStopWindow != undefined) {
 		arrivalWindows = arrivalWindows
