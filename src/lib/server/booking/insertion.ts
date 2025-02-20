@@ -62,6 +62,18 @@ export type NeighbourIds = {
 	nextDropoff: number | undefined;
 };
 
+export function toInsertionWithISOStrings(i: Insertion | undefined) {
+	return i === undefined
+		? undefined
+		: {
+				...i,
+				pickupTime: new Date(i.pickupTime).toISOString(),
+				dropoffTime: new Date(i.dropoffTime).toISOString(),
+				departure: i.departure == undefined ? undefined : new Date(i.departure).toISOString(),
+				arrival: i.arrival == undefined ? undefined : new Date(i.arrival).toISOString()
+			};
+}
+
 export function printInsertionEvaluation(e: Insertion) {
 	return (
 		'pickupTime: ' +
