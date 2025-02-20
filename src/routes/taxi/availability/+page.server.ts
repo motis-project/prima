@@ -60,7 +60,13 @@ export async function load(event) {
 		tours: await tours,
 		vehicles: await vehicles,
 		utcDate,
-		companyDataComplete
+		companyDataComplete,
+		companyCoordinates: companyDataComplete
+			? {
+					lat: company.lat!,
+					lng: company.lng!
+				}
+			: null
 	};
 }
 

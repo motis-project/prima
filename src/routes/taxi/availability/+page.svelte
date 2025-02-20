@@ -26,6 +26,7 @@
 	import type { Tours } from '$lib/server/db/getTours';
 	import Message from '$lib/ui/Message.svelte';
 	import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
+	import type { LngLatLike } from 'maplibre-gl';
 
 	const { data, form } = $props();
 
@@ -68,7 +69,12 @@
 	let selectedTour = $state<{
 		tours: Tours | undefined;
 		isAdmin: boolean;
-	}>({ tours: undefined, isAdmin: false });
+		companyCoordinates: LngLatLike;
+	}>({
+		tours: undefined,
+		isAdmin: false,
+		companyCoordinates: data.companyCoordinates!
+	});
 
 	let value = $state<DateValue>(toCalendarDate(fromDate(data.utcDate!, TZ)));
 	let day = $derived(new SvelteDate(value));
