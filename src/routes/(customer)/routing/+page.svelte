@@ -56,9 +56,7 @@
 	let toItems = $state<Array<Location>>([]);
 
 	const toPlaceString = (l: Location) => {
-		if (l.value.match?.type === 'STOP') {
-			return l.value.match.id;
-		} else if (l.value.match?.level) {
+		if (l.value.match?.level) {
 			return `${lngLatToStr(l.value.match!)},${l.value.match.level}`;
 		} else {
 			return `${lngLatToStr(l.value.match!)},0`;

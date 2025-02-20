@@ -3,12 +3,20 @@
 	import * as Card from '$lib/shadcn/card';
 	import { formatDurationSec } from './formatDuration';
 	import Time from './Time.svelte';
-	import type { Itinerary, Leg } from '$lib/openapi';
+	import type { Itinerary, Leg, PlanData } from '$lib/openapi';
 	import { getModeStyle, routeColor } from './modeStyle';
 	import { t } from '$lib/i18n/translation';
 	import type { Snippet } from 'svelte';
 
-	const { it, info }: { it: Itinerary; info?: Snippet | undefined } = $props();
+	const {
+		it,
+		baseQuery,
+		info
+	}: {
+		it: Itinerary;
+		baseQuery?: PlanData | undefined;
+		info?: Snippet | undefined;
+	} = $props();
 </script>
 
 {#snippet legSummary(l: Leg)}
@@ -42,12 +50,14 @@
 				timestamp={it.startTime}
 				scheduledTimestamp={it.legs[0].scheduledStartTime}
 				variant={'realtime-show-always'}
+				queriedTime={baseQuery?.query.time}
 			/> - <Time
 				class="inline"
 				isRealtime={it.legs[it.legs.length - 1].realTime}
 				timestamp={it.endTime}
 				scheduledTimestamp={it.legs[it.legs.length - 1].scheduledEndTime}
 				variant="realtime-show-always"
+				queriedTime={it.startTime}
 			/>
 		</span>
 		<div class="flex flex-wrap gap-x-3 gap-y-3">
