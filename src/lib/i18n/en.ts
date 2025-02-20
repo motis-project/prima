@@ -13,7 +13,7 @@ const translations: Translations = {
 	},
 	msg: {
 		// Unknown error
-		unkownError: 'Unbekannter Fehler',
+		unkownError: 'Unkown Error',
 
 		// Account
 		enterEmailAndPassword: 'Please enter your email and password.',
@@ -167,12 +167,12 @@ const translations: Translations = {
 	booking: {
 		summary: 'Booking summary',
 		header: 'Book ride (incurs cost)',
-		info: '',
 		disclaimer:
 			"Cancel your ride 24h early if you don't want to take it. In case you do not cancel your ride in time or don't show up, you are liable to pay the full costs of the taxi.",
-		noLuggage: 'No luggage',
-		handLuggage: 'Handluggage',
-		heavyLuggage: 'Heavy luggage',
+		noLuggage: 'No Luggage',
+		handLuggage: 'Light Luggage',
+		heavyLuggage: 'Heavy Luggage',
+		foldableWheelchair: 'Foldable wheelchair',
 		withFoldableWheelchair: 'With foldable wheelchair',
 		bookingFor: (passengers: number) => {
 			switch (passengers) {
@@ -182,7 +182,16 @@ const translations: Translations = {
 					return `${passengers} persons`;
 			}
 		},
-		totalPrice: 'Total price (payable in the tax)'
+		totalPrice: 'Total price (payable in the taxi)',
+		cancel: 'Cancel',
+		loginToBook: 'Login to book',
+		connection: 'Connection',
+		ticket: 'Ticket',
+		cancelHeadline: 'Do you really want to cancel this trip?',
+		cancelDescription:
+			'Cancellation cannot be undone. Cancellation less than 24 hours before the trip will incur costs.',
+		cancelTrip: 'Cancel Trip',
+		noCancel: 'No, I don not want to cancel.'
 	}
 };
 

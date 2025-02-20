@@ -39,6 +39,7 @@
 	import { cn } from '$lib/shadcn/utils';
 	import { updateStartDest } from '$lib/util/updateStartDest';
 	import { odmPrice } from '$lib/util/odmPrice';
+	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -98,8 +99,8 @@
 						preTransitModes: ['WALK', 'ODM'],
 						postTransitModes: ['WALK', 'ODM'],
 						directModes: ['WALK', 'ODM'],
-						passengers,
-						luggage: luggageToInt(luggage)
+						luggage: luggageToInt(luggage),
+						passengers
 					}
 				} as PlanData)
 			: undefined
@@ -138,7 +139,7 @@
 </script>
 
 <div class="md:h-[80%] md:w-96">
-	<Message msg={form?.msg} />
+	<Message msg={form?.msg} class="mb-4" />
 
 	{#if page.state.selectFrom}
 		<AddressTypeahead
@@ -164,38 +165,20 @@
 				{#if data.isLoggedIn}
 					<Dialog.Root>
 						<Dialog.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
-							Fahrt kostenpflichtig buchen
+							{t.booking.header}
 							<ChevronRight />
 						</Dialog.Trigger>
 						<Dialog.Content class="w-[90%] flex-col md:w-96">
 							<Dialog.Header>
 								<Dialog.Title>{t.booking.header}</Dialog.Title>
-								<Dialog.Description>{t.booking.info}</Dialog.Description>
 							</Dialog.Header>
 
-							{t.booking.summary}:
-							<ul class="flex list-inside list-disc flex-col gap-2">
-								<li>
-									{t.booking.totalPrice}:
-									<span class="font-bold">
-										{odmPrice(page.state.selectedItinerary, passengers)} €
-									</span>
-								</li>
-
-								<li>{t.booking.bookingFor(passengers)}</li>
-
-								{#if wheelchair}
-									<li>{t.booking.withFoldableWheelchair}</li>
-								{/if}
-
-								{#if luggage == 'none'}
-									<li>{t.booking.noLuggage}</li>
-								{:else if luggage == 'light'}
-									<li>{t.booking.handLuggage}</li>
-								{:else if luggage == 'heavy'}
-									<li>{t.booking.heavyLuggage}</li>
-								{/if}
-							</ul>
+							<BookingSummary
+								{passengers}
+								{wheelchair}
+								luggage={luggageToInt(luggage)}
+								price={odmPrice(page.state.selectedItinerary, passengers)}
+							/>
 
 							<p class="my-2 text-sm">{t.booking.disclaimer}</p>
 
@@ -264,13 +247,16 @@
 										value={new Date(last.startTime).getTime()}
 									/>
 									<input type="hidden" name="endTime2" value={new Date(last.endTime).getTime()} />
-									<Button type="submit" variant="outline">Fahrt kostenpflichtig buchen</Button>
+									<input type="hidden" name="passengers" value={passengers} />
+									<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
+									<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
+									<Button type="submit" variant="outline">{t.booking.header}</Button>
 								</form>
 							</Dialog.Footer>
 						</Dialog.Content>
 					</Dialog.Root>
 				{:else}
-					<Button href="/account" variant="outline">Anmelden zur Buchung</Button>
+					<Button href="/account" variant="outline">{t.booking.loginToBook}</Button>
 				{/if}
 			{/if}
 		</div>
@@ -377,7 +363,7 @@
 						</span>
 						<ChevronDown />
 					</Dialog.Trigger>
-					<Dialog.Content class="w-[90%] flex-col md:max-w-96">
+					<Dialog.Content class="w-[90%] flex-col md:max-w-[28rem]">
 						<Dialog.Header>
 							<Dialog.Title>{t.bookingInfo}</Dialog.Title>
 							<Dialog.Description>
@@ -391,7 +377,7 @@
 
 							<Label class="flex items-center gap-2">
 								<WheelchairIcon class="size-5 shrink-0" />
-								Falt-Rollstuhl
+								{t.booking.foldableWheelchair}
 							</Label>
 							<Switch class="justify-self-end" bind:checked={wheelchair} />
 						</div>
@@ -403,7 +389,7 @@
 							>
 								<RadioGroup.Item value="none" id="none" class="sr-only" aria-label="none" />
 								<NoLuggageIcon />
-								Kein Gepäck
+								{t.booking.noLuggage}
 							</Label>
 							<Label
 								for="light"
@@ -411,7 +397,7 @@
 							>
 								<RadioGroup.Item value="light" id="light" class="sr-only" aria-label="light" />
 								<LuggageIcon />
-								Kleines Gepäck
+								{t.booking.handLuggage}
 							</Label>
 							<Label
 								for="heavy"
@@ -421,9 +407,8 @@
 								<div class="flex">
 									<LuggageIcon />
 									<LuggageIcon />
-									<LuggageIcon />
 								</div>
-								Großes Gepäck
+								{t.booking.heavyLuggage}
 							</Label>
 						</RadioGroup.Root>
 					</Dialog.Content>

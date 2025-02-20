@@ -147,14 +147,22 @@ export type Translations = {
 	booking: {
 		summary: string;
 		header: string;
-		info: string;
 		disclaimer: string;
 		noLuggage: string;
 		handLuggage: string;
 		heavyLuggage: string;
 		totalPrice: string;
+		foldableWheelchair: string;
 		withFoldableWheelchair: string;
 		bookingFor: (passengers: number) => string;
+		cancel: string;
+		loginToBook: string;
+		connection: string;
+		ticket: string;
+		cancelHeadline: string;
+		cancelDescription: string;
+		cancelTrip: string;
+		noCancel: string;
 	};
 };
 

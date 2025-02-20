@@ -9,7 +9,8 @@
 
 	import CalendarIcon from 'lucide-svelte/icons/calendar';
 	import { Calendar } from '$lib/shadcn/calendar';
-	import * as Popover from '$lib/shadcn/popover/index';
+	import * as Popover from '$lib/shadcn/popover';
+	import * as HoverCard from '$lib/shadcn/hover-card';
 
 	import { SvelteDate } from 'svelte/reactivity';
 	import { Button, buttonVariants } from '$lib/shadcn/button';
@@ -324,7 +325,16 @@
 					<td
 						class="h-full pr-2 align-middle font-mono text-sm font-semibold leading-none tracking-tight"
 					>
-						{v.licensePlate}
+						<HoverCard.Root>
+							<HoverCard.Trigger>{v.licensePlate}</HoverCard.Trigger>
+							<HoverCard.Content>
+								<ul class="list-inside list-disc">
+									<li>Anzahl Passagiere: {v.passengers}</li>
+									<li>Rollstuhl: {v.wheelchairs === 0 ? 'Nein' : 'Ja'}</li>
+									<li>Gepäckstücke: {v.luggage}</li>
+								</ul>
+							</HoverCard.Content>
+						</HoverCard.Root>
 					</td>
 					{#each split(range, 60) as x}
 						<td>

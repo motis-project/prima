@@ -18,10 +18,10 @@ export async function whitelist(
 		'Whitelist Request: ',
 		JSON.stringify(
 			{
+				required,
 				startFixed,
 				userChosen,
-				busStops: busStops.map((b) => toBusStopWithISOStrings(b)),
-				required
+				busStops: busStops.map((b) => toBusStopWithISOStrings(b))
 			},
 			null,
 			'\t'

@@ -169,12 +169,12 @@ const translations: Translations = {
 	booking: {
 		summary: 'Buchungszusammenfassung',
 		header: 'Kostenpflichtig buchen',
-		info: '',
 		disclaimer:
 			'Stornieren Sie die Fahrt mind. 24h vorher, falls sie die Fahrt nicht wahrnehmen können. Sollten Sie nicht rechtzeitig stornieren wird Ihnen die Taxi-Fahrt voll in Rechnung gestellt.',
 		noLuggage: 'Kein Gepäck',
 		handLuggage: 'Handgepäck',
 		heavyLuggage: 'Schweres Gepäck',
+		foldableWheelchair: 'Faltbarer Rollstuhl',
 		withFoldableWheelchair: 'Mit faltbarem Rollstuhl',
 		bookingFor: (passengers: number) => {
 			switch (passengers) {
@@ -184,7 +184,16 @@ const translations: Translations = {
 					return `Buchung für ${passengers} Personen`;
 			}
 		},
-		totalPrice: 'Gesamptpreis (Bezahlung im Taxi)'
+		totalPrice: 'Gesamptpreis (Bezahlung im Taxi)',
+		cancel: 'Stornieren',
+		loginToBook: 'Einloggen zum Buchen',
+		connection: 'Verbindung',
+		ticket: 'Ticket',
+		cancelTrip: 'Fahrt stornieren',
+		cancelHeadline: 'Möchten Sie wirklich diese Fahrt stornieren?',
+		noCancel: 'Nein, Fahrt nicht stornieren.',
+		cancelDescription:
+			'Die Stornierung der Fahrt kann nicht rückgängig gemacht werden. Eine Stornierung weniger als 24 Stunden vor der Fahrt ist mit Kosten verbunden.'
 	}
 };
 

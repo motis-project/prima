@@ -12,6 +12,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.innerJoin('request', 'journey.request1', 'request.id')
 		.select([
 			'json',
+			'request.passengers',
+			'request.luggage',
+			'request.wheelchairs',
 			'request.cancelled',
 			'request.ticketCode',
 			'request.customer',
@@ -26,11 +29,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	return {
-		journey: JSON.parse(journey.json) as Itinerary,
-		ticketCode: journey.ticketCode,
-		requestId: journey.requestId,
-		customerId: journey.customer,
-		cancelled: journey.cancelled
+		...journey,
+		journey: JSON.parse(journey.json) as Itinerary
 	};
 };
 
