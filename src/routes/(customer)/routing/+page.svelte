@@ -100,7 +100,7 @@
 						postTransitModes: ['WALK', 'ODM'],
 						directModes: ['WALK', 'ODM'],
 						luggage: luggageToInt(luggage),
-						fastestDirectFactor: 1.5,
+						fastestDirectFactor: 1.6,
 						passengers
 					}
 				} as PlanData)
