@@ -2,6 +2,7 @@
 	import { Button } from '$lib/shadcn/button';
 	import { plan, type Itinerary, type PlanData, type PlanResponse } from '$lib/openapi';
 	import LoaderCircle from 'lucide-svelte/icons/loader-circle';
+	import Info from 'lucide-svelte/icons/info';
 	import { t } from '$lib/i18n/translation';
 	import ItinerarySummary from './ItinerarySummary.svelte';
 
@@ -17,6 +18,10 @@
 		selectItinerary: (it: Itinerary) => void;
 	} = $props();
 </script>
+
+{#snippet odmInfo()}
+	<Info class="size-4" /> Hier buchen. Preis ab 3,00 €
+{/snippet}
 
 {#if baseResponse}
 	{#await baseResponse}
@@ -54,8 +59,9 @@
 							</div>
 						{/if}
 						{#each r.itineraries as it}
+							{@const hasODM = it.legs.some((l) => l.mode === 'ODM')}
 							<button onclick={() => selectItinerary(it)}>
-								<ItinerarySummary {it} {baseQuery} />
+								<ItinerarySummary {it} {baseQuery} info={hasODM ? odmInfo : undefined} />
 							</button>
 						{/each}
 						{#if rI === routingResponses.length - 1 && baseQuery}
