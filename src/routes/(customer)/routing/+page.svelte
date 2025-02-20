@@ -167,7 +167,7 @@
 							Fahrt kostenpflichtig buchen
 							<ChevronRight />
 						</Dialog.Trigger>
-						<Dialog.Content class="w-[80%] flex-col md:w-96">
+						<Dialog.Content class="w-[90%] flex-col md:w-96">
 							<Dialog.Header>
 								<Dialog.Title>{t.booking.header}</Dialog.Title>
 								<Dialog.Description>{t.booking.info}</Dialog.Description>
