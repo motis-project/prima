@@ -26,6 +26,8 @@ export const getTours = async (
 			'tour.message',
 			'company.name as companyName',
 			'company.address as companyAddress',
+			'company.lat as companyLat',
+			'company.lng as companyLng',
 			'vehicle.id as vehicleId',
 			'vehicle.licensePlate as licensePlate',
 			jsonArrayFrom(
