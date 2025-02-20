@@ -1,6 +1,7 @@
 import { browser } from '$app/environment';
 import en from './en';
 import de from './de';
+import type { TimeType } from '$lib/util/TimeType';
 
 export type Translations = {
 	menu: {
@@ -111,6 +112,9 @@ export type Translations = {
 		resendCode: string;
 		verify: string;
 	};
+
+	atDateTime: (timeType: TimeType, time: Date, isToday: boolean) => string;
+
 	journeyDetails: string;
 	transfers: string;
 	walk: string;
@@ -121,6 +125,7 @@ export type Translations = {
 	car: string;
 	taxi: string;
 	moped: string;
+	odm: string;
 	from: string;
 	to: string;
 	arrival: string;
@@ -137,6 +142,20 @@ export type Translations = {
 	tripIntermediateStops: (n: number) => string;
 	sharingProvider: string;
 	roundtripStationReturnConstraint: string;
+	bookingInfo: string;
+	changeBookingInfo: string;
+	booking: {
+		summary: string;
+		header: string;
+		info: string;
+		disclaimer: string;
+		noLuggage: string;
+		handLuggage: string;
+		heavyLuggage: string;
+		totalPrice: string;
+		withFoldableWheelchair: string;
+		bookingFor: (passengers: number) => string;
+	};
 };
 
 const translations: Map<string, Translations> = new Map(Object.entries({ en, de }));

@@ -15,7 +15,7 @@
 	}: {
 		it: Itinerary;
 		baseQuery?: PlanData | undefined;
-		info?: Snippet | undefined;
+		info?: Snippet<[Itinerary]> | undefined;
 	} = $props();
 </script>
 
@@ -70,7 +70,7 @@
 		<div
 			class="flex items-center justify-end gap-1 rounded-b-lg border-t border-input bg-accent px-4 py-1.5 text-sm text-destructive"
 		>
-			{@render info()}
+			{@render info(it)}
 		</div>
 	{/if}
 </Card.Root>

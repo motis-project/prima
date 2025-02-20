@@ -113,6 +113,18 @@ const translations: Translations = {
 		resendCode: 'Code erneut senden',
 		verify: 'Verifizieren'
 	},
+
+	atDateTime: (timeType, t: Date, isToday: boolean) =>
+		`${timeType === 'departure' ? 'Los um ' : 'Ankunft um '} ` +
+		t.toLocaleString('de', {
+			hour: '2-digit',
+			minute: '2-digit',
+			weekday: isToday ? undefined : 'short',
+			day: isToday ? undefined : '2-digit',
+			month: isToday ? undefined : '2-digit',
+			year: isToday ? undefined : '2-digit'
+		}),
+
 	journeyDetails: 'Verbindungsdetails',
 	transfers: 'Umstiege',
 	walk: 'Fußweg',
@@ -123,6 +135,7 @@ const translations: Translations = {
 	car: 'Auto',
 	taxi: 'Taxi',
 	moped: 'Moped',
+	odm: 'ÖPNV-Taxi - Buchung erforderlich!',
 	from: 'Von',
 	to: 'Nach',
 	arrival: 'Ankunft',
@@ -148,7 +161,31 @@ const translations: Translations = {
 	},
 	sharingProvider: 'Anbieter',
 	roundtripStationReturnConstraint:
-		'Das Fahrzeug muss wieder an der Abfahrtsstation abgestellt werden.'
+		'Das Fahrzeug muss wieder an der Abfahrtsstation abgestellt werden.',
+
+	bookingInfo: 'Buchungsangaben',
+	changeBookingInfo: 'Ändern Sie Ihre Such- und Buchungsangaben.',
+
+	booking: {
+		summary: 'Buchungszusammenfassung',
+		header: 'Kostenpflichtig buchen',
+		info: '',
+		disclaimer:
+			'Stornieren Sie die Fahrt mind. 24h vorher, falls sie die Fahrt nicht wahrnehmen können. Sollten Sie nicht rechtzeitig stornieren wird Ihnen die Taxi-Fahrt voll in Rechnung gestellt.',
+		noLuggage: 'Kein Gepäck',
+		handLuggage: 'Handgepäck',
+		heavyLuggage: 'Schweres Gepäck',
+		withFoldableWheelchair: 'Mit faltbarem Rollstuhl',
+		bookingFor: (passengers: number) => {
+			switch (passengers) {
+				case 1:
+					return 'Buchung für eine Person';
+				default:
+					return `Buchung für ${passengers} Personen`;
+			}
+		},
+		totalPrice: 'Gesamptpreis (Bezahlung im Taxi)'
+	}
 };
 
 export default translations;

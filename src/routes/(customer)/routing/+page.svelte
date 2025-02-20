@@ -6,6 +6,12 @@
 
 	import ArrowUpDown from 'lucide-svelte/icons/arrow-up-down';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
+	import ChevronRight from 'lucide-svelte/icons/chevron-right';
+	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import NoLuggageIcon from 'lucide-svelte/icons/circle-slash-2';
+	import LuggageIcon from 'lucide-svelte/icons/luggage';
+	import WheelchairIcon from 'lucide-svelte/icons/accessibility';
+	import PersonIcon from 'lucide-svelte/icons/user';
 
 	import Separator from '$lib/shadcn/separator/separator.svelte';
 	import * as RadioGroup from '$lib/shadcn/radio-group';
@@ -26,14 +32,25 @@
 	import { enhance } from '$app/forms';
 	import Message from '$lib/ui/Message.svelte';
 	import DateInput from './DateInput.svelte';
-	import { Button } from '$lib/shadcn/button';
+	import { Button, buttonVariants } from '$lib/shadcn/button';
+	import * as Dialog from '$lib/shadcn/dialog';
+	import type { TimeType } from '$lib/util/TimeType';
+	import Switch from '$lib/shadcn/switch/switch.svelte';
+	import { cn } from '$lib/shadcn/utils';
+	import { updateStartDest } from '$lib/util/updateStartDest';
+	import { odmPrice } from '$lib/util/odmPrice';
+
+	type LuggageType = 'none' | 'light' | 'heavy';
 
 	const { form, data } = $props();
 
 	const urlParams = browser ? new URLSearchParams(window.location.search) : undefined;
 
+	let passengers = $state(1);
+	let wheelchair = $state(false);
+	let luggage = $state<LuggageType>('none');
 	let time = $state<Date>(new Date());
-	let timeType = $state<string>('departure');
+	let timeType = $state<TimeType>('departure');
 	let fromParam: Match | undefined = undefined;
 	let toParam: Match | undefined = undefined;
 	if (browser && urlParams && urlParams.has('from') && urlParams.has('to')) {
@@ -53,6 +70,16 @@
 	let fromItems = $state<Array<Location>>([]);
 	let toItems = $state<Array<Location>>([]);
 
+	const luggageToInt = (str: LuggageType) => {
+		switch (str) {
+			case 'heavy':
+				return 3;
+			case 'light':
+				return 1;
+			case 'none':
+				return 0;
+		}
+	};
 	const toPlaceString = (l: Location) => {
 		if (l.value.match?.level) {
 			return `${lngLatToStr(l.value.match!)},${l.value.match.level}`;
@@ -70,21 +97,23 @@
 						toPlace: toPlaceString(to),
 						preTransitModes: ['WALK', 'ODM'],
 						postTransitModes: ['WALK', 'ODM'],
-						directModes: ['WALK', 'ODM']
+						directModes: ['WALK', 'ODM'],
+						passengers,
+						luggage: luggageToInt(luggage)
 					}
 				} as PlanData)
 			: undefined
 	);
 
 	type Timeout = ReturnType<typeof setTimeout>;
-	let baseResponse = $state<Promise<PlanResponse>>();
-	let routingResponses = $state<Array<Promise<PlanResponse>>>([]);
+	let baseResponse = $state<Promise<PlanResponse | undefined>>();
+	let routingResponses = $state<Array<Promise<PlanResponse | undefined>>>([]);
 	let searchDebounceTimer: Timeout;
 	$effect(() => {
 		if (baseQuery) {
 			clearTimeout(searchDebounceTimer);
 			searchDebounceTimer = setTimeout(() => {
-				const base = plan<true>(baseQuery).then((response) => response.data);
+				const base = plan<true>(baseQuery).then(updateStartDest(from, to));
 				baseResponse = base;
 				routingResponses = [base];
 			}, 400);
@@ -133,51 +162,113 @@
 
 			{#if page.state.selectedItinerary.legs.some((l: Leg) => l.mode === 'ODM')}
 				{#if data.isLoggedIn}
-					{@const first = page.state.selectedItinerary.legs.find((l: Leg) => l.mode === 'ODM')}
-					{@const last = page.state.selectedItinerary.legs.findLast((l: Leg) => l.mode === 'ODM')}
-					{@const isSpecial = (stopName: string) => stopName === 'START' || stopName === 'END'}
-					<form method="post" use:enhance>
-						<input type="hidden" name="json" value={JSON.stringify(page.state.selectedItinerary)} />
-						<input
-							type="hidden"
-							name="startFixed1"
-							value={isSpecial(first.from.name) ? '1' : '0'}
-						/>
-						<input type="hidden" name="startFixed2" value={isSpecial(last.to.name) ? '1' : '0'} />
-						<input
-							type="hidden"
-							name="fromAddress1"
-							value={isSpecial(first.from.name) ? from.label : first.from.name}
-						/>
-						<input
-							type="hidden"
-							name="toAddress1"
-							value={isSpecial(first.to.name) ? to.label : first.to.name}
-						/>
-						<input
-							type="hidden"
-							name="fromAddress2"
-							value={isSpecial(last.from.name) ? from.label : last.from.name}
-						/>
-						<input
-							type="hidden"
-							name="toAddress2"
-							value={isSpecial(last.to.name) ? to.label : last.to.name}
-						/>
-						<input type="hidden" name="fromLat1" value={first.from.lat} />
-						<input type="hidden" name="fromLng1" value={first.from.lon} />
-						<input type="hidden" name="toLat1" value={first.to.lat} />
-						<input type="hidden" name="toLng1" value={first.to.lon} />
-						<input type="hidden" name="fromLat2" value={last.from.lat} />
-						<input type="hidden" name="fromLng2" value={last.from.lon} />
-						<input type="hidden" name="toLat2" value={last.to.lat} />
-						<input type="hidden" name="toLng2" value={last.to.lon} />
-						<input type="hidden" name="startTime1" value={new Date(first.startTime).getTime()} />
-						<input type="hidden" name="endTime1" value={new Date(first.endTime).getTime()} />
-						<input type="hidden" name="startTime2" value={new Date(last.startTime).getTime()} />
-						<input type="hidden" name="endTime2" value={new Date(last.endTime).getTime()} />
-						<Button type="submit" variant="outline">Fahrt kostenpflichtig buchen</Button>
-					</form>
+					<Dialog.Root>
+						<Dialog.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
+							Fahrt kostenpflichtig buchen
+							<ChevronRight />
+						</Dialog.Trigger>
+						<Dialog.Content class="w-[80%] flex-col md:w-96">
+							<Dialog.Header>
+								<Dialog.Title>{t.booking.header}</Dialog.Title>
+								<Dialog.Description>{t.booking.info}</Dialog.Description>
+							</Dialog.Header>
+
+							{t.booking.summary}:
+							<ul class="flex list-inside list-disc flex-col gap-2">
+								<li>
+									{t.booking.totalPrice}:
+									<span class="font-bold">
+										{odmPrice(page.state.selectedItinerary, passengers)} €
+									</span>
+								</li>
+
+								<li>{t.booking.bookingFor(passengers)}</li>
+
+								{#if wheelchair}
+									<li>{t.booking.withFoldableWheelchair}</li>
+								{/if}
+
+								{#if luggage == 'none'}
+									<li>{t.booking.noLuggage}</li>
+								{:else if luggage == 'light'}
+									<li>{t.booking.handLuggage}</li>
+								{:else if luggage == 'heavy'}
+									<li>{t.booking.heavyLuggage}</li>
+								{/if}
+							</ul>
+
+							<p class="my-2 text-sm">{t.booking.disclaimer}</p>
+
+							<Dialog.Footer>
+								{@const first = page.state.selectedItinerary.legs.find(
+									(l: Leg) => l.mode === 'ODM'
+								)}
+								{@const last = page.state.selectedItinerary.legs.findLast(
+									(l: Leg) => l.mode === 'ODM'
+								)}
+								{@const isSpecial = (stopName: string) =>
+									stopName === 'START' || stopName === 'END'}
+								<form method="post" use:enhance>
+									<input
+										type="hidden"
+										name="json"
+										value={JSON.stringify(page.state.selectedItinerary)}
+									/>
+									<input
+										type="hidden"
+										name="startFixed1"
+										value={isSpecial(first.from.name) ? '1' : '0'}
+									/>
+									<input
+										type="hidden"
+										name="startFixed2"
+										value={isSpecial(last.to.name) ? '1' : '0'}
+									/>
+									<input
+										type="hidden"
+										name="fromAddress1"
+										value={isSpecial(first.from.name) ? from.label : first.from.name}
+									/>
+									<input
+										type="hidden"
+										name="toAddress1"
+										value={isSpecial(first.to.name) ? to.label : first.to.name}
+									/>
+									<input
+										type="hidden"
+										name="fromAddress2"
+										value={isSpecial(last.from.name) ? from.label : last.from.name}
+									/>
+									<input
+										type="hidden"
+										name="toAddress2"
+										value={isSpecial(last.to.name) ? to.label : last.to.name}
+									/>
+									<input type="hidden" name="fromLat1" value={first.from.lat} />
+									<input type="hidden" name="fromLng1" value={first.from.lon} />
+									<input type="hidden" name="toLat1" value={first.to.lat} />
+									<input type="hidden" name="toLng1" value={first.to.lon} />
+									<input type="hidden" name="fromLat2" value={last.from.lat} />
+									<input type="hidden" name="fromLng2" value={last.from.lon} />
+									<input type="hidden" name="toLat2" value={last.to.lat} />
+									<input type="hidden" name="toLng2" value={last.to.lon} />
+									<input
+										type="hidden"
+										name="startTime1"
+										value={new Date(first.startTime).getTime()}
+									/>
+									<input type="hidden" name="endTime1" value={new Date(first.endTime).getTime()} />
+									<input
+										type="hidden"
+										name="startTime2"
+										value={new Date(last.startTime).getTime()}
+									/>
+									<input type="hidden" name="endTime2" value={new Date(last.endTime).getTime()} />
+									<Button type="submit" variant="outline">Fahrt kostenpflichtig buchen</Button>
+								</form>
+							</Dialog.Footer>
+						</Dialog.Content>
+					</Dialog.Root>
 				{:else}
 					<Button href="/account" variant="outline">Anmelden zur Buchung</Button>
 				{/if}
@@ -229,35 +320,123 @@
 				</Button>
 			</div>
 			<div class="flex gap-2">
-				<DateInput bind:value={time} />
-				<RadioGroup.Root class="flex" bind:value={timeType}>
-					<Label
-						for="departure"
-						class="flex items-center rounded-md border-2 border-muted bg-popover p-1 px-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
-					>
-						<RadioGroup.Item
-							value="departure"
-							id="departure"
-							class="sr-only"
-							aria-label={t.departure}
-						/>
-						<span>{t.departure}</span>
-					</Label>
-					<Label
-						for="arrival"
-						class="flex items-center rounded-md border-2 border-muted bg-popover p-1 px-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
-					>
-						<RadioGroup.Item value="arrival" id="arrival" class="sr-only" aria-label={t.arrival} />
-						<span>{t.arrival}</span>
-					</Label>
-				</RadioGroup.Root>
+				<Dialog.Root>
+					<Dialog.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
+						{t.atDateTime(
+							timeType,
+							time,
+							time.toLocaleDateString() == new Date().toLocaleDateString()
+						)}
+						<ChevronDown />
+					</Dialog.Trigger>
+					<Dialog.Content class="flex-col sm:max-w-[425px]">
+						<RadioGroup.Root class="flex" bind:value={timeType}>
+							<Label
+								for="departure"
+								class="flex items-center rounded-md border-2 border-muted bg-popover p-1 px-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
+							>
+								<RadioGroup.Item
+									value="departure"
+									id="departure"
+									class="sr-only"
+									aria-label={t.departure}
+								/>
+								<span>{t.departure}</span>
+							</Label>
+							<Label
+								for="arrival"
+								class="flex items-center rounded-md border-2 border-muted bg-popover p-1 px-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
+							>
+								<RadioGroup.Item
+									value="arrival"
+									id="arrival"
+									class="sr-only"
+									aria-label={t.arrival}
+								/>
+								<span>{t.arrival}</span>
+							</Label>
+						</RadioGroup.Root>
+						<DateInput bind:value={time} />
+					</Dialog.Content>
+				</Dialog.Root>
+				<Dialog.Root>
+					<Dialog.Trigger class={buttonVariants({ variant: 'default' })}>
+						<span class="flex items-center">
+							{passengers === 1 ? '' : passengers}
+							<PersonIcon />
+							{#if luggage == 'light'}
+								+ <LuggageIcon />
+							{/if}
+							{#if luggage == 'heavy'}
+								+ <LuggageIcon />
+								<LuggageIcon />
+							{/if}
+							{#if wheelchair}
+								+ <WheelchairIcon />
+							{/if}
+						</span>
+						<ChevronDown />
+					</Dialog.Trigger>
+					<Dialog.Content class="w-[90%] flex-col md:max-w-96">
+						<Dialog.Header>
+							<Dialog.Title>{t.bookingInfo}</Dialog.Title>
+							<Dialog.Description>
+								{t.changeBookingInfo}
+							</Dialog.Description>
+						</Dialog.Header>
+
+						<div class="md-4 grid grid-cols-2 grid-rows-2 items-center gap-4">
+							<Label>Anzahl Personen</Label>
+							<Input type="number" bind:value={passengers} min="1" max="6" />
+
+							<Label class="flex items-center gap-2">
+								<WheelchairIcon class="size-5 shrink-0" />
+								Falt-Rollstuhl
+							</Label>
+							<Switch class="justify-self-end" bind:checked={wheelchair} />
+						</div>
+
+						<RadioGroup.Root bind:value={luggage} class="grid grid-cols-3 gap-4">
+							<Label
+								for="none"
+								class="flex flex-col items-center justify-center gap-2 rounded-md border-2 border-muted bg-popover p-4 text-center leading-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary"
+							>
+								<RadioGroup.Item value="none" id="none" class="sr-only" aria-label="none" />
+								<NoLuggageIcon />
+								Kein Gepäck
+							</Label>
+							<Label
+								for="light"
+								class="flex flex-col items-center justify-center gap-2 rounded-md border-2 border-muted bg-popover p-4 text-center leading-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary"
+							>
+								<RadioGroup.Item value="light" id="light" class="sr-only" aria-label="light" />
+								<LuggageIcon />
+								Kleines Gepäck
+							</Label>
+							<Label
+								for="heavy"
+								class="flex flex-col items-center justify-center gap-2 rounded-md border-2 border-muted bg-popover p-4 text-center leading-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary"
+							>
+								<RadioGroup.Item value="heavy" id="heavy" class="sr-only" aria-label="heavy" />
+								<div class="flex">
+									<LuggageIcon />
+									<LuggageIcon />
+									<LuggageIcon />
+								</div>
+								Großes Gepäck
+							</Label>
+						</RadioGroup.Root>
+					</Dialog.Content>
+				</Dialog.Root>
 			</div>
 			<div bind:this={connectionsEl} class="flex grow flex-col gap-4 overflow-y-auto">
 				<ItineraryList
 					{baseQuery}
 					{baseResponse}
 					{routingResponses}
+					{passengers}
 					selectItinerary={(selectedItinerary) => pushState('', { selectedItinerary })}
+					updateStartDest={updateStartDest(from, to)}
 				/>
 			</div>
 		</div>

@@ -453,6 +453,14 @@ export const RentalSchema = {
             type: 'string',
             description: 'Name of the station'
         },
+        fromStationName: {
+            type: 'string',
+            description: 'Name of the station where the vehicle is picked up (empty for free floating vehicles)'
+        },
+        toStationName: {
+            type: 'string',
+            description: 'Name of the station where the vehicle is returned (empty for free floating vehicles)'
+        },
         rentalUriAndroid: {
             type: 'string',
             description: 'Rental URI for Android (deep link to the specific station or vehicle)'
@@ -473,50 +481,6 @@ export const RentalSchema = {
         },
         returnConstraint: {
             '$ref': '#/components/schemas/RentalReturnConstraint'
-        }
-    }
-} as const;
-
-export const ODMTypeSchema = {
-    type: 'string',
-    enum: ['TAXI', 'RIDE_SHARING']
-} as const;
-
-export const ODMSchema = {
-    description: 'Vehicle with driver, e.g., taxi',
-    type: 'object',
-    required: ['systemId'],
-    properties: {
-        systemId: {
-            type: 'string',
-            description: 'ODM system ID'
-        },
-        systemName: {
-            type: 'string',
-            description: 'ODM system name'
-        },
-        url: {
-            type: 'string',
-            description: 'URL of the ODM system'
-        },
-        companyName: {
-            type: 'string',
-            description: 'Name of company that offers the service'
-        },
-        odmUriAndroid: {
-            type: 'string',
-            description: 'ODM URI for Android (deep link to the specific station or vehicle)'
-        },
-        odmUriIOS: {
-            type: 'string',
-            description: 'ODM URI for iOS (deep link to the specific station or vehicle)'
-        },
-        odmUriWeb: {
-            type: 'string',
-            description: 'ODM URI for web (deep link to the specific station or vehicle)'
-        },
-        odmType: {
-            '$ref': '#/components/schemas/ODMType'
         }
     }
 } as const;
@@ -640,9 +604,6 @@ used for walking, biking and driving.
         },
         rental: {
             '$ref': '#/components/schemas/Rental'
-        },
-        odm: {
-            '$ref': '#/components/schemas/ODM'
         }
     }
 } as const;

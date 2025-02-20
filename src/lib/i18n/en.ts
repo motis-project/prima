@@ -112,6 +112,18 @@ const translations: Translations = {
 		resendCode: 'Resend code',
 		verify: 'Verify'
 	},
+
+	atDateTime: (timeType, t: Date, isToday: boolean) =>
+		`${timeType === 'departure' ? 'Depart at ' : 'Arrive at '} ` +
+		t.toLocaleString('en', {
+			hour: '2-digit',
+			minute: '2-digit',
+			weekday: isToday ? undefined : 'short',
+			day: isToday ? undefined : '2-digit',
+			month: isToday ? undefined : '2-digit',
+			year: isToday ? undefined : '2-digit'
+		}),
+
 	journeyDetails: 'Journey Details',
 	transfers: 'transfers',
 	walk: 'Walk',
@@ -122,6 +134,7 @@ const translations: Translations = {
 	car: 'Car',
 	taxi: 'Taxi',
 	moped: 'Moped',
+	odm: 'Public Transport Taxi, booking required!',
 	from: 'From',
 	to: 'To',
 	arrival: 'Arrival',
@@ -146,7 +159,31 @@ const translations: Translations = {
 		}
 	},
 	sharingProvider: 'Provider',
-	roundtripStationReturnConstraint: 'The vehicle must be returned to the departure station.'
+	roundtripStationReturnConstraint: 'The vehicle must be returned to the departure station.',
+
+	bookingInfo: 'Booking Information',
+	changeBookingInfo: 'Change your search options and booking information.',
+
+	booking: {
+		summary: 'Booking summary',
+		header: 'Book ride (incurs cost)',
+		info: '',
+		disclaimer:
+			"Cancel your ride 24h early if you don't want to take it. In case you do not cancel your ride in time or don't show up, you are liable to pay the full costs of the taxi.",
+		noLuggage: 'No luggage',
+		handLuggage: 'Handluggage',
+		heavyLuggage: 'Heavy luggage',
+		withFoldableWheelchair: 'With foldable wheelchair',
+		bookingFor: (passengers: number) => {
+			switch (passengers) {
+				case 1:
+					return 'One person';
+				default:
+					return `${passengers} persons`;
+			}
+		},
+		totalPrice: 'Total price (payable in the tax)'
+	}
 };
 
 export default translations;
