@@ -95,8 +95,7 @@ export function getAllowedOperationTimes(
 	next: DbEvent | undefined,
 	expandedSearchInterval: Interval,
 	prepTime: UnixtimeMs,
-	vehicle: VehicleWithInterval,
-	allowedTimes: Interval[]
+	vehicle: VehicleWithInterval
 ): Interval[] {
 	console.assert(
 		implication(!returnsToCompany(insertionCase), next !== undefined),
@@ -157,12 +156,9 @@ export function getAllowedOperationTimes(
 		!(insertionCase.how != InsertHow.NEW_TOUR && relevantAvailabilities.length > 1),
 		`Found ${relevantAvailabilities.length} intervals, which are supposed to be disjoint, containing the same timestamp.`
 	);
-	return Interval.intersect(
-		relevantAvailabilities
-			.map((availability) => new Interval(availability).intersect(window))
-			.filter((availability) => availability != undefined),
-		allowedTimes
-	);
+	return relevantAvailabilities
+		.map((availability) => new Interval(availability).intersect(window))
+		.filter((availability) => availability != undefined);
 }
 
 export function getArrivalWindow(
@@ -171,16 +167,22 @@ export function getArrivalWindow(
 	directDuration: number,
 	busStopWindow: Interval | undefined,
 	prevLegDuration: number,
-	nextLegDuration: number
+	nextLegDuration: number,
+	allowedTimes: Interval[]
 ): Interval | undefined {
-	const fullPrevLegDuration =
-		prevLegDuration +
-		(insertionCase.direction == InsertDirection.BUS_STOP_DROPOFF ? directDuration : 0);
-	const fullNextLegDuration =
-		nextLegDuration +
-		(insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? directDuration : 0);
-	let arrivalWindows = windows
-		.map((window) => window.shrink(fullPrevLegDuration, fullNextLegDuration))
+	const directWindows = Interval.intersect(
+		allowedTimes,
+		windows
+			.map((window) => window.shrink(prevLegDuration, nextLegDuration))
+			.filter((window) => window != undefined)
+	);
+	let arrivalWindows = directWindows
+		.map((window) =>
+			window.shrink(
+				insertionCase.direction == InsertDirection.BUS_STOP_DROPOFF ? directDuration : 0,
+				insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? directDuration : 0
+			)
+		)
 		.filter((window) => window != undefined);
 	if (busStopWindow != undefined) {
 		arrivalWindows = arrivalWindows

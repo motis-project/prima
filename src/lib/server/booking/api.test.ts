@@ -242,7 +242,7 @@ describe('Whitelist and Booking API Tests', () => {
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(106)],
+			directTimes: [inXMinutes(113)],
 			startFixed: true,
 			capacities
 		});

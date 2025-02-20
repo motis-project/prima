@@ -65,12 +65,6 @@ export async function POST(event: RequestEvent) {
 		direct.length === p.directTimes.length,
 		'Array size mismatch in Whitelist - direct.'
 	);
-	for (let i = 0; i != direct.length; ++i) {
-		console.assert(
-			direct[i] != null && direct[i] != undefined,
-			'Undefined in Whitelist Response. - direct'
-		);
-	}
 
 	const response: WhitelistResponse = {
 		start,
