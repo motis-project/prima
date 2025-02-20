@@ -205,10 +205,7 @@ export const getViableBusStops = async (
 			createBatchQuery(
 				userChosen,
 				busStops.slice(currentPos, Math.min(currentPos + batchSize, busStops.length)),
-				busStopIntervals.slice(
-					currentPos,
-					Math.min(currentPos + batchSize, busStops.length)
-				),
+				busStopIntervals.slice(currentPos, Math.min(currentPos + batchSize, busStops.length)),
 				capacities
 			)
 		);
