@@ -63,7 +63,7 @@ let mockUserId = -1;
 
 beforeAll(async () => {
 	await clearDatabase();
-}, 5000000);
+}, 60000);
 
 beforeEach(async () => {
 	await clearDatabase();
@@ -242,7 +242,7 @@ describe('Whitelist and Booking API Tests', () => {
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(106)],
+			directTimes: [inXMinutes(113)],
 			startFixed: true,
 			capacities
 		});

@@ -25,6 +25,9 @@ export const actions = {
 
 		const formData = await request.formData();
 
+		const passengers = readInt(formData.get('passengers'));
+		const luggage = readInt(formData.get('luggage'));
+		const wheelchairs = readInt(formData.get('wheelchairs'));
 		const json = formData.get('json');
 		const startFixed1 = formData.get('startFixed1');
 		const startFixed2 = formData.get('startFixed2');
@@ -46,6 +49,9 @@ export const actions = {
 		const endTime2 = readInt(formData.get('endTime2'));
 
 		console.log('BOOKING PARAMS =', {
+			passengers,
+			luggage,
+			wheelchairs,
 			startFixed1,
 			startFixed2,
 			fromAddress1,
@@ -92,9 +98,9 @@ export const actions = {
 
 		const capacities: Capacities = {
 			bikes: 0,
-			luggage: 0,
-			passengers: 1,
-			wheelchairs: 0
+			luggage,
+			passengers,
+			wheelchairs
 		};
 		const start1 = { lat: fromLat1, lng: fromLng1, address: fromAddress1 };
 		const target1 = { lat: toLat1, lng: toLng1, address: toAddress1 };

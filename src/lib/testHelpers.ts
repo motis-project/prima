@@ -4,6 +4,7 @@ import type { Coordinates } from '$lib/util/Coordinates';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import type { Capacities } from '$lib/server/booking/Capacities';
 import { db } from '$lib/server/db';
+import type { BusStop } from './server/booking/BusStop';
 
 export enum Zone {
 	NIESKY = 1,
@@ -112,7 +113,7 @@ export const setEvent = async (
 	).id;
 };
 
-export const addTestUser = async () => {
+export const addTestUser = async (company?: number) => {
 	return await db
 		.insertInto('user')
 		.values({
@@ -122,7 +123,8 @@ export const addTestUser = async () => {
 			isAdmin: false,
 			isEmailVerified: true,
 			passwordHash:
-				'$argon2id$v=19$m=19456,t=2,p=1$4lXilBjWTY+DsYpN0eATrw$imFLatxSsy9WjMny7MusOJeAJE5ZenrOEqD88YsZv8o'
+				'$argon2id$v=19$m=19456,t=2,p=1$4lXilBjWTY+DsYpN0eATrw$imFLatxSsy9WjMny7MusOJeAJE5ZenrOEqD88YsZv8o',
+			companyId: company
 		})
 		.returning('id')
 		.executeTakeFirstOrThrow();
@@ -165,3 +167,43 @@ export const getTours = async () => {
 		])
 		.execute();
 };
+
+export const selectEvents = async () => {
+	return await db
+		.selectFrom('tour')
+		.innerJoin('request', 'tour.id', 'request.tour')
+		.innerJoin('event', 'event.request', 'request.id')
+		.select([
+			'event.id as eventid',
+			'request.id as requestid',
+			'tour.id as tourid',
+			'event.cancelled as ec',
+			'request.cancelled as rc',
+			'tour.cancelled as tc',
+			'tour.message'
+		])
+		.execute();
+};
+
+export function assertArraySizes<T>(
+	response: T[][],
+	request: BusStop[],
+	caller: string,
+	checkForUndefined: boolean
+): void {
+	console.assert(response.length === request.length, 'Array size mismatch in ' + caller);
+	for (let i = 0; i != response.length; ++i) {
+		console.assert(
+			response[i].length === request[i].times.length,
+			'Array size mismatch in ' + caller
+		);
+		if (checkForUndefined) {
+			for (let j = 0; j != response[i].length; ++j) {
+				console.assert(
+					response[i][j] != null && response[i][j] != undefined,
+					'Undefined in ' + caller
+				);
+			}
+		}
+	}
+}

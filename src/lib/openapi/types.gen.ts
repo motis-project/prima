@@ -371,6 +371,14 @@ export type Rental = {
      */
     stationName?: string;
     /**
+     * Name of the station where the vehicle is picked up (empty for free floating vehicles)
+     */
+    fromStationName?: string;
+    /**
+     * Name of the station where the vehicle is returned (empty for free floating vehicles)
+     */
+    toStationName?: string;
+    /**
      * Rental URI for Android (deep link to the specific station or vehicle)
      */
     rentalUriAndroid?: string;
@@ -385,43 +393,6 @@ export type Rental = {
     formFactor?: RentalFormFactor;
     propulsionType?: RentalPropulsionType;
     returnConstraint?: RentalReturnConstraint;
-};
-
-export type ODMType = 'TAXI' | 'RIDE_SHARING';
-
-/**
- * Vehicle with driver, e.g., taxi
- */
-export type ODM = {
-    /**
-     * ODM system ID
-     */
-    systemId: string;
-    /**
-     * ODM system name
-     */
-    systemName?: string;
-    /**
-     * URL of the ODM system
-     */
-    url?: string;
-    /**
-     * Name of company that offers the service
-     */
-    companyName?: string;
-    /**
-     * ODM URI for Android (deep link to the specific station or vehicle)
-     */
-    odmUriAndroid?: string;
-    /**
-     * ODM URI for iOS (deep link to the specific station or vehicle)
-     */
-    odmUriIOS?: string;
-    /**
-     * ODM URI for web (deep link to the specific station or vehicle)
-     */
-    odmUriWeb?: string;
-    odmType?: ODMType;
 };
 
 export type Leg = {
@@ -507,7 +478,6 @@ export type Leg = {
      */
     steps?: Array<StepInstruction>;
     rental?: Rental;
-    odm?: ODM;
 };
 
 export type Itinerary = {
@@ -808,9 +778,21 @@ export type PlanData = {
          */
         directRentalProviders?: Array<(string)>;
         /**
+         * Optional. Experimental. Default is `1.0`.
+         * Factor with which the duration of the fastest direct connection is multiplied.
+         * Values > 1.0 allow connections that are slower than the fastest direct connection to be found.
+         *
+         */
+        fastestDirectFactor?: number;
+        /**
          * \`latitude,longitude,level\` tuple in degrees OR stop id
          */
         fromPlace: string;
+        /**
+         * Optional. Experimental. Number of luggage pieces; base unit: airline cabin luggage (e.g. for ODM or price calculation)
+         *
+         */
+        luggage?: number;
         /**
          * Optional. Default is 30min which is `1800`.
          * Maximum time in seconds for direct connections.
@@ -881,6 +863,10 @@ export type PlanData = {
          *
          */
         pageCursor?: string;
+        /**
+         * Optional. Experimental. Number of passengers (e.g. for ODM or price calculation)
+         */
+        passengers?: number;
         /**
          * Optional. Default is `FOOT`.
          *

@@ -9,7 +9,8 @@
 
 	import CalendarIcon from 'lucide-svelte/icons/calendar';
 	import { Calendar } from '$lib/shadcn/calendar';
-	import * as Popover from '$lib/shadcn/popover/index';
+	import * as Popover from '$lib/shadcn/popover';
+	import * as HoverCard from '$lib/shadcn/hover-card';
 
 	import { SvelteDate } from 'svelte/reactivity';
 	import { Button, buttonVariants } from '$lib/shadcn/button';
@@ -25,6 +26,7 @@
 	import type { Tours } from '$lib/server/db/getTours';
 	import Message from '$lib/ui/Message.svelte';
 	import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
+	import type { LngLatLike } from 'maplibre-gl';
 
 	const { data, form } = $props();
 
@@ -66,7 +68,13 @@
 
 	let selectedTour = $state<{
 		tours: Tours | undefined;
-	}>({ tours: undefined });
+		isAdmin: boolean;
+		companyCoordinates: LngLatLike;
+	}>({
+		tours: undefined,
+		isAdmin: false,
+		companyCoordinates: data.companyCoordinates!
+	});
 
 	let value = $state<DateValue>(toCalendarDate(fromDate(data.utcDate!, TZ)));
 	let day = $derived(new SvelteDate(value));
@@ -323,7 +331,16 @@
 					<td
 						class="h-full pr-2 align-middle font-mono text-sm font-semibold leading-none tracking-tight"
 					>
-						{v.licensePlate}
+						<HoverCard.Root>
+							<HoverCard.Trigger>{v.licensePlate}</HoverCard.Trigger>
+							<HoverCard.Content>
+								<ul class="list-inside list-disc">
+									<li>Anzahl Passagiere: {v.passengers}</li>
+									<li>Rollstuhl: {v.wheelchairs === 0 ? 'Nein' : 'Ja'}</li>
+									<li>Gepäckstücke: {v.luggage}</li>
+								</ul>
+							</HoverCard.Content>
+						</HoverCard.Root>
 					</td>
 					{#each split(range, 60) as x}
 						<td>
@@ -417,7 +434,7 @@
 	</div>
 
 	<Card.Content class="mt-8">
-		<Message msg={form?.msg} />
+		<Message msg={form?.msg} class="mb-4" />
 
 		{#if !data.companyDataComplete}
 			<div class="flex min-h-[45vh] w-full flex-col items-center justify-center">

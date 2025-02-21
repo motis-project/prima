@@ -8,7 +8,8 @@ import {
 	whitelistSchema,
 	type WhitelistRequest
 } from './WhitelistRequest';
-import type { Insertion } from '$lib/server/booking/insertion';
+import { toInsertionWithISOStrings, type Insertion } from '$lib/server/booking/insertion';
+import { assertArraySizes } from '$lib/testHelpers';
 
 export type WhitelistResponse = {
 	start: (Insertion | undefined)[][];
@@ -47,6 +48,10 @@ export async function POST(event: RequestEvent) {
 		whitelist(p.start, p.startBusStops, p.capacities, false),
 		whitelist(p.target, p.targetBusStops, p.capacities, true)
 	]);
+
+	assertArraySizes(start, p.startBusStops, 'Whitelist', false);
+	assertArraySizes(target, p.targetBusStops, 'Whitelist', false);
+
 	if (p.directTimes.length != 0) {
 		direct = p.startFixed ? target[target.length - 1] : start[start.length - 1];
 		if (p.startFixed) {
@@ -55,10 +60,28 @@ export async function POST(event: RequestEvent) {
 			start = start.slice(0, start.length - 1);
 		}
 	}
+
+	console.assert(
+		direct.length === p.directTimes.length,
+		'Array size mismatch in Whitelist - direct.'
+	);
+
 	const response: WhitelistResponse = {
 		start,
 		target,
 		direct
 	};
+	console.log(
+		'WHITELIST RESPONSE: ',
+		JSON.stringify(toWhitelistResponseWithISOStrings(response), null, '\t')
+	);
 	return json(response);
+}
+
+function toWhitelistResponseWithISOStrings(r: WhitelistResponse) {
+	return {
+		start: r.start.map((i) => i.map((j) => toInsertionWithISOStrings(j))),
+		target: r.target.map((i) => i.map((j) => toInsertionWithISOStrings(j))),
+		direct: r.direct.map((j) => toInsertionWithISOStrings(j))
+	};
 }

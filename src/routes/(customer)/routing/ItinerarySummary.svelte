@@ -3,11 +3,20 @@
 	import * as Card from '$lib/shadcn/card';
 	import { formatDurationSec } from './formatDuration';
 	import Time from './Time.svelte';
-	import type { Itinerary, Leg } from '$lib/openapi';
+	import type { Itinerary, Leg, PlanData } from '$lib/openapi';
 	import { getModeStyle, routeColor } from './modeStyle';
 	import { t } from '$lib/i18n/translation';
+	import type { Snippet } from 'svelte';
 
-	const { it }: { it: Itinerary } = $props();
+	const {
+		it,
+		baseQuery,
+		info
+	}: {
+		it: Itinerary;
+		baseQuery?: PlanData | undefined;
+		info?: Snippet<[Itinerary]> | undefined;
+	} = $props();
 </script>
 
 {#snippet legSummary(l: Leg)}
@@ -26,7 +35,7 @@
 	</div>
 {/snippet}
 
-<Card.Root class="border-input">
+<Card.Root class="min-w-72 border-input">
 	<Card.Content class="flex flex-col gap-4 p-4">
 		<div class="flex gap-4">
 			<span>{formatDurationSec(it.duration)}</span>
@@ -41,12 +50,14 @@
 				timestamp={it.startTime}
 				scheduledTimestamp={it.legs[0].scheduledStartTime}
 				variant={'realtime-show-always'}
+				queriedTime={baseQuery?.query.time}
 			/> - <Time
 				class="inline"
 				isRealtime={it.legs[it.legs.length - 1].realTime}
 				timestamp={it.endTime}
 				scheduledTimestamp={it.legs[it.legs.length - 1].scheduledEndTime}
 				variant="realtime-show-always"
+				queriedTime={it.startTime}
 			/>
 		</span>
 		<div class="flex flex-wrap gap-x-3 gap-y-3">
@@ -55,4 +66,11 @@
 			{/each}
 		</div>
 	</Card.Content>
+	{#if info}
+		<div
+			class="flex items-center justify-end gap-1 rounded-b-lg border-t border-input bg-accent px-4 py-1.5 text-sm text-destructive"
+		>
+			{@render info(it)}
+		</div>
+	{/if}
 </Card.Root>

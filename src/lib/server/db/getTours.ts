@@ -23,8 +23,11 @@ export const getTours = async (
 			'tour.departure as startTime',
 			'tour.arrival as endTime',
 			'tour.cancelled',
+			'tour.message',
 			'company.name as companyName',
 			'company.address as companyAddress',
+			'company.lat as companyLat',
+			'company.lng as companyLng',
 			'vehicle.id as vehicleId',
 			'vehicle.licensePlate as licensePlate',
 			jsonArrayFrom(
