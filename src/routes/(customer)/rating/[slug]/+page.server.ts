@@ -51,6 +51,6 @@ export const actions = {
 			.where('user', '=', user)
 			.execute();
 
-		return { msg: msg('feedbackThank') };
+		return { msg: msg('feedbackThank', 'success') };
 	}
 };
