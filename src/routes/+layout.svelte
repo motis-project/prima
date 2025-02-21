@@ -43,7 +43,7 @@
 
 <div class="flex h-full flex-col">
 	{#if data.pendingRating}
-		<Alert.Root class="p">
+		<Alert.Root class="mb-2">
 			<CircleAlert class="size-4" />
 			<Alert.Title></Alert.Title>
 			<Alert.Description>

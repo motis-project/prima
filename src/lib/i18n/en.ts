@@ -80,7 +80,10 @@ const translations: Translations = {
 		bookingSuccess: 'Booking successful.',
 
 		// Journey
-		cancelled: 'This trip has been cancelled.'
+		cancelled: 'This trip has been cancelled.',
+
+		// Feedback
+		feedbackThank: 'Thank you very much for your feedback!'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',

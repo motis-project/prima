@@ -317,32 +317,14 @@
 						<ChevronDown />
 					</Dialog.Trigger>
 					<Dialog.Content class="flex-col sm:max-w-[425px]">
-						<RadioGroup.Root class="flex" bind:value={timeType}>
-							<Label
-								for="departure"
-								class="flex items-center rounded-md border-2 border-muted bg-popover p-1 px-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
-							>
-								<RadioGroup.Item
-									value="departure"
-									id="departure"
-									class="sr-only"
-									aria-label={t.departure}
-								/>
-								<span>{t.departure}</span>
-							</Label>
-							<Label
-								for="arrival"
-								class="flex items-center rounded-md border-2 border-muted bg-popover p-1 px-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
-							>
-								<RadioGroup.Item
-									value="arrival"
-									id="arrival"
-									class="sr-only"
-									aria-label={t.arrival}
-								/>
-								<span>{t.arrival}</span>
-							</Label>
-						</RadioGroup.Root>
+						<label>
+							<input type="radio" name="timetype" value="departure" bind:group={timeType} />
+							{t.departure}
+						</label>
+						<label>
+							<input type="radio" name="timetype" value="arrival" bind:group={timeType} />
+							{t.arrival}
+						</label>
 						<DateInput bind:value={time} />
 					</Dialog.Content>
 				</Dialog.Root>

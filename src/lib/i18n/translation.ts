@@ -82,6 +82,9 @@ export type Translations = {
 
 		// Journey
 		cancelled: string;
+
+		// Feedback
+		feedbackThank: string;
 	};
 	admin: {
 		completedToursSubtitle: string;

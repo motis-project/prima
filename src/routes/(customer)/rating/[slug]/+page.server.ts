@@ -2,17 +2,16 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import type { Itinerary } from '$lib/openapi';
-import { cancelRequest } from '$lib/server/db/cancel';
-import { msg, type Msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
+import { msg } from '$lib/msg';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const journey = await db
 		.selectFrom('journey')
 		.innerJoin('request', 'journey.request1', 'request.id')
-		.select(['json', 'request.ticketCode', 'request.customer', 'request.id as requestId'])
+		.select(['json', 'rating'])
 		.where('journey.id', '=', parseInt(params.slug))
-		.where('user', '=', locals.session!.userId!)
+		.where('user', '=', locals.session!.userId)
 		.executeTakeFirst();
 
 	if (journey == undefined) {
@@ -21,22 +20,37 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	return {
 		journey: JSON.parse(journey.json) as Itinerary,
-		ticketCode: journey.ticketCode,
-		requestId: journey.requestId,
-		customerId: journey.customer
+		rated: !!journey.rating,
+		id: params.slug
 	};
 };
 
 export const actions = {
-	default: async ({ request, locals }): Promise<{ msg: Msg }> => {
-		const user = locals.session?.userId;
+	default: async ({ request, locals }) => {
+		const user = locals.session!.userId!;
 		const formData = await request.formData();
-		const customer = readInt(formData.get('customerId'));
-		if (!user || user != customer) {
-			return { msg: msg('accountDoesNotExist') };
+
+		const journeyId = readInt(formData.get('id'));
+		const ratingStr = formData.get('rating');
+		const comment = formData.get('comment');
+
+		if (
+			isNaN(journeyId) ||
+			typeof ratingStr !== 'string' ||
+			(ratingStr != 'good' && ratingStr != 'bad') ||
+			typeof comment !== 'string'
+		) {
+			throw 'bad request';
 		}
-		const requestId = readInt(formData.get('requestId'));
-		cancelRequest(requestId);
-		return { msg: msg('requestCancelled') };
+
+		const rating = ratingStr === 'good' ? 1 : 0;
+		await db
+			.updateTable('journey')
+			.set({ comment, rating })
+			.where('id', '=', journeyId)
+			.where('user', '=', user)
+			.execute();
+
+		return { msg: msg('feedbackThank') };
 	}
 };

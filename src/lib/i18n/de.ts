@@ -80,7 +80,10 @@ const translations: Translations = {
 		bookingSuccess: 'Buchung erfolgreich.',
 
 		// Journey
-		cancelled: 'Diese Fahrt wurde storniert.'
+		cancelled: 'Diese Fahrt wurde storniert.',
+
+		// Feedback
+		feedbackThank: 'Vielen Dank für Ihr Feedback!'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',
