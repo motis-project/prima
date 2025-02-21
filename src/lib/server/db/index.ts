@@ -95,6 +95,8 @@ export interface Database {
 		user: number;
 		request1: number;
 		request2: number | null;
+		rating: number | null;
+		comment: string | null;
 	};
 }
 

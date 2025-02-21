@@ -80,7 +80,10 @@ const translations: Translations = {
 		bookingSuccess: 'Booking successful.',
 
 		// Journey
-		cancelled: 'This trip has been cancelled.'
+		cancelled: 'This trip has been cancelled.',
+
+		// Feedback
+		feedbackThank: 'Thank you very much for your feedback!'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',
@@ -111,6 +114,11 @@ const translations: Translations = {
 		newPassword: 'New Password',
 		resendCode: 'Resend code',
 		verify: 'Verify'
+	},
+	rating: {
+		good: 'good',
+		bad: 'bad',
+		sendFeedback: 'Send feedback'
 	},
 
 	atDateTime: (timeType, t: Date, isToday: boolean) =>

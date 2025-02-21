@@ -82,6 +82,9 @@ export type Translations = {
 
 		// Journey
 		cancelled: string;
+
+		// Feedback
+		feedbackThank: string;
 	};
 	admin: {
 		completedToursSubtitle: string;
@@ -111,6 +114,11 @@ export type Translations = {
 		newPassword: string;
 		resendCode: string;
 		verify: string;
+	};
+	rating: {
+		good: string;
+		bad: string;
+		sendFeedback: string;
 	};
 
 	atDateTime: (timeType: TimeType, time: Date, isToday: boolean) => string;

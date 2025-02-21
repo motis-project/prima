@@ -118,6 +118,8 @@ export async function up(db) {
 		.addColumn('user', 'integer', (col) => col.references('user.id').notNull())
 		.addColumn('request1', 'integer', (col) => col.references('request.id').notNull())
 		.addColumn('request2', 'integer', (col) => col.references('request.id'))
+		.addColumn('rating', 'integer')
+		.addColumn('comment', 'varchar')
 		.execute();
 
 	// =======
