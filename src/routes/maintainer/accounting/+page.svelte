@@ -275,7 +275,7 @@
 		//availabilities.sort(compareDateAvailibility);
 		for (let avail of data.availabilities) {
 			// was wenn die Tour über den Tag drüber geht?
-			if(avail.start_time.getTime() === day.getTime()) // keine avaiabilities in der DB!!!
+			if(avail.start_time.getTime() === day.getTime())
 			// frage: wenn eine tour eingetragen wird wird die availability automatsich eingetragen?
 			{
 				console.log("capSum: %d", avail.vehicle);
