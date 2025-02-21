@@ -58,12 +58,7 @@ data class APIResponse(
 
 data class Vehicle(
     val id: Int,
-    val licensePlate: String,
-    val company: Int,
-    val passengers: Int,
-    val wheelchairs: Int,
-    val bikes: Int,
-    val luggage: Int
+    val licensePlate: String
 )
 
 data class Event(

@@ -1,12 +1,8 @@
 package de.motis.prima
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
-import android.content.pm.PackageManager
 import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
@@ -39,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,24 +42,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import de.motis.prima.app.DriversApp
 import de.motis.prima.services.Api
 import de.motis.prima.services.Tour
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
@@ -83,8 +75,8 @@ class ToursViewModel : ViewModel() {
     var isLoading = mutableStateOf(true)
         private set
 
-    var displayDate = MutableStateFlow(LocalDate.now())
-
+    var displayDate = mutableStateOf(LocalDate.now())
+    
     var showAllTours = mutableStateOf(false)
 
     init {
@@ -92,13 +84,14 @@ class ToursViewModel : ViewModel() {
     }
 
     fun reset() {
-        displayDate.value = LocalDate.now()
+        displayDate = mutableStateOf(LocalDate.now())
         tours = mutableStateOf(emptyList())
         showAllTours = mutableStateOf(false)
     }
 
     fun fetchTours() {
         val today = displayDate.value
+        Log.d("test", today.toString())
         val tomorrow = today.plusDays(1)
         val start = today.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val end = tomorrow.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -181,32 +174,118 @@ fun Tours(
                     t.vehicleId == userViewModel.selectedVehicle.value.id
         }
 
-        Column {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(contentPadding),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                showTours(tours = toursPast + toursFuture, navController = navController)
-            }
-
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding)
+        ) {
+            DateSelect(navController, viewModel)
+            VehicleInfo(userViewModel)
+            ShowTours(tours = toursPast + toursFuture, navController = navController)
         }
     }
 }
 
 @Composable
-fun showTours(tours: List<Tour>, navController: NavController) {
+fun VehicleInfo(
+    userViewModel: UserViewModel
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = userViewModel.selectedVehicle.collectAsState().value.licensePlate,
+            fontSize = 16.sp,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+fun DateSelect(
+    navController: NavController,
+    viewModel: ToursViewModel
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        val date by remember {
+            mutableStateOf(viewModel.displayDate)
+        }
+        Box(
+            modifier = Modifier
+                .padding(all = 6.dp),
+
+            ) {
+            IconButton(
+                onClick = {
+                    date.value = date.value.minusDays(1)
+                    viewModel.displayDate = date
+                    viewModel.showAllTours.value = true
+                },
+                Modifier
+                    .background(color = Color.Transparent)
+                    .size(width = 26.dp, height = 26.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Localized description"
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .padding(all = 6.dp),
+
+            ) {
+                Text(
+                text = date.value.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+        }
+        Box(
+            modifier = Modifier
+                .padding(all = 6.dp),
+
+            ) {
+            IconButton(
+                onClick = {
+                    date.value = date.value.plusDays(1)
+                    viewModel.displayDate = date
+                    viewModel.showAllTours.value = true
+                },
+                Modifier
+                    .background(color = Color.Transparent)
+                    .size(width = 26.dp, height = 26.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = "Localized description"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ShowTours(tours: List<Tour>, navController: NavController) {
     Row {
         if (tours.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(24.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Keine Aufträge",
+                    text = stringResource(id = R.string.no_tours),
                     fontSize = 24.sp,
                     textAlign = TextAlign.Center
                 )
@@ -217,9 +296,9 @@ fun showTours(tours: List<Tour>, navController: NavController) {
                     .fillMaxSize()
             ) {
                 items(items = tours, itemContent = { tour ->
-                    ConstraintLayout(modifier = Modifier.clickable {
+                    ConstraintLayout(/*modifier = Modifier.clickable {
                         navController.navigate("tour/${tour.tourId}")
-                    }) {
+                    }*/) {
                         var city = "-"
                         var displayTime = "-"
                         try {
@@ -236,7 +315,7 @@ fun showTours(tours: List<Tour>, navController: NavController) {
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
+                                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 0.dp)
                                 .wrapContentSize()
                         ) {
                             Box(
@@ -246,14 +325,27 @@ fun showTours(tours: List<Tour>, navController: NavController) {
                                 contentAlignment = Alignment.TopStart
                             ) {
                                 Column {
-                                    Text(displayTime, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        displayTime,
+                                        fontSize = 24.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                     Spacer(modifier = Modifier.height(12.dp))
                                     if (city != "-") {
-                                        Text(city, fontSize = 24.sp)
+                                        Text(
+                                            city,
+                                            fontSize = 24.sp
+                                        )
                                     } else {
-                                        Text("Keine Adresse", fontSize = 24.sp)
+                                        Text(
+                                            text = stringResource(id = R.string.no_adress),
+                                            fontSize = 24.sp
+                                        )
                                         Spacer(modifier = Modifier.height(12.dp))
-                                        Text("GPS Navigation verfügbar", fontSize = 24.sp)
+                                        Text(
+                                            text = stringResource(id = R.string.navi_available),
+                                            fontSize = 24.sp
+                                        )
                                     }
                                 }
                             }
@@ -282,7 +374,7 @@ fun TopBar(
         ),
         title = {
             Text(
-                "Aufträge",
+                text = stringResource(id = R.string.tours_header),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -309,7 +401,7 @@ fun TopBar(
                         navController.navigate("vehicles")
 
                     },
-                    text = { Text("Fahrzeug wechseln") }
+                    text = { Text(text = stringResource(id = R.string.tours_header)) }
                 )
                 DropdownMenuItem(
                     onClick = {
@@ -317,7 +409,7 @@ fun TopBar(
                         dropdownExpanded = false
 
                     },
-                    text = { Text("Logout") }
+                    text = { Text(text = stringResource(id = R.string.logout)) }
                 )
             }
         }

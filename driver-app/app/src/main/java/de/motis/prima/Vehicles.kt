@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -144,7 +145,7 @@ fun TopBar(
         ),
         title = {
             Text(
-                "Fahrzeuge",
+                text = stringResource(id = R.string.vehicles_header),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -163,7 +164,7 @@ fun TopBar(
                         dropdownExpanded = false
 
                     },
-                    text = { Text("Logout") }
+                    text = { Text(text = stringResource(id = R.string.logout)) }
                 )
             }
         }

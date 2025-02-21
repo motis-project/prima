@@ -1,10 +1,8 @@
 package de.motis.prima
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,32 +13,22 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        //requestPermissions()
-        setContent {
-            Nav()
-        }
+        requestPermissions()
     }
 
-    @SuppressLint("InlinedApi")
     private val permissionsLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
+        }
+
         val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
         val cameraGranted = permissions[Manifest.permission.CAMERA] ?: false
-        val notificationsGranted = permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
 
-        if (!fineLocationGranted || !coarseLocationGranted) {
-            Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
-        }
-
-        if (!cameraGranted) {
-            setContent { PermissionInfo() }
-        }
-
-        if (!notificationsGranted) {
-            Toast.makeText(this, "Notification permission denied", Toast.LENGTH_SHORT).show()
-        }
+        setContent { Nav(cameraGranted, fineLocationGranted) }
     }
 
     private fun requestPermissions() {

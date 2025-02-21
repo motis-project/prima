@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "de.motis.prima"
-    compileSdk = 35
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "de.motis.prima"
@@ -20,8 +20,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "BASE_URL", "\"http://130.83.165.211:7777\"")
-            //buildConfigField("String", "BASE_URL", "\"https://prima.motis-project.de\"")
+            buildConfigField("String", "BASE_URL", "\"https://prima.motis-project.de\"")
         }
         release {
             isMinifyEnabled = false

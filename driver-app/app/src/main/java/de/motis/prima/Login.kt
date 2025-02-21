@@ -97,7 +97,7 @@ fun Login(
                     if (selectedVehicle.id == 0) {
                         navController.navigate("vehicles")
                     } else {
-                        //navController.navigate("tours")
+                        navController.navigate("tours")
                     }
                 }
             }

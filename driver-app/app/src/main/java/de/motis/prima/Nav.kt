@@ -11,17 +11,21 @@ import androidx.navigation.compose.rememberNavController
 import de.motis.prima.app.DriversApp
 import de.motis.prima.services.CookieStore
 
-
 @Composable
-fun Nav() {
+fun Nav(
+    cameraGranted: Boolean,
+    fineLocationGranted: Boolean
+) {
     val navController = rememberNavController()
     val userViewModel: UserViewModel = viewModel()
 
-    // Before rendering any component, check whether user is authenticated.
+    // Before rendering any component, check preconditions
     val startDestination by remember {
         derivedStateOf {
             val cookieStore = CookieStore(DriversApp.instance)
-            if (cookieStore.isEmpty()) {
+            if (!cameraGranted || !fineLocationGranted) {
+                "permissionInfo"
+            } else if (cookieStore.isEmpty()) {
                 "login"
             } else {
                 "vehicles"
@@ -30,6 +34,10 @@ fun Nav() {
     }
 
     NavHost(navController = navController, startDestination = startDestination) {
+        composable(route = "permissionInfo") {
+            PermissionInfo(navController, cameraGranted, fineLocationGranted)
+        }
+
         composable(route = "login") {
             Login(navController, userViewModel)
         }

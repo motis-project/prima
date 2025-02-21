@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -37,19 +38,25 @@ class UserViewModel : ViewModel() {
         }
     }
 
-    // Extension property to create a DataStore instance
     private val Context.dataStore by preferencesDataStore(name = "prima_datastore")
-    private val keyVehicleId = intPreferencesKey("vehicleId")
+    private val vehicleId_KEY = intPreferencesKey("vehicleId")
+    private val licensePlate_KEY = stringPreferencesKey("licensePlate")
 
     var selectedVehicle = DriversApp.instance.dataStore.data.map { preferences ->
         Vehicle(
-            preferences[keyVehicleId]?:0,"",0,0,0,0,0
+            preferences[vehicleId_KEY] ?: 0,
+            preferences[licensePlate_KEY] ?: "-",
         )
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, Vehicle(0, "", 0,0,0,0,0))
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        Vehicle(0, "-")
+    )
 
     private suspend fun saveToDataStore(vehicle: Vehicle) {
         DriversApp.instance.dataStore.edit { preferences ->
-            preferences[keyVehicleId] = vehicle.id
+            preferences[vehicleId_KEY] = vehicle.id
+            preferences[licensePlate_KEY] = vehicle.licensePlate
         }
     }
 
@@ -59,7 +66,7 @@ class UserViewModel : ViewModel() {
                 cookieStore.clearCookies()
                 _logoutEvent.emit(Unit)
             } catch (e: Exception) {
-                Log.d("user", "Error while logout.")
+                Log.d("error", "Error while logout.")
             }
         }
     }
