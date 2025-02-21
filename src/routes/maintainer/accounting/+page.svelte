@@ -274,9 +274,13 @@
 		//let availabilities = data.availabilities;
 		//availabilities.sort(compareDateAvailibility);
 		for (let avail of data.availabilities) {
-			// was wenn die Tour über den Tag drüber geht?
 			if(avail.start_time.getTime() === day.getTime())
 			// frage: wenn eine tour eingetragen wird wird die availability automatsich eingetragen?
+
+			//merge avaiabilities funktion
+			//schlechte idee cap in db -> weil überschneidbar und über tagesgrenze hinaus
+			//umarbeiten
+			 
 			{
 				console.log("capSum: %d", avail.vehicle);
 				capSumPerDay[avail.vehicle] += avail.cap;
@@ -360,7 +364,6 @@
 			if(thisDay.getTime() !== row.from.getTime())
 			{
 				daySum = computeDayCost(oneDayTours, thisDay);
-				// -- pro vehicle aber eine Summe anzeigen?
 				data.push(['Summe Tag', thisDay.toLocaleString('de-DE').slice(0, -10), '', '', '', getEuroString(daySum)]);
 				thisDay = row.from;
 				daySum = 0;
