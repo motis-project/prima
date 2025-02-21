@@ -4,6 +4,7 @@ import type { Coordinates } from '$lib/util/Coordinates';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import type { Capacities } from '$lib/server/booking/Capacities';
 import { db } from '$lib/server/db';
+import type { BusStop } from './server/booking/BusStop';
 
 export enum Zone {
 	NIESKY = 1,
@@ -183,3 +184,26 @@ export const selectEvents = async () => {
 		])
 		.execute();
 };
+
+export function assertArraySizes<T>(
+	response: T[][],
+	request: BusStop[],
+	caller: string,
+	checkForUndefined: boolean
+): void {
+	console.assert(response.length === request.length, 'Array size mismatch in ' + caller);
+	for (let i = 0; i != response.length; ++i) {
+		console.assert(
+			response[i].length === request[i].times.length,
+			'Array size mismatch in ' + caller
+		);
+		if (checkForUndefined) {
+			for (let j = 0; j != response[i].length; ++j) {
+				console.assert(
+					response[i][j] != null && response[i][j] != undefined,
+					'Undefined in ' + caller
+				);
+			}
+		}
+	}
+}

@@ -10,7 +10,6 @@
 {#if msg}
 	<Alert.Root class={className} variant={msg.type === 'success' ? 'default' : 'destructive'}>
 		<CircleAlert class="size-4" />
-		<Alert.Title>{msg.type == 'success' ? 'Erfolg!' : 'Fehler!'}</Alert.Title>
 		<Alert.Description>
 			<!-- eslint-disable svelte/no-at-html-tags -->
 			{@html t.msg[msg.text]}
