@@ -2,7 +2,7 @@
 
 import { render } from 'svelte/server';
 import { convert } from 'html-to-text';
-import { EMAIL_SENDER, SCW_DEFAULT_PROJECT_ID, SCW_SECRET_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { PUBLIC_PROVIDER } from '$env/static/public';
 
 export type EmailContent = {
@@ -27,13 +27,13 @@ async function send(subject: string, email: string, content: EmailContent) {
 		headers: {
 			Accept: 'application/json',
 			'Content-Type': 'application/json',
-			'X-Auth-Token': SCW_SECRET_KEY
+			'X-Auth-Token': env.SCW_SECRET_KEY
 		},
 		body: JSON.stringify({
-			project_id: SCW_DEFAULT_PROJECT_ID,
+			project_id: env.SCW_DEFAULT_PROJECT_ID,
 			from: {
 				name: PUBLIC_PROVIDER,
-				email: EMAIL_SENDER
+				email: env.EMAIL_SENDER
 			},
 			to: [{ email }],
 			subject,
