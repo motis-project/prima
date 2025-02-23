@@ -10,6 +10,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const journey = await db
 		.selectFrom('journey')
 		.innerJoin('request', 'journey.request1', 'request.id')
+		.innerJoin('event', 'event.request', 'request.id')
+		.orderBy('event.communicatedTime', 'asc')
 		.select([
 			'json',
 			'request.passengers',
@@ -18,10 +20,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			'request.cancelled',
 			'request.ticketCode',
 			'request.customer',
-			'request.id as requestId'
+			'request.id as requestId',
+			'event.communicatedTime'
 		])
 		.where('journey.id', '=', parseInt(params.slug))
 		.where('user', '=', locals.session!.userId!)
+		.limit(1)
 		.executeTakeFirst();
 
 	if (journey == undefined) {
