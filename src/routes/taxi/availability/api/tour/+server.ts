@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { sql } from 'kysely';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
-import { getEventLatestTime } from '$lib/util/getScheduledEventTime';
+import { getLatestEventTime } from '$lib/util/getLatestEventTime';
 
 export const POST = async (event) => {
 	const companyId = event.locals.session?.companyId;
@@ -62,9 +62,9 @@ export const POST = async (event) => {
 			'Found a request which contains no events.'
 		);
 		const events = movedTour.requests.flatMap((r) => r.events);
-		const firstEventTime = getEventLatestTime(
+		const firstEventTime = getLatestEventTime(
 			events.reduce(
-				(min, entry) => (getEventLatestTime(entry) < getEventLatestTime(min) ? entry : min),
+				(min, entry) => (getLatestEventTime(entry) < getLatestEventTime(min) ? entry : min),
 				events[0]
 			)
 		);
