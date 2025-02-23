@@ -5,3 +5,11 @@ export function getScheduledEventTime(ev: {
 }) {
 	return ev.isPickup ? ev.scheduledTimeEnd : ev.scheduledTimeStart;
 }
+
+export function getEventLatestTime(ev: {
+	communicatedTime: number;
+	scheduledTimeEnd: number;
+	scheduledTimeStart: number;
+}) {
+	return Math.max(...[ev.scheduledTimeStart, ev.scheduledTimeEnd, ev.communicatedTime]);
+}

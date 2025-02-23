@@ -1,6 +1,8 @@
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { sql } from 'kysely';
+import { jsonArrayFrom } from 'kysely/helpers/postgres';
+import { getEventLatestTime } from '$lib/util/getScheduledEventTime';
 
 export const POST = async (event) => {
 	const companyId = event.locals.session?.companyId;
@@ -29,9 +31,44 @@ export const POST = async (event) => {
 					)
 				])
 			)
-			.selectAll()
+			.select((eb) => [
+				'tour.departure',
+				'tour.arrival',
+				jsonArrayFrom(
+					eb
+						.selectFrom('request')
+						.whereRef('tour.id', '=', 'request.tour')
+						.select((eb) => [
+							jsonArrayFrom(
+								eb
+									.selectFrom('event')
+									.whereRef('event.request', '=', 'request.id')
+									.select([
+										'event.scheduledTimeStart',
+										'event.scheduledTimeEnd',
+										'event.communicatedTime'
+									])
+							).as('events')
+						])
+				).as('requests')
+			])
 			.executeTakeFirst();
 		if (!movedTour) {
+			return;
+		}
+		console.assert(movedTour.requests.length != 0, 'Found a tour which contains no requests.');
+		console.assert(
+			!movedTour.requests.some((r) => r.events.length == 0),
+			'Found a request which contains no events.'
+		);
+		const events = movedTour.requests.flatMap((r) => r.events);
+		const firstEventTime = getEventLatestTime(
+			events.reduce(
+				(min, entry) => (getEventLatestTime(entry) < getEventLatestTime(min) ? entry : min),
+				events[0]
+			)
+		);
+		if (firstEventTime < Date.now()) {
 			return;
 		}
 		const collidingTours = await trx
