@@ -10,8 +10,8 @@
 
 	<p>Es wurde eine neue Buchung angenommen:</p>
 
+	Fahrt:
 	<ul>
-		Fahrt:
 		<li>Geplanter Start: {new Date(departure).toLocaleDateString('de')}</li>
 		<li>Geplanter Ankunft: {new Date(arrival).toLocaleDateString('de')}</li>
 	</ul>

@@ -8,10 +8,12 @@
 
 	let {
 		isAdmin,
-		tours
+		tours,
+		selectedTourId
 	}: {
 		isAdmin: boolean;
 		tours: Tours;
+		selectedTourId?: number;
 	} = $props();
 
 	let selectedTour = $state<{
@@ -24,6 +26,15 @@
 		tour.events.forEach((e: TourEvent) => customers.add(e.customer));
 		return customers.size;
 	};
+
+	$effect(() => {
+		if (selectedTourId != undefined) {
+			const tour = tours.find((t) => t.tourId === selectedTourId);
+			if (tour) {
+				selectedTour.tours = [tour];
+			}
+		}
+	});
 </script>
 
 <Panel title={t.menu.completedTours} subtitle={t.admin.completedToursSubtitle}>
