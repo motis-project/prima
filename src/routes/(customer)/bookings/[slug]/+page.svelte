@@ -68,8 +68,7 @@
 								<AlertDialog.Cancel>{t.booking.noCancel}</AlertDialog.Cancel>
 								<form method="post" use:enhance>
 									<input type="hidden" name="requestId" value={data.requestId} />
-									<input type="hidden" name="customerId" value={data.customer} />
-									<AlertDialog.Action type="submit">
+									<AlertDialog.Action>
 										{t.booking.cancelTrip}
 									</AlertDialog.Action>
 								</form>

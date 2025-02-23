@@ -375,7 +375,7 @@ END;
 $$ LANGUAGE plpgsql;
 `.execute(db);
 
-await sql`
+	await sql`
 CREATE OR REPLACE FUNCTION create_and_merge_tours(
 	p_request request_type,
 	p_event1 event_type,
@@ -412,14 +412,35 @@ END;
 $$ LANGUAGE plpgsql;
 `.execute(db);
 
-await sql`
+	await sql`
 CREATE OR REPLACE PROCEDURE cancel_request(
-	p_request_id INTEGER
+	p_request_id INTEGER,
+	p_user_id INTEGER,
+	p_now BIGINT
 ) AS $$
 DECLARE
 	v_tour_id INTEGER;
 	v_all_requests_cancelled BOOLEAN;
 BEGIN
+	IF NOT EXISTS (
+	    SELECT 1
+			FROM request r
+	    WHERE r.customer = p_user_id
+			AND r.id = p_request_id
+	) THEN
+	    RETURN;
+	END IF;
+
+	IF (
+		SELECT communicated_time
+		FROM request r
+		JOIN event e ON r.id = e.request
+		ORDER BY e.communicated_time ASC
+		LIMIT 1
+	) <= p_now THEN
+		RETURN;
+	END IF;
+
 	UPDATE request r
 	SET cancelled = true
 	WHERE r.id = p_request_id;
@@ -445,7 +466,7 @@ END;
 $$ LANGUAGE plpgsql;
 `.execute(db);
 
-await sql`
+	await sql`
 CREATE OR REPLACE PROCEDURE cancel_tour(
 	p_tour_id INTEGER,
 	p_company_id INTEGER,
