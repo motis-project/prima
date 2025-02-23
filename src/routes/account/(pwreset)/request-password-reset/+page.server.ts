@@ -43,8 +43,8 @@ export const actions: Actions = {
 		}
 
 		try {
-			await sendMail(PasswordReset, 'Email Verification', email, {
-				code: user.emailVerificationCode,
+			await sendMail(PasswordReset, 'Passwort zurücksetzen', email, {
+				code: user.passwordResetCode,
 				name: user.name,
 				email
 			});
@@ -52,6 +52,6 @@ export const actions: Actions = {
 			return fail(500, { msg: msg('failedToSendVerificationEmail'), email });
 		}
 
-		return redirect(302, '/reset-password');
+		return redirect(302, '/account/reset-password');
 	}
 };
