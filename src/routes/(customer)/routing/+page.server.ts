@@ -6,6 +6,8 @@ import { sql } from 'kysely';
 import { insertRequest } from '../../api/booking/query';
 import { msg, type Msg } from '$lib/msg';
 import { redirect } from '@sveltejs/kit';
+import { sendMail } from '$lib/server/sendMail';
+import NewRide from '$lib/server/email/NewRide.svelte';
 
 const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 	for (const e of l1) {
@@ -223,6 +225,29 @@ export const actions = {
 					.returning('id')
 					.executeTakeFirstOrThrow()
 			).id;
+
+			console.log('SENDING EMAIL TO TAXI OWNERS');
+			try {
+				const rideInfo = await db
+					.selectFrom('request')
+					.innerJoin('tour', 'request.tour', 'tour.id')
+					.innerJoin('vehicle', 'tour.vehicle', 'vehicle.id')
+					.innerJoin('user', 'vehicle.company', 'user.companyId')
+					.select([
+						'user.email',
+						'user.name',
+						'tour.departure',
+						'tour.arrival',
+						'tour.id as tourId'
+					])
+					.where('request.id', '=', request1!)
+					.where('user.isTaxiOwner', '=', true)
+					.execute();
+				await Promise.all(rideInfo.map((r) => sendMail(NewRide, 'Neue Beförderung', r.email, r)));
+			} catch {
+				/* nothing we can do about this */
+			}
+
 			return redirect(302, `/bookings/${id}`);
 		}
 
