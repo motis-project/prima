@@ -83,15 +83,8 @@ class ToursViewModel : ViewModel() {
         refreshTours()
     }
 
-    fun reset() {
-        displayDate = mutableStateOf(LocalDate.now())
-        tours = mutableStateOf(emptyList())
-        showAllTours = mutableStateOf(false)
-    }
-
     fun fetchTours() {
         val today = displayDate.value
-        Log.d("test", today.toString())
         val tomorrow = today.plusDays(1)
         val start = today.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val end = tomorrow.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -179,7 +172,7 @@ fun Tours(
                 .fillMaxSize()
                 .padding(contentPadding)
         ) {
-            DateSelect(navController, viewModel)
+            DateSelect(viewModel)
             VehicleInfo(userViewModel)
             ShowTours(tours = toursPast + toursFuture, navController = navController)
         }
@@ -206,17 +199,15 @@ fun VehicleInfo(
 
 @Composable
 fun DateSelect(
-    navController: NavController,
     viewModel: ToursViewModel
 ) {
+    val date by remember { mutableStateOf(viewModel.displayDate) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.Center
     ) {
-        val date by remember {
-            mutableStateOf(viewModel.displayDate)
-        }
         Box(
             modifier = Modifier
                 .padding(all = 6.dp),
@@ -227,6 +218,7 @@ fun DateSelect(
                     date.value = date.value.minusDays(1)
                     viewModel.displayDate = date
                     viewModel.showAllTours.value = true
+                    viewModel.fetchTours()
                 },
                 Modifier
                     .background(color = Color.Transparent)
@@ -260,6 +252,7 @@ fun DateSelect(
                     date.value = date.value.plusDays(1)
                     viewModel.displayDate = date
                     viewModel.showAllTours.value = true
+                    viewModel.fetchTours()
                 },
                 Modifier
                     .background(color = Color.Transparent)
