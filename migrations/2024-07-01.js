@@ -435,6 +435,7 @@ BEGIN
 		SELECT communicated_time
 		FROM request r
 		JOIN event e ON r.id = e.request
+		WHERE r.id = p_request_id
 		ORDER BY e.communicated_time ASC
 		LIMIT 1
 	) <= p_now THEN

@@ -25,8 +25,8 @@ describe('tests for cancelling requests', () => {
 		const e1 = await setEvent(r, Date.now() + 7200, true, 1, 1);
 		const e2 = await setEvent(r, Date.now() + 7200, false, 1, 1);
 		const r2 = (await setRequest(t!.id, u.id, '')).id;
-		await setEvent(r2, 0, true, 1, 1);
-		await setEvent(r2, 0, false, 1, 1);
+		await setEvent(r2, Date.now() + 7200, true, 1, 1);
+		await setEvent(r2, Date.now() + 7200, false, 1, 1);
 
 		await cancelRequest(r, u.id);
 		const events = await selectEvents();

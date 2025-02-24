@@ -108,7 +108,7 @@ export const setEvent = async (
 				address: '',
 				cancelled: false
 			})
-			.returning('id')
+			.returning('event.id')
 			.executeTakeFirstOrThrow()
 	).id;
 };
