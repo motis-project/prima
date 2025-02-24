@@ -3,6 +3,7 @@ package de.motis.prima
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -289,9 +290,10 @@ fun ShowTours(tours: List<Tour>, navController: NavController) {
                     .fillMaxSize()
             ) {
                 items(items = tours, itemContent = { tour ->
-                    ConstraintLayout(/*modifier = Modifier.clickable {
-                        navController.navigate("tour/${tour.tourId}")
-                    }*/) {
+                    ConstraintLayout(modifier = Modifier.clickable {
+                        //navController.navigate("tour/${tour.tourId}")
+                        navController.navigate("taxameter/${tour.tourId}")
+                    }) {
                         var city = "-"
                         var displayTime = "-"
                         try {

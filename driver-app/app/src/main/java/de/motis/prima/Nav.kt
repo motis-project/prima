@@ -49,5 +49,10 @@ fun Nav(
         composable(route = "tours") {
             Tours(navController, userViewModel)
         }
+
+        composable(route = "taxameter/{tourId}") {
+            val tourId = it.arguments?.getString("tourId")?.toInt()
+            Taxameter(navController, userViewModel, tourId!!)
+        }
     }
 }
