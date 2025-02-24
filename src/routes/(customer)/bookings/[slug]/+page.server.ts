@@ -40,14 +40,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 export const actions = {
 	default: async ({ request, locals }): Promise<{ msg: Msg }> => {
-		const user = locals.session?.userId;
 		const formData = await request.formData();
-		const customer = readInt(formData.get('customerId'));
-		if (!user || user != customer) {
-			return { msg: msg('accountDoesNotExist') };
-		}
 		const requestId = readInt(formData.get('requestId'));
-		await cancelRequest(requestId);
-		return { msg: msg('requestCancelled') };
+		await cancelRequest(requestId, locals.session!.userId!);
+		return { msg: msg('requestCancelled', 'success') };
 	}
 };
