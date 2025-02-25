@@ -7,18 +7,19 @@
 	import Label from '$lib/shadcn/label/label.svelte';
 	import { onMount } from 'svelte';
 	import { getLocalTimeZone, today, CalendarDate } from '@internationalized/date';
-	import { RangeCalendar } from '$lib/shadcn/range-calendar/index';
 	import { paginate, setCurrentPages } from '$lib/Paginate';
 	import Papa from 'papaparse';
 	import pkg from 'file-saver';
 	import Paginate from '$lib/paginate.svelte';
 	import type { Tour, Tours } from '$lib/server/db/getTours';
 	import { FIXED_PRICE } from '$lib/constants.js';
-	import { Tabs } from '$lib/shadcn/tabs';
+	import Tabs from '$lib/ui/tabs.svelte';
 
 	const { data } = $props();
 
 	const { saveAs } = pkg;
+
+	const thisYear = new Date(Date.now()).getFullYear();
 
 	const getCustomerCount = (tour: Tour) => {
 		let customers = new Set<number>();
@@ -36,7 +37,8 @@
 		return ((price ?? 0) / 100).toFixed(2);
 	};
 
-	let currentRows: Tour[] = [];
+	let currentRowsToursTable: Tour[] = [];
+	let currentRowsSubtractionsTable: Tour[] = [];
 	let perPage = 5;
 	let firstPage = data.tours.slice(0, perPage);
 	let firstarray = [firstPage];
@@ -47,9 +49,9 @@
 	}>({ page: 0, currentPageRows: firstPage, totalPages: firstarray });
 
 	onMount(() => {
-		currentRows = data.tours;
-		paginationInfo.totalPages = paginate(perPage, currentRows);
-		setCompanys(currentRows);
+		currentRowsToursTable = data.tours;
+		paginationInfo.totalPages = paginate(perPage, currentRowsToursTable);
+		setCompanys(currentRowsToursTable);
 	});
 
 	// --- Sort: ---
@@ -58,28 +60,28 @@
 	const sortColumn = (idx: number) => {
 		switch (idx) {
 			case 0: {
-				currentRows.sort((a, b) => a.startTime - b.startTime);
+				currentRowsToursTable.sort((a, b) => a.startTime - b.startTime);
 				break;
 			}
 			case 1: {
-				currentRows.sort((a, b) => getTourCost(a) - getTourCost(b));
+				currentRowsToursTable.sort((a, b) => getTourCost(a) - getTourCost(b));
 				break;
 			}
 			case 2: {
-				currentRows.sort((a, b) => (a.fare ?? 0) - (b.fare ?? 0));
+				currentRowsToursTable.sort((a, b) => (a.fare ?? 0) - (b.fare ?? 0));
 			}
 			default:
 				return;
 		}
 		if (!descending[idx]) {
-			currentRows.reverse();
+			currentRowsToursTable.reverse();
 		} else {
 			for (let i = 0; i < descending.length; i++) {
 				if (i != idx) descending[i] = true;
 			}
 		}
 		descending[idx] = !descending[idx];
-		paginationInfo.totalPages = paginate(perPage, currentRows);
+		paginationInfo.totalPages = paginate(perPage, currentRowsToursTable);
 		paginationInfo.page = 0;
 		paginationInfo.currentPageRows = setCurrentPages(
 			paginationInfo.page,
@@ -102,6 +104,79 @@
 		}
 	};
 
+	let selectedTimespan = $state('Zeitraum');
+	let selectedYear = $state('Jahr');
+	let timespans = [
+		'Quartal 1',
+		'Quartal 2',
+		'Quartal 3',
+		'Quartal 4',
+		'ganzes Jahr'
+	];
+
+	const filter = () => {
+		const getNewRows = () => {
+			const isMonthOk = (time: string, month: number) => {
+				let result = false;
+				switch (time) {
+					case 'Quartal 1':
+						result = month == 0 || month == 1 || month == 2;
+						break;
+					case 'Quartal 2':
+						result = month == 3 || month == 4 || month == 5;
+						break;
+					case 'Quartal 3':
+						result = month == 6 || month == 7 || month == 8;
+						break;
+					case 'Quartal 4':
+						result = month == 9 || month == 10 || month == 11;
+						break;
+					default:
+						result = true;
+				}
+				return result;
+			};
+
+			const comp = selectedCompany != 'Unternehmen';
+			const time = selectedTimespan != 'Zeitraum';
+			const span = range.end == end && range.start == start ? false : true;
+			let newrows: Tour[] = [];
+			const currentDate = new Date();
+			let year = currentDate.getFullYear();
+			const targetYear = selectedTimespan === 'Letztes Jahr' ? year - 1 : year;
+			for (let row of data.tours) {
+				if (time && timespans.find((str) => str === selectedTimespan) == undefined) {
+					newrows = data.tours;
+					break;
+				}
+				const d = new Date(row.startTime);
+				let rowDate: CalendarDate = new CalendarDate(
+					d.getFullYear(),
+					d.getMonth() + 1,
+					d.getDate()
+				);
+				if (
+					(time &&
+						new Date(row.startTime).getFullYear() == targetYear &&
+						isMonthOk(selectedTimespan, new Date(row.startTime).getMonth())) ||
+					(span && rowDate.compare(range.start) >= 0 && rowDate.compare(range.end) <= 0) ||
+					(comp && !span && !time)
+				) {
+					if (!comp || (comp && row.companyName == selectedCompany)) {
+						newrows.push(row);
+					}
+				}
+			}
+			if (!span && !comp && !time) {
+				newrows = data.tours;
+			}
+			return newrows;
+		}
+
+		currentRowsToursTable = getNewRows();
+		restore();
+	};
+
 	const restore = () => {
 		selectedTimespan = 'Zeitraum';
 		selectedCompany = 'Unternehmen';
@@ -109,90 +184,8 @@
 		start = today(getLocalTimeZone());
 		end = start.add({ days: 7 });
 		range = { start, end };
-		currentRows = data.tours;
-		paginationInfo.totalPages = paginate(perPage, currentRows);
-		paginationInfo.page = 0;
-		paginationInfo.currentPageRows = setCurrentPages(
-			paginationInfo.page,
-			paginationInfo.totalPages
-		);
-	};
-
-	let selectedTimespan = $state('Zeitraum');
-	let timespans = [
-		'Quartal 1',
-		'Quartal 2',
-		'Quartal 3',
-		'Quartal 4',
-		'Aktuelles Jahr',
-		'Letztes Jahr'
-	];
-
-	const filter = (
-		comp: boolean,
-		time: boolean,
-		span: boolean,
-		selectedCompany: string,
-		selectedTime: string
-	) => {
-		let newrows: Tour[] = [];
-		const currentDate = new Date();
-		let year = currentDate.getFullYear();
-		const isMonthOk = (time: string, month: number) => {
-			let result = false;
-			switch (time) {
-				case 'Quartal 1':
-					result = month == 0 || month == 1 || month == 2;
-					break;
-				case 'Quartal 2':
-					result = month == 3 || month == 4 || month == 5;
-					break;
-				case 'Quartal 3':
-					result = month == 6 || month == 7 || month == 8;
-					break;
-				case 'Quartal 4':
-					result = month == 9 || month == 10 || month == 11;
-					break;
-				default:
-					result = true;
-			}
-			return result;
-		};
-		const targetYear = selectedTime === 'Letztes Jahr' ? year - 1 : year;
-		for (let row of data.tours) {
-			if (time && timespans.find((str) => str === selectedTime) == undefined) {
-				newrows = data.tours;
-				break;
-			}
-			const d = new Date(row.startTime);
-			let rowDate: CalendarDate = new CalendarDate(
-				d.getFullYear(),
-				d.getMonth() + 1,
-				d.getDate()
-			);
-			if (
-				(time &&
-					new Date(row.startTime).getFullYear() == targetYear &&
-					isMonthOk(selectedTime, new Date(row.startTime).getMonth())) ||
-				(span && rowDate.compare(range.start) >= 0 && rowDate.compare(range.end) <= 0) ||
-				(comp && span == false && time == false)
-			) {
-				if (!comp || (comp && row.companyName == selectedCompany)) {
-					newrows.push(row);
-				}
-			}
-		}
-		if (span == false && comp == false && time == false) {
-			newrows = data.tours;
-		}
-		prepareFilterString();
-		selectedTimespan = 'Zeitraum';
-		selectedCompany = 'Unternehmen';
-		start = today(getLocalTimeZone());
-		end = start.add({ days: 7 });
-		range = { start, end };
-		currentRows = newrows;
-		paginationInfo.totalPages = paginate(perPage, currentRows);
+		currentRowsToursTable = data.tours;
+		paginationInfo.totalPages = paginate(perPage, currentRowsToursTable);
 		paginationInfo.page = 0;
 		paginationInfo.currentPageRows = setCurrentPages(
 			paginationInfo.page,
@@ -286,15 +279,95 @@
 		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 		saveAs(blob, filename);
 	};
+
+	let items = [
+    { label: "pro Tour",
+		 value: 1,
+		 component: tourTable
+		},
+    { label: "pro Tag",
+		 value: 2,
+		 component: subtractionTable
+		}
+  ];
 </script>
 
+{#snippet tourTable()}
+	<Table.Root>
+		<Table.Header>
+			<Table.Row>
+				<Table.Head class="mt-6.5">Unternehmen</Table.Head>
+				<Table.Head class="mt-6.5">
+					<Button class="whitespace-pre" variant="outline" onclick={() => sortColumn(0)}>
+						{'Abfahrt  '}
+						<ChevronsUpDown class="h-6 w-4" />
+					</Button>
+				</Table.Head>
+				<Table.Head class="mt-6.5">Ankunft</Table.Head>
+				<Table.Head class="mt-6.5 text-center">Anzahl Kunden</Table.Head>
+				<Table.Head class="mt-6.5 text-center">
+					<Button class="whitespace-pre" variant="outline" onclick={() => sortColumn(1)}>
+						{'Taxameterpreis  '}
+						<ChevronsUpDown class="h-6 w-4" />
+					</Button>
+				</Table.Head>
+				<Table.Head class="mt-6.5 text-center">
+					<Button class="whitespace-pre" variant="outline" onclick={() => sortColumn(2)}>
+						{'Kosten  '}
+						<ChevronsUpDown class="h-6 w-4" />
+					</Button>
+				</Table.Head>
+			</Table.Row>
+		</Table.Header>
+		<Table.Body>
+			{#each paginationInfo.currentPageRows as tour}
+				<Table.Row>
+					<Table.Cell>{tour.companyName}</Table.Cell>
+					<Table.Cell>{new Date(tour.startTime).toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
+					<Table.Cell>{new Date(tour.endTime).toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
+					<Table.Cell class="text-center">{getCustomerCount(tour)}</Table.Cell>
+					<Table.Cell class="text-center">{getEuroString(tour.fare)} €</Table.Cell>
+					<Table.Cell class="text-center">{getEuroString(getTourCost(tour))} €</Table.Cell>
+				</Table.Row>
+			{/each}
+		</Table.Body>
+	</Table.Root>
+{/snippet}
+
+{#snippet subtractionTable()}
+	<Table.Root>
+		<Table.Header>
+			<Table.Row>
+				<Table.Head class="mt-6.5">Unternehmen</Table.Head>
+				<Table.Head class="mt-6.5">Tag</Table.Head>
+				<Table.Head class="mt-6.5 text-center">
+					<Button class="whitespace-pre" variant="outline" onclick={() => sortColumn(1)}>
+						{'Taxameterpreis kumuliert '}
+						<ChevronsUpDown class="h-6 w-4" />
+					</Button>
+				</Table.Head>
+				<Table.Head class="mt-6.5 text-center">
+					<Button class="whitespace-pre" variant="outline" onclick={() => sortColumn(2)}>
+						{'Abzüge  '}
+						<ChevronsUpDown class="h-6 w-4" />
+					</Button>
+				</Table.Head>
+			</Table.Row>
+		</Table.Header>
+		<Table.Body>
+			{#each paginationInfo.currentPageRows as tour}
+				<Table.Row>
+					<Table.Cell>{tour.companyName}</Table.Cell>
+					<Table.Cell>tac</Table.Cell>
+					<Table.Cell class="text-center">{getEuroString(tour.fare)} €</Table.Cell>
+					<Table.Cell class="text-center">{getEuroString(getTourCost(tour))} €</Table.Cell>
+				</Table.Row>
+			{/each}
+		</Table.Body>
+	</Table.Root>
+{/snippet}
+
 <div>
-	<Tabs>
-		<Tabs.List class="grid w-full grid-cols-2">
-		  <Tabs.Trigger value="account">Account</Tabs.Trigger>
-		  <Tabs.Trigger value="password">Password</Tabs.Trigger>
-		</Tabs.List>
-	</Tabs>
 	<Card.Header>
 		<Card.Title>Abrechnung</Card.Title>
 	</Card.Header>
@@ -327,7 +400,6 @@
 				<div class="grid grid-cols-2 items-center gap-4">
 					<Label for="timespan" class="text-left">Filter nach Zeitraum:</Label>
 					<select
-						name="months"
 						class={buttonVariants({ variant: 'outline' })}
 						bind:value={selectedTimespan}
 					>
@@ -338,22 +410,20 @@
 							</option>
 						{/each}
 					</select>
-				</div>
-				<div class="grid grid-cols-2 items-start gap-4">
-					<Label for="timespan" class="text-left">Filter nach beliebigem Zeitraum:</Label>
-					<RangeCalendar bind:value={range} />
+					<Label for="timespan" class="text-left">Filter nach Jahr:</Label>
+					<select
+						class={buttonVariants({ variant: 'outline' })}
+						bind:value={selectedYear}
+					>
+						<option selected={true} disabled>Jahr</option>
+						<option value={thisYear}>{thisYear.toString()}</option>
+						<option value={thisYear-1}>{(thisYear-1).toString()}</option>
+					</select>
 				</div>
 				<Dialog.Close class="text-right">
 					<Button
 						type="submit"
-						onclick={() =>
-							filter(
-								selectedCompany != 'Unternehmen',
-								selectedTimespan != 'Zeitraum',
-								range.end == end && range.start == start ? false : true,
-								selectedCompany,
-								selectedTimespan
-							)}
+						onclick={filter}
 					>
 						Filter anwenden
 					</Button>
@@ -364,7 +434,7 @@
 		<Dialog.Root>
 			<Dialog.Trigger
 				class={buttonVariants({ variant: 'outline' })}
-				onclick={() => summarize(currentRows)}
+				onclick={() => summarize(currentRowsToursTable)}
 			>
 				Summierung Kosten
 			</Dialog.Trigger>
@@ -418,7 +488,7 @@
 					</Table.Body>
 				</Table.Root>
 				<Dialog.Close class="text-right">
-					<Button type="submit" onclick={() => csvExport(currentRows, 'Abrechnung')}>
+					<Button type="submit" onclick={() => csvExport(currentRowsToursTable, 'Abrechnung')}>
 						CSV-Export starten
 					</Button>
 				</Dialog.Close>
@@ -426,46 +496,7 @@
 		</Dialog.Root>
 	</div>
 	<Card.Content class="h-full w-full">
-		<Table.Root>
-			<Table.Header>
-				<Table.Row>
-					<Table.Head class="mt-6.5">Unternehmen</Table.Head>
-					<Table.Head class="mt-6.5">
-						<Button class="whitespace-pre" variant="outline" onclick={() => sortColumn(0)}>
-							{'Abfahrt  '}
-							<ChevronsUpDown class="h-6 w-4" />
-						</Button>
-					</Table.Head>
-					<Table.Head class="mt-6.5">Ankunft</Table.Head>
-					<Table.Head class="mt-6.5 text-center">Anzahl Kunden</Table.Head>
-					<Table.Head class="mt-6.5 text-center">
-						<Button class="whitespace-pre" variant="outline" onclick={() => sortColumn(1)}>
-							{'Taxameterpreis  '}
-							<ChevronsUpDown class="h-6 w-4" />
-						</Button>
-					</Table.Head>
-					<Table.Head class="mt-6.5 text-center">
-						<Button class="whitespace-pre" variant="outline" onclick={() => sortColumn(2)}>
-							{'Kosten  '}
-							<ChevronsUpDown class="h-6 w-4" />
-						</Button>
-					</Table.Head>
-				</Table.Row>
-			</Table.Header>
-			<Table.Body>
-				{#each paginationInfo.currentPageRows as tour}
-					<Table.Row>
-						<Table.Cell>{tour.companyName}</Table.Cell>
-						<Table.Cell>{new Date(tour.startTime).toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
-						<Table.Cell>{new Date(tour.endTime).toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
-						<Table.Cell class="text-center">{getCustomerCount(tour)}</Table.Cell>
-						<Table.Cell class="text-center">{getEuroString(tour.fare)} €</Table.Cell>
-						<Table.Cell class="text-center">{getEuroString(getTourCost(tour))} €</Table.Cell>
-					</Table.Row>
-				{/each}
-			</Table.Body>
-		</Table.Root>
-
+		<Tabs {items} />
 		<Paginate bind:open={paginationInfo} />
 	</Card.Content>
 
