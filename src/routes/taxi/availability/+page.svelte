@@ -28,7 +28,7 @@
 	import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 	import type { LngLatLike } from 'maplibre-gl';
 
-	const { data, form } = $props();
+	const { data, form } = $props(); 
 
 	type Vehicle = NonNullable<typeof data.vehicles>[0];
 
@@ -299,6 +299,13 @@
 			return 'bg-yellow-100';
 		}
 	};
+
+	const heatmapColor = (cell: Range) => {
+		data.heatarray
+
+		return 'bg-yellow-100';
+	};
+	// inklusive oder exkulisve der eigenen Verfügbarkeiten?
 </script>
 
 <svelte:window onmouseup={() => selectionFinish()} />
@@ -395,6 +402,43 @@
 					{/each}
 				</tr>
 			{/each}
+			<tr>
+				<td
+					class="h-full pr-2 align-middle font-mono text-sm font-semibold leading-none tracking-tight"
+				>
+				<HoverCard.Root>
+					<HoverCard.Trigger>{"Auslastung"}</HoverCard.Trigger>
+					<HoverCard.Content>
+						Eine Heatmap, die die Verfügbarkeiten der anderen Taxiunternehmer anzeigt.
+						Farbcodierung: ...TODO...
+					</HoverCard.Content>
+				</HoverCard.Root>
+				</td>
+					{#each split(range, 60) as x}
+						<td>
+							<table class="w-full">
+								<tbody>
+									<tr>
+										{#each split(x, 15) as cell}
+											<td
+											>
+												<div
+													class={[
+														'w-8',
+														'h-8',
+														'border',
+														'rounded-md',
+														heatmapColor(cell)
+													].join(' ')}
+												></div>
+											</td>
+										{/each}
+									</tr>
+								</tbody>
+							</table>
+						</td>
+					{/each}
+				</tr>
 		</tbody>
 	</table>
 {/snippet}

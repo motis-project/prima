@@ -5,6 +5,7 @@ import type { Actions, RequestEvent } from './$types';
 import { fail } from '@sveltejs/kit';
 import { msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
+import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
 export async function load(event) {
 	const companyId = event.locals.session?.companyId;
@@ -56,9 +57,68 @@ export async function load(event) {
 		company.lat !== null &&
 		company.lng !== null;
 
+	// HEATMAP
+	const heatmapInfos = await db
+  		.selectFrom('availability')
+  		.innerJoin('vehicle', 'vehicle.id', 'availability.vehicle')
+		.where('startTime', '>', toTime.getTime())
+		.where('endTime', '<', fromTime.getTime())
+		.where('company', '!=', companyId)
+		.select(['availability.id','availability.startTime', 'availability.endTime', 'availability.vehicle', 'vehicle.company'])
+		.execute();
+
+	
+	type Range = {
+		startTime: UnixtimeMs;
+		endTime: UnixtimeMs;
+	};
+	type heatinfo = {
+		cell: Range;
+		heat: number;	
+	};
+	let heatarray: heatinfo[] = [];
+	const split = (range: Range, size: number): Array<Range> => {
+		let cells: Array<Range> = [];
+		let prev = new Date(range.startTime);
+		let t = new Date(range.startTime);
+		t.setMinutes(t.getMinutes() + size);
+		for (; t.getTime() <= range.endTime; t.setMinutes(t.getMinutes() + size)) {
+			cells.push({ startTime: prev.getTime(), endTime: t.getTime() });
+			prev = new Date(t);
+		}
+		return cells;
+	};
+	const isAInsideB = (rangeA: Range, Bstart: UnixtimeMs, Bend: UnixtimeMs) => {
+		return rangeA.startTime >= Bstart && rangeA.startTime < Bend && rangeA.endTime >= Bstart && rangeA.endTime <= Bend; 
+	};
+	let range: Range = {startTime: toTime.getTime(), endTime: fromTime.getTime()}; 
+	let hours = split(range, 60);
+	//let indexcount = 0;
+	let heatcount = 0;
+	for(let hour of hours)
+	{
+		let cell = split(hour, 15);
+		for(let onecell of cell) 
+		{
+			for(let heat of heatmapInfos) 
+			{
+				if(isAInsideB(onecell, heat.startTime, heat.endTime)) 
+				{
+					// das ist noch falsch! ich möchte in heatarray, die cell und die heat (akkumuliert von dem if) speichern, damit ich dann in page 
+					// sowohl die cellrange als auch die heat zahl habe
+					// wie muss die induzierung von heatarray aussehen?
+					heatarray[0] = {cell: onecell, heat: heatcount++}; // hier dann später Berechnung für gewichtete Summe einbauen
+				}
+			}
+			//indexcount++;
+		}
+		//indexcount++;
+	}
+
 	return {
 		tours: await tours,
 		vehicles: await vehicles,
+		heatarray,
 		utcDate,
 		companyDataComplete,
 		companyCoordinates: companyDataComplete
