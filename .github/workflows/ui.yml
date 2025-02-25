@@ -16,40 +16,54 @@ jobs:
     permissions: write-all
     env:
       DATABASE_URL: postgresql://postgres:pw@localhost:6500/prima
+      PUBLIC_MOTIS_URL: https://prima-motis.motis-project.de
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install Dependencies
-        run: npm install -f
+        run: pnpm install
 
       - name: Code Lint
-        run: npm run lint
+        run: pnpm run lint
 
       - name: Svelte Check
-        run: npm run check
+        run: pnpm run check
 
       - name: Install Playwright Dependencies
         run: npx playwright install
 
       - name: Integration Tests
         run: |
-          npm run build
-          docker compose build prima
-          docker compose up -d pg
+          docker compose down
+          docker compose pull motis-server pg
+          ./motis-import.sh
+          docker compose up -d motis-server pg
           sleep 5
-          echo "CREATE DATABASE prima;" | PGPASSWORD=pw psql postgresql://localhost:6500 --user postgres
+          ./setup-db.sh
           npx playwright test
 
       - name: Unit Tests
-        run: npm run test:unit
+        run: |
+          docker compose up -d pg
+          sleep 5
+          ./setup-db.sh
+          pnpm run dev &
+          pnpm run test:unit
+
+      - name: Shutdown
+        if: always()
+        run: docker compose down
 
       - name: Upload screenshots
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: screenshots
           path: screenshots/
+
+      - name: Release Build
+        run: pnpm run build
 
       - name: Docker setup-buildx
         uses: docker/setup-buildx-action@v3
@@ -93,7 +107,7 @@ jobs:
     steps:
       - name: Deploy
         run: |
-          cd /home/prima
+          cd /home/prima/prima-staging
           docker compose pull
           docker compose down
           docker compose up -d

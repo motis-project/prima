@@ -1,7 +1,5 @@
-import { type TourDetails } from '$lib/TourDetails.js';
-
 // return totalPages
-export function paginate(perPage: number, tours: TourDetails[]) {
+export function paginate<T>(perPage: number, tours: T[]) {
 	const pagesCount = Math.ceil(tours.length / perPage);
 	const paginatedItems = Array.from({ length: pagesCount }, (_, index) => {
 		const start = index * perPage;
@@ -16,7 +14,7 @@ export function isPageValid(p: number, length: number) {
 }
 
 // return currentPageRows
-export function setCurrentPages(p: number, totalPages: TourDetails[][]) {
+export function setCurrentPages<T>(p: number, totalPages: T[][]) {
 	if (isPageValid(p, totalPages.length)) {
 		return totalPages.length > 0 ? totalPages[p] : [];
 	}

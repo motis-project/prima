@@ -1,0 +1,180 @@
+import { CAP, OVER_CAP_FACTOR } from '$lib/constants';
+import type { VehicleId } from '$lib/server/booking/VehicleId';
+import { db } from '$lib/server/db';
+import { getTours, type Tour } from '$lib/server/db/getTours';
+import { groupBy } from '$lib/server/util/groupBy';
+import { Interval } from '$lib/server/util/interval';
+import { DAY, HOUR } from '$lib/util/time';
+import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
+
+type CompanyId = number;
+
+export const load = async () => {
+	function isLeapYear(year: number): boolean {
+		return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+  	}
+	
+	// accounting can display information for any individual day from this and the previous year.
+	// all other cost-related information are aggregates of these values
+
+	// selecting relevant information from these two years
+	const today = Math.floor(Date.now() / DAY) * DAY;
+	const year = new Date(today).getUTCFullYear();
+	const firstOfJanuaryLastYear = new Date(year - 1, 0, 1).getTime();
+	const i = new Interval(firstOfJanuaryLastYear, Math.floor(today / DAY) * DAY);
+	const availabilities = await db
+		.selectFrom('availability')
+		.where('availability.endTime', '>=', firstOfJanuaryLastYear)
+		.where('availability.startTime', '<=', today)
+		.select(['availability.vehicle as vehicleId', 'availability.startTime', 'availability.endTime'])
+		.execute();
+
+	const tours = (await getTours(false)).map((t) => {
+		return {
+			...t,
+			interval: new Interval(t.startTime, t.endTime)
+		};
+	});
+	tours.sort((t1, t2) => t1.startTime - t2.startTime);
+	const { companyCostsPerDay, companySubtractionsPerDay } = getCompanyCosts(today, firstOfJanuaryLastYear, availabilities, tours);
+	return {
+		tours: tours.map(({ interval, ...rest }) => rest),
+		firstOfJanuaryLastYear,
+		isLeapYear: isLeapYear(year),
+		lastIsLeapYear: isLeapYear(year - 1),
+		companyCostsPerDay,
+		companySubtractionsPerDay
+	};
+};
+
+function getCompanyCosts(today: UnixtimeMs, firstOfJanuaryLastYear: UnixtimeMs, availabilities:  {
+    endTime: number;
+    startTime: number;
+    vehicleId: number;
+}[], tours: (Tour & { interval: Interval })[]){
+	// create an array of intervals representing the individual days in the two relevant years
+	const days = Array.from(
+		{ length: Math.floor((today - firstOfJanuaryLastYear) / DAY) }, 
+		(_, i) => new Interval(firstOfJanuaryLastYear + DAY * i, firstOfJanuaryLastYear + DAY * (i + 1))
+	  );
+
+	// group Intervals by vehicle
+	const availabilitiesPerVehicle = groupBy(
+	  availabilities,
+	  (a) => a.vehicleId,
+	  (a) => new Interval(a.startTime, a.endTime)
+	);
+	// merge availabilities belonging to same vehicle
+	availabilitiesPerVehicle.forEach((availabilities, vehicle) =>
+		availabilitiesPerVehicle.set(vehicle, Interval.merge(availabilities))
+	);
+	// get list of all merged availabilities
+	const allAvailabilities = Array.from(availabilitiesPerVehicle).flatMap(([vehicleId, intervals]) =>
+		intervals.map((interval) => ({ vehicleId, interval }))
+	);
+	allAvailabilities.sort((a1, a2) => a1.interval.startTime - a2.interval.startTime);
+
+	// cumulate the total duration of availability on every relevant day for each vehicle
+	const availabilitiesPerDayAndVehicle = new Array<Map<VehicleId, number>>();
+	let availabilityIdx = 0;
+	let currentAvailability = allAvailabilities[0];
+	for (let d = 0; d != days.length; ++d) {
+		const day = days[d];
+		if(availabilityIdx == allAvailabilities.length) {
+			break;
+		}
+		while(currentAvailability.interval.endTime <= day.startTime) {
+			if(availabilityIdx == allAvailabilities.length) {
+				break;
+			}
+			currentAvailability = allAvailabilities[++availabilityIdx];
+		}
+		if(availabilityIdx == allAvailabilities.length) {
+			break;
+		}
+		availabilitiesPerDayAndVehicle[d] = new Map<VehicleId, number>();
+		const availabilityOnDay = days[d].intersect(currentAvailability.interval);
+		if (availabilityOnDay === undefined) {
+			continue;
+		}
+		availabilitiesPerDayAndVehicle[d].set(
+			currentAvailability.vehicleId,
+			(availabilitiesPerDayAndVehicle[d].get(currentAvailability.vehicleId) ?? 0) +
+				availabilityOnDay.getDurationMs()
+		);
+		currentAvailability = allAvailabilities[++availabilityIdx];
+	}
+
+	// cumulate the total taxameter readings on every relevant day for each vehicle
+	const taxameterPerDayAndVehicle = new Array<Map<VehicleId, number>>();
+	let tourIdx = 0;
+	let currentTour = tours[0];
+	for (let d = 0; d != days.length; ++d) {
+		taxameterPerDayAndVehicle[d] = new Map<VehicleId, number>();
+		if (!days[d].intersect(currentTour.interval)) {
+			continue;
+		}
+		taxameterPerDayAndVehicle[d].set(
+			currentTour.vehicleId,
+			(taxameterPerDayAndVehicle[d].get(currentTour.vehicleId) ?? 0) + (currentTour.fare ?? 0)
+		);
+		currentTour = tours[++tourIdx];
+	}
+
+	// compute the cost per vehicle and day, taking into account the daily cap based on the availability on the day
+	const costPerDayAndVehicle = new Array<Map<VehicleId, number>>();
+	for (let d = 0; d != days.length; ++d) {
+		costPerDayAndVehicle[d] = new Map<VehicleId, number>();
+		taxameterPerDayAndVehicle[d].forEach((vehicle, taxameter) => {
+			const costCap = ((availabilitiesPerDayAndVehicle[d]?.get(vehicle) ?? 0) * CAP) / HOUR;
+			const cost =
+				Math.min(costCap, taxameter) + Math.max(taxameter - costCap, 0) * OVER_CAP_FACTOR;
+			costPerDayAndVehicle[d].set(vehicle, cost);
+		});
+	}
+
+	const companyByVehicle = new Map<CompanyId, number>();
+	tours.forEach((t) => companyByVehicle.set(t.vehicleId, t.companyId));
+
+	// Store the daily (soft-capped) costs per day and company in a double array
+	const companyCostsPerDay = new Array<Map<CompanyId, number>>();
+	for (let d = 0; d != days.length; ++d) {
+		companyCostsPerDay[d] = new Map<CompanyId, number>();
+		if(costPerDayAndVehicle[d] === undefined) {
+			continue;
+		}
+		costPerDayAndVehicle[d].forEach((vehicle, cost) => {
+			const company = companyByVehicle.get(vehicle)!;
+			companyCostsPerDay[d].set(company, (companyCostsPerDay[d].get(company) ?? 0) + cost);
+		});
+	}
+	const companySubtractionsPerDay = new Array<Map<CompanyId, number>>();
+	for(let d=0;d!=days.length;++d) {
+		companySubtractionsPerDay[d] = new Map<CompanyId, number>();
+		if(availabilitiesPerDayAndVehicle[d] === undefined) {
+			continue;
+		}
+		availabilitiesPerDayAndVehicle[d].forEach((vehicle, availabilityDuration) => {
+			const company = companyByVehicle.get(vehicle)!;
+			companySubtractionsPerDay[d].set(company, (companyCostsPerDay[d].get(company) ?? 0) + availabilityDuration);
+		})
+	}
+	return {
+		companyCostsPerDay: companyCostsPerDay.map((companyCosts) =>
+			Array.from(companyCosts).map(([company, costs]) => {
+				return {
+					company,
+					costs
+				};
+			})
+		),
+		companySubtractionsPerDay: companySubtractionsPerDay.map((companySubtrations) =>
+			Array.from(companySubtrations).map(([company, subtractions]) => {
+				return {
+					company,
+					subtractions
+				};
+			})
+		)
+	}
+}

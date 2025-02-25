@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { type TourDetails } from '$lib/TourDetails.js';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import { ChevronsRight, ChevronsLeft } from 'lucide-svelte';
-	import { Button } from '$lib/components/ui/button';
-	import Label from '$lib/components/ui/label/label.svelte';
+	import { Button } from '$lib/shadcn/button';
+	import Label from '$lib/shadcn/label/label.svelte';
 	import { isPageValid, setCurrentPages } from '$lib/Paginate';
+	import type { Tour } from './server/db/getTours';
 
 	class Props {
 		open!: {
 			page: number;
-			currentPageRows: TourDetails[];
-			totalPages: TourDetails[][];
+			currentPageRows: Tour[];
+			totalPages: Tour[][];
 		};
 	}
 	const { open = $bindable() }: Props = $props();
@@ -26,7 +26,7 @@
 	{#if open.totalPages.length > 10}
 		<Button
 			variant="outline"
-			on:click={() => {
+			onclick={() => {
 				setPage(0);
 			}}
 		>
@@ -35,7 +35,7 @@
 		</Button>
 		<Button
 			variant="outline"
-			on:click={() => {
+			onclick={() => {
 				setPage(open.page - 1);
 			}}
 		>
@@ -44,7 +44,7 @@
 		</Button>
 		<Button
 			variant="outline"
-			on:click={() => {
+			onclick={() => {
 				setPage(open.page + 1);
 			}}
 		>
@@ -53,7 +53,7 @@
 		</Button>
 		<Button
 			variant="outline"
-			on:click={() => {
+			onclick={() => {
 				setPage(open.totalPages.length - 1);
 			}}
 		>
@@ -63,7 +63,7 @@
 	{:else}
 		<Button
 			variant="outline"
-			on:click={() => {
+			onclick={() => {
 				setPage(open.page - 1);
 			}}
 		>
@@ -73,7 +73,7 @@
 		{#each open.totalPages as _page, i}
 			<Button
 				variant="outline"
-				on:click={() => {
+				onclick={() => {
 					setPage(i);
 				}}
 			>
@@ -82,7 +82,7 @@
 		{/each}
 		<Button
 			variant="outline"
-			on:click={() => {
+			onclick={() => {
 				setPage(open.page + 1);
 			}}
 		>

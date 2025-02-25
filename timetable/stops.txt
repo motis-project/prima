@@ -1,0 +1,4 @@
+stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station,platform_code
+G-BHF,Görlitz Bhf,51.147678225443364,14.976624722989568,1,,
+S-BHF,Schleife Bhf,51.535517588668505,14.531007527403844,1,,
+S-BUS,Schleife Bus,51.54535471582166,14.533945541471137,1,,

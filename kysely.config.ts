@@ -10,7 +10,5 @@ export const dialect = new PostgresDialect({ pool });
 
 export default defineConfig({
 	dialect,
-	migrations: {
-		allowJS: true
-	}
+	migrations: { allowJS: true }
 });

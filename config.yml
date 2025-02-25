@@ -1,0 +1,36 @@
+server:
+  port: 6499
+  web_folder: /Users/felix/code/motis/ui/build
+osm: /Users/felix/osm.pbf
+tiles:
+  profile: /Users/felix/code/motis/deps/tiles/profile/full.lua
+  db_size: 274877906944
+  flush_threshold: 100000
+timetable:
+  first_day: TODAY
+  num_days: 365
+  railviz: true
+  with_shapes: true
+  ignore_errors: false
+  adjust_footpaths: true
+  merge_dupes_intra_src: false
+  merge_dupes_inter_src: false
+  link_stop_distance: 100
+  update_interval: 60
+  http_timeout: 10
+  incremental_rt_update: false
+  use_osm_stop_coordinates: false
+  extend_missing_footpaths: false
+  max_footpath_length: 15
+  datasets:
+    timetable:
+      path: timetable
+      default_bikes_allowed: false
+street_routing: true
+osr_footpath: false
+elevators: false
+geocoding: true
+reverse_geocoding: true
+odm:
+  url: http://localhost:5173
+  bounds: weisswasser.geojson
