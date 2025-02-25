@@ -4,6 +4,7 @@ import android.app.Application
 import android.graphics.ImageFormat
 import android.media.Image
 import android.util.Log
+import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
@@ -25,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -33,12 +35,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -47,9 +49,9 @@ import com.google.zxing.BinaryBitmap
 import com.google.zxing.LuminanceSource
 import com.google.zxing.NotFoundException
 import com.google.zxing.PlanarYUVLuminanceSource
+import com.google.zxing.Result
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.qrcode.QRCodeReader
-import com.google.zxing.Result
 import de.motis.prima.services.Api
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
@@ -76,7 +78,7 @@ class ScanViewModel : ViewModel() {
 
     private fun md5(input: String): String {
         val bytes = MessageDigest.getInstance("MD5").digest(input.toByteArray())
-        return bytes.joinToString("") { "%02x".format(it) } // Convert to hex string
+        return bytes.joinToString("") { "%02x".format(it) }
     }
 
     fun reportTicketScan(requestId: Int, ticketCode: String) {
@@ -111,7 +113,7 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun shutdownCamera() {
+    private fun shutdownCamera() {
         _cameraProvider.value?.unbindAll()
         cameraExecutor.shutdown()
     }
@@ -119,6 +121,74 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
     override fun onCleared() {
         super.onCleared()
         shutdownCamera()
+    }
+
+    @OptIn(ExperimentalGetImage::class)
+    private fun processImageProxy(imageProxy: ImageProxy, onQRCodeScanned: (String) -> Unit) {
+        val mediaImage: Image? = imageProxy.image
+
+        if (mediaImage == null || imageProxy.format != ImageFormat.YUV_420_888) {
+            imageProxy.close()
+            return
+        }
+
+        imageProxy.use { _ ->
+            val buffer = mediaImage.planes[0].buffer
+            val bytes = ByteArray(buffer.capacity())
+            buffer.get(bytes)
+            val source: LuminanceSource = PlanarYUVLuminanceSource(
+                bytes,
+                mediaImage.width,
+                mediaImage.height,
+                0,
+                0,
+                mediaImage.width,
+                mediaImage.height,
+                false
+            )
+
+            val result = QRCodeProcessor().processImage(source)
+            result?.text?.let { qrCodeText ->
+                imageProxy.close()
+                onQRCodeScanned(qrCodeText)
+            }
+        }
+    }
+
+    private fun setupQRCodeAnalyzer(
+        onQRCodeScanned: (String) -> Unit
+    ): ImageAnalysis {
+        return ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+            .apply {
+                setAnalyzer(cameraExecutor) { imageProxy: ImageProxy ->
+                    processImageProxy(imageProxy, onQRCodeScanned)
+                }
+            }
+    }
+
+    fun startCamera(
+        onQRCodeScanned: (String) -> Unit,
+        cameraProvider: ProcessCameraProvider,
+        lifecycleOwner: LifecycleOwner,
+        previewView: PreviewView
+    ) {
+        val preview = Preview.Builder()
+            .build()
+            .also {
+                it.surfaceProvider = previewView.surfaceProvider
+            }
+
+        val imageAnalysis = setupQRCodeAnalyzer(onQRCodeScanned)
+        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+        try {
+            cameraProvider.unbindAll()
+            cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview, imageAnalysis)
+        } catch (exc: Exception) {
+            exc.printStackTrace()
+        }
     }
 }
 
@@ -159,95 +229,35 @@ class QRCodeProcessor {
     }
 }
 
-@OptIn(ExperimentalGetImage::class)
-private fun processImageProxy(imageProxy: ImageProxy, onQRCodeScanned: (String) -> Unit) {
-    val mediaImage: Image? = imageProxy.image
-
-    if (mediaImage == null || imageProxy.format != ImageFormat.YUV_420_888) {
-        imageProxy.close()
-        return
-    }
-
-    imageProxy.use { _ ->
-        val buffer = mediaImage.planes[0].buffer
-        val bytes = ByteArray(buffer.capacity())
-        buffer.get(bytes)
-        val source: LuminanceSource = PlanarYUVLuminanceSource(
-            bytes,
-            mediaImage.width,
-            mediaImage.height,
-            0,
-            0,
-            mediaImage.width,
-            mediaImage.height,
-            false
-        )
-
-        val result = QRCodeProcessor().processImage(source)
-        result?.text?.let { qrCodeText ->
-            imageProxy.close()
-            onQRCodeScanned(qrCodeText)
-        }
-    }
-}
-
-private fun setupQRCodeAnalyzer(
-    onQRCodeScanned: (String) -> Unit,
-    cameraExecutor: ExecutorService
-): ImageAnalysis {
-    return ImageAnalysis.Builder()
-        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-        .build()
-        .apply {
-            setAnalyzer(cameraExecutor) { imageProxy: ImageProxy ->
-                processImageProxy(imageProxy, onQRCodeScanned)
-            }
-        }
-}
-
 @Composable
 fun QRCodeScanner(
     onQRCodeScanned: (String) -> Unit,
     cameraViewModel: CameraViewModel = viewModel()
 ) {
-    val cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val cameraProvider by cameraViewModel.cameraProvider.observeAsState(null)
 
-    cameraViewModel.initializeCamera()
+    LaunchedEffect(Unit) {
+        cameraViewModel.initializeCamera()
+    }
 
-    AndroidView(
-        onRelease = {cameraViewModel.shutdownCamera()},
-        factory = { ctx ->
-            val previewView = PreviewView(ctx)
-
-            val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
-            cameraProviderFuture.addListener({
-                val cameraProvider = cameraProviderFuture.get()
-
-                val preview = Preview.Builder()
-                    .build()
-                    .also {
-                        it.surfaceProvider = previewView.surfaceProvider
-                    }
-
-                val imageAnalysis = setupQRCodeAnalyzer(onQRCodeScanned, cameraExecutor)
-                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-                try {
-                    cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(
-                        (ctx as LifecycleOwner), cameraSelector, preview, imageAnalysis
+    if (cameraProvider != null) {
+        AndroidView(
+            factory = { ctx ->
+                val previewView = PreviewView(ctx).apply {
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
                     )
-                } catch (e: Exception) {
-                    Log.e("error", "QRCodeScanner: Binding failed", e)
                 }
-            }, ContextCompat.getMainExecutor(ctx))
-
-            previewView
-        },
-        modifier = Modifier
-            .height(200.dp)
-            .width(200.dp)
-    )
+                previewView
+            },
+            modifier = Modifier.fillMaxSize(),
+            update = { previewView ->
+                cameraViewModel.startCamera(onQRCodeScanned, cameraProvider!!, lifecycleOwner, previewView)
+            }
+        )
+    }
 }
 
 @Composable

@@ -76,6 +76,7 @@ dependencies {
     implementation(libs.mlkit.barcode.scanning)
 
     implementation(libs.play.services.location)
+    implementation(libs.androidx.runtime.livedata)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
