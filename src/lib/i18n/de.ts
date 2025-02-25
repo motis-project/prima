@@ -21,6 +21,7 @@ const translations: Translations = {
 		weakPassword: 'Bitte wähle ein stärkeres Passwort.',
 		tooManyRequests: 'Zu viele Anfragen.',
 		failedToSendVerificationEmail: 'E-Mail zur Verifikation konnte nicht gesendet werden.',
+		failedToSendPasswordResetEmail: 'E-Mail zum Passwortzurücksetzen konnte nicht gesendet werden.',
 		accountDoesNotExist: 'Nutzerkonto existiert nicht.',
 		invalidPassword: 'Ungültiges Passwort.',
 		new: 'Neu hier? <a href="/account/signup" class="link">Erstelle ein neues Nutzerkonto!</a>',
@@ -60,6 +61,9 @@ const translations: Translations = {
 		duplicateLicensePlate: 'Kennzeichen existiert bereits.',
 		vehicleAddedSuccessfully: 'Fahrzeug erfolgreich angelegt.',
 
+		//Request
+		requestCancelled: 'Fahrt storniert',
+
 		// Booking
 		noRouteFound: 'Keine Route gefunden.',
 		distanceTooLong: 'Distanz zu lang.',
@@ -74,7 +78,13 @@ const translations: Translations = {
 		bookingError: 'Die Fahrt konnte nicht gebucht werden.',
 		bookingError1: 'Erster Abschnitt konnte nicht gebucht werden.',
 		bookingError2: 'Zweiter Abschnitt konnte nicht gebucht werden.',
-		bookingSuccess: 'Buchung erfolgreich.'
+		bookingSuccess: 'Buchung erfolgreich.',
+
+		// Journey
+		cancelled: 'Diese Fahrt wurde storniert.',
+
+		// Feedback
+		feedbackThank: 'Vielen Dank für Ihr Feedback!'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',
@@ -107,6 +117,23 @@ const translations: Translations = {
 		resendCode: 'Code erneut senden',
 		verify: 'Verifizieren'
 	},
+	rating: {
+		good: 'gut',
+		bad: 'schlecht',
+		sendFeedback: 'Feedback abschicken'
+	},
+
+	atDateTime: (timeType, t: Date, isToday: boolean) =>
+		`${timeType === 'departure' ? 'Los um ' : 'Ankunft um '} ` +
+		t.toLocaleString('de', {
+			hour: '2-digit',
+			minute: '2-digit',
+			weekday: isToday ? undefined : 'short',
+			day: isToday ? undefined : '2-digit',
+			month: isToday ? undefined : '2-digit',
+			year: isToday ? undefined : '2-digit'
+		}),
+
 	journeyDetails: 'Verbindungsdetails',
 	transfers: 'Umstiege',
 	walk: 'Fußweg',
@@ -117,6 +144,7 @@ const translations: Translations = {
 	car: 'Auto',
 	taxi: 'Taxi',
 	moped: 'Moped',
+	odm: 'ÖPNV-Taxi - Buchung erforderlich!',
 	from: 'Von',
 	to: 'Nach',
 	arrival: 'Ankunft',
@@ -142,7 +170,40 @@ const translations: Translations = {
 	},
 	sharingProvider: 'Anbieter',
 	roundtripStationReturnConstraint:
-		'Das Fahrzeug muss wieder an der Abfahrtsstation abgestellt werden.'
+		'Das Fahrzeug muss wieder an der Abfahrtsstation abgestellt werden.',
+
+	bookingInfo: 'Buchungsangaben',
+	changeBookingInfo: 'Ändern Sie Ihre Such- und Buchungsangaben.',
+
+	booking: {
+		summary: 'Buchungszusammenfassung',
+		header: 'Kostenpflichtig buchen',
+		disclaimer:
+			'Stornieren Sie die Fahrt mind. 24h vorher, falls sie die Fahrt nicht wahrnehmen können. Sollten Sie nicht rechtzeitig stornieren wird Ihnen die Taxi-Fahrt voll in Rechnung gestellt.',
+		noLuggage: 'Kein Gepäck',
+		handLuggage: 'Handgepäck',
+		heavyLuggage: 'Schweres Gepäck',
+		foldableWheelchair: 'Faltbarer Rollstuhl',
+		withFoldableWheelchair: 'Mit faltbarem Rollstuhl',
+		bookingFor: (passengers: number) => {
+			switch (passengers) {
+				case 1:
+					return 'Buchung für eine Person';
+				default:
+					return `Buchung für ${passengers} Personen`;
+			}
+		},
+		totalPrice: 'Gesamptpreis (Bezahlung im Taxi)',
+		cancel: 'Stornieren',
+		loginToBook: 'Einloggen zum Buchen',
+		connection: 'Verbindung',
+		ticket: 'Ticket',
+		cancelTrip: 'Fahrt stornieren',
+		cancelHeadline: 'Möchten Sie wirklich diese Fahrt stornieren?',
+		noCancel: 'Nein, Fahrt nicht stornieren.',
+		cancelDescription:
+			'Die Stornierung der Fahrt kann nicht rückgängig gemacht werden. Eine Stornierung weniger als 24 Stunden vor der Fahrt ist mit Kosten verbunden.'
+	}
 };
 
 export default translations;

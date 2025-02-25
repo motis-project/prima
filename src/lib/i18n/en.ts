@@ -13,7 +13,7 @@ const translations: Translations = {
 	},
 	msg: {
 		// Unknown error
-		unkownError: 'Unbekannter Fehler',
+		unkownError: 'Unkown Error',
 
 		// Account
 		enterEmailAndPassword: 'Please enter your email and password.',
@@ -21,7 +21,8 @@ const translations: Translations = {
 		emailAlreadyRegistered: 'E-Mail already registered.',
 		weakPassword: 'Weak password.',
 		tooManyRequests: 'Too many requests.',
-		failedToSendVerificationEmail: 'Failed to send the verification e-mail',
+		failedToSendVerificationEmail: 'Failed to send the verification e-mail.',
+		failedToSendPasswordResetEmail: 'Failed to send the password reset email.',
 		accountDoesNotExist: 'Account does not exist.',
 		invalidPassword: 'Invalid password.',
 		new: 'New here? <a class="link" href="/account/signup">Create an account!</a>',
@@ -60,6 +61,9 @@ const translations: Translations = {
 		duplicateLicensePlate: 'Duplicate license plate.',
 		vehicleAddedSuccessfully: 'Vehicle added successfully.',
 
+		//Request
+		requestCancelled: 'Ride cancelled',
+
 		// Booking
 		noRouteFound: 'No route found.',
 		distanceTooLong: 'Distance too long.',
@@ -74,7 +78,13 @@ const translations: Translations = {
 		bookingError: 'The ride could not be booked.',
 		bookingError1: 'First section could not be booked.',
 		bookingError2: 'Last section could not be booked.',
-		bookingSuccess: 'Booking successful.'
+		bookingSuccess: 'Booking successful.',
+
+		// Journey
+		cancelled: 'This trip has been cancelled.',
+
+		// Feedback
+		feedbackThank: 'Thank you very much for your feedback!'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',
@@ -106,6 +116,23 @@ const translations: Translations = {
 		resendCode: 'Resend code',
 		verify: 'Verify'
 	},
+	rating: {
+		good: 'good',
+		bad: 'bad',
+		sendFeedback: 'Send feedback'
+	},
+
+	atDateTime: (timeType, t: Date, isToday: boolean) =>
+		`${timeType === 'departure' ? 'Depart at ' : 'Arrive at '} ` +
+		t.toLocaleString('en', {
+			hour: '2-digit',
+			minute: '2-digit',
+			weekday: isToday ? undefined : 'short',
+			day: isToday ? undefined : '2-digit',
+			month: isToday ? undefined : '2-digit',
+			year: isToday ? undefined : '2-digit'
+		}),
+
 	journeyDetails: 'Journey Details',
 	transfers: 'transfers',
 	walk: 'Walk',
@@ -116,6 +143,7 @@ const translations: Translations = {
 	car: 'Car',
 	taxi: 'Taxi',
 	moped: 'Moped',
+	odm: 'Public Transport Taxi, booking required!',
 	from: 'From',
 	to: 'To',
 	arrival: 'Arrival',
@@ -140,7 +168,40 @@ const translations: Translations = {
 		}
 	},
 	sharingProvider: 'Provider',
-	roundtripStationReturnConstraint: 'The vehicle must be returned to the departure station.'
+	roundtripStationReturnConstraint: 'The vehicle must be returned to the departure station.',
+
+	bookingInfo: 'Booking Information',
+	changeBookingInfo: 'Change your search options and booking information.',
+
+	booking: {
+		summary: 'Booking summary',
+		header: 'Book ride (incurs cost)',
+		disclaimer:
+			"Cancel your ride 24h early if you don't want to take it. In case you do not cancel your ride in time or don't show up, you are liable to pay the full costs of the taxi.",
+		noLuggage: 'No Luggage',
+		handLuggage: 'Light Luggage',
+		heavyLuggage: 'Heavy Luggage',
+		foldableWheelchair: 'Foldable wheelchair',
+		withFoldableWheelchair: 'With foldable wheelchair',
+		bookingFor: (passengers: number) => {
+			switch (passengers) {
+				case 1:
+					return 'One person';
+				default:
+					return `${passengers} persons`;
+			}
+		},
+		totalPrice: 'Total price (payable in the taxi)',
+		cancel: 'Cancel',
+		loginToBook: 'Login to book',
+		connection: 'Connection',
+		ticket: 'Ticket',
+		cancelHeadline: 'Do you really want to cancel this trip?',
+		cancelDescription:
+			'Cancellation cannot be undone. Cancellation less than 24 hours before the trip will incur costs.',
+		cancelTrip: 'Cancel Trip',
+		noCancel: 'No, I don not want to cancel.'
+	}
 };
 
 export default translations;

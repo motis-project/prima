@@ -31,4 +31,6 @@ osr_footpath: false
 elevators: false
 geocoding: true
 reverse_geocoding: true
-odm: http://localhost:5173
+odm:
+  url: http://localhost:5173
+  bounds: weisswasser.geojson

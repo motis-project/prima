@@ -75,6 +75,8 @@ export async function up(db) {
 			col.references('vehicle.id').notNull()
 		)
 		.addColumn('fare', 'integer')
+		.addColumn('cancelled', 'boolean', (col) => col.notNull())
+		.addColumn('message', 'varchar')
 		.execute();
 
 	await db.schema
@@ -88,6 +90,7 @@ export async function up(db) {
 		.addColumn('customer', 'integer', (col) => col.references('user.id').notNull())
 		.addColumn('ticket_code', 'varchar', (col) => col.notNull())
 		.addColumn('ticket_checked', 'boolean', (col) => col.notNull())
+		.addColumn('cancelled', 'boolean', (col) => col.notNull())
 		.execute();
 
 	await db.schema
@@ -105,6 +108,7 @@ export async function up(db) {
 		.addColumn('event_group', 'varchar', (col) => col.notNull())
 		.addColumn('request', 'integer', (col) => col.references('request.id').notNull())
 		.addColumn('address', 'varchar', (col) => col.notNull())
+		.addColumn('cancelled', 'boolean', (col) => col.notNull())
 		.execute();
 
 	await db.schema
@@ -114,6 +118,8 @@ export async function up(db) {
 		.addColumn('user', 'integer', (col) => col.references('user.id').notNull())
 		.addColumn('request1', 'integer', (col) => col.references('request.id').notNull())
 		.addColumn('request2', 'integer', (col) => col.references('request.id'))
+		.addColumn('rating', 'integer')
+		.addColumn('comment', 'varchar')
 		.execute();
 
 	// =======
@@ -306,8 +312,8 @@ export async function up(db) {
 		OUT v_request_id INTEGER
 	) AS $$
 	BEGIN
-		INSERT INTO request (passengers, wheelchairs, bikes, luggage, customer, tour, ticket_code, ticket_checked)
-		VALUES (p_request.passengers, p_request.wheelchairs, p_request.bikes, p_request.luggage, p_request.customer, p_tour_id, md5(random()::text), FALSE)
+		INSERT INTO request (passengers, wheelchairs, bikes, luggage, customer, tour, ticket_code, ticket_checked, cancelled)
+		VALUES (p_request.passengers, p_request.wheelchairs, p_request.bikes, p_request.luggage, p_request.customer, p_tour_id, md5(random()::text), FALSE, FALSE)
 		RETURNING id INTO v_request_id;
 	END;
 	$$ LANGUAGE plpgsql;
@@ -321,12 +327,12 @@ CREATE OR REPLACE PROCEDURE insert_event(
 	BEGIN
 		INSERT INTO event (
 			is_pickup, lat, lng, scheduled_time_start, scheduled_time_end, communicated_time,
-			address, request, prev_leg_duration, next_leg_duration, event_group
+			address, request, prev_leg_duration, next_leg_duration, event_group, cancelled
 		)
 	VALUES (
 		p_event.is_pickup, p_event.lat, p_event.lng, p_event.scheduled_time_start, p_event.scheduled_time_end,
 		p_event.communicated_time, p_event.address,
-		p_request_id, p_event.prev_leg_duration, p_event.next_leg_duration, p_event.grp
+		p_request_id, p_event.prev_leg_duration, p_event.next_leg_duration, p_event.grp, FALSE
 	);
 END;
 $$ LANGUAGE plpgsql;`.execute(db);
@@ -362,14 +368,14 @@ CREATE OR REPLACE PROCEDURE insert_tour(
 	OUT v_tour_id INTEGER
 ) AS $$
 BEGIN
-	INSERT INTO tour (departure, arrival, vehicle, fare, direct_duration)
-	VALUES (p_tour.departure, p_tour.arrival, p_tour.vehicle, NULL, p_tour.direct_duration)
+	INSERT INTO tour (departure, arrival, vehicle, fare, direct_duration, cancelled)
+	VALUES (p_tour.departure, p_tour.arrival, p_tour.vehicle, NULL, p_tour.direct_duration, FALSE)
 	RETURNING id INTO v_tour_id;
 END;
 $$ LANGUAGE plpgsql;
 `.execute(db);
 
-await sql`
+	await sql`
 CREATE OR REPLACE FUNCTION create_and_merge_tours(
 	p_request request_type,
 	p_event1 event_type,
@@ -402,6 +408,94 @@ BEGIN
 	CALL insert_event(p_event2, v_request_id);
 
 	RETURN v_request_id;
+END;
+$$ LANGUAGE plpgsql;
+`.execute(db);
+
+	await sql`
+CREATE OR REPLACE PROCEDURE cancel_request(
+	p_request_id INTEGER,
+	p_user_id INTEGER,
+	p_now BIGINT
+) AS $$
+DECLARE
+	v_tour_id INTEGER;
+	v_all_requests_cancelled BOOLEAN;
+BEGIN
+	IF NOT EXISTS (
+	    SELECT 1
+			FROM request r
+	    WHERE r.customer = p_user_id
+			AND r.id = p_request_id
+	) THEN
+	    RETURN;
+	END IF;
+
+	IF (
+		SELECT communicated_time
+		FROM request r
+		JOIN event e ON r.id = e.request
+		WHERE r.id = p_request_id
+		ORDER BY e.communicated_time ASC
+		LIMIT 1
+	) <= p_now THEN
+		RETURN;
+	END IF;
+
+	UPDATE request r
+	SET cancelled = true
+	WHERE r.id = p_request_id;
+
+	SELECT tour INTO v_tour_id
+	FROM request
+	WHERE id = p_request_id;
+
+	SELECT bool_and(cancelled) INTO v_all_requests_cancelled
+	FROM request
+	WHERE tour = v_tour_id;
+
+	IF v_all_requests_cancelled THEN
+		UPDATE tour
+		SET cancelled = TRUE
+		WHERE id = v_tour_id;
+	END IF;
+
+	UPDATE event e
+	SET cancelled = TRUE
+	WHERE e.request = p_request_id;
+END;
+$$ LANGUAGE plpgsql;
+`.execute(db);
+
+	await sql`
+CREATE OR REPLACE PROCEDURE cancel_tour(
+	p_tour_id INTEGER,
+	p_company_id INTEGER,
+	p_message VARCHAR
+) AS $$
+BEGIN
+	IF NOT EXISTS (
+	    SELECT 1
+	    FROM tour t
+	    JOIN vehicle v ON v.id = t.vehicle
+	    WHERE t.id = p_tour_id
+	    AND v.company = p_company_id
+	) THEN
+	    RETURN;
+	END IF;
+
+	UPDATE tour t
+	SET cancelled = TRUE,
+		message = p_message
+	WHERE t.id = p_tour_id;
+
+	UPDATE request r
+	SET cancelled = TRUE
+	WHERE r.tour = p_tour_id;
+
+	UPDATE event e
+	SET cancelled = TRUE
+	WHERE e.request IN (SELECT id FROM request WHERE tour = p_tour_id);
 END;
 $$ LANGUAGE plpgsql;
 `.execute(db);

@@ -62,6 +62,18 @@ export type NeighbourIds = {
 	nextDropoff: number | undefined;
 };
 
+export function toInsertionWithISOStrings(i: Insertion | undefined) {
+	return i === undefined
+		? undefined
+		: {
+				...i,
+				pickupTime: new Date(i.pickupTime).toISOString(),
+				dropoffTime: new Date(i.dropoffTime).toISOString(),
+				departure: i.departure == undefined ? undefined : new Date(i.departure).toISOString(),
+				arrival: i.arrival == undefined ? undefined : new Date(i.arrival).toISOString()
+			};
+}
+
 export function printInsertionEvaluation(e: Insertion) {
 	return (
 		'pickupTime: ' +
@@ -128,6 +140,7 @@ export function evaluateBothInsertion(
 	busStopIdx: number | undefined,
 	prev: Event | undefined,
 	next: Event | undefined,
+	allowedTimes: Interval[],
 	_promisedTimes?: PromisedTimes // TODO
 ): InsertionEvaluation | undefined {
 	console.assert(
@@ -159,7 +172,8 @@ export function evaluateBothInsertion(
 		passengerDuration,
 		busStopWindow,
 		prevLegDuration,
-		nextLegDuration
+		nextLegDuration,
+		allowedTimes
 	);
 	if (arrivalWindow == undefined) {
 		return undefined;
@@ -226,6 +240,7 @@ export function evaluateNewTours(
 	busStopTimes: Interval[][],
 	routingResults: RoutingResults,
 	travelDurations: (number | undefined)[],
+	allowedTimes: Interval[],
 	promisedTimes?: PromisedTimes
 ): (Insertion | undefined)[][] {
 	const bestEvaluations = new Array<(Insertion | undefined)[]>(busStopTimes.length);
@@ -272,6 +287,7 @@ export function evaluateNewTours(
 						busStopIdx,
 						undefined,
 						undefined,
+						allowedTimes,
 						promisedTimes
 					);
 					if (

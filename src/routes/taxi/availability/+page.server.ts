@@ -41,7 +41,7 @@ export async function load(event) {
 		])
 		.execute();
 
-	const tours = getTours(companyId, [fromTime.getTime(), toTime.getTime()]);
+	const tours = getTours(false, companyId, [fromTime.getTime(), toTime.getTime()]);
 
 	const company = await db
 		.selectFrom('company')
@@ -60,7 +60,13 @@ export async function load(event) {
 		tours: await tours,
 		vehicles: await vehicles,
 		utcDate,
-		companyDataComplete
+		companyDataComplete,
+		companyCoordinates: companyDataComplete
+			? {
+					lat: company.lat!,
+					lng: company.lng!
+				}
+			: null
 	};
 }
 

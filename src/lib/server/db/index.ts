@@ -53,6 +53,8 @@ export interface Database {
 		vehicle: number;
 		fare: number | null;
 		directDuration: number | null;
+		cancelled: boolean;
+		message: string | null;
 	};
 	availability: {
 		id: Generated<number>;
@@ -73,6 +75,7 @@ export interface Database {
 		eventGroup: string;
 		address: string;
 		request: number;
+		cancelled: boolean;
 	};
 	request: {
 		id: Generated<number>;
@@ -84,6 +87,7 @@ export interface Database {
 		customer: number;
 		ticketCode: string;
 		ticketChecked: boolean;
+		cancelled: boolean;
 	};
 	journey: {
 		id: Generated<number>;
@@ -91,6 +95,8 @@ export interface Database {
 		user: number;
 		request1: number;
 		request2: number | null;
+		rating: number | null;
+		comment: string | null;
 	};
 }
 

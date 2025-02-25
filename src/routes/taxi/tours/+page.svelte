@@ -4,4 +4,4 @@
 	const { data } = $props();
 </script>
 
-<ToursTable isAdmin={true} tours={data.tours} />
+<ToursTable isAdmin={false} tours={data.tours} selectedTourId={data.tourId} />

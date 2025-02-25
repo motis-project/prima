@@ -104,9 +104,10 @@ export async function setCompanyData(page: Page, user: UserCredentials, company:
 export async function addVehicle(page: Page, licensePlate: string) {
 	await login(page, TAXI_OWNER);
 	await page.goto('/taxi/availability');
-	await page.waitForTimeout(500);
+	await page.waitForTimeout(1000);
 	await page.getByTestId('add-vehicle').click();
 	await page.waitForTimeout(1000);
+	await page.screenshot({ path: 'screenshots/afterAddVehicleButton.png', fullPage: true });
 	await page.getByPlaceholder('DA-AB-1234').fill(licensePlate);
 	await page.getByLabel('3 Passagiere').check();
 	await page.getByTestId('create-vehicle').click();

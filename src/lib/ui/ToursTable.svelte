@@ -8,21 +8,33 @@
 
 	let {
 		isAdmin,
-		tours
+		tours,
+		selectedTourId
 	}: {
 		isAdmin: boolean;
 		tours: Tours;
+		selectedTourId?: number;
 	} = $props();
 
 	let selectedTour = $state<{
 		tours: Array<Tour> | undefined;
-	}>({ tours: undefined });
+		isAdmin: boolean;
+	}>({ tours: undefined, isAdmin });
 
 	const getCustomerCount = (tour: Tour) => {
 		let customers: Set<number> = new Set<number>();
 		tour.events.forEach((e: TourEvent) => customers.add(e.customer));
 		return customers.size;
 	};
+
+	$effect(() => {
+		if (selectedTourId != undefined) {
+			const tour = tours.find((t) => t.tourId === selectedTourId);
+			if (tour) {
+				selectedTour.tours = [tour];
+			}
+		}
+	});
 </script>
 
 <Panel title={t.menu.completedTours} subtitle={t.admin.completedToursSubtitle}>
@@ -46,7 +58,14 @@
 		</Table.Header>
 		<Table.Body>
 			{#each tours as tour}
-				<Table.Row onclick={() => (selectedTour = { tours: [tour] })} class="cursor-pointer">
+				<Table.Row
+					onclick={() =>
+						(selectedTour = {
+							tours: [tour],
+							isAdmin
+						})}
+					class={`cursor-pointer ${tour.cancelled ? 'bg-destructive' : 'bg-white-0'}`}
+				>
 					{#if isAdmin}
 						<Table.Cell>{tour.companyName}</Table.Cell>
 					{:else}

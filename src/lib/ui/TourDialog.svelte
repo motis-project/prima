@@ -1,6 +1,9 @@
 <script lang="ts">
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import LuggageIcon from 'lucide-svelte/icons/luggage';
+	import WheelchairIcon from 'lucide-svelte/icons/accessibility';
+	import PersonIcon from 'lucide-svelte/icons/user';
 
 	import { Button } from '$lib/shadcn/button';
 	import * as Dialog from '$lib/shadcn/dialog';
@@ -13,7 +16,7 @@
 	import GeoJSON from '$lib/map/GeoJSON.svelte';
 	import Layer from '$lib/map/Layer.svelte';
 
-	import type { TourEvent, Tours } from '$lib/server/db/getTours';
+	import type { Tours } from '$lib/server/db/getTours';
 	import type { PlanResponse } from '$lib/openapi';
 	import { MIN_PREP } from '$lib/constants';
 	import { carRouting } from '$lib/util/carRouting';
@@ -21,11 +24,15 @@
 	import { getTourInfoShort } from '$lib/util/getTourInfoShort';
 	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 	import { PUBLIC_MOTIS_URL } from '$env/static/public';
+	import CancelMessageDialog from './CancelMessageDialog.svelte';
 
 	const {
 		open = $bindable()
 	}: {
-		open: { tours: Tours | undefined };
+		open: {
+			tours: Tours | undefined;
+			isAdmin: boolean;
+		};
 	} = $props();
 
 	const displayFare = (fare: number | null) => {
@@ -38,29 +45,40 @@
 
 	let tourIndex = $state(0);
 	let tour = $derived(open.tours && open.tours[tourIndex]);
+	let company = $derived(tour && { lat: tour.companyLat!, lng: tour.companyLng! });
 
-	const getRoutes = (tourEvents: Array<TourEvent> | null): Promise<PlanResponse>[] => {
+	const getRoutes = (): Promise<PlanResponse>[] => {
 		let routes: Array<Promise<PlanResponse>> = [];
-		if (tourEvents == null || tourEvents!.length == 0) {
+		if (tour == null || company == null || tour.events.length == 0) {
 			return routes;
 		}
-		for (let e = 0; e < tourEvents!.length - 1; e++) {
-			let e1 = tourEvents![e];
-			let e2 = tourEvents![e + 1];
+		for (let e = 0; e < tour.events.length - 1; e++) {
+			const e1 = tour.events[e];
+			const e2 = tour.events[e + 1];
 			routes.push(carRouting(e1, e2));
 		}
 		return routes;
 	};
 
-	const getCenter = (tourEvents: Array<TourEvent>): [number, number] => {
-		return [
-			tourEvents.map((e) => e.lng).reduce((e, c) => e + c, 0) / tourEvents.length,
-			tourEvents.map((e) => e.lat).reduce((e, c) => e + c, 0) / tourEvents.length
-		];
-	};
+	const routes = $derived(tour && getRoutes());
+	const fromCompany = $derived(tour && company && carRouting(company, tour.events[0]));
+	const toCompany = $derived(
+		tour && company && carRouting(tour.events[tour.events.length - 1], company)
+	);
 
-	const routes = $derived(tour && tour.events.length !== 0 && getRoutes(tour.events));
-	const center = $derived(tour && getCenter(tour.events));
+	$effect(() => {
+		if (map && tour) {
+			const box = new maplibregl.LngLatBounds(company, company);
+			tour.events.forEach((e) => box.extend(e));
+			const padding = {
+				top: 64,
+				right: 64,
+				bottom: 64,
+				left: 64
+			};
+			map.flyTo({ ...map.cameraForBounds(box), padding, zoom: 10 });
+		}
+	});
 
 	let map = $state<undefined | maplibregl.Map>();
 	let init = false;
@@ -111,6 +129,9 @@
 				{@render overview()}
 				{@render mapView()}
 				<div class="col-span-2">{@render details()}</div>
+				{#if tour?.message != null}
+					<div class="col-span-2">{@render message()}</div>
+				{/if}
 			</div>
 		</Dialog.Description>
 	</Dialog.Content>
@@ -119,7 +140,12 @@
 {#snippet overview()}
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Übersicht</Card.Title>
+			<div class="flex w-full items-center justify-between">
+				<Card.Title>Übersicht</Card.Title>
+				{#if tour && !tour.cancelled && !open.isAdmin && tour.endTime > Date.now()}
+					<CancelMessageDialog bind:tour={open.tours![tourIndex]} />
+				{/if}
+			</div>
 		</Card.Header>
 		<Card.Content>
 			<div class="grid grid-flow-row grid-cols-2 flex-col gap-2">
@@ -147,59 +173,70 @@
 	</Card.Root>
 {/snippet}
 
+{#snippet drawRoutes(
+	routes: Array<Promise<PlanResponse>>,
+	name: string,
+	color: string,
+	outlineColor: string
+)}
+	{#each routes as segment, i}
+		{#await segment then r}
+			{#if r.direct.length != 0 && r.direct[0] != undefined}
+				{#each r.direct[0].legs as leg}
+					<GeoJSON id={name + '-r_ ' + i} data={polylineToGeoJSON(leg.legGeometry.points)}>
+						<Layer
+							id={name + '-path-outline_' + i}
+							type="line"
+							layout={{
+								'line-join': 'round',
+								'line-cap': 'round'
+							}}
+							filter={true}
+							paint={{
+								'line-color': outlineColor,
+								'line-width': 7.5,
+								'line-opacity': 0.5
+							}}
+						/>
+						<Layer
+							id={name + '-path_' + i}
+							type="line"
+							layout={{
+								'line-join': 'round',
+								'line-cap': 'round'
+							}}
+							filter={true}
+							paint={{
+								'line-color': color,
+								'line-width': 5,
+								'line-opacity': 0.5
+							}}
+						/>
+					</GeoJSON>
+				{/each}
+			{/if}
+		{/await}
+	{/each}
+{/snippet}
+
 {#snippet mapView()}
-	{#if center && routes}
+	{#if company && routes && fromCompany && toCompany}
 		<Map
 			bind:map
-			{center}
+			center={company}
 			transformRequest={(url) => {
 				if (url.startsWith('/')) {
 					return { url: `${PUBLIC_MOTIS_URL}/tiles${url}` };
 				}
 			}}
 			style={getStyle('light', 0)}
-			zoom={11}
+			zoom={10}
 			class="h-full w-full rounded-lg border shadow"
 			attribution={"&copy; <a href='http://www.openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a>"}
 		>
-			{#each routes as segment, i}
-				{#await segment then r}
-					{#if r.direct.length != 0 && r.direct[0] != undefined}
-						{#each r.direct[0].legs as leg}
-							<GeoJSON id={'r_ ' + i} data={polylineToGeoJSON(leg.legGeometry.points)}>
-								<Layer
-									id={'path-outline_ ' + i}
-									type="line"
-									layout={{
-										'line-join': 'round',
-										'line-cap': 'round'
-									}}
-									filter={true}
-									paint={{
-										'line-color': '#1966a4',
-										'line-width': 7.5,
-										'line-opacity': 0.8
-									}}
-								/>
-								<Layer
-									id={'path_ ' + i}
-									type="line"
-									layout={{
-										'line-join': 'round',
-										'line-cap': 'round'
-									}}
-									filter={true}
-									paint={{
-										'line-color': '#42a5f5',
-										'line-width': 5,
-										'line-opacity': 0.8
-									}}
-								/>
-							</GeoJSON>
-						{/each}
-					{/if}
-				{/await}
-			{/each}
+			{@render drawRoutes([fromCompany], 'outward', '#ff0000', '#000000')}
+			{@render drawRoutes([toCompany], 'return', '#00ff00', '#000000')}
+			{@render drawRoutes(routes, 'events', '#0000ff', '#000000')}
 		</Map>
 	{/if}
 {/snippet}
@@ -225,7 +262,7 @@
 				<Table.Body>
 					{#if tour?.events}
 						{#each tour!.events as event}
-							<Table.Row>
+							<Table.Row class={`${tour.cancelled ? 'bg-destructive' : 'bg-primary-background'}`}>
 								<Table.Cell>
 									{new Date(getScheduledEventTime(event))
 										.toLocaleString('de-DE')
@@ -240,12 +277,42 @@
 									{event.customerPhone}
 								</Table.Cell>
 								{#if event.isPickup}
-									<Table.Cell class="text-green-500">
-										<ArrowRight class="h-4 w-4" />
+									<Table.Cell class="flex gap-2 text-green-500">
+										<ArrowRight class="size-4" />
+										{#if event.wheelchairs}
+											<WheelchairIcon class="size-4" />
+										{/if}
+										<span class="flex">
+											<PersonIcon class="size-4" />
+											{event.passengers}
+										</span>
+										<span class="flex">
+											{#if event.luggage === 1}
+												<LuggageIcon class="size-4" />
+											{:else if event.luggage === 3}
+												<LuggageIcon class="size-4" />
+												<LuggageIcon class="size-4" />
+											{/if}
+										</span>
 									</Table.Cell>
 								{:else}
-									<Table.Cell class="text-red-500">
-										<ArrowLeft class="h-4 w-4" />
+									<Table.Cell class="flex items-center gap-2 text-red-500">
+										<ArrowLeft class="size-4" />
+										{#if event.wheelchairs}
+											<WheelchairIcon class="size-4" />
+										{/if}
+										<span class="flex items-center">
+											<PersonIcon class="size-4" />
+											{event.passengers}
+										</span>
+										<span class="flex items-center">
+											{#if event.luggage === 1}
+												<LuggageIcon class="size-4" />
+											{:else if event.luggage === 3}
+												<LuggageIcon class="size-4" />
+												<LuggageIcon class="size-4" />
+											{/if}
+										</span>
 									</Table.Cell>
 								{/if}
 							</Table.Row>
@@ -253,6 +320,19 @@
 					{/if}
 				</Table.Body>
 			</Table.Root>
+		</Card.Content>
+	</Card.Root>
+{/snippet}
+
+{#snippet message()}
+	<Card.Root class="max-h-80 overflow-y-auto">
+		<Card.Header>
+			<Card.Title>Stornierungsnachricht</Card.Title>
+		</Card.Header>
+		<Card.Content>
+			<div class="bg-primary-foreground">
+				{tour!.message}
+			</div>
 		</Card.Content>
 	</Card.Root>
 {/snippet}

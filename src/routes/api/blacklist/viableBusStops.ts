@@ -10,6 +10,8 @@ import { sql, type RawBuilder } from 'kysely';
 import type { Coordinates } from '$lib/util/Coordinates';
 import type { Capacities } from '$lib/server/booking/Capacities';
 import type { BusStop } from '$lib/server/booking/BusStop';
+import { getAllowedTimes } from '$lib/server/booking/evaluateRequest';
+import { Interval } from '$lib/server/util/interval';
 
 interface CoordinatesTable {
 	busStopIndex: number;
@@ -26,7 +28,7 @@ type TimesTable = {
 
 type TmpDatabase = Database & { busstopzone: CoordinatesTable } & { times: TimesTable };
 
-const withBusStops = (busStops: BusStop[], startFixed: boolean) => {
+const withBusStops = (busStops: BusStop[], busStopIntervals: Interval[][]) => {
 	return db
 		.with('busstops', (db) => {
 			const busStopsSelect = busStops.map(
@@ -45,20 +47,20 @@ const withBusStops = (busStops: BusStop[], startFixed: boolean) => {
 				.selectAll();
 		})
 		.with('times', (db) => {
-			const busStopIntervals: RawBuilder<string>[] = busStops.flatMap((busStop, i) =>
-				busStop.times.map((t, j) => {
-					const startTime = startFixed ? t : t - MAX_PASSENGER_WAITING_TIME_DROPOFF;
-					const endTime = !startFixed ? t : t + MAX_PASSENGER_WAITING_TIME_PICKUP;
+			const busStopIntervalSelect: RawBuilder<string>[] = busStopIntervals.flatMap((busStop, i) =>
+				busStop.map((t, j) => {
 					return sql<string>`SELECT
-                    cast(${i} as INTEGER) AS bus_stop_index,
-                    cast(${j} as INTEGER) AS time_index,
-                    cast(${startTime} as BIGINT) AS start_time,
-                    cast(${endTime} as BIGINT) AS end_time`;
+					 cast(${i} as INTEGER) AS bus_stop_index,
+					 cast(${j} as INTEGER) AS time_index,
+					 cast(${t.startTime} as BIGINT) AS start_time,
+					 cast(${t.endTime} as BIGINT) AS end_time`;
 				})
 			);
 			return db
 				.selectFrom(
-					sql<TimesTable>`(${sql.join(busStopIntervals, sql<string>` UNION ALL `)})`.as('times')
+					sql<TimesTable>`(${sql.join(busStopIntervalSelect, sql<string>` UNION ALL `)})`.as(
+						'times'
+					)
 				)
 				.selectAll();
 		});
@@ -81,6 +83,7 @@ const doesTourExist = (eb: ExpressionBuilder<TmpDatabase, 'vehicle' | 'times'>) 
 			.whereRef('tour.vehicle', '=', 'vehicle.id')
 			.where((eb) =>
 				eb.and([
+					eb('tour.cancelled', '=', false),
 					sql<boolean>`tour.departure <= times.end_time`,
 					sql<boolean>`tour.arrival >= times.start_time`
 				])
@@ -130,13 +133,14 @@ export const getViableBusStops = async (
 	if (busStops.length == 0 || !busStops.some((b) => b.times.length != 0)) {
 		return [];
 	}
+
 	const createBatchQuery = (
 		userChosen: Coordinates,
 		busStops: BusStop[],
-		startFixed: boolean,
+		busStopIntervals: Interval[][],
 		capacities: Capacities
 	): Promise<BlacklistingResult[]> => {
-		return withBusStops(busStops, startFixed)
+		return withBusStops(busStops, busStopIntervals)
 			.selectFrom('zone')
 			.where(covers(userChosen))
 			.innerJoinLateral(
@@ -156,6 +160,43 @@ export const getViableBusStops = async (
 			.execute();
 	};
 
+	// Find the smallest Interval containing all availabilities and tours of the companies received as a parameter.
+	let earliest = Number.MAX_VALUE;
+	let latest = 0;
+	let busStopIntervals = busStops.map((b) =>
+		b.times.map(
+			(t) =>
+				new Interval(
+					startFixed ? t : t - MAX_PASSENGER_WAITING_TIME_DROPOFF,
+					!startFixed ? t : t + MAX_PASSENGER_WAITING_TIME_PICKUP
+				)
+		)
+	);
+	busStopIntervals.forEach((b) =>
+		b.forEach((i) => {
+			if (i.startTime < earliest) {
+				earliest = i.startTime;
+			}
+			if (i.endTime > latest) {
+				latest = i.endTime;
+			}
+		})
+	);
+	if (earliest >= latest) {
+		return [];
+	}
+	const allowedTimes = getAllowedTimes(earliest, latest);
+	busStopIntervals = busStopIntervals.map((b) =>
+		b.map((t) => {
+			const allowed = Interval.intersect(allowedTimes, [t]);
+			console.assert(
+				allowed.length < 2,
+				'Intersecting an array of intervals with a second array of intervals with only one entry produced an array of more than one interval in viableBusStops.'
+			);
+			return allowed.length === 0 ? new Interval(0, 0) : allowed[0];
+		})
+	);
+
 	const batches = [];
 	const batchSize = 50;
 	let currentPos = 0;
@@ -164,20 +205,20 @@ export const getViableBusStops = async (
 			createBatchQuery(
 				userChosen,
 				busStops.slice(currentPos, Math.min(currentPos + batchSize, busStops.length)),
-				startFixed,
+				busStopIntervals.slice(currentPos, Math.min(currentPos + batchSize, busStops.length)),
 				capacities
 			)
 		);
 		currentPos += batchSize;
 	}
 	const batchResponses = await Promise.all(batches);
-	console.log(batchResponses);
-	return batchResponses.flatMap((batchResponse, idx) =>
+	const response = batchResponses.flatMap((batchResponse, idx) =>
 		batchResponse.map((r) => {
-			console.log(r);
 			return { timeIndex: r.timeIndex, busStopIndex: r.busStopIndex + idx * batchSize };
 		})
 	);
+	console.log('BLACKLIST QUERY RESULT: ', JSON.stringify(response, null, '\t'));
+	return response;
 };
 
 export type BlacklistingResult = {
