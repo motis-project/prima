@@ -18,6 +18,7 @@ fun Nav(
 ) {
     val navController = rememberNavController()
     val userViewModel: UserViewModel = viewModel()
+    val scanViewModel: ScanViewModel = viewModel()
 
     // Before rendering any component, check preconditions
     val startDestination by remember {
@@ -48,6 +49,11 @@ fun Nav(
 
         composable(route = "tours") {
             Tours(navController, userViewModel)
+        }
+
+        composable(route = "scan/{tourId}") {
+            val tourId = it.arguments?.getString("tourId")?.toInt()
+            TicketScan(navController,  tourId!!, scanViewModel)
         }
 
         composable(route = "taxameter/{tourId}") {

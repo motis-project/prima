@@ -19,5 +19,10 @@
     <string name="no_adress">Keine Adresse</string>
     <string name="navi_available">GPS Navigation verfügbar</string>
     <string name="switch_vehicle">Fahrzeug wechseln</string>
+    <string name="change_vehicles">Fahrzeug wechseln</string>
+    <string name="cancel_tour">Fahrt abbrechen</string>
+    <string name="fare_input_error">Die Eingabe konnte nicht verarbeitet werden.</string>
+    <string name="taxameter_header">Taxameter</string>
+    <string name="abort_scan">Zurück</string>
     <string name="logout">Logout</string>
 </resources>

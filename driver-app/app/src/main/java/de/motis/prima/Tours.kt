@@ -143,7 +143,6 @@ fun Tours(
             viewModel.fetchTours()
 
             userViewModel.logoutEvent.collect {
-                Log.d("Logout", "Logout event triggered.")
                 navController.navigate("login") {
                     launchSingleTop = true
                 }
@@ -291,8 +290,7 @@ fun ShowTours(tours: List<Tour>, navController: NavController) {
             ) {
                 items(items = tours, itemContent = { tour ->
                     ConstraintLayout(modifier = Modifier.clickable {
-                        //navController.navigate("tour/${tour.tourId}")
-                        navController.navigate("taxameter/${tour.tourId}")
+                        navController.navigate("scan/${tour.tourId}")
                     }) {
                         var city = "-"
                         var displayTime = "-"
@@ -396,7 +394,7 @@ fun TopBar(
                         navController.navigate("vehicles")
 
                     },
-                    text = { Text(text = stringResource(id = R.string.tours_header)) }
+                    text = { Text(text = stringResource(id = R.string.change_vehicles)) }
                 )
                 DropdownMenuItem(
                     onClick = {

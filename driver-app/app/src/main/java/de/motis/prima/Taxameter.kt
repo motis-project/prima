@@ -1,6 +1,5 @@
 package de.motis.prima
 
-import android.util.Log
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -58,31 +57,24 @@ class TaxameterViewModel : ViewModel() {
     val reportSuccessEvent = _reportSuccessEvent.asSharedFlow()
 
     fun reportFare(tourId: Int, fare: String) {
-        Log.d("fare", "Reporting fare: $fare")
-
         viewModelScope.launch {
             var fareCent = 0
             try {
                 fareCent = fare.replace(",", "").toInt()
             } catch (e: Exception) {
                 _conversionErrorEvent.emit(Unit)
-                Log.d("fare", "Fare conversion Error: ${e.message!!}")
             }
 
             if (fareCent > 0) {
-                Log.d("fare", fareCent.toString())
-                Log.d("fare", "tourId: $tourId")
                 try {
                     val response = Api.apiService.reportFare(tourId, fareCent)
                     if (!response.success) {
                         _networkErrorEvent.emit(Unit)
-                        Log.d("fare", response.toString())
                     } else {
                         _reportSuccessEvent.emit(Unit)
                     }
                 } catch (e: Exception) {
                     _networkErrorEvent.emit(Unit)
-                    Log.d("fare", "Network Error: ${e.message!!}")
                 }
             }
         }
@@ -101,11 +93,11 @@ fun Taxameter(
     var fare by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
     val networkErrorMessage = stringResource(id = R.string.network_error_message)
+    val inputErrorMessage = stringResource(id = R.string.fare_input_error)
 
     LaunchedEffect(key1 = viewModel) {
         launch {
             userViewModel.logoutEvent.collect {
-                Log.d("Logout", "Logout event triggered.")
                 navController.navigate("login") {
                     launchSingleTop = true
                 }
@@ -128,14 +120,12 @@ fun Taxameter(
 
         launch {
             viewModel.conversionErrorEvent.collect {
-                snackbarHostState.showSnackbar(message = "Die Eingabe konnte nicht verarbeitet werden.")
+                snackbarHostState.showSnackbar(message = inputErrorMessage)
             }
         }
     }
 
-    var dropdownExpanded by remember {
-        mutableStateOf(false)
-    }
+    var dropdownExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -146,7 +136,7 @@ fun Taxameter(
                 ),
                 title = {
                     Text(
-                        "Taxameter",
+                        stringResource(id = R.string.taxameter_header),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -165,7 +155,7 @@ fun Taxameter(
                                 dropdownExpanded = false
 
                             },
-                            text = { Text("Fahrt abbrechen") }
+                            text = { Text(text = stringResource(id = R.string.cancel_tour)) }
                         )
                         DropdownMenuItem(
                             onClick = {
