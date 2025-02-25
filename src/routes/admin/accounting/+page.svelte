@@ -14,6 +14,7 @@
 	import Paginate from '$lib/paginate.svelte';
 	import type { Tour, Tours } from '$lib/server/db/getTours';
 	import { FIXED_PRICE } from '$lib/constants.js';
+	import { Tabs } from '$lib/shadcn/tabs';
 
 	const { data } = $props();
 
@@ -288,6 +289,12 @@
 </script>
 
 <div>
+	<Tabs>
+		<Tabs.List class="grid w-full grid-cols-2">
+		  <Tabs.Trigger value="account">Account</Tabs.Trigger>
+		  <Tabs.Trigger value="password">Password</Tabs.Trigger>
+		</Tabs.List>
+	</Tabs>
 	<Card.Header>
 		<Card.Title>Abrechnung</Card.Title>
 	</Card.Header>
@@ -461,4 +468,5 @@
 
 		<Paginate bind:open={paginationInfo} />
 	</Card.Content>
+
 </div>
