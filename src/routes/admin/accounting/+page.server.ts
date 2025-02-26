@@ -11,21 +11,9 @@ export const load = async () => {
 	function isLeapYear(year: number): boolean {
 		return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
   	}
-	
-	// accounting can display information for any individual day from this and the previous year.
-	// all other cost-related information are aggregates of these values
-
-	// selecting relevant information from these two years
 	const today = Math.floor(Date.now() / DAY) * DAY;
 	const year = new Date(today).getUTCFullYear();
 	const firstOfJanuaryLastYear = new Date(year - 1, 0, 1).getTime();
-	const i = new Interval(firstOfJanuaryLastYear, Math.floor(today / DAY) * DAY);
-	const availabilities = await db
-		.selectFrom('availability')
-		.where('availability.endTime', '>=', firstOfJanuaryLastYear)
-		.where('availability.startTime', '<=', today)
-		.select(['availability.vehicle as vehicleId', 'availability.startTime', 'availability.endTime'])
-		.execute();
 
 	const tours = (await getTours(false)).map((t) => {
 		return {
@@ -39,15 +27,18 @@ export const load = async () => {
 		firstOfJanuaryLastYear,
 		isLeapYear: isLeapYear(year),
 		lastIsLeapYear: isLeapYear(year - 1),
-		companyCostsPerDay: getCompanyCosts(today, firstOfJanuaryLastYear, availabilities, tours)
+		companyCostsPerDay: await getCompanyCosts(today, firstOfJanuaryLastYear, tours)
 	};
 };
 
-function getCompanyCosts(today: UnixtimeMs, firstOfJanuaryLastYear: UnixtimeMs, availabilities:  {
-    endTime: number;
-    startTime: number;
-    vehicleId: number;
-}[], tours: (Tour & { interval: Interval })[]){
+async function getCompanyCosts(today: UnixtimeMs, firstOfJanuaryLastYear: UnixtimeMs, tours: (Tour & { interval: Interval })[]){
+	const availabilities = await db
+		.selectFrom('availability')
+		.where('availability.endTime', '>=', firstOfJanuaryLastYear)
+		.where('availability.startTime', '<=', today)
+		.select(['availability.vehicle as vehicleId', 'availability.startTime', 'availability.endTime'])
+		.execute();
+
 	// create an array of intervals representing the individual days in the two relevant years
 	const days = Array.from(
 		{ length: Math.floor((today - firstOfJanuaryLastYear) / DAY) }, 
@@ -69,6 +60,7 @@ function getCompanyCosts(today: UnixtimeMs, firstOfJanuaryLastYear: UnixtimeMs, 
 		intervals.map((interval) => ({ vehicleId, interval }))
 	);
 	allAvailabilities.sort((a1, a2) => a1.interval.startTime - a2.interval.startTime);
+	console.log({allAvailabilities});
 
 	// cumulate the total duration of availability on every relevant day for each vehicle
 	const availabilitiesPerDayAndVehicle = new Array<Map<VehicleId, number>>();
@@ -150,6 +142,16 @@ function getCompanyCosts(today: UnixtimeMs, firstOfJanuaryLastYear: UnixtimeMs, 
 			});
 		});
 	}
+	console.log({costs: companyCostsPerDay.flatMap((companyCosts, day) =>
+		Array.from(companyCosts).map(([companyId, {capped, uncapped, companyName}]) => {
+			return {
+				companyId,
+				capped,
+				uncapped,
+				day,
+				companyName
+			};
+		}))})
 	return companyCostsPerDay.flatMap((companyCosts, day) =>
 		Array.from(companyCosts).map(([companyId, {capped, uncapped, companyName}]) => {
 			return {
