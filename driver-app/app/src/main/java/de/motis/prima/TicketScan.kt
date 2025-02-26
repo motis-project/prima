@@ -1,6 +1,8 @@
 package de.motis.prima
 
 import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.util.Log
 import android.widget.Toast
@@ -22,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,6 +54,9 @@ import kotlinx.coroutines.launch
 import java.security.MessageDigest
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import android.provider.Settings
+import android.net.Uri
+import androidx.compose.foundation.layout.fillMaxWidth
 
 class ScanViewModel : ViewModel() {
     private val _validTickets = MutableStateFlow(mutableMapOf<String, String>())
@@ -104,11 +110,13 @@ fun TicketScan(
                 QRCodeScanner(
                     onQRCodeScanned = { result ->
                         viewModel.updateValidTickets(result)
+                        viewModel.reportTicketScan(6, result)
                         isScanning = false
                     },
                     onCloseScanner = {
                         isScanning = false
-                    }
+                    },
+                    navController
                 )
             }
 
@@ -128,32 +136,111 @@ fun TicketScan(
 @Composable
 fun QRCodeScanner(
     onQRCodeScanned: (String) -> Unit,
-    onCloseScanner: () -> Unit
+    onCloseScanner: () -> Unit,
+    navController: NavController,
 ) {
     val context = LocalContext.current
+    var cameraProvider: ProcessCameraProvider? by remember { mutableStateOf(null) }
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
     val executor: ExecutorService = remember { Executors.newSingleThreadExecutor() }
     var hasPermission by remember { mutableStateOf(false) }
-    var cameraProvider: ProcessCameraProvider? by remember { mutableStateOf(null) }
+    var showRationale by remember { mutableStateOf(false) }
+    var permanentlyDenied by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        hasPermission = granted
-        if (!granted) {
-            Toast.makeText(context, "Camera permission is required!", Toast.LENGTH_SHORT).show()
+    ) { isGranted ->
+        when {
+            isGranted -> {
+                hasPermission = true
+                Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
+            }
+            showRationale -> {
+                Toast.makeText(context, "Permission Denied. You can enable it in settings.", Toast.LENGTH_LONG).show()
+            }
+            else -> {
+                permanentlyDenied = true
+            }
         }
     }
 
+    // Check permission status
     LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            permissionLauncher.launch(Manifest.permission.CAMERA)
-        } else {
-            hasPermission = true
+        when {
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
+                hasPermission = true
+            }
+            else -> {
+                showRationale = shouldShowRequestPermissionRationale(context, Manifest.permission.CAMERA)
+            }
         }
     }
 
-    if (hasPermission) {
+    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
+        when {
+            showRationale -> {
+                PermissionRationaleDialog(
+                    onDismiss = { showRationale = false },
+                    onRequestPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) }
+                )
+            }
+            permanentlyDenied -> {
+                PermissionDeniedDialog(navController, context)
+            }
+            hasPermission -> {
+                AndroidView(
+                    modifier = Modifier.fillMaxSize(),
+                    factory = { ctx ->
+                        val previewView = androidx.camera.view.PreviewView(ctx).apply {
+                            scaleType = androidx.camera.view.PreviewView.ScaleType.FILL_CENTER
+                        }
+
+                        cameraProviderFuture.addListener({
+                            val provider = cameraProviderFuture.get()
+                            cameraProvider = provider
+
+                            val preview = Preview.Builder().build().also {
+                                it.surfaceProvider = previewView.surfaceProvider
+                            }
+
+                            val imageAnalyzer = ImageAnalysis.Builder().build().also {
+                                it.setAnalyzer(executor) { imageProxy ->
+                                    processImage(imageProxy, onQRCodeScanned, provider)
+                                }
+                            }
+
+                            provider.unbindAll()
+                            provider.bindToLifecycle(
+                                ctx as ComponentActivity,
+                                CameraSelector.DEFAULT_BACK_CAMERA,
+                                preview,
+                                imageAnalyzer
+                            )
+                        }, ContextCompat.getMainExecutor(ctx))
+
+                        previewView
+                    },
+                    onRelease = {
+                        cameraProvider?.unbindAll()
+                        executor.shutdown()
+                        onCloseScanner()
+                    }
+                )
+            }
+            else -> {
+                Box (
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Button(onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }) {
+                        Text("Request Camera Permission")
+                    }
+                }
+            }
+        }
+    }
+
+    /*if (hasPermission) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { ctx ->
@@ -194,7 +281,7 @@ fun QRCodeScanner(
         )
     } else {
         Text("Camera permission is required to scan QR codes.", modifier = Modifier.padding(16.dp))
-    }
+    }*/
 }
 
 @OptIn(ExperimentalGetImage::class)
@@ -227,4 +314,47 @@ private fun processImage(
         .addOnCompleteListener {
             imageProxy.close()
         }
+}
+
+@Composable
+fun PermissionRationaleDialog(onDismiss: () -> Unit, onRequestPermission: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Camera Permission Needed") },
+        text = { Text("We need camera access to scan QR codes.") },
+        confirmButton = {
+            Button(onClick = onRequestPermission) { Text("Grant Permission") }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
+
+@Composable
+fun PermissionDeniedDialog(navController: NavController, context: Context) {
+    AlertDialog(
+        onDismissRequest = {},
+        title = { Text("Permission Denied") },
+        text = { Text("Camera permission is permanently denied. Please enable it in settings.") },
+        confirmButton = {
+            Button(onClick = { openAppSettings(context) }) { Text("Open Settings") }
+        },
+        dismissButton = {
+            Button(onClick = { navController.navigate("tours") }) { Text("Cancel") }
+        }
+    )
+}
+
+// Function to check if rationale should be shown
+fun shouldShowRequestPermissionRationale(context: Context, permission: String): Boolean {
+    return (context as? ComponentActivity)?.shouldShowRequestPermissionRationale(permission) ?: false
+}
+
+// Function to open app settings
+fun openAppSettings(context: Context) {
+    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+        data = Uri.fromParts("package", context.packageName, null)
+    }
+    context.startActivity(intent)
 }
