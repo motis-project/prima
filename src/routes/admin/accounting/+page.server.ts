@@ -132,7 +132,7 @@ function getCompanyCosts(today: UnixtimeMs, firstOfJanuaryLastYear: UnixtimeMs, 
 	const companyByVehicle = new Map<number, { name: string|null, id: number }>();
 	tours.forEach((t) => companyByVehicle.set(t.vehicleId, {name:t.companyName, id: t.companyId}));
 
-	// Store the daily (soft-capped) costs per day and company in a double array
+	// Gather the daily (soft-capped and uncapped) costs per day and company
 	const companyCostsPerDay = new Array<Map<number, {capped: number, uncapped: number, companyName: string | null}>>();
 	for (let d = 0; d != days.length; ++d) {
 		companyCostsPerDay[d] = new Map<number, {capped: number, uncapped: number, companyName: string | null}>();
