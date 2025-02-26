@@ -16,5 +16,5 @@ export const BUFFER_TIME = 0;
 export const EARLIEST_SHIFT_START = 6 * HOUR;
 export const LATEST_SHIFT_END = 21 * HOUR;
 export const FIXED_PRICE = 600; // in cents
-export const CAP = 35; // in hours
+export const CAP = 3500; 
 export const OVER_CAP_FACTOR = 0.25;

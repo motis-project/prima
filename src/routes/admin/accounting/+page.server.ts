@@ -106,15 +106,17 @@ function getCompanyCosts(today: UnixtimeMs, firstOfJanuaryLastYear: UnixtimeMs, 
 	let tourIdx = 0;
 	let currentTour = tours[0];
 	for (let d = 0; d != days.length; ++d) {
-		taxameterPerDayAndVehicle[d] = new Map<VehicleId, number>();
-		if (!days[d].intersect(currentTour.interval)) {
-			continue;
+		if(currentTour === undefined) {
+			break;
 		}
-		taxameterPerDayAndVehicle[d].set(
-			currentTour.vehicleId,
-			(taxameterPerDayAndVehicle[d].get(currentTour.vehicleId) ?? 0) + (currentTour.fare ?? 0)
-		);
-		currentTour = tours[++tourIdx];
+		taxameterPerDayAndVehicle[d] = new Map<VehicleId, number>();
+		while (currentTour != undefined && days[d].intersect(currentTour.interval)) {
+			taxameterPerDayAndVehicle[d].set(
+				currentTour.vehicleId,
+				(taxameterPerDayAndVehicle[d].get(currentTour.vehicleId) ?? 0) + (currentTour.fare ?? 0)
+			);
+			currentTour = tours[++tourIdx];
+		}
 	}
 
 	// compute the cost per vehicle and day, taking into account the daily cap based on the availability on the day

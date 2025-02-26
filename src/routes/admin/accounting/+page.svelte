@@ -14,6 +14,7 @@
 	import type { Tour, Tours } from '$lib/server/db/getTours';
 	import { FIXED_PRICE } from '$lib/constants.js';
 	import Tabs from '$lib/ui/tabs.svelte';
+	import { HOUR } from '$lib/util/time.js';
 
 	const { data } = $props();
 
@@ -121,6 +122,10 @@
 			}
 		}
 	};
+
+	const dayIdxToString = (day: number) => {
+		return new Date(data.firstOfJanuaryLastYear + 24 * HOUR * day).toLocaleDateString();
+	}
 
 	let selectedTimespan = $state('Zeitraum');
 	let selectedYear = $state(thisYear);
@@ -423,7 +428,7 @@
 			{#each paginationInfo2.currentPageRows as subtraction}
 				<Table.Row>
 					<Table.Cell>{subtraction.companyName}</Table.Cell>
-					<Table.Cell>tac</Table.Cell>
+					<Table.Cell class="text-center">{dayIdxToString(subtraction.day)}</Table.Cell>
 					<Table.Cell class="text-center">{getEuroString(subtraction.uncapped)} €</Table.Cell>
 					<Table.Cell class="text-center">{getEuroString(subtraction.capped)} €</Table.Cell>
 					<Table.Cell class="text-center">{getEuroString(subtraction.uncapped - subtraction.capped)} €</Table.Cell>
