@@ -1,5 +1,5 @@
 // return totalPages
-export function paginate<T>(perPage: number, tours: T[]) {
+export function paginate<T>(perPage: number, tours: T[]): T[][] {
 	const pagesCount = Math.ceil(tours.length / perPage);
 	const paginatedItems = Array.from({ length: pagesCount }, (_, index) => {
 		const start = index * perPage;
