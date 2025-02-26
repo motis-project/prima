@@ -29,6 +29,7 @@
 		{ title: t.menu.employees, href: '/taxi/members', Icon: UsersRound }
 	];
 	const adminItems: Array<MenuItem> = [
+		{ title: t.menu.accounting, href: '/admin/accounting', Icon: ListChecks },
 		{ title: t.menu.completedTours, href: '/admin/tours', Icon: ListChecks },
 		{ title: t.menu.companies, href: '/admin/taxi-owners', Icon: CarTaxiFront }
 	];

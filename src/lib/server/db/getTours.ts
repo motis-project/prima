@@ -24,6 +24,7 @@ export const getTours = async (
 			'tour.arrival as endTime',
 			'tour.cancelled',
 			'tour.message',
+			'company.id as companyId',
 			'company.name as companyName',
 			'company.address as companyAddress',
 			'company.lat as companyLat',

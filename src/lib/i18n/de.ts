@@ -8,6 +8,7 @@ const translations: Translations = {
 		availability: 'Verfügbarkeit',
 		company: 'Unternehmen',
 		completedTours: 'Fahrten',
+		accounting: 'Abrechnung',
 		employees: 'Mitarbeiter',
 		companies: 'Unternehmen'
 	},
