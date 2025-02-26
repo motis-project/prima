@@ -20,7 +20,7 @@
 	const baseItems: Array<MenuItem> = [{ title: t.menu.account, href: '/account', Icon: UserRound }];
 	const customerItems: Array<MenuItem> = [
 		{ title: t.menu.connections, href: '/routing', Icon: ChevronsRight },
-		{ title: t.menu.bookings, href: '/bookings', Icon: TicketCheck }
+		...(data.isLoggedIn ? [{ title: t.menu.bookings, href: '/bookings', Icon: TicketCheck }] : [])
 	];
 	const taxiOwnerItems: Array<MenuItem> = [
 		{ title: t.menu.availability, href: '/taxi/availability', Icon: CarTaxiFront },

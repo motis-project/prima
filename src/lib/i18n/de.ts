@@ -21,6 +21,7 @@ const translations: Translations = {
 		weakPassword: 'Bitte wähle ein stärkeres Passwort.',
 		tooManyRequests: 'Zu viele Anfragen.',
 		failedToSendVerificationEmail: 'E-Mail zur Verifikation konnte nicht gesendet werden.',
+		failedToSendPasswordResetEmail: 'E-Mail zum Passwortzurücksetzen konnte nicht gesendet werden.',
 		accountDoesNotExist: 'Nutzerkonto existiert nicht.',
 		invalidPassword: 'Ungültiges Passwort.',
 		new: 'Neu hier? <a href="/account/signup" class="link">Erstelle ein neues Nutzerkonto!</a>',

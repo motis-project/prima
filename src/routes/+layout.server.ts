@@ -9,7 +9,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 					.innerJoin('event', 'journey.request1', 'event.request')
 					.where('journey.rating', 'is', null)
 					.where('journey.user', '=', locals.session.userId)
-					// .where('event.communicatedTime', '<=', Date.now())
+					.where('event.communicatedTime', '<=', Date.now())
 					.orderBy('event.communicatedTime desc')
 					.select('journey.id')
 					.limit(1)

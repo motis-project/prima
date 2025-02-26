@@ -24,6 +24,7 @@ export type Translations = {
 		weakPassword: string;
 		tooManyRequests: string;
 		failedToSendVerificationEmail: string;
+		failedToSendPasswordResetEmail: string;
 		accountDoesNotExist: string;
 		invalidPassword: string;
 		new: string;

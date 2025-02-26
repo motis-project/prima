@@ -10,6 +10,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const journey = await db
 		.selectFrom('journey')
 		.innerJoin('request', 'journey.request1', 'request.id')
+		.innerJoin('event', 'event.request', 'request.id')
+		.orderBy('event.communicatedTime', 'asc')
 		.select([
 			'json',
 			'request.passengers',
@@ -18,10 +20,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			'request.cancelled',
 			'request.ticketCode',
 			'request.customer',
-			'request.id as requestId'
+			'request.id as requestId',
+			'event.communicatedTime'
 		])
 		.where('journey.id', '=', parseInt(params.slug))
 		.where('user', '=', locals.session!.userId!)
+		.limit(1)
 		.executeTakeFirst();
 
 	if (journey == undefined) {
@@ -36,14 +40,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 export const actions = {
 	default: async ({ request, locals }): Promise<{ msg: Msg }> => {
-		const user = locals.session?.userId;
 		const formData = await request.formData();
-		const customer = readInt(formData.get('customerId'));
-		if (!user || user != customer) {
-			return { msg: msg('accountDoesNotExist') };
-		}
 		const requestId = readInt(formData.get('requestId'));
-		await cancelRequest(requestId);
-		return { msg: msg('requestCancelled') };
+		await cancelRequest(requestId, locals.session!.userId!);
+		return { msg: msg('requestCancelled', 'success') };
 	}
 };

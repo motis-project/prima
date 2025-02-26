@@ -52,14 +52,12 @@
 					</Button>
 				{/if}
 
-				<AlertDialog.Root>
-					<AlertDialog.Trigger class={buttonVariants({ variant: 'destructive' })}>
-						{t.booking.cancel}
-					</AlertDialog.Trigger>
-					<AlertDialog.Content class="w-[90%]">
-						<form method="post" use:enhance>
-							<input type="hidden" name="requestId" value={data.requestId} />
-							<input type="hidden" name="customerId" value={data.customer} />
+				{#if data.communicatedTime >= Date.now()}
+					<AlertDialog.Root>
+						<AlertDialog.Trigger class={buttonVariants({ variant: 'destructive' })}>
+							{t.booking.cancel}
+						</AlertDialog.Trigger>
+						<AlertDialog.Content class="w-[90%]">
 							<AlertDialog.Header>
 								<AlertDialog.Title>{t.booking.cancelHeadline}</AlertDialog.Title>
 								<AlertDialog.Description>
@@ -68,13 +66,16 @@
 							</AlertDialog.Header>
 							<AlertDialog.Footer class="mt-4">
 								<AlertDialog.Cancel>{t.booking.noCancel}</AlertDialog.Cancel>
-								<AlertDialog.Action type="submit">
-									{t.booking.cancelTrip}
-								</AlertDialog.Action>
+								<form method="post" use:enhance>
+									<input type="hidden" name="requestId" value={data.requestId} />
+									<AlertDialog.Action>
+										{t.booking.cancelTrip}
+									</AlertDialog.Action>
+								</form>
 							</AlertDialog.Footer>
-						</form>
-					</AlertDialog.Content>
-				</AlertDialog.Root>
+						</AlertDialog.Content>
+					</AlertDialog.Root>
+				{/if}
 			</div>
 		</div>
 	{:else}
@@ -82,6 +83,9 @@
 	{/if}
 
 	{#if showTicket}
+		<div class="flex h-full w-full items-center justify-center">
+			<QrCode value={data.ticketCode} />
+		</div>
 		<Card.Root class="my-2">
 			<Card.Content>
 				<BookingSummary
@@ -92,9 +96,6 @@
 				/>
 			</Card.Content>
 		</Card.Root>
-		<div class="flex h-full w-full items-center justify-center">
-			<QrCode value={data.ticketCode} />
-		</div>
 	{:else}
 		<ConnectionDetail
 			itinerary={data.journey}

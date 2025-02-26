@@ -16,6 +16,7 @@ jobs:
     permissions: write-all
     env:
       DATABASE_URL: postgresql://postgres:pw@localhost:6500/prima
+      PUBLIC_MOTIS_URL: https://prima-motis.motis-project.de
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -62,7 +63,7 @@ jobs:
           path: screenshots/
 
       - name: Release Build
-        run: PUBLIC_MOTIS_URL=https://prima-motis.motis-project.de pnpm run build
+        run: pnpm run build
 
       - name: Docker setup-buildx
         uses: docker/setup-buildx-action@v3

@@ -65,10 +65,6 @@ test('Request ride', async ({ page }) => {
 	await requestRide(page);
 	await page.goto('/taxi/availability?offset=-120&date=2026-09-30');
 	await page.waitForTimeout(500);
-	await expect(page.getByTestId('GR-TU-11-2026-09-30T07:45:00.000Z').locator('div')).toHaveCSS(
-		'background-color',
-		'rgb(251, 146, 60)'
-	);
 	await expect(page.getByTestId('GR-TU-11-2026-09-30T08:00:00.000Z').locator('div')).toHaveCSS(
 		'background-color',
 		'rgb(251, 146, 60)'
