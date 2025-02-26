@@ -14,7 +14,7 @@
 	import type { Tour, Tours } from '$lib/server/db/getTours';
 	import { FIXED_PRICE } from '$lib/constants.js';
 	import Tabs from '$lib/ui/tabs.svelte';
-	import { HOUR } from '$lib/util/time.js';
+	import { HOUR, MINUTE, SECOND } from '$lib/util/time.js';
 
 	const { data } = $props();
 
@@ -38,16 +38,24 @@
 		return ((price ?? 0) / 100).toFixed(2);
 	};
 
+	const displayDuration = (duration: number) => {
+		console.log({duration})
+		const rounded = Math.floor(duration / HOUR);
+		const minutes = ((duration / HOUR - rounded) * MINUTE / SECOND);
+		return (rounded < 10 ? '0' : '') + rounded + ':' + (minutes < 10 ? '0' : '') + minutes;
+	}
+
 	type Subtractions = {
         companyId: number;
 		companyName: string|null;
         capped: number;
         uncapped: number;
 		day: number;
+		availabilityDuration: number;
     }
 
-	let currentRowsToursTable: Tour[] = [];
-	let currentRowsSubtractionsTable: Subtractions[] = [];
+	let currentRowsToursTable: Tour[] = $state([]);
+	let currentRowsSubtractionsTable: Subtractions[] = $state([]);
 	let perPage = 5;
 	let firstPage = data.tours.slice(0, perPage);
 	let firstarray = [firstPage];
@@ -69,45 +77,91 @@
 		currentRowsToursTable = data.tours;
 		currentRowsSubtractionsTable = data.companyCostsPerDay;
 		paginationInfo.totalPages = paginate(perPage, currentRowsToursTable);
-		console.log(currentRowsSubtractionsTable[0]);
 		paginationInfo2.totalPages = paginate(perPage, currentRowsSubtractionsTable);
 		setCompanys(currentRowsToursTable);
 	});
 
-	// --- Sort: ---
-	let descending = [true, true, true];
+	$effect(() => {
+		sum = getNewSum(currentRowsSubtractionsTable);
+	})
 
-	const sortColumn = (idx: number) => {
-		switch (idx) {
-			case 0: {
-				currentRowsToursTable.sort((a, b) => a.startTime - b.startTime);
-				break;
-			}
-			case 1: {
-				currentRowsToursTable.sort((a, b) => getTourCost(a) - getTourCost(b));
-				break;
-			}
-			case 2: {
-				currentRowsToursTable.sort((a, b) => (a.fare ?? 0) - (b.fare ?? 0));
-			}
-			default:
-				return;
+	// --- Sort: ---
+	let descendingTours = [true, true, true];
+	let descendingSubtractions = [true, true, true, true, true];
+
+const sortTourColumn = (idx: number) => {
+	switch (idx) {
+		case 0: {
+			currentRowsToursTable.sort((a, b) => a.startTime - b.startTime);
+			break;
 		}
-		if (!descending[idx]) {
-			currentRowsToursTable.reverse();
-		} else {
-			for (let i = 0; i < descending.length; i++) {
-				if (i != idx) descending[i] = true;
-			}
+		case 1: {
+			currentRowsToursTable.sort((a, b) => (a.fare ?? 0) - (b.fare ?? 0));
+			break;
 		}
-		descending[idx] = !descending[idx];
-		paginationInfo.totalPages = paginate(perPage, currentRowsToursTable);
-		paginationInfo.page = 0;
-		paginationInfo.currentPageRows = setCurrentPages(
-			paginationInfo.page,
-			paginationInfo.totalPages
-		);
-	};
+		case 2: {
+			currentRowsToursTable.sort((a, b) => getTourCost(a) - getTourCost(b));
+			break;
+		}
+		default:
+			return;
+	}
+	if (!descendingTours[idx]) {
+		currentRowsToursTable.reverse();
+	} else {
+		for (let i = 0; i < descendingTours.length; i++) {
+			if (i != idx) descendingTours[i] = true;
+		}
+	}
+	descendingTours[idx] = !descendingTours[idx];
+	paginationInfo.totalPages = paginate(perPage, currentRowsToursTable);
+	paginationInfo.page = 0;
+	paginationInfo.currentPageRows = setCurrentPages(
+		paginationInfo.page,
+		paginationInfo.totalPages
+	);
+};
+
+const sortSubtractionColumn = (idx: number) => {
+	switch (idx) {
+		case 0: {
+			currentRowsSubtractionsTable.sort((a, b) => a.day - b.day);
+			break;
+		}
+		case 1: {
+			currentRowsSubtractionsTable.sort((a, b) => a.uncapped - b.uncapped);
+			break;
+		}
+		case 2: {
+			currentRowsSubtractionsTable.sort((a, b) => a.capped - b.capped);
+			break;
+		}
+		case 3: {
+			currentRowsSubtractionsTable.sort((a, b) => a.uncapped - a.capped - b.uncapped + b.capped);
+			break;
+		}
+		case 4: {
+			currentRowsSubtractionsTable.sort((a, b) => a.availabilityDuration - b.availabilityDuration);
+			break;
+		}
+		default:
+			return;
+	}
+	if (!descendingSubtractions[idx]) {
+		currentRowsSubtractionsTable.reverse();
+	} else {
+		for (let i = 0; i < descendingSubtractions.length; i++) {
+			if (i != idx) descendingSubtractions[i] = true;
+		}
+	}
+	descendingSubtractions[idx] = !descendingSubtractions[idx];
+	paginationInfo2.totalPages = paginate(perPage, currentRowsSubtractionsTable);
+	paginationInfo2.page = 0;
+	paginationInfo2.currentPageRows = setCurrentPages(
+		paginationInfo2.page,
+		paginationInfo2.totalPages
+	);
+};
 
 	// --- Filter: ---
 	let start = today(getLocalTimeZone());
@@ -130,50 +184,46 @@
 	let selectedTimespan = $state('Zeitraum');
 	let selectedYear = $state(thisYear);
 	let timespans = [
-		'Quartal 1',
-		'Quartal 2',
-		'Quartal 3',
-		'Quartal 4',
+		'keine Einschränkung',
+		'Janurar',
+		'Februar',
+		'März',
+		'April',
+		'Mai',
+		'Juni',
+		'Juli',
+		'August',
+		'September',
+		'Oktober',
+		'November',
+		'Dezember',
 		'ganzes Jahr'
 	];
 	const lastDaysOfTimespans = [
+		0,
+		31,
+		59,
 		90,
-		91,
-		92,
-		92,
+		120,
+		151,
+		181,
+		212,
+		243,
+		273,
+		304,
+		334,
+		365,
 		365
 	];
 
 	const filter = () => {
 		const getNewTourRows = () => {
-			const isMonthOk = (time: string, month: number) => {
-				let result = false;
-				switch (time) {
-					case 'Quartal 1':
-						result = month == 0 || month == 1 || month == 2;
-						break;
-					case 'Quartal 2':
-						result = month == 3 || month == 4 || month == 5;
-						break;
-					case 'Quartal 3':
-						result = month == 6 || month == 7 || month == 8;
-						break;
-					case 'Quartal 4':
-						result = month == 9 || month == 10 || month == 11;
-						break;
-					default:
-						result = true;
-				}
-				return result;
-			};
-
 			const comp = selectedCompany.id != -1;
 			const time = selectedTimespan != 'Zeitraum';
 			const span = range.end == end && range.start == start ? false : true;
 			let newrows: Tour[] = [];
-			const currentDate = new Date();
-			let year = currentDate.getFullYear();
-			const targetYear = selectedTimespan === 'Letztes Jahr' ? year - 1 : year;
+			const selectedMonth = timespans.findIndex((t) => t === selectedTimespan);
+			const acceptAnyMonth = -1 === selectedMonth || 0 === selectedMonth || 13 === selectedMonth;
 			for (let row of data.tours) {
 				if (time && timespans.find((str) => str === selectedTimespan) == undefined) {
 					newrows = data.tours;
@@ -187,8 +237,8 @@
 				);
 				if (
 					(time &&
-						new Date(row.startTime).getFullYear() == targetYear &&
-						isMonthOk(selectedTimespan, new Date(row.startTime).getMonth())) ||
+						new Date(row.startTime).getFullYear() == selectedYear &&
+						(acceptAnyMonth || selectedMonth === new Date(row.startTime).getMonth())) ||
 					(span && rowDate.compare(range.start) >= 0 && rowDate.compare(range.end) <= 0) ||
 					(comp && !span && !time)
 				) {
@@ -224,41 +274,56 @@
 					newrows = data.companyCostsPerDay;
 					break;
 				}
-				if (
-					(
-						(filterByQuarter && isInSpan(row.day, timespanStart, timespanEnd)) ||
-						(filterCompanies && !filterByCustomTimespan && !filterByQuarter)
-					) && (!filterCompanies || (filterCompanies && row.companyId == selectedCompany.id))
+				if ((!filterByQuarter || isInSpan(row.day, timespanStart, timespanEnd)) &&
+					(!filterCompanies || row.companyId == selectedCompany.id)
 				) {
 					newrows.push(row);
 				}
 			}
 			return newrows;
 		}
-
 		currentRowsToursTable = getNewTourRows();
 		currentRowsSubtractionsTable = getNewSubtractionRows();
-		restore();
+		updateFiltered();
 	};
 
+	const getNewSum = (rows: Subtractions[]) => {
+		let newSum = 0;
+		for(let dayInfo of rows) {
+			newSum += dayInfo.capped;
+		}
+		return newSum;
+	}
+
 	const restore = () => {
+		currentRowsSubtractionsTable = data.companyCostsPerDay;
+		currentRowsToursTable = data.tours;
+		updateFiltered();
+	}
+
+	const updateFiltered = () => {
 		selectedTimespan = 'Zeitraum';
 		selectedCompany = {name: 'Unternehmen', id: -1};
 		prepareFilterString();
 		start = today(getLocalTimeZone());
 		end = start.add({ days: 7 });
 		range = { start, end };
-		currentRowsToursTable = data.tours;
 		paginationInfo.totalPages = paginate(perPage, currentRowsToursTable);
 		paginationInfo.page = 0;
 		paginationInfo.currentPageRows = setCurrentPages(
 			paginationInfo.page,
 			paginationInfo.totalPages
 		);
+		paginationInfo2.totalPages = paginate(perPage, currentRowsSubtractionsTable);
+		paginationInfo2.page = 0;
+		paginationInfo2.currentPageRows = setCurrentPages(
+			paginationInfo2.page,
+			paginationInfo2.totalPages
+		);
 	};
 
 	let filterString = $state('keine Filter ausgewählt');
-	let sum = $state(0);
+	let sum = $state(getNewSum(data.companyCostsPerDay));
 
 	const prepareFilterString = () => {
 		let result = ' ';
@@ -280,17 +345,6 @@
 			result = 'keine Filter ausgewählt';
 		}
 		filterString = result;
-	};
-
-	const summarize = (currentRows: Tours) => {
-		sum = 0;
-		let toIterate = data.tours;
-		if (filterString != 'keine Filter ausgewählt') {
-			toIterate = currentRows;
-		}
-		for (let row of toIterate) {
-			sum += getTourCost(row);
-		}
 	};
 
 	const csvExport = (currentTourData: Tour[], filename: string) => {
@@ -362,7 +416,7 @@
 			<Table.Row>
 				<Table.Head class="mt-6.5">Unternehmen</Table.Head>
 				<Table.Head class="mt-6.5">
-					<Button class="whitespace-pre" variant="outline" onclick={() => sortColumn(0)}>
+					<Button class="whitespace-pre" variant="outline" onclick={() => sortTourColumn(0)}>
 						{'Abfahrt  '}
 						<ChevronsUpDown class="h-6 w-4" />
 					</Button>
@@ -370,13 +424,13 @@
 				<Table.Head class="mt-6.5">Ankunft</Table.Head>
 				<Table.Head class="mt-6.5 text-center">Anzahl Kunden</Table.Head>
 				<Table.Head class="mt-6.5 text-center">
-					<Button class="whitespace-pre" variant="outline" onclick={() => sortColumn(1)}>
+					<Button class="whitespace-pre" variant="outline" onclick={() => sortTourColumn(1)}>
 						{'Taxameterpreis  '}
 						<ChevronsUpDown class="h-6 w-4" />
 					</Button>
 				</Table.Head>
 				<Table.Head class="mt-6.5 text-center">
-					<Button class="whitespace-pre" variant="outline" onclick={() => sortColumn(2)}>
+					<Button class="whitespace-pre" variant="outline" onclick={() => sortTourColumn(2)}>
 						{'Kosten  '}
 						<ChevronsUpDown class="h-6 w-4" />
 					</Button>
@@ -403,22 +457,33 @@
 		<Table.Header>
 			<Table.Row>
 				<Table.Head class="mt-6.5">Unternehmen</Table.Head>
-				<Table.Head class="mt-6.5">Tag</Table.Head>
 				<Table.Head class="mt-6.5 text-center">
-					<Button class="whitespace-pre" variant="outline" onclick={() => sortColumn(1)}>
+					<Button class="whitespace-pre" variant="outline" onclick={() => sortSubtractionColumn(0)}>
+						{'Tag '}
+						<ChevronsUpDown class="h-6 w-4" />
+					</Button>
+				</Table.Head>
+				<Table.Head class="mt-6.5 text-center">
+					<Button class="whitespace-pre" variant="outline" onclick={() => sortSubtractionColumn(1)}>
 						{'Taxameterpreis kumuliert '}
 						<ChevronsUpDown class="h-6 w-4" />
 					</Button>
 				</Table.Head>
 				<Table.Head class="mt-6.5 text-center">
-					<Button class="whitespace-pre" variant="outline" onclick={() => sortColumn(2)}>
+					<Button class="whitespace-pre" variant="outline" onclick={() => sortSubtractionColumn(2)}>
 						{'Kosten mit Obergrenze  '}
 						<ChevronsUpDown class="h-6 w-4" />
 					</Button>
 				</Table.Head>
 				<Table.Head class="mt-6.5 text-center">
-					<Button class="whitespace-pre" variant="outline" onclick={() => sortColumn(2)}>
+					<Button class="whitespace-pre" variant="outline" onclick={() => sortSubtractionColumn(3)}>
 						{'Abzüge'}
+						<ChevronsUpDown class="h-6 w-4" />
+					</Button>
+				</Table.Head>
+				<Table.Head class="mt-6.5 text-center">
+					<Button class="whitespace-pre" variant="outline" onclick={() => sortSubtractionColumn(4)}>
+						{'gesetzte Verfügbarkeit'}
 						<ChevronsUpDown class="h-6 w-4" />
 					</Button>
 				</Table.Head>
@@ -432,6 +497,7 @@
 					<Table.Cell class="text-center">{getEuroString(subtraction.uncapped)} €</Table.Cell>
 					<Table.Cell class="text-center">{getEuroString(subtraction.capped)} €</Table.Cell>
 					<Table.Cell class="text-center">{getEuroString(subtraction.uncapped - subtraction.capped)} €</Table.Cell>
+					<Table.Cell class="text-center">{displayDuration(subtraction.availabilityDuration)}</Table.Cell>
 				</Table.Row>
 			{/each}
 		</Table.Body>
@@ -474,7 +540,6 @@
 						class={buttonVariants({ variant: 'outline' })}
 						bind:value={selectedTimespan}
 					>
-						<option selected={true} disabled>Zeitraum</option>
 						{#each timespans as t}
 							<option value={t}>
 								{t}
@@ -503,7 +568,7 @@
 	</div>
 	<Card.Content class="h-full w-full">
 		<Tabs items={tables} />
+		<Label>Summe aller Kosten unter Berücksichtigung der Obergrenze im gewählten Zeitraum: {getEuroString(sum)} €</Label>
 		<Paginate bind:open={paginationInfo} />
 	</Card.Content>
-
 </div>

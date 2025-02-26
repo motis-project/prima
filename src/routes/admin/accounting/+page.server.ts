@@ -1,4 +1,4 @@
-import { CAP, OVER_CAP_FACTOR } from '$lib/constants';
+import { CAP, FIXED_PRICE, OVER_CAP_FACTOR } from '$lib/constants';
 import type { VehicleId } from '$lib/server/booking/VehicleId';
 import { db } from '$lib/server/db';
 import { getTours, type Tour } from '$lib/server/db/getTours';
@@ -11,8 +11,8 @@ export const load = async () => {
 	function isLeapYear(year: number): boolean {
 		return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
   	}
-	const today = Math.floor(Date.now() / DAY) * DAY;
-	const year = new Date(today).getUTCFullYear();
+	const todayEnd = (Math.floor(Date.now() / DAY) + 1) * DAY;
+	const year = new Date(todayEnd).getUTCFullYear();
 	const firstOfJanuaryLastYear = new Date(year - 1, 0, 1).getTime();
 
 	const tours = (await getTours(false)).map((t) => {
@@ -27,7 +27,7 @@ export const load = async () => {
 		firstOfJanuaryLastYear,
 		isLeapYear: isLeapYear(year),
 		lastIsLeapYear: isLeapYear(year - 1),
-		companyCostsPerDay: await getCompanyCosts(today, firstOfJanuaryLastYear, tours)
+		companyCostsPerDay: await getCompanyCosts(todayEnd, firstOfJanuaryLastYear, tours)
 	};
 };
 
@@ -59,38 +59,40 @@ async function getCompanyCosts(today: UnixtimeMs, firstOfJanuaryLastYear: Unixti
 	const allAvailabilities = Array.from(availabilitiesPerVehicle).flatMap(([vehicleId, intervals]) =>
 		intervals.map((interval) => ({ vehicleId, interval }))
 	);
-	allAvailabilities.sort((a1, a2) => a1.interval.startTime - a2.interval.startTime);
-	console.log({allAvailabilities});
+
+	allAvailabilities.sort((a1, a2) => {
+		const startDayCmp = Math.floor(a1.interval.startTime/DAY) - Math.floor(a2.interval.startTime/DAY);
+		return startDayCmp === 0 ? a1.interval.endTime - a2.interval.endTime : startDayCmp;
+	});
 
 	// cumulate the total duration of availability on every relevant day for each vehicle
 	const availabilitiesPerDayAndVehicle = new Array<Map<VehicleId, number>>();
 	let availabilityIdx = 0;
 	let currentAvailability = allAvailabilities[0];
-	for (let d = 0; d != days.length; ++d) {
+	for (let d = 410; d != days.length; ++d) {
 		availabilitiesPerDayAndVehicle[d] = new Map<VehicleId, number>();
 		const day = days[d];
-		if(availabilityIdx == allAvailabilities.length) {
-			break;
-		}
-		while(currentAvailability.interval.endTime <= day.startTime) {
-			if(availabilityIdx == allAvailabilities.length) {
-				break;
-			}
+		while(availabilityIdx != allAvailabilities.length && currentAvailability.interval.endTime <= day.startTime) {
 			currentAvailability = allAvailabilities[++availabilityIdx];
 		}
 		if(availabilityIdx == allAvailabilities.length) {
 			break;
 		}
-		availabilitiesPerDayAndVehicle[d] = new Map<VehicleId, number>();
-		const availabilityOnDay = days[d].intersect(currentAvailability.interval);
-		if (availabilityOnDay === undefined) {
-			continue;
+		const oldAvailabilityIdx = availabilityIdx;
+		let availabilityOnDay = day.intersect(currentAvailability.interval);
+		while (availabilityIdx != allAvailabilities.length && availabilityOnDay !== undefined) {
+			availabilitiesPerDayAndVehicle[d].set(
+				currentAvailability.vehicleId,
+				(availabilitiesPerDayAndVehicle[d].get(currentAvailability.vehicleId) ?? 0) +
+					availabilityOnDay.getDurationMs()
+			);
+			currentAvailability = allAvailabilities[++availabilityIdx];
+			if(availabilityIdx !== allAvailabilities.length) {
+				availabilityOnDay = day.intersect(currentAvailability.interval);
+			}
 		}
-		availabilitiesPerDayAndVehicle[d].set(
-			currentAvailability.vehicleId,
-			(availabilitiesPerDayAndVehicle[d].get(currentAvailability.vehicleId) ?? 0) +
-				availabilityOnDay.getDurationMs()
-		);
+		availabilityIdx = oldAvailabilityIdx;
+		currentAvailability = allAvailabilities[availabilityIdx];
 	}
 
 	// cumulate the total taxameter readings on every relevant day for each vehicle
@@ -118,7 +120,7 @@ async function getCompanyCosts(today: UnixtimeMs, firstOfJanuaryLastYear: Unixti
 		taxameterPerDayAndVehicle[d].forEach((taxameter, vehicle) => {
 			const costCap = ((availabilitiesPerDayAndVehicle[d]?.get(vehicle) ?? 0) * CAP) / HOUR;
 			const cost =
-				Math.min(costCap, taxameter) + Math.max(taxameter - costCap, 0) * OVER_CAP_FACTOR;
+				Math.min(costCap, taxameter - FIXED_PRICE) + Math.max(taxameter - FIXED_PRICE - costCap, 0) * OVER_CAP_FACTOR;
 			costPerDayAndVehicle[d].set(vehicle, cost);
 		});
 	}
@@ -127,9 +129,9 @@ async function getCompanyCosts(today: UnixtimeMs, firstOfJanuaryLastYear: Unixti
 	tours.forEach((t) => companyByVehicle.set(t.vehicleId, {name:t.companyName, id: t.companyId}));
 
 	// Gather the daily (soft-capped and uncapped) costs per day and company
-	const companyCostsPerDay = new Array<Map<number, {capped: number, uncapped: number, companyName: string | null}>>();
+	const companyCostsPerDay = new Array<Map<number, {capped: number, uncapped: number, companyName: string | null, availabilityDuration: number }>>();
 	for (let d = 0; d != days.length; ++d) {
-		companyCostsPerDay[d] = new Map<number, {capped: number, uncapped: number, companyName: string | null}>();
+		companyCostsPerDay[d] = new Map<number, {capped: number, uncapped: number, companyName: string | null, availabilityDuration: number }>();
 		if(costPerDayAndVehicle[d] === undefined) {
 			continue;
 		}
@@ -138,28 +140,20 @@ async function getCompanyCosts(today: UnixtimeMs, firstOfJanuaryLastYear: Unixti
 			companyCostsPerDay[d].set(company.id, {
 				capped: (companyCostsPerDay[d].get(company.id)?.capped ?? 0) + cost,
 				uncapped: (companyCostsPerDay[d].get(company.id)?.uncapped ?? 0) + (taxameterPerDayAndVehicle[d].get(vehicle) ?? 0),
-				companyName: company.name
+				companyName: company.name,
+				availabilityDuration: (companyCostsPerDay[d].get(company.id)?.availabilityDuration ?? 0) + (availabilitiesPerDayAndVehicle[d]?.get(vehicle) ?? 0)
 			});
 		});
 	}
-	console.log({costs: companyCostsPerDay.flatMap((companyCosts, day) =>
-		Array.from(companyCosts).map(([companyId, {capped, uncapped, companyName}]) => {
-			return {
-				companyId,
-				capped,
-				uncapped,
-				day,
-				companyName
-			};
-		}))})
 	return companyCostsPerDay.flatMap((companyCosts, day) =>
-		Array.from(companyCosts).map(([companyId, {capped, uncapped, companyName}]) => {
+		Array.from(companyCosts).map(([companyId, {capped, uncapped, companyName, availabilityDuration}]) => {
 			return {
 				companyId,
 				capped,
 				uncapped,
 				day,
-				companyName
+				companyName,
+				availabilityDuration
 			};
 		})
 	);
