@@ -20,7 +20,6 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "BASE_URL", "\"http://192.168.178.48:7777\"")
             buildConfigField("String", "BASE_URL", "\"https://prima.motis-project.de\"")
         }
         release {
