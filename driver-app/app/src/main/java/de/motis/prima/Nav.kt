@@ -24,7 +24,11 @@ fun Nav() {
             if (cookieStore.isEmpty()) {
                 "login"
             } else {
-                "vehicles"
+                if (userViewModel.selectedVehicle.value.id != 0) {
+                    "tours"
+                } else {
+                    "vehicles"
+                }
             }
         }
     }
