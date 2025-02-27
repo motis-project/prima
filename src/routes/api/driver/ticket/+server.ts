@@ -1,13 +1,12 @@
 import { db } from '$lib/server/db';
 import { readInt } from '$lib/server/util/readForm.js';
-import { error } from '@sveltejs/kit';
 
 export const PUT = async ({ url }) => {
 	const requestId = readInt(url.searchParams.get('requestId'));
 	const ticketCode = url.searchParams.get('ticketCode');
 
 	if (typeof ticketCode !== 'string' || isNaN(requestId)) {
-		throw error(400, 'Bad request');
+		return new Response(null, { status: 400 });
 	}
 
 	const result = await db
@@ -18,7 +17,7 @@ export const PUT = async ({ url }) => {
 		.executeTakeFirst();
 
 	if (result.numUpdatedRows === BigInt(0)) {
-		throw error(404, 'Not found');
+		return new Response(null, { status: 404 });
 	}
 
 	return new Response(null, { status: 204 });

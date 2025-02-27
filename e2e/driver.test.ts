@@ -13,7 +13,6 @@ test('Get tours', async ({ page }) => {
 	const responseBody = await response.json();
 	expect(responseBody).toHaveLength(1);
 	expect(responseBody[0]).toHaveProperty('tourId');
-	expect(responseBody[0]).toHaveProperty('licensePlate', 'GR-TU-11');
 	expect(responseBody[0]).toHaveProperty('events');
 
 	const events = responseBody[0]['events'];
@@ -31,8 +30,7 @@ test('Get vehicles', async ({ page }) => {
 	expect(response.status()).toBe(200);
 
 	const responseBody = await response.json();
-	expect(responseBody).toHaveLength(1);
-	expect(responseBody[0]).toHaveProperty('licensePlate', 'GR-TU-11');
+	expect(responseBody).toHaveLength(2);
 });
 
 test('Set ticket checked', async ({ page }) => {

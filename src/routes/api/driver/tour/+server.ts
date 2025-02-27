@@ -1,6 +1,6 @@
 import { getTours } from '$lib/server/db/getTours';
 import { readInt } from '$lib/server/util/readForm.js';
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 
 export const GET = async ({ locals, url }) => {
 	const companyId = locals.session!.companyId!;
@@ -8,7 +8,7 @@ export const GET = async ({ locals, url }) => {
 	const toTime = readInt(url.searchParams.get('toTime'));
 
 	if (isNaN(fromTime) || isNaN(toTime)) {
-		throw error(400, 'Bad request');
+		return new Response(null, { status: 400 });
 	}
 
 	return json(await getTours(false, companyId, [fromTime, toTime]));
