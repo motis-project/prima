@@ -12,10 +12,7 @@ import de.motis.prima.app.DriversApp
 import de.motis.prima.services.CookieStore
 
 @Composable
-fun Nav(
-    cameraGranted: Boolean,
-    fineLocationGranted: Boolean
-) {
+fun Nav() {
     val navController = rememberNavController()
     val userViewModel: UserViewModel = viewModel()
     val scanViewModel: ScanViewModel = viewModel()
@@ -24,9 +21,7 @@ fun Nav(
     val startDestination by remember {
         derivedStateOf {
             val cookieStore = CookieStore(DriversApp.instance)
-            if (!cameraGranted || !fineLocationGranted) {
-                "permissionInfo"
-            } else if (cookieStore.isEmpty()) {
+            if (cookieStore.isEmpty()) {
                 "login"
             } else {
                 "vehicles"
@@ -35,10 +30,6 @@ fun Nav(
     }
 
     NavHost(navController = navController, startDestination = startDestination) {
-        composable(route = "permissionInfo") {
-            PermissionInfo(navController, cameraGranted, fineLocationGranted)
-        }
-
         composable(route = "login") {
             Login(navController, userViewModel)
         }
