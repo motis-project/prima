@@ -58,12 +58,18 @@ import android.provider.Settings
 import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxWidth
 
+data class Ticket(
+    val requestId: Int,
+    val ticketCode: String,
+    val isReported: Boolean
+)
+
 class ScanViewModel : ViewModel() {
-    private val _validTickets = MutableStateFlow(mutableMapOf<String, String>())
+    private val _validTickets = MutableStateFlow(mutableMapOf<String, Ticket>())
     val validTickets = _validTickets.asStateFlow()
 
-    fun updateValidTickets(ticketCode: String) {
-        _validTickets.value[md5(ticketCode)] = ticketCode
+    private fun updateValidTickets(requestId: Int, ticketCode: String, reported: Boolean) {
+        _validTickets.value[md5(ticketCode)] = Ticket(requestId, ticketCode, reported)
     }
 
     private fun md5(input: String): String {
@@ -72,16 +78,21 @@ class ScanViewModel : ViewModel() {
     }
 
     fun reportTicketScan(requestId: Int, ticketCode: String) {
-        Log.d("ticket", "Validating ticket code: $ticketCode")
         viewModelScope.launch {
+            var isReported = false
             try {
-                val response = Api.apiService.validateTicket(requestId, ticketCode)
-                if (!response.success) {
-                    Log.d("ticket", response.toString())
+                //val response = Api.apiService.validateTicket(requestId, ticketCode)
+                val response = Api.apiService.validateTicket(requestId, "ticketCode")
+                if (response.status == 204) {
+                    isReported = true
+                } else {
+                    Log.d("error", response.toString())
                 }
             } catch (e: Exception) {
-                Log.d("ticket", "Network Error: ${e.message!!}")
+                Log.d("error", "Network Error: ${e.message!!}")
             }
+            Log.d("test", "$requestId, $ticketCode, $isReported")
+            updateValidTickets(requestId, ticketCode, isReported)
         }
     }
 }
@@ -90,6 +101,7 @@ class ScanViewModel : ViewModel() {
 fun TicketScan(
     navController: NavController,
     tourId: Int,
+    requestId: Int,
     viewModel: ScanViewModel
 ) {
     var isScanning by remember { mutableStateOf(true) }
@@ -109,8 +121,7 @@ fun TicketScan(
             ) {
                 QRCodeScanner(
                     onQRCodeScanned = { result ->
-                        viewModel.updateValidTickets(result)
-                        viewModel.reportTicketScan(6, result)
+                        viewModel.reportTicketScan(requestId, result)
                         isScanning = false
                     },
                     onCloseScanner = {
@@ -128,7 +139,7 @@ fun TicketScan(
         }
     } else {
         LaunchedEffect(Unit) {
-            navController.navigate("taxameter/$tourId")
+            navController.navigate("fare/$tourId")
         }
     }
 }
@@ -239,49 +250,6 @@ fun QRCodeScanner(
             }
         }
     }
-
-    /*if (hasPermission) {
-        AndroidView(
-            modifier = Modifier.fillMaxSize(),
-            factory = { ctx ->
-                val previewView = androidx.camera.view.PreviewView(ctx).apply {
-                    scaleType = androidx.camera.view.PreviewView.ScaleType.FILL_CENTER
-                }
-
-                cameraProviderFuture.addListener({
-                    val provider = cameraProviderFuture.get()
-                    cameraProvider = provider
-
-                    val preview = Preview.Builder().build().also {
-                        it.setSurfaceProvider(previewView.surfaceProvider)
-                    }
-
-                    val imageAnalyzer = ImageAnalysis.Builder().build().also {
-                        it.setAnalyzer(executor) { imageProxy ->
-                            processImage(imageProxy, onQRCodeScanned, provider)
-                        }
-                    }
-
-                    provider.unbindAll()
-                    provider.bindToLifecycle(
-                        ctx as ComponentActivity,
-                        CameraSelector.DEFAULT_BACK_CAMERA,
-                        preview,
-                        imageAnalyzer
-                    )
-                }, ContextCompat.getMainExecutor(ctx))
-
-                previewView
-            },
-            onRelease = {
-                cameraProvider?.unbindAll()
-                executor.shutdown()
-                onCloseScanner()
-            }
-        )
-    } else {
-        Text("Camera permission is required to scan QR codes.", modifier = Modifier.padding(16.dp))
-    }*/
 }
 
 @OptIn(ExperimentalGetImage::class)

@@ -290,7 +290,8 @@ fun ShowTours(tours: List<Tour>, navController: NavController) {
             ) {
                 items(items = tours, itemContent = { tour ->
                     ConstraintLayout(modifier = Modifier.clickable {
-                        navController.navigate("scan/${tour.tourId}")
+                        val requestId = tour.events[0].requestId
+                        navController.navigate("scan/${tour.tourId}/$requestId")
                     }) {
                         var city = "-"
                         var displayTime = "-"

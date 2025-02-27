@@ -1,5 +1,6 @@
 package de.motis.prima
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -7,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
@@ -26,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -68,9 +73,7 @@ class TaxameterViewModel : ViewModel() {
             if (fareCent > 0) {
                 try {
                     val response = Api.apiService.reportFare(tourId, fareCent)
-                    if (!response.success) {
-                        _networkErrorEvent.emit(Unit)
-                    } else {
+                    if (response.status == 204) {
                         _reportSuccessEvent.emit(Unit)
                     }
                 } catch (e: Exception) {
@@ -83,9 +86,10 @@ class TaxameterViewModel : ViewModel() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Taxameter(
+fun Fare(
     navController: NavController,
     userViewModel: UserViewModel,
+    scanViewModel: ScanViewModel,
     tourId: Int,
     viewModel: TaxameterViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
 ) {
@@ -213,6 +217,32 @@ fun Taxameter(
                     Text(
                         text = stringResource(id = R.string.send_fare_button_text), fontSize = 20.sp
                     )
+                }
+                Spacer(modifier = Modifier.height(100.dp))
+                val validTickets by scanViewModel.validTickets.collectAsState()
+                val failedReports = validTickets.entries.filter { e -> !e.value.isReported }
+
+                Text("Fehlgeschlagene Ticket-Validierungen",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Box {
+                    LazyColumn(
+                        modifier = Modifier
+                            .padding(contentPadding)
+                    ) {
+                        items(items = failedReports, itemContent = { ticket ->
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    ticket.value.requestId.toString(),
+                                    fontSize = 12.sp
+                                )
+                            }
+                        })
+                    }
                 }
             }
         }

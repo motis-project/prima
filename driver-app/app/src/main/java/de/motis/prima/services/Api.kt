@@ -8,6 +8,7 @@ import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Query
 
 interface ApiService {
@@ -16,7 +17,7 @@ interface ApiService {
     suspend fun login(
         @Field("email") email: String,
         @Field("password") password: String
-    ): LoginResponse
+    ): ApiResponse
 
     @GET("api/driver/vehicle")
     fun getVehicles() : Call<List<Vehicle>>
@@ -24,17 +25,17 @@ interface ApiService {
     @GET("api/driver/tour")
     fun getTours(@Query("fromTime") fromTime: Long, @Query("toTime") toTime: Long) : Call<List<Tour>>
 
-    @POST("api/driver/ticket")
+    @PUT("api/driver/ticket")
     suspend fun validateTicket(
         @Query("requestId") requestId: Int,
         @Query("ticketCode") ticketCode: String
-    ): APIResponse
+    ): ApiResponse
 
-    @POST("api/driver/fare")
+    @PUT("api/driver/fare")
     suspend fun reportFare(
         @Query("tourId") tourId: Int,
         @Query("fare") fare: Int
-    ): APIResponse
+    ): ApiResponse
 }
 
 object Api {
@@ -47,13 +48,8 @@ object Api {
     val apiService: ApiService = retrofit.create(ApiService::class.java)
 }
 
-data class LoginResponse(
-    val type: String,
+data class ApiResponse(
     val status: Int
-)
-
-data class APIResponse(
-    val success: Boolean,
 )
 
 data class Vehicle(
