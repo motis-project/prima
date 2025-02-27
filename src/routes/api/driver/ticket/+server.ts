@@ -1,21 +1,25 @@
 import { db } from '$lib/server/db';
 import { readInt } from '$lib/server/util/readForm.js';
-import { json } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 
-export const POST = async ({ url }) => {
+export const PUT = async ({ url }) => {
 	const requestId = readInt(url.searchParams.get('requestId'));
 	const ticketCode = url.searchParams.get('ticketCode');
 
 	if (typeof ticketCode !== 'string' || isNaN(requestId)) {
-		throw 'bad params';
+		throw error(400, 'Bad request');
 	}
 
-	await db
+	const result = await db
 		.updateTable('request')
 		.set({ ticketChecked: true })
 		.where('id', '=', requestId)
 		.where('ticketCode', '=', ticketCode)
-		.execute();
+		.executeTakeFirst();
 
-	return json({ success: true });
+	if (result.numUpdatedRows === BigInt(0)) {
+		throw error(404, 'Not found');
+	}
+
+	return new Response(null, { status: 204 });
 };

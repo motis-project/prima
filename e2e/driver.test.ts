@@ -57,10 +57,20 @@ test('Set ticket checked', async ({ page }) => {
 	const ticketCode = 'a7d421840cf89e052d7c1aa74caf66d8';
 	await execSQL(sql`UPDATE "request" SET ticket_code = ${ticketCode} WHERE id = ${requestId}`);
 
-	const response = await page
+	const response1 = await page
 		.context()
-		.request.post(`/api/driver/ticket?requestId=${requestId}&ticketCode=${ticketCode}`);
-	expect(response.status()).toBe(200);
+		.request.put(`/api/driver/ticket?requestId=${requestId}&ticketCode=${ticketCode}`);
+	expect(response1.status()).toBe(204);
+
+	const response2 = await page
+		.context()
+		.request.put(`/api/driver/ticket?requestId="NaN"&ticketCode=${ticketCode}`);
+	expect(response2.status()).toBe(400);
+
+	const response3 = await page
+		.context()
+		.request.put(`/api/driver/ticket?requestId=${requestId}&ticketCode=invalidCode`);
+	expect(response3.status()).toBe(404);
 });
 
 test('Set tour fare', async ({ page }) => {
@@ -80,8 +90,14 @@ test('Set tour fare', async ({ page }) => {
 
 	const fare = 1234;
 
-	const response = await page
+	const response1 = await page
 		.context()
-		.request.post(`/api/driver/fare?tourId=${tourId}&fare=${fare}`);
-	expect(response.status()).toBe(200);
+		.request.put(`/api/driver/fare?tourId=${tourId}&fare=${fare}`);
+	expect(response1.status()).toBe(204);
+
+	const response2 = await page.context().request.put(`/api/driver/fare?tourId=NaN&fare=${fare}`);
+	expect(response2.status()).toBe(400);
+
+	const response3 = await page.context().request.put(`/api/driver/fare?tourId=${tourId}&fare=NaN`);
+	expect(response3.status()).toBe(400);
 });
