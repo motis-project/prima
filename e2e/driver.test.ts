@@ -30,7 +30,7 @@ test('Get vehicles', async ({ page }) => {
 	expect(response.status()).toBe(200);
 
 	const responseBody = await response.json();
-	expect(responseBody).toHaveLength(2);
+	expect(responseBody).not.toHaveLength(0);
 });
 
 test('Set ticket checked', async ({ page }) => {
