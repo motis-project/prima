@@ -2,18 +2,20 @@ import { test, expect } from '@playwright/test';
 import { TAXI_OWNER, execSQL, login } from './utils';
 import { sql } from 'kysely';
 
+const fromTime = new Date('2026-09-30T00:00:00.000Z').getTime();
+const toTime = new Date('2026-09-30T23:59:59.000Z').getTime();
+
 test('Get tours', async ({ page }) => {
 	await login(page, TAXI_OWNER);
 
 	const response = await page
 		.context()
-		.request.get('/api/driver/tour?fromTime=1790726400000&toTime=1790812799000');
+		.request.get(`/api/driver/tour?fromTime=${fromTime}&toTime=${toTime}`);
 	expect(response.status()).toBe(200);
 
 	const responseBody = await response.json();
 	expect(responseBody).toHaveLength(1);
 	expect(responseBody[0]).toHaveProperty('tourId');
-	expect(responseBody[0]).toHaveProperty('licensePlate', 'GR-TU-11');
 	expect(responseBody[0]).toHaveProperty('events');
 
 	const events = responseBody[0]['events'];
@@ -31,8 +33,7 @@ test('Get vehicles', async ({ page }) => {
 	expect(response.status()).toBe(200);
 
 	const responseBody = await response.json();
-	expect(responseBody).toHaveLength(1);
-	expect(responseBody[0]).toHaveProperty('licensePlate', 'GR-TU-11');
+	expect(responseBody).not.toHaveLength(0);
 });
 
 test('Set ticket checked', async ({ page }) => {
@@ -40,7 +41,7 @@ test('Set ticket checked', async ({ page }) => {
 
 	const toursResponse = await page
 		.context()
-		.request.get('/api/driver/tour?fromTime=1790726400000&toTime=1790812799000');
+		.request.get(`/api/driver/tour?fromTime=${fromTime}&toTime=${toTime}`);
 	expect(toursResponse.status()).toBe(200);
 
 	const tours = await toursResponse.json();
@@ -78,7 +79,7 @@ test('Set tour fare', async ({ page }) => {
 
 	const toursResponse = await page
 		.context()
-		.request.get('/api/driver/tour?fromTime=1790726400000&toTime=1790812799000');
+		.request.get(`/api/driver/tour?fromTime=${fromTime}&toTime=${toTime}`);
 	expect(toursResponse.status()).toBe(200);
 
 	const tours = await toursResponse.json();

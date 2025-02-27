@@ -7,7 +7,7 @@ export const PUT = async ({ url }) => {
 	const fare = readInt(url.searchParams.get('fare'));
 
 	if (isNaN(fare) || isNaN(tourId)) {
-		throw error(400, 'Bad request');
+		error(400, { message: 'Invalid fare or tourId parameter' });
 	}
 
 	const result = await db
@@ -17,7 +17,7 @@ export const PUT = async ({ url }) => {
 		.executeTakeFirst();
 
 	if (result.numUpdatedRows === BigInt(0)) {
-		throw error(404, 'Not found');
+		error(404, { message: 'Tour not found' });
 	}
 
 	return new Response(null, { status: 204 });

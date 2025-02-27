@@ -7,7 +7,7 @@ export const PUT = async ({ url }) => {
 	const ticketCode = url.searchParams.get('ticketCode');
 
 	if (typeof ticketCode !== 'string' || isNaN(requestId)) {
-		throw error(400, 'Bad request');
+		error(400, { message: 'Invalid ticketCode parameter' });
 	}
 
 	const result = await db
@@ -18,7 +18,7 @@ export const PUT = async ({ url }) => {
 		.executeTakeFirst();
 
 	if (result.numUpdatedRows === BigInt(0)) {
-		throw error(404, 'Not found');
+		error(404, { message: 'Request not found or invalid ticket code' });
 	}
 
 	return new Response(null, { status: 204 });
