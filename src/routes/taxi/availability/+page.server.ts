@@ -73,7 +73,7 @@ export async function load(event) {
 		cell: Range;
 		heat: number;
 	};
-	let heatarray: heatinfo[] = [];
+	const heatarray: heatinfo[] = [];
 	const isAInsideB = (rangeA: Range, Bstart: UnixtimeMs, Bend: UnixtimeMs) => {
 		return (
 			rangeA.startTime >= Bstart &&
@@ -82,13 +82,13 @@ export async function load(event) {
 			rangeA.endTime <= Bend
 		);
 	};
-	let range: Range = { startTime: fromTime.getTime(), endTime: toTime.getTime() };
-	let hours = split(range, 60);
+	const range: Range = { startTime: fromTime.getTime(), endTime: toTime.getTime() };
+	const hours = split(range, 60);
 	let heatcount = 0;
-	for (let hour of hours) {
-		let cell = split(hour, 15);
-		for (let onecell of cell) {
-			for (let heat of heatmapInfos) {
+	for (const hour of hours) {
+		const cell = split(hour, 15);
+		for (const onecell of cell) {
+			for (const heat of heatmapInfos) {
 				if (isAInsideB(onecell, heat.startTime, heat.endTime)) {
 					heatcount++; // hier dann später Berechnung für gewichtete Summe einbauen
 				}
