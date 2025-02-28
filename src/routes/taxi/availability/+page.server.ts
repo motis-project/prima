@@ -8,6 +8,7 @@ import { readInt } from '$lib/server/util/readForm';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import type { Range } from './Range';
 import { split } from './Range';
+import { mergeAvailabilities } from '$lib/server/util/mergeAvailabilities';
 
 export async function load(event) {
 	const companyId = event.locals.session?.companyId;
@@ -66,8 +67,10 @@ export async function load(event) {
 		.where('startTime', '<', toTime.getTime())
 		.where('endTime', '>', fromTime.getTime())
 		.where('company', '!=', companyId)
-		.select(['availability.id', 'startTime', 'endTime', 'vehicle', 'vehicle.company'])
+		.select(['startTime', 'endTime', 'vehicle', 'vehicle.company'])
 		.execute();
+
+	// TODO: availabilities müssen gemerged werden!
 
 	type heatinfo = {
 		cell: Range;
@@ -90,7 +93,10 @@ export async function load(event) {
 		for (const onecell of cell) {
 			for (const heat of heatmapInfos) {
 				if (isAInsideB(onecell, heat.startTime, heat.endTime)) {
-					heatcount++; // hier dann später Berechnung für gewichtete Summe einbauen
+					heatcount++; // hier dann später Berechnung für gewichtete Summe einbauen. 
+					// TODO:
+					// - euklidische distanz für die distanz der Taxiunternehmen zueinander
+					// - gewichtung anhand der distanz in die heatmap einbauen
 				}
 			}
 			heatarray.push({ cell: onecell, heat: heatcount });
