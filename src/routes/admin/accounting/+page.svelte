@@ -11,6 +11,7 @@
 	import Tabs from '$lib/ui/Tabs.svelte';
 	import { DAY, HOUR, MINUTE, SECOND } from '$lib/util/time.js';
 	import SortableScrollableTable from '$lib/ui/SortableScrollableTable.svelte';
+	import * as Table from '$lib/shadcn/table/index.js';
 
 	const { data } = $props();
 
@@ -283,7 +284,60 @@
 <div>
 	<Card.Header>
 		<Card.Title>Abrechnung</Card.Title>
-	</Card.Header>
+	</Card.Header><Dialog.Root>
+		<Dialog.Trigger
+			class={buttonVariants({ variant: 'outline' })}
+			onclick={() => summarize(currentRowsToursTable)}
+		>
+			Summierung Kosten
+		</Dialog.Trigger>
+		<Dialog.Content class="sm:max-w-[850px]">
+			<Dialog.Header>
+				<Dialog.Title>Summierung Kosten</Dialog.Title>
+				<Dialog.Description>
+					Summiere Kosten, um eine Abrechnungsdatei zu erstellen.
+				</Dialog.Description>
+			</Dialog.Header>
+			<Label for="name" class="text-left">
+				Folgende Filter sind ausgewählt: {filterString}
+			</Label>
+			<Table.Root>
+				<Table.Header>
+					<Table.Row>
+						<Table.Head class="mt-6.5">Unternehmen</Table.Head>
+						<Table.Head class="mt-6.5">Tag</Table.Head>
+						<Table.Head class="mt-6.5 text-center">Taxameterstand</Table.Head>
+						<Table.Head class="mt-6.5 text-center">Kosten</Table.Head>
+					</Table.Row>
+				</Table.Header>
+				<Table.Body>
+					{#each currentRowsToursTable as tour}
+						<Table.Row>
+							<Table.Cell>{tour.companyName}</Table.Cell>
+							<Table.Cell>{tour.startTime.toLocaleString('de-DE').slice(0, -10)}</Table.Cell>
+							<Table.Cell class="text-center">{getEuroString(tour.fare)} €</Table.Cell>
+							<Table.Cell class="text-center"
+								>{getEuroString(getTourCost(tour))} €</Table.Cell
+							>
+						</Table.Row>
+					{/each}
+					<Table.Row>
+						<Table.Cell>Summe</Table.Cell>
+						<Table.Cell></Table.Cell>
+						<Table.Cell></Table.Cell>
+						<Table.Cell></Table.Cell>
+						<Table.Cell></Table.Cell>
+						<Table.Cell>{getEuroString(sum)} €</Table.Cell>
+					</Table.Row>
+				</Table.Body>
+			</Table.Root>
+			<Dialog.Close class="text-right">
+				<Button type="submit" onclick={() => csvExport(currentRowsToursTable, 'Abrechnung')}>
+					CSV-Export starten
+				</Button>
+			</Dialog.Close>
+		</Dialog.Content>
+	</Dialog.Root>
 	<div class="flex gap-4 p-6 font-semibold leading-none tracking-tight">
 		<Button type="submit" onclick={() => restore()}>Filter zurücksetzten</Button>
 		<Dialog.Root>
