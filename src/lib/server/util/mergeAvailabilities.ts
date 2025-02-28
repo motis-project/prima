@@ -6,14 +6,14 @@ import { Interval } from "./interval";
 //TODO schauen, wie ich das anpassen kann damit es für nils und mich passend/einfach ist
 type valueType = {
     Intervals: Interval[],
-    company: number
+    company: number | undefined
 }
 
 export function mergeAvailabilities(availabilities: {
     vehicleId: VehicleId,
+    company: number | undefined,
     startTime: UnixtimeMs,
     endTime: UnixtimeMs,
-    company: number | undefined
 }[]): Map<VehicleId, Interval[]> {
     // group availabilities by vehicle
     const availabilitiesPerVehicle = groupBy(
