@@ -8,9 +8,9 @@
 	import pkg from 'file-saver';
 	import type { Tour } from '$lib/server/db/getTours';
 	import { FIXED_PRICE } from '$lib/constants.js';
-	import Tabs from '$lib/ui/tabs.svelte';
+	import Tabs from '$lib/ui/Tabs.svelte';
 	import { DAY, HOUR, MINUTE, SECOND } from '$lib/util/time.js';
-	import SortableScrollableTable from '$lib/ui/sortableScrollableTable.svelte';
+	import SortableScrollableTable from '$lib/ui/SortableScrollableTable.svelte';
 
 	const { data } = $props();
 
@@ -19,7 +19,7 @@
 	const thisYear = new Date(Date.now()).getFullYear();
 
 	const tourCols = [
-		{text: 'Unternhemen', sort: undefined, toTableCell: (r: Tour) => r.companyName},
+		{text: 'Unternehmen', sort: undefined, toTableCell: (r: Tour) => r.companyName},
 		{text: 'Abfahrt  ', sort:(t1: Tour, t2: Tour) => t1.startTime - t2.startTime, toTableCell: (r: Tour) => new Date(r.startTime).toLocaleString('de-DE').slice(0, -3)},
 		{text: 'Ankunft', sort: undefined, toTableCell: (r: Tour) => new Date(r.endTime).toLocaleString('de-DE').slice(0, -3)},
 		{text: 'Anzahl Kunden', sort: undefined, toTableCell: (r: Tour) => getCustomerCount(r)},
@@ -36,7 +36,7 @@
 		{text: 'Kosten mit Obergrenze  ', sort: (a: Subtractions, b: Subtractions) => a.capped - b.capped, toTableCell: (r: Subtractions) => getEuroString(r.capped)},
 		{text: 'Abzüge  ', sort: (a: Subtractions, b: Subtractions) => a.uncapped - a.capped - b.uncapped + b.capped, toTableCell: (r: Subtractions) => getEuroString(r.uncapped - r.capped)},
 		{
-			text: 'gesetzte Verfügbarkeit', sort: (a: Subtractions, b: Subtractions) => (a: Subtractions, b: Subtractions) => a.availabilityDuration - b.availabilityDuration,
+			text: 'gesetzte Verfügbarkeit', sort: (a: Subtractions, b: Subtractions) => a.availabilityDuration - b.availabilityDuration,
 			toTableCell: (r: Subtractions) => displayDuration(r.availabilityDuration)
 		},
 	]
