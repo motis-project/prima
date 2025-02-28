@@ -1,8 +1,18 @@
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { sql } from 'kysely';
+import { jsonArrayFrom } from 'kysely/helpers/postgres';
+import { MIN_PREP } from '$lib/constants';
 
 export const POST = async (event) => {
+	function getEarliestEventTime(ev: {
+		communicatedTime: number;
+		scheduledTimeEnd: number;
+		scheduledTimeStart: number;
+	}) {
+		return Math.min(...[ev.scheduledTimeStart, ev.scheduledTimeEnd, ev.communicatedTime]);
+	}
+	
 	const companyId = event.locals.session?.companyId;
 	if (!companyId) {
 		throw 'no company id';
@@ -29,9 +39,39 @@ export const POST = async (event) => {
 					)
 				])
 			)
-			.selectAll()
+			.select((eb) => [
+				'tour.departure',
+				'tour.arrival',
+				jsonArrayFrom(
+					eb
+						.selectFrom('request')
+						.whereRef('tour.id', '=', 'request.tour')
+						.select((eb) => [
+							jsonArrayFrom(
+								eb
+									.selectFrom('event')
+									.whereRef('event.request', '=', 'request.id')
+									.select([
+										'event.scheduledTimeStart',
+										'event.scheduledTimeEnd',
+										'event.communicatedTime'
+									])
+							).as('events')
+						])
+				).as('requests')
+			])
 			.executeTakeFirst();
 		if (!movedTour) {
+			return;
+		}
+		console.assert(movedTour.requests.length != 0, 'Found a tour which contains no requests.');
+		console.assert(
+			!movedTour.requests.some((r) => r.events.length == 0),
+			'Found a request which contains no events.'
+		);
+		const events = movedTour.requests.flatMap((r) => r.events.map((e) => getEarliestEventTime(e)));
+		const firstEventTime = events.reduce((min, entry) => (entry < min ? entry : min), events[0]);
+		if (MIN_PREP + firstEventTime < Date.now()) {
 			return;
 		}
 		const collidingTours = await trx

@@ -1,5 +1,6 @@
 import { db, type Database } from '$lib/server/db';
 import { Interval } from '$lib/server/util/interval';
+import { endOfCurrent15MinuteInterval } from '$lib/util/time';
 import { json } from '@sveltejs/kit';
 import { sql, type Insertable, type Selectable } from 'kysely';
 
@@ -35,7 +36,12 @@ export const DELETE = async ({ locals, request }) => {
 		throw 'invalid params';
 	}
 
-	const toRemove = new Interval(from, to);
+	const restrictedFrom = Math.max(endOfCurrent15MinuteInterval(), from);
+	if (to <= restrictedFrom) {
+		return json({});
+	}
+
+	const toRemove = new Interval(restrictedFrom, to);
 	console.log('remove availability vehicle=', vehicleId, 'toRemove=', toRemove);
 	await db.transaction().execute(async (trx) => {
 		await sql`LOCK TABLE availability IN ACCESS EXCLUSIVE MODE;`.execute(trx);
@@ -111,6 +117,11 @@ export const POST = async ({ locals, request }) => {
 		throw 'invalid params';
 	}
 
+	const restrictedFrom = Math.max(endOfCurrent15MinuteInterval(), from);
+	if (to <= restrictedFrom) {
+		return json({});
+	}
+
 	await db
 		.insertInto('availability')
 		.columns(['startTime', 'endTime', 'vehicle'])
@@ -118,7 +129,7 @@ export const POST = async ({ locals, request }) => {
 			eb
 				.selectFrom('vehicle')
 				.select((eb) => [
-					eb.val(from).as('startTime'),
+					eb.val(restrictedFrom).as('startTime'),
 					eb.val(to).as('endTime'),
 					'vehicle.id as vehicle'
 				])
