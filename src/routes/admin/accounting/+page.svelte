@@ -119,12 +119,13 @@
 	let selectedYear = $state(-1);
 	let selectedMonth = $state('Monat');
 	const selectedMonthIdx = $derived(months.findIndex((m) => m === selectedMonth));
-	const lastDaysOfMonths = [31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
+	const cumulatedDaysEndOfMonth = [31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
 
 	const filter = () => {
 		const acceptAnyCompany = selectedCompany.id === -1;
 		const acceptAnyMonth = -1 === selectedMonthIdx;
 		const acceptAnyYear = -1 === selectedYear;
+		
 		const getNewTourRows = () => {
 			let newrows: Tour[] = [];
 			if (acceptAnyCompany && acceptAnyMonth && acceptAnyYear) {
@@ -151,8 +152,8 @@
 			const leapYearShift = choseThisYear && data.lastIsLeapYear ? 1 : 0;
 			const yearShift = leapYearShift + (choseThisYear ? 365 : 0);
 			const timespanStart = 
-				(selectedMonthIdx < 1 ? 0 : lastDaysOfMonths[selectedMonthIdx - 1]) + yearShift + (selectedMonthIdx > 2 && monthLeap ? 1 : 0);
-			const timespanEnd = (selectedMonthIdx === - 1 ? 0 : lastDaysOfMonths[selectedMonthIdx]) + yearShift + (selectedMonthIdx > 1 && monthLeap ? 1 : 0);
+				(selectedMonthIdx < 1 ? 0 : cumulatedDaysEndOfMonth[selectedMonthIdx - 1]) + yearShift + (selectedMonthIdx > 2 && monthLeap ? 1 : 0);
+			const timespanEnd = (selectedMonthIdx === - 1 ? 0 : cumulatedDaysEndOfMonth[selectedMonthIdx]) + yearShift + (selectedMonthIdx > 1 && monthLeap ? 1 : 0);
 			if (acceptAnyCompany && acceptAnyMonth && acceptAnyYear) {
 				return data.companyCostsPerDay;
 			}
