@@ -61,12 +61,11 @@ export async function load(event) {
 	const heatmapInfos = await db
   		.selectFrom('availability')
   		.innerJoin('vehicle', 'vehicle.id', 'availability.vehicle')
-		.where('startTime', '>', toTime.getTime())
-		.where('endTime', '<', fromTime.getTime())
+		.where('startTime', '<', toTime.getTime())
+		.where('endTime', '>', fromTime.getTime())
 		.where('company', '!=', companyId)
-		.select(['availability.id','availability.startTime', 'availability.endTime', 'availability.vehicle', 'vehicle.company'])
+		.select(['availability.id','startTime', 'endTime', 'vehicle', 'vehicle.company'])
 		.execute();
-
 	
 	type Range = {
 		startTime: UnixtimeMs;
@@ -91,9 +90,8 @@ export async function load(event) {
 	const isAInsideB = (rangeA: Range, Bstart: UnixtimeMs, Bend: UnixtimeMs) => {
 		return rangeA.startTime >= Bstart && rangeA.startTime < Bend && rangeA.endTime >= Bstart && rangeA.endTime <= Bend; 
 	};
-	let range: Range = {startTime: toTime.getTime(), endTime: fromTime.getTime()}; 
+	let range: Range = {startTime: fromTime.getTime(), endTime: toTime.getTime()}; 
 	let hours = split(range, 60);
-	//let indexcount = 0;
 	let heatcount = 0;
 	for(let hour of hours)
 	{
@@ -104,15 +102,12 @@ export async function load(event) {
 			{
 				if(isAInsideB(onecell, heat.startTime, heat.endTime)) 
 				{
-					// das ist noch falsch! ich möchte in heatarray, die cell und die heat (akkumuliert von dem if) speichern, damit ich dann in page 
-					// sowohl die cellrange als auch die heat zahl habe
-					// wie muss die induzierung von heatarray aussehen?
-					heatarray[0] = {cell: onecell, heat: heatcount++}; // hier dann später Berechnung für gewichtete Summe einbauen
+					heatcount++; // hier dann später Berechnung für gewichtete Summe einbauen
 				}
 			}
-			//indexcount++;
+			heatarray.push({cell: onecell, heat: heatcount}); 
+			heatcount = 0;
 		}
-		//indexcount++;
 	}
 
 	return {

@@ -301,11 +301,46 @@
 	};
 
 	const heatmapColor = (cell: Range) => {
-		data.heatarray
-
-		return 'bg-yellow-100';
+		let max = 20; 
+		for(let heat of data.heatarray)
+		{
+			if(heat.cell.startTime == cell.startTime && heat.cell.endTime == cell.endTime) 
+			{
+				// logarithmisch für stark schwankende Werte:
+				//let normval = Math.floor(10 * (Math.log(heat.heat + 1)) / Math.log(max + 1));
+				let normval = Math.floor((heat.heat / max) * 10);
+				normval = heat.heat > 0 ? Math.max(1, normval) : 0;
+				switch(normval)
+				{
+ 					case 0: 
+					 	return;
+ 	 				case 1: 
+					  	return 'bg-rose-100';
+					case 2: 
+						return 'bg-rose-200';
+ 	 				case 3: 
+					  	return 'bg-rose-300';
+					case 4: 
+						return 'bg-rose-400';
+ 	 				case 5: 
+					  	return 'bg-rose-500';
+					case 6: 
+						return 'bg-rose-600';
+ 	 				case 7: 
+					  	return 'bg-rose-700';
+					case 8: 
+						return 'bg-rose-800';
+ 	 				case 9: 
+					  	return 'bg-rose-900';	
+					case 10:
+						return 'bg-rose-950';					
+  					default: 
+					  	return;
+				}
+			}
+		}
+		return;
 	};
-	// inklusive oder exkulisve der eigenen Verfügbarkeiten?
 </script>
 
 <svelte:window onmouseup={() => selectionFinish()} />
@@ -409,8 +444,9 @@
 				<HoverCard.Root>
 					<HoverCard.Trigger>{"Auslastung"}</HoverCard.Trigger>
 					<HoverCard.Content>
+						<!-- Anpassen, wenn logarithmische Skalierung verwendet wird. -->
 						Eine Heatmap, die die Verfügbarkeiten der anderen Taxiunternehmer anzeigt.
-						Farbcodierung: ...TODO...
+						Farbcodierung: linear, [1, 10]
 					</HoverCard.Content>
 				</HoverCard.Root>
 				</td>
