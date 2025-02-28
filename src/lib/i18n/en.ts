@@ -8,6 +8,7 @@ const translations: Translations = {
 		availability: 'Availability',
 		company: 'Company',
 		completedTours: 'Tours',
+		accounting: 'Accounting',
 		employees: 'Employees',
 		companies: 'Companies'
 	},

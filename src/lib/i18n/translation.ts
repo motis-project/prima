@@ -11,6 +11,7 @@ export type Translations = {
 		availability: string;
 		company: string;
 		completedTours: string;
+		accounting: string;
 		employees: string;
 		companies: string;
 	};
