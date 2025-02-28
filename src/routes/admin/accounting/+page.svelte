@@ -1,8 +1,6 @@
 <script lang="ts">
 	import * as Card from '$lib/shadcn/card';
-	import * as Table from '$lib/shadcn/table/index';
 	import * as Dialog from '$lib/shadcn/dialog/index';
-	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import Label from '$lib/shadcn/label/label.svelte';
 	import { onMount } from 'svelte';
@@ -12,12 +10,36 @@
 	import { FIXED_PRICE } from '$lib/constants.js';
 	import Tabs from '$lib/ui/tabs.svelte';
 	import { DAY, HOUR, MINUTE, SECOND } from '$lib/util/time.js';
+	import SortableScrollableTable from '$lib/ui/sortableScrollableTable.svelte';
 
 	const { data } = $props();
 
 	const { saveAs } = pkg;
 
 	const thisYear = new Date(Date.now()).getFullYear();
+
+	const tourCols = [
+		{text: 'Unternhemen', sort: undefined, toTableCell: (r: Tour) => r.companyName},
+		{text: 'Abfahrt  ', sort:(t1: Tour, t2: Tour) => t1.startTime - t2.startTime, toTableCell: (r: Tour) => new Date(r.startTime).toLocaleString('de-DE').slice(0, -3)},
+		{text: 'Ankunft', sort: undefined, toTableCell: (r: Tour) => new Date(r.endTime).toLocaleString('de-DE').slice(0, -3)},
+		{text: 'Anzahl Kunden', sort: undefined, toTableCell: (r: Tour) => getCustomerCount(r)},
+		{text: 'Taxameterstand  ', sort:(t1: Tour, t2: Tour) => (t1.fare ?? 0) - (t2.fare ?? 0), toTableCell: (r: Tour) => getEuroString(r.fare)},
+		{text: 'Kosten  ', sort:(t1: Tour, t2: Tour) => getTourCost(t1) - getTourCost(t2), toTableCell: (r: Tour) => getEuroString(getTourCost(r))}
+	];
+
+	const subtractionCols = [
+		{text: 'Unternehmen', toTableCell: (r: Subtractions) => r.companyName},
+		{text: 'Tag  ', sort: (a: Subtractions, b: Subtractions) => a.day - b.day, toTableCell: (r: Subtractions) => dayIdxToString(r.day)},
+		{text: 'Buchungen', toTableCell: (r: Subtractions) => r.customerCount},
+		{text: 'Taxameterstand kumuliert ', sort: (a: Subtractions, b: Subtractions) => a.taxameter - b.taxameter, toTableCell: (r: Subtractions) => getEuroString(r.taxameter)},
+		{text: 'Kosten ohne Obergrenze  ', sort: (a: Subtractions, b: Subtractions) => a.uncapped - b.uncapped, toTableCell: (r: Subtractions) => getEuroString(r.uncapped)},
+		{text: 'Kosten mit Obergrenze  ', sort: (a: Subtractions, b: Subtractions) => a.capped - b.capped, toTableCell: (r: Subtractions) => getEuroString(r.capped)},
+		{text: 'Abzüge  ', sort: (a: Subtractions, b: Subtractions) => a.uncapped - a.capped - b.uncapped + b.capped, toTableCell: (r: Subtractions) => getEuroString(r.uncapped - r.capped)},
+		{
+			text: 'gesetzte Verfügbarkeit', sort: (a: Subtractions, b: Subtractions) => (a: Subtractions, b: Subtractions) => a.availabilityDuration - b.availabilityDuration,
+			toTableCell: (r: Subtractions) => displayDuration(r.availabilityDuration)
+		},
+	]
 
 	const getCustomerCount = (tour: Tour) => {
 		let customers = new Set<number>();
@@ -64,49 +86,6 @@
 	$effect(() => {
 		sum = getNewSum(currentRowsSubtractionsTable);
 	});
-
-	// --- Sort: ---
-	let descendingTours = [true, true, true];
-	let descendingSubtractions = [true, true, true, true, true, true];
-
-	const sortTourColumn = (idx: number) => {
-		switch (idx) {
-			case 0: {
-				currentRowsToursTable.sort((a, b) => a.startTime - b.startTime);
-				break;
-			}
-			case 1: {
-				currentRowsToursTable.sort((a, b) => (a.fare ?? 0) - (b.fare ?? 0));
-				break;
-			}
-			case 2: {
-				currentRowsToursTable.sort((a, b) => getTourCost(a) - getTourCost(b));
-				break;
-			}
-			default:
-				return;
-		}
-		if (!descendingTours[idx]) {
-			currentRowsToursTable.reverse();
-		} else {
-			for (let i = 0; i < descendingTours.length; i++) {
-				if (i != idx) descendingTours[i] = true;
-			}
-		}
-		descendingTours[idx] = !descendingTours[idx];
-	};
-
-	const sortSubtractionColumn = (idx: number, sortFn: (a: Subtractions, b: Subtractions) => number) => {
-		currentRowsSubtractionsTable.sort(sortFn);
-		if (!descendingSubtractions[idx]) {
-			currentRowsSubtractionsTable.reverse();
-		} else {
-			for (let i = 0; i < descendingSubtractions.length; i++) {
-				if (i != idx) descendingSubtractions[i] = true;
-			}
-		}
-		descendingSubtractions[idx] = !descendingSubtractions[idx];
-	};
 
 	// --- Filter: ---
 	let selectedCompany = $state({ name: 'Unternehmen', id: -1 });
@@ -293,114 +272,11 @@
 </script>
 
 {#snippet tourTable()}
-	<div class="h-[50vh] min-w-[130vh] overflow-y-auto">
-	  <Table.Root class="w-full">
-		<Table.Header class="sticky top-0 z-10">
-		  <Table.Row>
-			<Table.Head>Unternehmen</Table.Head>
-			<Table.Head>
-			  <Button class="whitespace-pre" variant="outline" onclick={() => sortTourColumn(0)}>
-				{'Abfahrt  '}
-				<ChevronsUpDown class="h-6 w-4" />
-			  </Button>
-			</Table.Head>
-			<Table.Head>Ankunft</Table.Head>
-			<Table.Head class="text-center">Anzahl Kunden</Table.Head>
-			<Table.Head class="text-center">
-			  <Button class="whitespace-pre" variant="outline" onclick={() => sortTourColumn(1)}>
-				{'Taxameterstand  '}
-				<ChevronsUpDown class="h-6 w-4" />
-			  </Button>
-			</Table.Head>
-			<Table.Head class="text-center">
-			  <Button class="whitespace-pre" variant="outline" onclick={() => sortTourColumn(2)}>
-				{'Kosten  '}
-				<ChevronsUpDown class="h-6 w-4" />
-			  </Button>
-			</Table.Head>
-		  </Table.Row>
-		</Table.Header>
-		<Table.Body>
-		  {#each currentRowsToursTable as tour}
-			<Table.Row>
-			  <Table.Cell>{tour.companyName}</Table.Cell>
-			  <Table.Cell>{new Date(tour.startTime).toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
-			  <Table.Cell>{new Date(tour.endTime).toLocaleString('de-DE').slice(0, -3)}</Table.Cell>
-			  <Table.Cell class="text-center">{getCustomerCount(tour)}</Table.Cell>
-			  <Table.Cell class="text-center">{getEuroString(tour.fare)} €</Table.Cell>
-			  <Table.Cell class="text-center">{getEuroString(getTourCost(tour))} €</Table.Cell>
-			</Table.Row>
-		  {/each}
-		</Table.Body>
-	  </Table.Root>
-	</div>
+	<SortableScrollableTable rows={currentRowsToursTable} cols={tourCols}/>
 {/snippet}
 
 {#snippet subtractionTable()}
-	<div class="h-[50vh] min-w-[130vh] overflow-y-auto">
-		<Table.Root>
-			<Table.Header>
-				<Table.Row>
-					<Table.Head class="mt-6.5">Unternehmen</Table.Head>
-					<Table.Head class="mt-6.5 text-center">
-						<Button class="whitespace-pre" variant="outline" onclick={() => sortSubtractionColumn(0, (a: Subtractions, b: Subtractions) => a.day - b.day)}>
-							{'Tag '}
-							<ChevronsUpDown class="h-6 w-4" />
-						</Button>
-					</Table.Head>
-					<Table.Head class="mt-6.5">Anzahl Buchungen</Table.Head>
-					<Table.Head class="mt-6.5 text-center">
-						<Button class="whitespace-pre" variant="outline" onclick={() => sortSubtractionColumn(1, (a: Subtractions, b: Subtractions) => a.taxameter - b.taxameter)}>
-							{'Taxameterstand kumuliert '}
-							<ChevronsUpDown class="h-6 w-4" />
-						</Button>
-					</Table.Head>
-					<Table.Head class="mt-6.5 text-center">
-						<Button class="whitespace-pre" variant="outline" onclick={() => sortSubtractionColumn(2, (a: Subtractions, b: Subtractions) => a.uncapped - b.uncapped)}>
-							{'Kosten ohne Obergrenze  '}
-							<ChevronsUpDown class="h-6 w-4" />
-						</Button>
-					</Table.Head>
-					<Table.Head class="mt-6.5 text-center">
-						<Button class="whitespace-pre" variant="outline" onclick={() => sortSubtractionColumn(3, (a: Subtractions, b: Subtractions) => a.capped - b.capped)}>
-							{'Kosten mit Obergrenze  '}
-							<ChevronsUpDown class="h-6 w-4" />
-						</Button>
-					</Table.Head>
-					<Table.Head class="mt-6.5 text-center">
-						<Button class="whitespace-pre" variant="outline" onclick={() => sortSubtractionColumn(4, (a: Subtractions, b: Subtractions) => a.uncapped - a.capped - b.uncapped + b.capped)}>
-							{'Abzüge'}
-							<ChevronsUpDown class="h-6 w-4" />
-						</Button>
-					</Table.Head>
-					<Table.Head class="mt-6.5 text-center">
-						<Button class="whitespace-pre" variant="outline" onclick={() => sortSubtractionColumn(5, (a: Subtractions, b: Subtractions) => a.availabilityDuration - b.availabilityDuration)}>
-							{'gesetzte Verfügbarkeit'}
-							<ChevronsUpDown class="h-6 w-4" />
-						</Button>
-					</Table.Head>
-				</Table.Row>
-			</Table.Header>
-				<Table.Body>
-					{#each currentRowsSubtractionsTable as subtraction}
-						<Table.Row>
-							<Table.Cell>{subtraction.companyName}</Table.Cell>
-							<Table.Cell class="text-center">{dayIdxToString(subtraction.day)}</Table.Cell>
-							<Table.Cell class="text-center">{subtraction.customerCount}</Table.Cell>
-							<Table.Cell class="text-center">{getEuroString(subtraction.taxameter)} €</Table.Cell>
-							<Table.Cell class="text-center">{getEuroString(subtraction.uncapped)} €</Table.Cell>
-							<Table.Cell class="text-center">{getEuroString(subtraction.capped)} €</Table.Cell>
-							<Table.Cell class="text-center"
-								>{getEuroString(subtraction.uncapped - subtraction.capped)} €</Table.Cell
-							>
-							<Table.Cell class="text-center"
-								>{displayDuration(subtraction.availabilityDuration)}</Table.Cell
-							>
-						</Table.Row>
-					{/each}
-				</Table.Body>
-		</Table.Root>
-	</div>
+	<SortableScrollableTable rows={currentRowsSubtractionsTable} cols={subtractionCols}/>
 {/snippet}
 
 <div>
