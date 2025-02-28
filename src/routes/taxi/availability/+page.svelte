@@ -26,16 +26,13 @@
 	import type { Tours } from '$lib/server/db/getTours';
 	import Message from '$lib/ui/Message.svelte';
 	import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
+	import type { Range } from './Range';
+	import {split} from './Range'; 
 	import type { LngLatLike } from 'maplibre-gl';
 
 	const { data, form } = $props(); 
 
 	type Vehicle = NonNullable<typeof data.vehicles>[0];
-
-	type Range = {
-		startTime: UnixtimeMs;
-		endTime: UnixtimeMs;
-	};
 
 	// ===
 	// API
@@ -132,18 +129,6 @@
 		data.tours.filter((t) => vehicleId == t.vehicleId && overlaps(t, cell));
 
 	const isAvailable = (v: Vehicle, cell: Range) => v.availability.some((a) => overlaps(a, cell));
-
-	const split = (range: Range, size: number): Array<Range> => {
-		let cells: Array<Range> = [];
-		let prev = new Date(range.startTime);
-		let t = new Date(range.startTime);
-		t.setMinutes(t.getMinutes() + size);
-		for (; t.getTime() <= range.endTime; t.setMinutes(t.getMinutes() + size)) {
-			cells.push({ startTime: prev.getTime(), endTime: t.getTime() });
-			prev = new Date(t);
-		}
-		return cells;
-	};
 
 	// =========
 	// Selection

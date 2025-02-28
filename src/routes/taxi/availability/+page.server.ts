@@ -6,6 +6,9 @@ import { fail } from '@sveltejs/kit';
 import { msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
+import type { Range } from './Range';
+import { split } from './Range';
+
 
 export async function load(event) {
 	const companyId = event.locals.session?.companyId;
@@ -67,26 +70,11 @@ export async function load(event) {
 		.select(['availability.id','startTime', 'endTime', 'vehicle', 'vehicle.company'])
 		.execute();
 	
-	type Range = {
-		startTime: UnixtimeMs;
-		endTime: UnixtimeMs;
-	};
 	type heatinfo = {
 		cell: Range;
 		heat: number;	
 	};
 	let heatarray: heatinfo[] = [];
-	const split = (range: Range, size: number): Array<Range> => {
-		let cells: Array<Range> = [];
-		let prev = new Date(range.startTime);
-		let t = new Date(range.startTime);
-		t.setMinutes(t.getMinutes() + size);
-		for (; t.getTime() <= range.endTime; t.setMinutes(t.getMinutes() + size)) {
-			cells.push({ startTime: prev.getTime(), endTime: t.getTime() });
-			prev = new Date(t);
-		}
-		return cells;
-	};
 	const isAInsideB = (rangeA: Range, Bstart: UnixtimeMs, Bend: UnixtimeMs) => {
 		return rangeA.startTime >= Bstart && rangeA.startTime < Bend && rangeA.endTime >= Bstart && rangeA.endTime <= Bend; 
 	};
