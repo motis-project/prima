@@ -4,6 +4,7 @@ import { db } from '$lib/server/db';
 import { getTours, type Tour } from '$lib/server/db/getTours';
 import { groupBy } from '$lib/server/util/groupBy';
 import { Interval } from '$lib/server/util/interval';
+import { mergeAvailabilities } from '$lib/server/util/mergeAvailabilities';
 import { DAY, HOUR } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
@@ -79,19 +80,9 @@ async function getCompanyCosts(
 		{ length: Math.floor((today - firstOfJanuaryLastYear) / DAY) },
 		(_, i) => new Interval(firstOfJanuaryLastYear + DAY * i, firstOfJanuaryLastYear + DAY * (i + 1))
 	);
-
-	// group availabilities by vehicle
-	const availabilitiesPerVehicle = groupBy(
-		availabilities,
-		(a) => a.vehicleId,
-		(a) => new Interval(a.startTime, a.endTime)
-	);
-	// merge availabilities belonging to same vehicle
-	availabilitiesPerVehicle.forEach((availabilities, vehicle) =>
-		availabilitiesPerVehicle.set(vehicle, Interval.merge(availabilities))
-	);
+	
 	// get list of all merged availabilities
-	const allAvailabilities = Array.from(availabilitiesPerVehicle).flatMap(([vehicleId, intervals]) =>
+	const allAvailabilities = Array.from(mergeAvailabilities(availabilities)).flatMap(([vehicleId, intervals]) =>
 		intervals.map((interval) => ({ vehicleId, interval }))
 	);
 

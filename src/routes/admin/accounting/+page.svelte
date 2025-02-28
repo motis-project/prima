@@ -19,8 +19,14 @@
 
 	const thisYear = new Date(Date.now()).getFullYear();
 
-	const tourCols = [
-		{text: 'Unternehmen', sort: undefined, toTableCell: (r: Tour) => r.companyName},
+	type Column = {
+		text: string;
+		sort: undefined | ((r1: any, r2: any) => number);
+		toTableCell: (r: any) => string | number;
+ 	}
+
+	const tourCols: Column[] = [
+		{text: 'Unternehmen', sort: undefined, toTableCell: (r: Tour) => r.companyName ?? ''},
 		{text: 'Abfahrt  ', sort:(t1: Tour, t2: Tour) => t1.startTime - t2.startTime, toTableCell: (r: Tour) => new Date(r.startTime).toLocaleString('de-DE').slice(0, -3)},
 		{text: 'Ankunft', sort: undefined, toTableCell: (r: Tour) => new Date(r.endTime).toLocaleString('de-DE').slice(0, -3)},
 		{text: 'Anzahl Kunden', sort: undefined, toTableCell: (r: Tour) => getCustomerCount(r)},
@@ -28,10 +34,10 @@
 		{text: 'Kosten  ', sort:(t1: Tour, t2: Tour) => getTourCost(t1) - getTourCost(t2), toTableCell: (r: Tour) => getEuroString(getTourCost(r))}
 	];
 
-	const subtractionCols = [
-		{text: 'Unternehmen', toTableCell: (r: Subtractions) => r.companyName},
+	const subtractionCols: Column[] = [
+		{text: 'Unternehmen', sort: undefined, toTableCell: (r: Subtractions) => r.companyName ?? ''},
 		{text: 'Tag  ', sort: (a: Subtractions, b: Subtractions) => a.day - b.day, toTableCell: (r: Subtractions) => dayIdxToString(r.day)},
-		{text: 'Buchungen', toTableCell: (r: Subtractions) => r.customerCount},
+		{text: 'Buchungen', sort: undefined, toTableCell: (r: Subtractions) => r.customerCount},
 		{text: 'Taxameterstand kumuliert ', sort: (a: Subtractions, b: Subtractions) => a.taxameter - b.taxameter, toTableCell: (r: Subtractions) => getEuroString(r.taxameter)},
 		{text: 'Kosten ohne Obergrenze  ', sort: (a: Subtractions, b: Subtractions) => a.uncapped - b.uncapped, toTableCell: (r: Subtractions) => getEuroString(r.uncapped)},
 		{text: 'Kosten mit Obergrenze  ', sort: (a: Subtractions, b: Subtractions) => a.capped - b.capped, toTableCell: (r: Subtractions) => getEuroString(r.capped)},
@@ -216,55 +222,27 @@
 		filterString = result;
 	};
 
-	const csvExport = (currentTourData: Tour[], filename: string) => {
-		currentTourData.sort((a, b) => a.startTime - b.startTime);
-		let thisDay = new Date();
-		let oneDayTours: Tour[] = [];
-		let daySum = 0;
-		let data = [];
-		let isFirst = true;
-		data.push(['Unternehmen', 'Tag', 'Taxameterstand', 'ÖV-Preis', 'Gesamtpreis', 'Kosten']);
-		for (let row of currentTourData) {
-			if (isFirst) {
-				thisDay = new Date(row.startTime);
-				isFirst = false;
+	const csvExportBothTables = <R>(tourRows: Tour[], subtractionRows: Subtractions[], filename: string) => {
+		tourRows.sort((a, b) => a.startTime - b.startTime);
+		subtractionRows.sort((a, b) => {
+			const companyDifference = a.companyId - b.companyId;
+			return companyDifference == 0 ? a.day - b.day : companyDifference;
+		});
+
+		const csvExport = <R>(rows: R[], cols: Column[], filename: string) => {
+			let data = [];
+			data.push(cols.map((col) => col.text));
+			for (let row of rows) {
+				data.push(cols.map((col) => col.toTableCell(row)));
 			}
-			if (thisDay.getTime() !== row.startTime) {
-				daySum = 0; //computeDayCost(oneDayTours, thisDay);
-				data.push([
-					'Summe Tag',
-					thisDay.toLocaleString('de-DE').slice(0, -10),
-					'',
-					'',
-					'',
-					getEuroString(daySum)
-				]);
-				thisDay = new Date(row.startTime);
-				daySum = 0;
-				oneDayTours.length = 0;
-			}
-			data.push([
-				row.companyName,
-				new Date(row.startTime).toLocaleString('de-DE').slice(0, -10),
-				getEuroString(row.fare),
-				getEuroString(getTourCost(row))
-			]);
-			oneDayTours.push(row);
+			data.push(['Summe insgesamt', '', '', '', '', getEuroString(sum)]);
+			const csvContent = Papa.unparse(data, { header: true });
+			const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+			saveAs(blob, filename);
 		}
-		// last "oneDayTours"
-		daySum = 0; //computeDayCost(oneDayTours, thisDay);
-		data.push([
-			'Summe Tag',
-			thisDay.toLocaleString('de-DE').slice(0, -10),
-			'',
-			'',
-			'',
-			getEuroString(daySum)
-		]);
-		data.push(['Summe insgesamt', '', '', '', '', getEuroString(sum)]);
-		const csvContent = Papa.unparse(data, { header: true });
-		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-		saveAs(blob, filename);
+
+		csvExport(tourRows, tourCols, filename + '_tour.csv');
+		csvExport(subtractionRows, subtractionCols, filename + '_abzuege.csv');
 	};
 
 	let tables = [
@@ -284,55 +262,20 @@
 <div>
 	<Card.Header>
 		<Card.Title>Abrechnung</Card.Title>
-	</Card.Header><Dialog.Root>
-		<Dialog.Trigger
-			class={buttonVariants({ variant: 'outline' })}
-			onclick={() => summarize(currentRowsToursTable)}
-		>
-			Summierung Kosten
+	</Card.Header>
+	<Dialog.Root>
+		<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}>
+			Exportieren
 		</Dialog.Trigger>
-		<Dialog.Content class="sm:max-w-[850px]">
+		<Dialog.Content>
 			<Dialog.Header>
-				<Dialog.Title>Summierung Kosten</Dialog.Title>
-				<Dialog.Description>
-					Summiere Kosten, um eine Abrechnungsdatei zu erstellen.
-				</Dialog.Description>
+				<Dialog.Title>Exportieren</Dialog.Title>
 			</Dialog.Header>
 			<Label for="name" class="text-left">
 				Folgende Filter sind ausgewählt: {filterString}
 			</Label>
-			<Table.Root>
-				<Table.Header>
-					<Table.Row>
-						<Table.Head class="mt-6.5">Unternehmen</Table.Head>
-						<Table.Head class="mt-6.5">Tag</Table.Head>
-						<Table.Head class="mt-6.5 text-center">Taxameterstand</Table.Head>
-						<Table.Head class="mt-6.5 text-center">Kosten</Table.Head>
-					</Table.Row>
-				</Table.Header>
-				<Table.Body>
-					{#each currentRowsToursTable as tour}
-						<Table.Row>
-							<Table.Cell>{tour.companyName}</Table.Cell>
-							<Table.Cell>{tour.startTime.toLocaleString('de-DE').slice(0, -10)}</Table.Cell>
-							<Table.Cell class="text-center">{getEuroString(tour.fare)} €</Table.Cell>
-							<Table.Cell class="text-center"
-								>{getEuroString(getTourCost(tour))} €</Table.Cell
-							>
-						</Table.Row>
-					{/each}
-					<Table.Row>
-						<Table.Cell>Summe</Table.Cell>
-						<Table.Cell></Table.Cell>
-						<Table.Cell></Table.Cell>
-						<Table.Cell></Table.Cell>
-						<Table.Cell></Table.Cell>
-						<Table.Cell>{getEuroString(sum)} €</Table.Cell>
-					</Table.Row>
-				</Table.Body>
-			</Table.Root>
 			<Dialog.Close class="text-right">
-				<Button type="submit" onclick={() => csvExport(currentRowsToursTable, 'Abrechnung')}>
+				<Button type="submit" onclick={() => csvExportBothTables(currentRowsToursTable, currentRowsSubtractionsTable, 'Abrechnung')}>
 					CSV-Export starten
 				</Button>
 			</Dialog.Close>
