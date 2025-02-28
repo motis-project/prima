@@ -9,7 +9,6 @@ import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import type { Range } from './Range';
 import { split } from './Range';
 
-
 export async function load(event) {
 	const companyId = event.locals.session?.companyId;
 	if (!companyId) {
@@ -62,38 +61,39 @@ export async function load(event) {
 
 	// HEATMAP
 	const heatmapInfos = await db
-  		.selectFrom('availability')
-  		.innerJoin('vehicle', 'vehicle.id', 'availability.vehicle')
+		.selectFrom('availability')
+		.innerJoin('vehicle', 'vehicle.id', 'availability.vehicle')
 		.where('startTime', '<', toTime.getTime())
 		.where('endTime', '>', fromTime.getTime())
 		.where('company', '!=', companyId)
-		.select(['availability.id','startTime', 'endTime', 'vehicle', 'vehicle.company'])
+		.select(['availability.id', 'startTime', 'endTime', 'vehicle', 'vehicle.company'])
 		.execute();
-	
+
 	type heatinfo = {
 		cell: Range;
-		heat: number;	
+		heat: number;
 	};
 	let heatarray: heatinfo[] = [];
 	const isAInsideB = (rangeA: Range, Bstart: UnixtimeMs, Bend: UnixtimeMs) => {
-		return rangeA.startTime >= Bstart && rangeA.startTime < Bend && rangeA.endTime >= Bstart && rangeA.endTime <= Bend; 
+		return (
+			rangeA.startTime >= Bstart &&
+			rangeA.startTime < Bend &&
+			rangeA.endTime >= Bstart &&
+			rangeA.endTime <= Bend
+		);
 	};
-	let range: Range = {startTime: fromTime.getTime(), endTime: toTime.getTime()}; 
+	let range: Range = { startTime: fromTime.getTime(), endTime: toTime.getTime() };
 	let hours = split(range, 60);
 	let heatcount = 0;
-	for(let hour of hours)
-	{
+	for (let hour of hours) {
 		let cell = split(hour, 15);
-		for(let onecell of cell) 
-		{
-			for(let heat of heatmapInfos) 
-			{
-				if(isAInsideB(onecell, heat.startTime, heat.endTime)) 
-				{
+		for (let onecell of cell) {
+			for (let heat of heatmapInfos) {
+				if (isAInsideB(onecell, heat.startTime, heat.endTime)) {
 					heatcount++; // hier dann später Berechnung für gewichtete Summe einbauen
 				}
 			}
-			heatarray.push({cell: onecell, heat: heatcount}); 
+			heatarray.push({ cell: onecell, heat: heatcount });
 			heatcount = 0;
 		}
 	}
