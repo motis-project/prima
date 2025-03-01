@@ -4,7 +4,7 @@
     <string name="wrong_login_data">Passwort oder E-Mail sind inkorrekt.</string>
     <string name="email_label">E-Mail</string>
     <string name="password_label">Passwort</string>
-    <string name="network_error_message">Etwas ist schiefgelaufen. Bitte versuchen Sie es später erneut.</string>
+    <string name="login_error_message">Etwas ist schiefgelaufen. Bitte versuchen Sie es später erneut.</string>
     <string name="fare_label">Fahrpreis</string>
     <string name="send_fare_button_text">Speichern</string>
     <string name="camera_info_1">Ohne Zugriff auf die Kamera kann die Prima+ÖV App nicht verwendet werden.</string>
@@ -18,11 +18,11 @@
     <string name="no_tours">Keine Aufträge</string>
     <string name="no_adress">Keine Adresse</string>
     <string name="navi_available">GPS Navigation verfügbar</string>
-    <string name="switch_vehicle">Fahrzeug wechseln</string>
     <string name="change_vehicles">Fahrzeug wechseln</string>
     <string name="cancel_tour">Fahrt abbrechen</string>
     <string name="fare_input_error">Die Eingabe konnte nicht verarbeitet werden.</string>
-    <string name="taxameter_header">Taxameter</string>
+    <string name="fare_header">Fahrpreis</string>
     <string name="abort_scan">Zurück</string>
     <string name="logout">Logout</string>
+    <string name="network_error">Bitte überprüfen Sie Ihre Internetverbindung.</string>
 </resources>

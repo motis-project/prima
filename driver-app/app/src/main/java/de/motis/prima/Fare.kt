@@ -11,22 +11,12 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -48,10 +37,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import de.motis.prima.services.Api
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class TaxameterViewModel : ViewModel() {
+class FareViewModel : ViewModel() {
     private val _networkErrorEvent = MutableSharedFlow<Unit>()
     val networkErrorEvent = _networkErrorEvent.asSharedFlow()
 
@@ -84,19 +76,18 @@ class TaxameterViewModel : ViewModel() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Fare(
     navController: NavController,
     userViewModel: UserViewModel,
     scanViewModel: ScanViewModel,
     tourId: Int,
-    viewModel: TaxameterViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    viewModel: FareViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
 ) {
     var entryCorrect by remember { mutableStateOf(false) }
     var fare by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
-    val networkErrorMessage = stringResource(id = R.string.network_error_message)
+    val networkErrorMessage = stringResource(id = R.string.network_error)
     val inputErrorMessage = stringResource(id = R.string.fare_input_error)
 
     LaunchedEffect(key1 = viewModel) {
@@ -129,50 +120,24 @@ fun Fare(
         }
     }
 
-    var dropdownExpanded by remember { mutableStateOf(false) }
+    val navBack = @Composable {}
+
+    val navItems = listOf(
+        NavItem(
+            text = stringResource(id = R.string.cancel_tour),
+            action = { navController.navigate("tours") }
+        )
+    )
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
-                title = {
-                    Text(
-                        stringResource(id = R.string.taxameter_header),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                actions = {
-                    IconButton(onClick = { dropdownExpanded = !dropdownExpanded }) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = "More Options")
-                    }
-                    DropdownMenu(
-                        expanded = dropdownExpanded,
-                        onDismissRequest = { dropdownExpanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            onClick = {
-                                navController.navigate("tours")
-                                dropdownExpanded = false
-
-                            },
-                            text = { Text(text = stringResource(id = R.string.cancel_tour)) }
-                        )
-                        DropdownMenuItem(
-                            onClick = {
-                                userViewModel.logout()
-                                dropdownExpanded = false
-
-                            },
-                            text = { Text("Logout") }
-                        )
-                    }
-                }
+            TopBar(
+                userViewModel,
+                navBack,
+                stringResource(id = R.string.fare_header),
+                true,
+                navItems
             )
-
         },
         snackbarHost = {
             BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -222,7 +187,8 @@ fun Fare(
                 val validTickets by scanViewModel.validTickets.collectAsState()
                 val failedReports = validTickets.entries.filter { e -> !e.value.isReported }
 
-                Text("Fehlgeschlagene Ticket-Validierungen",
+                Text(
+                    "Fehlgeschlagene Ticket-Validierungen",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )

@@ -80,7 +80,7 @@ fun Login(
 
     var isLoginFailed by remember { mutableStateOf(false) }
 
-    val networkErrorMessage = stringResource(id = R.string.network_error_message)
+    val networkErrorMessage = stringResource(id = R.string.login_error_message)
 
     val activity = (LocalContext.current as? Activity)
     BackHandler {

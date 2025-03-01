@@ -2,37 +2,32 @@ package de.motis.prima
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -42,31 +37,41 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import de.motis.prima.services.Api
 import de.motis.prima.services.Vehicle
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class VehiclesViewModel() : ViewModel() {
-    var vehicles = mutableStateOf<List<Vehicle>>(emptyList())
+class VehiclesViewModel : ViewModel() {
+    private val _vehicles = MutableStateFlow<List<Vehicle>>(emptyList())
+    val vehicles: StateFlow<List<Vehicle>> = _vehicles.asStateFlow()
 
-    var isLoading = mutableStateOf(true)
-        private set
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
-    fun fetchVehicles() {
+    private val _networkError = MutableStateFlow(false)
+    val networkError = _networkError.asStateFlow()
+
+    init {
         viewModelScope.launch {
+            _loading.value = true
             Api.apiService.getVehicles().enqueue(object : Callback<List<Vehicle>> {
-                override fun onResponse(call: Call<List<Vehicle>>, response: Response<List<Vehicle>>) {
+                override fun onResponse(
+                    call: Call<List<Vehicle>>,
+                    response: Response<List<Vehicle>>
+                ) {
                     if (response.isSuccessful) {
-                        vehicles.value = response.body() ?: emptyList()
-                        isLoading.value = false
-                    } else {
-                        isLoading.value = false
+                        _vehicles.value = response.body() ?: emptyList()
+                        _loading.value = false
                     }
                 }
 
                 override fun onFailure(call: Call<List<Vehicle>>, t: Throwable) {
-                    isLoading.value = false
+                    _networkError.value = true
+                    _loading.value = false
                 }
             })
         }
@@ -80,8 +85,6 @@ fun Vehicles(
     viewModel: VehiclesViewModel = viewModel()
 ) {
     LaunchedEffect(key1 = viewModel) {
-        viewModel.fetchVehicles()
-
         launch {
             userViewModel.logoutEvent.collect {
                 navController.navigate("login") {
@@ -97,75 +100,114 @@ fun Vehicles(
         }
     }
 
-    Scaffold(
-        topBar = { TopBar(userViewModel) }
-    ) { contentPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .padding(contentPadding)
-        ) {
-            items(items = viewModel.vehicles.value, itemContent = { vehicle ->
-                ConstraintLayout(modifier = Modifier.clickable {
-                    userViewModel.selectVehicle(vehicle)
-                }) {
-                    Card(
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 0.dp)
-                            .height(80.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(vehicle.licensePlate, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
+    val vehicles by viewModel.vehicles.collectAsState()
+    val loading by viewModel.loading.collectAsState()
+    val networkError by viewModel.networkError.collectAsState()
 
-            })
+    val navBack = @Composable {}
+    val navItems = emptyList<NavItem>()
+
+    Scaffold(
+        topBar = {
+            TopBar(
+                userViewModel,
+                navBack,
+                stringResource(id = R.string.vehicles_header),
+                true,
+                navItems
+            )
+        }
+    ) { contentPadding ->
+        Column {
+            if (loading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(contentPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else if (networkError) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(contentPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    ErrorInfo(stringResource(id = R.string.network_error))
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(contentPadding)
+                ) {
+                    items(items = vehicles, itemContent = { vehicle ->
+                        ConstraintLayout(modifier = Modifier.clickable {
+                            userViewModel.selectVehicle(vehicle)
+                        }) {
+                            Card(
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 0.dp)
+                                    .height(80.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        vehicle.licensePlate,
+                                        fontSize = 24.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+
+                    })
+                }
+            }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(
-    userViewModel: UserViewModel
+fun ErrorInfo(
+    errorMsg: String
 ) {
-    var dropdownExpanded by remember {
-        mutableStateOf(false)
-    }
-    CenterAlignedTopAppBar(
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            titleContentColor = MaterialTheme.colorScheme.primary,
-        ),
-        title = {
-            Text(
-                text = stringResource(id = R.string.vehicles_header),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        actions = {
-            IconButton(onClick = { dropdownExpanded = !dropdownExpanded }) {
-                Icon(Icons.Filled.MoreVert, contentDescription = "More Options")
-            }
-            DropdownMenu(
-                expanded = dropdownExpanded,
-                onDismissRequest = { dropdownExpanded = false }
-            ) {
-                DropdownMenuItem(
-                    onClick = {
-                        userViewModel.logout()
-                        dropdownExpanded = false
-
-                    },
-                    text = { Text(text = stringResource(id = R.string.logout)) }
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .wrapContentSize()
+            .padding(start = 24.dp, end = 24.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
+            Column {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_warning),
+                        contentDescription = "Localized description",
+                        Modifier
+                            .size(width = 64.dp, height = 64.dp)
+                    )
+                }
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    text = errorMsg,
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
                 )
             }
         }
-    )
+    }
 }

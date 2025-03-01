@@ -49,7 +49,7 @@ fun Nav() {
         composable(route = "scan/{tourId}/{requestId}") {
             val tourId = it.arguments?.getString("tourId")?.toInt()
             val requestId = it.arguments?.getString("requestId")?.toInt()
-            TicketScan(navController,  tourId!!, requestId!!, scanViewModel)
+            TicketScan(navController,  tourId!!, requestId!!, userViewModel, scanViewModel)
         }
 
         composable(route = "fare/{tourId}") {

@@ -57,6 +57,12 @@ import java.util.concurrent.Executors
 import android.provider.Settings
 import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import java.util.Date
 
 data class Ticket(
     val requestId: Int,
@@ -102,44 +108,62 @@ fun TicketScan(
     navController: NavController,
     tourId: Int,
     requestId: Int,
+    userViewModel: UserViewModel,
     viewModel: ScanViewModel
 ) {
-    var isScanning by remember { mutableStateOf(true) }
-
-    if (isScanning) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(300.dp)
-                    .height(300.dp)
-            ) {
-                QRCodeScanner(
-                    onQRCodeScanned = { result ->
-                        viewModel.reportTicketScan(requestId, result)
-                        isScanning = false
-                    },
-                    onCloseScanner = {
-                        isScanning = false
-                    },
-                    navController
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(onClick = { navController.navigate("tours") }) {
-                Text(text = stringResource(id = R.string.abort_scan))
-            }
+    val navBack = @Composable {
+        IconButton(onClick = { navController.navigate("tours") }) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Localized description"
+            )
         }
-    } else {
-        LaunchedEffect(Unit) {
-            navController.navigate("fare/$tourId")
+    }
+
+    val navItems = emptyList<NavItem>()
+
+    Scaffold(
+        topBar = {
+            TopBar(
+                userViewModel,
+                navBack,
+                "   Scan Ticket Code",
+                false,
+                navItems
+            )
+        }
+    ) { contentPadding ->
+        var isScanning by remember { mutableStateOf(true) }
+
+        if (isScanning) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(300.dp)
+                        .height(300.dp)
+                ) {
+                    QRCodeScanner(
+                        onQRCodeScanned = { result ->
+                            viewModel.reportTicketScan(requestId, result)
+                            isScanning = false
+                        },
+                        onCloseScanner = {
+                            isScanning = false
+                        },
+                        navController
+                    )
+                }
+            }
+        } else {
+            LaunchedEffect(Unit) {
+                navController.navigate("fare/$tourId")
+            }
         }
     }
 }
