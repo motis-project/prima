@@ -38,7 +38,7 @@ interface ApiService {
     ): ApiResponse
 }
 
-object Api {
+/*object Api {
     private val retrofit: Retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
         .client(okHttpClient().build())
@@ -46,7 +46,7 @@ object Api {
         .build()
 
     val apiService: ApiService = retrofit.create(ApiService::class.java)
-}
+}*/
 
 data class ApiResponse(
     val status: Int

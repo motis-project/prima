@@ -1,27 +1,53 @@
 package de.motis.prima.services
 
 import de.motis.prima.BuildConfig
-import de.motis.prima.app.DriversApp
-import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
+import android.content.Context
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
-/**
- * The login api accepts only requests with the following headers set explicitly
- * This must be changed when CORS settings will be changed.
- */
-fun okHttpClient() = OkHttpClient().newBuilder()
-    .cookieJar(CookieStore(DriversApp.instance))
-    .addInterceptor(
-        object : Interceptor {
-            override fun intercept(chain: Interceptor.Chain): Response {
-                val request: Request = chain.request()
-                    .newBuilder()
+@Module
+@InstallIn(SingletonComponent::class)
+object NetworkModule {
+
+    @Provides
+    @Singleton
+    fun provideHttpClient(@ApplicationContext context: Context): OkHttpClient {
+        return OkHttpClient.Builder()
+            .cookieJar(CookieStore(context))
+            .addInterceptor { chain ->
+                val original: Request = chain.request()
+
+                val newRequest = original.newBuilder()
                     .header("x-sveltekit-action", "true")
                     .header("Origin", BuildConfig.BASE_URL)
                     .build()
-                return chain.proceed(request)
+
+                chain.proceed(newRequest)
             }
-        }
-    )
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(client: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(BuildConfig.BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideApiService(retrofit: Retrofit): ApiService {
+        return retrofit.create(ApiService::class.java)
+    }
+}

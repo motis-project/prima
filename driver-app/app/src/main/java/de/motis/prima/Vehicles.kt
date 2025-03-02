@@ -35,7 +35,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import de.motis.prima.services.Api
+import de.motis.prima.services.ApiService
 import de.motis.prima.services.Vehicle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,8 +44,9 @@ import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import javax.inject.Inject
 
-class VehiclesViewModel : ViewModel() {
+class VehiclesViewModel @Inject constructor(private val apiService: ApiService) : ViewModel() {
     private val _vehicles = MutableStateFlow<List<Vehicle>>(emptyList())
     val vehicles: StateFlow<List<Vehicle>> = _vehicles.asStateFlow()
 
@@ -58,7 +59,7 @@ class VehiclesViewModel : ViewModel() {
     init {
         viewModelScope.launch {
             _loading.value = true
-            Api.apiService.getVehicles().enqueue(object : Callback<List<Vehicle>> {
+            apiService.getVehicles().enqueue(object : Callback<List<Vehicle>> {
                 override fun onResponse(
                     call: Call<List<Vehicle>>,
                     response: Response<List<Vehicle>>

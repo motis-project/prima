@@ -9,7 +9,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,8 +34,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,7 +47,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import de.motis.prima.services.Api
+import dagger.hilt.android.lifecycle.HiltViewModel
+import de.motis.prima.data.DataStoreManager
+import de.motis.prima.services.ApiService
 import de.motis.prima.services.Tour
 import de.motis.prima.services.Vehicle
 import kotlinx.coroutines.delay
@@ -68,11 +67,13 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
-import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class ToursViewModel @Inject constructor(private val repository: DataRepository) : ViewModel() {
+class ToursViewModel @Inject constructor(
+    private val repository: DataStoreManager,
+    private val apiService: ApiService
+) : ViewModel() {
     private val _tours = MutableStateFlow<List<Tour>>(emptyList())
     val tours: StateFlow<List<Tour>> = _tours.asStateFlow()
 
@@ -99,7 +100,7 @@ class ToursViewModel @Inject constructor(private val repository: DataRepository)
         val start = displayDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val end = nextDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-        Api.apiService.getTours(start, end).enqueue(object : Callback<List<Tour>> {
+        apiService.getTours(start, end).enqueue(object : Callback<List<Tour>> {
             override fun onResponse(
                 call: Call<List<Tour>>,
                 response: Response<List<Tour>>

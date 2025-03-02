@@ -35,15 +35,16 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import de.motis.prima.services.Api
+import de.motis.prima.services.ApiService
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class FareViewModel : ViewModel() {
+class FareViewModel @Inject constructor(private val apiService: ApiService) : ViewModel() {
     private val _networkErrorEvent = MutableSharedFlow<Unit>()
     val networkErrorEvent = _networkErrorEvent.asSharedFlow()
 
@@ -64,7 +65,7 @@ class FareViewModel : ViewModel() {
 
             if (fareCent > 0) {
                 try {
-                    val response = Api.apiService.reportFare(tourId, fareCent)
+                    val response = apiService.reportFare(tourId, fareCent)
                     if (response.status == 204) {
                         _reportSuccessEvent.emit(Unit)
                     }

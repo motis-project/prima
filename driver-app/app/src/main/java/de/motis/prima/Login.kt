@@ -40,14 +40,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import de.motis.prima.services.Api
+import dagger.hilt.android.lifecycle.HiltViewModel
+import de.motis.prima.services.ApiService
 import de.motis.prima.services.Vehicle
 import de.motis.prima.viewmodel.SettingsViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class LoginViewModel : ViewModel() {
+@HiltViewModel
+class LoginViewModel @Inject constructor(private val apiService: ApiService) : ViewModel() {
     private val _navigationEvent = MutableSharedFlow<Boolean>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
@@ -60,7 +63,7 @@ class LoginViewModel : ViewModel() {
     fun login(email: String, password: String) {
         viewModelScope.launch {
             try {
-                val response = Api.apiService.login(email, password)
+                val response = apiService.login(email, password)
                 if (response.status == 302) {
                     _navigationEvent.emit(true)
                 } else {
