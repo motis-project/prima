@@ -1,67 +1,112 @@
 <script lang="ts">
 	import * as Card from '$lib/shadcn/card';
-	import * as Dialog from '$lib/shadcn/dialog/index';
 	import { Button, buttonVariants } from '$lib/shadcn/button';
-	import Label from '$lib/shadcn/label/label.svelte';
-	import { onMount } from 'svelte';
 	import Papa from 'papaparse';
 	import pkg from 'file-saver';
-	import type { Tour } from '$lib/server/db/getTours';
+	import type { TourWithRequests } from '$lib/server/db/getTours';
 	import { FIXED_PRICE } from '$lib/constants.js';
 	import Tabs from '$lib/ui/Tabs.svelte';
-	import { DAY, HOUR, MINUTE, SECOND } from '$lib/util/time.js';
-	import SortableScrollableTable from '$lib/ui/SortableScrollableTable.svelte';
-	import * as Table from '$lib/shadcn/table/index.js';
+	import { HOUR, MINUTE, SECOND } from '$lib/util/time.js';
+	import SortableScrollableTable, { type Column } from '$lib/ui/SortableScrollableTable.svelte';
+	import Select from '$lib/ui/Select.svelte';
+	import type { UnixtimeMs } from '$lib/util/UnixtimeMs.js';
+	import { RangeCalendar } from '$lib/shadcn/range-calendar/index.js';
+	import * as Dialog from '$lib/shadcn/dialog';
+	import { CalendarDate } from '@internationalized/date';
+	import { groupBy } from '$lib/util/groupBy';
 
-	const { data } = $props();
+	let range: {
+		start: CalendarDate | undefined;
+		end: CalendarDate | undefined;
+	} = $state({
+		start: undefined,
+		end: undefined
+	});
 
 	const { saveAs } = pkg;
+	const { data } = $props();
 
-	const thisYear = new Date(Date.now()).getFullYear();
+	let currentRowsToursTable: TourWithRequests[] = $state(data.tours);
+	let currentRowsSubtractionsTable: Subtractions[] = $state(data.companyCostsPerDay);
 
-	type Column = {
-		text: string;
-		sort: undefined | ((r1: any, r2: any) => number);
-		toTableCell: (r: any) => string | number;
- 	}
-
-	const tourCols: Column[] = [
-		{text: 'Unternehmen', sort: undefined, toTableCell: (r: Tour) => r.companyName ?? ''},
-		{text: 'Abfahrt  ', sort:(t1: Tour, t2: Tour) => t1.startTime - t2.startTime, toTableCell: (r: Tour) => new Date(r.startTime).toLocaleString('de-DE').slice(0, -3)},
-		{text: 'Ankunft', sort: undefined, toTableCell: (r: Tour) => new Date(r.endTime).toLocaleString('de-DE').slice(0, -3)},
-		{text: 'Anzahl Kunden', sort: undefined, toTableCell: (r: Tour) => getCustomerCount(r)},
-		{text: 'Taxameterstand  ', sort:(t1: Tour, t2: Tour) => (t1.fare ?? 0) - (t2.fare ?? 0), toTableCell: (r: Tour) => getEuroString(r.fare)},
-		{text: 'Kosten  ', sort:(t1: Tour, t2: Tour) => getTourCost(t1) - getTourCost(t2), toTableCell: (r: Tour) => getEuroString(getTourCost(r))}
-	];
-
-	const subtractionCols: Column[] = [
-		{text: 'Unternehmen', sort: undefined, toTableCell: (r: Subtractions) => r.companyName ?? ''},
-		{text: 'Tag  ', sort: (a: Subtractions, b: Subtractions) => a.day - b.day, toTableCell: (r: Subtractions) => dayIdxToString(r.day)},
-		{text: 'Buchungen', sort: undefined, toTableCell: (r: Subtractions) => r.customerCount},
-		{text: 'Taxameterstand kumuliert ', sort: (a: Subtractions, b: Subtractions) => a.taxameter - b.taxameter, toTableCell: (r: Subtractions) => getEuroString(r.taxameter)},
-		{text: 'Kosten ohne Obergrenze  ', sort: (a: Subtractions, b: Subtractions) => a.uncapped - b.uncapped, toTableCell: (r: Subtractions) => getEuroString(r.uncapped)},
-		{text: 'Kosten mit Obergrenze  ', sort: (a: Subtractions, b: Subtractions) => a.capped - b.capped, toTableCell: (r: Subtractions) => getEuroString(r.capped)},
-		{text: 'Abzüge  ', sort: (a: Subtractions, b: Subtractions) => a.uncapped - a.capped - b.uncapped + b.capped, toTableCell: (r: Subtractions) => getEuroString(r.uncapped - r.capped)},
-		{
-			text: 'gesetzte Verfügbarkeit', sort: (a: Subtractions, b: Subtractions) => a.availabilityDuration - b.availabilityDuration,
-			toTableCell: (r: Subtractions) => displayDuration(r.availabilityDuration)
-		},
-	]
-
-	const getCustomerCount = (tour: Tour) => {
-		let customers = new Set<number>();
-		tour.events.forEach((e) => {
-			customers.add(e.customer!);
+	const updateCompanySums = (subtractionRows: Subtractions[]) => {
+		const costsPerCompany = groupBy(
+			subtractionRows,
+			(c) => c.companyId,
+			(c) => c
+		);
+		const newCompanyRows: CompanyRow[] = [];
+		costsPerCompany.forEach((arr, companyId) => {
+			if (arr.length === 0) {
+				return;
+			}
+			const accumulated = arr.reduce(
+				(acc, current) => {
+					acc.capped += current.capped;
+					acc.uncapped += current.uncapped;
+					acc.taxameter += current.taxameter;
+					acc.availabilityDuration += current.availabilityDuration;
+					acc.customerCount += current.customerCount;
+					return acc;
+				},
+				{ capped: 0, uncapped: 0, taxameter: 0, availabilityDuration: 0, customerCount: 0 }
+			);
+			newCompanyRows.push({ ...accumulated, companyName: arr[0].companyName, companyId });
 		});
-		return customers.size;
+		if (newCompanyRows.length === 0) {
+			return;
+		}
+		newCompanyRows.push({
+			...newCompanyRows.reduce(
+				(acc, current) => {
+					acc.capped += current.capped;
+					acc.uncapped += current.uncapped;
+					acc.taxameter += current.taxameter;
+					acc.availabilityDuration += current.availabilityDuration;
+					acc.customerCount += current.customerCount;
+					return acc;
+				},
+				{ capped: 0, uncapped: 0, taxameter: 0, availabilityDuration: 0, customerCount: 0 }
+			),
+			companyId: -1,
+			companyName: 'Summiert'
+		});
+		return newCompanyRows;
+	};
+	let currentCompanyRows: CompanyRow[] = $state(updateCompanySums(data.companyCostsPerDay)!);
+
+	const getNewSum = (rows: Subtractions[]) => {
+		let newSum = 0;
+		for (let dayInfo of rows) {
+			newSum += dayInfo.capped;
+		}
+		return newSum;
+	};
+	let sum = $state(getNewSum(data.companyCostsPerDay));
+
+	const years: number[] = [];
+	for (
+		let i = new Date(Date.now()).getFullYear();
+		i != new Date(data.earliestTime).getFullYear() - 1;
+		--i
+	) {
+		years.push(i);
+	}
+
+	const getCustomerCount = (tour: TourWithRequests) => {
+		let customers = 0;
+		tour.requests.forEach((r) => {
+			customers += r.passengers;
+		});
+		return customers;
 	};
 
-	const getTourCost = (tour: Tour) => {
+	const getTourCost = (tour: TourWithRequests) => {
 		return Math.max(0, (tour.fare ?? 0) - FIXED_PRICE * getCustomerCount(tour));
 	};
 
 	const getEuroString = (price: number | null) => {
-		return ((price ?? 0) / 100).toFixed(2);
+		return ((price ?? 0) / 100).toFixed(2) + '€';
 	};
 
 	const displayDuration = (duration: number) => {
@@ -70,46 +115,62 @@
 		return (rounded < 10 ? '0' : '') + rounded + ':' + (minutes < 10 ? '0' : '') + minutes;
 	};
 
-	type Subtractions = {
+	type CompanyRow = {
 		taxameter: number;
 		companyId: number;
 		companyName: string | null;
 		capped: number;
 		uncapped: number;
-		day: number;
 		availabilityDuration: number;
 		customerCount: number;
 	};
 
-	let currentRowsToursTable: Tour[] = $state([]);
-	let currentRowsSubtractionsTable: Subtractions[] = $state([]);
+	type Subtractions = CompanyRow & { timestamp: UnixtimeMs };
 
-	onMount(() => {
-		currentRowsToursTable = data.tours;
-		currentRowsSubtractionsTable = data.companyCostsPerDay;
-		setCompanys(currentRowsToursTable);
-	});
-
-	$effect(() => {
-		sum = getNewSum(currentRowsSubtractionsTable);
-	});
-
-	// --- Filter: ---
-	let selectedCompany = $state({ name: 'Unternehmen', id: -1 });
-	let companys = $state(new Array<{ name: string | null; id: number }>());
-	const setCompanys = (tours: Tour[]) => {
-		for (let tour of tours) {
-			if (companys.find((c) => c.id == tour.companyId) === undefined) {
-				companys.push({ name: tour.companyName, id: tour.companyId });
+	const getNewRows = <T,>(
+		ignoredFilters: boolean[],
+		filters: ((row: T) => boolean)[],
+		rows: T[]
+	) => {
+		let newrows: T[] = [];
+		if (!ignoredFilters.some((f) => !f)) {
+			return rows;
+		}
+		for (let row of rows) {
+			if (!filters.some((f, i) => !ignoredFilters[i] && !f(row))) {
+				newrows.push(row);
 			}
 		}
+		return newrows;
 	};
 
-	const dayIdxToString = (day: number) => {
-		return new Date(data.firstOfJanuaryLastYear + 24 * HOUR * day).toLocaleDateString();
-	};
+	// Filter
+	$effect(() => {
+		const ignoredFilters = [
+			-1 === selectedCompanyIdx,
+			-1 === selectedMonthIdx,
+			-1 === selectedQuarterIdx,
+			range.start === undefined,
+			-1 === selectedYear
+		];
+		currentRowsToursTable = getNewRows(ignoredFilters, tourFilters, data.tours);
+		const subtractionRows = getNewRows(ignoredFilters, subtractionFilters, data.companyCostsPerDay);
+		currentCompanyRows = updateCompanySums(subtractionRows)!;
+		currentRowsSubtractionsTable = subtractionRows;
+	});
 
-	let months = [
+	$effect(() => {});
+
+	const companyNames: string[] = [];
+	for (let tour of data.tours) {
+		if (tour.companyName && companyNames.find((c) => c == tour.companyName) === undefined) {
+			companyNames.push(tour.companyName!);
+		}
+	}
+	companyNames.sort((a, b) => (a.toLowerCase() < b.toLowerCase() ? -1 : 1));
+	let selectedCompanyIdx = $state(-1);
+
+	const months = [
 		'Janurar',
 		'Februar',
 		'März',
@@ -123,219 +184,277 @@
 		'November',
 		'Dezember'
 	];
-	let selectedYear = $state(-1);
-	let selectedMonth = $state('Monat');
-	const selectedMonthIdx = $derived(months.findIndex((m) => m === selectedMonth));
-	const cumulatedDaysEndOfMonth = [31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
+	const quarters = ['Quartal 1', 'Quartal 2', 'Quartal 3', 'Quartal 4'];
+	let selectedMonthIdx = $state(-1);
+	let selectedQuarterIdx = $state(-1);
+	let selectedYearIdx = $state(-1);
+	let selectedYear = $derived(selectedYearIdx === -1 ? -1 : years[selectedYearIdx]);
 
-	const filter = () => {
-		const acceptAnyCompany = selectedCompany.id === -1;
-		const acceptAnyMonth = -1 === selectedMonthIdx;
-		const acceptAnyYear = -1 === selectedYear;
-		
-		const getNewTourRows = () => {
-			let newrows: Tour[] = [];
-			if (acceptAnyCompany && acceptAnyMonth && acceptAnyYear) {
-				return data.tours;
-			}
-			for (let row of data.tours) {
-				if ((!acceptAnyYear && new Date(row.startTime).getFullYear() !== selectedYear) ||
-					(!acceptAnyMonth && selectedMonthIdx !== new Date(row.startTime).getMonth()) ||
-					(!acceptAnyCompany && row.companyId !== selectedCompany.id)
-				) {
-					continue;
-				}
-				newrows.push(row);
-			}
-			return newrows;
-		};
+	const tourFilters = [
+		(row: TourWithRequests) => row.companyName === companyNames[selectedCompanyIdx],
+		(row: TourWithRequests) => selectedMonthIdx === new Date(row.startTime).getMonth(),
+		(row: TourWithRequests) => {
+			const month = new Date(row.startTime).getMonth();
+			return selectedQuarterIdx * 3 <= month && month < (selectedQuarterIdx + 1) * 3;
+		},
+		(row: TourWithRequests) => {
+			const asDate = new Date(row.startTime);
+			const asCalendarDate = new CalendarDate(
+				asDate.getFullYear(),
+				asDate.getMonth() + 1,
+				asDate.getDate()
+			);
+			return asCalendarDate.compare(range.start!) >= 0 && asCalendarDate.compare(range.end!) <= 0;
+		},
+		(row: TourWithRequests) => new Date(row.startTime).getFullYear() === selectedYear
+	];
 
-		const getNewSubtractionRows = () => {
-			const isInSpan = (day: number, spanStart: number, spanEnd: number) => {
-				return day < spanEnd && day >= spanStart;
-			};
-			const choseThisYear = thisYear === selectedYear;
-			const monthLeap = ((choseThisYear && data.isLeapYear) || (!choseThisYear && data.lastIsLeapYear));
-			const leapYearShift = choseThisYear && data.lastIsLeapYear ? 1 : 0;
-			const yearShift = leapYearShift + (choseThisYear ? 365 : 0);
-			const timespanStart = 
-				(selectedMonthIdx < 1 ? 0 : cumulatedDaysEndOfMonth[selectedMonthIdx - 1]) + yearShift + (selectedMonthIdx > 2 && monthLeap ? 1 : 0);
-			const timespanEnd = (selectedMonthIdx === - 1 ? 0 : cumulatedDaysEndOfMonth[selectedMonthIdx]) + yearShift + (selectedMonthIdx > 1 && monthLeap ? 1 : 0);
-			if (acceptAnyCompany && acceptAnyMonth && acceptAnyYear) {
-				return data.companyCostsPerDay;
-			}
-			let newrows: Subtractions[] = [];
-			for (let row of data.companyCostsPerDay) {
-				if ((!acceptAnyYear && new Date(data.firstOfJanuaryLastYear + DAY * timespanStart + DAY).getFullYear() !== selectedYear) ||
-					(!acceptAnyMonth && !isInSpan(row.day, timespanStart, timespanEnd)) ||
-					(!acceptAnyCompany && row.companyId !== selectedCompany.id)
-				) {
-					continue;	
-				}
-				newrows.push(row);
-			}
-			return newrows;
-		};
-		currentRowsToursTable = getNewTourRows();
-		currentRowsSubtractionsTable = getNewSubtractionRows();
-		updateFiltered();
-	};
+	const subtractionFilters = [
+		(row: Subtractions) => row.companyName === companyNames[selectedCompanyIdx],
+		(row: Subtractions) => new Date(row.timestamp).getMonth() === selectedMonthIdx,
+		(row: Subtractions) => {
+			const month = new Date(row.timestamp).getMonth();
+			return selectedQuarterIdx * 3 <= month && month < (selectedQuarterIdx + 1) * 3;
+		},
+		(row: Subtractions) => {
+			const asDate = new Date(row.timestamp);
+			const asCalendarDate = new CalendarDate(
+				asDate.getFullYear(),
+				asDate.getMonth() + 1,
+				asDate.getDate()
+			);
+			return asCalendarDate.compare(range.start!) >= 0 && asCalendarDate.compare(range.end!) <= 0;
+		},
+		(row: Subtractions) => new Date(row.timestamp).getFullYear() === selectedYear
+	];
 
-	const getNewSum = (rows: Subtractions[]) => {
-		let newSum = 0;
-		for (let dayInfo of rows) {
-			newSum += dayInfo.capped;
+	const tourCols: Column<TourWithRequests>[] = [
+		{
+			text: 'Unternehmen',
+			sort: undefined,
+			toTableEntry: (r: TourWithRequests) => r.companyName ?? ''
+		},
+		{
+			text: 'Abfahrt  ',
+			sort: (t1: TourWithRequests, t2: TourWithRequests) => t1.startTime - t2.startTime,
+			toTableEntry: (r: TourWithRequests) =>
+				new Date(r.startTime).toLocaleString('de-DE').slice(0, -3)
+		},
+		{
+			text: 'Ankunft',
+			sort: (t1: TourWithRequests, t2: TourWithRequests) => t1.endTime - t2.endTime,
+			toTableEntry: (r: TourWithRequests) =>
+				new Date(r.endTime).toLocaleString('de-DE').slice(0, -3)
+		},
+		{
+			text: 'Anzahl Kunden',
+			sort: undefined,
+			toTableEntry: (r: TourWithRequests) => getCustomerCount(r)
+		},
+		{
+			text: 'Taxameterstand  ',
+			sort: (t1: TourWithRequests, t2: TourWithRequests) => (t1.fare ?? 0) - (t2.fare ?? 0),
+			toTableEntry: (r: TourWithRequests) => getEuroString(r.fare)
+		},
+		{
+			text: 'Kosten  ',
+			sort: (t1: TourWithRequests, t2: TourWithRequests) => getTourCost(t1) - getTourCost(t2),
+			toTableEntry: (r: TourWithRequests) => getEuroString(getTourCost(r))
 		}
-		return newSum;
-	};
+	];
 
-	const restore = () => {
-		currentRowsSubtractionsTable = data.companyCostsPerDay;
-		currentRowsToursTable = data.tours;
-		updateFiltered();
-	};
-
-	const updateFiltered = () => {
-		prepareFilterString();
-		selectedMonth = 'Monat';
-		selectedCompany = { name: 'Unternehmen', id: -1 };
-	};
-
-	let filterString = $state('keine Filter ausgewählt');
-	let sum = $state(getNewSum(data.companyCostsPerDay));
-
-	const prepareFilterString = () => {
-		if (
-			selectedCompany.id == -1 &&
-			selectedMonthIdx == -1
-		) {
-			filterString = 'keine Filter ausgewählt';
-			return;
+	const subtractionCols: Column<Subtractions>[] = [
+		{
+			text: 'Unternehmen',
+			sort: undefined,
+			toTableEntry: (r: Subtractions) => r.companyName ?? ''
+		},
+		{
+			text: 'Tag  ',
+			sort: (a: Subtractions, b: Subtractions) => a.timestamp - b.timestamp,
+			toTableEntry: (r: Subtractions) => new Date(r.timestamp).toLocaleDateString('de-DE')
+		},
+		{ text: 'Buchungen', sort: undefined, toTableEntry: (r: Subtractions) => r.customerCount },
+		{
+			text: 'Taxameterstand kumuliert ',
+			sort: (a: Subtractions, b: Subtractions) => a.taxameter - b.taxameter,
+			toTableEntry: (r: Subtractions) => getEuroString(r.taxameter)
+		},
+		{
+			text: 'Kosten ohne Obergrenze  ',
+			sort: (a: Subtractions, b: Subtractions) => a.uncapped - b.uncapped,
+			toTableEntry: (r: Subtractions) => getEuroString(r.uncapped)
+		},
+		{
+			text: 'Kosten mit Obergrenze  ',
+			sort: (a: Subtractions, b: Subtractions) => a.capped - b.capped,
+			toTableEntry: (r: Subtractions) => getEuroString(r.capped)
+		},
+		{
+			text: 'Abzüge  ',
+			sort: (a: Subtractions, b: Subtractions) => a.uncapped - a.capped - b.uncapped + b.capped,
+			toTableEntry: (r: Subtractions) => getEuroString(r.uncapped - r.capped)
+		},
+		{
+			text: 'gesetzte Verfügbarkeit',
+			sort: (a: Subtractions, b: Subtractions) => a.availabilityDuration - b.availabilityDuration,
+			toTableEntry: (r: Subtractions) => displayDuration(r.availabilityDuration)
 		}
-		let result = ' ';
-		if (selectedCompany.id != -1) {
-			result = result.concat(selectedCompany.name, '; ');
-		}
-		if (selectedMonthIdx != -1) {
-			result = result.concat(months[selectedMonthIdx], '; ');
-		}
-		filterString = result;
-	};
+	];
 
-	const csvExportBothTables = <R>(tourRows: Tour[], subtractionRows: Subtractions[], filename: string) => {
+	const companyCols: Column<CompanyRow>[] = [
+		{
+			text: 'Unternehmen',
+			sort: undefined,
+			toTableEntry: (r: CompanyRow) => r.companyName ?? ''
+		},
+		{ text: 'Buchungen', sort: undefined, toTableEntry: (r: CompanyRow) => r.customerCount },
+		{
+			text: 'Taxameterstand kumuliert ',
+			sort: (a: CompanyRow, b: CompanyRow) => a.taxameter - b.taxameter,
+			toTableEntry: (r: CompanyRow) => getEuroString(r.taxameter)
+		},
+		{
+			text: 'Kosten ohne Obergrenze  ',
+			sort: (a: CompanyRow, b: CompanyRow) => a.uncapped - b.uncapped,
+			toTableEntry: (r: CompanyRow) => getEuroString(r.uncapped)
+		},
+		{
+			text: 'Kosten mit Obergrenze  ',
+			sort: (a: CompanyRow, b: CompanyRow) => a.capped - b.capped,
+			toTableEntry: (r: CompanyRow) => getEuroString(r.capped)
+		},
+		{
+			text: 'Abzüge  ',
+			sort: (a: CompanyRow, b: CompanyRow) => a.uncapped - a.capped - b.uncapped + b.capped,
+			toTableEntry: (r: CompanyRow) => getEuroString(r.uncapped - r.capped)
+		},
+		{
+			text: 'gesetzte Verfügbarkeit',
+			sort: (a: CompanyRow, b: CompanyRow) => a.availabilityDuration - b.availabilityDuration,
+			toTableEntry: (r: CompanyRow) => displayDuration(r.availabilityDuration)
+		}
+	];
+
+	const csvExportBothTables = (
+		tourRows: TourWithRequests[],
+		subtractionRows: Subtractions[],
+		filename: string
+	) => {
 		tourRows.sort((a, b) => a.startTime - b.startTime);
 		subtractionRows.sort((a, b) => {
 			const companyDifference = a.companyId - b.companyId;
-			return companyDifference == 0 ? a.day - b.day : companyDifference;
+			return companyDifference == 0 ? a.timestamp - b.timestamp : companyDifference;
 		});
 
-		const csvExport = <R>(rows: R[], cols: Column[], filename: string) => {
+		const csvExport = <T,>(rows: T[], cols: Column<T>[], filename: string, addSumRow: boolean) => {
 			let data = [];
 			data.push(cols.map((col) => col.text));
 			for (let row of rows) {
-				data.push(cols.map((col) => col.toTableCell(row)));
+				data.push(cols.map((col) => col.toTableEntry(row)));
 			}
-			data.push(['Summe insgesamt', '', '', '', '', getEuroString(sum)]);
+			if (addSumRow) {
+				const lastRow = ['Summe insgesamt'];
+				for (let i = 0; i != cols.length - 4; ++i) {
+					lastRow.push('');
+				}
+				lastRow.push(getEuroString(sum));
+				data.push(lastRow);
+			}
 			const csvContent = Papa.unparse(data, { header: true });
 			const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 			saveAs(blob, filename);
-		}
+		};
 
-		csvExport(tourRows, tourCols, filename + '_tour.csv');
-		csvExport(subtractionRows, subtractionCols, filename + '_abzuege.csv');
+		csvExport(tourRows, tourCols, filename + '_tour.csv', false);
+		csvExport(subtractionRows, subtractionCols, filename + '_abzuege.csv', true);
 	};
 
 	let tables = [
 		{ label: 'pro Tour', value: 1, component: tourTable },
-		{ label: 'pro Tag', value: 2, component: subtractionTable }
+		{ label: 'pro Tag', value: 2, component: subtractionTable },
+		{ label: 'pro Unternehmen', value: 3, component: companyTable }
 	];
+
+	function resetFilter() {
+		selectedCompanyIdx = -1;
+		selectedMonthIdx = -1;
+		selectedQuarterIdx = -1;
+		range.start = undefined;
+		range.end = undefined;
+		selectedYearIdx = -1;
+	}
 </script>
 
 {#snippet tourTable()}
-	<SortableScrollableTable rows={currentRowsToursTable} cols={tourCols}/>
+	<SortableScrollableTable rows={currentRowsToursTable} cols={tourCols} />
 {/snippet}
 
 {#snippet subtractionTable()}
-	<SortableScrollableTable rows={currentRowsSubtractionsTable} cols={subtractionCols}/>
+	<SortableScrollableTable rows={currentRowsSubtractionsTable} cols={subtractionCols} />
 {/snippet}
 
-<div>
+{#snippet companyTable()}
+	<SortableScrollableTable rows={currentCompanyRows} cols={companyCols} />
+{/snippet}
+
+{#snippet filterOptions()}
+	<div class="grid gap-2 pb-4 pt-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+		<Select
+			bind:selectedIdx={selectedCompanyIdx}
+			entries={companyNames}
+			initial={'Unternehmen'}
+			disabled={null}
+		/>
+		<Select
+			bind:selectedIdx={selectedMonthIdx}
+			entries={months}
+			initial={'Monat'}
+			disabled={selectedQuarterIdx !== -1 || range.start != undefined}
+		/>
+		<Select
+			bind:selectedIdx={selectedQuarterIdx}
+			entries={quarters}
+			initial={'Quartal'}
+			disabled={selectedMonthIdx !== -1 || range.start != undefined}
+		/>
+		<Select
+			bind:selectedIdx={selectedYearIdx}
+			entries={years}
+			initial={'Jahr'}
+			disabled={range.start != undefined}
+		/>
+		<Dialog.Root>
+			<Dialog.Trigger
+				disabled={selectedMonthIdx !== -1 || selectedQuarterIdx !== -1 || selectedYearIdx !== -1}
+				class="col-span-2 {buttonVariants({ variant: 'outline' })}"
+				>{range.start === undefined
+					? 'Zeitspanne'
+					: range.start + ' - ' + range.end}</Dialog.Trigger
+			>
+			<Dialog.Content class="sm:max-w-[600px]">
+				<RangeCalendar bind:value={range} class="rounded-md border" />
+			</Dialog.Content>
+		</Dialog.Root>
+		<Button type="submit" onclick={() => resetFilter()}>Filter zurücksetzten</Button>
+		<Button
+			type="submit"
+			onclick={() =>
+				csvExportBothTables(currentRowsToursTable, currentRowsSubtractionsTable, 'Abrechnung')}
+		>
+			als CSV exportieren
+		</Button>
+	</div>
+{/snippet}
+
+<div class="flex flex-col overflow-y-auto">
 	<Card.Header>
 		<Card.Title>Abrechnung</Card.Title>
 	</Card.Header>
-	<Dialog.Root>
-		<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}>
-			Exportieren
-		</Dialog.Trigger>
-		<Dialog.Content>
-			<Dialog.Header>
-				<Dialog.Title>Exportieren</Dialog.Title>
-			</Dialog.Header>
-			<Label for="name" class="text-left">
-				Folgende Filter sind ausgewählt: {filterString}
-			</Label>
-			<Dialog.Close class="text-right">
-				<Button type="submit" onclick={() => csvExportBothTables(currentRowsToursTable, currentRowsSubtractionsTable, 'Abrechnung')}>
-					CSV-Export starten
-				</Button>
-			</Dialog.Close>
-		</Dialog.Content>
-	</Dialog.Root>
-	<div class="flex gap-4 p-6 font-semibold leading-none tracking-tight">
-		<Button type="submit" onclick={() => restore()}>Filter zurücksetzten</Button>
-		<Dialog.Root>
-			<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}>Filteroptionen</Dialog.Trigger>
-			<Dialog.Content class="sm:max-w-[600px]">
-				<Dialog.Header>
-					<Dialog.Title>Filteroptionen</Dialog.Title>
-					<Dialog.Description>
-						Filteren Sie die Daten für eine bessere Übersicht.
-					</Dialog.Description>
-				</Dialog.Header>
-				<div class="grid grid-cols-2 items-center gap-4">
-					<Label for="name" class="text-left">Filter nach Unternehmen:</Label>
-					<select
-						name="company"
-						class={buttonVariants({ variant: 'outline' })}
-						bind:value={selectedCompany}
-					>
-						<option selected={true} disabled>Unternehmen</option>
-						{#each companys as c}
-							<option value={c}>
-								{c.name}
-							</option>
-						{/each}
-					</select>
-				</div>
-				<div class="grid grid-cols-2 items-center gap-4">
-					<Label for="timespan" class="text-left">Filter nach Monat:</Label>
-					<select class={buttonVariants({ variant: 'outline' })} bind:value={selectedMonth}>
-						<option selected = {true} value = {'Monat'}>Monat</option>
-						{#each months as t}
-							<option value={t}>
-								{t}
-							</option>
-						{/each}
-					</select>
-					<Label for="timespan" class="text-left">Filter nach Jahr:</Label>
-					<select class={buttonVariants({ variant: 'outline' })} bind:value={selectedYear}>
-						<option selected={true} value={-1}>{'Jahr'}</option>
-						<option value={thisYear}>{thisYear}</option>
-						<option value={thisYear - 1}>{thisYear - 1}</option>
-					</select>
-				</div>
-				<Dialog.Close class="text-right">
-					<Button type="submit" onclick={filter}>Filter anwenden</Button>
-				</Dialog.Close>
-			</Dialog.Content>
-		</Dialog.Root>
-	</div>
 	<Card.Content class="h-full w-full">
+		<div class="flex flex-row">
+			{@render filterOptions()}
+		</div>
 		<Tabs items={tables} />
-		<Label
-			>Summe aller Kosten unter Berücksichtigung der Obergrenze im gewählten Zeitraum: {getEuroString(
-				sum
-			)} €</Label
-		>
 	</Card.Content>
 </div>

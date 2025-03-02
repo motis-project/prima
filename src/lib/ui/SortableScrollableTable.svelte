@@ -1,15 +1,34 @@
-<script lang="ts">
+<script module lang="ts">
+	export type Column<T> = {
+		text: string;
+		sort: undefined | ((r1: T, r2: T) => number);
+		toTableEntry: (r: T) => string | number;
+	};
+</script>
+
+<script lang="ts" generics="T">
+	/* global T */
+	// Fix until es-lint can detect generics in .svelte files
 	import * as Table from '$lib/shadcn/table/index';
 	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button } from '$lib/shadcn/button';
 
-    const { rows, cols } = $props();
+	const {
+		rows,
+		cols
+	}: {
+		rows: T[];
+		cols: {
+			text: string;
+			sort: undefined | ((r1: T, r2: T) => number);
+			toTableEntry: (r: T) => string | number;
+		}[];
+	} = $props();
 
-
-	let descending = new Array<boolean>(cols.filter((c: {sort: any}) => c.sort != undefined).length);
-    descending.map((_) => true);
-    const sort = (idx: number) => {
-        rows.sort(cols[idx].sort);
+	let descending = new Array<boolean>(cols.filter((c) => c.sort != undefined).length);
+	descending.map((_) => true);
+	const sort = (idx: number) => {
+		rows.sort(cols[idx].sort);
 		if (!descending[idx]) {
 			rows.reverse();
 		} else {
@@ -18,37 +37,37 @@
 			}
 		}
 		descending[idx] = !descending[idx];
-    }
+	};
 </script>
 
 <sortableScrollableTable>
-	<div class="h-[50vh] min-w-[130vh] overflow-y-auto">
-	  <Table.Root class="w-full">
-		<Table.Header>
-		  <Table.Row>
-		    {#each cols as col, i}
-                {#if col.sort != undefined}
-                    <Table.Head>
-                        <Button class="whitespace-pre" variant="outline" onclick={() => sort(i)}>
-                            {col.text}
-                            <ChevronsUpDown class="h-6 w-4" />
-                        </Button>
-                    </Table.Head>
-                {:else}
-			        <Table.Head>{col.text}</Table.Head>
-                {/if}
-            {/each}
-		  </Table.Row>
-		</Table.Header>
-		<Table.Body>
-		{#each rows as row}
-		    <Table.Row>
-                {#each cols as col}
-		            <Table.Cell>{col.toTableCell(row)}</Table.Cell>
-                {/each}
-		    </Table.Row>
-		{/each}
-		</Table.Body>
-	  </Table.Root>
+	<div class="h-[50vh] min-w-[130vh] overflow-x-auto overflow-y-auto">
+		<Table.Root>
+			<Table.Header>
+				<Table.Row>
+					{#each cols as col, i}
+						{#if col.sort != undefined}
+							<Table.Head>
+								<Button class="whitespace-pre" variant="outline" onclick={() => sort(i)}>
+									{col.text}
+									<ChevronsUpDown class="h-6 w-4" />
+								</Button>
+							</Table.Head>
+						{:else}
+							<Table.Head>{col.text}</Table.Head>
+						{/if}
+					{/each}
+				</Table.Row>
+			</Table.Header>
+			<Table.Body>
+				{#each rows as row}
+					<Table.Row>
+						{#each cols as col}
+							<Table.Cell>{col.toTableEntry(row)}</Table.Cell>
+						{/each}
+					</Table.Row>
+				{/each}
+			</Table.Body>
+		</Table.Root>
 	</div>
 </sortableScrollableTable>

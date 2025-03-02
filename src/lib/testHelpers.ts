@@ -58,10 +58,15 @@ export const setAvailability = async (
 	await db.insertInto('availability').values({ vehicle, startTime, endTime }).execute();
 };
 
-export const setTour = async (vehicle: number, departure: UnixtimeMs, arrival: UnixtimeMs) => {
+export const setTour = async (
+	vehicle: number,
+	departure: UnixtimeMs,
+	arrival: UnixtimeMs,
+	fare?: number
+) => {
 	return await db
 		.insertInto('tour')
-		.values({ vehicle, arrival, departure, cancelled: false })
+		.values({ vehicle, arrival, departure, cancelled: false, fare: fare ?? null })
 		.returning('tour.id')
 		.executeTakeFirst();
 };
