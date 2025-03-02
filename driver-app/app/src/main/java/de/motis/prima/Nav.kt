@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -17,20 +18,22 @@ fun Nav() {
     val userViewModel: UserViewModel = viewModel()
     val scanViewModel: ScanViewModel = viewModel()
 
+    val selectedVehicleId = 0
+
     // Before rendering any component, check preconditions
     val startDestination by remember {
         derivedStateOf {
-            val cookieStore = CookieStore(DriversApp.instance)
+            /*val cookieStore = CookieStore(DriversApp.instance)
             if (cookieStore.isEmpty()) {
                 "login"
             } else {
-                if (userViewModel.selectedVehicle.value.id != 0) {
+                if (selectedVehicleId != 0) {
                     "tours"
                 } else {
                     "vehicles"
                 }
+            }*/"login"
             }
-        }
     }
 
     NavHost(navController = navController, startDestination = startDestination) {

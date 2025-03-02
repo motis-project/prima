@@ -144,7 +144,7 @@ fun Vehicles(
                 ) {
                     items(items = vehicles, itemContent = { vehicle ->
                         ConstraintLayout(modifier = Modifier.clickable {
-                            userViewModel.selectVehicle(vehicle)
+                            //userViewModel.selectVehicle(vehicle)
                         }) {
                             Card(
                                 shape = RoundedCornerShape(12.dp),

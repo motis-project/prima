@@ -36,10 +36,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import de.motis.prima.services.Api
+import de.motis.prima.services.Vehicle
+import de.motis.prima.viewmodel.SettingsViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -74,7 +77,8 @@ class LoginViewModel : ViewModel() {
 fun Login(
     navController: NavController,
     userViewModel: UserViewModel,
-    viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -87,7 +91,9 @@ fun Login(
         activity?.finish()
     }
 
-    val selectedVehicle by userViewModel.selectedVehicle.collectAsState()
+    //val selectedVehicle by userViewModel.selectedVehicle.collectAsState()
+    //Log.d("test", selectedVehicle.toString())
+    val selectedVehicle = Vehicle(0, "")
 
     LaunchedEffect(key1 = viewModel) {
         launch {

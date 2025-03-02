@@ -68,10 +68,15 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class ToursViewModel : ViewModel() {
+@HiltViewModel
+class ToursViewModel @Inject constructor(private val repository: DataRepository) : ViewModel() {
     private val _tours = MutableStateFlow<List<Tour>>(emptyList())
     val tours: StateFlow<List<Tour>> = _tours.asStateFlow()
+
+    private val _displayTours = MutableStateFlow<List<Tour>>(emptyList())
 
     private val _loading = MutableStateFlow(false)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
@@ -79,9 +84,9 @@ class ToursViewModel : ViewModel() {
     private val _networkError = MutableStateFlow(false)
     val networkError = _networkError.asStateFlow()
 
-    var displayDate = mutableStateOf(LocalDate.now())
+    private val _displayDate = MutableStateFlow(LocalDate.now())
+    val displayDate = _displayDate.asStateFlow()
 
-    var showAllTours = mutableStateOf(false)
     private var fetchAttempts = mutableIntStateOf(0)
 
     init {
@@ -89,10 +94,11 @@ class ToursViewModel : ViewModel() {
     }
 
     fun fetchTours() {
-        val today = displayDate.value
-        val tomorrow = today.plusDays(1)
-        val start = today.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val end = tomorrow.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val displayDay = _displayDate.value
+        val nextDay = displayDay.plusDays(1)
+        val start = displayDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val end = nextDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
         Api.apiService.getTours(start, end).enqueue(object : Callback<List<Tour>> {
             override fun onResponse(
                 call: Call<List<Tour>>,
@@ -140,6 +146,38 @@ class ToursViewModel : ViewModel() {
             }
         }
     }
+
+    fun incrementDate() {
+        _displayDate.value = _displayDate.value.plusDays(1)
+    }
+
+    fun decrementDate() {
+        _displayDate.value = _displayDate.value.minusDays(1)
+    }
+
+    fun getDisplayTours(selectedVehicleId: Int): StateFlow<List<Tour>> {
+        val toursForVehicle = _tours.value.filter { t ->
+            t.vehicleId == selectedVehicleId
+        }
+
+        val toursPast = toursForVehicle.filter { t ->
+            Date(t.events.first().scheduledTimeStart).before(Date()) &&
+                    t.vehicleId == selectedVehicleId
+        }
+
+        val toursFuture = toursForVehicle.filter { t ->
+            Date(t.events.first().scheduledTimeStart).after(Date()) &&
+                    t.vehicleId == selectedVehicleId
+        }
+
+        if (_displayDate.value.dayOfYear != LocalDate.now().dayOfYear) {
+            _displayTours.value = toursPast + toursFuture
+        } else {
+            _displayTours.value = toursFuture
+        }
+
+        return _displayTours.asStateFlow()
+    }
 }
 
 @SuppressLint("StateFlowValueCalledInComposition")
@@ -175,26 +213,13 @@ fun Tours(
         )
     )
 
-    val tours by viewModel.tours.collectAsState()
-    val selectedVehicle by userViewModel.selectedVehicle.collectAsState()
+    //val tours by viewModel.tours.collectAsState()
+    //val selectedVehicle by userViewModel.selectedVehicle.collectAsState()
+    val selectedVehicle = Vehicle(1, "")
     val loading by viewModel.loading.collectAsState()
     val networkError by viewModel.networkError.collectAsState()
 
-    val toursForVehicle = tours.filter { t ->
-        t.vehicleId == selectedVehicle.id
-    }
-
-    val toursPast = toursForVehicle.filter { t ->
-        Date(t.events.first().scheduledTimeStart).before(Date()) &&
-                t.vehicleId == selectedVehicle.id
-    }
-
-    val toursFuture = toursForVehicle.filter { t ->
-        Date(t.events.first().scheduledTimeStart).after(Date()) &&
-                t.vehicleId == selectedVehicle.id
-    }
-
-    val displayTours = toursPast + toursFuture
+    val tours by viewModel.getDisplayTours(selectedVehicle.id).collectAsState()
 
     Scaffold(
         topBar = {
@@ -234,7 +259,7 @@ fun Tours(
                     ErrorInfo(stringResource(id = R.string.network_error))
                 }
             } else {
-                ShowTours(displayTours, navController)
+                ShowTours(tours, navController)
             }
         }
     }
@@ -251,7 +276,7 @@ fun VehicleInfo(
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = userViewModel.selectedVehicle.collectAsState().value.licensePlate,
+            text = "vehicle",//userViewModel.selectedVehicle.collectAsState().value.licensePlate,
             fontSize = 16.sp,
             textAlign = TextAlign.Center
         )
@@ -262,7 +287,7 @@ fun VehicleInfo(
 fun DateSelect(
     viewModel: ToursViewModel
 ) {
-    val date by remember { mutableStateOf(viewModel.displayDate) }
+    val date by viewModel.displayDate.collectAsState()
 
     Row(
         modifier = Modifier
@@ -276,9 +301,7 @@ fun DateSelect(
             ) {
             IconButton(
                 onClick = {
-                    date.value = date.value.minusDays(1)
-                    viewModel.displayDate = date
-                    viewModel.showAllTours.value = true
+                    viewModel.decrementDate()
                     viewModel.fetchTours()
                 },
                 Modifier
@@ -303,7 +326,7 @@ fun DateSelect(
 
             ) {
             Text(
-                text = date.value.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
+                text = date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
@@ -316,9 +339,7 @@ fun DateSelect(
             ) {
             IconButton(
                 onClick = {
-                    date.value = date.value.plusDays(1)
-                    viewModel.displayDate = date
-                    viewModel.showAllTours.value = true
+                    viewModel.incrementDate()
                     viewModel.fetchTours()
                 },
                 Modifier

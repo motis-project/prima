@@ -1,8 +1,12 @@
 package de.motis.prima.app
 
 import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
 
-class DriversApp: Application() {
+@HiltAndroidApp
+class DriversApp: Application()
+
+/*class DriversApp: Application() {
 
     companion object {
         lateinit var instance: DriversApp
@@ -13,4 +17,4 @@ class DriversApp: Application() {
         super.onCreate()
         instance = this
     }
-}
+}*/
