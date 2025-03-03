@@ -33,14 +33,27 @@ const getCustomerCount = (tour: TourWithRequests) => {
 	return customers;
 };
 
+const displayUnixtimeMs = (t: UnixtimeMs, displayTime?: boolean) => {
+	return new Date(t).toLocaleDateString('de-DE', {
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+		hour: displayTime ? '2-digit' : undefined,
+		minute: displayTime ? '2-digit' : undefined
+	});
+};
+
 const getTourCost = (tour: TourWithRequests) => {
 	return Math.max(0, (tour.fare ?? 0) - FIXED_PRICE * getCustomerCount(tour));
 };
 
 const displayDuration = (duration: number) => {
-	const rounded = Math.floor(duration / HOUR);
-	const minutes = ((duration / HOUR - rounded) * MINUTE) / SECOND;
-	return (rounded < 10 ? '0' : '') + rounded + ':' + (minutes < 10 ? '0' : '') + minutes;
+	const addLeadingZero = (n: number) => {
+		return (n < 10 ? '0' : '') + n;
+	};
+	const hours = Math.floor(duration / HOUR);
+	const minutes = ((duration / HOUR - hours) * MINUTE) / SECOND;
+	return addLeadingZero(hours) + ':' + addLeadingZero(minutes);
 };
 
 export const tourCols: Column<TourWithRequests>[] = [
@@ -52,13 +65,12 @@ export const tourCols: Column<TourWithRequests>[] = [
 	{
 		text: 'Abfahrt  ',
 		sort: (t1: TourWithRequests, t2: TourWithRequests) => t1.startTime - t2.startTime,
-		toTableEntry: (r: TourWithRequests) =>
-			new Date(r.startTime).toLocaleString('de-DE').slice(0, -3)
+		toTableEntry: (r: TourWithRequests) => displayUnixtimeMs(r.startTime, true)
 	},
 	{
 		text: 'Ankunft',
 		sort: (t1: TourWithRequests, t2: TourWithRequests) => t1.endTime - t2.endTime,
-		toTableEntry: (r: TourWithRequests) => new Date(r.endTime).toLocaleString('de-DE').slice(0, -3)
+		toTableEntry: (r: TourWithRequests) => displayUnixtimeMs(r.endTime, true)
 	},
 	{
 		text: 'Anzahl Kunden',
@@ -86,7 +98,7 @@ export const subtractionCols: Column<Subtractions>[] = [
 	{
 		text: 'Tag  ',
 		sort: (a: Subtractions, b: Subtractions) => a.timestamp - b.timestamp,
-		toTableEntry: (r: Subtractions) => new Date(r.timestamp).toLocaleDateString('de-DE')
+		toTableEntry: (r: Subtractions) => displayUnixtimeMs(r.timestamp)
 	},
 	{ text: 'Buchungen', sort: undefined, toTableEntry: (r: Subtractions) => r.customerCount },
 	{

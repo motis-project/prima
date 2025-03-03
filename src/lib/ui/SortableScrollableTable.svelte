@@ -1,6 +1,4 @@
 <script lang="ts" generics="T">
-	/* global T */
-	// Fix until es-lint can detect generics in .svelte files
 	import * as Table from '$lib/shadcn/table/index';
 	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button } from '$lib/shadcn/button';
@@ -17,8 +15,7 @@
 		}[];
 	} = $props();
 
-	let descending = new Array<boolean>(cols.filter((c) => c.sort != undefined).length);
-	descending.map((_) => true);
+	const descending = Array.from({ length: cols.length }, () => true);
 	const sort = (idx: number) => {
 		rows.sort(cols[idx].sort);
 		if (!descending[idx]) {
