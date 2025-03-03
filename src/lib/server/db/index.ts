@@ -119,13 +119,11 @@ export const db = new Kysely<Database>({
 			});
 		} else {
 			// `'query'`
-			/*
 			console.log('Query executed : ', {
 				durationMs: event.queryDurationMillis,
 				sql: event.query.sql,
 				params: event.query.parameters
 			});
-			*/
 		}
 	}
 });

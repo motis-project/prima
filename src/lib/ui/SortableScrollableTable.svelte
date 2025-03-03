@@ -1,11 +1,3 @@
-<script module lang="ts">
-	export type Column<T> = {
-		text: string;
-		sort: undefined | ((r1: T, r2: T) => number);
-		toTableEntry: (r: T) => string | number;
-	};
-</script>
-
 <script lang="ts" generics="T">
 	/* global T */
 	// Fix until es-lint can detect generics in .svelte files
