@@ -287,7 +287,7 @@
 	</div>
 {/snippet}
 
-<div class="flex flex-col overflow-y-auto">
+<div class="h-[90vh] flex flex-col">
 	<Card.Header>
 		<Card.Title>Abrechnung</Card.Title>
 	</Card.Header>

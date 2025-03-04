@@ -19,7 +19,7 @@
 		</li>
 	{/each}
 </ul>
-<div class="overflow-x-auto rounded-md border border-border p-4">
+<div class="rounded-md border border-border p-4">
 	{#each items as item}
 		{#if activeTabValue == item.value}
 			<item.component />

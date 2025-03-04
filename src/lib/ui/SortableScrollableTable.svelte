@@ -30,7 +30,7 @@
 </script>
 
 <sortableScrollableTable>
-	<div class="h-[60vh] min-w-[130vh] overflow-x-auto overflow-y-auto">
+	<div class="h-[60vh] min-w-[130vh]">
 		<Table.Root>
 			<Table.Header>
 				<Table.Row>
