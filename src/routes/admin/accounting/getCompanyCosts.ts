@@ -24,10 +24,9 @@ export async function getCompanyCosts() {
 			companyCostsPerDay: []
 		};
 	}
-	const earliestTime = tours.reduce(
-		(min, entry) => (entry.startTime < min.startTime ? entry : min),
-		tours[0]
-	).startTime - DAY;
+	const earliestTime =
+		tours.reduce((min, entry) => (entry.startTime < min.startTime ? entry : min), tours[0])
+			.startTime - DAY;
 
 	const today = Math.ceil(Date.now() / DAY) * DAY;
 	const availabilities = await db
