@@ -19,7 +19,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -31,91 +30,28 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import de.motis.prima.services.ApiService
-import de.motis.prima.services.Vehicle
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import javax.inject.Inject
-
-class VehiclesViewModel @Inject constructor(private val apiService: ApiService) : ViewModel() {
-    private val _vehicles = MutableStateFlow<List<Vehicle>>(emptyList())
-    val vehicles: StateFlow<List<Vehicle>> = _vehicles.asStateFlow()
-
-    private val _loading = MutableStateFlow(false)
-    val loading: StateFlow<Boolean> = _loading.asStateFlow()
-
-    private val _networkError = MutableStateFlow(false)
-    val networkError = _networkError.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            _loading.value = true
-            apiService.getVehicles().enqueue(object : Callback<List<Vehicle>> {
-                override fun onResponse(
-                    call: Call<List<Vehicle>>,
-                    response: Response<List<Vehicle>>
-                ) {
-                    if (response.isSuccessful) {
-                        _vehicles.value = response.body() ?: emptyList()
-                        _loading.value = false
-                    }
-                }
-
-                override fun onFailure(call: Call<List<Vehicle>>, t: Throwable) {
-                    _networkError.value = true
-                    _loading.value = false
-                }
-            })
-        }
-    }
-}
+import de.motis.prima.viewmodel.VehiclesViewModel
 
 @Composable
 fun Vehicles(
     navController: NavController,
-    userViewModel: UserViewModel,
-    viewModel: VehiclesViewModel = viewModel()
+    viewModel: VehiclesViewModel = hiltViewModel()
 ) {
-    LaunchedEffect(key1 = viewModel) {
-        launch {
-            userViewModel.logoutEvent.collect {
-                navController.navigate("login") {
-                    launchSingleTop = true
-                }
-            }
-        }
-
-        launch {
-            userViewModel.vehicleSelectEvent.collect {
-                navController.navigate("tours")
-            }
-        }
-    }
-
     val vehicles by viewModel.vehicles.collectAsState()
     val loading by viewModel.loading.collectAsState()
     val networkError by viewModel.networkError.collectAsState()
-
-    val navBack = @Composable {}
     val navItems = emptyList<NavItem>()
 
     Scaffold(
         topBar = {
             TopBar(
-                userViewModel,
-                navBack,
+                "vehicles",
                 stringResource(id = R.string.vehicles_header),
                 true,
-                navItems
+                navItems,
+                navController
             )
         }
     ) { contentPadding ->
@@ -145,7 +81,8 @@ fun Vehicles(
                 ) {
                     items(items = vehicles, itemContent = { vehicle ->
                         ConstraintLayout(modifier = Modifier.clickable {
-                            //userViewModel.selectVehicle(vehicle)
+                            viewModel.selectVehicle(vehicle.id)
+                            navController.navigate("tours")
                         }) {
                             Card(
                                 shape = RoundedCornerShape(12.dp),

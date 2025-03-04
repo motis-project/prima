@@ -1,6 +1,7 @@
 package de.motis.prima
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
@@ -12,12 +13,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import de.motis.prima.viewmodel.TopBarViewModel
+import kotlinx.coroutines.launch
 
 data class NavItem(
     val text: String,
@@ -27,12 +33,23 @@ data class NavItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
-    userViewModel: UserViewModel,
-    navBack: @Composable () -> Unit,
+    navBack: String,
     title: String,
     options: Boolean,
-    navItems: List<NavItem>?
+    navItems: List<NavItem>?,
+    navController: NavController,
+    viewModel: TopBarViewModel = hiltViewModel(),
 ) {
+    LaunchedEffect(key1 = viewModel) {
+        launch {
+            viewModel.logoutEvent.collect {
+                navController.navigate("login") {
+                    launchSingleTop = true
+                }
+            }
+        }
+    }
+
     var dropdownExpanded by remember {
         mutableStateOf(false)
     }
@@ -49,7 +66,14 @@ fun TopBar(
                 overflow = TextOverflow.Ellipsis
             )
         },
-        navigationIcon = navBack,
+        navigationIcon = {
+            IconButton(onClick = { navController.navigate(navBack) }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Localized description"
+                )
+            }
+        },
         actions = {
             if (options && navItems != null) {
                 IconButton(onClick = { dropdownExpanded = !dropdownExpanded }) {
@@ -71,7 +95,7 @@ fun TopBar(
                     }
                     DropdownMenuItem(
                         onClick = {
-                            userViewModel.logout()
+                            viewModel.logout()
                             dropdownExpanded = false
 
                         },

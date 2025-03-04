@@ -1,6 +1,5 @@
 package de.motis.prima
 
-import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -30,10 +29,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,169 +40,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import dagger.hilt.android.lifecycle.HiltViewModel
-import de.motis.prima.data.DataStoreManager
-import de.motis.prima.services.ApiService
 import de.motis.prima.services.Tour
-import de.motis.prima.services.Vehicle
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import de.motis.prima.viewmodel.ToursViewModel
 import java.text.SimpleDateFormat
 import java.time.LocalDate
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
-import javax.inject.Inject
 
-@HiltViewModel
-class ToursViewModel @Inject constructor(
-    private val repository: DataStoreManager,
-    private val apiService: ApiService
-) : ViewModel() {
-    private val _tours = MutableStateFlow<List<Tour>>(emptyList())
-    val tours: StateFlow<List<Tour>> = _tours.asStateFlow()
-
-    private val _displayTours = MutableStateFlow<List<Tour>>(emptyList())
-
-    private val _loading = MutableStateFlow(false)
-    val loading: StateFlow<Boolean> = _loading.asStateFlow()
-
-    private val _networkError = MutableStateFlow(false)
-    val networkError = _networkError.asStateFlow()
-
-    private val _displayDate = MutableStateFlow(LocalDate.now())
-    val displayDate = _displayDate.asStateFlow()
-
-    private var fetchAttempts = mutableIntStateOf(0)
-
-    init {
-        refreshTours()
-    }
-
-    fun fetchTours() {
-        val displayDay = _displayDate.value
-        val nextDay = displayDay.plusDays(1)
-        val start = displayDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val end = nextDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-
-        apiService.getTours(start, end).enqueue(object : Callback<List<Tour>> {
-            override fun onResponse(
-                call: Call<List<Tour>>,
-                response: Response<List<Tour>>
-            ) {
-                if (response.isSuccessful) {
-                    val newTours = response.body() ?: emptyList()
-                    fetchAttempts.intValue = 1
-                    _loading.value = false
-                    _networkError.value = false
-
-                    // Check for new items and trigger notification
-                    if (tours.value.isNotEmpty() && newTours.size > tours.value.size) {
-                        val newItem = newTours.last()
-                        val pickup = newItem.events.first()
-                        val currentDday = Date().formatTo("yyyy-MM-dd")
-                        val pickupDate = Date(pickup.scheduledTimeStart)
-
-                        if (pickupDate.formatTo("yyyy-MM-dd") == currentDday) {
-                            Log.d("tours", "new tour")
-                        }
-                    }
-                    _tours.value = newTours
-                }
-            }
-
-            override fun onFailure(call: Call<List<Tour>>, t: Throwable) {
-                fetchAttempts.intValue++
-                if (fetchAttempts.intValue - 3 < 0) {
-                    _loading.value = true
-                }
-                if (fetchAttempts.intValue > 3) {
-                    _loading.value = false
-                    _networkError.value = true
-                }
-            }
-        })
-    }
-
-    private fun refreshTours() {
-        viewModelScope.launch {
-            while (true) {
-                fetchTours()
-                delay(5000) // Fetch every 5 seconds
-            }
-        }
-    }
-
-    fun incrementDate() {
-        _displayDate.value = _displayDate.value.plusDays(1)
-    }
-
-    fun decrementDate() {
-        _displayDate.value = _displayDate.value.minusDays(1)
-    }
-
-    fun getDisplayTours(selectedVehicleId: Int): StateFlow<List<Tour>> {
-        val toursForVehicle = _tours.value.filter { t ->
-            t.vehicleId == selectedVehicleId
-        }
-
-        val toursPast = toursForVehicle.filter { t ->
-            Date(t.events.first().scheduledTimeStart).before(Date()) &&
-                    t.vehicleId == selectedVehicleId
-        }
-
-        val toursFuture = toursForVehicle.filter { t ->
-            Date(t.events.first().scheduledTimeStart).after(Date()) &&
-                    t.vehicleId == selectedVehicleId
-        }
-
-        if (_displayDate.value.dayOfYear != LocalDate.now().dayOfYear) {
-            _displayTours.value = toursPast + toursFuture
-        } else {
-            _displayTours.value = toursFuture
-        }
-
-        return _displayTours.asStateFlow()
-    }
-}
-
-@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun Tours(
     navController: NavController,
-    userViewModel: UserViewModel,
-    viewModel: ToursViewModel = viewModel()
+    viewModel: ToursViewModel = hiltViewModel()
 ) {
-    LaunchedEffect(key1 = viewModel) {
-        launch {
-            userViewModel.logoutEvent.collect {
-                navController.navigate("login") {
-                    launchSingleTop = true
-                }
-            }
-        }
-    }
-
-    val navBack = @Composable {
-        IconButton(onClick = { navController.navigate("vehicles") }) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Localized description"
-            )
-        }
-    }
+    val navBack = "vehicles"
 
     val navItems = listOf(
         NavItem(
@@ -214,22 +65,41 @@ fun Tours(
         )
     )
 
-    //val tours by viewModel.tours.collectAsState()
-    //val selectedVehicle by userViewModel.selectedVehicle.collectAsState()
-    val selectedVehicle = Vehicle(1, "")
     val loading by viewModel.loading.collectAsState()
     val networkError by viewModel.networkError.collectAsState()
+    val vehicleId = viewModel.selectedVehicle.collectAsState(0).value
+    val tours by viewModel.tours.collectAsState()
+    val date by viewModel.displayDate.collectAsState()
+    var displayTours: List<Tour>
 
-    val tours by viewModel.getDisplayTours(selectedVehicle.id).collectAsState()
+    val toursForVehicle = tours.filter { t ->
+        t.vehicleId == vehicleId
+    }
+
+    val toursPast = toursForVehicle.filter { t ->
+        Date(t.events.first().scheduledTimeStart).before(Date()) &&
+                t.vehicleId == vehicleId
+    }
+
+    val toursFuture = toursForVehicle.filter { t ->
+        Date(t.events.first().scheduledTimeStart).after(Date()) &&
+                t.vehicleId == vehicleId
+    }
+
+    if (date.dayOfYear != LocalDate.now().dayOfYear) {
+        displayTours = toursPast + toursFuture
+    } else {
+        displayTours = toursFuture
+    }
 
     Scaffold(
         topBar = {
             TopBar(
-                userViewModel,
                 navBack,
                 stringResource(id = R.string.tours_header),
                 true,
-                navItems
+                navItems,
+                navController
             )
         }
     ) { contentPadding ->
@@ -239,7 +109,22 @@ fun Tours(
                 .padding(contentPadding)
         ) {
             DateSelect(viewModel)
-            VehicleInfo(userViewModel)
+
+            val vehicle = viewModel.getSelectedVehicle(vehicleId)
+            vehicle?.let {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = vehicle.licensePlate,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
 
             if (loading) {
                 Box(
@@ -260,27 +145,9 @@ fun Tours(
                     ErrorInfo(stringResource(id = R.string.network_error))
                 }
             } else {
-                ShowTours(tours, navController)
+                ShowTours(displayTours, navController)
             }
         }
-    }
-}
-
-@Composable
-fun VehicleInfo(
-    userViewModel: UserViewModel
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(12.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "vehicle",//userViewModel.selectedVehicle.collectAsState().value.licensePlate,
-            fontSize = 16.sp,
-            textAlign = TextAlign.Center
-        )
     }
 }
 

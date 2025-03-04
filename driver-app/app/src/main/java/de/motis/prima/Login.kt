@@ -1,7 +1,6 @@
 package de.motis.prima
 
 import android.app.Activity
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -37,56 +36,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import dagger.hilt.android.lifecycle.HiltViewModel
-import de.motis.prima.services.ApiService
-import de.motis.prima.services.Vehicle
-import de.motis.prima.viewmodel.SettingsViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import de.motis.prima.viewmodel.LoginViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-@HiltViewModel
-class LoginViewModel @Inject constructor(private val apiService: ApiService) : ViewModel() {
-    private val _navigationEvent = MutableSharedFlow<Boolean>()
-    val navigationEvent = _navigationEvent.asSharedFlow()
-
-    private val _loginErrorEvent = MutableSharedFlow<Boolean>()
-    val loginErrorEvent = _loginErrorEvent.asSharedFlow()
-
-    private val _networkErrorEvent = MutableSharedFlow<Unit>()
-    val networkErrorEvent = _networkErrorEvent.asSharedFlow()
-
-    fun login(email: String, password: String) {
-        viewModelScope.launch {
-            try {
-                val response = apiService.login(email, password)
-                if (response.status == 302) {
-                    _navigationEvent.emit(true)
-                } else {
-                    _loginErrorEvent.emit(true)
-                }
-            } catch (e: Exception) {
-                _networkErrorEvent.emit(Unit)
-            }
-        }
-    }
-}
 
 @Composable
 fun Login(
     navController: NavController,
-    userViewModel: UserViewModel,
-    viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    settingsViewModel: SettingsViewModel = hiltViewModel()
+    viewModel: LoginViewModel = hiltViewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-
     var isLoginFailed by remember { mutableStateOf(false) }
-
     val networkErrorMessage = stringResource(id = R.string.login_error_message)
 
     val activity = (LocalContext.current as? Activity)
@@ -94,16 +54,13 @@ fun Login(
         activity?.finish()
     }
 
-    //val selectedVehicle by userViewModel.selectedVehicle.collectAsState()
-    //Log.d("test", selectedVehicle.toString())
-    val selectedVehicle = Vehicle(0, "")
+    val selectedVehicle by viewModel.selectedVehicle.collectAsState(0)
 
     LaunchedEffect(key1 = viewModel) {
         launch {
-            // Catching successful login event and navigation to the next screen
             viewModel.navigationEvent.collect { shouldNavigate ->
                 if (shouldNavigate) {
-                    if (selectedVehicle.id == 0) {
+                    if (selectedVehicle == 0) {
                         navController.navigate("vehicles")
                     } else {
                         navController.navigate("tours")
@@ -113,14 +70,12 @@ fun Login(
         }
 
         launch {
-            // Catching event when login failed due to incorrect login data
             viewModel.loginErrorEvent.collect { error ->
                 isLoginFailed = error
             }
         }
 
         launch {
-            // Catching event when a network error occurs and displaying of error message
             viewModel.networkErrorEvent.collect {
                 snackbarHostState.showSnackbar(message = networkErrorMessage)
             }

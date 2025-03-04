@@ -32,58 +32,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import de.motis.prima.services.ApiService
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
+import de.motis.prima.viewmodel.FareViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-class FareViewModel @Inject constructor(private val apiService: ApiService) : ViewModel() {
-    private val _networkErrorEvent = MutableSharedFlow<Unit>()
-    val networkErrorEvent = _networkErrorEvent.asSharedFlow()
-
-    private val _conversionErrorEvent = MutableSharedFlow<Unit>()
-    val conversionErrorEvent = _conversionErrorEvent.asSharedFlow()
-
-    private val _reportSuccessEvent = MutableSharedFlow<Unit>()
-    val reportSuccessEvent = _reportSuccessEvent.asSharedFlow()
-
-    fun reportFare(tourId: Int, fare: String) {
-        viewModelScope.launch {
-            var fareCent = 0
-            try {
-                fareCent = fare.replace(",", "").toInt()
-            } catch (e: Exception) {
-                _conversionErrorEvent.emit(Unit)
-            }
-
-            if (fareCent > 0) {
-                try {
-                    val response = apiService.reportFare(tourId, fareCent)
-                    if (response.status == 204) {
-                        _reportSuccessEvent.emit(Unit)
-                    }
-                } catch (e: Exception) {
-                    _networkErrorEvent.emit(Unit)
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun Fare(
     navController: NavController,
-    userViewModel: UserViewModel,
-    scanViewModel: ScanViewModel,
     tourId: Int,
-    viewModel: FareViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    viewModel: FareViewModel = hiltViewModel(),
 ) {
     var entryCorrect by remember { mutableStateOf(false) }
     var fare by remember { mutableStateOf("") }
@@ -92,14 +50,6 @@ fun Fare(
     val inputErrorMessage = stringResource(id = R.string.fare_input_error)
 
     LaunchedEffect(key1 = viewModel) {
-        launch {
-            userViewModel.logoutEvent.collect {
-                navController.navigate("login") {
-                    launchSingleTop = true
-                }
-            }
-        }
-
         launch {
             viewModel.reportSuccessEvent.collect {
                 navController.navigate("tours") {
@@ -121,23 +71,19 @@ fun Fare(
         }
     }
 
-    val navBack = @Composable {}
-
-    val navItems = listOf(
-        NavItem(
-            text = stringResource(id = R.string.cancel_tour),
-            action = { navController.navigate("tours") }
-        )
-    )
-
     Scaffold(
         topBar = {
             TopBar(
-                userViewModel,
-                navBack,
+                "tours",
                 stringResource(id = R.string.fare_header),
                 true,
-                navItems
+                listOf(
+                    NavItem(
+                        text = stringResource(id = R.string.cancel_tour),
+                        action = { navController.navigate("tours") }
+                    )
+                ),
+                navController
             )
         },
         snackbarHost = {
@@ -185,7 +131,7 @@ fun Fare(
                     )
                 }
                 Spacer(modifier = Modifier.height(100.dp))
-                val validTickets by scanViewModel.validTickets.collectAsState()
+                val validTickets by viewModel.validTickets.collectAsState()
                 val failedReports = validTickets.entries.filter { e -> !e.value.isReported }
 
                 Text(

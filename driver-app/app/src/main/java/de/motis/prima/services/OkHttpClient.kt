@@ -1,17 +1,17 @@
 package de.motis.prima.services
 
-import de.motis.prima.BuildConfig
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import android.content.Context
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import de.motis.prima.BuildConfig
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -28,6 +28,7 @@ object NetworkModule {
                 val newRequest = original.newBuilder()
                     .header("x-sveltekit-action", "true")
                     .header("Origin", BuildConfig.BASE_URL)
+                    //.header("Cookie", "session=7n24z7zliamyqiobukknlrp6cxi73g5m")
                     .build()
 
                 chain.proceed(newRequest)

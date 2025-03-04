@@ -26,12 +26,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,88 +42,31 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
-import de.motis.prima.services.ApiService
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import java.security.MessageDigest
+import de.motis.prima.viewmodel.ScanViewModel
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import javax.inject.Inject
-
-data class Ticket(
-    val requestId: Int,
-    val ticketCode: String,
-    val isReported: Boolean
-)
-
-class ScanViewModel @Inject constructor(private val apiService: ApiService) : ViewModel() {
-    private val _validTickets = MutableStateFlow(mutableMapOf<String, Ticket>())
-    val validTickets = _validTickets.asStateFlow()
-
-    private fun updateValidTickets(requestId: Int, ticketCode: String, reported: Boolean) {
-        _validTickets.value[md5(ticketCode)] = Ticket(requestId, ticketCode, reported)
-    }
-
-    private fun md5(input: String): String {
-        val bytes = MessageDigest.getInstance("MD5").digest(input.toByteArray())
-        return bytes.joinToString("") { "%02x".format(it) }
-    }
-
-    fun reportTicketScan(requestId: Int, ticketCode: String) {
-        viewModelScope.launch {
-            var isReported = false
-            try {
-                //val response = Api.apiService.validateTicket(requestId, ticketCode)
-                val response = apiService.validateTicket(requestId, "ticketCode")
-                if (response.status == 204) {
-                    isReported = true
-                } else {
-                    Log.d("error", response.toString())
-                }
-            } catch (e: Exception) {
-                Log.d("error", "Network Error: ${e.message!!}")
-            }
-            Log.d("test", "$requestId, $ticketCode, $isReported")
-            updateValidTickets(requestId, ticketCode, isReported)
-        }
-    }
-}
 
 @Composable
 fun TicketScan(
     navController: NavController,
     tourId: Int,
     requestId: Int,
-    userViewModel: UserViewModel,
-    viewModel: ScanViewModel
+    viewModel: ScanViewModel = hiltViewModel()
 ) {
-    val navBack = @Composable {
-        IconButton(onClick = { navController.navigate("tours") }) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Localized description"
-            )
-        }
-    }
-
-    val navItems = emptyList<NavItem>()
-
     Scaffold(
         topBar = {
             TopBar(
-                userViewModel,
-                navBack,
+                "tours",
                 "   Scan Ticket Code",
                 false,
-                navItems
+                emptyList<NavItem>(),
+                navController
             )
         }
     ) { contentPadding ->
@@ -188,9 +127,15 @@ fun QRCodeScanner(
                 hasPermission = true
                 Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
             }
+
             showRationale -> {
-                Toast.makeText(context, "Permission Denied. You can enable it in settings.", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    context,
+                    "Permission Denied. You can enable it in settings.",
+                    Toast.LENGTH_LONG
+                ).show()
             }
+
             else -> {
                 permanentlyDenied = true
             }
@@ -200,11 +145,16 @@ fun QRCodeScanner(
     // Check permission status
     LaunchedEffect(Unit) {
         when {
-            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> {
                 hasPermission = true
             }
+
             else -> {
-                showRationale = shouldShowRequestPermissionRationale(context, Manifest.permission.CAMERA)
+                showRationale =
+                    shouldShowRequestPermissionRationale(context, Manifest.permission.CAMERA)
             }
         }
     }
@@ -217,9 +167,11 @@ fun QRCodeScanner(
                     onRequestPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) }
                 )
             }
+
             permanentlyDenied -> {
                 PermissionDeniedDialog(navController, context)
             }
+
             hasPermission -> {
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
@@ -260,8 +212,9 @@ fun QRCodeScanner(
                     }
                 )
             }
+
             else -> {
-                Box (
+                Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
@@ -338,7 +291,8 @@ fun PermissionDeniedDialog(navController: NavController, context: Context) {
 
 // Function to check if rationale should be shown
 fun shouldShowRequestPermissionRationale(context: Context, permission: String): Boolean {
-    return (context as? ComponentActivity)?.shouldShowRequestPermissionRationale(permission) ?: false
+    return (context as? ComponentActivity)?.shouldShowRequestPermissionRationale(permission)
+        ?: false
 }
 
 // Function to open app settings

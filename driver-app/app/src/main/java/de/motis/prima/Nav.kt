@@ -1,63 +1,62 @@
 package de.motis.prima
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import de.motis.prima.app.DriversApp
 import de.motis.prima.services.CookieStore
+import de.motis.prima.viewmodel.SettingsViewModel
 
 @Composable
 fun Nav() {
     val navController = rememberNavController()
-    val userViewModel: UserViewModel = viewModel()
-    val scanViewModel: ScanViewModel = viewModel()
+    val context = LocalContext.current
+    val settingsViewModel: SettingsViewModel = hiltViewModel()
+    val selectedVehicle = settingsViewModel.selectedVehicle.collectAsState(0)
 
-    val selectedVehicleId = 0
-
-    // Before rendering any component, check preconditions
     val startDestination by remember {
         derivedStateOf {
-            /*val cookieStore = CookieStore(DriversApp.instance)
+            val cookieStore = CookieStore(context)
             if (cookieStore.isEmpty()) {
                 "login"
             } else {
-                if (selectedVehicleId != 0) {
+                if (selectedVehicle.value != 0) {
                     "tours"
                 } else {
                     "vehicles"
                 }
-            }*/"login"
             }
+        }
     }
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable(route = "login") {
-            Login(navController, userViewModel)
+            Login(navController)
         }
 
         composable(route = "vehicles") {
-            Vehicles(navController, userViewModel)
+            Vehicles(navController)
         }
 
         composable(route = "tours") {
-            Tours(navController, userViewModel)
+            Tours(navController)
         }
 
         composable(route = "scan/{tourId}/{requestId}") {
             val tourId = it.arguments?.getString("tourId")?.toInt()
             val requestId = it.arguments?.getString("requestId")?.toInt()
-            TicketScan(navController,  tourId!!, requestId!!, userViewModel, scanViewModel)
+            TicketScan(navController, tourId!!, requestId!!)
         }
 
         composable(route = "fare/{tourId}") {
             val tourId = it.arguments?.getString("tourId")?.toInt()
-            Fare(navController, userViewModel, scanViewModel, tourId!!)
+            Fare(navController, tourId!!)
         }
     }
 }
