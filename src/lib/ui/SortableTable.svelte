@@ -16,7 +16,7 @@
 	} = $props();
 
 	const descending = Array.from({ length: cols.length }, () => true);
-	const sort = (idx: number) => {
+	const sortAndToggle = (idx: number) => {
 		rows.sort(cols[idx].sort);
 		if (!descending[idx]) {
 			rows.reverse();
@@ -37,7 +37,7 @@
 					{#each cols as col, i}
 						{#if col.sort != undefined}
 							<Table.Head>
-								<Button class="whitespace-pre" variant="outline" onclick={() => sort(i)}>
+								<Button class="whitespace-pre" variant="outline" onclick={() => sortAndToggle(i)}>
 									{col.text}
 									<ChevronsUpDown class="h-6 w-4" />
 								</Button>
