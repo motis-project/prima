@@ -71,11 +71,16 @@ export const setTour = async (
 		.executeTakeFirst();
 };
 
-export const setRequest = async (tour: number, customer: number, ticketCode: string) => {
+export const setRequest = async (
+	tour: number,
+	customer: number,
+	ticketCode: string,
+	passengers?: number
+) => {
 	return await db
 		.insertInto('request')
 		.values({
-			passengers: 1,
+			passengers: passengers ?? 1,
 			bikes: 0,
 			luggage: 0,
 			wheelchairs: 0,
