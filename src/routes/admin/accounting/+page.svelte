@@ -5,7 +5,7 @@
 	import pkg from 'file-saver';
 	import type { TourWithRequests } from '$lib/server/db/getTours';
 	import Tabs from '$lib/ui/Tabs.svelte';
-	import SortableScrollableTable from '$lib/ui/SortableScrollableTable.svelte';
+	import SortableScrollableTable from '$lib/ui/SortableTable.svelte';
 	import Select from '$lib/ui/Select.svelte';
 	import { RangeCalendar } from '$lib/shadcn/range-calendar/index.js';
 	import * as Dialog from '$lib/shadcn/dialog';
