@@ -287,7 +287,7 @@
 	</div>
 {/snippet}
 
-<div class="h-[90vh] flex flex-col">
+<div class="h-[90vh]">
 	<Card.Header>
 		<Card.Title>Abrechnung</Card.Title>
 	</Card.Header>
