@@ -95,11 +95,7 @@ export async function getCompanyCosts() {
 		intervals.map((interval) => ({ vehicleId, interval }))
 	);
 
-	allAvailabilities.sort((a1, a2) => {
-		const startDayCmp =
-			Math.floor(a1.interval.startTime / DAY) - Math.floor(a2.interval.startTime / DAY);
-		return startDayCmp === 0 ? a1.interval.endTime - a2.interval.endTime : startDayCmp;
-	});
+	allAvailabilities.sort((a1, a2) => a1.interval.startTime - a2.interval.startTime);
 	// cumulate the total duration of availability on every relevant day for each vehicle
 	const availabilitiesPerDayAndVehicle = iterateIntervalArrays(
 		days,
