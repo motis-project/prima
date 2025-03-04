@@ -61,18 +61,7 @@
 			if (arr.length === 0) {
 				return;
 			}
-			const accumulated = arr.reduce(
-				(acc, current) => {
-					acc.capped += current.capped;
-					acc.uncapped += current.uncapped;
-					acc.taxameter += current.taxameter;
-					acc.availabilityDuration += current.availabilityDuration;
-					acc.customerCount += current.customerCount;
-					acc.verifiedCustomerCount += current.verifiedCustomerCount;
-					return acc;
-				},
-				{ capped: 0, uncapped: 0, taxameter: 0, availabilityDuration: 0, customerCount: 0, verifiedCustomerCount: 0 }
-			);
+			const accumulated = accumulatedCompanyRowEntries(arr);
 			newCompanyRows.push({ ...accumulated, companyName: arr[0].companyName, companyId });
 		});
 		if (newCompanyRows.length === 0) {
