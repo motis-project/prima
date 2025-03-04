@@ -24,11 +24,10 @@ export async function getCompanyCosts() {
 			companyCostsPerDay: []
 		};
 	}
-	const earliestTime =
-		Math.floor(
-			tours.reduce((min, entry) => (entry.startTime < min.startTime ? entry : min), tours[0])
-				.startTime / DAY
-		) * DAY;
+	const earliestTime = tours.reduce(
+		(min, entry) => (entry.startTime < min.startTime ? entry : min),
+		tours[0]
+	).startTime - DAY;
 
 	const today = Math.ceil(Date.now() / DAY) * DAY;
 	const availabilities = await db
@@ -40,11 +39,27 @@ export async function getCompanyCosts() {
 		.execute();
 
 	// create an array of intervals representing the individual days in the two relevant years
-	const days = Array.from(
-		{ length: Math.floor((today - earliestTime) / DAY) },
-		(_, i) => new Interval(earliestTime + DAY * i, earliestTime + DAY * (i + 1))
-	);
-
+	const getOffset = (t: UnixtimeMs) => {
+		return (
+			parseInt(
+				new Date(t).toLocaleString('de-DE', {
+					hour: '2-digit',
+					hour12: false,
+					timeZone: 'Europe/Berlin'
+				})
+			) - 12
+		);
+	};
+	const firstDay = new Date(earliestTime - DAY);
+	const firstDayStart = Math.floor(firstDay.getTime() / DAY) * DAY;
+	const days = Array.from({ length: Math.ceil((today - firstDayStart) / DAY) }, (_, i) => {
+		const offset = getOffset(firstDayStart + DAY * i + HOUR * 12);
+		const offsetNextDay = getOffset(firstDayStart + DAY * (i + 1) + HOUR * 12);
+		return new Interval(
+			firstDayStart + DAY * i - offset * HOUR,
+			firstDayStart + DAY * (i + 1) - offsetNextDay * HOUR
+		);
+	});
 	// group availabilities by vehicle
 	const availabilitiesPerVehicle = groupBy(
 		availabilities,
