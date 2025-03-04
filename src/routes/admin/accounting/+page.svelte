@@ -37,6 +37,20 @@
 	let currentRowsSubtractionsTable: Subtractions[] = $state(data.companyCostsPerDay);
 
 	const updateCompanySums = (subtractionRows: Subtractions[]) => {
+		const accumulatedCompanyRowEntries = (arr: (Subtractions | CompanyRow)[]) => {
+			return arr.reduce(
+				(acc, current) => {
+					acc.capped += current.capped;
+					acc.uncapped += current.uncapped;
+					acc.taxameter += current.taxameter;
+					acc.availabilityDuration += current.availabilityDuration;
+					acc.customerCount += current.customerCount;
+					acc.verifiedCustomerCount += current.verifiedCustomerCount;
+					return acc;
+				},
+				{ capped: 0, uncapped: 0, taxameter: 0, availabilityDuration: 0, customerCount: 0, verifiedCustomerCount: 0 }
+			);
+		};
 		const costsPerCompany = groupBy(
 			subtractionRows,
 			(c) => c.companyId,
@@ -54,9 +68,10 @@
 					acc.taxameter += current.taxameter;
 					acc.availabilityDuration += current.availabilityDuration;
 					acc.customerCount += current.customerCount;
+					acc.verifiedCustomerCount += current.verifiedCustomerCount;
 					return acc;
 				},
-				{ capped: 0, uncapped: 0, taxameter: 0, availabilityDuration: 0, customerCount: 0 }
+				{ capped: 0, uncapped: 0, taxameter: 0, availabilityDuration: 0, customerCount: 0, verifiedCustomerCount: 0 }
 			);
 			newCompanyRows.push({ ...accumulated, companyName: arr[0].companyName, companyId });
 		});
@@ -64,17 +79,7 @@
 			return;
 		}
 		newCompanyRows.push({
-			...newCompanyRows.reduce(
-				(acc, current) => {
-					acc.capped += current.capped;
-					acc.uncapped += current.uncapped;
-					acc.taxameter += current.taxameter;
-					acc.availabilityDuration += current.availabilityDuration;
-					acc.customerCount += current.customerCount;
-					return acc;
-				},
-				{ capped: 0, uncapped: 0, taxameter: 0, availabilityDuration: 0, customerCount: 0 }
-			),
+			...accumulatedCompanyRowEntries(newCompanyRows),
 			companyId: -1,
 			companyName: 'Summiert'
 		});

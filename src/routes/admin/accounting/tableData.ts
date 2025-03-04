@@ -11,9 +11,10 @@ export type CompanyRow = {
 	uncapped: number;
 	availabilityDuration: number;
 	customerCount: number;
+	verifiedCustomerCount: number;
 };
 
-export type Subtractions = CompanyRow & { timestamp: UnixtimeMs, verifiedCustomerCount: number };
+export type Subtractions = CompanyRow & { timestamp: UnixtimeMs };
 
 export type Column<T> = {
 	text: string;
@@ -127,7 +128,7 @@ export const subtractionCols: Column<Subtractions>[] = [
 		toTableEntry: (r: Subtractions) => displayDuration(r.availabilityDuration)
 	},
 	{
-		text: 'erschienen Kunden  ',
+		text: 'erschienene Kunden  ',
 		sort: undefined,
 		toTableEntry: (r: Subtractions) => r.verifiedCustomerCount
 	}
@@ -164,5 +165,10 @@ export const companyCols: Column<CompanyRow>[] = [
 		text: 'gesetzte Verfügbarkeit',
 		sort: (a: CompanyRow, b: CompanyRow) => a.availabilityDuration - b.availabilityDuration,
 		toTableEntry: (r: CompanyRow) => displayDuration(r.availabilityDuration)
+	},
+	{
+		text: 'erschienene Kunden  ',
+		sort: undefined,
+		toTableEntry: (r: CompanyRow) => r.verifiedCustomerCount
 	}
 ];

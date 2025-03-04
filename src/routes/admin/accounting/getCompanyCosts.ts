@@ -143,11 +143,11 @@ export async function getCompanyCosts() {
 		taxameterPerDayAndVehicle[d].forEach((taxameter, vehicle) => {
 			const costCap = ((availabilitiesPerDayAndVehicle[d]?.get(vehicle) ?? 0) * CAP) / HOUR;
 			const uncapped = taxameter.taxameter - taxameter.verifiedCustomerCount * FIXED_PRICE;
-			const cost = Math.min(costCap, uncapped) + Math.max(uncapped - costCap, 0) * OVER_CAP_FACTOR;
+			const capped = Math.min(costCap, uncapped) + Math.max(uncapped - costCap, 0) * OVER_CAP_FACTOR;
 			costPerDayAndVehicle[d].set(vehicle, {
-				uncapped: uncapped,
+				uncapped,
 				taxameter: taxameter.taxameter,
-				capped: cost,
+				capped,
 				customerCount: taxameter.customerCount,
 				timestamp: taxameter.timestamp,
 				verifiedCustomerCount: taxameter.verifiedCustomerCount
