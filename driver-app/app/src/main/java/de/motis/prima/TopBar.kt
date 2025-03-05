@@ -33,7 +33,7 @@ data class NavItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
-    navBack: String,
+    navBack: String?,
     title: String,
     options: Boolean,
     navItems: List<NavItem>?,
@@ -67,11 +67,13 @@ fun TopBar(
             )
         },
         navigationIcon = {
-            IconButton(onClick = { navController.navigate(navBack) }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Localized description"
-                )
+            if (navBack != null) {
+                IconButton(onClick = { navController.navigate(navBack) }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Localized description"
+                    )
+                }
             }
         },
         actions = {

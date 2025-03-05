@@ -47,7 +47,7 @@ fun Vehicles(
     Scaffold(
         topBar = {
             TopBar(
-                "vehicles",
+                null,
                 stringResource(id = R.string.vehicles_header),
                 true,
                 navItems,
