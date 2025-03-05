@@ -29,7 +29,7 @@ export const getEuroString = (price: number | null) => {
 const getCustomerCount = (tour: TourWithRequests, countOnlyVerified: boolean) => {
 	let customers = 0;
 	tour.requests.forEach((r) => {
-		if(!countOnlyVerified || r.ticketChecked) {
+		if (!countOnlyVerified || r.ticketChecked) {
 			customers += r.passengers;
 		}
 	});

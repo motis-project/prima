@@ -48,7 +48,14 @@
 					acc.verifiedCustomerCount += current.verifiedCustomerCount;
 					return acc;
 				},
-				{ capped: 0, uncapped: 0, taxameter: 0, availabilityDuration: 0, customerCount: 0, verifiedCustomerCount: 0 }
+				{
+					capped: 0,
+					uncapped: 0,
+					taxameter: 0,
+					availabilityDuration: 0,
+					customerCount: 0,
+					verifiedCustomerCount: 0
+				}
 			);
 		};
 		const costsPerCompany = groupBy(

@@ -8,14 +8,14 @@ import { DAY, HOUR } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
 export async function getCompanyCosts() {
-	const tours: (TourWithRequests & { interval: Interval })[] = (
-		await getToursWithRequests()
-	).map((t) => {
-		return {
-			...t,
-			interval: new Interval(t.startTime, t.endTime)
-		};
-	});
+	const tours: (TourWithRequests & { interval: Interval })[] = (await getToursWithRequests()).map(
+		(t) => {
+			return {
+				...t,
+				interval: new Interval(t.startTime, t.endTime)
+			};
+		}
+	);
 	tours.sort((t1, t2) => t1.startTime - t2.startTime);
 	if (tours.length === 0) {
 		return {
@@ -88,12 +88,25 @@ export async function getCompanyCosts() {
 
 	// cumulate the total taxameter readings on every relevant day for each vehicle
 	const taxameterPerDayAndVehicle = new Array<
-		Map<number, { taxameter: number; customerCount: number; timestamp: UnixtimeMs, verifiedCustomerCount: number }>
+		Map<
+			number,
+			{
+				taxameter: number;
+				customerCount: number;
+				timestamp: UnixtimeMs;
+				verifiedCustomerCount: number;
+			}
+		>
 	>(days.length);
 	days.forEach((day, dayIdx) => {
 		taxameterPerDayAndVehicle[dayIdx] = new Map<
 			number,
-			{ taxameter: number; customerCount: number; timestamp: UnixtimeMs, verifiedCustomerCount: number }
+			{
+				taxameter: number;
+				customerCount: number;
+				timestamp: UnixtimeMs;
+				verifiedCustomerCount: number;
+			}
 		>();
 		tours.forEach((tour) => {
 			if (day.overlaps(tour.interval)) {
@@ -105,9 +118,12 @@ export async function getCompanyCosts() {
 						(taxameterPerDayAndVehicle[dayIdx].get(tour.vehicleId)?.customerCount ?? 0) +
 						tour.requests.reduce((acc, current) => current.passengers + acc, 0),
 					timestamp: tour.startTime,
-					verifiedCustomerCount: 
+					verifiedCustomerCount:
 						(taxameterPerDayAndVehicle[dayIdx].get(tour.vehicleId)?.verifiedCustomerCount ?? 0) +
-						tour.requests.reduce((acc, current) => (current.ticketChecked ? current.passengers : 0) + acc, 0)
+						tour.requests.reduce(
+							(acc, current) => (current.ticketChecked ? current.passengers : 0) + acc,
+							0
+						)
 				});
 			}
 		});
@@ -143,7 +159,8 @@ export async function getCompanyCosts() {
 		taxameterPerDayAndVehicle[d].forEach((taxameter, vehicle) => {
 			const costCap = ((availabilitiesPerDayAndVehicle[d]?.get(vehicle) ?? 0) * CAP) / HOUR;
 			const uncapped = taxameter.taxameter - taxameter.verifiedCustomerCount * FIXED_PRICE;
-			const capped = Math.min(costCap, uncapped) + Math.max(uncapped - costCap, 0) * OVER_CAP_FACTOR;
+			const capped =
+				Math.min(costCap, uncapped) + Math.max(uncapped - costCap, 0) * OVER_CAP_FACTOR;
 			costPerDayAndVehicle[d].set(vehicle, {
 				uncapped,
 				taxameter: taxameter.taxameter,
@@ -204,7 +221,7 @@ export async function getCompanyCosts() {
 				customerCount:
 					(companyCostsPerDay[d].get(company.id)?.customerCount ?? 0) +
 					(costPerDayAndVehicle[d].get(vehicle)?.customerCount ?? 0),
-				verifiedCustomerCount: 
+				verifiedCustomerCount:
 					(companyCostsPerDay[d].get(company.id)?.verifiedCustomerCount ?? 0) +
 					(costPerDayAndVehicle[d].get(vehicle)?.verifiedCustomerCount ?? 0),
 				taxameter: (companyCostsPerDay[d].get(company.id)?.taxameter ?? 0) + cost.taxameter,

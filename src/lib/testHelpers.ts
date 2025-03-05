@@ -75,7 +75,8 @@ export const setRequest = async (
 	tour: number,
 	customer: number,
 	ticketCode: string,
-	passengers?: number
+	passengers?: number,
+	ticketChecked?: boolean
 ) => {
 	return await db
 		.insertInto('request')
@@ -87,7 +88,7 @@ export const setRequest = async (
 			tour,
 			customer,
 			ticketCode,
-			ticketChecked: false,
+			ticketChecked: ticketChecked == undefined ? false : ticketChecked,
 			cancelled: false
 		})
 		.returning('id')

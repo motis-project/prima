@@ -44,7 +44,7 @@ describe('test accounting', () => {
 		const v1 = await addTaxi(c1, dummyCapacities);
 		await setAvailability(v1, testDays[0] + HOUR * 5, testDays[0] + HOUR * 6);
 		const t1 = (await setTour(v1, testDays[0] + HOUR, testDays[0] + HOUR * 2, 1000))!.id;
-		await setRequest(t1, u.id, '');
+		await setRequest(t1, u.id, '', 1, true);
 		const { companyCostsPerDay } = await getCompanyCosts();
 		expect(companyCostsPerDay).toHaveLength(1);
 		expect(companyCostsPerDay[0].taxameter).toBe(1000);
@@ -60,8 +60,8 @@ describe('test accounting', () => {
 		const v1 = await addTaxi(c1, dummyCapacities);
 		await setAvailability(v1, testDays[0] + HOUR * 5, testDays[0] + HOUR * 6);
 		const t1 = (await setTour(v1, testDays[0] + HOUR, testDays[0] + HOUR * 2, 400))!.id;
-		await setRequest(t1, u.id, '');
-		await setRequest(t1, u.id, '');
+		await setRequest(t1, u.id, '', 1, true);
+		await setRequest(t1, u.id, '', 1, true);
 		const { companyCostsPerDay } = await getCompanyCosts();
 		expect(companyCostsPerDay).toHaveLength(1);
 		expect(companyCostsPerDay[0].taxameter).toBe(400);
@@ -77,7 +77,7 @@ describe('test accounting', () => {
 		const v1 = await addTaxi(c1, dummyCapacities);
 		await setAvailability(v1, testDays[0] + HOUR * 5, testDays[0] + HOUR * 6);
 		const t1 = (await setTour(v1, testDays[0] + HOUR, testDays[0] + HOUR * 2, 5000))!.id;
-		await setRequest(t1, u.id, '');
+		await setRequest(t1, u.id, '', 1, true);
 		const { companyCostsPerDay } = await getCompanyCosts();
 		expect(companyCostsPerDay).toHaveLength(1);
 		expect(companyCostsPerDay[0].taxameter).toBe(5000);
@@ -94,8 +94,8 @@ describe('test accounting', () => {
 		await setAvailability(v1, testDays[0] + HOUR * 5, testDays[0] + HOUR * 6);
 		const t1 = (await setTour(v1, testDays[0] + HOUR, testDays[0] + HOUR * 2, 2200))!.id;
 		const t2 = (await setTour(v1, testDays[0] + HOUR, testDays[0] + HOUR * 2, 3400))!.id;
-		await setRequest(t1, u.id, '');
-		await setRequest(t2, u.id, '');
+		await setRequest(t1, u.id, '', 1, true);
+		await setRequest(t2, u.id, '', 1, true);
 		const { companyCostsPerDay } = await getCompanyCosts();
 		expect(companyCostsPerDay).toHaveLength(1);
 		expect(companyCostsPerDay[0].taxameter).toBe(5600);
@@ -116,8 +116,8 @@ describe('test accounting', () => {
 		await setAvailability(v1, testDays[0] + HOUR * 14, testDays[0] + HOUR * 14 + 30 * MINUTE);
 		const t1 = (await setTour(v1, testDays[0] + HOUR, testDays[0] + HOUR * 2, 4250))!.id;
 		const t2 = (await setTour(v1, testDays[0] + HOUR, testDays[0] + HOUR * 2, 3400))!.id;
-		await setRequest(t1, u.id, '');
-		await setRequest(t2, u.id, '');
+		await setRequest(t1, u.id, '', 1, true);
+		await setRequest(t2, u.id, '', 1, true);
 		const { companyCostsPerDay } = await getCompanyCosts();
 		expect(companyCostsPerDay).toHaveLength(1);
 		expect(companyCostsPerDay[0].taxameter).toBe(7650);
@@ -133,7 +133,7 @@ describe('test accounting', () => {
 		const v1 = await addTaxi(c1, dummyCapacities);
 		await setAvailability(v1, midnight + 30 * MINUTE, midnight + 90 * MINUTE);
 		const t1 = (await setTour(v1, testDays[0] + HOUR, testDays[0] + HOUR * 2, 2600))!.id;
-		await setRequest(t1, u.id, '');
+		await setRequest(t1, u.id, '', 1, true);
 		const { companyCostsPerDay } = await getCompanyCosts();
 		expect(companyCostsPerDay).toHaveLength(1);
 		expect(companyCostsPerDay[0].taxameter).toBe(2600);
@@ -149,8 +149,8 @@ describe('test accounting', () => {
 		const v1 = await addTaxi(c1, dummyCapacities);
 		const t1 = (await setTour(v1, testDays[0] + HOUR, testDays[0] + HOUR * 2, 2600))!.id;
 		const t2 = (await setTour(v1, testDays[0] + HOUR, testDays[0] + HOUR * 2, 3000))!.id;
-		await setRequest(t1, u.id, '');
-		await setRequest(t2, u.id, '');
+		await setRequest(t1, u.id, '', 1, true);
+		await setRequest(t2, u.id, '', 1, true);
 		const { companyCostsPerDay } = await getCompanyCosts();
 		expect(companyCostsPerDay).toHaveLength(1);
 		expect(companyCostsPerDay[0].taxameter).toBe(5600);
@@ -169,8 +169,8 @@ describe('test accounting', () => {
 		await setAvailability(v2, testDays[0] + 3 * HOUR, testDays[0] + 4 * HOUR);
 		const t1 = (await setTour(v1, testDays[0] + HOUR, testDays[0] + HOUR * 2, 5100))!.id;
 		const t2 = (await setTour(v2, testDays[0] + HOUR, testDays[0] + HOUR * 2, 5100))!.id;
-		await setRequest(t1, u.id, '');
-		await setRequest(t2, u.id, '');
+		await setRequest(t1, u.id, '', 1, true);
+		await setRequest(t2, u.id, '', 1, true);
 		const { companyCostsPerDay } = await getCompanyCosts();
 		expect(companyCostsPerDay).toHaveLength(1);
 		expect(companyCostsPerDay[0].taxameter).toBe(10200);
@@ -186,7 +186,7 @@ describe('test accounting', () => {
 		const v1 = await addTaxi(c1, dummyCapacities);
 		await setAvailability(v1, testDays[0] + 3 * HOUR, testDays[0] + 4 * HOUR);
 		const t1 = (await setTour(v1, testDays[0] + HOUR, testDays[0] + HOUR * 2, 5700))!.id;
-		await setRequest(t1, u.id, '', 2);
+		await setRequest(t1, u.id, '', 2, true);
 		const { companyCostsPerDay } = await getCompanyCosts();
 		expect(companyCostsPerDay).toHaveLength(1);
 		expect(companyCostsPerDay[0].taxameter).toBe(5700);
@@ -206,8 +206,8 @@ describe('test accounting', () => {
 		await setAvailability(v2, testDays[0] + 5 * HOUR, testDays[0] + 7 * HOUR);
 		const t1 = (await setTour(v1, testDays[0] + HOUR, testDays[0] + HOUR * 2, 5100))!.id;
 		const t2 = (await setTour(v2, testDays[0] + HOUR, testDays[0] + HOUR * 2, 35300))!.id;
-		await setRequest(t1, u.id, '');
-		await setRequest(t2, u.id, '');
+		await setRequest(t1, u.id, '', 1, true);
+		await setRequest(t2, u.id, '', 1, true);
 		const { companyCostsPerDay } = await getCompanyCosts();
 		expect(companyCostsPerDay).toHaveLength(1);
 		expect(companyCostsPerDay[0].taxameter).toBe(40400);
@@ -227,8 +227,8 @@ describe('test accounting', () => {
 		await setAvailability(v2, testDays[0] + 2 * HOUR, testDays[0] + 4 * HOUR);
 		const t1 = (await setTour(v1, testDays[0] + HOUR, testDays[0] + HOUR * 2, 5100))!.id;
 		const t2 = (await setTour(v2, testDays[0] + HOUR, testDays[0] + HOUR * 2, 9200))!.id;
-		await setRequest(t1, u.id, '');
-		await setRequest(t2, u.id, '', 2);
+		await setRequest(t1, u.id, '', 1, true);
+		await setRequest(t2, u.id, '', 2 ,true);
 		const { companyCostsPerDay } = await getCompanyCosts();
 		expect(companyCostsPerDay).toHaveLength(2);
 		expect(companyCostsPerDay[0].timestamp).toBe(companyCostsPerDay[1].timestamp);
