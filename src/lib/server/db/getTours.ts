@@ -88,7 +88,7 @@ export const getToursWithRequests = async () => {
 				eb
 					.selectFrom('request')
 					.whereRef('tour.id', '=', 'request.tour')
-					.select((eb) => ['request.luggage', 'request.passengers', 'request.ticketChecked'])
+					.select(['request.luggage', 'request.passengers', 'request.ticketChecked'])
 			).as('requests')
 		])
 		.where('tour.fare', 'is not', null)

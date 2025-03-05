@@ -228,7 +228,7 @@ describe('test accounting', () => {
 		const t1 = (await setTour(v1, testDays[0] + HOUR, testDays[0] + HOUR * 2, 5100))!.id;
 		const t2 = (await setTour(v2, testDays[0] + HOUR, testDays[0] + HOUR * 2, 9200))!.id;
 		await setRequest(t1, u.id, '', 1, true);
-		await setRequest(t2, u.id, '', 2 ,true);
+		await setRequest(t2, u.id, '', 2, true);
 		const { companyCostsPerDay } = await getCompanyCosts();
 		expect(companyCostsPerDay).toHaveLength(2);
 		expect(companyCostsPerDay[0].timestamp).toBe(companyCostsPerDay[1].timestamp);
