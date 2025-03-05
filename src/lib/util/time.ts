@@ -10,7 +10,3 @@ export function milliToSecond(milli: number): number {
 export function secondToMilli(second: number): number {
 	return second * SECOND;
 }
-
-export function endOfCurrent15MinuteInterval() {
-	return Math.ceil(Date.now() / (15 * MINUTE)) * 15 * MINUTE;
-}

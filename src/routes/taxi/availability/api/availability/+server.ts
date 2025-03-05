@@ -1,9 +1,15 @@
+import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, MIN_PREP } from '$lib/constants';
+import { getAllowedTimes } from '$lib/server/booking/evaluateRequest';
 import { db, type Database } from '$lib/server/db';
 import { Interval } from '$lib/server/util/interval';
-import { endOfCurrent15MinuteInterval } from '$lib/util/time';
+import { MINUTE } from '$lib/util/time';
+import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import { json } from '@sveltejs/kit';
 import { sql, type Insertable, type Selectable } from 'kysely';
 
+function getFirstAlterableTime() {
+	return Math.ceil((Date.now() + MIN_PREP) / (15 * MINUTE)) * 15 * MINUTE;
+}
 type Availability = Selectable<Database['availability']>;
 type NewAvailability = Insertable<Database['availability']>;
 
@@ -36,11 +42,11 @@ export const DELETE = async ({ locals, request }) => {
 		throw 'invalid params';
 	}
 
-	const restrictedFrom = Math.max(endOfCurrent15MinuteInterval(), from);
+
+	const restrictedFrom = Math.max(getFirstAlterableTime(), from);
 	if (to <= restrictedFrom) {
 		return json({});
 	}
-
 	const toRemove = new Interval(restrictedFrom, to);
 	console.log('remove availability vehicle=', vehicleId, 'toRemove=', toRemove);
 	await db.transaction().execute(async (trx) => {
@@ -117,26 +123,26 @@ export const POST = async ({ locals, request }) => {
 		throw 'invalid params';
 	}
 
-	const restrictedFrom = Math.max(endOfCurrent15MinuteInterval(), from);
+	const restrictedFrom = Math.max(from, getFirstAlterableTime());
 	if (to <= restrictedFrom) {
 		return json({});
 	}
-
-	await db
+	const allowedAvailabilityIntervals = getAllowedTimes(restrictedFrom, to, EARLIEST_SHIFT_START - 1, LATEST_SHIFT_END + 1);
+	const queries = allowedAvailabilityIntervals.map((a) => db
 		.insertInto('availability')
 		.columns(['startTime', 'endTime', 'vehicle'])
 		.expression((eb) =>
 			eb
 				.selectFrom('vehicle')
 				.select((eb) => [
-					eb.val(restrictedFrom).as('startTime'),
-					eb.val(to).as('endTime'),
+					eb.val(a.startTime).as('startTime'),
+					eb.val(a.endTime).as('endTime'),
 					'vehicle.id as vehicle'
 				])
 				.where('vehicle.company', '=', companyId)
 				.where('vehicle.id', '=', vehicleId)
 		)
-		.execute();
-
+	);
+	Promise.all(queries);
 	return json({});
 };

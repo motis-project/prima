@@ -84,7 +84,7 @@ export async function evaluateRequest(
 	if (earliest >= latest) {
 		return busStops.map((bs) => bs.times.map((_) => undefined));
 	}
-	const allowedTimes = getAllowedTimes(earliest, latest);
+	const allowedTimes = getAllowedTimes(earliest, latest, EARLIEST_SHIFT_START, LATEST_SHIFT_END);
 	console.log(
 		'WHITELIST REQUEST: ALLOWED TIMES (RESTRICTION FROM 6 TO 21):\n',
 		allowedTimes.map((i) => i.toString())
@@ -103,7 +103,7 @@ export async function evaluateRequest(
 	return newTourEvaluations;
 }
 
-export function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs): Interval[] {
+export function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs, startOnDay: UnixtimeMs, endOnDay: UnixtimeMs): Interval[] {
 	if (earliest >= latest) {
 		return [];
 	}
@@ -124,7 +124,7 @@ export function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs): Inter
 				})
 			) - 12;
 		allowedTimes.push(
-			new Interval(t + EARLIEST_SHIFT_START - offset * HOUR, t + LATEST_SHIFT_END - offset * HOUR)
+			new Interval(t + startOnDay - offset * HOUR, t + endOnDay - offset * HOUR)
 		);
 		noonEarliestDay.setHours(noonEarliestDay.getHours() + 24);
 	}
