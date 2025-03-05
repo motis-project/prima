@@ -255,8 +255,9 @@ fun ShowTours(
                         val requestId = tour.events[0].requestId
                         navController.navigate("scan/${tour.tourId}/$requestId")
                     }) {
-                        var city = "-"
+                        val city: String
                         val displayTime: String
+                        val address: String
 
                         var startEvent: Event? = null
                         try {
@@ -265,13 +266,11 @@ fun ShowTours(
                             Log.d("error", "Error: Tour has no events")
                         }
 
-                        val address = startEvent?.address
-                        try {
-                            if (address != null) {
-                                city = address.split(',')[1]
-                            }
+                        address = startEvent?.address ?: "-,-"
+                        city = try {
+                            address.split(',')[1]
                         } catch (e: Exception) {
-                            city = address ?: "-"
+                            address
                         }
 
                         val start = startEvent?.scheduledTimeStart ?: 0
