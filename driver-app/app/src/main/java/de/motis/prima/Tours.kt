@@ -266,7 +266,7 @@ fun ShowTours(
                             Log.d("error", "Error: Tour has no events")
                         }
 
-                        address = startEvent?.address ?: "-,-"
+                        address = startEvent?.address ?: ""
                         city = try {
                             address.split(',')[1]
                         } catch (e: Exception) {
@@ -278,7 +278,7 @@ fun ShowTours(
                             Date(start)
                                 .formatTo("HH:mm")
                         } else {
-                            "-"
+                            ""
                         }
 
                         Card(
