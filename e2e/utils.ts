@@ -88,10 +88,10 @@ export async function setCompanyData(page: Page, user: UserCredentials, company:
 
 	await page.getByLabel('Name').fill(company.name);
 	await page.getByLabel('Unternehmenssitz').pressSequentially(company.address, { delay: 10 });
-	await page.screenshot({ path: 'screenshots/duringSetCompany.png', fullPage: true });
 	//await page.getByText('nbinder-Straße 70A').click();
 
 	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: company.zone });
+	await page.screenshot({ path: 'screenshots/duringSetCompany.png', fullPage: true });
 	await page.getByRole('button', { name: 'Übernehmen' }).click();
 	await expect(page.getByText('Unternehmensdaten erfolgreich aktualisiert.')).toBeVisible();
 }
