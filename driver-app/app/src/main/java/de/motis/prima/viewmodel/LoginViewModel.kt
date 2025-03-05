@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.data.DataRepository
 import de.motis.prima.services.ApiService
+import de.motis.prima.data.CookieStore
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -13,7 +14,8 @@ import javax.inject.Inject
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val apiService: ApiService,
-    repository: DataRepository
+    repository: DataRepository,
+    private val cookieStore: CookieStore
 ) : ViewModel() {
     private val _navigationEvent = MutableSharedFlow<Boolean>()
     val navigationEvent = _navigationEvent.asSharedFlow()
@@ -24,11 +26,15 @@ class LoginViewModel @Inject constructor(
     private val _networkErrorEvent = MutableSharedFlow<Unit>()
     val networkErrorEvent = _networkErrorEvent.asSharedFlow()
 
+    fun isLoggedIn(): Boolean {
+        return !cookieStore.isEmpty()
+    }
+
     fun login(email: String, password: String) {
         viewModelScope.launch {
             try {
                 val response = apiService.login(email, password)
-                if (response.code() == 302) {
+                if (response.isSuccessful) {
                     _navigationEvent.emit(true)
                 } else {
                     _loginErrorEvent.emit(true)

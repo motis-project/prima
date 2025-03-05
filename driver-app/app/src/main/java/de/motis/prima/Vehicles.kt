@@ -81,7 +81,7 @@ fun Vehicles(
                 ) {
                     items(items = vehicles, itemContent = { vehicle ->
                         ConstraintLayout(modifier = Modifier.clickable {
-                            viewModel.selectVehicle(vehicle.id)
+                            viewModel.selectVehicle(vehicle)
                             navController.navigate("tours")
                         }) {
                             Card(

@@ -5,31 +5,29 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import de.motis.prima.services.CookieStore
+import de.motis.prima.viewmodel.LoginViewModel
 import de.motis.prima.viewmodel.SettingsViewModel
 
 @Composable
 fun Nav() {
     val navController = rememberNavController()
-    val context = LocalContext.current
     val settingsViewModel: SettingsViewModel = hiltViewModel()
-    val selectedVehicle = settingsViewModel.selectedVehicle.collectAsState(0)
+    val loginViewModel: LoginViewModel = hiltViewModel()
+    val selectedVehicle = settingsViewModel.selectedVehicle.collectAsState().value
 
     val startDestination by remember {
         derivedStateOf {
-            val cookieStore = CookieStore(context)
-            if (cookieStore.isEmpty()) {
+            if (!loginViewModel.isLoggedIn()) {
                 "login"
             } else {
-                if (selectedVehicle.value != 0) {
-                    "tours"
-                } else {
+                if (selectedVehicle != null && selectedVehicle.id == 0) {
                     "vehicles"
+                } else {
+                    "tours"
                 }
             }
         }

@@ -12,8 +12,10 @@ import de.motis.prima.services.Tour
 import de.motis.prima.services.Vehicle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
@@ -43,7 +45,7 @@ class ToursViewModel @Inject constructor(
     private var fetchAttempts = mutableIntStateOf(0)
 
     val selectedVehicle = repository.selectedVehicle
-    private val vehicles = repository.vehicles
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     init {
         refreshTours()
@@ -111,9 +113,5 @@ class ToursViewModel @Inject constructor(
     fun decrementDate() {
         _displayDate.value = _displayDate.value.minusDays(1)
         fetchTours()
-    }
-
-    fun getSelectedVehicle(id: Int): Vehicle? {
-        return vehicles.value.singleOrNull { v -> v.id == id }
     }
 }

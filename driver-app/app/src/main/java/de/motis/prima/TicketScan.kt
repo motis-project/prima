@@ -142,7 +142,6 @@ fun QRCodeScanner(
         }
     }
 
-    // Check permission status
     LaunchedEffect(Unit) {
         when {
             ContextCompat.checkSelfPermission(

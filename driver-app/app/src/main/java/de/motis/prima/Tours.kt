@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import de.motis.prima.services.Event
 import de.motis.prima.services.Tour
 import de.motis.prima.viewmodel.ToursViewModel
 import java.text.SimpleDateFormat
@@ -56,21 +57,13 @@ fun Tours(
     navController: NavController,
     viewModel: ToursViewModel = hiltViewModel()
 ) {
-    val navBack = "vehicles"
-
-    val navItems = listOf(
-        NavItem(
-            text = stringResource(id = R.string.change_vehicles),
-            action = { navController.navigate("vehicles") }
-        )
-    )
-
     val loading by viewModel.loading.collectAsState()
     val networkError by viewModel.networkError.collectAsState()
-    val vehicleId = viewModel.selectedVehicle.collectAsState(0).value
+    val vehicle = viewModel.selectedVehicle.collectAsState()
     val tours by viewModel.tours.collectAsState()
     val date by viewModel.displayDate.collectAsState()
-    var displayTours: List<Tour>
+    val displayTours: List<Tour>
+    val vehicleId = vehicle.value?.id ?: 0
 
     val toursForVehicle = tours.filter { t ->
         t.vehicleId == vehicleId
@@ -95,10 +88,15 @@ fun Tours(
     Scaffold(
         topBar = {
             TopBar(
-                navBack,
+                "vehicles",
                 stringResource(id = R.string.tours_header),
                 true,
-                navItems,
+                listOf(
+                    NavItem(
+                        text = stringResource(id = R.string.change_vehicles),
+                        action = { navController.navigate("vehicles") }
+                    )
+                ),
                 navController
             )
         }
@@ -110,16 +108,15 @@ fun Tours(
         ) {
             DateSelect(viewModel)
 
-            val vehicle = viewModel.getSelectedVehicle(vehicleId)
-            vehicle?.let {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    contentAlignment = Alignment.Center
-                ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                vehicle.value?.let {
                     Text(
-                        text = vehicle.licensePlate,
+                        text = it.licensePlate,
                         fontSize = 16.sp,
                         textAlign = TextAlign.Center
                     )
@@ -259,18 +256,32 @@ fun ShowTours(
                         navController.navigate("scan/${tour.tourId}/$requestId")
                     }) {
                         var city = "-"
-                        var displayTime = "-"
+                        val displayTime: String
+
+                        var startEvent: Event? = null
                         try {
-                            val startEvent = tour.events[0]
-                            if (startEvent.address != "") {
-                                city = startEvent.address.split(',')[1]
-                            }
-                            displayTime =
-                                Date(startEvent.scheduledTimeStart) // TODO: correct timestamp?
-                                    .formatTo("HH:mm")
+                            startEvent = tour.events[0]
                         } catch (e: Exception) {
                             Log.d("error", "Error: Tour has no events")
                         }
+
+                        val address = startEvent?.address
+                        try {
+                            if (address != null) {
+                                city = address.split(',')[1]
+                            }
+                        } catch (e: Exception) {
+                            city = address ?: "-"
+                        }
+
+                        val start = startEvent?.scheduledTimeStart ?: 0
+                        displayTime = if (start.toInt() != 0) {
+                            Date(start)
+                                .formatTo("HH:mm")
+                        } else {
+                            "-"
+                        }
+
                         Card(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier

@@ -17,16 +17,6 @@ data class Ticket(
 class DataRepository @Inject constructor(
     private val dataStoreManager: DataStoreManager
 ) {
-    val isDarkMode: Flow<Boolean> = dataStoreManager.darkModeFlow
-
-    suspend fun setDarkMode(enabled: Boolean) {
-        dataStoreManager.setDarkMode(enabled)
-    }
-
-    fun logout() {
-        dataStoreManager.clearCookies()
-    }
-
     private val _validTickets = MutableStateFlow(mutableMapOf<String, Ticket>())
     val validTickets = _validTickets.asStateFlow()
 
@@ -39,10 +29,10 @@ class DataRepository @Inject constructor(
         return bytes.joinToString("") { "%02x".format(it) }
     }
 
-    val selectedVehicle: Flow<Int> = dataStoreManager.selectedVehicleFlow
+    val selectedVehicle: Flow<Vehicle> = dataStoreManager.selectedVehicleFlow
 
-    suspend fun setSelectedVehicle(id: Int) {
-        dataStoreManager.setSelectedVehicle(id)
+    suspend fun setSelectedVehicle(vehicle: Vehicle) {
+        dataStoreManager.setSelectedVehicle(vehicle)
     }
 
     private val _vehicles = MutableStateFlow<List<Vehicle>>(emptyList())

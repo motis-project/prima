@@ -1,4 +1,4 @@
-package de.motis.prima.services
+package de.motis.prima.data
 
 import android.content.Context
 import android.content.SharedPreferences

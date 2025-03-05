@@ -136,7 +136,7 @@ fun Fare(
 
                 Text(
                     "Fehlgeschlagene Ticket-Validierungen",
-                    fontSize = 24.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Box {
@@ -151,7 +151,7 @@ fun Fare(
                             ) {
                                 Text(
                                     ticket.value.requestId.toString(),
-                                    fontSize = 12.sp
+                                    fontSize = 16.sp
                                 )
                             }
                         })
