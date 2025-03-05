@@ -5,7 +5,7 @@
 	import pkg from 'file-saver';
 	import type { TourWithRequests } from '$lib/server/db/getTours';
 	import Tabs from '$lib/ui/Tabs.svelte';
-	import SortableScrollableTable from '$lib/ui/SortableTable.svelte';
+	import SortableTable from '$lib/ui/SortableTable.svelte';
 	import Select from '$lib/ui/Select.svelte';
 	import { RangeCalendar } from '$lib/shadcn/range-calendar/index.js';
 	import * as Dialog from '$lib/shadcn/dialog';
@@ -228,15 +228,15 @@
 </script>
 
 {#snippet tourTable()}
-	<SortableScrollableTable rows={currentRowsToursTable} cols={tourCols} />
+	<SortableTable rows={currentRowsToursTable} cols={tourCols} selectedTour={undefined} />
 {/snippet}
 
 {#snippet subtractionTable()}
-	<SortableScrollableTable rows={currentRowsSubtractionsTable} cols={subtractionCols} />
+	<SortableTable rows={currentRowsSubtractionsTable} cols={subtractionCols} selectedTour={undefined} />
 {/snippet}
 
 {#snippet companyTable()}
-	<SortableScrollableTable rows={currentCompanyRows} cols={companyCols} />
+	<SortableTable rows={currentCompanyRows} cols={companyCols} selectedTour={undefined} />
 {/snippet}
 
 {#snippet filterOptions()}

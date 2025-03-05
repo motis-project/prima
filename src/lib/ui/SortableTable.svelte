@@ -2,10 +2,13 @@
 	import * as Table from '$lib/shadcn/table/index';
 	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button } from '$lib/shadcn/button';
+	import TourDialog from './TourDialog.svelte';
+	import type { Tour } from '$lib/server/db/getTours';
 
-	const {
+	let {
 		rows,
-		cols
+		cols,
+		selectedTour
 	}: {
 		rows: T[];
 		cols: {
@@ -13,6 +16,10 @@
 			sort: undefined | ((r1: T, r2: T) => number);
 			toTableEntry: (r: T) => string | number;
 		}[];
+		selectedTour: undefined | {
+			tours: Array<Tour> | undefined;
+			isAdmin: boolean;
+		};
 	} = $props();
 
 	const descending = Array.from({ length: cols.length }, () => true);
@@ -60,3 +67,7 @@
 		</Table.Root>
 	</div>
 </sortableScrollableTable>
+
+{#if selectedTour != undefined}
+	<TourDialog bind:open={selectedTour} />
+{/if}
