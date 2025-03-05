@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { sql } from 'kysely';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
-import { DAY, getOffset, HOUR } from '$lib/util/time';
+import { getOffset, HOUR } from '$lib/util/time';
 
 export const POST = async (event) => {
 	function getLatestEventTime(ev: {
@@ -69,9 +69,11 @@ export const POST = async (event) => {
 			!movedTour.requests.some((r) => r.events.length == 0),
 			'Found a request which contains no events.'
 		);
-		
-		const firstEventTime = Math.min(...(movedTour.requests.flatMap((r) => r.events.map((e) => getLatestEventTime(e)))));
-		if (firstEventTime < Date.now() + getOffset(Date.now())*HOUR) {
+
+		const firstEventTime = Math.min(
+			...movedTour.requests.flatMap((r) => r.events.map((e) => getLatestEventTime(e)))
+		);
+		if (firstEventTime < Date.now() + getOffset(Date.now()) * HOUR) {
 			return;
 		}
 		const collidingTours = await trx

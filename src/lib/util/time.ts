@@ -1,4 +1,4 @@
-import type { UnixtimeMs } from "./UnixtimeMs";
+import type { UnixtimeMs } from './UnixtimeMs';
 
 export const SECOND = 1000;
 export const MINUTE = SECOND * 60;
@@ -14,9 +14,13 @@ export function secondToMilli(second: number): number {
 }
 
 export function getOffset(t: UnixtimeMs) {
-	return parseInt(new Date(Math.floor(t / DAY) * DAY + 12 * HOUR).toLocaleString('de-DE', {
-		hour: '2-digit',
-		hour12: false,
-		timeZone: 'Europe/Berlin'
-	})) - 12;
-};
+	return (
+		parseInt(
+			new Date(Math.floor(t / DAY) * DAY + 12 * HOUR).toLocaleString('de-DE', {
+				hour: '2-digit',
+				hour12: false,
+				timeZone: 'Europe/Berlin'
+			})
+		) - 12
+	);
+}
