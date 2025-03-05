@@ -3,7 +3,6 @@ import { getAllowedTimes } from '$lib/server/booking/evaluateRequest';
 import { db, type Database } from '$lib/server/db';
 import { Interval } from '$lib/server/util/interval';
 import { HOUR, MINUTE } from '$lib/util/time';
-import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import { json } from '@sveltejs/kit';
 import { sql, type Insertable, type Selectable } from 'kysely';
 
@@ -41,7 +40,6 @@ export const DELETE = async ({ locals, request }) => {
 		console.log('remove availability invalid params: ', { vehicleId, from, to });
 		throw 'invalid params';
 	}
-
 
 	const restrictedFrom = Math.max(getFirstAlterableTime(), from);
 	if (to <= restrictedFrom) {
@@ -128,24 +126,27 @@ export const POST = async ({ locals, request }) => {
 		return json({});
 	}
 	const interval = new Interval(restrictedFrom, to);
-	await Promise.all(getAllowedTimes(restrictedFrom, to, EARLIEST_SHIFT_START - HOUR, LATEST_SHIFT_END + HOUR)
-		.map((allowed) => allowed.intersect(interval))
-		.filter((a) => a != undefined)
-		.map((availability) => db
-			.insertInto('availability')
-			.columns(['startTime', 'endTime', 'vehicle'])
-			.expression((eb) =>
-				eb
-					.selectFrom('vehicle')
-					.select((eb) => [
-						eb.val(availability.startTime).as('startTime'),
-						eb.val(availability.endTime).as('endTime'),
-						'vehicle.id as vehicle'
-					])
-					.where('vehicle.company', '=', companyId)
-					.where('vehicle.id', '=', vehicleId)
-			).execute()
-		)
+	await Promise.all(
+		getAllowedTimes(restrictedFrom, to, EARLIEST_SHIFT_START - HOUR, LATEST_SHIFT_END + HOUR)
+			.map((allowed) => allowed.intersect(interval))
+			.filter((a) => a != undefined)
+			.map((availability) =>
+				db
+					.insertInto('availability')
+					.columns(['startTime', 'endTime', 'vehicle'])
+					.expression((eb) =>
+						eb
+							.selectFrom('vehicle')
+							.select((eb) => [
+								eb.val(availability.startTime).as('startTime'),
+								eb.val(availability.endTime).as('endTime'),
+								'vehicle.id as vehicle'
+							])
+							.where('vehicle.company', '=', companyId)
+							.where('vehicle.id', '=', vehicleId)
+					)
+					.execute()
+			)
 	);
 	return json({});
 };

@@ -103,7 +103,12 @@ export async function evaluateRequest(
 	return newTourEvaluations;
 }
 
-export function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs, startOnDay: UnixtimeMs, endOnDay: UnixtimeMs): Interval[] {
+export function getAllowedTimes(
+	earliest: UnixtimeMs,
+	latest: UnixtimeMs,
+	startOnDay: UnixtimeMs,
+	endOnDay: UnixtimeMs
+): Interval[] {
 	if (earliest >= latest) {
 		return [];
 	}
@@ -123,9 +128,7 @@ export function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs, startO
 					timeZone: 'Europe/Berlin'
 				})
 			) - 12;
-		allowedTimes.push(
-			new Interval(t + startOnDay - offset * HOUR, t + endOnDay - offset * HOUR)
-		);
+		allowedTimes.push(new Interval(t + startOnDay - offset * HOUR, t + endOnDay - offset * HOUR));
 		noonEarliestDay.setHours(noonEarliestDay.getHours() + 24);
 	}
 	return allowedTimes;

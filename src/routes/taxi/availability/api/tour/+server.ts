@@ -11,7 +11,7 @@ export const POST = async (event) => {
 	}) {
 		return Math.max(...[ev.scheduledTimeStart, ev.scheduledTimeEnd, ev.communicatedTime]);
 	}
-	
+
 	const companyId = event.locals.session?.companyId;
 	if (!companyId) {
 		throw 'no company id';
