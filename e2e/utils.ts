@@ -88,6 +88,7 @@ export async function setCompanyData(page: Page, user: UserCredentials, company:
 
 	await page.getByLabel('Name').fill(company.name);
 	await page.getByLabel('Unternehmenssitz').pressSequentially(company.address, { delay: 10 });
+	await page.screenshot({ path: 'screenshots/duringSetCompany.png', fullPage: true });
 	await page.getByText('Werner-Seelenbinder-Straße 70a').click();
 
 	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: company.zone });
