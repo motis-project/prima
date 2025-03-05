@@ -70,3 +70,31 @@ export const getTours = async (
 export type Tours = Awaited<ReturnType<typeof getTours>>;
 export type Tour = Tours[0];
 export type TourEvent = Tour['events'][0];
+
+export const getToursWithRequests = async () => {
+	return await db
+		.selectFrom('tour')
+		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
+		.innerJoin('company', 'company.id', 'vehicle.company')
+		.select((eb) => [
+			'tour.fare as fare',
+			'tour.departure as startTime',
+			'tour.arrival as endTime',
+			'tour.cancelled',
+			'company.name as companyName',
+			'company.id as companyId',
+			'vehicle.id as vehicleId',
+			jsonArrayFrom(
+				eb
+					.selectFrom('request')
+					.whereRef('tour.id', '=', 'request.tour')
+					.select(['request.luggage', 'request.passengers', 'request.ticketChecked'])
+			).as('requests')
+		])
+		.where('tour.fare', 'is not', null)
+		.execute();
+};
+
+export type ToursWithRequests = Awaited<ReturnType<typeof getToursWithRequests>>;
+export type TourWithRequests = ToursWithRequests[0];
+export type TourRequest = TourWithRequests['requests'][0];
