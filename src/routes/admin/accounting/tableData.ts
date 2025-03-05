@@ -26,10 +26,12 @@ export const getEuroString = (price: number | null) => {
 	return ((price ?? 0) / 100).toFixed(2) + '€';
 };
 
-const getCustomerCount = (tour: TourWithRequests) => {
+const getCustomerCount = (tour: TourWithRequests, countOnlyVerified: boolean) => {
 	let customers = 0;
 	tour.requests.forEach((r) => {
-		customers += r.passengers;
+		if(!countOnlyVerified || r.ticketChecked) {
+			customers += r.passengers;
+		}
 	});
 	return customers;
 };
@@ -45,7 +47,7 @@ const displayUnixtimeMs = (t: UnixtimeMs, displayTime?: boolean) => {
 };
 
 const getTourCost = (tour: TourWithRequests) => {
-	return Math.max(0, (tour.fare ?? 0) - FIXED_PRICE * getCustomerCount(tour));
+	return Math.max(0, (tour.fare ?? 0) - FIXED_PRICE * getCustomerCount(tour, true));
 };
 
 const displayDuration = (duration: number) => {
@@ -76,7 +78,12 @@ export const tourCols: Column<TourWithRequests>[] = [
 	{
 		text: 'Anzahl Kunden',
 		sort: undefined,
-		toTableEntry: (r: TourWithRequests) => getCustomerCount(r)
+		toTableEntry: (r: TourWithRequests) => getCustomerCount(r, false)
+	},
+	{
+		text: 'erschienene Kunden  ',
+		sort: undefined,
+		toTableEntry: (r: TourWithRequests) => getCustomerCount(r, true)
 	},
 	{
 		text: 'Taxameterstand  ',
@@ -103,6 +110,11 @@ export const subtractionCols: Column<Subtractions>[] = [
 	},
 	{ text: 'Buchungen', sort: undefined, toTableEntry: (r: Subtractions) => r.customerCount },
 	{
+		text: 'erschienene Kunden  ',
+		sort: undefined,
+		toTableEntry: (r: Subtractions) => r.verifiedCustomerCount
+	},
+	{
 		text: 'Taxameterstand kumuliert ',
 		sort: (a: Subtractions, b: Subtractions) => a.taxameter - b.taxameter,
 		toTableEntry: (r: Subtractions) => getEuroString(r.taxameter)
@@ -126,11 +138,6 @@ export const subtractionCols: Column<Subtractions>[] = [
 		text: 'gesetzte Verfügbarkeit',
 		sort: (a: Subtractions, b: Subtractions) => a.availabilityDuration - b.availabilityDuration,
 		toTableEntry: (r: Subtractions) => displayDuration(r.availabilityDuration)
-	},
-	{
-		text: 'erschienene Kunden  ',
-		sort: undefined,
-		toTableEntry: (r: Subtractions) => r.verifiedCustomerCount
 	}
 ];
 
@@ -141,6 +148,11 @@ export const companyCols: Column<CompanyRow>[] = [
 		toTableEntry: (r: CompanyRow) => r.companyName ?? ''
 	},
 	{ text: 'Buchungen', sort: undefined, toTableEntry: (r: CompanyRow) => r.customerCount },
+	{
+		text: 'erschienene Kunden  ',
+		sort: undefined,
+		toTableEntry: (r: CompanyRow) => r.verifiedCustomerCount
+	},
 	{
 		text: 'Taxameterstand kumuliert ',
 		sort: (a: CompanyRow, b: CompanyRow) => a.taxameter - b.taxameter,
@@ -165,10 +177,5 @@ export const companyCols: Column<CompanyRow>[] = [
 		text: 'gesetzte Verfügbarkeit',
 		sort: (a: CompanyRow, b: CompanyRow) => a.availabilityDuration - b.availabilityDuration,
 		toTableEntry: (r: CompanyRow) => displayDuration(r.availabilityDuration)
-	},
-	{
-		text: 'erschienene Kunden  ',
-		sort: undefined,
-		toTableEntry: (r: CompanyRow) => r.verifiedCustomerCount
 	}
 ];

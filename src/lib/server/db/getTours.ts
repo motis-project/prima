@@ -95,6 +95,7 @@ export const getToursWithRequests = async () => {
 					])
 			).as('requests')
 		])
+		.where('tour.fare', 'is not', null)
 		.execute();
 };
 
