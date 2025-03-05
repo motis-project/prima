@@ -91,7 +91,6 @@ export async function setCompanyData(page: Page, user: UserCredentials, company:
 	await page.getByText('Werner-Seelenbinder-Straße 70a').click();
 
 	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: company.zone });
-	await page.screenshot({ path: 'screenshots/duringSetCompany.png', fullPage: true });
 	await page.getByRole('button', { name: 'Übernehmen' }).click();
 	await expect(page.getByText('Unternehmensdaten erfolgreich aktualisiert.')).toBeVisible();
 }
