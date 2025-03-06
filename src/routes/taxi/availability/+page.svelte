@@ -122,7 +122,7 @@
 		copy.setHours(todayDay.getHours() + 8);
 		return copy;
 	});
-	console.log({tours:data.tours})
+	console.log({ tours: data.tours });
 	const overlaps = (a: Range, b: Range) => a.startTime < b.endTime && a.endTime > b.startTime;
 
 	const hasTour = (vehicleId: number, cell: Range) =>
