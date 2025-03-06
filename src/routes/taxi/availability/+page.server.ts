@@ -5,6 +5,9 @@ import type { Actions, RequestEvent } from './$types';
 import { fail } from '@sveltejs/kit';
 import { msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
+import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
+import type { Range } from './Range';
+import { split } from './Range';
 
 export async function load(event) {
 	const companyId = event.locals.session?.companyId;
@@ -56,9 +59,49 @@ export async function load(event) {
 		company.lat !== null &&
 		company.lng !== null;
 
+	// HEATMAP
+	const heatmapInfos = await db
+		.selectFrom('availability')
+		.innerJoin('vehicle', 'vehicle.id', 'availability.vehicle')
+		.where('startTime', '<', toTime.getTime())
+		.where('endTime', '>', fromTime.getTime())
+		.where('company', '!=', companyId)
+		.select(['availability.id', 'startTime', 'endTime', 'vehicle', 'vehicle.company'])
+		.execute();
+
+	type heatinfo = {
+		cell: Range;
+		heat: number;
+	};
+	const heatarray: heatinfo[] = [];
+	const isAInsideB = (rangeA: Range, Bstart: UnixtimeMs, Bend: UnixtimeMs) => {
+		return (
+			rangeA.startTime >= Bstart &&
+			rangeA.startTime < Bend &&
+			rangeA.endTime >= Bstart &&
+			rangeA.endTime <= Bend
+		);
+	};
+	const range: Range = { startTime: fromTime.getTime(), endTime: toTime.getTime() };
+	const hours = split(range, 60);
+	let heatcount = 0;
+	for (const hour of hours) {
+		const cell = split(hour, 15);
+		for (const onecell of cell) {
+			for (const heat of heatmapInfos) {
+				if (isAInsideB(onecell, heat.startTime, heat.endTime)) {
+					heatcount++; // hier dann später Berechnung für gewichtete Summe einbauen
+				}
+			}
+			heatarray.push({ cell: onecell, heat: heatcount });
+			heatcount = 0;
+		}
+	}
+
 	return {
 		tours: await tours,
 		vehicles: await vehicles,
+		heatarray,
 		utcDate,
 		companyDataComplete,
 		companyCoordinates: companyDataComplete
