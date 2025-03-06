@@ -6,7 +6,7 @@ import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 export type CompanyRow = {
 	taxameter: number;
 	companyId: number;
-	companyName: string | null;
+	companyName?: string | null;
 	capped: number;
 	uncapped: number;
 	availabilityDuration: number;
@@ -59,12 +59,19 @@ const displayDuration = (duration: number) => {
 	return addLeadingZero(hours) + ':' + addLeadingZero(minutes);
 };
 
-export const tourCols: Column<TourWithRequests>[] = [
-	{
-		text: 'Unternehmen',
-		sort: undefined,
-		toTableEntry: (r: TourWithRequests) => r.companyName ?? ''
-	},
+const firstTourColAdmin: Column<TourWithRequests> = {
+	text: 'Unternehmen',
+	sort: undefined,
+	toTableEntry: (r: TourWithRequests) => r.companyName ?? ''
+};
+
+const firstTourColCompany: Column<TourWithRequests> = {
+	text: 'Fahrzeug',
+	sort: undefined,
+	toTableEntry: (r: TourWithRequests) => r.licensePlate ?? ''
+};
+
+const restTourCols: Column<TourWithRequests>[] = [
 	{
 		text: 'Abfahrt  ',
 		sort: (t1: TourWithRequests, t2: TourWithRequests) => t1.startTime - t2.startTime,
@@ -76,7 +83,7 @@ export const tourCols: Column<TourWithRequests>[] = [
 		toTableEntry: (r: TourWithRequests) => displayUnixtimeMs(r.endTime, true)
 	},
 	{
-		text: 'Anzahl Kunden',
+		text: 'Kunden',
 		sort: undefined,
 		toTableEntry: (r: TourWithRequests) => getCustomerCount(r, false)
 	},
@@ -97,7 +104,10 @@ export const tourCols: Column<TourWithRequests>[] = [
 	}
 ];
 
-export const subtractionCols: Column<Subtractions>[] = [
+export const tourColsAdmin = [firstTourColAdmin].concat(restTourCols);
+export const tourColsCompany = [firstTourColCompany].concat(restTourCols);
+
+export const subtractionColsAdmin: Column<Subtractions>[] = [
 	{
 		text: 'Unternehmen',
 		sort: undefined,
@@ -108,7 +118,7 @@ export const subtractionCols: Column<Subtractions>[] = [
 		sort: (a: Subtractions, b: Subtractions) => a.timestamp - b.timestamp,
 		toTableEntry: (r: Subtractions) => displayUnixtimeMs(r.timestamp)
 	},
-	{ text: 'Buchungen', sort: undefined, toTableEntry: (r: Subtractions) => r.customerCount },
+	{ text: 'Kunden', sort: undefined, toTableEntry: (r: Subtractions) => r.customerCount },
 	{
 		text: 'erschienene Kunden  ',
 		sort: undefined,
@@ -141,13 +151,15 @@ export const subtractionCols: Column<Subtractions>[] = [
 	}
 ];
 
-export const companyCols: Column<CompanyRow>[] = [
+export const subtractionColsCompany = subtractionColsAdmin.slice(1);
+
+export const companyColsAdmin: Column<CompanyRow>[] = [
 	{
 		text: 'Unternehmen',
 		sort: undefined,
 		toTableEntry: (r: CompanyRow) => r.companyName ?? ''
 	},
-	{ text: 'Buchungen', sort: undefined, toTableEntry: (r: CompanyRow) => r.customerCount },
+	{ text: 'Kunden', sort: undefined, toTableEntry: (r: CompanyRow) => r.customerCount },
 	{
 		text: 'erschienene Kunden  ',
 		sort: undefined,
@@ -179,3 +191,5 @@ export const companyCols: Column<CompanyRow>[] = [
 		toTableEntry: (r: CompanyRow) => displayDuration(r.availabilityDuration)
 	}
 ];
+
+export const companyColsCompany = companyColsAdmin.slice(1);

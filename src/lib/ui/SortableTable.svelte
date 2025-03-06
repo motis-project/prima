@@ -70,7 +70,7 @@
 			<Table.Body>
 				{#each rows as row}
 					<Table.Row
-						class={`cursor-pointer ${isTourWithRequests(row) && (row as TourWithRequests).cancelled ? 'bg-destructive' : 'bg-white-0'}`}
+						class={`${isTourWithRequests(row) && (row as TourWithRequests).cancelled ? 'bg-destructive cursor-pointer' : 'bg-white-0'}`}
 						onclick={() => {
 							if (rows.length != 0 && isTourWithRequests(rows[0])) {
 								selectedTour = {

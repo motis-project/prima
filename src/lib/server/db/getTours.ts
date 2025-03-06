@@ -76,10 +76,12 @@ export const getToursWithRequests = async (
 	companyId?: number,
 	timeRange?: [UnixtimeMs, UnixtimeMs]
 ) => {
+	console.log({companyId})
 	return await db
 		.selectFrom('tour')
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 		.innerJoin('company', 'company.id', 'vehicle.company')
+		.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
 		.$if(companyId != undefined, (qb) => qb.where('company.id', '=', companyId!))
 		.$if(!!timeRange, (qb) =>
 			qb.where('tour.departure', '<', timeRange![1]).where('tour.arrival', '>', timeRange![0])
@@ -101,6 +103,7 @@ export const getToursWithRequests = async (
 				eb
 					.selectFrom('request')
 					.whereRef('tour.id', '=', 'request.tour')
+					.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
 					.select([
 						'request.luggage',
 						'request.passengers',
@@ -111,6 +114,7 @@ export const getToursWithRequests = async (
 								.innerJoin('request', 'request.id', 'event.request')
 								.whereRef('tour.id', '=', 'request.tour')
 								.innerJoin('user', 'user.id', 'request.customer')
+								.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
 								.select([
 									'tour.id as tour',
 									'user.name as customerName',
@@ -140,7 +144,6 @@ export const getToursWithRequests = async (
 					])
 			).as('requests')
 		])
-		.where('tour.fare', 'is not', null)
 		.execute();
 };
 

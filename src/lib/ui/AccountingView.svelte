@@ -12,10 +12,13 @@
 	import { CalendarDate } from '@internationalized/date';
 	import { groupBy } from '$lib/util/groupBy';
 	import {
-		companyCols,
+		companyColsAdmin,
+		companyColsCompany,
 		getEuroString,
-		subtractionCols,
-		tourCols,
+		subtractionColsAdmin,
+		subtractionColsCompany,
+		tourColsAdmin,
+		tourColsCompany,
 		type Column,
 		type CompanyRow,
 		type Subtractions
@@ -44,9 +47,6 @@
 		earliestTime: UnixtimeMs;
 	} = $props();
 
-	let currentRowsToursTable: TourWithRequests[] = $state(tours);
-	let currentRowsSubtractionsTable: Subtractions[] = $state(companyCostsPerDay);
-
 	const updateCompanySums = (subtractionRows: Subtractions[]) => {
 		const accumulatedCompanyRowEntries = (arr: (Subtractions | CompanyRow)[]) => {
 			return arr.reduce(
@@ -69,6 +69,7 @@
 				}
 			);
 		};
+
 		const costsPerCompany = groupBy(
 			subtractionRows,
 			(c) => c.companyId,
@@ -80,10 +81,14 @@
 				return;
 			}
 			const accumulated = accumulatedCompanyRowEntries(arr);
-			newCompanyRows.push({ ...accumulated, companyName: arr[0].companyName, companyId });
+			if (isAdmin) {
+				newCompanyRows.push({ ...accumulated, companyName: arr[0].companyName, companyId });
+			} else {
+				newCompanyRows.push({ ...accumulated, companyId });
+			}
 		});
 		if (newCompanyRows.length === 0) {
-			return;
+			return [];
 		}
 		if (isAdmin) {
 			newCompanyRows.push({
@@ -94,7 +99,10 @@
 		}
 		return newCompanyRows;
 	};
-	let currentCompanyRows: CompanyRow[] = $state(updateCompanySums(companyCostsPerDay)!);
+
+	let currentRowsToursTable: TourWithRequests[] = $state(tours);
+	let currentRowsSubtractionsTable: Subtractions[] = $state(companyCostsPerDay);
+	let currentCompanyRows: CompanyRow[] = $state(updateCompanySums(companyCostsPerDay));
 
 	const getNewSum = (rows: Subtractions[]) => {
 		let newSum = 0;
@@ -135,7 +143,7 @@
 	$effect(() => {
 		currentRowsToursTable = getNewRows(tourFilters, tours);
 		const subtractionRows = getNewRows(subtractionFilters, companyCostsPerDay);
-		currentCompanyRows = updateCompanySums(subtractionRows)!;
+		currentCompanyRows = updateCompanySums(subtractionRows);
 		currentRowsSubtractionsTable = subtractionRows;
 	});
 
@@ -203,7 +211,7 @@
 
 		const csvExport = <T,>(rows: T[], cols: Column<T>[], filename: string, addSumRow: boolean) => {
 			let data = [];
-			data.push(cols.map((col) => col.text));
+			data.push(cols.map((col) => col.text.trim()));
 			for (let row of rows) {
 				data.push(cols.map((col) => col.toTableEntry(row)));
 			}
@@ -220,8 +228,13 @@
 			saveAs(blob, filename);
 		};
 
-		csvExport(tourRows, tourCols, filename + '_tour.csv', false);
-		csvExport(subtractionRows, subtractionCols, filename + '_abzuege.csv', true);
+		csvExport(tourRows, isAdmin ? tourColsAdmin : tourColsCompany, filename + '_tour.csv', false);
+		csvExport(
+			subtractionRows,
+			isAdmin ? subtractionColsAdmin : subtractionColsCompany,
+			filename + '_abzuege.csv',
+			true
+		);
 	};
 
 	let tables = [
@@ -241,15 +254,27 @@
 </script>
 
 {#snippet tourTable()}
-	<SortableTable rows={currentRowsToursTable} cols={tourCols} {isAdmin} />
+	<SortableTable
+		rows={currentRowsToursTable}
+		cols={isAdmin ? tourColsAdmin : tourColsCompany}
+		{isAdmin}
+	/>
 {/snippet}
 
 {#snippet subtractionTable()}
-	<SortableTable rows={currentRowsSubtractionsTable} cols={subtractionCols} {isAdmin} />
+	<SortableTable
+		rows={currentRowsSubtractionsTable}
+		cols={isAdmin ? subtractionColsAdmin : subtractionColsCompany}
+		{isAdmin}
+	/>
 {/snippet}
 
 {#snippet companyTable()}
-	<SortableTable rows={currentCompanyRows} cols={companyCols} {isAdmin} />
+	<SortableTable
+		rows={currentCompanyRows}
+		cols={isAdmin ? companyColsAdmin : companyColsCompany}
+		{isAdmin}
+	/>
 {/snippet}
 
 {#snippet filterOptions()}
