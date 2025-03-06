@@ -2,7 +2,6 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { sql } from 'kysely';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
-import { getOffset, HOUR } from '$lib/util/time';
 
 export const POST = async (event) => {
 	function getLatestEventTime(ev: {
@@ -73,7 +72,7 @@ export const POST = async (event) => {
 		const firstEventTime = Math.min(
 			...movedTour.requests.flatMap((r) => r.events.map((e) => getLatestEventTime(e)))
 		);
-		if (firstEventTime < Date.now() + getOffset(Date.now()) * HOUR) {
+		if (firstEventTime < Date.now()) {
 			return;
 		}
 		const collidingTours = await trx
