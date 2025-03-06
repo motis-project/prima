@@ -58,26 +58,37 @@ export const setAvailability = async (
 	await db.insertInto('availability').values({ vehicle, startTime, endTime }).execute();
 };
 
-export const setTour = async (vehicle: number, departure: UnixtimeMs, arrival: UnixtimeMs) => {
+export const setTour = async (
+	vehicle: number,
+	departure: UnixtimeMs,
+	arrival: UnixtimeMs,
+	fare?: number
+) => {
 	return await db
 		.insertInto('tour')
-		.values({ vehicle, arrival, departure, cancelled: false })
+		.values({ vehicle, arrival, departure, cancelled: false, fare: fare ?? null })
 		.returning('tour.id')
 		.executeTakeFirst();
 };
 
-export const setRequest = async (tour: number, customer: number, ticketCode: string) => {
+export const setRequest = async (
+	tour: number,
+	customer: number,
+	ticketCode: string,
+	passengers?: number,
+	ticketChecked?: boolean
+) => {
 	return await db
 		.insertInto('request')
 		.values({
-			passengers: 1,
+			passengers: passengers ?? 1,
 			bikes: 0,
 			luggage: 0,
 			wheelchairs: 0,
 			tour,
 			customer,
 			ticketCode,
-			ticketChecked: false,
+			ticketChecked: ticketChecked == undefined ? false : ticketChecked,
 			cancelled: false
 		})
 		.returning('id')

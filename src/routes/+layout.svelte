@@ -9,6 +9,7 @@
 	import ListChecks from 'lucide-svelte/icons/list-checks';
 	import UsersRound from 'lucide-svelte/icons/users-round';
 	import CircleAlert from 'lucide-svelte/icons/circle-alert';
+	import Receipt from 'lucide-svelte/icons/receipt';
 
 	import * as Alert from '$lib/shadcn/alert';
 
@@ -29,6 +30,7 @@
 		{ title: t.menu.employees, href: '/taxi/members', Icon: UsersRound }
 	];
 	const adminItems: Array<MenuItem> = [
+		{ title: t.menu.accounting, href: '/admin/accounting', Icon: Receipt },
 		{ title: t.menu.completedTours, href: '/admin/tours', Icon: ListChecks },
 		{ title: t.menu.companies, href: '/admin/taxi-owners', Icon: CarTaxiFront }
 	];
