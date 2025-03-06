@@ -23,7 +23,7 @@
 	import TourDialog from '$lib/ui/TourDialog.svelte';
 	import AddVehicle from './AddVehicle.svelte';
 	import { onMount } from 'svelte';
-	import type { Tours } from '$lib/server/db/getTours';
+	import type { ToursWithRequests } from '$lib/server/db/getTours';
 	import Message from '$lib/ui/Message.svelte';
 	import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 	import type { LngLatLike } from 'maplibre-gl';
@@ -67,7 +67,7 @@
 	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
 
 	let selectedTour = $state<{
-		tours: Tours | undefined;
+		tours: ToursWithRequests | undefined;
 		isAdmin: boolean;
 		companyCoordinates: LngLatLike;
 	}>({
@@ -229,7 +229,7 @@
 	// Drag & Drop
 	// -----------
 	type Drag = {
-		tours: Tours;
+		tours: ToursWithRequests;
 		vehicleId: number;
 	};
 

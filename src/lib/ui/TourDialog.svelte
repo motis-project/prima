@@ -16,7 +16,7 @@
 	import GeoJSON from '$lib/map/GeoJSON.svelte';
 	import Layer from '$lib/map/Layer.svelte';
 
-	import type { Tours } from '$lib/server/db/getTours';
+	import type { ToursWithRequests } from '$lib/server/db/getTours';
 	import type { PlanResponse } from '$lib/openapi';
 	import { MIN_PREP } from '$lib/constants';
 	import { carRouting } from '$lib/util/carRouting';
@@ -30,7 +30,7 @@
 		open = $bindable()
 	}: {
 		open: {
-			tours: Tours | undefined;
+			tours: ToursWithRequests | undefined;
 			isAdmin: boolean;
 		};
 	} = $props();
@@ -45,31 +45,30 @@
 
 	let tourIndex = $state(0);
 	let tour = $derived(open.tours && open.tours[tourIndex]);
+	let events = $derived(tour?.requests.flatMap((r) => r.events));
 	let company = $derived(tour && { lat: tour.companyLat!, lng: tour.companyLng! });
 
 	const getRoutes = (): Promise<PlanResponse>[] => {
 		let routes: Array<Promise<PlanResponse>> = [];
-		if (tour == null || company == null || tour.events.length == 0) {
+		if (tour == null || company == null || events!.length == 0) {
 			return routes;
 		}
-		for (let e = 0; e < tour.events.length - 1; e++) {
-			const e1 = tour.events[e];
-			const e2 = tour.events[e + 1];
+		for (let e = 0; e < events!.length - 1; e++) {
+			const e1 = events![e];
+			const e2 = events![e + 1];
 			routes.push(carRouting(e1, e2));
 		}
 		return routes;
 	};
 
 	const routes = $derived(tour && getRoutes());
-	const fromCompany = $derived(tour && company && carRouting(company, tour.events[0]));
-	const toCompany = $derived(
-		tour && company && carRouting(tour.events[tour.events.length - 1], company)
-	);
+	const fromCompany = $derived(tour && company && carRouting(company, events![0]));
+	const toCompany = $derived(tour && company && carRouting(events![events!.length - 1], company));
 
 	$effect(() => {
 		if (map && tour) {
 			const box = new maplibregl.LngLatBounds(company, company);
-			tour.events.forEach((e) => box.extend(e));
+			events!.forEach((e) => box.extend(e));
 			const padding = {
 				top: 64,
 				right: 64,
@@ -260,9 +259,9 @@
 				</Table.Header>
 
 				<Table.Body>
-					{#if tour?.events}
-						{#each tour!.events as event}
-							<Table.Row class={`${tour.cancelled ? 'bg-destructive' : 'bg-primary-background'}`}>
+					{#if events}
+						{#each events as event}
+							<Table.Row class={`${tour!.cancelled ? 'bg-destructive' : 'bg-primary-background'}`}>
 								<Table.Cell>
 									{new Date(getScheduledEventTime(event))
 										.toLocaleString('de-DE')

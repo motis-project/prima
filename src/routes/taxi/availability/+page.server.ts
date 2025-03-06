@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { getTours } from '$lib/server/db/getTours.js';
+import { getToursWithRequests } from '$lib/server/db/getTours.js';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import type { Actions, RequestEvent } from './$types';
 import { fail } from '@sveltejs/kit';
@@ -41,7 +41,7 @@ export async function load(event) {
 		])
 		.execute();
 
-	const tours = getTours(false, companyId, [fromTime.getTime(), toTime.getTime()]);
+	const tours = getToursWithRequests(false, companyId, [fromTime.getTime(), toTime.getTime()]);
 
 	const company = await db
 		.selectFrom('company')
