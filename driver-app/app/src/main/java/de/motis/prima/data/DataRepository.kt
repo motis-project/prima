@@ -1,5 +1,6 @@
 package de.motis.prima.data
 
+import android.util.Log
 import de.motis.prima.services.Vehicle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -8,23 +9,41 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.security.MessageDigest
 import javax.inject.Inject
 
+enum class ValidationStatus {
+    FAILED, REJECTED, OK
+}
+
 data class Ticket(
     val requestId: Int,
     val ticketCode: String,
-    val isReported: Boolean
+    var validationStatus: ValidationStatus
 )
 
 class DataRepository @Inject constructor(
     private val dataStoreManager: DataStoreManager
 ) {
-    private val _validTickets = MutableStateFlow(mutableMapOf<String, Ticket>())
-    val validTickets = _validTickets.asStateFlow()
+    private val _scannedTickets = MutableStateFlow(mutableMapOf<String, Ticket>())
+    val scannedTickets = _scannedTickets.asStateFlow()
 
-    fun updateValidTickets(requestId: Int, ticketCode: String, reported: Boolean) {
-        _validTickets.value[md5(ticketCode)] = Ticket(requestId, ticketCode, reported)
+    fun getTicketStatus(ticketCode: String): ValidationStatus? {
+        return _scannedTickets.value[md5(ticketCode)]?.validationStatus
     }
 
-    private fun md5(input: String): String {
+    fun updateScannedTickets(
+        requestId: Int,
+        ticketCode: String,
+        validationStatus: ValidationStatus
+    ) {
+        val entry = _scannedTickets.value[md5(ticketCode)]
+        if (entry != null) {
+            entry.validationStatus = validationStatus
+        } else {
+            _scannedTickets.value[md5(ticketCode)] =
+                Ticket(requestId, ticketCode, validationStatus)
+        }
+    }
+
+    fun md5(input: String): String {
         val bytes = MessageDigest.getInstance("MD5").digest(input.toByteArray())
         return bytes.joinToString("") { "%02x".format(it) }
     }

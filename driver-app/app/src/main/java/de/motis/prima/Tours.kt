@@ -253,7 +253,8 @@ fun ShowTours(
                 items(items = tours, itemContent = { tour ->
                     ConstraintLayout(modifier = Modifier.clickable {
                         val requestId = tour.events[0].requestId
-                        navController.navigate("scan/${tour.tourId}/$requestId")
+                        val ticketHash = tour.events[0].ticketHash
+                        navController.navigate("scan/${tour.tourId}/$requestId/$ticketHash")
                     }) {
                         val city: String
                         val displayTime: String

@@ -26,7 +26,7 @@ class FareViewModel @Inject constructor(
     private val _reportSuccessEvent = MutableSharedFlow<Unit>()
     val reportSuccessEvent = _reportSuccessEvent.asSharedFlow()
 
-    val validTickets = repository.validTickets
+    val scannedTickets = repository.scannedTickets
 
     fun reportFare(tourId: Int, fare: String) {
         viewModelScope.launch {

@@ -50,7 +50,12 @@ fun Vehicles(
                 null,
                 stringResource(id = R.string.vehicles_header),
                 true,
-                navItems,
+                listOf(
+                    NavItem(
+                        text = stringResource(id = R.string.reload),
+                        action = { navController.navigate("vehicles") }
+                    )
+                ),
                 navController
             )
         }

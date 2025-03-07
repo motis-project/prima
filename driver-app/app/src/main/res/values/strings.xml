@@ -25,4 +25,5 @@
     <string name="abort_scan">Zurück</string>
     <string name="logout">Logout</string>
     <string name="network_error">Bitte überprüfen Sie Ihre Internetverbindung.</string>
+    <string name="reload">Aktualisieren</string>
 </resources>

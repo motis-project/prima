@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.data.DataRepository
+import de.motis.prima.data.ValidationStatus
 import de.motis.prima.formatTo
 import de.motis.prima.services.ApiService
 import de.motis.prima.services.Tour
@@ -28,7 +29,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ToursViewModel @Inject constructor(
     private val apiService: ApiService,
-    repository: DataRepository
+    private val repository: DataRepository
 ) : ViewModel() {
     private val _tours = MutableStateFlow<List<Tour>>(emptyList())
     val tours: StateFlow<List<Tour>> = _tours.asStateFlow()
@@ -46,6 +47,25 @@ class ToursViewModel @Inject constructor(
 
     val selectedVehicle = repository.selectedVehicle
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    val scannedTickets = repository.scannedTickets
+
+    fun reportTicketScan(requestId: Int, ticketCode: String) {
+        viewModelScope.launch {
+            var validationStatus = ValidationStatus.OK
+            try {
+                val response = apiService.validateTicket(requestId, ticketCode)
+                if (!response.isSuccessful) {
+                    validationStatus = ValidationStatus.REJECTED
+                }
+            } catch (e: Exception) {
+                validationStatus = ValidationStatus.FAILED
+                Log.d("error", "Network Error: ${e.message!!}")
+            } finally {
+                repository.updateScannedTickets(requestId, ticketCode, validationStatus)
+            }
+        }
+    }
 
     init {
         refreshTours()
@@ -100,6 +120,13 @@ class ToursViewModel @Inject constructor(
         viewModelScope.launch {
             while (true) {
                 fetchTours()
+                // TODO
+                val failedReports = scannedTickets.value.entries
+                    .filter { e -> e.value.validationStatus == ValidationStatus.FAILED }
+                for (report in failedReports) {
+                    reportTicketScan(report.value.requestId, report.value.ticketCode)
+                }
+
                 delay(5000) // Fetch every 5 seconds
             }
         }

@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import de.motis.prima.data.ValidationStatus
 import de.motis.prima.viewmodel.FareViewModel
 import kotlinx.coroutines.launch
 
@@ -131,30 +132,31 @@ fun Fare(
                     )
                 }
                 Spacer(modifier = Modifier.height(100.dp))
-                val validTickets by viewModel.validTickets.collectAsState()
-                val failedReports = validTickets.entries.filter { e -> !e.value.isReported }
+                val scannedTickets by viewModel.scannedTickets.collectAsState()
+                val failedReports = scannedTickets.entries
+                    .filter { e -> e.value.validationStatus == ValidationStatus.FAILED }
 
-                Text(
-                    "Fehlgeschlagene Ticket-Validierungen",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Box {
-                    LazyColumn(
-                        modifier = Modifier
-                            .padding(contentPadding)
-                    ) {
-                        items(items = failedReports, itemContent = { ticket ->
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    ticket.value.requestId.toString(),
-                                    fontSize = 16.sp
-                                )
-                            }
-                        })
+                if (failedReports.isNotEmpty()) {
+                    Text(
+                        "Fehlgeschlagene Ticket-Validierungen",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.height(20.dp))
+                    Box {
+                        LazyColumn {
+                            items(items = failedReports, itemContent = { ticket ->
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        ticket.value.toString(),
+                                        fontSize = 16.sp
+                                    )
+                                }
+                            })
+                        }
                     }
                 }
             }
