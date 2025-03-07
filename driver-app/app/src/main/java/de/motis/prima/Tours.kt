@@ -165,10 +165,7 @@ fun DateSelect(
 
             ) {
             IconButton(
-                onClick = {
-                    viewModel.decrementDate()
-                    viewModel.fetchTours()
-                },
+                onClick = { viewModel.decrementDate() },
                 Modifier
                     .size(width = 48.dp, height = 24.dp)
             ) {
@@ -203,10 +200,7 @@ fun DateSelect(
 
             ) {
             IconButton(
-                onClick = {
-                    viewModel.incrementDate()
-                    viewModel.fetchTours()
-                },
+                onClick = { viewModel.incrementDate() },
                 Modifier
                     .size(width = 48.dp, height = 24.dp)
             ) {

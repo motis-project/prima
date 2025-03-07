@@ -29,17 +29,12 @@ class DataRepository @Inject constructor(
         return _scannedTickets.value[md5(ticketCode)]?.validationStatus
     }
 
-    fun updateScannedTickets(
-        requestId: Int,
-        ticketCode: String,
-        validationStatus: ValidationStatus
-    ) {
-        val entry = _scannedTickets.value[md5(ticketCode)]
+    fun updateScannedTickets(ticket: Ticket) {
+        val entry = _scannedTickets.value[md5(ticket.ticketCode)]
         if (entry != null) {
-            entry.validationStatus = validationStatus
+            entry.validationStatus = ticket.validationStatus
         } else {
-            _scannedTickets.value[md5(ticketCode)] =
-                Ticket(requestId, ticketCode, validationStatus)
+            _scannedTickets.value[md5(ticket.ticketCode)] = ticket
         }
     }
 

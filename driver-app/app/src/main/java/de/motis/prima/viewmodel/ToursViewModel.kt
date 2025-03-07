@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.data.DataRepository
+import de.motis.prima.data.Ticket
 import de.motis.prima.data.ValidationStatus
 import de.motis.prima.formatTo
 import de.motis.prima.services.ApiService
@@ -48,21 +49,21 @@ class ToursViewModel @Inject constructor(
     val selectedVehicle = repository.selectedVehicle
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val scannedTickets = repository.scannedTickets
+    private val scannedTickets = repository.scannedTickets
 
-    fun reportTicketScan(requestId: Int, ticketCode: String) {
+    private fun retryFailedReport(ticket: Ticket) {
         viewModelScope.launch {
-            var validationStatus = ValidationStatus.OK
             try {
-                val response = apiService.validateTicket(requestId, ticketCode)
-                if (!response.isSuccessful) {
-                    validationStatus = ValidationStatus.REJECTED
+                val response = apiService.validateTicket(ticket.requestId, ticket.ticketCode)
+                if (response.isSuccessful) {
+                    ticket.validationStatus =  ValidationStatus.OK
+                    repository.updateScannedTickets(ticket)
+                } else {
+                    ticket.validationStatus = ValidationStatus.REJECTED
+                    repository.updateScannedTickets(ticket)
                 }
             } catch (e: Exception) {
-                validationStatus = ValidationStatus.FAILED
                 Log.d("error", "Network Error: ${e.message!!}")
-            } finally {
-                repository.updateScannedTickets(requestId, ticketCode, validationStatus)
             }
         }
     }
@@ -96,10 +97,12 @@ class ToursViewModel @Inject constructor(
                         val pickupDate = Date(pickup.scheduledTimeStart)
 
                         if (pickupDate.formatTo("yyyy-MM-dd") == currentDday) {
-                            Log.d("test", "new tour") // TODO: notification
+                            // TODO: notifications
                         }
                     }
                     _tours.value = newTours
+                } else {
+                    Log.d("debug", "fetchTours: $response")
                 }
             }
 
@@ -124,7 +127,7 @@ class ToursViewModel @Inject constructor(
                 val failedReports = scannedTickets.value.entries
                     .filter { e -> e.value.validationStatus == ValidationStatus.FAILED }
                 for (report in failedReports) {
-                    reportTicketScan(report.value.requestId, report.value.ticketCode)
+                    retryFailedReport(report.value)
                 }
 
                 delay(5000) // Fetch every 5 seconds

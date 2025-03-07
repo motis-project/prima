@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.data.DataRepository
+import de.motis.prima.data.Ticket
 import de.motis.prima.data.ValidationStatus
 import de.motis.prima.services.ApiService
 import kotlinx.coroutines.launch
@@ -33,7 +34,7 @@ class ScanViewModel @Inject constructor(
                     validationStatus = ValidationStatus.FAILED
                     Log.d("error", "Network Error: ${e.message!!}")
                 } finally {
-                    repository.updateScannedTickets(requestId, ticketCode, validationStatus)
+                    repository.updateScannedTickets(Ticket(requestId, ticketCode, validationStatus))
                 }
             }
         }
