@@ -40,6 +40,8 @@
 	import { updateStartDest } from '$lib/util/updateStartDest';
 	import { odmPrice } from '$lib/util/odmPrice';
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
+	import { LocateFixed } from 'lucide-svelte';
+	import { posToLocation } from '$lib/map/Location';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -136,6 +138,18 @@
 			return;
 		}
 		pushState('', { selectedItinerary: itinerary });
+	};
+
+	const getLocation = () => {
+		if (navigator && navigator.geolocation) {
+			navigator.geolocation.getCurrentPosition(applyPosition, (e) => console.log(e), {
+				enableHighAccuracy: true
+			});
+		}
+	};
+
+	const applyPosition = (position: { coords: { latitude: number; longitude: number } }) => {
+		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
 	};
 </script>
 
@@ -291,7 +305,15 @@
 					value={to.label}
 				/>
 				<Button
-					class="absolute right-4 top-6 z-10 rounded-full"
+					variant="ghost"
+					class="absolute z-10 right-0 top-0"
+					size="icon"
+					onclick={() => getLocation()}
+				>
+					<LocateFixed class="w-5 h-5" />
+				</Button>
+				<Button
+					class="absolute right-10 top-6 z-10 rounded-full"
 					size="icon"
 					onclick={() => {
 						const tmp = to;
