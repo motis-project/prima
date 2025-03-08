@@ -306,11 +306,11 @@
 				/>
 				<Button
 					variant="ghost"
-					class="absolute z-10 right-0 top-0"
+					class="absolute right-0 top-0 z-10"
 					size="icon"
 					onclick={() => getLocation()}
 				>
-					<LocateFixed class="w-5 h-5" />
+					<LocateFixed class="h-5 w-5" />
 				</Button>
 				<Button
 					class="absolute right-10 top-6 z-10 rounded-full"

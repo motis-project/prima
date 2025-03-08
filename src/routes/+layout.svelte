@@ -57,10 +57,10 @@
 			</Alert.Description>
 		</Alert.Root>
 	{/if}
-	<div class="overflow-y-auto grow">
+	<div class="grow overflow-y-auto">
 		<div
 			id="searchmask-container"
-			class="p-2 pb-6 min-h-full md:flex md:items-center md:justify-center"
+			class="min-h-full p-2 pb-6 md:flex md:items-center md:justify-center"
 		>
 			{@render children()}
 		</div>
