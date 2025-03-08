@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { sql } from 'kysely';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
+import { getPossibleInsertions } from '$lib/server/booking/getPossibleInsertions';
 
 export const POST = async (event) => {
 	function getLatestEventTime(ev: {
@@ -46,6 +47,10 @@ export const POST = async (event) => {
 						.selectFrom('request')
 						.whereRef('tour.id', '=', 'request.tour')
 						.select((eb) => [
+							'request.bikes',
+							'request.wheelchairs',
+							'request.luggage',
+							'request.passengers',
 							jsonArrayFrom(
 								eb
 									.selectFrom('event')
@@ -53,7 +58,8 @@ export const POST = async (event) => {
 									.select([
 										'event.scheduledTimeStart',
 										'event.scheduledTimeEnd',
-										'event.communicatedTime'
+										'event.communicatedTime',
+										'event.isPickup'
 									])
 							).as('events')
 						])
@@ -68,9 +74,38 @@ export const POST = async (event) => {
 			!movedTour.requests.some((r) => r.events.length == 0),
 			'Found a request which contains no events.'
 		);
+		const targetVehicle = await trx
+			.selectFrom('vehicle')
+			.where('vehicle.id', '=', vehicleId)
+			.select(['vehicle.passengers', 'vehicle.bikes', 'vehicle.wheelchairs', 'vehicle.luggage'])
+			.executeTakeFirst();
+		if (!targetVehicle) {
+			return;
+		}
+		const events = movedTour.requests.flatMap((r) => r.events.map((e) => {
+			return {
+				...e,
+				passengers: r.passengers,
+				bikes: r.bikes,
+				wheelchairs: r.wheelchairs,
+				luggage: r.luggage
+			};
+		}));
+		const possibleInsertions = getPossibleInsertions(
+			targetVehicle,
+			{ passengers: 0, bikes: 0, wheelchairs: 0, luggage: 0 },
+			events
+		);
+		if (
+			possibleInsertions.length != 1 ||
+			possibleInsertions[0].earliestPickup != 0 ||
+			possibleInsertions[0].latestDropoff != events.length
+		) {
+			return;
+		}
 
 		const firstEventTime = Math.min(
-			...movedTour.requests.flatMap((r) => r.events.map((e) => getLatestEventTime(e)))
+			...events.map((e) => getLatestEventTime(e))
 		);
 		if (firstEventTime < Date.now()) {
 			return;
