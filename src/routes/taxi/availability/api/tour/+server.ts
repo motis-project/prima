@@ -82,15 +82,17 @@ export const POST = async (event) => {
 		if (!targetVehicle) {
 			return;
 		}
-		const events = movedTour.requests.flatMap((r) => r.events.map((e) => {
-			return {
-				...e,
-				passengers: r.passengers,
-				bikes: r.bikes,
-				wheelchairs: r.wheelchairs,
-				luggage: r.luggage
-			};
-		}));
+		const events = movedTour.requests.flatMap((r) =>
+			r.events.map((e) => {
+				return {
+					...e,
+					passengers: r.passengers,
+					bikes: r.bikes,
+					wheelchairs: r.wheelchairs,
+					luggage: r.luggage
+				};
+			})
+		);
 		const possibleInsertions = getPossibleInsertions(
 			targetVehicle,
 			{ passengers: 0, bikes: 0, wheelchairs: 0, luggage: 0 },
@@ -104,9 +106,7 @@ export const POST = async (event) => {
 			return;
 		}
 
-		const firstEventTime = Math.min(
-			...events.map((e) => getLatestEventTime(e))
-		);
+		const firstEventTime = Math.min(...events.map((e) => getLatestEventTime(e)));
 		if (firstEventTime < Date.now()) {
 			return;
 		}
