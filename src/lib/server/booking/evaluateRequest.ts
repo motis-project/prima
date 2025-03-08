@@ -120,14 +120,14 @@ export function getAllowedTimes(
 
 	const allowedTimes: Array<Interval> = [];
 	for (let t = earliestDay; t < latestDay; t += DAY) {
-		const offset = 
-		parseInt(
-			noonEarliestDay.toLocaleString('de-DE', {
-				hour: '2-digit',
-				hour12: false,
-				timeZone: 'Europe/Berlin'
-			})
-		) - 12;
+		const offset =
+			parseInt(
+				noonEarliestDay.toLocaleString('de-DE', {
+					hour: '2-digit',
+					hour12: false,
+					timeZone: 'Europe/Berlin'
+				})
+			) - 12;
 		allowedTimes.push(new Interval(t + startOnDay - offset * HOUR, t + endOnDay - offset * HOUR));
 		noonEarliestDay.setHours(noonEarliestDay.getHours() + 24);
 	}
