@@ -21,7 +21,14 @@
 		Fahrzeug hinzufügen
 	</Popover.Trigger>
 	<Popover.Content>
-		<form method="post" action="?/addVehicle" class="flex flex-col gap-4" use:enhance>
+		<form
+			method="post"
+			action="?/addVehicle"
+			class="flex flex-col gap-4"
+			use:enhance={() =>
+				async ({ update }) =>
+					await update({ reset: false })}
+		>
 			<h2 class="font-medium leading-none">Neues Fahrzeug</h2>
 
 			<div class="field">

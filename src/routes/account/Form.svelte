@@ -41,7 +41,7 @@
 		{#if type == 'signup'}
 			Durch die Anmeldung stimme ich den
 			<a href="/tos" class="border-b border-dotted border-muted-foreground">
-				Allgemeinen&nbsp;Geschäftsbedingen
+				Allgemeinen&nbsp;Geschäftsbedingungen
 			</a>
 			sowie der
 			<a href="/privacy" class="border-b border-dotted border-muted-foreground">
