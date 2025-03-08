@@ -139,7 +139,7 @@
 	};
 </script>
 
-<div class="md:h-[80%] md:w-96">
+<div class="md:min-h-[70dvh] md:w-96">
 	<Message msg={form?.msg} class="mb-4" />
 
 	{#if page.state.selectFrom}
