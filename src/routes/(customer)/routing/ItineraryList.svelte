@@ -101,6 +101,8 @@
 					{/await}
 				{/each}
 			</div>
+		{:else}
+			<div>{t.noItinerariesFound}</div>
 		{/if}
 	{/await}
 {/if}

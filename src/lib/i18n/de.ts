@@ -172,6 +172,7 @@ const translations: Translations = {
 	sharingProvider: 'Anbieter',
 	roundtripStationReturnConstraint:
 		'Das Fahrzeug muss wieder an der Abfahrtsstation abgestellt werden.',
+	noItinerariesFound: 'Keine Verbindungen gefunden.',
 
 	bookingInfo: 'Buchungsangaben',
 	changeBookingInfo: 'Ändern Sie Ihre Such- und Buchungsangaben.',

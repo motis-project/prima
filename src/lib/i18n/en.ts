@@ -170,7 +170,8 @@ const translations: Translations = {
 	},
 	sharingProvider: 'Provider',
 	roundtripStationReturnConstraint: 'The vehicle must be returned to the departure station.',
-
+	noItinerariesFound: 'Keine Verbindungen gefunden.',
+	
 	bookingInfo: 'Booking Information',
 	changeBookingInfo: 'Change your search options and booking information.',
 
