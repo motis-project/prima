@@ -1,5 +1,4 @@
 import { FIXED_PRICE } from '$lib/constants';
-import type { Company } from '$lib/server/booking/getBookingAvailability';
 import type { TourWithRequests } from '$lib/server/db/getTours';
 import { HOUR, MINUTE, SECOND } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';

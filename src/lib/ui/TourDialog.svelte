@@ -16,7 +16,7 @@
 	import GeoJSON from '$lib/map/GeoJSON.svelte';
 	import Layer from '$lib/map/Layer.svelte';
 
-	import type { ToursWithRequests } from '$lib/server/db/getTours';
+	import type { TourWithRequests } from '$lib/server/db/getTours';
 	import type { PlanResponse } from '$lib/openapi';
 	import { MIN_PREP } from '$lib/constants';
 	import { carRouting } from '$lib/util/carRouting';
@@ -30,10 +30,9 @@
 		tours,
 		isAdmin
 	}: {
-		tours: ToursWithRequests | undefined;
+		tours: TourWithRequests[] | undefined;
 		isAdmin: boolean;
 	} = $props();
-
 	const displayFare = (fare: number | null) => {
 		if (!fare) {
 			return '-';

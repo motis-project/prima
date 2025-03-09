@@ -2,14 +2,13 @@
 	import * as Table from '$lib/shadcn/table/index';
 	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button } from '$lib/shadcn/button';
-	import type { ToursWithRequests, TourWithRequests } from '$lib/server/db/getTours';
-	import TourDialog from '$lib/ui/TourDialog.svelte';
+	import type { TourWithRequests } from '$lib/server/db/getTours';
 
-	const {
+	let {
 		rows,
 		cols,
-		isAdmin,
-		getRowStyle
+		getRowStyle,
+		selectedRow = $bindable()
 	}: {
 		rows: T[];
 		cols: {
@@ -19,6 +18,7 @@
 		}[];
 		isAdmin: boolean;
 		getRowStyle?: (row: T) => string;
+		selectedRow?: undefined | T[];
 	} = $props();
 
 	const descending = Array.from({ length: cols.length }, () => true);
@@ -38,8 +38,6 @@
 	function isTourWithRequests(data: any): data is TourWithRequests {
 		return data && typeof data.tourId === 'number' && Array.isArray(data.requests);
 	}
-
-	let selectedRow: ToursWithRequests | undefined = $state(undefined);
 </script>
 
 <sortableTable>
@@ -80,7 +78,3 @@
 		</Table.Root>
 	</div>
 </sortableTable>
-
-{#if selectedRow != undefined}
-	<TourDialog tours={selectedRow} {isAdmin} />
-{/if}

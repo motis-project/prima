@@ -25,6 +25,7 @@
 	} from './tableData.js';
 	import { MONTHS, QUARTERS } from '$lib/constants.js';
 	import type { UnixtimeMs } from '$lib/util/UnixtimeMs.js';
+	import TourDialog from './TourDialog.svelte';
 
 	let range: {
 		start: CalendarDate | undefined;
@@ -273,6 +274,8 @@
 		selectedCancelledToursIdx = -1;
 		selectedCompletedToursIdx = -1;
 	}
+
+	let selectedToursTableRow: TourWithRequests[] | undefined = $state(undefined);
 </script>
 
 {#snippet tourTable()}
@@ -283,7 +286,10 @@
 		getRowStyle={(row: TourWithRequests) =>
 			'cursor-pointer ' +
 			(row.cancelled ? (row.message === null ? 'bg-orange-500' : 'bg-destructive') : 'bg-white-0')}
+		bind:selectedRow={selectedToursTableRow}
 	/>
+
+	<TourDialog tours={selectedToursTableRow} {isAdmin} />
 {/snippet}
 
 {#snippet subtractionTable()}
