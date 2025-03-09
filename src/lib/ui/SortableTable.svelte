@@ -2,13 +2,14 @@
 	import * as Table from '$lib/shadcn/table/index';
 	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button } from '$lib/shadcn/button';
-	import type { TourWithRequests } from '$lib/server/db/getTours';
+	import type { ToursWithRequests, TourWithRequests } from '$lib/server/db/getTours';
 	import TourDialog from '$lib/ui/TourDialog.svelte';
 
 	const {
 		rows,
 		cols,
-		isAdmin
+		isAdmin,
+		getRowStyle
 	}: {
 		rows: T[];
 		cols: {
@@ -17,6 +18,7 @@
 			toTableEntry: (r: T) => string | number;
 		}[];
 		isAdmin: boolean;
+		getRowStyle?: (row: T) => string;
 	} = $props();
 
 	const descending = Array.from({ length: cols.length }, () => true);
@@ -37,15 +39,7 @@
 		return data && typeof data.tourId === 'number' && Array.isArray(data.requests);
 	}
 
-	let selectedTour: { tours: Array<TourWithRequests> | undefined; isAdmin: boolean } | undefined =
-		$state(undefined);
-
-	if (rows.length != 0 && isTourWithRequests(rows[0])) {
-		selectedTour = {
-			tours: undefined,
-			isAdmin: isAdmin
-		};
-	}
+	let selectedRow: ToursWithRequests | undefined = $state(undefined);
 </script>
 
 <sortableTable>
@@ -70,13 +64,10 @@
 			<Table.Body>
 				{#each rows as row}
 					<Table.Row
-						class={`${isTourWithRequests(row) && (row as TourWithRequests).cancelled ? 'cursor-pointer bg-destructive' : 'bg-white-0'}`}
+						class={`${getRowStyle === undefined ? '' : getRowStyle(row)}`}
 						onclick={() => {
-							if (rows.length != 0 && isTourWithRequests(rows[0])) {
-								selectedTour = {
-									tours: [row as TourWithRequests],
-									isAdmin: isAdmin
-								};
+							if (isTourWithRequests(row)) {
+								selectedRow = [row];
 							}
 						}}
 					>
@@ -90,6 +81,6 @@
 	</div>
 </sortableTable>
 
-{#if selectedTour != undefined}
-	<TourDialog bind:open={selectedTour} />
+{#if selectedRow != undefined}
+	<TourDialog tours={selectedRow} {isAdmin} />
 {/if}

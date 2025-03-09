@@ -141,7 +141,11 @@
 
 	// Filter
 	$effect(() => {
-		currentRowsToursTable = getNewRows(tourFilters, tours);
+		currentRowsToursTable = getNewRows(tourFilters, tours).filter(
+			(t) =>
+				(selectedCancelledToursIdx == -1 || cancelledFilters[selectedCancelledToursIdx](t)) &&
+				(selectedCompletedToursIdx === -1 || completedFilters[selectedCompletedToursIdx](t))
+		);
 		const subtractionRows = getNewRows(subtractionFilters, companyCostsPerDay);
 		currentCompanyRows = updateCompanySums(subtractionRows);
 		currentRowsSubtractionsTable = subtractionRows;
@@ -243,6 +247,22 @@
 		{ label: isAdmin ? 'pro Unternehmen' : 'Summe', value: 3, component: companyTable }
 	];
 
+	let selectedCompletedToursIdx = $state(-1);
+	let selectedCancelledToursIdx = $state(-1);
+
+	let toggleTours1 = ['abgeschlossene', 'zukünftige'];
+
+	const completedFilters = [
+		(t: TourWithRequests) => t.fare != null,
+		(t: TourWithRequests) => t.fare === null
+	];
+	const cancelledFilters = [
+		(t: TourWithRequests) => t.cancelled,
+		(t: TourWithRequests) => !t.cancelled
+	];
+
+	let toggleTours2 = ['stornierte', 'nicht stornierte'];
+
 	function resetFilter() {
 		selectedCompanyIdx = -1;
 		selectedMonthIdx = -1;
@@ -250,6 +270,8 @@
 		range.start = undefined;
 		range.end = undefined;
 		selectedYearIdx = -1;
+		selectedCancelledToursIdx = -1;
+		selectedCompletedToursIdx = -1;
 	}
 </script>
 
@@ -258,6 +280,9 @@
 		rows={currentRowsToursTable}
 		cols={isAdmin ? tourColsAdmin : tourColsCompany}
 		{isAdmin}
+		getRowStyle={(row: TourWithRequests) =>
+			'cursor-pointer ' +
+			(row.cancelled ? (row.message === null ? 'bg-orange-500' : 'bg-destructive') : 'bg-white-0')}
 	/>
 {/snippet}
 
@@ -308,7 +333,7 @@
 		<Dialog.Root>
 			<Dialog.Trigger
 				disabled={selectedMonthIdx !== -1 || selectedQuarterIdx !== -1 || selectedYearIdx !== -1}
-				class="col-span-2 {buttonVariants({ variant: 'outline' })}"
+				class="col-span-1 {buttonVariants({ variant: 'outline' })}"
 				>{range.start === undefined
 					? 'Zeitspanne'
 					: range.start + ' - ' + range.end}</Dialog.Trigger
@@ -317,6 +342,18 @@
 				<RangeCalendar bind:value={range} class="rounded-md border" />
 			</Dialog.Content>
 		</Dialog.Root>
+		<Select
+			bind:selectedIdx={selectedCompletedToursIdx}
+			entries={toggleTours1}
+			initial={'nach abgeschlossenen Touren filtern'}
+			disabled={false}
+		/>
+		<Select
+			bind:selectedIdx={selectedCancelledToursIdx}
+			entries={toggleTours2}
+			initial={'nach stornierten Touren filtern'}
+			disabled={false}
+		/>
 		<Button type="submit" onclick={() => resetFilter()}>Filter zurücksetzten</Button>
 		<Button
 			type="submit"

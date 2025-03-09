@@ -468,4 +468,4 @@
 	</Card.Content>
 </Card.Root>
 
-<TourDialog bind:open={selectedTour} />
+<TourDialog tours={selectedTour.tours} isAdmin={selectedTour.isAdmin} />

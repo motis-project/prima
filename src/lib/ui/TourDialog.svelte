@@ -26,13 +26,12 @@
 	import { PUBLIC_MOTIS_URL } from '$env/static/public';
 	import CancelMessageDialog from './CancelMessageDialog.svelte';
 
-	const {
-		open = $bindable()
+	let {
+		tours,
+		isAdmin
 	}: {
-		open: {
-			tours: ToursWithRequests | undefined;
-			isAdmin: boolean;
-		};
+		tours: ToursWithRequests | undefined;
+		isAdmin: boolean;
 	} = $props();
 
 	const displayFare = (fare: number | null) => {
@@ -44,7 +43,7 @@
 	};
 
 	let tourIndex = $state(0);
-	let tour = $derived(open.tours && open.tours[tourIndex]);
+	let tour = $derived(tours && tours[tourIndex]);
 	let events = $derived(tour?.requests.flatMap((r) => r.events));
 	let company = $derived(tour && { lat: tour.companyLat!, lng: tour.companyLng! });
 
@@ -97,7 +96,7 @@
 	open={tour !== undefined}
 	onOpenChange={(x) => {
 		if (!x) {
-			open.tours = undefined;
+			tours = undefined;
 		}
 	}}
 >
@@ -106,8 +105,8 @@
 			<div class="flex items-center justify-between pr-4">
 				<Dialog.Title>Tour Details</Dialog.Title>
 				<div>
-					{#if open!.tours && open.tours.length > 1}
-						{#each open.tours as tour, i}
+					{#if tours && tours.length > 1}
+						{#each tours as tour, i}
 							{@const tourInfo = getTourInfoShort(tour)}
 							<Button
 								onclick={() => {
@@ -128,7 +127,7 @@
 				{@render overview()}
 				{@render mapView()}
 				<div class="col-span-2">{@render details()}</div>
-				{#if tour?.message != null}
+				{#if tour?.cancelled}
 					<div class="col-span-2">{@render message()}</div>
 				{/if}
 			</div>
@@ -141,8 +140,8 @@
 		<Card.Header>
 			<div class="flex w-full items-center justify-between">
 				<Card.Title>Übersicht</Card.Title>
-				{#if tour && !tour.cancelled && !open.isAdmin && tour.endTime > Date.now()}
-					<CancelMessageDialog bind:tour={open.tours![tourIndex]} />
+				{#if tour && !tour.cancelled && !isAdmin && tour.endTime > Date.now()}
+					<CancelMessageDialog bind:tour={tours![tourIndex]} />
 				{/if}
 			</div>
 		</Card.Header>
@@ -330,7 +329,11 @@
 		</Card.Header>
 		<Card.Content>
 			<div class="bg-primary-foreground">
-				{tour!.message}
+				{#if tour!.message != null}
+					{tour!.message}
+				{:else}
+					Die Tour wurde vom Kunden storniert.
+				{/if}
 			</div>
 		</Card.Content>
 	</Card.Root>

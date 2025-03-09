@@ -1,4 +1,5 @@
 import { FIXED_PRICE } from '$lib/constants';
+import type { Company } from '$lib/server/booking/getBookingAvailability';
 import type { TourWithRequests } from '$lib/server/db/getTours';
 import { HOUR, MINUTE, SECOND } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
@@ -61,13 +62,13 @@ const displayDuration = (duration: number) => {
 
 const firstTourColAdmin: Column<TourWithRequests> = {
 	text: 'Unternehmen',
-	sort: undefined,
+	sort: (a: TourWithRequests, b: TourWithRequests) => a.companyId - b.companyId,
 	toTableEntry: (r: TourWithRequests) => r.companyName ?? ''
 };
 
 const firstTourColCompany: Column<TourWithRequests> = {
 	text: 'Fahrzeug',
-	sort: undefined,
+	sort: (a: TourWithRequests, b: TourWithRequests) => a.vehicleId - b.vehicleId,
 	toTableEntry: (r: TourWithRequests) => r.licensePlate ?? ''
 };
 
@@ -110,7 +111,7 @@ export const tourColsCompany = [firstTourColCompany].concat(restTourCols);
 export const subtractionColsAdmin: Column<Subtractions>[] = [
 	{
 		text: 'Unternehmen',
-		sort: undefined,
+		sort: (a: CompanyRow, b: CompanyRow) => a.companyId - b.companyId,
 		toTableEntry: (r: Subtractions) => r.companyName ?? ''
 	},
 	{
@@ -156,7 +157,7 @@ export const subtractionColsCompany = subtractionColsAdmin.slice(1);
 export const companyColsAdmin: Column<CompanyRow>[] = [
 	{
 		text: 'Unternehmen',
-		sort: undefined,
+		sort: (a: CompanyRow, b: CompanyRow) => a.companyId - b.companyId,
 		toTableEntry: (r: CompanyRow) => r.companyName ?? ''
 	},
 	{ text: 'Kunden', sort: undefined, toTableEntry: (r: CompanyRow) => r.customerCount },
