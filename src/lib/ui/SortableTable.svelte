@@ -2,10 +2,13 @@
 	import * as Table from '$lib/shadcn/table/index';
 	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button } from '$lib/shadcn/button';
+	import type { TourWithRequests } from '$lib/server/db/getTours';
 
-	const {
+	let {
 		rows,
-		cols
+		cols,
+		getRowStyle,
+		selectedRow = $bindable()
 	}: {
 		rows: T[];
 		cols: {
@@ -13,6 +16,9 @@
 			sort: undefined | ((r1: T, r2: T) => number);
 			toTableEntry: (r: T) => string | number;
 		}[];
+		isAdmin: boolean;
+		getRowStyle?: (row: T) => string;
+		selectedRow?: undefined | T[];
 	} = $props();
 
 	const descending = Array.from({ length: cols.length }, () => true);
@@ -27,9 +33,14 @@
 		}
 		descending[idx] = !descending[idx];
 	};
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	function isTourWithRequests(data: any): data is TourWithRequests {
+		return data && typeof data.tourId === 'number' && Array.isArray(data.requests);
+	}
 </script>
 
-<sortableScrollableTable>
+<sortableTable>
 	<div class="min-w-[160vh]">
 		<Table.Root>
 			<Table.Header>
@@ -50,7 +61,14 @@
 			</Table.Header>
 			<Table.Body>
 				{#each rows as row}
-					<Table.Row>
+					<Table.Row
+						class={`${getRowStyle === undefined ? '' : getRowStyle(row)}`}
+						onclick={() => {
+							if (isTourWithRequests(row)) {
+								selectedRow = [row];
+							}
+						}}
+					>
 						{#each cols as col}
 							<Table.Cell>{col.toTableEntry(row)}</Table.Cell>
 						{/each}
@@ -59,4 +77,4 @@
 			</Table.Body>
 		</Table.Root>
 	</div>
-</sortableScrollableTable>
+</sortableTable>

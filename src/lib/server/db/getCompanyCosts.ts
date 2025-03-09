@@ -7,32 +7,36 @@ import { groupBy } from '$lib/util/groupBy';
 import { DAY, HOUR } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
-export async function getCompanyCosts() {
-	const tours: (TourWithRequests & { interval: Interval })[] = (await getToursWithRequests()).map(
-		(t) => {
-			return {
-				...t,
-				interval: new Interval(t.startTime, t.endTime)
-			};
-		}
-	);
+export async function getCompanyCosts(companyId?: number) {
+	const tours: (TourWithRequests & { interval: Interval })[] = (
+		await getToursWithRequests(true, companyId)
+	).map((t) => {
+		return {
+			...t,
+			interval: new Interval(t.startTime, t.endTime)
+		};
+	});
 	tours.sort((t1, t2) => t1.startTime - t2.startTime);
 	if (tours.length === 0) {
 		return {
 			tours: [],
 			earliestTime: Date.now(),
+			latestTime: Date.now(),
 			companyCostsPerDay: []
 		};
 	}
 	const earliestTime =
 		tours.reduce((min, entry) => (entry.startTime < min.startTime ? entry : min), tours[0])
 			.startTime - DAY;
-
-	const today = Math.ceil(Date.now() / DAY) * DAY;
+	const latestTime =
+		tours.reduce((max, entry) => (entry.endTime > max.endTime ? entry : max), tours[0]).endTime +
+		DAY;
 	const availabilities = await db
 		.selectFrom('availability')
+		.innerJoin('vehicle', 'vehicle.id', 'availability.vehicle')
+		.$if(companyId != undefined, (qb) => qb.where('vehicle.company', '=', companyId!))
 		.where('availability.endTime', '>=', earliestTime)
-		.where('availability.startTime', '<=', today)
+		.where('availability.startTime', '<=', latestTime)
 		.select(['availability.vehicle as vehicleId', 'availability.startTime', 'availability.endTime'])
 		.orderBy('availability.endTime', 'asc')
 		.execute();
@@ -51,7 +55,7 @@ export async function getCompanyCosts() {
 	};
 	const firstDay = new Date(earliestTime - DAY);
 	const firstDayStart = Math.floor(firstDay.getTime() / DAY) * DAY;
-	const days = Array.from({ length: Math.ceil((today - firstDayStart) / DAY) }, (_, i) => {
+	const days = Array.from({ length: Math.ceil((latestTime - firstDayStart) / DAY) }, (_, i) => {
 		const offset = getOffset(firstDayStart + DAY * i + HOUR * 12);
 		const offsetNextDay = getOffset(firstDayStart + DAY * (i + 1) + HOUR * 12);
 		return new Interval(
@@ -232,6 +236,7 @@ export async function getCompanyCosts() {
 	return {
 		tours,
 		earliestTime,
+		latestTime,
 		companyCostsPerDay: companyCostsPerDay.flatMap((companyCosts) =>
 			Array.from(companyCosts).map(
 				([

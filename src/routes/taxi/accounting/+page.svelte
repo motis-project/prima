@@ -5,7 +5,7 @@
 </script>
 
 <AccountingView
-	isAdmin={true}
+	isAdmin={false}
 	tours={data.tours}
 	companyCostsPerDay={data.companyCostsPerDay}
 	earliestTime={data.earliestTime}

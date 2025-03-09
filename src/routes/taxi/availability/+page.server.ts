@@ -1,12 +1,12 @@
 import { db } from '$lib/server/db';
-import { getTours } from '$lib/server/db/getTours.js';
+import { getToursWithRequests } from '$lib/server/db/getTours.js';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import type { Actions, RequestEvent } from './$types';
 import { fail } from '@sveltejs/kit';
 import { msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
 
-export async function load(event) {
+export async function load(event: RequestEvent) {
 	const companyId = event.locals.session?.companyId;
 	if (!companyId) {
 		throw 'company not defined';
@@ -41,7 +41,7 @@ export async function load(event) {
 		])
 		.execute();
 
-	const tours = getTours(false, companyId, [fromTime.getTime(), toTime.getTime()]);
+	const tours = getToursWithRequests(false, companyId, [fromTime.getTime(), toTime.getTime()]);
 
 	const company = await db
 		.selectFrom('company')
