@@ -25,6 +25,7 @@
 	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 	import { PUBLIC_MOTIS_URL } from '$env/static/public';
 	import CancelMessageDialog from './CancelMessageDialog.svelte';
+	import { nowOrSimulationTime } from '$lib/time';
 
 	const {
 		open = $bindable()
@@ -90,7 +91,7 @@
 		}
 	});
 
-	const threshold = new Date();
+	const threshold = nowOrSimulationTime();
 	threshold.setMinutes(threshold.getMinutes() + MIN_PREP);
 </script>
 
@@ -142,7 +143,7 @@
 		<Card.Header>
 			<div class="flex w-full items-center justify-between">
 				<Card.Title>Übersicht</Card.Title>
-				{#if tour && !tour.cancelled && !open.isAdmin && tour.endTime > Date.now()}
+				{#if tour && !tour.cancelled && !open.isAdmin && tour.endTime > nowOrSimulationTime().getTime()}
 					<CancelMessageDialog bind:tour={open.tours![tourIndex]} />
 				{/if}
 			</div>

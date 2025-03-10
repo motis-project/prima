@@ -21,6 +21,7 @@
 		type Subtractions
 	} from './tableData.js';
 	import { MONTHS, QUARTERS } from '$lib/constants.js';
+	import { nowOrSimulationTime } from '$lib/time.js';
 
 	let range: {
 		start: CalendarDate | undefined;
@@ -94,7 +95,7 @@
 
 	const years: number[] = [];
 	for (
-		let i = new Date(Date.now()).getFullYear();
+		let i = nowOrSimulationTime().getFullYear();
 		i != new Date(data.earliestTime).getFullYear() - 1;
 		--i
 	) {

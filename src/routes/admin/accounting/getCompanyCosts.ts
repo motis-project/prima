@@ -3,6 +3,7 @@ import type { VehicleId } from '$lib/server/booking/VehicleId';
 import { db } from '$lib/server/db';
 import { getToursWithRequests, type TourWithRequests } from '$lib/server/db/getTours';
 import { Interval } from '$lib/server/util/interval';
+import { nowOrSimulationTime } from '$lib/time';
 import { groupBy } from '$lib/util/groupBy';
 import { DAY, HOUR } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
@@ -20,7 +21,7 @@ export async function getCompanyCosts() {
 	if (tours.length === 0) {
 		return {
 			tours: [],
-			earliestTime: Date.now(),
+			earliestTime: nowOrSimulationTime().getTime(),
 			companyCostsPerDay: []
 		};
 	}
@@ -28,7 +29,7 @@ export async function getCompanyCosts() {
 		tours.reduce((min, entry) => (entry.startTime < min.startTime ? entry : min), tours[0])
 			.startTime - DAY;
 
-	const today = Math.ceil(Date.now() / DAY) * DAY;
+	const today = Math.ceil(nowOrSimulationTime().getTime() / DAY) * DAY;
 	const availabilities = await db
 		.selectFrom('availability')
 		.where('availability.endTime', '>=', earliestTime)

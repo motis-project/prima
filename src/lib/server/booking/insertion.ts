@@ -29,6 +29,7 @@ import type { Capacities } from './Capacities';
 import { isValid } from './getPossibleInsertions';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 import { roundToNextFullMinute } from '../util/roundToNextFullMinute';
+import { nowOrSimulationTime } from '$lib/time';
 
 export type InsertionEvaluation = {
 	pickupTime: number;
@@ -254,7 +255,7 @@ export function evaluateNewTours(
 		where: InsertWhere.BEFORE_FIRST_EVENT,
 		direction: startFixed ? InsertDirection.BUS_STOP_PICKUP : InsertDirection.BUS_STOP_DROPOFF
 	};
-	const prepTime = Date.now() + MIN_PREP;
+	const prepTime = nowOrSimulationTime().getTime() + MIN_PREP;
 
 	companies.forEach((company, companyIdx) => {
 		company.vehicles.forEach((vehicle) => {

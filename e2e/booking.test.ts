@@ -64,4 +64,6 @@ test('Boooking', async ({ page }) => {
 	await setup(page);
 
 	//TODO record bookings
+	await login(page, TAXI_OWNER);
+	
 });

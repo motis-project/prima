@@ -42,6 +42,7 @@
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { LocateFixed } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
+	import { nowOrSimulationTime } from '$lib/time';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -52,7 +53,7 @@
 	let passengers = $state(1);
 	let wheelchair = $state(false);
 	let luggage = $state<LuggageType>('none');
-	let time = $state<Date>(new Date());
+	let time = $state<Date>(nowOrSimulationTime());
 	let timeType = $state<TimeType>('departure');
 	let fromParam: Match | undefined = undefined;
 	let toParam: Match | undefined = undefined;
