@@ -139,8 +139,8 @@ export function evaluateBothInsertion(
 	busStopIdx: number | undefined,
 	prev: Event | undefined,
 	next: Event | undefined,
-	allowedTimes: Interval[],
-	promisedTimes?: PromisedTimes
+	allowedTimes: Interval[]
+	//promisedTimes?: PromisedTimes
 ): InsertionEvaluation | undefined {
 	console.assert(
 		insertionCase.what == InsertWhat.BOTH,
@@ -177,12 +177,14 @@ export function evaluateBothInsertion(
 	if (arrivalWindow == undefined) {
 		return undefined;
 	}
+	/*
 	if (
 		promisedTimes != undefined &&
 		!keepsPromises(insertionCase, arrivalWindow, passengerDuration, promisedTimes)
 	) {
 		return undefined;
 	}
+	*/
 	const taxiDuration =
 		prevLegDuration +
 		nextLegDuration +
@@ -357,7 +359,7 @@ const getOldDrivingTime = (
 	}
 	return prev.nextLegDuration;
 };
-
+/*
 const keepsPromises = (
 	insertionCase: InsertionType,
 	arrivalWindow: Interval,
@@ -414,3 +416,4 @@ const keepsPromises = (
 	}
 	return true;
 };
+*/
