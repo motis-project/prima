@@ -39,6 +39,7 @@
 	</form>
 	<p class="mx-auto mt-8 max-w-72 text-center text-xs text-muted-foreground">
 		{#if type == 'signup'}
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 			{@html t.account.signupConditions(
 				`<a href="/tos" class="border-b border-dotted border-muted-foreground whitespace-nowrap">${t.account.tos}</a>`,
 				`<a href="/privacy" class="border-b border-dotted border-muted-foreground whitespace-nowrap">${t.account.privacy}</a>`,
