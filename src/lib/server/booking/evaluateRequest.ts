@@ -5,7 +5,7 @@ import type { BusStop } from './BusStop';
 import type { Capacities } from './Capacities';
 import { getPossibleInsertions } from './getPossibleInsertions';
 import type { Company } from './getBookingAvailability';
-import type { PromisedTimes } from './PromisedTimes';
+//import type { PromisedTimes } from './PromisedTimes';
 import type { Range } from './getPossibleInsertions';
 import { gatherRoutingCoordinates, routing } from './routing';
 import {
@@ -26,8 +26,8 @@ export async function evaluateRequest(
 	userChosen: Coordinates,
 	busStops: BusStop[],
 	required: Capacities,
-	startFixed: boolean,
-	promisedTimes?: PromisedTimes
+	startFixed: boolean
+	//promisedTimes?: PromisedTimes
 ) {
 	if (companies.length == 0) {
 		return busStops.map((bs) => bs.times.map((_) => undefined));
@@ -97,8 +97,8 @@ export async function evaluateRequest(
 		busStopTimes,
 		routingResults,
 		directDurations,
-		allowedTimes,
-		promisedTimes
+		allowedTimes
+		//promisedTimes
 	);
 	return newTourEvaluations;
 }

@@ -21,7 +21,7 @@ import {
 	getNextLegDuration,
 	returnsToCompany
 } from './durations';
-import type { PromisedTimes } from './PromisedTimes';
+//import type { PromisedTimes } from './PromisedTimes';
 import type { Interval } from '$lib/server/util/interval';
 import type { RoutingResults } from './routing';
 import type { Company, Event } from './getBookingAvailability';
@@ -235,8 +235,8 @@ export function evaluateNewTours(
 	busStopTimes: Interval[][],
 	routingResults: RoutingResults,
 	travelDurations: (number | undefined)[],
-	allowedTimes: Interval[],
-	promisedTimes?: PromisedTimes
+	allowedTimes: Interval[]
+	//promisedTimes?: PromisedTimes
 ): (Insertion | undefined)[][] {
 	const bestEvaluations = new Array<(Insertion | undefined)[]>(busStopTimes.length);
 	for (let i = 0; i != busStopTimes.length; ++i) {
@@ -282,7 +282,7 @@ export function evaluateNewTours(
 						busStopIdx,
 						undefined,
 						undefined,
-						allowedTimes,
+						allowedTimes
 						//promisedTimes
 					);
 					if (
