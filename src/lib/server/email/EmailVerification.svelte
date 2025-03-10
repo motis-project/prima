@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ORIGIN } from '$env/static/private';
-	import { PUBLIC_PROVIDER } from '$env/static/public';
+	import EmailFooter from './EmailFooter.svelte';
 	const { code, name } = $props();
 </script>
 
@@ -12,9 +12,6 @@
 			{ORIGIN}/verify-email/?code={code}
 		</a>
 	</p>
-	<p>
-		Liebe Grüße<br />
-		Dein {PUBLIC_PROVIDER} Team<br />
-		<a href={ORIGIN} target="_blank">{ORIGIN}</a><br />
-	</p>
+
+	<EmailFooter />
 </div>

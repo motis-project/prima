@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ORIGIN } from '$env/static/private';
-	import { PUBLIC_PROVIDER } from '$env/static/public';
+	import EmailFooter from './EmailFooter.svelte';
 	const { departure, arrival, name, tourId } = $props();
 	const tourLink = $derived(`${ORIGIN}/taxi/tours/?tourId=${tourId}`);
 </script>
@@ -18,9 +18,5 @@
 
 	<p>Link zur Fahrt: <a href={tourLink}>{tourLink}</a></p>
 
-	<p>
-		Liebe Grüße<br />
-		Ihr {PUBLIC_PROVIDER} Team<br />
-		<a href={ORIGIN} target="_blank">{ORIGIN}</a><br />
-	</p>
+	<EmailFooter />
 </div>
