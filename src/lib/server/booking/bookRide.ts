@@ -78,11 +78,11 @@ export async function bookRide(
 			userChosen,
 			[{ ...busStop, times: [busTime] }],
 			required,
-			startFixed,
-			{
-				pickup: c.startTime,
-				dropoff: c.targetTime
-			}
+			startFixed
+			//{
+			//	pickup: c.startTime,
+			//	dropoff: c.targetTime
+			//}
 		)
 	)[0][0];
 	if (best == undefined) {

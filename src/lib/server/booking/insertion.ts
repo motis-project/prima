@@ -21,7 +21,7 @@ import {
 	getNextLegDuration,
 	returnsToCompany
 } from './durations';
-import type { PromisedTimes } from './PromisedTimes';
+//import type { PromisedTimes } from './PromisedTimes';
 import type { Interval } from '$lib/server/util/interval';
 import type { RoutingResults } from './routing';
 import type { Company, Event } from './getBookingAvailability';
@@ -139,8 +139,8 @@ export function evaluateBothInsertion(
 	busStopIdx: number | undefined,
 	prev: Event | undefined,
 	next: Event | undefined,
-	allowedTimes: Interval[],
-	promisedTimes?: PromisedTimes
+	allowedTimes: Interval[]
+	//promisedTimes?: PromisedTimes
 ): InsertionEvaluation | undefined {
 	console.assert(
 		insertionCase.what == InsertWhat.BOTH,
@@ -177,12 +177,14 @@ export function evaluateBothInsertion(
 	if (arrivalWindow == undefined) {
 		return undefined;
 	}
+	/*
 	if (
 		promisedTimes != undefined &&
 		!keepsPromises(insertionCase, arrivalWindow, passengerDuration, promisedTimes)
 	) {
 		return undefined;
 	}
+	*/
 	const taxiDuration =
 		prevLegDuration +
 		nextLegDuration +
@@ -233,8 +235,8 @@ export function evaluateNewTours(
 	busStopTimes: Interval[][],
 	routingResults: RoutingResults,
 	travelDurations: (number | undefined)[],
-	allowedTimes: Interval[],
-	promisedTimes?: PromisedTimes
+	allowedTimes: Interval[]
+	//promisedTimes?: PromisedTimes
 ): (Insertion | undefined)[][] {
 	const bestEvaluations = new Array<(Insertion | undefined)[]>(busStopTimes.length);
 	for (let i = 0; i != busStopTimes.length; ++i) {
@@ -280,8 +282,8 @@ export function evaluateNewTours(
 						busStopIdx,
 						undefined,
 						undefined,
-						allowedTimes,
-						promisedTimes
+						allowedTimes
+						//promisedTimes
 					);
 					if (
 						resultNewTour != undefined &&
@@ -357,7 +359,7 @@ const getOldDrivingTime = (
 	}
 	return prev.nextLegDuration;
 };
-
+/*
 const keepsPromises = (
 	insertionCase: InsertionType,
 	arrivalWindow: Interval,
@@ -414,3 +416,4 @@ const keepsPromises = (
 	}
 	return true;
 };
+*/
