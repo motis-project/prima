@@ -13,40 +13,40 @@ export async function markVehicle(page: Page, from: string, to: string) {
 export async function setAvailable(page: Page) {
 	await login(page, TAXI_OWNER);
 
-	await page.goto('/taxi/availability?offset=-60&date=2025-11-01');
+	await page.goto('/taxi/availability?offset=-60&date=2025-03-10');
 	await page.waitForTimeout(500);
-	await markVehicle(page, 'GR-TU-11-2025-10-31T23:00:00.000Z', 'GR-TU-11-2025-11-01T22:45:00.000Z');
-	await markVehicle(page, 'GR-TU-12-2025-10-31T23:00:00.000Z', 'GR-TU-12-2025-11-01T22:45:00.000Z');
+	await markVehicle(page, 'GR-TU-11-2025-03-09T23:00:00.000Z', 'GR-TU-11-2025-03-10T22:45:00.000Z');
+	await markVehicle(page, 'GR-TU-12-2025-03-09T23:00:00.000Z', 'GR-TU-12-2025-03-10T22:45:00.000Z');
 
-	await page.goto('/taxi/availability?offset=-60&date=2025-11-02');
+	await page.goto('/taxi/availability?offset=-60&date=2025-03-11');
 	await page.waitForTimeout(500);
-	await markVehicle(page, 'GR-TU-11-2025-11-01T23:00:00.000Z', 'GR-TU-11-2025-11-02T22:45:00.000Z');
-	await markVehicle(page, 'GR-TU-12-2025-11-01T23:00:00.000Z', 'GR-TU-12-2025-11-02T22:45:00.000Z');
+	await markVehicle(page, 'GR-TU-11-2025-03-10T23:00:00.000Z', 'GR-TU-11-2025-03-11T22:45:00.000Z');
+	await markVehicle(page, 'GR-TU-12-2025-03-10T23:00:00.000Z', 'GR-TU-12-2025-03-11T22:45:00.000Z');
 
-	await page.goto('/taxi/availability?offset=-60&date=2025-11-03');
+	await page.goto('/taxi/availability?offset=-60&date=2025-03-12');
 	await page.waitForTimeout(500);
-	await markVehicle(page, 'GR-TU-11-2025-11-02T23:00:00.000Z', 'GR-TU-11-2025-11-03T22:45:00.000Z');
-	await markVehicle(page, 'GR-TU-12-2025-11-02T23:00:00.000Z', 'GR-TU-12-2025-11-03T22:45:00.000Z');
+	await markVehicle(page, 'GR-TU-11-2025-03-11T23:00:00.000Z', 'GR-TU-11-2025-03-12T22:45:00.000Z');
+	await markVehicle(page, 'GR-TU-12-2025-03-11T23:00:00.000Z', 'GR-TU-12-2025-03-12T22:45:00.000Z');
 
-	await page.goto('/taxi/availability?offset=-60&date=2025-11-04');
+	await page.goto('/taxi/availability?offset=-60&date=2025-03-13');
 	await page.waitForTimeout(500);
-	await markVehicle(page, 'GR-TU-11-2025-11-03T23:00:00.000Z', 'GR-TU-11-2025-11-04T22:45:00.000Z');
-	await markVehicle(page, 'GR-TU-12-2025-11-03T23:00:00.000Z', 'GR-TU-12-2025-11-04T22:45:00.000Z');
+	await markVehicle(page, 'GR-TU-11-2025-03-12T23:00:00.000Z', 'GR-TU-11-2025-03-13T22:45:00.000Z');
+	await markVehicle(page, 'GR-TU-12-2025-03-12T23:00:00.000Z', 'GR-TU-12-2025-03-13T22:45:00.000Z');
 
-	await page.goto('/taxi/availability?offset=-60&date=2025-11-05');
+	await page.goto('/taxi/availability?offset=-60&date=2025-03-14');
 	await page.waitForTimeout(500);
-	await markVehicle(page, 'GR-TU-11-2025-11-04T23:00:00.000Z', 'GR-TU-11-2025-11-05T22:45:00.000Z');
-	await markVehicle(page, 'GR-TU-12-2025-11-04T23:00:00.000Z', 'GR-TU-12-2025-11-05T22:45:00.000Z');
+	await markVehicle(page, 'GR-TU-11-2025-03-13T23:00:00.000Z', 'GR-TU-11-2025-03-14T22:45:00.000Z');
+	await markVehicle(page, 'GR-TU-12-2025-03-13T23:00:00.000Z', 'GR-TU-12-2025-03-14T22:45:00.000Z');
 
-	await page.goto('/taxi/availability?offset=-60&date=2025-11-06');
+	await page.goto('/taxi/availability?offset=-60&date=2025-03-15');
 	await page.waitForTimeout(500);
-	await markVehicle(page, 'GR-TU-11-2025-11-05T23:00:00.000Z', 'GR-TU-11-2025-11-06T22:45:00.000Z');
-	await markVehicle(page, 'GR-TU-12-2025-11-05T23:00:00.000Z', 'GR-TU-12-2025-11-06T22:45:00.000Z');
+	await markVehicle(page, 'GR-TU-11-2025-03-14T23:00:00.000Z', 'GR-TU-11-2025-03-15T22:45:00.000Z');
+	await markVehicle(page, 'GR-TU-12-2025-03-14T23:00:00.000Z', 'GR-TU-12-2025-03-15T22:45:00.000Z');
 
-	await page.goto('/taxi/availability?offset=-60&date=2025-11-07');
+	await page.goto('/taxi/availability?offset=-60&date=2025-03-16');
 	await page.waitForTimeout(500);
-	await markVehicle(page, 'GR-TU-11-2025-11-06T23:00:00.000Z', 'GR-TU-11-2025-11-07T22:45:00.000Z');
-	await markVehicle(page, 'GR-TU-12-2025-11-06T23:00:00.000Z', 'GR-TU-12-2025-11-07T22:45:00.000Z');
+	await markVehicle(page, 'GR-TU-11-2025-03-15T23:00:00.000Z', 'GR-TU-11-2025-03-16T22:45:00.000Z');
+	await markVehicle(page, 'GR-TU-12-2025-03-15T23:00:00.000Z', 'GR-TU-12-2025-03-16T22:45:00.000Z');
 }
 
 export async function setup(page: Page) {
