@@ -28,7 +28,6 @@ import type { Company, Event } from './getBookingAvailability';
 import type { Capacities } from './Capacities';
 import { isValid } from './getPossibleInsertions';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
-import { roundToNextFullMinute } from '../util/roundToNextFullMinute';
 
 export type InsertionEvaluation = {
 	pickupTime: number;
@@ -141,7 +140,7 @@ export function evaluateBothInsertion(
 	prev: Event | undefined,
 	next: Event | undefined,
 	allowedTimes: Interval[],
-	_promisedTimes?: PromisedTimes // TODO
+	promisedTimes?: PromisedTimes
 ): InsertionEvaluation | undefined {
 	console.assert(
 		insertionCase.what == InsertWhat.BOTH,
@@ -178,18 +177,12 @@ export function evaluateBothInsertion(
 	if (arrivalWindow == undefined) {
 		return undefined;
 	}
-	arrivalWindow.startTime = roundToNextFullMinute(arrivalWindow.startTime);
-	if (arrivalWindow.startTime >= arrivalWindow.endTime) {
-		return undefined;
-	}
-	/* TODO: reactivate!
 	if (
 		promisedTimes != undefined &&
 		!keepsPromises(insertionCase, arrivalWindow, passengerDuration, promisedTimes)
 	) {
 		return undefined;
 	}
-	*/
 	const taxiDuration =
 		prevLegDuration +
 		nextLegDuration +
@@ -365,8 +358,7 @@ const getOldDrivingTime = (
 	return prev.nextLegDuration;
 };
 
-// TODO
-const _keepsPromises = (
+const keepsPromises = (
 	insertionCase: InsertionType,
 	arrivalWindow: Interval,
 	directDuration: number,
@@ -375,10 +367,13 @@ const _keepsPromises = (
 	const w = arrivalWindow.shift(
 		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? directDuration : -directDuration
 	);
-	const pickupWindow =
-		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? arrivalWindow : w;
-	const dropoffWindow =
-		insertionCase.direction == InsertDirection.BUS_STOP_DROPOFF ? arrivalWindow : w;
+	const pickupWindow = (
+		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? arrivalWindow : w
+	).round();
+	const dropoffWindow = (
+		insertionCase.direction == InsertDirection.BUS_STOP_DROPOFF ? arrivalWindow : w
+	).round();
+
 	let checkPickup = false;
 	let checkDropoff = false;
 	switch (insertionCase.what) {
