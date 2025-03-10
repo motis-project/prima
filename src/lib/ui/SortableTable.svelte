@@ -40,41 +40,43 @@
 	}
 </script>
 
-<sortableTable>
-	<div class="min-w-[160vh]">
-		<Table.Root>
-			<Table.Header>
-				<Table.Row>
-					{#each cols as col, i}
-						{#if col.sort != undefined}
-							<Table.Head>
-								<Button class="whitespace-pre" variant="outline" onclick={() => sortAndToggle(i)}>
-									{col.text}
-									<ChevronsUpDown class="h-6 w-4" />
-								</Button>
-							</Table.Head>
-						{:else}
-							<Table.Head>{col.text}</Table.Head>
-						{/if}
+<div class="min-w-[160vh]">
+	<Table.Root>
+		<Table.Header>
+			<Table.Row>
+				{#each cols as col, i}
+					{#if col.sort != undefined}
+						<Table.Head>
+							<Button
+								class="px-0 hover:no-underline"
+								variant="link"
+								onclick={() => sortAndToggle(i)}
+							>
+								{col.text}
+								<ChevronsUpDown class="h-6 w-4" />
+							</Button>
+						</Table.Head>
+					{:else}
+						<Table.Head>{col.text}</Table.Head>
+					{/if}
+				{/each}
+			</Table.Row>
+		</Table.Header>
+		<Table.Body>
+			{#each rows as row}
+				<Table.Row
+					class={`${getRowStyle === undefined ? '' : getRowStyle(row)}`}
+					onclick={() => {
+						if (isTourWithRequests(row)) {
+							selectedRow = [row];
+						}
+					}}
+				>
+					{#each cols as col}
+						<Table.Cell>{col.toTableEntry(row)}</Table.Cell>
 					{/each}
 				</Table.Row>
-			</Table.Header>
-			<Table.Body>
-				{#each rows as row}
-					<Table.Row
-						class={`${getRowStyle === undefined ? '' : getRowStyle(row)}`}
-						onclick={() => {
-							if (isTourWithRequests(row)) {
-								selectedRow = [row];
-							}
-						}}
-					>
-						{#each cols as col}
-							<Table.Cell>{col.toTableEntry(row)}</Table.Cell>
-						{/each}
-					</Table.Row>
-				{/each}
-			</Table.Body>
-		</Table.Root>
-	</div>
-</sortableTable>
+			{/each}
+		</Table.Body>
+	</Table.Root>
+</div>
