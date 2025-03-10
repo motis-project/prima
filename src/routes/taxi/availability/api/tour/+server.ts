@@ -23,6 +23,7 @@ export const POST = async (event) => {
 		await sql`LOCK TABLE tour IN ACCESS EXCLUSIVE MODE;`.execute(trx);
 		const movedTour = await trx
 			.selectFrom('tour')
+			.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 			.where(({ eb }) =>
 				eb.and([
 					eb('tour.id', '=', tourId),
@@ -42,6 +43,10 @@ export const POST = async (event) => {
 			.select((eb) => [
 				'tour.departure',
 				'tour.arrival',
+				'vehicle.passengers',
+				'vehicle.bikes',
+				'vehicle.wheelchairs',
+				'vehicle.luggage',
 				jsonArrayFrom(
 					eb
 						.selectFrom('request')
@@ -74,14 +79,6 @@ export const POST = async (event) => {
 			!movedTour.requests.some((r) => r.events.length == 0),
 			'Found a request which contains no events.'
 		);
-		const targetVehicle = await trx
-			.selectFrom('vehicle')
-			.where('vehicle.id', '=', vehicleId)
-			.select(['vehicle.passengers', 'vehicle.bikes', 'vehicle.wheelchairs', 'vehicle.luggage'])
-			.executeTakeFirst();
-		if (!targetVehicle) {
-			return;
-		}
 		const events = movedTour.requests.flatMap((r) =>
 			r.events.map((e) => {
 				return {
@@ -94,7 +91,7 @@ export const POST = async (event) => {
 			})
 		);
 		const possibleInsertions = getPossibleInsertions(
-			targetVehicle,
+			movedTour,
 			{ passengers: 0, bikes: 0, wheelchairs: 0, luggage: 0 },
 			events
 		);
