@@ -249,10 +249,11 @@
 				<Table.Header>
 					<Table.Row>
 						<Table.Head>Abfahrt</Table.Head>
-						<Table.Head>Addresse</Table.Head>
+						<Table.Head>Adresse</Table.Head>
 						<Table.Head>Kunde</Table.Head>
 						<Table.Head>Tel. Kunde</Table.Head>
 						<Table.Head>Ein-/Ausstieg</Table.Head>
+						<Table.Head>Status</Table.Head>
 					</Table.Row>
 				</Table.Header>
 
@@ -310,8 +311,15 @@
 												<LuggageIcon class="size-4" />
 											{/if}
 										</span>
-									</Table.Cell>
-								{/if}
+								<Table.Cell>
+									{#if event.isPickup && event.ticketChecked}
+										<span class="text-green-500">Ticket verifiziert</span>
+									{:else if event.isPickup && !event.cancelled && event.scheduledTimeEnd + event.nextLegDuration < Date.now()}
+										<span class="text-red-500">Ticket nicht verifiziert</span>
+									{:else if event.cancelled}
+										<span class="text-red-500">Storniert</span>
+									{/if}
+								</Table.Cell>
 							</Table.Row>
 						{/each}
 					{/if}

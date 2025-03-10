@@ -135,6 +135,7 @@ export const getToursWithRequests = async (
 									'request.customer',
 									'request.luggage',
 									'request.passengers',
+									'request.ticketChecked',
 									'request.wheelchairs',
 									'request.id as requestId'
 								])
