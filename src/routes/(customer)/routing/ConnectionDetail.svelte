@@ -87,7 +87,7 @@
 		{#if l.routeShortName}
 			<div class="flex w-full items-center justify-between space-x-1">
 				<Route {onClickTrip} {l} />
-				{#if pred && (pred.from.track || pred.duration !== 0)}
+				{#if pred && (pred.from.track || pred.duration !== 0) && (i != 1 || pred.routeShortName)}
 					<div class="h-0 shrink grow border-t"></div>
 					<div class="px-2 text-sm leading-none text-muted-foreground">
 						{#if pred.from.track}

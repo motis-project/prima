@@ -14,7 +14,7 @@
 	const { data, form } = $props();
 </script>
 
-<div class="flex h-full flex-col gap-4 md:h-[80%] md:w-96">
+<div class="flex h-full flex-col gap-4 md:min-h-[70dvh] md:w-96">
 	{#if form?.msg}
 		<Message msg={form.msg} class="mb-4" />
 	{:else if !data.rated}

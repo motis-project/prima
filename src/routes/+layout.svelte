@@ -57,11 +57,10 @@
 			</Alert.Description>
 		</Alert.Root>
 	{/if}
-	<div
-		id="searchmask-container"
-		class="grow overflow-y-auto p-2 pb-6 md:flex md:items-center md:justify-center"
-	>
-		{@render children()}
+	<div class="flex grow flex-col overflow-y-auto">
+		<div id="searchmask-container" class="grow p-2 pb-6 md:flex md:items-center md:justify-center">
+			{@render children()}
+		</div>
 	</div>
 	<Menu class="shrink" {items} />
 </div>
