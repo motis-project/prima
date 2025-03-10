@@ -1,8 +1,14 @@
+import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, MIN_PREP } from '$lib/constants';
+import { getAllowedTimes } from '$lib/server/booking/evaluateRequest';
 import { db, type Database } from '$lib/server/db';
 import { Interval } from '$lib/server/util/interval';
+import { HOUR, MINUTE } from '$lib/util/time';
 import { json } from '@sveltejs/kit';
 import { sql, type Insertable, type Selectable } from 'kysely';
 
+function getFirstAlterableTime() {
+	return Math.ceil((Date.now() + MIN_PREP) / (15 * MINUTE)) * 15 * MINUTE;
+}
 type Availability = Selectable<Database['availability']>;
 type NewAvailability = Insertable<Database['availability']>;
 
@@ -35,7 +41,11 @@ export const DELETE = async ({ locals, request }) => {
 		throw 'invalid params';
 	}
 
-	const toRemove = new Interval(from, to);
+	const restrictedFrom = Math.max(getFirstAlterableTime(), from);
+	if (to <= restrictedFrom) {
+		return json({});
+	}
+	const toRemove = new Interval(restrictedFrom, to);
 	console.log('remove availability vehicle=', vehicleId, 'toRemove=', toRemove);
 	await db.transaction().execute(async (trx) => {
 		await sql`LOCK TABLE availability IN ACCESS EXCLUSIVE MODE;`.execute(trx);
@@ -111,21 +121,32 @@ export const POST = async ({ locals, request }) => {
 		throw 'invalid params';
 	}
 
-	await db
-		.insertInto('availability')
-		.columns(['startTime', 'endTime', 'vehicle'])
-		.expression((eb) =>
-			eb
-				.selectFrom('vehicle')
-				.select((eb) => [
-					eb.val(from).as('startTime'),
-					eb.val(to).as('endTime'),
-					'vehicle.id as vehicle'
-				])
-				.where('vehicle.company', '=', companyId)
-				.where('vehicle.id', '=', vehicleId)
-		)
-		.execute();
-
+	const restrictedFrom = Math.max(from, getFirstAlterableTime());
+	if (to <= restrictedFrom) {
+		return json({});
+	}
+	const interval = new Interval(restrictedFrom, to);
+	await Promise.all(
+		getAllowedTimes(restrictedFrom, to, EARLIEST_SHIFT_START - HOUR, LATEST_SHIFT_END + HOUR)
+			.map((allowed) => allowed.intersect(interval))
+			.filter((a) => a != undefined)
+			.map((availability) =>
+				db
+					.insertInto('availability')
+					.columns(['startTime', 'endTime', 'vehicle'])
+					.expression((eb) =>
+						eb
+							.selectFrom('vehicle')
+							.select((eb) => [
+								eb.val(availability.startTime).as('startTime'),
+								eb.val(availability.endTime).as('endTime'),
+								'vehicle.id as vehicle'
+							])
+							.where('vehicle.company', '=', companyId)
+							.where('vehicle.id', '=', vehicleId)
+					)
+					.execute()
+			)
+	);
 	return json({});
 };
