@@ -98,6 +98,11 @@ const translations: Translations = {
 		email: 'E-Mail',
 		password: 'Passwort',
 		create: 'Nutzerkonto erstellen',
+		forgotPassword: 'Passwort vergessen?',
+		signupConditions: (tos: string, privacy: string, provider: string) =>
+			`Durch die Anmeldung stimme ich den ${tos} sowie der ${privacy} von ${provider} zu.`,
+		tos: 'Allgemeinen Geschäftsbedingungen',
+		privacy: 'Datenschutzerklärung',
 		login: 'Login',
 		sentAnEmailTo: 'Wir haben Ihnen einen Code an folgende E-Mail-Adresse geschickt:',
 		changeYourEmail:
@@ -190,6 +195,7 @@ const translations: Translations = {
 		heavyLuggage: 'Schweres Gepäck',
 		foldableWheelchair: 'Faltbarer Rollstuhl',
 		withFoldableWheelchair: 'Mit faltbarem Rollstuhl',
+		passengerNumber: 'Anzahl Personen',
 		bookingFor: (passengers: number) => {
 			switch (passengers) {
 				case 1:
