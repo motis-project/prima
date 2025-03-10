@@ -289,7 +289,7 @@
 		bind:selectedRow={selectedToursTableRow}
 	/>
 
-	<TourDialog tours={selectedToursTableRow} {isAdmin} />
+	<TourDialog bind:tours={selectedToursTableRow} {isAdmin} />
 {/snippet}
 
 {#snippet subtractionTable()}

@@ -27,7 +27,7 @@
 	import CancelMessageDialog from './CancelMessageDialog.svelte';
 
 	let {
-		tours,
+		tours = $bindable(),
 		isAdmin
 	}: {
 		tours: TourWithRequests[] | undefined;
