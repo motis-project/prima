@@ -194,6 +194,6 @@ export function getArrivalWindow(
 	}
 	// TODO why?
 	return insertionCase.direction == InsertDirection.BUS_STOP_PICKUP
-		? arrivalWindows.reduce((current, best) => (current.endTime > best.endTime ? current : best))
-		: arrivalWindows.reduce((current, best) => (current.endTime < best.endTime ? current : best));
+		? arrivalWindows.reduce((current, best) => (current.endTime < best.endTime ? current : best))
+		: arrivalWindows.reduce((current, best) => (current.endTime > best.endTime ? current : best));
 }

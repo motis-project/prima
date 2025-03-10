@@ -346,4 +346,45 @@ describe('Whitelist and Booking API Tests', () => {
 		const response = await bookingResponse.json();
 		requests.some((r) => r.id == response.firstMileRequestId);
 	}, 30000);
+
+	it('keeps Promise is robust to rounding to full minutes', async () => {
+		const company = await addCompany(Zone.NIESKY, inNiesky3);
+		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
+		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));
+		const busStops = [];
+		for (let i = 0; i != 1; i++) {
+			busStops.push({
+				...inNiesky3,
+				times: [inXMinutes(100)]
+			});
+		}
+		const body = JSON.stringify({
+			start: inNiesky1,
+			target: inNiesky2,
+			startBusStops: [],
+			targetBusStops: busStops,
+			directTimes: [inXMinutes(70)],
+			startFixed: true,
+			capacities
+		});
+
+		await black(body).then((r) => r.json());
+		const whiteResponse = await white(body).then((r) => r.json());
+
+		const connection1: ExpectedConnection = {
+			start: { ...inNiesky1, address: 'start address' },
+			target: { ...inNiesky2, address: 'target address' },
+			startTime: whiteResponse.direct[0].pickupTime,
+			targetTime: Math.floor(whiteResponse.direct[0].dropoffTime / MINUTE) * MINUTE
+		};
+		const bookingBody = JSON.stringify({
+			connection1,
+			connection2: null,
+			capacities
+		});
+
+		await booking(bookingBody);
+		const tours = await getTours();
+		expect(tours.length).toBe(1);
+	}, 30000);
 });
