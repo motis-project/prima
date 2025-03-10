@@ -283,7 +283,7 @@ export function evaluateNewTours(
 						undefined,
 						undefined,
 						allowedTimes,
-						promisedTimes
+						//promisedTimes
 					);
 					if (
 						resultNewTour != undefined &&
