@@ -16,28 +16,30 @@ const translations: Translations = {
 		unkownError: 'Unbekannter Fehler.',
 
 		// Account
-		enterEmailAndPassword: 'Bitte gib Deine E-Mail und Dein Passwort ein.',
-		invalidEmail: 'Ungültige E-Mail Adresse.',
-		emailAlreadyRegistered: 'Diese E-Mail Adresse ist bereits registriert.',
-		weakPassword: 'Bitte wähle ein stärkeres Passwort.',
+		enterEmailAndPassword: 'Bitte geben Sie Ihre E-Mail und Ihr Passwort ein.',
+		invalidEmail: 'Ungültige E-Mail-Adresse.',
+		emailAlreadyRegistered: 'Diese E-Mail-Adresse ist bereits registriert.',
+		weakPassword: 'Bitte wählen Sie ein stärkeres Passwort.',
 		tooManyRequests: 'Zu viele Anfragen.',
 		failedToSendVerificationEmail: 'E-Mail zur Verifikation konnte nicht gesendet werden.',
-		failedToSendPasswordResetEmail: 'E-Mail zum Passwortzurücksetzen konnte nicht gesendet werden.',
+		failedToSendPasswordResetEmail:
+			'E-Mail zum Zurücksetzen des Passworts konnte nicht gesendet werden.',
 		accountDoesNotExist: 'Nutzerkonto existiert nicht.',
 		invalidPassword: 'Ungültiges Passwort.',
-		new: 'Neu hier? <a href="/account/signup" class="link">Erstelle ein neues Nutzerkonto!</a>',
-		enterYourCode: 'Bitte gib den Code ein.',
-		codeExpiredSentAnother: 'Dieser Code ist abgelaufen. Wir haben Dir einen neuen Code geschickt.',
+		new: 'Neu hier? <a href="/account/signup" class="link">Erstellen Sie ein neues Nutzerkonto!</a>',
+		enterYourCode: 'Bitte geben Sie den Code ein.',
+		codeExpiredSentAnother:
+			'Dieser Code ist abgelaufen. Wir haben Ihnen einen neuen Code geschickt.',
 		incorrectCode: 'Falscher Code.',
-		newCodeSent: 'Wir haben einen neuen Code an Deine E-Mail Adresse geschickt.',
-		enterNewPassword: 'Bitte gib Dein neues Passwort ein.',
+		newCodeSent: 'Wir haben einen neuen Code an Ihre E-Mail-Adresse geschickt.',
+		enterNewPassword: 'Bitte geben Sie Ihr neues Passwort ein.',
 		passwordChanged: 'Passwort erfolgreich geändert.',
-		enterEmail: 'Gib deine E-Mail Adresse ein.',
-		oldEmail: 'Dies ist die bereits verwendete E-Mail Adresse.',
+		enterEmail: 'Geben Sie Ihre E-Mail-Adresse ein.',
+		oldEmail: 'Dies ist die bereits verwendete E-Mail-Adresse.',
 		checkInboxToVerify:
-			'Bitte prüfe Dein E-Mail Postfach um Deine neue E-Mail Adresse zu verifizieren.',
+			'Bitte prüfen Sie Ihr E-Mail-Postfach um Ihre neue E-Mail-Adresse zu verifizieren.',
 		passwordResetSuccess:
-			'Passwort erfolgreich zurückgesetzt. Du kannst Dich jetzt mit dem neuen Passwort anmelden.',
+			'Passwort erfolgreich zurückgesetzt. Sie können sich jetzt mit dem neuen Passwort anmelden.',
 
 		// Admin
 		userDoesNotExist: 'Nutzer existiert nicht.',
@@ -56,7 +58,7 @@ const translations: Translations = {
 		companyUpdateSuccessful: 'Unternehmensdaten erfolgreich aktualisiert.',
 
 		// AddVehicle
-		invalidSeats: 'Ungültige Sitzzahl,',
+		invalidSeats: 'Ungültige Sitzzahl.',
 		invalidLicensePlate: 'Ungültiges Kennzeichen.',
 		invalidStorage: 'Ungültiger Stauraum.',
 		duplicateLicensePlate: 'Kennzeichen existiert bereits.',
@@ -97,23 +99,24 @@ const translations: Translations = {
 		password: 'Passwort',
 		create: 'Nutzerkonto erstellen',
 		login: 'Login',
-		sentAnEmailTo: 'Wir haben Dir einen Code an folgende E-Mail Adresse geschickt:',
+		sentAnEmailTo: 'Wir haben Ihnen einen Code an folgende E-Mail-Adresse geschickt:',
 		changeYourEmail:
-			'Die E-Mail Adresse kann in den <a href="/account/settings">Kontoeinstellungen</a> geändert werden',
+			'Die E-Mail-Adresse kann in den <a href="/account/settings">Kontoeinstellungen</a> geändert werden',
 		emailVerification: 'E-Mail Verifikation',
-		verifySubtitle: 'Verifiziere Deine E-Mail Adresse mit dem Code, den wir Dir geschickt haben.',
+		verifySubtitle:
+			'Verifizieren Sie Ihre E-Mail-Adresse mit dem Code, den wir Ihnen geschickt haben.',
 		resetPassword: 'Passwort zurücksetzen',
 		resetPasswordSubtitle: 'Passwort ändern',
-		changeEmail: 'E-Mail Adresse ändern',
+		changeEmail: 'E-Mail-Adresse ändern',
 		changeEmailSubtitle:
-			'Ändere Deine E-Mail Adresse. Wir werden Dir einen neuen Code zur Verifizierung senden.',
+			'Ändern Sie Ihre E-Mail-Adresse. Wir werden Ihnen einen neuen Code zur Verifizierung senden.',
 		logout: 'Abmelden',
-		logoutSubtitle: 'Aus dem Konto abmelden. Du kannst Dich jederzeit wieder anmelden.',
+		logoutSubtitle: 'Aus dem Konto abmelden. Sie können sich jederzeit wieder anmelden.',
 		code: 'Code',
 		passwordReset: 'Passwort zurücksetzen',
-		passwordResetSubtitle: 'Hier kannst Du ein neues Passwort festlegen.',
+		passwordResetSubtitle: 'Hier können Sie ein neues Passwort festlegen.',
 		passwordResetRequest: 'Passwort zurücksetzen',
-		passwordResetRequestSubtitle: 'Wir schicken Dir einen Code an Deine E-Mail Adresse.',
+		passwordResetRequestSubtitle: 'Wir schicken Ihnen einen Code an Ihre E-Mail-Adresse.',
 		newPassword: 'Neues Passwort',
 		resendCode: 'Code erneut senden',
 		verify: 'Verifizieren'
@@ -181,7 +184,7 @@ const translations: Translations = {
 		summary: 'Buchungszusammenfassung',
 		header: 'Kostenpflichtig buchen',
 		disclaimer:
-			'Stornieren Sie die Fahrt mind. 24h vorher, falls sie die Fahrt nicht wahrnehmen können. Sollten Sie nicht rechtzeitig stornieren wird Ihnen die Taxi-Fahrt voll in Rechnung gestellt.',
+			'Stornieren Sie die Fahrt mind. 24h vorher, falls Sie die Fahrt nicht wahrnehmen können. Sollten Sie nicht rechtzeitig stornieren, wird Ihnen die Taxi-Fahrt voll in Rechnung gestellt.',
 		noLuggage: 'Kein Gepäck',
 		handLuggage: 'Handgepäck',
 		heavyLuggage: 'Schweres Gepäck',
@@ -195,7 +198,7 @@ const translations: Translations = {
 					return `Buchung für ${passengers} Personen`;
 			}
 		},
-		totalPrice: 'Gesamptpreis (Bezahlung im Taxi)',
+		totalPrice: 'Gesamtpreis (Bezahlung im Taxi)',
 		cancel: 'Stornieren',
 		loginToBook: 'Einloggen zum Buchen',
 		connection: 'Verbindung',
