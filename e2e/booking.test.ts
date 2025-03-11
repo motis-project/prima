@@ -62,8 +62,17 @@ export async function setup(page: Page) {
 
 test('Boooking', async ({ page }) => {
 	await setup(page);
-
-	//TODO record bookings
 	await login(page, TAXI_OWNER);
 	
+	//TODO record bookings
+	await page.goto('http://localhost:5173/routing');
+	await page.getByRole('textbox', { name: 'From' }).click();
+	await page.getByRole('combobox', { name: 'From' }).fill('Schleife');
+	await page.getByRole('option', { name: 'Schleife Schleife - Slepo' }).click();
+	await page.getByRole('textbox', { name: 'To' }).click();
+	await page.getByRole('combobox', { name: 'To' }).fill('Görlitz');
+	await page.getByRole('option', { name: 'Görlitz Germany' }).click();
+	await page.getByRole('button', { name: '1 h 19 min 2 transfers 20:17' }).click();
+	await page.getByRole('button', { name: 'Book ride (incurs cost)' }).click();
+	await page.getByLabel('Book ride (incurs cost)').getByRole('button', { name: 'Book ride (incurs cost)' }).click();
 });
