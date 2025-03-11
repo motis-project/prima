@@ -39,21 +39,18 @@
 	</form>
 	<p class="mx-auto mt-8 max-w-72 text-center text-xs text-muted-foreground">
 		{#if type == 'signup'}
-			Durch die Anmeldung stimme ich den
-			<a href="/tos" class="border-b border-dotted border-muted-foreground">
-				Allgemeinen&nbsp;Geschäftsbedingungen
-			</a>
-			sowie der
-			<a href="/privacy" class="border-b border-dotted border-muted-foreground">
-				Datenschutzerklärung
-			</a>
-			von {PUBLIC_PROVIDER} zu.
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			{@html t.account.signupConditions(
+				`<a href="/tos" class="border-b border-dotted border-muted-foreground whitespace-nowrap">${t.account.tos}</a>`,
+				`<a href="/privacy" class="border-b border-dotted border-muted-foreground whitespace-nowrap">${t.account.privacy}</a>`,
+				PUBLIC_PROVIDER
+			)}
 		{:else}
 			<a
 				href="/account/request-password-reset"
 				class="border-b border-dotted border-muted-foreground"
 			>
-				Passwort vergessen?
+				{t.account.forgotPassword}
 			</a>
 		{/if}
 	</p>

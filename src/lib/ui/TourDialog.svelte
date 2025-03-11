@@ -4,6 +4,7 @@
 	import LuggageIcon from 'lucide-svelte/icons/luggage';
 	import WheelchairIcon from 'lucide-svelte/icons/accessibility';
 	import PersonIcon from 'lucide-svelte/icons/user';
+	import { t } from '$lib/i18n/translation';
 
 	import { Button } from '$lib/shadcn/button';
 	import * as Dialog from '$lib/shadcn/dialog';
@@ -249,10 +250,11 @@
 				<Table.Header>
 					<Table.Row>
 						<Table.Head>Abfahrt</Table.Head>
-						<Table.Head>Addresse</Table.Head>
+						<Table.Head>Adresse</Table.Head>
 						<Table.Head>Kunde</Table.Head>
 						<Table.Head>Tel. Kunde</Table.Head>
 						<Table.Head>Ein-/Ausstieg</Table.Head>
+						<Table.Head>Status</Table.Head>
 					</Table.Row>
 				</Table.Header>
 
@@ -273,45 +275,45 @@
 								<Table.Cell>
 									{event.customerPhone}
 								</Table.Cell>
-								{#if event.isPickup}
-									<Table.Cell class="flex gap-2 text-green-500">
+								<Table.Cell
+									class="flex items-center gap-2 {event.isPickup
+										? 'text-green-500'
+										: 'text-red-500'}"
+								>
+									{#if event.isPickup}
 										<ArrowRight class="size-4" />
-										{#if event.wheelchairs}
-											<WheelchairIcon class="size-4" />
-										{/if}
-										<span class="flex">
-											<PersonIcon class="size-4" />
-											{event.passengers}
-										</span>
-										<span class="flex">
-											{#if event.luggage === 1}
-												<LuggageIcon class="size-4" />
-											{:else if event.luggage === 3}
-												<LuggageIcon class="size-4" />
-												<LuggageIcon class="size-4" />
-											{/if}
-										</span>
-									</Table.Cell>
-								{:else}
-									<Table.Cell class="flex items-center gap-2 text-red-500">
+									{:else}
 										<ArrowLeft class="size-4" />
-										{#if event.wheelchairs}
-											<WheelchairIcon class="size-4" />
-										{/if}
-										<span class="flex items-center">
-											<PersonIcon class="size-4" />
-											{event.passengers}
+									{/if}
+									{#if event.wheelchairs}
+										<span title={t.booking.foldableWheelchair}
+											><WheelchairIcon class="size-4" /></span
+										>
+									{/if}
+									<span class="flex items-center" title={t.booking.bookingFor(event.passengers)}>
+										<PersonIcon class="size-4" />
+										{event.passengers}
+									</span>
+									{#if event.luggage === 1}
+										<span class="flex items-center" title={t.booking.handLuggage}>
+											<LuggageIcon class="size-4" />
 										</span>
-										<span class="flex items-center">
-											{#if event.luggage === 1}
-												<LuggageIcon class="size-4" />
-											{:else if event.luggage === 3}
-												<LuggageIcon class="size-4" />
-												<LuggageIcon class="size-4" />
-											{/if}
+									{:else if event.luggage === 3}
+										<span class="flex items-center" title={t.booking.heavyLuggage}>
+											<LuggageIcon class="size-4" />
+											<LuggageIcon class="size-4" />
 										</span>
-									</Table.Cell>
-								{/if}
+									{/if}
+								</Table.Cell>
+								<Table.Cell>
+									{#if event.isPickup && event.ticketChecked}
+										<span class="text-green-500">Ticket verifiziert</span>
+									{:else if event.isPickup && !event.cancelled && event.scheduledTimeEnd + event.nextLegDuration < Date.now()}
+										<span class="text-red-500">Ticket nicht verifiziert</span>
+									{:else if event.cancelled}
+										<span class="text-red-500">Storniert</span>
+									{/if}
+								</Table.Cell>
 							</Table.Row>
 						{/each}
 					{/if}
