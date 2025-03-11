@@ -167,7 +167,7 @@ export const subtractionColsAdmin: Column<Subtractions>[] = [
 			(a.availabilityDuration / HOUR) * CAP -
 			(b.uncapped - (b.availabilityDuration / HOUR) * CAP),
 		toTableEntry: (r: Subtractions) =>
-			getEuroString(r.uncapped - (r.availabilityDuration / HOUR) * CAP)
+			getEuroString(Math.max(r.uncapped - (r.availabilityDuration / HOUR) * CAP, 0))
 	},
 	{
 		text: ['Einnahmen', 'mit Obergrenze'],
@@ -182,41 +182,48 @@ export const subtractionColsAdmin: Column<Subtractions>[] = [
 ];
 
 export const subtractionColsCompany = subtractionColsAdmin.slice(1);
-
+const summationLast = (tiebreak: (a: CompanyRow, b: CompanyRow) => number) => {
+	return (a: CompanyRow, b: CompanyRow) =>
+		a.companyName === 'Summiert' ? -1 : b.companyName === ' Summiert' ? 1 : tiebreak(a, b);
+};
 export const companyColsAdmin: Column<CompanyRow>[] = [
 	{
 		text: ['Unternehmen'],
-		sort: (a: CompanyRow, b: CompanyRow) => a.companyId - b.companyId,
+		sort: summationLast((a: CompanyRow, b: CompanyRow) => a.companyId - b.companyId),
 		toTableEntry: (r: CompanyRow) => r.companyName ?? ''
 	},
 	{
 		text: ['Kunden'],
-		sort: (a: CompanyRow, b: CompanyRow) => a.customerCount - b.customerCount,
+		sort: summationLast((a: CompanyRow, b: CompanyRow) => a.customerCount - b.customerCount),
 		toTableEntry: (r: CompanyRow) => r.customerCount
 	},
 	{
 		text: ['erschienene', 'Kunden'],
-		sort: (a: CompanyRow, b: CompanyRow) => a.verifiedCustomerCount - b.verifiedCustomerCount,
+		sort: summationLast(
+			(a: CompanyRow, b: CompanyRow) => a.verifiedCustomerCount - b.verifiedCustomerCount
+		),
 		toTableEntry: (r: CompanyRow) => r.verifiedCustomerCount
 	},
 	{
 		text: ['Taxameterstand', 'kumuliert'],
-		sort: (a: CompanyRow, b: CompanyRow) => a.taxameter - b.taxameter,
+		sort: summationLast((a: CompanyRow, b: CompanyRow) => a.taxameter - b.taxameter),
 		toTableEntry: (r: CompanyRow) => getEuroString(r.taxameter)
 	},
 	{
 		text: ['Kosten ohne', 'Obergrenze'],
-		sort: (a: CompanyRow, b: CompanyRow) => a.uncapped - b.uncapped,
+		sort: summationLast((a: CompanyRow, b: CompanyRow) => a.uncapped - b.uncapped),
 		toTableEntry: (r: CompanyRow) => getEuroString(r.uncapped)
 	},
 	{
 		text: ['Kosten mit Obergrenze'],
-		sort: (a: CompanyRow, b: CompanyRow) => a.capped - b.capped,
+		sort: summationLast((a: CompanyRow, b: CompanyRow) => a.capped - b.capped),
 		toTableEntry: (r: CompanyRow) => getEuroString(r.capped)
 	},
 	{
 		text: ['Abzüge'],
-		sort: (a: CompanyRow, b: CompanyRow) => a.uncapped - a.capped - b.uncapped + b.capped,
+		sort: summationLast(
+			(a: CompanyRow, b: CompanyRow) => a.uncapped - a.capped - b.uncapped + b.capped
+		),
 		toTableEntry: (r: CompanyRow) => getEuroString(r.uncapped - r.capped)
 	}
 ];

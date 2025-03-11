@@ -38,7 +38,7 @@
 
 {#snippet tableHead(text: string[], i: number, sort: boolean)}
 	{#if sort}
-		<Table.Head rowspan={text.length}>
+		<Table.Head>
 			<Button class="px-0 hover:no-underline" variant="link" onclick={() => sortAndToggle(i)}>
 				{#each text as line}
 					{line}<br />
@@ -47,7 +47,7 @@
 			</Button>
 		</Table.Head>
 	{:else}
-		<Table.Head rowspan={text.length}>
+		<Table.Head>
 			{#each text as line}
 				{line}<br />
 			{/each}</Table.Head

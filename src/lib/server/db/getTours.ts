@@ -76,7 +76,6 @@ export const getToursWithRequests = async (
 	companyId?: number,
 	timeRange?: [UnixtimeMs, UnixtimeMs]
 ) => {
-	console.log({ companyId });
 	return await db
 		.selectFrom('tour')
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
