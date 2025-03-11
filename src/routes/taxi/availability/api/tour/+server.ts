@@ -3,6 +3,7 @@ import { db } from '$lib/server/db';
 import { sql } from 'kysely';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { getPossibleInsertions } from '$lib/server/booking/getPossibleInsertions';
+import { nowOrSimulationTime } from '$lib/time.js';
 
 export const POST = async (event) => {
 	function getLatestEventTime(ev: {
@@ -104,7 +105,7 @@ export const POST = async (event) => {
 		}
 
 		const firstEventTime = Math.min(...events.map((e) => getLatestEventTime(e)));
-		if (firstEventTime < Date.now()) {
+		if (firstEventTime < nowOrSimulationTime().getTime()) {
 			return;
 		}
 		const collidingTours = await trx

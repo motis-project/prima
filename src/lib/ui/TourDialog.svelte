@@ -309,7 +309,7 @@
 								<Table.Cell>
 									{#if event.isPickup && event.ticketChecked}
 										<span class="text-green-500">Ticket verifiziert</span>
-									{:else if event.isPickup && !event.cancelled && event.scheduledTimeEnd + event.nextLegDuration < Date.now()}
+									{:else if event.isPickup && !event.cancelled && event.scheduledTimeEnd + event.nextLegDuration < nowOrSimulationTime().getTime()}
 										<span class="text-red-500">Ticket nicht verifiziert</span>
 									{:else if event.cancelled}
 										<span class="text-red-500">Storniert</span>
