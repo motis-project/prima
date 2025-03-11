@@ -8,7 +8,7 @@ import { readInt } from '$lib/server/util/readForm';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import type { Range } from './Range';
 import { split } from './Range';
-import { groupBy } from '$lib/server/util/groupBy';
+import { groupBy } from '$lib/util/groupBy';
 import { Interval } from '$lib/server/util/interval';
 
 export async function load(event) {
