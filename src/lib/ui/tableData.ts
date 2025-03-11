@@ -1,4 +1,4 @@
-import { FIXED_PRICE } from '$lib/constants';
+import { CAP, FIXED_PRICE } from '$lib/constants';
 import type { TourWithRequests } from '$lib/server/db/getTours';
 import { HOUR, MINUTE, SECOND } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
@@ -14,7 +14,11 @@ export type CompanyRow = {
 	verifiedCustomerCount: number;
 };
 
-export type Subtractions = CompanyRow & { timestamp: UnixtimeMs };
+export type Subtractions = CompanyRow & {
+	timestamp: UnixtimeMs;
+	vehicleId: number;
+	licensePlate: string;
+};
 
 export type Column<T> = {
 	text: string;
@@ -56,7 +60,7 @@ const displayDuration = (duration: number) => {
 	};
 	const hours = Math.floor(duration / HOUR);
 	const minutes = ((duration / HOUR - hours) * MINUTE) / SECOND;
-	return addLeadingZero(hours) + ':' + addLeadingZero(minutes);
+	return addLeadingZero(hours) + ':' + addLeadingZero(minutes) + 'h';
 };
 
 const firstTourColAdmin: Column<TourWithRequests> = {
@@ -65,63 +69,75 @@ const firstTourColAdmin: Column<TourWithRequests> = {
 	toTableEntry: (r: TourWithRequests) => r.companyName ?? ''
 };
 
-const firstTourColCompany: Column<TourWithRequests> = {
-	text: 'Fahrzeug',
-	sort: (a: TourWithRequests, b: TourWithRequests) => a.vehicleId - b.vehicleId,
-	toTableEntry: (r: TourWithRequests) => r.licensePlate ?? ''
+const restTourCols = (isAdmin: boolean): Column<TourWithRequests>[] => {
+	return [
+		{
+			text: 'Fahrzeug',
+			sort: (a: TourWithRequests, b: TourWithRequests) => a.vehicleId - b.vehicleId,
+			toTableEntry: (r: TourWithRequests) => r.licensePlate ?? ''
+		},
+		{
+			text: 'Abfahrt  ',
+			sort: (t1: TourWithRequests, t2: TourWithRequests) => t1.startTime - t2.startTime,
+			toTableEntry: (r: TourWithRequests) => displayUnixtimeMs(r.startTime, true)
+		},
+		{
+			text: 'Ankunft',
+			sort: (t1: TourWithRequests, t2: TourWithRequests) => t1.endTime - t2.endTime,
+			toTableEntry: (r: TourWithRequests) => displayUnixtimeMs(r.endTime, true)
+		},
+		{
+			text: 'Kunden',
+			sort: (t1: TourWithRequests, t2: TourWithRequests) =>
+				getCustomerCount(t1, false) - getCustomerCount(t2, false),
+			toTableEntry: (r: TourWithRequests) => getCustomerCount(r, false)
+		},
+		{
+			text: 'erschienene Kunden  ',
+			sort: (t1: TourWithRequests, t2: TourWithRequests) =>
+				getCustomerCount(t1, true) - getCustomerCount(t2, true),
+			toTableEntry: (r: TourWithRequests) => getCustomerCount(r, true)
+		},
+		{
+			text: 'Taxameterstand  ',
+			sort: (t1: TourWithRequests, t2: TourWithRequests) => (t1.fare ?? 0) - (t2.fare ?? 0),
+			toTableEntry: (r: TourWithRequests) => getEuroString(r.fare)
+		},
+		{
+			text: isAdmin ? 'Kosten  ' : 'Einnahmen  ',
+			sort: (t1: TourWithRequests, t2: TourWithRequests) => getTourCost(t1) - getTourCost(t2),
+			toTableEntry: (r: TourWithRequests) => getEuroString(getTourCost(r))
+		}
+	];
 };
 
-const restTourCols: Column<TourWithRequests>[] = [
-	{
-		text: 'Abfahrt  ',
-		sort: (t1: TourWithRequests, t2: TourWithRequests) => t1.startTime - t2.startTime,
-		toTableEntry: (r: TourWithRequests) => displayUnixtimeMs(r.startTime, true)
-	},
-	{
-		text: 'Ankunft',
-		sort: (t1: TourWithRequests, t2: TourWithRequests) => t1.endTime - t2.endTime,
-		toTableEntry: (r: TourWithRequests) => displayUnixtimeMs(r.endTime, true)
-	},
-	{
-		text: 'Kunden',
-		sort: undefined,
-		toTableEntry: (r: TourWithRequests) => getCustomerCount(r, false)
-	},
-	{
-		text: 'erschienene Kunden  ',
-		sort: undefined,
-		toTableEntry: (r: TourWithRequests) => getCustomerCount(r, true)
-	},
-	{
-		text: 'Taxameterstand  ',
-		sort: (t1: TourWithRequests, t2: TourWithRequests) => (t1.fare ?? 0) - (t2.fare ?? 0),
-		toTableEntry: (r: TourWithRequests) => getEuroString(r.fare)
-	},
-	{
-		text: 'Kosten  ',
-		sort: (t1: TourWithRequests, t2: TourWithRequests) => getTourCost(t1) - getTourCost(t2),
-		toTableEntry: (r: TourWithRequests) => getEuroString(getTourCost(r))
-	}
-];
-
-export const tourColsAdmin = [firstTourColAdmin].concat(restTourCols);
-export const tourColsCompany = [firstTourColCompany].concat(restTourCols);
+export const tourColsAdmin = [firstTourColAdmin].concat(restTourCols(true));
+export const tourColsCompany = restTourCols(false);
 
 export const subtractionColsAdmin: Column<Subtractions>[] = [
 	{
 		text: 'Unternehmen',
-		sort: (a: CompanyRow, b: CompanyRow) => a.companyId - b.companyId,
+		sort: (a: Subtractions, b: Subtractions) => a.companyId - b.companyId,
 		toTableEntry: (r: Subtractions) => r.companyName ?? ''
+	},
+	{
+		text: 'Fahrzeug',
+		sort: (a: Subtractions, b: Subtractions) => a.vehicleId - b.vehicleId,
+		toTableEntry: (r: Subtractions) => r.licensePlate ?? ''
 	},
 	{
 		text: 'Tag  ',
 		sort: (a: Subtractions, b: Subtractions) => a.timestamp - b.timestamp,
 		toTableEntry: (r: Subtractions) => displayUnixtimeMs(r.timestamp)
 	},
-	{ text: 'Kunden', sort: undefined, toTableEntry: (r: Subtractions) => r.customerCount },
+	{
+		text: 'Kunden',
+		sort: (a: Subtractions, b: Subtractions) => a.customerCount - b.customerCount,
+		toTableEntry: (r: Subtractions) => r.customerCount
+	},
 	{
 		text: 'erschienene Kunden  ',
-		sort: undefined,
+		sort: (a: Subtractions, b: Subtractions) => a.verifiedCustomerCount - b.verifiedCustomerCount,
 		toTableEntry: (r: Subtractions) => r.verifiedCustomerCount
 	},
 	{
@@ -130,12 +146,31 @@ export const subtractionColsAdmin: Column<Subtractions>[] = [
 		toTableEntry: (r: Subtractions) => getEuroString(r.taxameter)
 	},
 	{
-		text: 'Kosten ohne Obergrenze  ',
+		text: 'Einnahmen ohne Obergrenze  ',
 		sort: (a: Subtractions, b: Subtractions) => a.uncapped - b.uncapped,
 		toTableEntry: (r: Subtractions) => getEuroString(r.uncapped)
 	},
 	{
-		text: 'Kosten mit Obergrenze  ',
+		text: 'gesetzte Verfügbarkeit',
+		sort: (a: Subtractions, b: Subtractions) => a.availabilityDuration - b.availabilityDuration,
+		toTableEntry: (r: Subtractions) => displayDuration(r.availabilityDuration)
+	},
+	{
+		text: 'Obergrenze',
+		sort: (a: Subtractions, b: Subtractions) => a.availabilityDuration - b.availabilityDuration,
+		toTableEntry: (r: Subtractions) => getEuroString((r.availabilityDuration / HOUR) * CAP)
+	},
+	{
+		text: 'über Obergrenze',
+		sort: (a: Subtractions, b: Subtractions) =>
+			a.uncapped -
+			(a.availabilityDuration / HOUR) * CAP -
+			(b.uncapped - (b.availabilityDuration / HOUR) * CAP),
+		toTableEntry: (r: Subtractions) =>
+			getEuroString(r.uncapped - (r.availabilityDuration / HOUR) * CAP)
+	},
+	{
+		text: 'Einnahmen mit Obergrenze  ',
 		sort: (a: Subtractions, b: Subtractions) => a.capped - b.capped,
 		toTableEntry: (r: Subtractions) => getEuroString(r.capped)
 	},
@@ -143,11 +178,6 @@ export const subtractionColsAdmin: Column<Subtractions>[] = [
 		text: 'Abzüge  ',
 		sort: (a: Subtractions, b: Subtractions) => a.uncapped - a.capped - b.uncapped + b.capped,
 		toTableEntry: (r: Subtractions) => getEuroString(r.uncapped - r.capped)
-	},
-	{
-		text: 'gesetzte Verfügbarkeit',
-		sort: (a: Subtractions, b: Subtractions) => a.availabilityDuration - b.availabilityDuration,
-		toTableEntry: (r: Subtractions) => displayDuration(r.availabilityDuration)
 	}
 ];
 
@@ -184,11 +214,6 @@ export const companyColsAdmin: Column<CompanyRow>[] = [
 		text: 'Abzüge  ',
 		sort: (a: CompanyRow, b: CompanyRow) => a.uncapped - a.capped - b.uncapped + b.capped,
 		toTableEntry: (r: CompanyRow) => getEuroString(r.uncapped - r.capped)
-	},
-	{
-		text: 'gesetzte Verfügbarkeit',
-		sort: (a: CompanyRow, b: CompanyRow) => a.availabilityDuration - b.availabilityDuration,
-		toTableEntry: (r: CompanyRow) => displayDuration(r.availabilityDuration)
 	}
 ];
 

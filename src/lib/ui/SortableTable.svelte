@@ -2,13 +2,13 @@
 	import * as Table from '$lib/shadcn/table/index';
 	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button } from '$lib/shadcn/button';
-	import type { TourWithRequests } from '$lib/server/db/getTours';
 
 	let {
-		rows,
+		rows = $bindable(),
 		cols,
 		getRowStyle,
-		selectedRow = $bindable()
+		selectedRow = $bindable(),
+		bindSelectedRow
 	}: {
 		rows: T[];
 		cols: {
@@ -19,6 +19,7 @@
 		isAdmin: boolean;
 		getRowStyle?: (row: T) => string;
 		selectedRow?: undefined | T[];
+		bindSelectedRow?: boolean;
 	} = $props();
 
 	const descending = Array.from({ length: cols.length }, () => true);
@@ -33,11 +34,6 @@
 		}
 		descending[idx] = !descending[idx];
 	};
-
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	function isTourWithRequests(data: any): data is TourWithRequests {
-		return data && typeof data.tourId === 'number' && Array.isArray(data.requests);
-	}
 </script>
 
 <div class="min-w-[160vh]">
@@ -67,7 +63,7 @@
 				<Table.Row
 					class={`${getRowStyle === undefined ? '' : getRowStyle(row)}`}
 					onclick={() => {
-						if (isTourWithRequests(row)) {
+						if (bindSelectedRow) {
 							selectedRow = [row];
 						}
 					}}

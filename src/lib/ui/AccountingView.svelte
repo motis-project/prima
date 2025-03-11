@@ -39,17 +39,19 @@
 	const {
 		isAdmin,
 		tours,
-		companyCostsPerDay,
-		earliestTime
+		costPerDayAndVehicle,
+		earliestTime,
+		latestTime
 	}: {
 		isAdmin: boolean;
 		tours: ToursWithRequests;
-		companyCostsPerDay: Subtractions[];
+		costPerDayAndVehicle: Subtractions[];
 		earliestTime: UnixtimeMs;
+		latestTime: UnixtimeMs;
 	} = $props();
 
 	const updateCompanySums = (subtractionRows: Subtractions[]) => {
-		const accumulatedCompanyRowEntries = (arr: (Subtractions | CompanyRow)[]) => {
+		const accumulateCompanyRowEntries = (arr: (Subtractions | CompanyRow)[]) => {
 			return arr.reduce(
 				(acc, current) => {
 					acc.capped += current.capped;
@@ -70,7 +72,6 @@
 				}
 			);
 		};
-
 		const costsPerCompany = groupBy(
 			subtractionRows,
 			(c) => c.companyId,
@@ -81,19 +82,16 @@
 			if (arr.length === 0) {
 				return;
 			}
-			const accumulated = accumulatedCompanyRowEntries(arr);
+			const accumulated = accumulateCompanyRowEntries(arr);
 			if (isAdmin) {
 				newCompanyRows.push({ ...accumulated, companyName: arr[0].companyName, companyId });
 			} else {
 				newCompanyRows.push({ ...accumulated, companyId });
 			}
 		});
-		if (newCompanyRows.length === 0) {
-			return [];
-		}
-		if (isAdmin) {
+		if (isAdmin && newCompanyRows.length > 1) {
 			newCompanyRows.push({
-				...accumulatedCompanyRowEntries(newCompanyRows),
+				...accumulateCompanyRowEntries(newCompanyRows),
 				companyId: -1,
 				companyName: 'Summiert'
 			});
@@ -102,8 +100,8 @@
 	};
 
 	let currentRowsToursTable: TourWithRequests[] = $state(tours);
-	let currentRowsSubtractionsTable: Subtractions[] = $state(companyCostsPerDay);
-	let currentCompanyRows: CompanyRow[] = $state(updateCompanySums(companyCostsPerDay));
+	let currentRowsSubtractionsTable: Subtractions[] = $state(costPerDayAndVehicle);
+	let currentCompanyRows: CompanyRow[] = $state(updateCompanySums(costPerDayAndVehicle));
 
 	const getNewSum = (rows: Subtractions[]) => {
 		let newSum = 0;
@@ -112,11 +110,11 @@
 		}
 		return newSum;
 	};
-	let sum = $state(getNewSum(companyCostsPerDay));
+	let sum = $state(getNewSum(costPerDayAndVehicle));
 
 	const years: number[] = [];
 	for (
-		let i = new Date(Date.now()).getFullYear();
+		let i = new Date(latestTime).getFullYear();
 		i != new Date(earliestTime).getFullYear() - 1;
 		--i
 	) {
@@ -147,7 +145,7 @@
 				(selectedCancelledToursIdx == -1 || cancelledFilters[selectedCancelledToursIdx](t)) &&
 				(selectedCompletedToursIdx === -1 || completedFilters[selectedCompletedToursIdx](t))
 		);
-		const subtractionRows = getNewRows(subtractionFilters, companyCostsPerDay);
+		const subtractionRows = getNewRows(subtractionFilters, costPerDayAndVehicle);
 		currentCompanyRows = updateCompanySums(subtractionRows);
 		currentRowsSubtractionsTable = subtractionRows;
 	});
@@ -203,37 +201,41 @@
 		(row: Subtractions) => new Date(row.timestamp).getFullYear() === selectedYear
 	];
 
-	const csvExportBothTables = (
-		tourRows: TourWithRequests[],
-		subtractionRows: Subtractions[],
-		filename: string
+	const filename = 'Abrechnung';
+	const csvExport = <T extends Subtractions | TourWithRequests>(
+		rows: T[],
+		cols: Column<T>[],
+		filename: string,
+		addSumRow: boolean
 	) => {
+		let data = [];
+		data.push(cols.map((col) => col.text.trim()));
+		for (let row of rows) {
+			data.push(cols.map((col) => col.toTableEntry(row)));
+		}
+		if (addSumRow) {
+			const lastRow = ['Summe insgesamt'];
+			for (let i = 0; i != cols.length - 3; ++i) {
+				lastRow.push('');
+			}
+			lastRow.push(getEuroString(sum));
+			data.push(lastRow);
+		}
+		const csvContent = Papa.unparse(data, { header: true });
+		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+		saveAs(blob, filename);
+	};
+
+	const csvExportToursTable = (tourRows: TourWithRequests[]) => {
 		tourRows.sort((a, b) => a.startTime - b.startTime);
+		csvExport(tourRows, isAdmin ? tourColsAdmin : tourColsCompany, filename + '_tour.csv', false);
+	};
+
+	const csvExportDayTable = (subtractionRows: Subtractions[]) => {
 		subtractionRows.sort((a, b) => {
 			const companyDifference = a.companyId - b.companyId;
 			return companyDifference == 0 ? a.timestamp - b.timestamp : companyDifference;
 		});
-
-		const csvExport = <T,>(rows: T[], cols: Column<T>[], filename: string, addSumRow: boolean) => {
-			let data = [];
-			data.push(cols.map((col) => col.text.trim()));
-			for (let row of rows) {
-				data.push(cols.map((col) => col.toTableEntry(row)));
-			}
-			if (addSumRow) {
-				const lastRow = ['Summe insgesamt'];
-				for (let i = 0; i != cols.length - 4; ++i) {
-					lastRow.push('');
-				}
-				lastRow.push(getEuroString(sum));
-				data.push(lastRow);
-			}
-			const csvContent = Papa.unparse(data, { header: true });
-			const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-			saveAs(blob, filename);
-		};
-
-		csvExport(tourRows, isAdmin ? tourColsAdmin : tourColsCompany, filename + '_tour.csv', false);
 		csvExport(
 			subtractionRows,
 			isAdmin ? subtractionColsAdmin : subtractionColsCompany,
@@ -280,13 +282,14 @@
 
 {#snippet tourTable()}
 	<SortableTable
-		rows={currentRowsToursTable}
+		bind:rows={currentRowsToursTable}
 		cols={isAdmin ? tourColsAdmin : tourColsCompany}
 		{isAdmin}
 		getRowStyle={(row: TourWithRequests) =>
 			'cursor-pointer ' +
 			(row.cancelled ? (row.message === null ? 'bg-orange-500' : 'bg-destructive') : 'bg-white-0')}
 		bind:selectedRow={selectedToursTableRow}
+		bindSelectedRow={true}
 	/>
 
 	<TourDialog bind:tours={selectedToursTableRow} {isAdmin} />
@@ -294,7 +297,7 @@
 
 {#snippet subtractionTable()}
 	<SortableTable
-		rows={currentRowsSubtractionsTable}
+		bind:rows={currentRowsSubtractionsTable}
 		cols={isAdmin ? subtractionColsAdmin : subtractionColsCompany}
 		{isAdmin}
 	/>
@@ -302,7 +305,7 @@
 
 {#snippet companyTable()}
 	<SortableTable
-		rows={currentCompanyRows}
+		bind:rows={currentCompanyRows}
 		cols={isAdmin ? companyColsAdmin : companyColsCompany}
 		{isAdmin}
 	/>
@@ -361,12 +364,11 @@
 			disabled={false}
 		/>
 		<Button type="submit" onclick={() => resetFilter()}>Filter zurücksetzten</Button>
-		<Button
-			type="submit"
-			onclick={() =>
-				csvExportBothTables(currentRowsToursTable, currentRowsSubtractionsTable, 'Abrechnung')}
-		>
-			als CSV exportieren
+		<Button type="submit" onclick={() => csvExportToursTable(currentRowsToursTable)}>
+			pro Tour als CSV exportieren
+		</Button>
+		<Button type="submit" onclick={() => csvExportDayTable(currentRowsSubtractionsTable)}>
+			pro Tag als CSV exportieren
 		</Button>
 	</div>
 {/snippet}
