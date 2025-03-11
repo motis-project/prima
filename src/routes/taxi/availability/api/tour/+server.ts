@@ -3,7 +3,7 @@ import { db } from '$lib/server/db';
 import { sql } from 'kysely';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { getPossibleInsertions } from '$lib/server/booking/getPossibleInsertions';
-import { nowOrSimulationTime } from '$lib/time.js';
+import { nowOrSimulationTime } from '$lib/util/time.js';
 
 export const POST = async (event) => {
 	function getLatestEventTime(ev: {

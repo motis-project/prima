@@ -10,7 +10,7 @@
 	import { enhance } from '$app/forms';
 	import Layer from '$lib/map/Layer.svelte';
 	import { PUBLIC_MOTIS_URL } from '$env/static/public';
-	import { nowOrSimulationTime } from '$lib/time.js';
+	import { nowOrSimulationTime } from '$lib/util/time.js';
 
 	const { data, form } = $props();
 

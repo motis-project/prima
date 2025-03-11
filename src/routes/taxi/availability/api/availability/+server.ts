@@ -2,7 +2,7 @@ import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, MIN_PREP } from '$lib/constants
 import { getAllowedTimes } from '$lib/server/booking/evaluateRequest';
 import { db, type Database } from '$lib/server/db';
 import { Interval } from '$lib/server/util/interval';
-import { nowOrSimulationTime } from '$lib/time.js';
+import { nowOrSimulationTime } from '$lib/util/time.js';
 import { HOUR, MINUTE } from '$lib/util/time';
 import { json } from '@sveltejs/kit';
 import { sql, type Insertable, type Selectable } from 'kysely';

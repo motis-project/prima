@@ -42,7 +42,7 @@
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { LocateFixed } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
-	import { nowOrSimulationTime } from '$lib/time';
+	import { nowOrSimulationTime } from '$lib/util/time';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 

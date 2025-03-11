@@ -28,7 +28,7 @@ import type { Company, Event } from './getBookingAvailability';
 import type { Capacities } from './Capacities';
 import { isValid } from './getPossibleInsertions';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
-import { nowOrSimulationTime } from '$lib/time';
+import { nowOrSimulationTime } from '$lib/util/time';
 
 export type InsertionEvaluation = {
 	pickupTime: number;

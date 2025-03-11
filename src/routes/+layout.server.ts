@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { nowOrSimulationTime } from '$lib/time';
+import { nowOrSimulationTime } from '$lib/util/time';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {

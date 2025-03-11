@@ -26,7 +26,7 @@
 	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 	import { PUBLIC_MOTIS_URL } from '$env/static/public';
 	import CancelMessageDialog from './CancelMessageDialog.svelte';
-	import { nowOrSimulationTime } from '$lib/time';
+	import { nowOrSimulationTime } from '$lib/util/time';
 
 	let {
 		tours = $bindable(),
