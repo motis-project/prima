@@ -97,6 +97,10 @@ export type Translations = {
 		email: string;
 		password: string;
 		create: string;
+		forgotPassword: string;
+		signupConditions: (tos: string, privacy: string, provider: string) => string;
+		tos: string;
+		privacy: string;
 		login: string;
 		sentAnEmailTo: string;
 		changeYourEmail: string;
@@ -165,6 +169,7 @@ export type Translations = {
 		totalPrice: string;
 		foldableWheelchair: string;
 		withFoldableWheelchair: string;
+		passengerNumber: string;
 		bookingFor: (passengers: number) => string;
 		cancel: string;
 		loginToBook: string;

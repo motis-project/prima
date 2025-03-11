@@ -4,6 +4,7 @@
 	import LuggageIcon from 'lucide-svelte/icons/luggage';
 	import WheelchairIcon from 'lucide-svelte/icons/accessibility';
 	import PersonIcon from 'lucide-svelte/icons/user';
+	import { t } from '$lib/i18n/translation';
 
 	import { Button } from '$lib/shadcn/button';
 	import * as Dialog from '$lib/shadcn/dialog';
@@ -16,7 +17,7 @@
 	import GeoJSON from '$lib/map/GeoJSON.svelte';
 	import Layer from '$lib/map/Layer.svelte';
 
-	import type { Tours } from '$lib/server/db/getTours';
+	import type { TourWithRequests } from '$lib/server/db/getTours';
 	import type { PlanResponse } from '$lib/openapi';
 	import { MIN_PREP } from '$lib/constants';
 	import { carRouting } from '$lib/util/carRouting';
@@ -27,15 +28,13 @@
 	import CancelMessageDialog from './CancelMessageDialog.svelte';
 	import { nowOrSimulationTime } from '$lib/time';
 
-	const {
-		open = $bindable()
+	let {
+		tours = $bindable(),
+		isAdmin
 	}: {
-		open: {
-			tours: Tours | undefined;
-			isAdmin: boolean;
-		};
+		tours: TourWithRequests[] | undefined;
+		isAdmin: boolean;
 	} = $props();
-
 	const displayFare = (fare: number | null) => {
 		if (!fare) {
 			return '-';
@@ -45,32 +44,31 @@
 	};
 
 	let tourIndex = $state(0);
-	let tour = $derived(open.tours && open.tours[tourIndex]);
+	let tour = $derived(tours && tours[tourIndex]);
+	let events = $derived(tour?.requests.flatMap((r) => r.events));
 	let company = $derived(tour && { lat: tour.companyLat!, lng: tour.companyLng! });
 
 	const getRoutes = (): Promise<PlanResponse>[] => {
 		let routes: Array<Promise<PlanResponse>> = [];
-		if (tour == null || company == null || tour.events.length == 0) {
+		if (tour == null || company == null || events!.length == 0) {
 			return routes;
 		}
-		for (let e = 0; e < tour.events.length - 1; e++) {
-			const e1 = tour.events[e];
-			const e2 = tour.events[e + 1];
+		for (let e = 0; e < events!.length - 1; e++) {
+			const e1 = events![e];
+			const e2 = events![e + 1];
 			routes.push(carRouting(e1, e2));
 		}
 		return routes;
 	};
 
 	const routes = $derived(tour && getRoutes());
-	const fromCompany = $derived(tour && company && carRouting(company, tour.events[0]));
-	const toCompany = $derived(
-		tour && company && carRouting(tour.events[tour.events.length - 1], company)
-	);
+	const fromCompany = $derived(tour && company && carRouting(company, events![0]));
+	const toCompany = $derived(tour && company && carRouting(events![events!.length - 1], company));
 
 	$effect(() => {
 		if (map && tour) {
 			const box = new maplibregl.LngLatBounds(company, company);
-			tour.events.forEach((e) => box.extend(e));
+			events!.forEach((e) => box.extend(e));
 			const padding = {
 				top: 64,
 				right: 64,
@@ -99,7 +97,7 @@
 	open={tour !== undefined}
 	onOpenChange={(x) => {
 		if (!x) {
-			open.tours = undefined;
+			tours = undefined;
 		}
 	}}
 >
@@ -108,8 +106,8 @@
 			<div class="flex items-center justify-between pr-4">
 				<Dialog.Title>Tour Details</Dialog.Title>
 				<div>
-					{#if open!.tours && open.tours.length > 1}
-						{#each open.tours as tour, i}
+					{#if tours && tours.length > 1}
+						{#each tours as tour, i}
 							{@const tourInfo = getTourInfoShort(tour)}
 							<Button
 								onclick={() => {
@@ -130,7 +128,7 @@
 				{@render overview()}
 				{@render mapView()}
 				<div class="col-span-2">{@render details()}</div>
-				{#if tour?.message != null}
+				{#if tour?.cancelled}
 					<div class="col-span-2">{@render message()}</div>
 				{/if}
 			</div>
@@ -143,8 +141,8 @@
 		<Card.Header>
 			<div class="flex w-full items-center justify-between">
 				<Card.Title>Übersicht</Card.Title>
-				{#if tour && !tour.cancelled && !open.isAdmin && tour.endTime > nowOrSimulationTime().getTime()}
-					<CancelMessageDialog bind:tour={open.tours![tourIndex]} />
+				{#if tour && !tour.cancelled && !isAdmin && tour.endTime > nowOrSimulationTime().getTime()}
+					<CancelMessageDialog bind:tour={tours![tourIndex]} />
 				{/if}
 			</div>
 		</Card.Header>
@@ -253,17 +251,18 @@
 				<Table.Header>
 					<Table.Row>
 						<Table.Head>Abfahrt</Table.Head>
-						<Table.Head>Addresse</Table.Head>
+						<Table.Head>Adresse</Table.Head>
 						<Table.Head>Kunde</Table.Head>
 						<Table.Head>Tel. Kunde</Table.Head>
 						<Table.Head>Ein-/Ausstieg</Table.Head>
+						<Table.Head>Status</Table.Head>
 					</Table.Row>
 				</Table.Header>
 
 				<Table.Body>
-					{#if tour?.events}
-						{#each tour!.events as event}
-							<Table.Row class={`${tour.cancelled ? 'bg-destructive' : 'bg-primary-background'}`}>
+					{#if events}
+						{#each events as event}
+							<Table.Row class={`${tour!.cancelled ? 'bg-destructive' : 'bg-primary-background'}`}>
 								<Table.Cell>
 									{new Date(getScheduledEventTime(event))
 										.toLocaleString('de-DE')
@@ -277,45 +276,45 @@
 								<Table.Cell>
 									{event.customerPhone}
 								</Table.Cell>
-								{#if event.isPickup}
-									<Table.Cell class="flex gap-2 text-green-500">
+								<Table.Cell
+									class="flex items-center gap-2 {event.isPickup
+										? 'text-green-500'
+										: 'text-red-500'}"
+								>
+									{#if event.isPickup}
 										<ArrowRight class="size-4" />
-										{#if event.wheelchairs}
-											<WheelchairIcon class="size-4" />
-										{/if}
-										<span class="flex">
-											<PersonIcon class="size-4" />
-											{event.passengers}
-										</span>
-										<span class="flex">
-											{#if event.luggage === 1}
-												<LuggageIcon class="size-4" />
-											{:else if event.luggage === 3}
-												<LuggageIcon class="size-4" />
-												<LuggageIcon class="size-4" />
-											{/if}
-										</span>
-									</Table.Cell>
-								{:else}
-									<Table.Cell class="flex items-center gap-2 text-red-500">
+									{:else}
 										<ArrowLeft class="size-4" />
-										{#if event.wheelchairs}
-											<WheelchairIcon class="size-4" />
-										{/if}
-										<span class="flex items-center">
-											<PersonIcon class="size-4" />
-											{event.passengers}
+									{/if}
+									{#if event.wheelchairs}
+										<span title={t.booking.foldableWheelchair}
+											><WheelchairIcon class="size-4" /></span
+										>
+									{/if}
+									<span class="flex items-center" title={t.booking.bookingFor(event.passengers)}>
+										<PersonIcon class="size-4" />
+										{event.passengers}
+									</span>
+									{#if event.luggage === 1}
+										<span class="flex items-center" title={t.booking.handLuggage}>
+											<LuggageIcon class="size-4" />
 										</span>
-										<span class="flex items-center">
-											{#if event.luggage === 1}
-												<LuggageIcon class="size-4" />
-											{:else if event.luggage === 3}
-												<LuggageIcon class="size-4" />
-												<LuggageIcon class="size-4" />
-											{/if}
+									{:else if event.luggage === 3}
+										<span class="flex items-center" title={t.booking.heavyLuggage}>
+											<LuggageIcon class="size-4" />
+											<LuggageIcon class="size-4" />
 										</span>
-									</Table.Cell>
-								{/if}
+									{/if}
+								</Table.Cell>
+								<Table.Cell>
+									{#if event.isPickup && event.ticketChecked}
+										<span class="text-green-500">Ticket verifiziert</span>
+									{:else if event.isPickup && !event.cancelled && event.scheduledTimeEnd + event.nextLegDuration < Date.now()}
+										<span class="text-red-500">Ticket nicht verifiziert</span>
+									{:else if event.cancelled}
+										<span class="text-red-500">Storniert</span>
+									{/if}
+								</Table.Cell>
 							</Table.Row>
 						{/each}
 					{/if}
@@ -332,7 +331,11 @@
 		</Card.Header>
 		<Card.Content>
 			<div class="bg-primary-foreground">
-				{tour!.message}
+				{#if tour!.message != null}
+					{tour!.message}
+				{:else}
+					Die Tour wurde vom Kunden storniert.
+				{/if}
 			</div>
 		</Card.Content>
 	</Card.Root>

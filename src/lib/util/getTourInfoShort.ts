@@ -1,11 +1,12 @@
-import type { Tour } from '$lib/server/db/getTours';
+import type { TourWithRequests } from '$lib/server/db/getTours';
 
-export const getTourInfoShort = (tour: Tour) => {
-	if (tour.events.length === 0) {
+export const getTourInfoShort = (tour: TourWithRequests) => {
+	const events = tour.requests.flatMap((r) => r.events);
+	if (events.length === 0) {
 		return { from: '???', to: '???' };
 	}
 	return {
-		from: tour.events[0].address,
-		to: tour.events[tour.events.length - 1].address
+		from: events[0].address,
+		to: events[events.length - 1].address
 	};
 };

@@ -71,27 +71,80 @@ export type Tours = Awaited<ReturnType<typeof getTours>>;
 export type Tour = Tours[0];
 export type TourEvent = Tour['events'][0];
 
-export const getToursWithRequests = async () => {
+export const getToursWithRequests = async (
+	selectCancelled: boolean,
+	companyId?: number,
+	timeRange?: [UnixtimeMs, UnixtimeMs]
+) => {
+	console.log({ companyId });
 	return await db
 		.selectFrom('tour')
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 		.innerJoin('company', 'company.id', 'vehicle.company')
+		.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
+		.$if(companyId != undefined, (qb) => qb.where('company.id', '=', companyId!))
+		.$if(!!timeRange, (qb) =>
+			qb.where('tour.departure', '<', timeRange![1]).where('tour.arrival', '>', timeRange![0])
+		)
 		.select((eb) => [
 			'tour.fare as fare',
 			'tour.departure as startTime',
 			'tour.arrival as endTime',
 			'tour.cancelled',
+			'tour.id as tourId',
+			'tour.message',
 			'company.name as companyName',
 			'company.id as companyId',
+			'company.lat as companyLat',
+			'company.lng as companyLng',
 			'vehicle.id as vehicleId',
+			'vehicle.licensePlate',
 			jsonArrayFrom(
 				eb
 					.selectFrom('request')
 					.whereRef('tour.id', '=', 'request.tour')
-					.select(['request.luggage', 'request.passengers', 'request.ticketChecked'])
+					.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
+					.select([
+						'request.luggage',
+						'request.passengers',
+						'request.ticketChecked',
+						jsonArrayFrom(
+							eb
+								.selectFrom('event')
+								.innerJoin('request', 'request.id', 'event.request')
+								.whereRef('tour.id', '=', 'request.tour')
+								.innerJoin('user', 'user.id', 'request.customer')
+								.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
+								.select([
+									'tour.id as tour',
+									'user.name as customerName',
+									'user.phone as customerPhone',
+									'event.id',
+									'event.communicatedTime',
+									'event.address',
+									'event.eventGroup',
+									'event.isPickup',
+									'event.lat',
+									'event.lng',
+									'event.nextLegDuration',
+									'event.prevLegDuration',
+									'event.scheduledTimeStart',
+									'event.scheduledTimeEnd',
+									'event.cancelled',
+									'request.bikes',
+									'request.customer',
+									'request.luggage',
+									'request.passengers',
+									'request.ticketChecked',
+									'request.wheelchairs',
+									'request.id as requestId'
+								])
+								.select(sql<string>`md5(request.ticket_code)`.as('ticketHash'))
+								.orderBy('event.scheduledTimeStart')
+						).as('events')
+					])
 			).as('requests')
 		])
-		.where('tour.fare', 'is not', null)
 		.execute();
 };
 

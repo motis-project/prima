@@ -5,7 +5,7 @@ import type { BusStop } from './BusStop';
 import type { Capacities } from './Capacities';
 import { getPossibleInsertions } from './getPossibleInsertions';
 import type { Company } from './getBookingAvailability';
-import type { PromisedTimes } from './PromisedTimes';
+//import type { PromisedTimes } from './PromisedTimes';
 import type { Range } from './getPossibleInsertions';
 import { gatherRoutingCoordinates, routing } from './routing';
 import {
@@ -26,8 +26,8 @@ export async function evaluateRequest(
 	userChosen: Coordinates,
 	busStops: BusStop[],
 	required: Capacities,
-	startFixed: boolean,
-	promisedTimes?: PromisedTimes
+	startFixed: boolean
+	//promisedTimes?: PromisedTimes
 ) {
 	if (companies.length == 0) {
 		return busStops.map((bs) => bs.times.map((_) => undefined));
@@ -84,7 +84,7 @@ export async function evaluateRequest(
 	if (earliest >= latest) {
 		return busStops.map((bs) => bs.times.map((_) => undefined));
 	}
-	const allowedTimes = getAllowedTimes(earliest, latest);
+	const allowedTimes = getAllowedTimes(earliest, latest, EARLIEST_SHIFT_START, LATEST_SHIFT_END);
 	console.log(
 		'WHITELIST REQUEST: ALLOWED TIMES (RESTRICTION FROM 6 TO 21):\n',
 		allowedTimes.map((i) => i.toString())
@@ -97,13 +97,18 @@ export async function evaluateRequest(
 		busStopTimes,
 		routingResults,
 		directDurations,
-		allowedTimes,
-		promisedTimes
+		allowedTimes
+		//promisedTimes
 	);
 	return newTourEvaluations;
 }
 
-export function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs): Interval[] {
+export function getAllowedTimes(
+	earliest: UnixtimeMs,
+	latest: UnixtimeMs,
+	startOnDay: UnixtimeMs,
+	endOnDay: UnixtimeMs
+): Interval[] {
 	if (earliest >= latest) {
 		return [];
 	}
@@ -123,9 +128,7 @@ export function getAllowedTimes(earliest: UnixtimeMs, latest: UnixtimeMs): Inter
 					timeZone: 'Europe/Berlin'
 				})
 			) - 12;
-		allowedTimes.push(
-			new Interval(t + EARLIEST_SHIFT_START - offset * HOUR, t + LATEST_SHIFT_END - offset * HOUR)
-		);
+		allowedTimes.push(new Interval(t + startOnDay - offset * HOUR, t + endOnDay - offset * HOUR));
 		noonEarliestDay.setHours(noonEarliestDay.getHours() + 24);
 	}
 	return allowedTimes;

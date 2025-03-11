@@ -378,7 +378,7 @@
 						</Dialog.Header>
 
 						<div class="md-4 grid grid-cols-2 grid-rows-2 items-center gap-4">
-							<Label>Anzahl Personen</Label>
+							<Label>{t.booking.passengerNumber}</Label>
 							<Input type="number" bind:value={passengers} min="1" max="6" />
 
 							<Label class="flex items-center gap-2">
