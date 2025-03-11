@@ -63,10 +63,7 @@ export async function load(event) {
 
 	// HEATMAP
 	const heatmapInfos = await db
-		.with('thiszone', (db) => db 
-			.selectFrom('company')
-			.where('id', '=', companyId)
-			.select(['zone']))
+		.with('thiszone', (db) => db.selectFrom('company').where('id', '=', companyId).select(['zone']))
 		.selectFrom('availability')
 		.innerJoin('vehicle', 'vehicle.id', 'availability.vehicle')
 		.innerJoin('company', 'company.id', 'vehicle.company')
@@ -74,8 +71,13 @@ export async function load(event) {
 		.where('availability.startTime', '<', toTime.getTime())
 		.where('availability.endTime', '>', fromTime.getTime())
 		.where('vehicle.company', '!=', companyId)
-		.whereRef('thiszone.zone' as any, '=', 'company.zone')
-		.select(['availability.startTime', 'availability.endTime', 'availability.vehicle', 'vehicle.company'])
+		.whereRef('thiszone.zone', '=', 'company.zone')
+		.select([
+			'availability.startTime',
+			'availability.endTime',
+			'availability.vehicle',
+			'vehicle.company'
+		])
 		.execute();
 
 	const mergedheatinfos = groupBy(
@@ -83,15 +85,9 @@ export async function load(event) {
 		(a) => a.vehicle,
 		(a) => new Interval(a.startTime, a.endTime)
 	);
-	mergedheatinfos.forEach((heatmap, vehicle) => 
+	mergedheatinfos.forEach((heatmap, vehicle) =>
 		mergedheatinfos.set(vehicle, Interval.merge(heatmap))
 	);
-	const companybyVehicle = groupBy(
-		heatmapInfos,
-		(a) => a.vehicle,
-		(a) => a.company
-	);	
-	
 
 	type heatinfo = {
 		cell: Range;
@@ -118,7 +114,7 @@ export async function load(event) {
 						heatcount++;
 					}
 				}
-			})
+			});
 			heatarray.push({ cell: onecell, heat: heatcount });
 			heatcount = 0;
 		}
