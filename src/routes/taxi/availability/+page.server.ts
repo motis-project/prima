@@ -63,22 +63,21 @@ export async function load(event) {
 
 	// HEATMAP
 	const heatmapInfos = await db
-		.with('thiszone', (db) => db.selectFrom('company').where('id', '=', companyId).select(['zone']))
-		.selectFrom('availability')
-		.innerJoin('vehicle', 'vehicle.id', 'availability.vehicle')
-		.innerJoin('company', 'company.id', 'vehicle.company')
-		.innerJoin('thiszone', (join) => join.onTrue())
-		.where('availability.startTime', '<', toTime.getTime())
-		.where('availability.endTime', '>', fromTime.getTime())
-		.where('vehicle.company', '!=', companyId)
-		.whereRef('thiszone.zone', '=', 'company.zone')
-		.select([
-			'availability.startTime',
-			'availability.endTime',
-			'availability.vehicle',
-			'vehicle.company'
-		])
-		.execute();
+        .selectFrom('company as company1')
+        .innerJoin('company as company2', 'company1.zone', 'company2.zone')
+        .innerJoin('vehicle', 'company2.id', 'vehicle.company')
+        .innerJoin('availability', 'vehicle.id', 'availability.vehicle')
+        .where('availability.startTime', '<', toTime.getTime())
+        .where('availability.endTime', '>', fromTime.getTime())
+        .where('company1.id', '=', companyId)
+        .where('company2.id', '!=', companyId)
+        .select([
+            'availability.startTime',
+            'availability.endTime',
+            'availability.vehicle',
+            'vehicle.company'
+        ])
+        .execute();
 
 	const mergedheatinfos = groupBy(
 		heatmapInfos,
