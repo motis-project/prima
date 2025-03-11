@@ -49,7 +49,7 @@
 								onclick={() => sortAndToggle(i)}
 							>
 								{col.text}
-								<ChevronsUpDown class="h-6 w-4" />
+								<ChevronsUpDown />
 							</Button>
 						</Table.Head>
 					{:else}

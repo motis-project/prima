@@ -83,7 +83,7 @@ export async function getCompanyCosts(companyId?: number) {
 					availabilitiesPerDayAndVehicle[dayIdx].set(
 						vehicle,
 						(availabilitiesPerDayAndVehicle[dayIdx].get(vehicle) ?? 0) +
-							availability.getDurationMs()
+							(day.intersect(availability)?.getDurationMs() ?? 0)
 					);
 				}
 			})
