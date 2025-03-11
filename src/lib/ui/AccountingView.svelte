@@ -209,7 +209,7 @@
 		addSumRow: boolean
 	) => {
 		let data = [];
-		data.push(cols.map((col) => col.text.trim()));
+		data.push(cols.map((col) => col.text.join(' ')));
 		for (let row of rows) {
 			data.push(cols.map((col) => col.toTableEntry(row)));
 		}

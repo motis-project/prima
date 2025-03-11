@@ -12,7 +12,7 @@
 	}: {
 		rows: T[];
 		cols: {
-			text: string;
+			text: string[];
 			sort: undefined | ((r1: T, r2: T) => number);
 			toTableEntry: (r: T) => string | number;
 		}[];
@@ -36,25 +36,31 @@
 	};
 </script>
 
+{#snippet tableHead(text: string[], i: number, sort: boolean)}
+	{#if sort}
+		<Table.Head rowspan={text.length}>
+			<Button class="px-0 hover:no-underline" variant="link" onclick={() => sortAndToggle(i)}>
+				{#each text as line}
+					{line}<br />
+				{/each}
+				<ChevronsUpDown />
+			</Button>
+		</Table.Head>
+	{:else}
+		<Table.Head rowspan={text.length}>
+			{#each text as line}
+				{line}<br />
+			{/each}</Table.Head
+		>
+	{/if}
+{/snippet}
+
 <div class="min-w-[160vh]">
 	<Table.Root>
 		<Table.Header>
 			<Table.Row>
 				{#each cols as col, i}
-					{#if col.sort != undefined}
-						<Table.Head>
-							<Button
-								class="px-0 hover:no-underline"
-								variant="link"
-								onclick={() => sortAndToggle(i)}
-							>
-								{col.text}
-								<ChevronsUpDown />
-							</Button>
-						</Table.Head>
-					{:else}
-						<Table.Head>{col.text}</Table.Head>
-					{/if}
+					{@render tableHead(col.text, i, col.sort != undefined)}
 				{/each}
 			</Table.Row>
 		</Table.Header>
