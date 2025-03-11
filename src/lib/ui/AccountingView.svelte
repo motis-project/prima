@@ -308,6 +308,7 @@
 		bind:rows={currentCompanyRows}
 		cols={isAdmin ? companyColsAdmin : companyColsCompany}
 		{isAdmin}
+		fixLastRow={isAdmin}
 	/>
 {/snippet}
 

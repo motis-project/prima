@@ -167,7 +167,7 @@ export const subtractionColsAdmin: Column<Subtractions>[] = [
 			(a.availabilityDuration / HOUR) * CAP -
 			(b.uncapped - (b.availabilityDuration / HOUR) * CAP),
 		toTableEntry: (r: Subtractions) =>
-			getEuroString(Math.max(r.uncapped - (r.availabilityDuration / HOUR) * CAP, 0))
+			getEuroString(r.uncapped - (r.availabilityDuration / HOUR) * CAP)
 	},
 	{
 		text: ['Einnahmen', 'mit Obergrenze'],
@@ -184,7 +184,7 @@ export const subtractionColsAdmin: Column<Subtractions>[] = [
 export const subtractionColsCompany = subtractionColsAdmin.slice(1);
 const summationLast = (tiebreak: (a: CompanyRow, b: CompanyRow) => number) => {
 	return (a: CompanyRow, b: CompanyRow) =>
-		a.companyName === 'Summiert' ? -1 : b.companyName === ' Summiert' ? 1 : tiebreak(a, b);
+		a.companyId === -1 ? 1 : b.companyId === -1 ? -1 : tiebreak(a, b);
 };
 export const companyColsAdmin: Column<CompanyRow>[] = [
 	{

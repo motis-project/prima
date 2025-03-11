@@ -156,8 +156,8 @@ export async function getCompanyCosts(companyId?: number) {
 				verifiedCustomerCount: number;
 				availabilityDuration: UnixtimeMs;
 				companyName: string | null;
-				vehicleId: number;
 				licensePlate: string;
+				companyId: number;
 			}
 		>
 	>();
@@ -173,8 +173,8 @@ export async function getCompanyCosts(companyId?: number) {
 				verifiedCustomerCount: number;
 				availabilityDuration: UnixtimeMs;
 				companyName: string | null;
-				vehicleId: number;
 				licensePlate: string;
+				companyId: number;
 			}
 		>();
 		if (taxameterPerDayAndVehicle[d] == undefined) {
@@ -194,8 +194,8 @@ export async function getCompanyCosts(companyId?: number) {
 				verifiedCustomerCount: taxameter.verifiedCustomerCount,
 				availabilityDuration: availabilitiesPerDayAndVehicle[d].get(vehicle) ?? 0,
 				companyName: companyByVehicle.get(vehicle)!.name,
-				vehicleId: vehicle,
-				licensePlate: companyByVehicle.get(vehicle)!.licensePlate
+				licensePlate: companyByVehicle.get(vehicle)!.licensePlate,
+				companyId: companyByVehicle.get(vehicle)!.id
 			});
 		});
 	}
@@ -206,8 +206,9 @@ export async function getCompanyCosts(companyId?: number) {
 		costPerDayAndVehicle: costPerDayAndVehicle.flatMap((vehicleCosts) =>
 			Array.from(vehicleCosts).map(
 				([
-					companyId,
+					vehicleId,
 					{
+						companyId,
 						capped,
 						uncapped,
 						companyName,
@@ -216,7 +217,6 @@ export async function getCompanyCosts(companyId?: number) {
 						taxameter,
 						timestamp,
 						verifiedCustomerCount,
-						vehicleId,
 						licensePlate
 					}
 				]) => {

@@ -8,7 +8,8 @@
 		cols,
 		getRowStyle,
 		selectedRow = $bindable(),
-		bindSelectedRow
+		bindSelectedRow,
+		fixLastRow
 	}: {
 		rows: T[];
 		cols: {
@@ -20,6 +21,7 @@
 		getRowStyle?: (row: T) => string;
 		selectedRow?: undefined | T[];
 		bindSelectedRow?: boolean;
+		fixLastRow?: boolean;
 	} = $props();
 
 	const descending = Array.from({ length: cols.length }, () => true);
@@ -27,6 +29,9 @@
 		rows.sort(cols[idx].sort);
 		if (!descending[idx]) {
 			rows.reverse();
+			if (fixLastRow) {
+				rows = rows.splice(1).concat([rows[0]]);
+			}
 		} else {
 			for (let i = 0; i < descending.length; i++) {
 				if (i != idx) descending[i] = true;
