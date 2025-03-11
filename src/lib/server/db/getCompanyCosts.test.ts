@@ -221,7 +221,7 @@ describe('test accounting', () => {
 		expect(costPerDayAndVehicle[0].availabilityDuration).toBe(3 * HOUR);
 		expect(costPerDayAndVehicle[0].customerCount).toBe(1);
 		expect(costPerDayAndVehicle[1].taxameter).toBe(35300);
-		expect(costPerDayAndVehicle[1].uncapped).toBe(35000);14000 + 21000/4
+		expect(costPerDayAndVehicle[1].uncapped).toBe(35000);
 		expect(costPerDayAndVehicle[1].capped).toBe(19250);
 		expect(costPerDayAndVehicle[1].availabilityDuration).toBe(4 * HOUR);
 		expect(costPerDayAndVehicle[1].customerCount).toBe(1);
