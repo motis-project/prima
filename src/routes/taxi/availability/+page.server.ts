@@ -8,7 +8,8 @@ import { readInt } from '$lib/server/util/readForm';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import type { Range } from './Range';
 import { split } from './Range';
-import { mergeAvailabilities } from '$lib/server/util/mergeAvailabilities';
+import { groupBy } from '$lib/server/util/groupBy';
+import { Interval } from '$lib/server/util/interval';
 
 export async function load(event) {
 	const companyId = event.locals.session?.companyId;
@@ -62,15 +63,35 @@ export async function load(event) {
 
 	// HEATMAP
 	const heatmapInfos = await db
+		.with('thiszone', (db) => db 
+			.selectFrom('company')
+			.where('id', '=', companyId)
+			.select(['zone']))
 		.selectFrom('availability')
 		.innerJoin('vehicle', 'vehicle.id', 'availability.vehicle')
-		.where('startTime', '<', toTime.getTime())
-		.where('endTime', '>', fromTime.getTime())
-		.where('company', '!=', companyId)
-		.select(['startTime', 'endTime', 'vehicle', 'vehicle.company'])
+		.innerJoin('company', 'company.id', 'vehicle.company')
+		.innerJoin('thiszone', (join) => join.onTrue())
+		.where('availability.startTime', '<', toTime.getTime())
+		.where('availability.endTime', '>', fromTime.getTime())
+		.where('vehicle.company', '!=', companyId)
+		.whereRef('thiszone.zone' as any, '=', 'company.zone')
+		.select(['availability.startTime', 'availability.endTime', 'availability.vehicle', 'vehicle.company'])
 		.execute();
 
-	// TODO: availabilities müssen gemerged werden!
+	const mergedheatinfos = groupBy(
+		heatmapInfos,
+		(a) => a.vehicle,
+		(a) => new Interval(a.startTime, a.endTime)
+	);
+	mergedheatinfos.forEach((heatmap, vehicle) => 
+		mergedheatinfos.set(vehicle, Interval.merge(heatmap))
+	);
+	const companybyVehicle = groupBy(
+		heatmapInfos,
+		(a) => a.vehicle,
+		(a) => a.company
+	);	
+	
 
 	type heatinfo = {
 		cell: Range;
@@ -91,14 +112,13 @@ export async function load(event) {
 	for (const hour of hours) {
 		const cell = split(hour, 15);
 		for (const onecell of cell) {
-			for (const heat of heatmapInfos) {
-				if (isAInsideB(onecell, heat.startTime, heat.endTime)) {
-					heatcount++; // hier dann später Berechnung für gewichtete Summe einbauen. 
-					// TODO:
-					// - euklidische distanz für die distanz der Taxiunternehmen zueinander
-					// - gewichtung anhand der distanz in die heatmap einbauen
+			mergedheatinfos.forEach((heatIntervals) => {
+				for (const interval of heatIntervals) {
+					if (isAInsideB(onecell, interval.startTime, interval.endTime)) {
+						heatcount++;
+					}
 				}
-			}
+			})
 			heatarray.push({ cell: onecell, heat: heatcount });
 			heatcount = 0;
 		}
