@@ -478,10 +478,6 @@
 			{@render availabilityTable({ startTime: base.getTime(), endTime: todayDay.getTime() })}
 			{@render availabilityTable({
 				startTime: todayDay.getTime(),
-				endTime: todayDay.getTime()
-			})}
-			{@render availabilityTable({
-				startTime: todayDay.getTime(),
 				endTime: todayEvening.getTime()
 			})}
 		{/if}
