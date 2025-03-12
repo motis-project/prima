@@ -177,7 +177,7 @@
 		)[0];
 		return (
 			getFirstAlterableTime() < cell.endTime &&
-			allowed.startTime <= cell.startTime &&
+			allowed.startTime <= cell.startTime - 5 * HOUR &&
 			allowed.endTime >= cell.endTime
 		);
 	};
@@ -305,6 +305,24 @@
 
 	const cellColor = (id: number, v: Vehicle, cell: Range) => {
 		let tours = getTours(id, cell);
+		if (!isAvailabilityAlterable(cell)) {
+			if (hasDraggedTour(id, cell)) {
+				return hasOverlap() ? 'bg-red-500' : 'bg-orange-200';
+			}
+			if (tours.length > 1) {
+				return 'bg-orange-600 bg-opacity-70';
+			}
+			if (tours.length != 0) {
+				return 'bg-orange-400 bg-opacity-70';
+			}
+			if (selection !== null && isSelected(id, cell)) {
+				return selection.available ? 'bg-yellow-100 bg-opacity-70' : '';
+			}
+			if (isAvailable(v, cell)) {
+				return 'bg-yellow-100 bg-opacity-70';
+			}
+			return 'bg-gray-200 dark:bg-gray-800 bg-opacity-90';
+		}
 		if (hasDraggedTour(id, cell)) {
 			return hasOverlap() ? 'bg-red-500' : 'bg-orange-200';
 		} else if (tours.length > 1) {
@@ -385,9 +403,7 @@
 															selectedTour.tours = getTours(v.id, cell);
 														}}
 														class={[
-															getTours(v.id, cell).some((t) => isTourDragable(t))
-																? 'cursor-pointer'
-																: '',
+															'cursor-pointer',
 															'w-8',
 															'h-8',
 															'border',
