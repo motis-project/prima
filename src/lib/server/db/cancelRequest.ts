@@ -12,6 +12,7 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 		.innerJoin('tour', 'tour.id', 'cancelled_request.tour')
 		.select((eb) => [
 			'tour.id',
+			'tour.departure',
 			jsonArrayFrom(
 				eb
 					.selectFrom('tour')
@@ -39,7 +40,8 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 		try {
 			await sendMail(CancelNotificationCompany, 'Stornierte Buchung', companyOwner.email, {
 				events: tour.events,
-				name: companyOwner.name
+				name: companyOwner.name,
+				departure: tour.departure
 			});
 		} catch {
 			console.log(

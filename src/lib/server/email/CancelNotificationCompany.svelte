@@ -4,24 +4,27 @@
 	import EmailFooter from './EmailFooter.svelte';
 	const {
 		name,
-		events
+		events,
+		departure
 	}: {
 		name: string;
 		events: TourEvent[];
+		departure: number;
 	} = $props();
 	events.sort(
 		(e1: TourEvent, e2: TourEvent) => getScheduledEventTime(e1) - getScheduledEventTime(e2)
 	);
-	const startTime = getScheduledEventTime(events[0]);
-	const endTime = getScheduledEventTime(events[events.length - 1]);
-	const startDate = new Date(startTime);
-	const endDate = new Date(endTime);
+	const startTime = events.length < 2 ? undefined : getScheduledEventTime(events[0]);
+	const endTime = events.length < 2 ? undefined : getScheduledEventTime(events[events.length - 1]);
 	const today = new Date(Date.now());
+	const startDate = startTime == undefined ? undefined : new Date(startTime);
+	const endDate = endTime == undefined ? undefined : new Date(endTime);
+	const departureDate = new Date(departure);
 	const isStartToday =
 		new Date(
-			startDate.getUTCFullYear(),
-			startDate.getUTCMonth(),
-			startDate.getUTCDate()
+			departureDate.getUTCFullYear(),
+			departureDate.getUTCMonth(),
+			departureDate.getUTCDate()
 		).getTime() ===
 		new Date(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()).getTime();
 </script>
@@ -30,9 +33,9 @@
 	Guten Tag {name},
 	<p>
 		Es gab Stornierungen in der Fahrt von {events[0].address} nach {events[events.length - 1]
-			.address}, die {isStartToday ? 'heute' : 'am ' + startDate.toLocaleDateString('de')} von {startDate.toLocaleTimeString(
+			.address}, die {isStartToday ? 'heute' : 'am ' + startDate!.toLocaleDateString('de')} von {startDate!.toLocaleTimeString(
 			'de'
-		)} bis {endDate.toLocaleTimeString('de')} stattfinden sollte.
+		)} bis {endDate!.toLocaleTimeString('de')} stattfinden sollte.
 		{events.length === 0
 			? 'Die Fahrt wurde vollständig storniert.'
 			: 'Die folgenden Halte sind immer noch eingeplant:'}
