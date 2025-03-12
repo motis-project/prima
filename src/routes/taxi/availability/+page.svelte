@@ -131,29 +131,22 @@
 		return () => clearInterval(interval);
 	});
 
-	// 11 pm local time day before
+	// 5 am local time day before
 	let base = $derived.by(() => {
 		let copy = new Date(day);
-		copy.setMinutes(copy.getMinutes() + value.toDate(TZ).getTimezoneOffset() - 60);
+		copy.setMinutes(copy.getMinutes() + value.toDate(TZ).getTimezoneOffset() + 300);
 		return copy;
 	});
 
 	// 8 am today
-	let todayMorning = $derived.by(() => {
+	let todayDay = $derived.by(() => {
 		let copy = new Date(base);
 		copy.setHours(base.getHours() + 9);
 		return copy;
 	});
 
-	// 5 pm today
-	let todayDay = $derived.by(() => {
-		let copy = new Date(todayMorning);
-		copy.setHours(todayMorning.getHours() + 9);
-		return copy;
-	});
-
-	// 1 am tomorrow
-	let tomorrowNight = $derived.by(() => {
+	// 22 pm today
+	let todayEvening = $derived.by(() => {
 		let copy = new Date(todayDay);
 		copy.setHours(todayDay.getHours() + 8);
 		return copy;
@@ -510,14 +503,14 @@
 				</p>
 			</div>
 		{:else}
-			{@render availabilityTable({ startTime: base.getTime(), endTime: todayMorning.getTime() })}
+			{@render availabilityTable({ startTime: base.getTime(), endTime: todayDay.getTime() })}
 			{@render availabilityTable({
-				startTime: todayMorning.getTime(),
+				startTime: todayDay.getTime(),
 				endTime: todayDay.getTime()
 			})}
 			{@render availabilityTable({
 				startTime: todayDay.getTime(),
-				endTime: tomorrowNight.getTime()
+				endTime: todayEvening.getTime()
 			})}
 		{/if}
 	</Card.Content>
