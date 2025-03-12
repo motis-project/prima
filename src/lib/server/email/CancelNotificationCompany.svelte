@@ -32,10 +32,11 @@
 <div>
 	Guten Tag {name},
 	<p>
-		Es gab Stornierungen in der Fahrt von {events[0].address} nach {events[events.length - 1]
-			.address}, die {isStartToday ? 'heute' : 'am ' + startDate!.toLocaleDateString('de')} von {startDate!.toLocaleTimeString(
-			'de'
-		)} bis {endDate!.toLocaleTimeString('de')} stattfinden sollte.
+		Es gab Stornierungen in der Fahrt von {events[0].address} nach
+		{events[events.length - 1].address}, die
+		{isStartToday ? 'heute' : 'am ' + startDate!.toLocaleDateString('de')} von
+		{startDate!.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' })} bis
+		{endDate!.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' })} stattfinden sollte.
 		{events.length < 2
 			? 'Die Fahrt wurde vollständig storniert.'
 			: 'Die folgenden Halte sind immer noch eingeplant:'}
