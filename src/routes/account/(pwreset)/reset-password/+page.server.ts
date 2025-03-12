@@ -58,6 +58,7 @@ export const actions: Actions = {
 			})
 			.where('email', '=', email)
 			.where('passwordResetCode', '=', code)
+			.where('passwordResetExpiresAt', '>=', Date.now())
 			.executeTakeFirst();
 
 		if (success.numUpdatedRows === BigInt(0)) {
