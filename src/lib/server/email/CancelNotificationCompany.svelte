@@ -36,12 +36,12 @@
 			.address}, die {isStartToday ? 'heute' : 'am ' + startDate!.toLocaleDateString('de')} von {startDate!.toLocaleTimeString(
 			'de'
 		)} bis {endDate!.toLocaleTimeString('de')} stattfinden sollte.
-		{events.length === 0
+		{events.length < 2
 			? 'Die Fahrt wurde vollständig storniert.'
 			: 'Die folgenden Halte sind immer noch eingeplant:'}
 		{events.map((e) => 'Addresse: ' + e.address + ' Zeit: ' + getScheduledEventTime(e) + '\n')}
 		Die stornierten Buchungen tauchen immer noch auf, sind nun aber rot markiert.
-		{events.length === 0
+		{events.length < 2
 			? 'Da die Fahrt vollständig storniert wurde, ist diese ebenfalls rot markiert.'
 			: ''}
 	</p>
