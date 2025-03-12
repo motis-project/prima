@@ -63,6 +63,18 @@ const displayDuration = (duration: number) => {
 	return addLeadingZero(hours) + ':' + addLeadingZero(minutes) + 'h';
 };
 
+const getStatus = (r: TourWithRequests) => {
+	return r.cancelled
+		? r.message === null
+			? 'von Kunden storniert'
+			: 'storniert'
+		: r.fare === null
+			? r.endTime < Date.now()
+				? 'Taxameterstand nicht eingetragen'
+				: 'geplant'
+			: 'beendet';
+};
+
 const firstTourColAdmin: Column<TourWithRequests> = {
 	text: ['Unternehmen'],
 	sort: (a: TourWithRequests, b: TourWithRequests) => a.companyId - b.companyId,
@@ -110,17 +122,9 @@ const restTourCols = (isAdmin: boolean): Column<TourWithRequests>[] => {
 		},
 		{
 			text: ['Status'],
-			sort: undefined,
-			toTableEntry: (r: TourWithRequests) =>
-				r.cancelled
-					? r.message === null
-						? 'von Kunden storniert'
-						: 'storniert'
-					: r.fare === null
-						? r.endTime < Date.now()
-							? 'Taxameterstand nicht eingetragen'
-							: 'geplant'
-						: 'beendet'
+			sort: (t1: TourWithRequests, t2: TourWithRequests) =>
+				getStatus(t1) < getStatus(t2) ? -1 : 1,
+			toTableEntry: (r: TourWithRequests) => getStatus(r)
 		}
 	];
 };
