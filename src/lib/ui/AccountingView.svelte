@@ -343,7 +343,7 @@
 		<Dialog.Root>
 			<Dialog.Trigger
 				disabled={selectedMonthIdx !== -1 || selectedQuarterIdx !== -1 || selectedYearIdx !== -1}
-				class="col-span-1 {buttonVariants({ variant: 'outline' })}"
+				class={buttonVariants({ variant: 'outline' })}
 				>{range.start === undefined
 					? 'Zeitspanne'
 					: range.start + ' - ' + range.end}</Dialog.Trigger
@@ -378,8 +378,8 @@
 	<Card.Header>
 		<Card.Title>Abrechnung</Card.Title>
 	</Card.Header>
-	<Card.Content class="h-full w-full">
-		<div class="flex flex-row">
+	<Card.Content>
+		<div class="flex flex-row justify-start">
 			{@render filterOptions()}
 		</div>
 		<Tabs items={tables} />

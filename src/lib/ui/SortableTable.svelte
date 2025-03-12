@@ -46,7 +46,7 @@
 		<Table.Head>
 			<Button class="px-0 hover:no-underline" variant="link" onclick={() => sortAndToggle(i)}>
 				{#each text as line}
-					{line}<br />
+					{line}<br/>
 				{/each}
 				<ChevronsUpDown />
 			</Button>
@@ -54,9 +54,9 @@
 	{:else}
 		<Table.Head>
 			{#each text as line}
-				{line}<br />
-			{/each}</Table.Head
-		>
+				{line}<br/>
+			{/each}
+		</Table.Head>
 	{/if}
 {/snippet}
 

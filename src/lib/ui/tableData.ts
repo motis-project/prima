@@ -107,6 +107,11 @@ const restTourCols = (isAdmin: boolean): Column<TourWithRequests>[] => {
 			text: isAdmin ? ['Kosten'] : ['Einnahmen'],
 			sort: (t1: TourWithRequests, t2: TourWithRequests) => getTourCost(t1) - getTourCost(t2),
 			toTableEntry: (r: TourWithRequests) => getEuroString(getTourCost(r))
+		},
+		{
+			text: ['Status'],
+			sort: undefined,
+			toTableEntry: (r: TourWithRequests) => r.cancelled ? (r.message === null ? 'von Kunden storniert' : 'storniert') : (r.fare === null ? (r.endTime < Date.now() ? 'Taxameterstand nicht eingetragen' : 'geplant') : 'beendet')
 		}
 	];
 };
@@ -167,7 +172,7 @@ export const subtractionColsAdmin: Column<Subtractions>[] = [
 			(a.availabilityDuration / HOUR) * CAP -
 			(b.uncapped - (b.availabilityDuration / HOUR) * CAP),
 		toTableEntry: (r: Subtractions) =>
-			getEuroString(r.uncapped - (r.availabilityDuration / HOUR) * CAP)
+			getEuroString(Math.max(r.uncapped - (r.availabilityDuration / HOUR) * CAP, 0))
 	},
 	{
 		text: ['Einnahmen', 'mit Obergrenze'],
@@ -215,7 +220,7 @@ export const companyColsAdmin: Column<CompanyRow>[] = [
 		toTableEntry: (r: CompanyRow) => getEuroString(r.uncapped)
 	},
 	{
-		text: ['Kosten mit Obergrenze'],
+		text: ['Kosten mit', 'Obergrenze'],
 		sort: summationLast((a: CompanyRow, b: CompanyRow) => a.capped - b.capped),
 		toTableEntry: (r: CompanyRow) => getEuroString(r.capped)
 	},
