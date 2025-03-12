@@ -111,7 +111,16 @@ const restTourCols = (isAdmin: boolean): Column<TourWithRequests>[] => {
 		{
 			text: ['Status'],
 			sort: undefined,
-			toTableEntry: (r: TourWithRequests) => r.cancelled ? (r.message === null ? 'von Kunden storniert' : 'storniert') : (r.fare === null ? (r.endTime < Date.now() ? 'Taxameterstand nicht eingetragen' : 'geplant') : 'beendet')
+			toTableEntry: (r: TourWithRequests) =>
+				r.cancelled
+					? r.message === null
+						? 'von Kunden storniert'
+						: 'storniert'
+					: r.fare === null
+						? r.endTime < Date.now()
+							? 'Taxameterstand nicht eingetragen'
+							: 'geplant'
+						: 'beendet'
 		}
 	];
 };
