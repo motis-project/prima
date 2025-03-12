@@ -30,6 +30,7 @@
 	import type { ToursWithRequests, TourWithRequests } from '$lib/util/getToursTypes';
 	import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 	import { getFirstAlterableTime } from '$lib/util/getFirstAlterableTime';
+	import { getLatestEventTime } from '$lib/util/getLatestEventTime';
 
 	const { data, form } = $props();
 
@@ -253,13 +254,8 @@
 
 	const isTourDragable = (tour: TourWithRequests) => {
 		return (
-			Math.min(
-				...tour.requests.flatMap((r) =>
-					r.events.map((e) =>
-						Math.max(...[e.scheduledTimeStart, e.scheduledTimeEnd, e.communicatedTime])
-					)
-				)
-			) >= Date.now()
+			Math.min(...tour.requests.flatMap((r) => r.events.map((e) => getLatestEventTime(e)))) >=
+			Date.now()
 		);
 	};
 
