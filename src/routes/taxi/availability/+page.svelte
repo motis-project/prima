@@ -16,17 +16,53 @@
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import * as Card from '$lib/shadcn/card';
 	import { ChevronRight, ChevronLeft } from 'lucide-svelte';
-	import { TZ } from '$lib/constants.js';
+	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, MIN_PREP, TZ } from '$lib/constants.js';
 
 	import { goto, invalidateAll } from '$app/navigation';
 
 	import TourDialog from '$lib/ui/TourDialog.svelte';
 	import AddVehicle from './AddVehicle.svelte';
 	import { onMount } from 'svelte';
-	import type { ToursWithRequests } from '$lib/server/db/getTours';
+	import type { ToursWithRequests, TourWithRequests } from '$lib/server/db/getTours';
 	import Message from '$lib/ui/Message.svelte';
 	import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 	import type { LngLatLike } from 'maplibre-gl';
+	import { DAY, HOUR, MINUTE } from '$lib/util/time';
+
+	export function getAllowedTimes(
+	earliest: UnixtimeMs,
+	latest: UnixtimeMs,
+	startOnDay: UnixtimeMs,
+	endOnDay: UnixtimeMs
+	): Range[] {
+		if (earliest >= latest) {
+			return [];
+		}
+
+		const earliestDay = Math.floor(earliest / DAY) * DAY;
+		const latestDay = Math.floor(latest / DAY) * DAY + DAY;
+
+		const noonEarliestDay = new Date(earliestDay + 12 * HOUR);
+
+		const allowedTimes: Array<Range> = [];
+		for (let t = earliestDay; t < latestDay; t += DAY) {
+			const offset =
+				parseInt(
+					noonEarliestDay.toLocaleString('de-DE', {
+						hour: '2-digit',
+						hour12: false,
+						timeZone: 'Europe/Berlin'
+					})
+				) - 12;
+			allowedTimes.push({startTime: t + startOnDay - offset * HOUR, endTime: t + endOnDay - offset * HOUR});
+			noonEarliestDay.setHours(noonEarliestDay.getHours() + 24);
+		}
+		return allowedTimes;
+	}
+
+	function getFirstAlterableTime() {
+		return Math.ceil((Date.now() + MIN_PREP) / (15 * MINUTE)) * 15 * MINUTE;
+	}
 
 	const { data, form } = $props();
 
@@ -171,9 +207,14 @@
 		return selection != null && selection.id == id && overlaps(getSelection()!, cell);
 	};
 
+	const isAvailabilityAlterable = (cell: Range) => {
+		const allowed = getAllowedTimes(cell.startTime + MINUTE, cell.endTime - MINUTE, EARLIEST_SHIFT_START - HOUR, LATEST_SHIFT_END + HOUR)[0];
+		return getFirstAlterableTime() < cell.endTime && allowed.startTime<=cell.startTime && allowed.endTime>=cell.endTime;
+	}
+
 	const selectionStart = (id: number, vehicle: Vehicle, cell: Range) => {
 		console.log('selectionStart', id);
-		if (selection === null) {
+		if (selection === null && isAvailabilityAlterable(cell)) {
 			selection = {
 				id,
 				vehicle,
@@ -185,7 +226,7 @@
 	};
 
 	const selectionContinue = (cell: Range) => {
-		if (selection !== null) {
+		if (selection !== null && isAvailabilityAlterable(cell)) {
 			selection = { ...selection, end: cell };
 		}
 	};
@@ -241,9 +282,15 @@
 		);
 	};
 
+	const isTourDragable = (tour: TourWithRequests) => {
+		return Math.min(...(tour.requests.flatMap((r) => r.events.map((e) =>
+			Math.max(...[e.scheduledTimeStart, e.scheduledTimeEnd, e.communicatedTime])
+		)))) >= Date.now();
+	}
+
 	const dragStart = (vehicleId: number, cell: Range) => {
 		if (cell === undefined) return;
-		let tours = getTours(vehicleId, cell);
+		let tours = getTours(vehicleId, cell).filter((t) =>	isTourDragable(t));
 		if (tours.length !== 0) {
 			draggedTours = { tours, vehicleId };
 		}
@@ -297,6 +344,12 @@
 			return selection.available ? 'bg-yellow-100' : '';
 		} else if (isAvailable(v, cell)) {
 			return 'bg-yellow-100';
+		}
+	};
+
+	const cellBorder = (cell: Range) => {
+		if (!isAvailabilityAlterable(cell)) {
+			return 'border-4 border-gray-500';
 		}
 	};
 </script>
@@ -367,12 +420,13 @@
 															selectedTour.tours = getTours(v.id, cell);
 														}}
 														class={[
-															'cursor-pointer',
+															getTours(v.id, cell).some((t) => isTourDragable(t)) ? 'cursor-pointer' : '',
 															'w-8',
 															'h-8',
 															'border',
 															'rounded-md',
-															cellColor(v.id, v, cell)
+															cellColor(v.id, v, cell),
+															cellBorder(cell)
 														].join(' ')}
 													></div>
 												{:else}
@@ -382,7 +436,8 @@
 															'h-8',
 															'border',
 															'rounded-md',
-															cellColor(v.id, v, cell)
+															cellColor(v.id, v, cell),
+															cellBorder(cell)
 														].join(' ')}
 													></div>
 												{/if}
