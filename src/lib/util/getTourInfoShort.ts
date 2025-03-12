@@ -1,4 +1,4 @@
-import type { TourWithRequests } from '$lib/server/db/getTours';
+import type { TourWithRequests } from '$lib/util/getToursTypes';
 
 export const getTourInfoShort = (tour: TourWithRequests) => {
 	const events = tour.requests.flatMap((r) => r.events);

@@ -17,8 +17,7 @@ import {
 	PASSENGER_CHANGE_DURATION
 } from '$lib/constants';
 import { evaluateNewTours } from './insertion';
-import { DAY, HOUR } from '$lib/util/time';
-import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
+import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 
 export async function evaluateRequest(
 	companies: Company[],
@@ -101,35 +100,4 @@ export async function evaluateRequest(
 		//promisedTimes
 	);
 	return newTourEvaluations;
-}
-
-export function getAllowedTimes(
-	earliest: UnixtimeMs,
-	latest: UnixtimeMs,
-	startOnDay: UnixtimeMs,
-	endOnDay: UnixtimeMs
-): Interval[] {
-	if (earliest >= latest) {
-		return [];
-	}
-
-	const earliestDay = Math.floor(earliest / DAY) * DAY;
-	const latestDay = Math.floor(latest / DAY) * DAY + DAY;
-
-	const noonEarliestDay = new Date(earliestDay + 12 * HOUR);
-
-	const allowedTimes: Array<Interval> = [];
-	for (let t = earliestDay; t < latestDay; t += DAY) {
-		const offset =
-			parseInt(
-				noonEarliestDay.toLocaleString('de-DE', {
-					hour: '2-digit',
-					hour12: false,
-					timeZone: 'Europe/Berlin'
-				})
-			) - 12;
-		allowedTimes.push(new Interval(t + startOnDay - offset * HOUR, t + endOnDay - offset * HOUR));
-		noonEarliestDay.setHours(noonEarliestDay.getHours() + 24);
-	}
-	return allowedTimes;
 }

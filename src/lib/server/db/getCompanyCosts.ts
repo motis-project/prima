@@ -1,7 +1,8 @@
 import { CAP, FIXED_PRICE, OVER_CAP_FACTOR } from '$lib/constants';
 import type { VehicleId } from '$lib/server/booking/VehicleId';
 import { db } from '$lib/server/db';
-import { getToursWithRequests, type TourWithRequests } from '$lib/server/db/getTours';
+import { getToursWithRequests } from '$lib/server/db/getTours';
+import type { TourWithRequests } from '$lib/util/getToursTypes';
 import { Interval } from '$lib/server/util/interval';
 import { groupBy } from '$lib/util/groupBy';
 import { DAY, HOUR } from '$lib/util/time';

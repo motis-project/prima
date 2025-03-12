@@ -16,56 +16,20 @@
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import * as Card from '$lib/shadcn/card';
 	import { ChevronRight, ChevronLeft } from 'lucide-svelte';
-	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, MIN_PREP, TZ } from '$lib/constants.js';
+	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, TZ } from '$lib/constants.js';
 
 	import { goto, invalidateAll } from '$app/navigation';
 
 	import TourDialog from '$lib/ui/TourDialog.svelte';
 	import AddVehicle from './AddVehicle.svelte';
 	import { onMount } from 'svelte';
-	import type { ToursWithRequests, TourWithRequests } from '$lib/server/db/getTours';
 	import Message from '$lib/ui/Message.svelte';
 	import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 	import type { LngLatLike } from 'maplibre-gl';
-	import { DAY, HOUR, MINUTE } from '$lib/util/time';
-
-	export function getAllowedTimes(
-		earliest: UnixtimeMs,
-		latest: UnixtimeMs,
-		startOnDay: UnixtimeMs,
-		endOnDay: UnixtimeMs
-	): Range[] {
-		if (earliest >= latest) {
-			return [];
-		}
-
-		const earliestDay = Math.floor(earliest / DAY) * DAY;
-		const latestDay = Math.floor(latest / DAY) * DAY + DAY;
-
-		const noonEarliestDay = new Date(earliestDay + 12 * HOUR);
-
-		const allowedTimes: Array<Range> = [];
-		for (let t = earliestDay; t < latestDay; t += DAY) {
-			const offset =
-				parseInt(
-					noonEarliestDay.toLocaleString('de-DE', {
-						hour: '2-digit',
-						hour12: false,
-						timeZone: 'Europe/Berlin'
-					})
-				) - 12;
-			allowedTimes.push({
-				startTime: t + startOnDay - offset * HOUR,
-				endTime: t + endOnDay - offset * HOUR
-			});
-			noonEarliestDay.setHours(noonEarliestDay.getHours() + 24);
-		}
-		return allowedTimes;
-	}
-
-	function getFirstAlterableTime() {
-		return Math.ceil((Date.now() + MIN_PREP) / (15 * MINUTE)) * 15 * MINUTE;
-	}
+	import { HOUR, MINUTE } from '$lib/util/time';
+	import type { ToursWithRequests, TourWithRequests } from '$lib/util/getToursTypes';
+	import { getAllowedTimes } from '$lib/util/getAllowedTimes';
+	import { getFirstAlterableTime } from './api/availability/+server';
 
 	const { data, form } = $props();
 
