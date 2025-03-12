@@ -60,19 +60,63 @@ export async function setup(page: Page) {
 	await logout(page);
 }
 
+
 test('Boooking', async ({ page }) => {
+	test.setTimeout(600_000);
+
 	await setup(page);
 	await login(page, TAXI_OWNER);
 	
-	//TODO record bookings
+	// Schleife --> Görlitz (Fwd)
 	await page.goto('http://localhost:5173/routing');
-	await page.getByRole('textbox', { name: 'From' }).click();
-	await page.getByRole('combobox', { name: 'From' }).fill('Schleife');
-	await page.getByRole('option', { name: 'Schleife Schleife - Slepo' }).click();
-	await page.getByRole('textbox', { name: 'To' }).click();
-	await page.getByRole('combobox', { name: 'To' }).fill('Görlitz');
-	await page.getByRole('option', { name: 'Görlitz Germany' }).click();
-	await page.getByRole('button', { name: '1 h 19 min 2 transfers 20:17' }).click();
-	await page.getByRole('button', { name: 'Book ride (incurs cost)' }).click();
-	await page.getByLabel('Book ride (incurs cost)').getByRole('button', { name: 'Book ride (incurs cost)' }).click();
+	await page.getByRole('textbox', { name: 'Von' }).click();
+	await page.getByRole('combobox', { name: 'Von' }).fill('Schleife, Deutschland');
+	await page.goBack();
+	await page.getByRole('textbox', { name: 'Nach' }).click();
+	await page.getByRole('combobox', { name: 'Nach' }).fill('Görlitz, Deutschland');
+	await page.goBack();
+	await page.getByRole('button', { name: '1 h 19 min 2 Umstiege 20:17' }).click();
+	await page.getByRole('button', { name: 'Kostenpflichtig buchen' }).click();
+	await page.getByLabel('Kostenpflichtig buchen').getByRole('button', { name: 'Kostenpflichtig buchen' }).click();
+
+	await page.goto('http://localhost:5173/taxi/availability?offset=-60&date=2025-03-10');	
+	await expect(page.getByTestId('GR-TU-11-2025-03-10T18:45:00.000Z').locator('div')).toHaveClass('bg-yellow-100');
+	await expect(page.getByTestId('GR-TU-11-2025-03-10T19:00:00.000Z').locator('div')).toHaveClass('bg-orange-400');
+	await expect(page.getByTestId('GR-TU-11-2025-03-10T19:15:00.000Z').locator('div')).toHaveClass('bg-orange-400');
+	await expect(page.getByTestId('GR-TU-11-2025-03-10T19:30:00.000Z').locator('div')).toHaveClass('bg-orange-400');
+	await expect(page.getByTestId('GR-TU-11-2025-03-10T19:45:00.000Z').locator('div')).toHaveClass('bg-yellow-100');
+
+	await page.getByTestId('GR-TU-11-2025-03-10T19:00:00.000Z').locator('div').click();
+	await expect(page.getByRole('dialog', { name: 'Tour Details' })).toBeVisible();
+
+	// Görlitz --> Schleife (Bwd)
+	await page.goto('http://localhost:5173/routing');
+	await page.getByRole('button', { name: 'Los um Mo., 10.03.25, 00:' }).click();
+	await page.getByRole('radio', { name: 'Ankunft' }).check();
+	await page.locator('input[type="datetime-local"]').click();
+	await page.locator('input[type="datetime-local"]').fill('2025-03-11T00:00');
+	await page.getByRole('button', { name: 'Close' }).click();
+	await page.getByRole('textbox', { name: 'Von' }).click();
+	await page.getByRole('combobox', { name: 'Von' }).fill('Görlitz, Deutschland');
+	await page.getByRole('combobox', { name: 'Von' }).press('Enter');
+	await page.getByRole('textbox', { name: 'Nach' }).click();
+	await page.getByRole('combobox', { name: 'Nach' }).fill('Schleife, Deutschland');
+	await page.getByRole('combobox', { name: 'Nach' }).press('Enter');
+	await expect(page.getByRole('button', { name: '1 h 16 min 2 Umstiege 18:21 (' })).toBeVisible();
+	await expect(page.getByRole('button', { name: '1 h 17 min 2 Umstiege 19:20 (' })).toBeVisible();
+	await page.getByRole('button', { name: '1 h 17 min 2 Umstiege 19:20 (' }).click();
+	await page.getByRole('button', { name: 'Kostenpflichtig buchen' }).click();
+	await page.getByLabel('Kostenpflichtig buchen').getByRole('button', { name: 'Kostenpflichtig buchen' }).click();
+
+	await page.getByRole('link', { name: 'Verfügbarkeit' }).click();
+	await expect(page.getByTestId('GR-TU-12-2025-03-10T19:00:00.000Z').locator('div')).toHaveClass('bg-yellow-100');
+	await expect(page.getByTestId('GR-TU-12-2025-03-10T19:15:00.000Z').locator('div')).toHaveClass('bg-orange-400');
+	await expect(page.getByTestId('GR-TU-12-2025-03-10T19:30:00.000Z').locator('div')).toHaveClass('bg-orange-400');
+	await expect(page.getByTestId('GR-TU-12-2025-03-10T19:45:00.000Z').locator('div')).toHaveClass('bg-orange-400');
+	await expect(page.getByTestId('GR-TU-12-2025-03-10T20:00:00.000Z').locator('div')).toHaveClass('bg-yellow-100');
+	await page.getByTestId('GR-TU-12-2025-03-10T19:30:00.000Z').locator('div').click();
+	await expect(page.getByRole('dialog', { name: 'Tour Details' })).toBeVisible();
+	await page.getByRole('button', { name: 'Close' }).click();
+
+await page.goto('http://localhost:5173/routing');
 });
