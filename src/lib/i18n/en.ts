@@ -29,7 +29,7 @@ const translations: Translations = {
 		new: 'New here? <a class="link" href="/account/signup">Create an account!</a>',
 		enterYourCode: 'Please enter your code.',
 		codeExpiredSentAnother: 'The verification code expired. We sent another code.',
-		incorrectCode: 'Wrong code.',
+		incorrectCode: 'Wrong or expired code.',
 		newCodeSent: 'We sent a new code to your inbox.',
 		enterNewPassword: 'Please enter your new password.',
 		passwordChanged: 'Password changed successfully.',
@@ -85,7 +85,8 @@ const translations: Translations = {
 		cancelled: 'This trip has been cancelled.',
 
 		// Feedback
-		feedbackThank: 'Thank you very much for your feedback!'
+		feedbackThank: 'Thank you very much for your feedback!',
+		feedbackMissing: 'No feedback given'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',
@@ -123,6 +124,11 @@ const translations: Translations = {
 		verify: 'Verify'
 	},
 	rating: {
+		thanksForUsing: 'Thank you for using the public transport taxi.',
+		howHasItBeen: 'How has it been?',
+		giveFeedback: 'Give us your feedback.',
+		howHasJourneyBeen: 'How has the journey been?',
+		yourFeedback: 'Your feedback',
 		good: 'good',
 		bad: 'bad',
 		sendFeedback: 'Send feedback'
