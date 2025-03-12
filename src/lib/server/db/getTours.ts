@@ -67,10 +67,6 @@ export const getTours = async (
 		.execute();
 };
 
-export type Tours = Awaited<ReturnType<typeof getTours>>;
-export type Tour = Tours[0];
-export type TourEvent = Tour['events'][0];
-
 export const getToursWithRequests = async (
 	selectCancelled: boolean,
 	companyId?: number,
