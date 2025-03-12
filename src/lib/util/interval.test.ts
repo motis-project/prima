@@ -1,6 +1,6 @@
 import { MINUTE } from '$lib/util/time';
 import { describe, it, expect } from 'vitest';
-import { Interval } from '../../util/interval';
+import { Interval } from './interval';
 
 const BASE_MS = new Date('4000-01-01T00:00:00.0Z').getTime();
 const inX = (m: number) => {

@@ -98,21 +98,21 @@
 		return () => clearInterval(interval);
 	});
 
-	// 5 am local time day before
+	// 5 am today
 	let base = $derived.by(() => {
 		let copy = new Date(day);
 		copy.setMinutes(copy.getMinutes() + value.toDate(TZ).getTimezoneOffset() + 300);
 		return copy;
 	});
 
-	// 8 am today
+	// 2 pm today
 	let todayDay = $derived.by(() => {
 		let copy = new Date(base);
 		copy.setHours(base.getHours() + 9);
 		return copy;
 	});
 
-	// 22 pm today
+	// 10 pm today
 	let todayEvening = $derived.by(() => {
 		let copy = new Date(todayDay);
 		copy.setHours(todayDay.getHours() + 8);
