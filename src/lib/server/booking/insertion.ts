@@ -22,12 +22,13 @@ import {
 	returnsToCompany
 } from './durations';
 //import type { PromisedTimes } from './PromisedTimes';
-import type { Interval } from '$lib/util/interval';
+import { Interval } from '$lib/util/interval';
 import type { RoutingResults } from './routing';
 import type { Company, Event } from './getBookingAvailability';
 import type { Capacities } from './Capacities';
 import { isValid } from './getPossibleInsertions';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
+//import { MINUTE } from '$lib/util/time';
 
 export type InsertionEvaluation = {
 	pickupTime: number;
@@ -366,15 +367,21 @@ const keepsPromises = (
 	directDuration: number,
 	promisedTimes: PromisedTimes
 ): boolean => {
+	const expandToFullMinutes = (interval: Interval) => {
+		return new Interval(
+			Math.floor(interval.startTime / MINUTE) * MINUTE,
+			Math.ceil(interval.endTime / MINUTE) * MINUTE
+		);
+	}
 	const w = arrivalWindow.shift(
 		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? directDuration : -directDuration
 	);
-	const pickupWindow = (
+	const pickupWindow = expandToFullMinutes(
 		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? arrivalWindow : w
-	).round();
-	const dropoffWindow = (
+	);
+	const dropoffWindow = expandToFullMinutes(
 		insertionCase.direction == InsertDirection.BUS_STOP_DROPOFF ? arrivalWindow : w
-	).round();
+	);
 
 	let checkPickup = false;
 	let checkDropoff = false;
