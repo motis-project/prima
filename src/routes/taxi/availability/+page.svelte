@@ -29,7 +29,7 @@
 	import { HOUR, MINUTE } from '$lib/util/time';
 	import type { ToursWithRequests, TourWithRequests } from '$lib/util/getToursTypes';
 	import { getAllowedTimes } from '$lib/util/getAllowedTimes';
-	import { getFirstAlterableTime } from './api/availability/+server';
+	import { getFirstAlterableTime } from '$lib/util/getFirstAlterableTime';
 
 	const { data, form } = $props();
 

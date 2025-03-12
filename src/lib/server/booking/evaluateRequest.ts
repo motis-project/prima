@@ -1,5 +1,5 @@
 import { batchOneToManyCarRouting } from '$lib/server/util/batchOneToManyCarRouting';
-import { Interval } from '$lib/server/util/interval';
+import { Interval } from '$lib/util/interval';
 import type { Coordinates } from '$lib/util/Coordinates';
 import type { BusStop } from './BusStop';
 import type { Capacities } from './Capacities';

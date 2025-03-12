@@ -1,7 +1,7 @@
 import type { Capacities } from '$lib/server/booking/Capacities';
 import { getBookingAvailability } from '$lib/server/booking/getBookingAvailability';
 import { MAX_TRAVEL } from '$lib/constants';
-import { Interval } from '$lib/server/util/interval';
+import { Interval } from '$lib/util/interval';
 import type { Coordinates } from '$lib/util/Coordinates';
 import { evaluateRequest } from '$lib/server/booking/evaluateRequest';
 import { toBusStopWithISOStrings, type BusStop } from '$lib/server/booking/BusStop';

@@ -22,7 +22,7 @@ import {
 	returnsToCompany
 } from './durations';
 //import type { PromisedTimes } from './PromisedTimes';
-import type { Interval } from '$lib/server/util/interval';
+import type { Interval } from '$lib/util/interval';
 import type { RoutingResults } from './routing';
 import type { Company, Event } from './getBookingAvailability';
 import type { Capacities } from './Capacities';

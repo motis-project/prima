@@ -1,4 +1,4 @@
-import { Interval } from '$lib/server/util/interval';
+import { Interval } from '$lib/util/interval';
 import { DAY, HOUR } from './time';
 import type { UnixtimeMs } from './UnixtimeMs';
 
