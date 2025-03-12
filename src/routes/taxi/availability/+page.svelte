@@ -30,10 +30,10 @@
 	import { DAY, HOUR, MINUTE } from '$lib/util/time';
 
 	export function getAllowedTimes(
-	earliest: UnixtimeMs,
-	latest: UnixtimeMs,
-	startOnDay: UnixtimeMs,
-	endOnDay: UnixtimeMs
+		earliest: UnixtimeMs,
+		latest: UnixtimeMs,
+		startOnDay: UnixtimeMs,
+		endOnDay: UnixtimeMs
 	): Range[] {
 		if (earliest >= latest) {
 			return [];
@@ -54,7 +54,10 @@
 						timeZone: 'Europe/Berlin'
 					})
 				) - 12;
-			allowedTimes.push({startTime: t + startOnDay - offset * HOUR, endTime: t + endOnDay - offset * HOUR});
+			allowedTimes.push({
+				startTime: t + startOnDay - offset * HOUR,
+				endTime: t + endOnDay - offset * HOUR
+			});
 			noonEarliestDay.setHours(noonEarliestDay.getHours() + 24);
 		}
 		return allowedTimes;
@@ -201,9 +204,18 @@
 	};
 
 	const isAvailabilityAlterable = (cell: Range) => {
-		const allowed = getAllowedTimes(cell.startTime + MINUTE, cell.endTime - MINUTE, EARLIEST_SHIFT_START - HOUR, LATEST_SHIFT_END + HOUR)[0];
-		return getFirstAlterableTime() < cell.endTime && allowed.startTime<=cell.startTime && allowed.endTime>=cell.endTime;
-	}
+		const allowed = getAllowedTimes(
+			cell.startTime + MINUTE,
+			cell.endTime - MINUTE,
+			EARLIEST_SHIFT_START - HOUR,
+			LATEST_SHIFT_END + HOUR
+		)[0];
+		return (
+			getFirstAlterableTime() < cell.endTime &&
+			allowed.startTime <= cell.startTime &&
+			allowed.endTime >= cell.endTime
+		);
+	};
 
 	const selectionStart = (id: number, vehicle: Vehicle, cell: Range) => {
 		console.log('selectionStart', id);
@@ -276,14 +288,20 @@
 	};
 
 	const isTourDragable = (tour: TourWithRequests) => {
-		return Math.min(...(tour.requests.flatMap((r) => r.events.map((e) =>
-			Math.max(...[e.scheduledTimeStart, e.scheduledTimeEnd, e.communicatedTime])
-		)))) >= Date.now();
-	}
+		return (
+			Math.min(
+				...tour.requests.flatMap((r) =>
+					r.events.map((e) =>
+						Math.max(...[e.scheduledTimeStart, e.scheduledTimeEnd, e.communicatedTime])
+					)
+				)
+			) >= Date.now()
+		);
+	};
 
 	const dragStart = (vehicleId: number, cell: Range) => {
 		if (cell === undefined) return;
-		let tours = getTours(vehicleId, cell).filter((t) =>	isTourDragable(t));
+		let tours = getTours(vehicleId, cell).filter((t) => isTourDragable(t));
 		if (tours.length !== 0) {
 			draggedTours = { tours, vehicleId };
 		}
@@ -337,12 +355,6 @@
 			return selection.available ? 'bg-yellow-100' : '';
 		} else if (isAvailable(v, cell)) {
 			return 'bg-yellow-100';
-		}
-	};
-
-	const cellBorder = (cell: Range) => {
-		if (!isAvailabilityAlterable(cell)) {
-			return 'border-4 border-gray-500';
 		}
 	};
 </script>
@@ -413,13 +425,14 @@
 															selectedTour.tours = getTours(v.id, cell);
 														}}
 														class={[
-															getTours(v.id, cell).some((t) => isTourDragable(t)) ? 'cursor-pointer' : '',
+															getTours(v.id, cell).some((t) => isTourDragable(t))
+																? 'cursor-pointer'
+																: '',
 															'w-8',
 															'h-8',
 															'border',
 															'rounded-md',
-															cellColor(v.id, v, cell),
-															cellBorder(cell)
+															cellColor(v.id, v, cell)
 														].join(' ')}
 													></div>
 												{:else}
@@ -429,8 +442,7 @@
 															'h-8',
 															'border',
 															'rounded-md',
-															cellColor(v.id, v, cell),
-															cellBorder(cell)
+															cellColor(v.id, v, cell)
 														].join(' ')}
 													></div>
 												{/if}
