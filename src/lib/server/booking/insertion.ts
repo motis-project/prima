@@ -29,7 +29,6 @@ import type { Capacities } from './Capacities';
 import { isValid } from './getPossibleInsertions';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 //import { MINUTE } from '$lib/util/time';
-//import { MINUTE } from '$lib/util/time';
 
 export type InsertionEvaluation = {
 	pickupTime: number;
@@ -374,24 +373,14 @@ const keepsPromises = (
 			Math.ceil(interval.endTime / MINUTE) * MINUTE
 		);
 	}
-	const expandToFullMinutes = (interval: Interval) => {
-		return new Interval(
-			Math.floor(interval.startTime / MINUTE) * MINUTE,
-			Math.ceil(interval.endTime / MINUTE) * MINUTE
-		);
-	}
 	const w = arrivalWindow.shift(
 		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? directDuration : -directDuration
 	);
 	const pickupWindow = expandToFullMinutes(
-	const pickupWindow = expandToFullMinutes(
 		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? arrivalWindow : w
 	);
 	const dropoffWindow = expandToFullMinutes(
-	);
-	const dropoffWindow = expandToFullMinutes(
 		insertionCase.direction == InsertDirection.BUS_STOP_DROPOFF ? arrivalWindow : w
-	);
 	);
 
 	let checkPickup = false;
