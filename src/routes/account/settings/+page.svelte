@@ -12,12 +12,12 @@
 
 <Meta title="Account | {PUBLIC_PROVIDER}" />
 
-<Message msg={form?.msg} class="mb-4" />
-
 <div class="flex flex-col gap-10">
+	<Message msg={form?.msg} class="mb-4" />
+
 	<Panel title={t.account.resetPassword} subtitle={t.account.resetPasswordSubtitle}>
 		<form method="post" action="/account/settings?/changePassword">
-			<Input name="password" type="password" placeholder="Password" />
+			<Input name="password" type="password" placeholder={t.account.password} />
 			<div class="mt-4 flex justify-end">
 				<Button type="submit" variant="outline">{t.account.resetPassword}</Button>
 			</div>
@@ -26,7 +26,7 @@
 
 	<Panel title={t.account.changeEmail} subtitle={t.account.changeEmailSubtitle}>
 		<form method="post" action="/account/settings?/changeEmail" class="mt-8">
-			<Input name="email" type="email" placeholder="Email" />
+			<Input name="email" type="email" placeholder={t.account.email} />
 			<div class="mt-4 flex justify-end">
 				<Button type="submit" variant="outline">{t.account.changeEmail}</Button>
 			</div>

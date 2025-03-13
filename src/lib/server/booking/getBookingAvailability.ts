@@ -1,5 +1,5 @@
 import { MAX_TRAVEL, WGS84 } from '$lib/constants';
-import { Interval } from '$lib/server/util/interval';
+import { Interval } from '$lib/util/interval';
 import type { Coordinates } from '$lib/util/Coordinates';
 import { sql, type ExpressionBuilder, type Transaction } from 'kysely';
 import type { Capacities } from './Capacities';

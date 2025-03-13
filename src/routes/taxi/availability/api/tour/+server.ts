@@ -3,16 +3,9 @@ import { db } from '$lib/server/db';
 import { sql } from 'kysely';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { getPossibleInsertions } from '$lib/server/booking/getPossibleInsertions';
+import { getLatestEventTime } from '$lib/util/getLatestEventTime';
 
 export const POST = async (event) => {
-	function getLatestEventTime(ev: {
-		communicatedTime: number;
-		scheduledTimeEnd: number;
-		scheduledTimeStart: number;
-	}) {
-		return Math.max(...[ev.scheduledTimeStart, ev.scheduledTimeEnd, ev.communicatedTime]);
-	}
-
 	const companyId = event.locals.session?.companyId;
 	if (!companyId) {
 		throw 'no company id';

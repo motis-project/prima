@@ -1,6 +1,6 @@
 import { BUFFER_TIME, MAX_TRAVEL, PASSENGER_CHANGE_DURATION } from '$lib/constants';
 import { implication } from '$lib/server/util/implication';
-import { Interval } from '$lib/server/util/interval';
+import { Interval } from '$lib/util/interval';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import type { DbEvent, VehicleWithInterval } from './getBookingAvailability';
 import {

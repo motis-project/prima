@@ -16,17 +16,21 @@
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import * as Card from '$lib/shadcn/card';
 	import { ChevronRight, ChevronLeft } from 'lucide-svelte';
-	import { TZ } from '$lib/constants.js';
+	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, TZ } from '$lib/constants.js';
 
 	import { goto, invalidateAll } from '$app/navigation';
 
 	import TourDialog from '$lib/ui/TourDialog.svelte';
 	import AddVehicle from './AddVehicle.svelte';
 	import { onMount } from 'svelte';
-	import type { ToursWithRequests } from '$lib/server/db/getTours';
 	import Message from '$lib/ui/Message.svelte';
 	import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 	import type { LngLatLike } from 'maplibre-gl';
+	import { HOUR, MINUTE } from '$lib/util/time';
+	import type { ToursWithRequests, TourWithRequests } from '$lib/util/getToursTypes';
+	import { getAllowedTimes } from '$lib/util/getAllowedTimes';
+	import { getFirstAlterableTime } from '$lib/util/getFirstAlterableTime';
+	import { getLatestEventTime } from '$lib/util/getLatestEventTime';
 
 	const { data, form } = $props();
 
@@ -95,29 +99,22 @@
 		return () => clearInterval(interval);
 	});
 
-	// 11 pm local time day before
+	// 5 am today
 	let base = $derived.by(() => {
 		let copy = new Date(day);
-		copy.setMinutes(copy.getMinutes() + value.toDate(TZ).getTimezoneOffset() - 60);
+		copy.setMinutes(copy.getMinutes() + value.toDate(TZ).getTimezoneOffset() + 300);
 		return copy;
 	});
 
-	// 8 am today
-	let todayMorning = $derived.by(() => {
+	// 2 pm today
+	let todayDay = $derived.by(() => {
 		let copy = new Date(base);
 		copy.setHours(base.getHours() + 9);
 		return copy;
 	});
 
-	// 5 pm today
-	let todayDay = $derived.by(() => {
-		let copy = new Date(todayMorning);
-		copy.setHours(todayMorning.getHours() + 9);
-		return copy;
-	});
-
-	// 1 am tomorrow
-	let tomorrowNight = $derived.by(() => {
+	// 10 pm today
+	let todayEvening = $derived.by(() => {
 		let copy = new Date(todayDay);
 		copy.setHours(todayDay.getHours() + 8);
 		return copy;
@@ -162,7 +159,7 @@
 		return selection == null
 			? null
 			: {
-					startTime: Math.min(selection.start.startTime, selection.end.endTime),
+					startTime: Math.min(selection.start.startTime, selection.end.startTime),
 					endTime: Math.max(selection.start.endTime, selection.end.endTime)
 				};
 	};
@@ -171,9 +168,23 @@
 		return selection != null && selection.id == id && overlaps(getSelection()!, cell);
 	};
 
+	const isAvailabilityAlterable = (cell: Range) => {
+		const allowed = getAllowedTimes(
+			cell.startTime + MINUTE,
+			cell.endTime - MINUTE,
+			EARLIEST_SHIFT_START - HOUR,
+			LATEST_SHIFT_END + HOUR
+		)[0];
+		return (
+			getFirstAlterableTime() < cell.endTime &&
+			allowed.startTime <= cell.startTime &&
+			allowed.endTime >= cell.endTime
+		);
+	};
+
 	const selectionStart = (id: number, vehicle: Vehicle, cell: Range) => {
 		console.log('selectionStart', id);
-		if (selection === null) {
+		if (selection === null && isAvailabilityAlterable(cell)) {
 			selection = {
 				id,
 				vehicle,
@@ -185,7 +196,7 @@
 	};
 
 	const selectionContinue = (cell: Range) => {
-		if (selection !== null) {
+		if (selection !== null && isAvailabilityAlterable(cell)) {
 			selection = { ...selection, end: cell };
 		}
 	};
@@ -241,9 +252,21 @@
 		);
 	};
 
+	const isTourDragable = (tour: TourWithRequests) => {
+		return (
+			Math.min(...tour.requests.flatMap((r) => r.events.map((e) => getLatestEventTime(e)))) >=
+			Date.now()
+		);
+	};
+
+	const hasDragableTour = (vehicleId: number, cell: Range) =>
+		data.tours
+			.filter((t) => vehicleId == t.vehicleId && overlaps(t, cell))
+			.some((t) => isTourDragable(t));
+
 	const dragStart = (vehicleId: number, cell: Range) => {
 		if (cell === undefined) return;
-		let tours = getTours(vehicleId, cell);
+		let tours = getTours(vehicleId, cell).filter((t) => isTourDragable(t));
 		if (tours.length !== 0) {
 			draggedTours = { tours, vehicleId };
 		}
@@ -287,12 +310,26 @@
 
 	const cellColor = (id: number, v: Vehicle, cell: Range) => {
 		let tours = getTours(id, cell);
-		if (hasDraggedTour(id, cell)) {
-			return hasOverlap() ? 'bg-red-500' : 'bg-orange-200';
-		} else if (tours.length > 1) {
-			return 'bg-orange-600';
-		} else if (tours.length != 0) {
+		if (tours.length != 0) {
+			if (hasDraggedTour(id, cell)) {
+				return hasOverlap() ? 'bg-red-500' : 'bg-orange-200';
+			}
+			if (!tours.some((t) => isTourDragable(t))) {
+				if (tours.length > 1) {
+					return 'bg-orange-600 bg-opacity-70';
+				}
+				return 'bg-orange-400 bg-opacity-60 dark:bg-opacity-70';
+			}
+			if (tours.length != 1) {
+				return 'bg-orange-600';
+			}
 			return 'bg-orange-400';
+		}
+		if (!isAvailabilityAlterable(cell)) {
+			if (isAvailable(v, cell)) {
+				return 'border-none border-gray-50 bg-yellow-100 bg-opacity-40 dark:bg-opacity-60';
+			}
+			return 'border-none';
 		} else if (selection !== null && isSelected(id, cell)) {
 			return selection.available ? 'bg-yellow-100' : '';
 		} else if (isAvailable(v, cell)) {
@@ -351,7 +388,7 @@
 											<td
 												data-testid="{v.licensePlate}-{new Date(cell.startTime).toISOString()}"
 												class="cell"
-												draggable={hasTour(v.id, cell)}
+												draggable={hasDragableTour(v.id, cell)}
 												ondragstart={() => dragStart(v.id, cell)}
 												ondragover={() => dragOver(v.id)}
 												ondragend={() => onDrop()}
@@ -455,14 +492,10 @@
 				</p>
 			</div>
 		{:else}
-			{@render availabilityTable({ startTime: base.getTime(), endTime: todayMorning.getTime() })}
-			{@render availabilityTable({
-				startTime: todayMorning.getTime(),
-				endTime: todayDay.getTime()
-			})}
+			{@render availabilityTable({ startTime: base.getTime(), endTime: todayDay.getTime() })}
 			{@render availabilityTable({
 				startTime: todayDay.getTime(),
-				endTime: tomorrowNight.getTime()
+				endTime: todayEvening.getTime()
 			})}
 		{/if}
 	</Card.Content>

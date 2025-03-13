@@ -11,7 +11,7 @@
 	<Alert.Root class={className} variant={msg.type === 'success' ? 'default' : 'destructive'}>
 		<CircleAlert class="size-4" />
 		<Alert.Description>
-			<!-- eslint-disable svelte/no-at-html-tags -->
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 			{@html t.msg[msg.text]}
 		</Alert.Description>
 	</Alert.Root>

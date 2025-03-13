@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
-	import type { TourEvent } from '../db/getTours';
+	import type { TourEvent } from '$lib/util/getToursTypes';
 	import EmailFooter from './EmailFooter.svelte';
 	const {
 		name,
