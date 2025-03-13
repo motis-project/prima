@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import type { Itinerary } from '$lib/openapi';
@@ -40,7 +40,7 @@ export const actions = {
 			(ratingStr != 'good' && ratingStr != 'bad') ||
 			typeof comment !== 'string'
 		) {
-			throw 'bad request';
+			return fail(400, { msg: msg('feedbackMissing') });
 		}
 
 		const rating = ratingStr === 'good' ? 1 : 0;
