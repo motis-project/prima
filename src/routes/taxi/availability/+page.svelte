@@ -159,7 +159,7 @@
 		return selection == null
 			? null
 			: {
-					startTime: Math.min(selection.start.startTime, selection.end.endTime),
+					startTime: Math.min(selection.start.startTime, selection.end.startTime),
 					endTime: Math.max(selection.start.endTime, selection.end.endTime)
 				};
 	};
