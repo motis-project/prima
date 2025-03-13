@@ -11,16 +11,19 @@ import de.motis.prima.data.ValidationStatus
 import de.motis.prima.formatTo
 import de.motis.prima.services.ApiService
 import de.motis.prima.services.Tour
-import de.motis.prima.services.Vehicle
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import retrofit2.Call
-import retrofit2.Callback
 import retrofit2.Response
 import java.time.LocalDate
 import java.time.ZoneId
@@ -51,6 +54,84 @@ class ToursViewModel @Inject constructor(
 
     private val scannedTickets = repository.scannedTickets
 
+    init {
+        startFetchingTours()
+        startReportingScans()
+    }
+
+    private fun refreshTours() {
+        val displayDay = _displayDate.value
+        val nextDay = displayDay.plusDays(1)
+        val start = displayDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val end = nextDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+        viewModelScope.launch {
+            try {
+                _loading.value = true
+                val response = apiService.getTours(start, end)
+                if (response.isSuccessful) {
+                    _tours.value = response.body() ?: emptyList()
+                    _loading.value = false
+                }
+            } catch (e: Exception) {
+                Log.e("error", "Exception: ${e.message}")
+            }
+        }
+    }
+
+    private fun fetchTours(): Flow<Response<List<Tour>>> = flow {
+        while (true) {
+            val displayDay = _displayDate.value
+            Log.d("test", displayDay.toString())
+            val nextDay = displayDay.plusDays(1)
+            val start = displayDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val end = nextDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            try {
+                val response = apiService.getTours(start, end)
+                emit(response)
+            } catch (e: Exception) {
+                fetchAttempts.intValue++
+                if (fetchAttempts.intValue - 3 < 0) {
+                    _loading.value = true
+                }
+                if (fetchAttempts.intValue > 3) {
+                    _loading.value = false
+                    _networkError.value = true
+                }
+                Log.e("error", "Exception: ${e.message}")
+            }
+            delay(10000) // 10 sec
+        }
+    }.flowOn(Dispatchers.IO)
+
+    private fun startFetchingTours() {
+        CoroutineScope(Dispatchers.IO).launch {
+            fetchTours().collect { response ->
+                if (response.isSuccessful) {
+                    val newTours = response.body() ?: emptyList()
+                    fetchAttempts.intValue = 1
+                    _loading.value = false
+                    _networkError.value = false
+
+                    if (tours.value.isNotEmpty() && newTours.size > tours.value.size) {
+                        val newItem = newTours.last()
+                        val pickup = newItem.events.first()
+                        val currentDay = Date().formatTo("yyyy-MM-dd")
+                        val pickupDate = Date(pickup.scheduledTimeStart)
+
+                        if (pickupDate.formatTo("yyyy-MM-dd") == currentDay) {
+                            // TODO: notifications
+                        }
+                    }
+                    _tours.value = newTours
+                } else {
+                    Log.d("debug", "fetchTours: $response")
+                }
+            }
+        }
+    }
+
     private fun retryFailedReport(ticket: Ticket) {
         viewModelScope.launch {
             try {
@@ -68,80 +149,27 @@ class ToursViewModel @Inject constructor(
         }
     }
 
-    init {
-        refreshTours()
-    }
-
-    fun fetchTours() {
-        val displayDay = _displayDate.value
-        val nextDay = displayDay.plusDays(1)
-        val start = displayDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val end = nextDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-
-        apiService.getTours(start, end).enqueue(object : Callback<List<Tour>> {
-            override fun onResponse(
-                call: Call<List<Tour>>,
-                response: Response<List<Tour>>
-            ) {
-                if (response.isSuccessful) {
-                    val newTours = response.body() ?: emptyList()
-                    fetchAttempts.intValue = 1
-                    _loading.value = false
-                    _networkError.value = false
-
-                    // Check for new items and trigger notification
-                    if (tours.value.isNotEmpty() && newTours.size > tours.value.size) {
-                        val newItem = newTours.last()
-                        val pickup = newItem.events.first()
-                        val currentDday = Date().formatTo("yyyy-MM-dd")
-                        val pickupDate = Date(pickup.scheduledTimeStart)
-
-                        if (pickupDate.formatTo("yyyy-MM-dd") == currentDday) {
-                            // TODO: notifications
-                        }
-                    }
-                    _tours.value = newTours
-                } else {
-                    Log.d("debug", "fetchTours: $response")
-                }
-            }
-
-            override fun onFailure(call: Call<List<Tour>>, t: Throwable) {
-                fetchAttempts.intValue++
-                if (fetchAttempts.intValue - 3 < 0) {
-                    _loading.value = true
-                }
-                if (fetchAttempts.intValue > 3) {
-                    _loading.value = false
-                    _networkError.value = true
-                }
-            }
-        })
-    }
-
-    private fun refreshTours() {
+    private fun startReportingScans() {
         viewModelScope.launch {
             while (true) {
-                fetchTours()
-                // TODO
                 val failedReports = scannedTickets.value.entries
                     .filter { e -> e.value.validationStatus == ValidationStatus.FAILED }
+                Log.d("debug", "failedReports: $failedReports")
                 for (report in failedReports) {
                     retryFailedReport(report.value)
                 }
-
-                delay(5000) // Fetch every 5 seconds
+                delay(120000) // 2 min
             }
         }
     }
 
     fun incrementDate() {
         _displayDate.value = _displayDate.value.plusDays(1)
-        fetchTours()
+        refreshTours()
     }
 
     fun decrementDate() {
         _displayDate.value = _displayDate.value.minusDays(1)
-        fetchTours()
+        refreshTours()
     }
 }

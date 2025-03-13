@@ -1,5 +1,6 @@
 package de.motis.prima.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,6 +30,7 @@ class FareViewModel @Inject constructor(
     val scannedTickets = repository.scannedTickets
 
     fun reportFare(tourId: Int, fare: String) {
+        Log.d("debug", "$tourId, $fare")
         viewModelScope.launch {
             var fareCent = 0
             try {

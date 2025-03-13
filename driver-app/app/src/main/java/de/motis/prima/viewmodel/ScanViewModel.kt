@@ -17,11 +17,10 @@ class ScanViewModel @Inject constructor(
     private val repository: DataRepository
 ) : ViewModel() {
     fun reportTicketScan(requestId: Int, ticketCode: String) {
-        Log.d("debug", "reportTicketScan: requestId: $requestId")
         val ticketStatus = repository.getTicketStatus(ticketCode)
         val shouldReport =
             ticketStatus != ValidationStatus.OK && ticketStatus != ValidationStatus.REJECTED
-        Log.d("debug", "shouldReport: $shouldReport, status: $ticketStatus")
+        Log.d("debug", "shouldReport: $shouldReport, ticketStatus: $ticketStatus")
         if (shouldReport) {
             viewModelScope.launch {
                 var validationStatus = ValidationStatus.OK
