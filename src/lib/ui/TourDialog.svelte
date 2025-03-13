@@ -17,7 +17,7 @@
 	import GeoJSON from '$lib/map/GeoJSON.svelte';
 	import Layer from '$lib/map/Layer.svelte';
 
-	import type { TourWithRequests } from '$lib/server/db/getTours';
+	import type { TourWithRequests } from '$lib/util/getToursTypes';
 	import type { PlanResponse } from '$lib/openapi';
 	import { MIN_PREP } from '$lib/constants';
 	import { carRouting } from '$lib/util/carRouting';

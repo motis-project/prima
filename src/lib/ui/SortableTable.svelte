@@ -2,7 +2,7 @@
 	import * as Table from '$lib/shadcn/table/index';
 	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button } from '$lib/shadcn/button';
-	import type { TourWithRequests } from '$lib/server/db/getTours';
+	import type { TourWithRequests } from '$lib/util/getToursTypes';
 
 	let {
 		rows,
