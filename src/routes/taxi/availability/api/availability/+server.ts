@@ -1,14 +1,12 @@
-import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, MIN_PREP } from '$lib/constants';
-import { getAllowedTimes } from '$lib/server/booking/evaluateRequest';
+import { EARLIEST_SHIFT_START, LATEST_SHIFT_END } from '$lib/constants';
 import { db, type Database } from '$lib/server/db';
-import { Interval } from '$lib/server/util/interval';
-import { HOUR, MINUTE } from '$lib/util/time';
+import { Interval } from '$lib/util/interval';
+import { getAllowedTimes } from '$lib/util/getAllowedTimes';
+import { HOUR } from '$lib/util/time';
 import { json } from '@sveltejs/kit';
 import { sql, type Insertable, type Selectable } from 'kysely';
+import { getFirstAlterableTime } from '$lib/util/getFirstAlterableTime';
 
-function getFirstAlterableTime() {
-	return Math.ceil((Date.now() + MIN_PREP) / (15 * MINUTE)) * 15 * MINUTE;
-}
 type Availability = Selectable<Database['availability']>;
 type NewAvailability = Insertable<Database['availability']>;
 

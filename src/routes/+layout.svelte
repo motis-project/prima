@@ -47,10 +47,10 @@
 			<CircleAlert class="size-4" />
 			<Alert.Title></Alert.Title>
 			<Alert.Description>
-				Vielen Dank dass Sie das ÖPNV Taxi benutzt haben. <br />
-				Wie war es?
+				{t.rating.thanksForUsing}<br />
+				{t.rating.howHasItBeen}
 				<a class="font-bold underline" href="/rating/{data.pendingRating.id}">
-					Geben Sie uns Ihr Feedback.
+					{t.rating.giveFeedback}
 				</a>
 			</Alert.Description>
 		</Alert.Root>

@@ -3,7 +3,7 @@
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import Papa from 'papaparse';
 	import pkg from 'file-saver';
-	import type { ToursWithRequests, TourWithRequests } from '$lib/server/db/getTours';
+	import type { ToursWithRequests, TourWithRequests } from '$lib/util/getToursTypes';
 	import Tabs from '$lib/ui/Tabs.svelte';
 	import SortableTable from '$lib/ui/SortableTable.svelte';
 	import Select from '$lib/ui/Select.svelte';
