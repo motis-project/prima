@@ -7,6 +7,7 @@
 <AccountingView
 	isAdmin={true}
 	tours={data.tours}
-	companyCostsPerDay={data.companyCostsPerDay}
 	earliestTime={data.earliestTime}
+	latestTime={data.latestTime}
+	costPerDayAndVehicle={data.costPerDayAndVehicle}
 />

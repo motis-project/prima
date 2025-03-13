@@ -2,23 +2,26 @@
 	import * as Table from '$lib/shadcn/table/index';
 	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button } from '$lib/shadcn/button';
-	import type { TourWithRequests } from '$lib/util/getToursTypes';
 
 	let {
-		rows,
+		rows = $bindable(),
 		cols,
 		getRowStyle,
-		selectedRow = $bindable()
+		selectedRow = $bindable(),
+		bindSelectedRow,
+		fixLastRow
 	}: {
 		rows: T[];
 		cols: {
-			text: string;
+			text: string[];
 			sort: undefined | ((r1: T, r2: T) => number);
 			toTableEntry: (r: T) => string | number;
 		}[];
 		isAdmin: boolean;
 		getRowStyle?: (row: T) => string;
 		selectedRow?: undefined | T[];
+		bindSelectedRow?: boolean;
+		fixLastRow?: boolean;
 	} = $props();
 
 	const descending = Array.from({ length: cols.length }, () => true);
@@ -26,6 +29,9 @@
 		rows.sort(cols[idx].sort);
 		if (!descending[idx]) {
 			rows.reverse();
+			if (fixLastRow) {
+				rows = rows.splice(1).concat([rows[0]]);
+			}
 		} else {
 			for (let i = 0; i < descending.length; i++) {
 				if (i != idx) descending[i] = true;
@@ -33,32 +39,33 @@
 		}
 		descending[idx] = !descending[idx];
 	};
-
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	function isTourWithRequests(data: any): data is TourWithRequests {
-		return data && typeof data.tourId === 'number' && Array.isArray(data.requests);
-	}
 </script>
 
-<div class="min-w-[160vh]">
+{#snippet tableHead(text: string[], i: number, sort: boolean)}
+	{#if sort}
+		<Table.Head class="pb-4 pt-2">
+			<Button class="px-0 hover:no-underline" variant="link" onclick={() => sortAndToggle(i)}>
+				{#each text as line}
+					{line}<br />
+				{/each}
+				<ChevronsUpDown />
+			</Button>
+		</Table.Head>
+	{:else}
+		<Table.Head class="pb-4 pt-2">
+			{#each text as line}
+				{line}<br />
+			{/each}
+		</Table.Head>
+	{/if}
+{/snippet}
+
+<div>
 	<Table.Root>
 		<Table.Header>
 			<Table.Row>
 				{#each cols as col, i}
-					{#if col.sort != undefined}
-						<Table.Head>
-							<Button
-								class="px-0 hover:no-underline"
-								variant="link"
-								onclick={() => sortAndToggle(i)}
-							>
-								{col.text}
-								<ChevronsUpDown class="h-6 w-4" />
-							</Button>
-						</Table.Head>
-					{:else}
-						<Table.Head>{col.text}</Table.Head>
-					{/if}
+					{@render tableHead(col.text, i, col.sort != undefined)}
 				{/each}
 			</Table.Row>
 		</Table.Header>
@@ -67,7 +74,7 @@
 				<Table.Row
 					class={`${getRowStyle === undefined ? '' : getRowStyle(row)}`}
 					onclick={() => {
-						if (isTourWithRequests(row)) {
+						if (bindSelectedRow) {
 							selectedRow = [row];
 						}
 					}}
