@@ -15,19 +15,21 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 			'tour.departure',
 			jsonArrayFrom(
 				eb
-					.selectFrom('tour')
-					.innerJoin('request', 'tour.id', 'request.tour')
+					.selectFrom('request as cancelled_request')
+					.innerJoin('tour as cancelled_tour', 'cancelled_tour.id', 'cancelled_request.tour')
+					.innerJoin('request', 'request.tour', 'cancelled_tour.id')
 					.innerJoin('event', 'event.request', 'request.id')
-					.whereRef('event.request', '=', 'request.id')
-					.where('event.cancelled', '=', false)
-					.select(['event.address', 'event.scheduledTimeStart', 'event.scheduledTimeEnd'])
+					.where('cancelled_request.id', '=', requestId)
+					.select(['event.address', 'event.scheduledTimeStart', 'event.scheduledTimeEnd', 'event.cancelled', 'cancelled_tour.id as tourid'])
 			).as('events'),
 			jsonArrayFrom(
 				eb
-					.selectFrom('tour')
+					.selectFrom('request')
+					.innerJoin('tour', 'tour.id', 'request.tour')
 					.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 					.innerJoin('company', 'company.id', 'vehicle.company')
 					.innerJoin('user', 'user.companyId', 'company.id')
+					.where('request.id', '=', requestId)
 					.where('user.isTaxiOwner', '=', true)
 					.select(['user.name', 'user.email'])
 			).as('companyOwners')
