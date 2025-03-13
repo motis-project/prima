@@ -327,7 +327,7 @@
 		}
 		if (!isAvailabilityAlterable(cell)) {
 			if (isAvailable(v, cell)) {
-				return 'border-none border-gray-50 bg-yellow-50 bg-opacity-40 dark:bg-opacity-70';
+				return 'border-none border-gray-50 bg-yellow-100 bg-opacity-40 dark:bg-opacity-60';
 			}
 			return 'border-none';
 		} else if (selection !== null && isSelected(id, cell)) {
