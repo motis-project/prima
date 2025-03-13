@@ -374,7 +374,7 @@
 	</div>
 {/snippet}
 
-<div class="h-[90vh]">
+<div>
 	<Card.Header>
 		<Card.Title>Abrechnung</Card.Title>
 	</Card.Header>
