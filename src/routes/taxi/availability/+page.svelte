@@ -326,13 +326,10 @@
 			return 'bg-orange-400';
 		}
 		if (!isAvailabilityAlterable(cell)) {
-			if (selection !== null && isSelected(id, cell)) {
-				return selection.available ? 'bg-yellow-100 bg-opacity-70' : '';
-			}
 			if (isAvailable(v, cell)) {
-				return 'bg-yellow-100 bg-opacity-40 dark:bg-opacity-70';
+				return 'border-none border-gray-50 bg-yellow-50 bg-opacity-40 dark:bg-opacity-70';
 			}
-			return 'bg-gray-200 dark:bg-gray-800 bg-opacity-90';
+			return 'border-none';
 		} else if (selection !== null && isSelected(id, cell)) {
 			return selection.available ? 'bg-yellow-100' : '';
 		} else if (isAvailable(v, cell)) {
