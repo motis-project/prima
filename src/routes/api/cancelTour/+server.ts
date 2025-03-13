@@ -45,7 +45,7 @@ export const POST = async (event: RequestEvent) => {
 		try {
 			await sendMail(CancelNotificationCustomer, 'Stornierte Buchung', request.email, {
 				start: request.events[0].address,
-				to: request.events[1].address,
+				target: request.events[1].address,
 				startTime: request.events[0].communicatedTime,
 				name: request.name
 			});

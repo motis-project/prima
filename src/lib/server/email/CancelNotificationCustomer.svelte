@@ -18,8 +18,9 @@
 	<p>
 		Deine Fahrt von {start} nach {target}, die {isToday
 			? 'heute'
-			: 'am ' + startDate.toLocaleDateString('de')} um {startDate.toLocaleTimeString('de')} beginnen
-		sollte wurde storniert.
+			: 'am ' + startDate.toLocaleDateString('de')} um
+		{startDate.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' })} beginnen sollte wurde
+		storniert.
 	</p>
 
 	<EmailFooter />
