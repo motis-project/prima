@@ -1,5 +1,5 @@
 import { CAP, FIXED_PRICE } from '$lib/constants';
-import type { TourWithRequests } from '$lib/server/db/getTours';
+import type { TourWithRequests } from '$lib/util/getToursTypes';
 import { HOUR, MINUTE, SECOND } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
