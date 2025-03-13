@@ -16,7 +16,7 @@
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import * as Card from '$lib/shadcn/card';
 	import { ChevronRight, ChevronLeft } from 'lucide-svelte';
-	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, TZ } from '$lib/constants.js';
+	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, MIN_PREP, TZ } from '$lib/constants.js';
 
 	import { goto, invalidateAll } from '$app/navigation';
 
@@ -305,30 +305,28 @@
 
 	const cellColor = (id: number, v: Vehicle, cell: Range) => {
 		let tours = getTours(id, cell);
-		if (!isAvailabilityAlterable(cell)) {
+		if(tours.length != 0) {
 			if (hasDraggedTour(id, cell)) {
 				return hasOverlap() ? 'bg-red-500' : 'bg-orange-200';
 			}
-			if (tours.length > 1) {
-				return 'bg-orange-600 bg-opacity-70';
+			if(!tours.some((t) => isTourDragable(t))){
+				if (tours.length > 1) {
+					return 'bg-orange-600 bg-opacity-70';
+				}
+				return 'bg-orange-400 bg-opacity-60 dark:bg-opacity-70';
+			} if (tours.length != 1) {
+				return 'bg-orange-600';
 			}
-			if (tours.length != 0) {
-				return 'bg-orange-400 bg-opacity-70';
-			}
+			return 'bg-orange-400';
+		}
+		if (!isAvailabilityAlterable(cell)) {
 			if (selection !== null && isSelected(id, cell)) {
 				return selection.available ? 'bg-yellow-100 bg-opacity-70' : '';
 			}
 			if (isAvailable(v, cell)) {
-				return 'bg-yellow-100 bg-opacity-70';
+				return 'bg-yellow-100 bg-opacity-40 dark:bg-opacity-70';
 			}
 			return 'bg-gray-200 dark:bg-gray-800 bg-opacity-90';
-		}
-		if (hasDraggedTour(id, cell)) {
-			return hasOverlap() ? 'bg-red-500' : 'bg-orange-200';
-		} else if (tours.length > 1) {
-			return 'bg-orange-600';
-		} else if (tours.length != 0) {
-			return 'bg-orange-400';
 		} else if (selection !== null && isSelected(id, cell)) {
 			return selection.available ? 'bg-yellow-100' : '';
 		} else if (isAvailable(v, cell)) {
@@ -338,6 +336,12 @@
 </script>
 
 <svelte:window onmouseup={() => selectionFinish()} />
+
+{#snippet separator(hours: number, n: number)}
+{#if hours  + (15 * MINUTE) * n < Date.now() + MIN_PREP && hours + (15 * MINUTE) * (n + 1) >= Date.now() + MIN_PREP}
+	<div class="h-[20px]  bg-green-300 w-1"></div>
+{/if}
+{/snippet}
 
 {#snippet availabilityTable(range: Range)}
 	<table class="mb-16 select-none">
@@ -350,10 +354,10 @@
 						<table>
 							<tbody>
 								<tr class="text-sm text-muted-foreground">
-									<td class="w-8">00</td>
-									<td class="w-8 pl-1">15</td>
-									<td class="w-8 pl-1">30</td>
-									<td class="w-8 pl-1">45</td>
+									<td class="w-8">00{@render separator(Math.floor(x.startTime / HOUR) * HOUR, 0)}</td>
+									<td class="w-8 pl-1">15{@render separator(Math.floor(x.startTime / HOUR) * HOUR, 1)}</td>
+									<td class="w-8 pl-1">30{@render separator(Math.floor(x.startTime / HOUR) * HOUR, 2)}</td>
+									<td class="w-8 pl-1">45{@render separator(Math.floor(x.startTime / HOUR) * HOUR, 3)}</td>
 								</tr>
 							</tbody>
 						</table>
