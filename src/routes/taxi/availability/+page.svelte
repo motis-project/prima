@@ -16,7 +16,7 @@
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import * as Card from '$lib/shadcn/card';
 	import { ChevronRight, ChevronLeft } from 'lucide-svelte';
-	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, MIN_PREP, TZ } from '$lib/constants.js';
+	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, TZ } from '$lib/constants.js';
 
 	import { goto, invalidateAll } from '$app/navigation';
 
@@ -260,7 +260,8 @@
 	};
 
 	const hasDragableTour = (vehicleId: number, cell: Range) =>
-		data.tours.filter((t) => vehicleId == t.vehicleId && overlaps(t, cell))
+		data.tours
+			.filter((t) => vehicleId == t.vehicleId && overlaps(t, cell))
 			.some((t) => isTourDragable(t));
 
 	const dragStart = (vehicleId: number, cell: Range) => {
@@ -309,16 +310,17 @@
 
 	const cellColor = (id: number, v: Vehicle, cell: Range) => {
 		let tours = getTours(id, cell);
-		if(tours.length != 0) {
+		if (tours.length != 0) {
 			if (hasDraggedTour(id, cell)) {
 				return hasOverlap() ? 'bg-red-500' : 'bg-orange-200';
 			}
-			if(!tours.some((t) => isTourDragable(t))){
+			if (!tours.some((t) => isTourDragable(t))) {
 				if (tours.length > 1) {
 					return 'bg-orange-600 bg-opacity-70';
 				}
 				return 'bg-orange-400 bg-opacity-60 dark:bg-opacity-70';
-			} if (tours.length != 1) {
+			}
+			if (tours.length != 1) {
 				return 'bg-orange-600';
 			}
 			return 'bg-orange-400';
