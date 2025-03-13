@@ -43,7 +43,7 @@
 
 {#snippet tableHead(text: string[], i: number, sort: boolean)}
 	{#if sort}
-		<Table.Head>
+		<Table.Head class="pb-4 pt-2">
 			<Button class="px-0 hover:no-underline" variant="link" onclick={() => sortAndToggle(i)}>
 				{#each text as line}
 					{line}<br />
@@ -52,7 +52,7 @@
 			</Button>
 		</Table.Head>
 	{:else}
-		<Table.Head>
+		<Table.Head class="pb-4 pt-2">
 			{#each text as line}
 				{line}<br />
 			{/each}
@@ -60,7 +60,7 @@
 	{/if}
 {/snippet}
 
-<div class="min-w-[160vh]">
+<div>
 	<Table.Root>
 		<Table.Header>
 			<Table.Row>

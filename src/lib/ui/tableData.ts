@@ -27,7 +27,9 @@ export type Column<T> = {
 };
 
 export const getEuroString = (price: number | null) => {
-	return ((price ?? 0) / 100).toFixed(2) + '€';
+	return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(
+		(price ?? 0) / 100
+	);
 };
 
 const getCustomerCount = (tour: TourWithRequests, countOnlyVerified: boolean) => {
