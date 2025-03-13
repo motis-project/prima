@@ -177,7 +177,7 @@
 		)[0];
 		return (
 			getFirstAlterableTime() < cell.endTime &&
-			allowed.startTime <= cell.startTime - 5 * HOUR &&
+			allowed.startTime <= cell.startTime &&
 			allowed.endTime >= cell.endTime
 		);
 	};
@@ -259,6 +259,10 @@
 		);
 	};
 
+	const hasDragableTour = (vehicleId: number, cell: Range) =>
+		data.tours.filter((t) => vehicleId == t.vehicleId && overlaps(t, cell))
+			.some((t) => isTourDragable(t));
+
 	const dragStart = (vehicleId: number, cell: Range) => {
 		if (cell === undefined) return;
 		let tours = getTours(vehicleId, cell).filter((t) => isTourDragable(t));
@@ -337,12 +341,6 @@
 
 <svelte:window onmouseup={() => selectionFinish()} />
 
-{#snippet separator(hours: number, n: number)}
-{#if hours  + (15 * MINUTE) * n < Date.now() + MIN_PREP && hours + (15 * MINUTE) * (n + 1) >= Date.now() + MIN_PREP}
-	<div class="h-[20px]  bg-green-300 w-1"></div>
-{/if}
-{/snippet}
-
 {#snippet availabilityTable(range: Range)}
 	<table class="mb-16 select-none">
 		<thead>
@@ -354,10 +352,10 @@
 						<table>
 							<tbody>
 								<tr class="text-sm text-muted-foreground">
-									<td class="w-8">00{@render separator(Math.floor(x.startTime / HOUR) * HOUR, 0)}</td>
-									<td class="w-8 pl-1">15{@render separator(Math.floor(x.startTime / HOUR) * HOUR, 1)}</td>
-									<td class="w-8 pl-1">30{@render separator(Math.floor(x.startTime / HOUR) * HOUR, 2)}</td>
-									<td class="w-8 pl-1">45{@render separator(Math.floor(x.startTime / HOUR) * HOUR, 3)}</td>
+									<td class="w-8">00</td>
+									<td class="w-8 pl-1">15</td>
+									<td class="w-8 pl-1">30</td>
+									<td class="w-8 pl-1">45</td>
 								</tr>
 							</tbody>
 						</table>
@@ -391,7 +389,7 @@
 											<td
 												data-testid="{v.licensePlate}-{new Date(cell.startTime).toISOString()}"
 												class="cell"
-												draggable={hasTour(v.id, cell)}
+												draggable={hasDragableTour(v.id, cell)}
 												ondragstart={() => dragStart(v.id, cell)}
 												ondragover={() => dragOver(v.id)}
 												ondragend={() => onDrop()}
