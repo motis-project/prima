@@ -1,5 +1,5 @@
 import { Interval } from '$lib/util/interval';
-import { DAY, HOUR, roundToUnit } from './time';
+import { DAY, getOffset, HOUR, roundToUnit } from './time';
 import type { UnixtimeMs } from './UnixtimeMs';
 
 export function getAllowedTimes(
@@ -19,15 +19,8 @@ export function getAllowedTimes(
 
 	const allowedTimes: Array<Interval> = [];
 	for (let t = earliestDay; t < latestDay; t += DAY) {
-		const offset =
-			parseInt(
-				noonEarliestDay.toLocaleString('de-DE', {
-					hour: '2-digit',
-					hour12: false,
-					timeZone: 'Europe/Berlin'
-				})
-			) - 12;
-		allowedTimes.push(new Interval(t + startOnDay - offset * HOUR, t + endOnDay - offset * HOUR));
+		const offset = getOffset(noonEarliestDay.getTime());
+		allowedTimes.push(new Interval(t + startOnDay - offset, t + endOnDay - offset));
 		noonEarliestDay.setHours(noonEarliestDay.getHours() + 24);
 	}
 	return allowedTimes;

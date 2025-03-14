@@ -5,7 +5,7 @@ import { getToursWithRequests } from '$lib/server/db/getTours';
 import type { TourWithRequests } from '$lib/util/getToursTypes';
 import { Interval } from '$lib/util/interval';
 import { groupBy } from '$lib/util/groupBy';
-import { DAY, HOUR, roundToUnit } from '$lib/util/time';
+import { DAY, HOUR, roundToUnit, getOffset } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
 export async function getCompanyCosts(companyId?: number) {
@@ -43,25 +43,14 @@ export async function getCompanyCosts(companyId?: number) {
 		.execute();
 
 	// create an array of intervals representing the individual days in the two relevant years
-	const getOffset = (t: UnixtimeMs) => {
-		return (
-			parseInt(
-				new Date(t).toLocaleString('de-DE', {
-					hour: '2-digit',
-					hour12: false,
-					timeZone: 'Europe/Berlin'
-				})
-			) - 12
-		);
-	};
 	const firstDay = new Date(earliestTime - DAY);
 	const firstDayStart = roundToUnit(firstDay.getTime(), DAY, Math.floor);
 	const days = Array.from({ length: Math.ceil((latestTime - firstDayStart) / DAY) }, (_, i) => {
 		const offset = getOffset(firstDayStart + DAY * i + HOUR * 12);
 		const offsetNextDay = getOffset(firstDayStart + DAY * (i + 1) + HOUR * 12);
 		return new Interval(
-			firstDayStart + DAY * i - offset * HOUR,
-			firstDayStart + DAY * (i + 1) - offsetNextDay * HOUR
+			firstDayStart + DAY * i - offset,
+			firstDayStart + DAY * (i + 1) - offsetNextDay
 		);
 	});
 	// group availabilities by vehicle

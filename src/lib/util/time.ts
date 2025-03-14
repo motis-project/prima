@@ -1,3 +1,5 @@
+import type { UnixtimeMs } from './UnixtimeMs';
+
 export const SECOND = 1000;
 export const MINUTE = SECOND * 60;
 export const HOUR = MINUTE * 60;
@@ -14,3 +16,17 @@ export function secondToMilli(second: number): number {
 export function roundToUnit(n: number, unit: number, roundFn: (n: number) => number) {
 	return roundFn(n / unit) * unit;
 }
+
+export const getOffset = (t: UnixtimeMs) => {
+	return (
+		HOUR *
+		(parseInt(
+			new Date(t).toLocaleString('de-DE', {
+				hour: '2-digit',
+				hour12: false,
+				timeZone: 'Europe/Berlin'
+			})
+		) -
+			12)
+	);
+};
