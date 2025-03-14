@@ -3,9 +3,8 @@ import { Kysely, PostgresDialect, RawBuilder, sql } from 'kysely';
 import { dbConfig } from './config';
 import pg from 'pg';
 import { DAY, getOffset, HOUR, MINUTE } from '../src/lib/util/time';
-import { LOCALE_DE } from '../src/lib/constants';
 
-test.use({ locale: LOCALE_DE });
+test.use({ locale: 'de-DE' });
 
 export const in6Days = new Date(Math.ceil(Date.now() / DAY) * DAY + 5 * DAY);
 export const dayString = in6Days.toISOString().split('T')[0];
