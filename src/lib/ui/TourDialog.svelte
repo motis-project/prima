@@ -19,7 +19,7 @@
 
 	import type { TourWithRequests } from '$lib/util/getToursTypes';
 	import type { PlanResponse } from '$lib/openapi';
-	import { 'de-DE', MIN_PREP } from '$lib/constants';
+	import { MIN_PREP } from '$lib/constants';
 	import { carRouting } from '$lib/util/carRouting';
 	import { polylineToGeoJSON } from '$lib/util/polylineToGeoJSON';
 	import { getTourInfoShort } from '$lib/util/getTourInfoShort';

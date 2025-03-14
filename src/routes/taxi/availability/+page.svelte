@@ -16,7 +16,7 @@
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import * as Card from '$lib/shadcn/card';
 	import { ChevronRight, ChevronLeft } from 'lucide-svelte';
-	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, 'de-DE', TZ } from '$lib/constants.js';
+	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, TZ } from '$lib/constants.js';
 
 	import { goto, invalidateAll } from '$app/navigation';
 

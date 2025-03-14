@@ -1,4 +1,4 @@
-import { CAP, FIXED_PRICE, 'de-DE' } from '$lib/constants';
+import { CAP, FIXED_PRICE } from '$lib/constants';
 import type { TourWithRequests } from '$lib/util/getToursTypes';
 import { HOUR, MINUTE, SECOND } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';

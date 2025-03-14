@@ -1,4 +1,4 @@
-import { 'de-DE', TZ } from '$lib/constants';
+import { TZ } from '$lib/constants';
 import type { UnixtimeMs } from './UnixtimeMs';
 
 export const SECOND = 1000;
