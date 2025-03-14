@@ -1,4 +1,4 @@
-import { CAP, FIXED_PRICE } from '$lib/constants';
+import { CAP, FIXED_PRICE, LOCALE } from '$lib/constants';
 import type { TourWithRequests } from '$lib/util/getToursTypes';
 import { HOUR, MINUTE, SECOND } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
@@ -27,7 +27,7 @@ export type Column<T> = {
 };
 
 export const getEuroString = (price: number | null) => {
-	return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(
+	return new Intl.NumberFormat(LOCALE, { style: 'currency', currency: 'EUR' }).format(
 		(price ?? 0) / 100
 	);
 };
@@ -43,7 +43,7 @@ const getCustomerCount = (tour: TourWithRequests, countOnlyVerified: boolean) =>
 };
 
 const displayUnixtimeMs = (t: UnixtimeMs, displayTime?: boolean) => {
-	return new Date(t).toLocaleDateString('de-DE', {
+	return new Date(t).toLocaleDateString(LOCALE, {
 		year: 'numeric',
 		month: '2-digit',
 		day: '2-digit',

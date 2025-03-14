@@ -1,6 +1,7 @@
 import { HOUR, MINUTE } from '$lib/util/time';
 
 export const TZ = 'Europe/Berlin';
+export const LOCALE = 'de-DE';
 export const MIN_PREP = 1 * HOUR;
 export const MAX_TRAVEL = 1 * HOUR;
 export const MAX_PASSENGER_WAITING_TIME_PICKUP = 10 * MINUTE;
