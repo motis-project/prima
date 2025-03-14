@@ -1,5 +1,5 @@
 import { Interval } from '$lib/util/interval';
-import { DAY, HOUR } from './time';
+import { DAY, HOUR, roundToUnit } from './time';
 import type { UnixtimeMs } from './UnixtimeMs';
 
 export function getAllowedTimes(
@@ -12,8 +12,8 @@ export function getAllowedTimes(
 		return [];
 	}
 
-	const earliestDay = Math.floor(earliest / DAY) * DAY;
-	const latestDay = Math.floor(latest / DAY) * DAY + DAY;
+	const earliestDay = roundToUnit(earliest, DAY, Math.floor);
+	const latestDay = roundToUnit(latest, DAY, Math.floor) + DAY;
 
 	const noonEarliestDay = new Date(earliestDay + 12 * HOUR);
 

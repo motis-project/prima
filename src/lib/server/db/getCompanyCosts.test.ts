@@ -9,7 +9,7 @@ import {
 	setTour
 } from '$lib/testHelpers';
 import { getCompanyCosts } from './getCompanyCosts';
-import { DAY, HOUR, MINUTE } from '$lib/util/time';
+import { DAY, HOUR, MINUTE, roundToUnit } from '$lib/util/time';
 
 beforeEach(async () => {
 	await clearDatabase();
@@ -17,7 +17,7 @@ beforeEach(async () => {
 
 const dummyCoordinates = { lat: 1, lng: 1 };
 const dummyCapacities = { passengers: 1, bikes: 1, wheelchairs: 1, luggage: 1 };
-const midnight = Math.floor(Date.now() / DAY) * DAY;
+const midnight = roundToUnit(Date.now(), DAY, Math.floor);
 const testDays = [midnight - 30 * DAY];
 
 describe('test accounting', () => {

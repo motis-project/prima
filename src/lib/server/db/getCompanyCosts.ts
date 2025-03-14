@@ -5,7 +5,7 @@ import { getToursWithRequests } from '$lib/server/db/getTours';
 import type { TourWithRequests } from '$lib/util/getToursTypes';
 import { Interval } from '$lib/util/interval';
 import { groupBy } from '$lib/util/groupBy';
-import { DAY, HOUR } from '$lib/util/time';
+import { DAY, HOUR, roundToUnit } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
 export async function getCompanyCosts(companyId?: number) {
@@ -55,7 +55,7 @@ export async function getCompanyCosts(companyId?: number) {
 		);
 	};
 	const firstDay = new Date(earliestTime - DAY);
-	const firstDayStart = Math.floor(firstDay.getTime() / DAY) * DAY;
+	const firstDayStart = roundToUnit(firstDay.getTime(), DAY, Math.floor);
 	const days = Array.from({ length: Math.ceil((latestTime - firstDayStart) / DAY) }, (_, i) => {
 		const offset = getOffset(firstDayStart + DAY * i + HOUR * 12);
 		const offsetNextDay = getOffset(firstDayStart + DAY * (i + 1) + HOUR * 12);

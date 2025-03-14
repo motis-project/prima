@@ -29,8 +29,8 @@
 	import { HOUR, MINUTE } from '$lib/util/time';
 	import type { ToursWithRequests, TourWithRequests } from '$lib/util/getToursTypes';
 	import { getAllowedTimes } from '$lib/util/getAllowedTimes';
-	import { getFirstAlterableTime } from '$lib/util/getFirstAlterableTime';
 	import { getLatestEventTime } from '$lib/util/getLatestEventTime';
+	import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
 
 	const { data, form } = $props();
 
@@ -174,11 +174,9 @@
 			cell.endTime - MINUTE,
 			EARLIEST_SHIFT_START - HOUR,
 			LATEST_SHIFT_END + HOUR
-		)[0];
+		)[0].intersect(getAlterableTimeframe());
 		return (
-			getFirstAlterableTime() < cell.endTime &&
-			allowed.startTime <= cell.startTime &&
-			allowed.endTime >= cell.endTime
+			allowed != undefined && allowed.startTime <= cell.startTime && allowed.endTime >= cell.endTime
 		);
 	};
 

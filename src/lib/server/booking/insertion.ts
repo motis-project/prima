@@ -28,7 +28,7 @@ import type { Company, Event } from './getBookingAvailability';
 import type { Capacities } from './Capacities';
 import { isValid } from './getPossibleInsertions';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
-//import { MINUTE } from '$lib/util/time';
+//import { roundToUnit, MINUTE } from '$lib/util/time';
 
 export type InsertionEvaluation = {
 	pickupTime: number;
@@ -369,8 +369,8 @@ const keepsPromises = (
 ): boolean => {
 	const expandToFullMinutes = (interval: Interval) => {
 		return new Interval(
-			Math.floor(interval.startTime / MINUTE) * MINUTE,
-			Math.ceil(interval.endTime / MINUTE) * MINUTE
+			roundToUnit(interval.startTime, MINUTE, Math.floor),
+			roundToUnit(interval.endTime, MINUTE, Math.ceil)
 		);
 	}
 	const w = arrivalWindow.shift(
