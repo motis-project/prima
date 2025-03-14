@@ -1,3 +1,4 @@
+import { LOCALE_DE, TZ } from '$lib/constants';
 import type { UnixtimeMs } from './UnixtimeMs';
 
 export const SECOND = 1000;
@@ -21,10 +22,10 @@ export const getOffset = (t: UnixtimeMs) => {
 	return (
 		HOUR *
 		(parseInt(
-			new Date(t).toLocaleString('de-DE', {
+			new Date(t).toLocaleString(LOCALE_DE, {
 				hour: '2-digit',
 				hour12: false,
-				timeZone: 'Europe/Berlin'
+				timeZone: TZ
 			})
 		) -
 			12)

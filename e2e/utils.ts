@@ -3,12 +3,13 @@ import { Kysely, PostgresDialect, RawBuilder, sql } from 'kysely';
 import { dbConfig } from './config';
 import pg from 'pg';
 import { DAY, getOffset, HOUR, MINUTE } from '../src/lib/util/time';
+import { LOCALE_DE } from '../src/lib/constants';
 
-test.use({ locale: 'de-DE' });
+test.use({ locale: LOCALE_DE });
 
-export const date = new Date(Math.ceil(Date.now() / DAY) * DAY + 5 * DAY);
-export const dayString = date.toISOString().split('T')[0];
-export const offset = getOffset(date.getTime() + HOUR * 12) / MINUTE;
+export const in6Days = new Date(Math.ceil(Date.now() / DAY) * DAY + 5 * DAY);
+export const dayString = in6Days.toISOString().split('T')[0];
+export const offset = getOffset(in6Days.getTime() + HOUR * 12) / MINUTE;
 export type UserCredentials = {
 	email: string;
 	password: string;
