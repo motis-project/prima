@@ -1,5 +1,6 @@
 import { Interval } from '$lib/util/interval';
-import { DAY, getOffset, HOUR, roundToUnit } from './time';
+import { getOffset } from './getOffset';
+import { DAY, HOUR, roundToUnit } from './time';
 import type { UnixtimeMs } from './UnixtimeMs';
 
 export function getAllowedTimes(

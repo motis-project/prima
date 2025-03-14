@@ -5,8 +5,9 @@ import { getToursWithRequests } from '$lib/server/db/getTours';
 import type { TourWithRequests } from '$lib/util/getToursTypes';
 import { Interval } from '$lib/util/interval';
 import { groupBy } from '$lib/util/groupBy';
-import { DAY, HOUR, roundToUnit, getOffset } from '$lib/util/time';
+import { DAY, HOUR, roundToUnit } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
+import { getOffset } from '$lib/util/getOffset';
 
 export async function getCompanyCosts(companyId?: number) {
 	const tours: (TourWithRequests & { interval: Interval })[] = (
