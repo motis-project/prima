@@ -2,9 +2,24 @@ import { test, expect, type Page } from '@playwright/test';
 import { Kysely, PostgresDialect, RawBuilder, sql } from 'kysely';
 import { dbConfig } from './config';
 import pg from 'pg';
+import { DAY, HOUR, MINUTE } from '../src/lib/util/time';
 
 test.use({ locale: 'de-DE' });
 
+export const date = new Date(Math.ceil(Date.now() / DAY) * DAY + 5 * DAY);
+export const dayString = date.toISOString().split('T')[0];
+const getOffset = (t: number) => {
+	return (
+		parseInt(
+			new Date(t).toLocaleString('de-DE', {
+				hour: '2-digit',
+				hour12: false,
+				timeZone: 'Europe/Berlin'
+			})
+		) - 12
+	);
+};
+export const offset = (getOffset(date.getTime() + HOUR * 12) * HOUR) / MINUTE;
 export type UserCredentials = {
 	email: string;
 	password: string;
