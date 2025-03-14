@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { TAXI_OWNER, execSQL, login } from './utils';
+import { TAXI_OWNER, in6Days, execSQL, login } from './utils';
 import { sql } from 'kysely';
+import { DAY, SECOND } from '../src/lib/util/time';
 
-const fromTime = new Date('2026-09-30T00:00:00.000Z').getTime();
-const toTime = new Date('2026-09-30T23:59:59.000Z').getTime();
+const fromTime = in6Days.getTime();
+const toTime = in6Days.getTime() + DAY - SECOND;
 
 test('Get tours', async ({ page }) => {
 	await login(page, TAXI_OWNER);

@@ -10,7 +10,7 @@ import {
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { COORDINATE_ROUNDING_ERROR_THRESHOLD } from '$lib/constants';
 import { createSession } from '../auth/session';
-import { MINUTE } from '$lib/util/time';
+import { MINUTE, roundToUnit } from '$lib/util/time';
 import type { ExpectedConnection } from './bookRide';
 
 const black = async (body: string) => {
@@ -375,7 +375,7 @@ describe('Whitelist and Booking API Tests', () => {
 			start: { ...inNiesky1, address: 'start address' },
 			target: { ...inNiesky2, address: 'target address' },
 			startTime: whiteResponse.direct[0].pickupTime,
-			targetTime: Math.floor(whiteResponse.direct[0].dropoffTime / MINUTE) * MINUTE
+			targetTime: roundToUnit(whiteResponse.direct[0].dropoffTime, MINUTE, Math.floor)
 		};
 		const bookingBody = JSON.stringify({
 			connection1,

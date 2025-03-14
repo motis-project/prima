@@ -16,7 +16,7 @@
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import * as Card from '$lib/shadcn/card';
 	import { ChevronRight, ChevronLeft } from 'lucide-svelte';
-	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, TZ } from '$lib/constants.js';
+	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, LOCALE, TZ } from '$lib/constants.js';
 
 	import { goto, invalidateAll } from '$app/navigation';
 
@@ -29,8 +29,8 @@
 	import { HOUR, MINUTE } from '$lib/util/time';
 	import type { ToursWithRequests, TourWithRequests } from '$lib/util/getToursTypes';
 	import { getAllowedTimes } from '$lib/util/getAllowedTimes';
-	import { getFirstAlterableTime } from '$lib/util/getFirstAlterableTime';
 	import { getLatestEventTime } from '$lib/util/getLatestEventTime';
+	import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
 
 	const { data, form } = $props();
 
@@ -68,7 +68,7 @@
 	// ===========
 	// Basic Setup
 	// -----------
-	const df = new DateFormatter('de-DE', { dateStyle: 'long' });
+	const df = new DateFormatter(LOCALE, { dateStyle: 'long' });
 
 	let selectedTour = $state<{
 		tours: ToursWithRequests | undefined;
@@ -174,11 +174,9 @@
 			cell.endTime - MINUTE,
 			EARLIEST_SHIFT_START - HOUR,
 			LATEST_SHIFT_END + HOUR
-		)[0];
+		)[0].intersect(getAlterableTimeframe());
 		return (
-			getFirstAlterableTime() < cell.endTime &&
-			allowed.startTime <= cell.startTime &&
-			allowed.endTime >= cell.endTime
+			allowed != undefined && allowed.startTime <= cell.startTime && allowed.endTime >= cell.endTime
 		);
 	};
 

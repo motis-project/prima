@@ -10,3 +10,7 @@ export function milliToSecond(milli: number): number {
 export function secondToMilli(second: number): number {
 	return second * SECOND;
 }
+
+export function roundToUnit(n: number, unit: number, roundFn: (n: number) => number) {
+	return roundFn(n / unit) * unit;
+}
