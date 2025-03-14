@@ -78,9 +78,7 @@
 	title="Stammdaten Ihres Unternehmens"
 	subtitle="Angaben zu Unternehmenssitz und Pflichtfahrgebiet"
 >
-	<div
-		class="grid grid-cols-1 grid-rows-2 gap-4 md:w-[96ch] md:grid-cols-2 md:grid-rows-1 md:flex-row"
-	>
+	<div class="grid grid-cols-1 grid-rows-2 gap-4 md:grid-cols-2 md:grid-rows-1 md:flex-row">
 		<form method="POST">
 			<div class="flex flex-col gap-6" id="searchmask-container">
 				<Message msg={form?.msg} />

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import { pushState } from '$app/navigation';
+	import { goto, pushState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 
@@ -289,7 +289,14 @@
 			stopId={page.state.stop.stopId}
 			{onClickTrip}
 		/>
-	{:else}
+	{/if}
+	<div
+		class="contents"
+		class:hidden={page.state.stop ||
+			page.state.selectedItinerary ||
+			page.state.selectFrom ||
+			page.state.selectTo}
+	>
 		<div class="flex h-full flex-col gap-4">
 			<div class="relative flex flex-col gap-4">
 				<Input
@@ -419,16 +426,18 @@
 					</Dialog.Content>
 				</Dialog.Root>
 			</div>
-			<div bind:this={connectionsEl} class="flex grow flex-col gap-4 overflow-y-auto">
+			<div bind:this={connectionsEl} class="flex grow flex-col gap-4">
 				<ItineraryList
 					{baseQuery}
 					{baseResponse}
 					{routingResponses}
 					{passengers}
-					selectItinerary={(selectedItinerary) => pushState('', { selectedItinerary })}
+					selectItinerary={(selectedItinerary) => {
+						goto('?detail', { state: { selectedItinerary } });
+					}}
 					updateStartDest={updateStartDest(from, to)}
 				/>
 			</div>
 		</div>
-	{/if}
+	</div>
 </div>
