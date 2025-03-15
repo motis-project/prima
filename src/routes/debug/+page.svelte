@@ -106,7 +106,7 @@
 	center={[14.5771254, 51.5269344]}
 	zoom={10}
 	style={getStyle('light', 0)}
-	class="h-full w-full rounded-lg border shadow"
+	class="h-full w-[95vw] rounded-lg border shadow"
 	attribution={"&copy; <a href='http://www.openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a>"}
 >
 	<Control position="bottom-left">

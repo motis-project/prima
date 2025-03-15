@@ -92,6 +92,7 @@ jobs:
             type=edge
 
       - name: Docker build and push
+        if: github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v5
         with:
           push: true
