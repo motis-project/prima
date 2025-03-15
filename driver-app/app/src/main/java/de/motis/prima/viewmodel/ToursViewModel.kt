@@ -13,7 +13,6 @@ import de.motis.prima.services.ApiService
 import de.motis.prima.services.Tour
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -72,6 +71,7 @@ class ToursViewModel @Inject constructor(
                 if (response.isSuccessful) {
                     _tours.value = response.body() ?: emptyList()
                     _loading.value = false
+                    repository.setTours(_tours.value)
                 }
             } catch (e: Exception) {
                 Log.e("error", "Exception: ${e.message}")
@@ -82,7 +82,6 @@ class ToursViewModel @Inject constructor(
     private fun fetchTours(): Flow<Response<List<Tour>>> = flow {
         while (true) {
             val displayDay = _displayDate.value
-            Log.d("test", displayDay.toString())
             val nextDay = displayDay.plusDays(1)
             val start = displayDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
             val end = nextDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -125,6 +124,7 @@ class ToursViewModel @Inject constructor(
                         }
                     }
                     _tours.value = newTours
+                    repository.setTours(newTours)
                 } else {
                     Log.d("debug", "fetchTours: $response")
                 }
@@ -137,7 +137,7 @@ class ToursViewModel @Inject constructor(
             try {
                 val response = apiService.validateTicket(ticket.requestId, ticket.ticketCode)
                 if (response.isSuccessful) {
-                    ticket.validationStatus =  ValidationStatus.OK
+                    ticket.validationStatus = ValidationStatus.OK
                     repository.updateScannedTickets(ticket)
                 } else {
                     ticket.validationStatus = ValidationStatus.REJECTED
@@ -171,5 +171,10 @@ class ToursViewModel @Inject constructor(
     fun decrementDate() {
         _displayDate.value = _displayDate.value.minusDays(1)
         refreshTours()
+    }
+
+    fun selectTour(id: Int) {
+        repository.setSelectedTourId(id)
+        repository.updateEventGroups()
     }
 }

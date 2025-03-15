@@ -7,8 +7,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import de.motis.prima.BuildConfig
-import de.motis.prima.services.ApiService
 import de.motis.prima.data.CookieStore
+import de.motis.prima.services.ApiService
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import retrofit2.Retrofit

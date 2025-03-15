@@ -18,7 +18,6 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,7 +28,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.AlertDialog
@@ -57,7 +55,6 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import de.motis.prima.viewmodel.ScanViewModel
-import kotlinx.coroutines.channels.TickerMode
 import kotlinx.coroutines.delay
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -65,15 +62,13 @@ import java.util.concurrent.Executors
 @Composable
 fun TicketScan(
     navController: NavController,
-    tourId: Int,
-    requestId: Int,
-    ticketHash: String,
+    eventGroupId: String,
     viewModel: ScanViewModel = hiltViewModel()
 ) {
     Scaffold(
         topBar = {
             TopBar(
-                "tours",
+                null,
                 "   Scan Ticket Code",
                 false,
                 emptyList<NavItem>(),
@@ -100,10 +95,18 @@ fun TicketScan(
                 if (isScanning) {
                     QRCodeScanner(
                         onQRCodeScanned = { result ->
+                            val eventGroup = viewModel.getEventGroup(eventGroupId)
                             val activeHash = viewModel.getActiveHash(result)
-                            ticketValid = (activeHash == ticketHash)
-                            if (ticketValid) {
-                                viewModel.reportTicketScan(requestId, result)
+
+                            // does eventGroup contain the ticketHash?
+                            if (eventGroup != null) {
+                                val event =
+                                    eventGroup.events.find { e -> e.ticketHash == activeHash }
+                                Log.d("debug", "$event")
+                                if (event != null) {
+                                    ticketValid = true
+                                    viewModel.reportTicketScan(event.requestId, result)
+                                }
                             }
                             isScanning = false
                         },
@@ -131,7 +134,7 @@ fun TicketScan(
 
                     LaunchedEffect(Unit) {
                         delay(400)
-                        navController.navigate("fare/$tourId")
+                        navController.popBackStack()
                     }
                 }
             }

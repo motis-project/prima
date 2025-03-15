@@ -142,7 +142,7 @@ fun Tours(
                     ErrorInfo(stringResource(id = R.string.network_error))
                 }
             } else {
-                ShowTours(displayTours, navController)
+                ShowTours(navController, displayTours)
             }
         }
     }
@@ -222,8 +222,9 @@ fun DateSelect(
 
 @Composable
 fun ShowTours(
+    navController: NavController,
     tours: List<Tour>,
-    navController: NavController
+    viewModel: ToursViewModel = hiltViewModel()
 ) {
     Row {
         if (tours.isEmpty()) {
@@ -246,9 +247,8 @@ fun ShowTours(
             ) {
                 items(items = tours, itemContent = { tour ->
                     ConstraintLayout(modifier = Modifier.clickable {
-                        val requestId = tour.events[0].requestId
-                        val ticketHash = tour.events[0].ticketHash
-                        navController.navigate("scan/${tour.tourId}/$requestId/$ticketHash")
+                        viewModel.selectTour(tour.tourId)
+                        navController.navigate("preview/${tour.tourId}")
                     }) {
                         val city: String
                         val displayTime: String

@@ -26,4 +26,5 @@
     <string name="logout">Logout</string>
     <string name="network_error">Bitte überprüfen Sie Ihre Internetverbindung.</string>
     <string name="reload">Aktualisieren</string>
+    <string name="tour_preview_header">Tour Übersicht</string>
 </resources>

@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.motis.prima.EventGroup
 import de.motis.prima.data.DataRepository
 import de.motis.prima.data.Ticket
 import de.motis.prima.data.ValidationStatus
@@ -45,5 +46,9 @@ class ScanViewModel @Inject constructor(
         } else {
             null
         }
+    }
+
+    fun getEventGroup(id: String): EventGroup? {
+        return repository.getEventGroup(id)
     }
 }

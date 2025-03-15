@@ -47,11 +47,20 @@ fun Nav() {
                 Tours(navController)
             }
 
-            composable(route = "scan/{tourId}/{requestId}/{ticketHash}") {
+            composable(route = "preview/{tourId}") {
                 val tourId = it.arguments?.getString("tourId")?.toInt()
-                val requestId = it.arguments?.getString("requestId")?.toInt()
-                val ticketHash = it.arguments?.getString("ticketHash")
-                TicketScan(navController, tourId!!, requestId!!, ticketHash!!)
+                TourPreview(navController, tourId!!)
+            }
+
+            composable(route = "leg/{tourId}/{eventGroupIndex}") {
+                val tourId = it.arguments?.getString("tourId")?.toInt()
+                val eventGroupIndex = it.arguments?.getString("eventGroupIndex")?.toInt()
+                Leg(navController, tourId!!, eventGroupIndex!!)
+            }
+
+            composable(route = "scan/{eventGroupId}") {
+                val eventGroupId = it.arguments?.getString("eventGroupId")
+                TicketScan(navController, eventGroupId!!)
             }
 
             composable(route = "fare/{tourId}") {

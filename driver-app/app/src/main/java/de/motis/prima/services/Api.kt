@@ -21,7 +21,10 @@ interface ApiService {
     fun getVehicles(): Call<List<Vehicle>>
 
     @GET("api/driver/tour")
-    suspend fun getTours(@Query("fromTime") fromTime: Long, @Query("toTime") toTime: Long): Response<List<Tour>>
+    suspend fun getTours(
+        @Query("fromTime") fromTime: Long,
+        @Query("toTime") toTime: Long
+    ): Response<List<Tour>>
 
     @PUT("api/driver/ticket")
     suspend fun validateTicket(

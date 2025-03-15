@@ -3,9 +3,9 @@ package de.motis.prima.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.motis.prima.data.CookieStore
 import de.motis.prima.data.DataRepository
 import de.motis.prima.services.ApiService
-import de.motis.prima.data.CookieStore
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
