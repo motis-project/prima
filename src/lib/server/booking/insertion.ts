@@ -21,14 +21,14 @@ import {
 	getNextLegDuration,
 	returnsToCompany
 } from './durations';
-//import type { PromisedTimes } from './PromisedTimes';
+import type { PromisedTimes } from './PromisedTimes';
 import { Interval } from '$lib/util/interval';
 import type { RoutingResults } from './routing';
 import type { Company, Event } from './getBookingAvailability';
 import type { Capacities } from './Capacities';
 import { isValid } from './getPossibleInsertions';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
-//import { roundToUnit, MINUTE } from '$lib/util/time';
+import { roundToUnit, MINUTE } from '$lib/util/time';
 
 export type InsertionEvaluation = {
 	pickupTime: number;
@@ -140,8 +140,8 @@ export function evaluateBothInsertion(
 	busStopIdx: number | undefined,
 	prev: Event | undefined,
 	next: Event | undefined,
-	allowedTimes: Interval[]
-	//promisedTimes?: PromisedTimes
+	allowedTimes: Interval[],
+	promisedTimes?: PromisedTimes
 ): InsertionEvaluation | undefined {
 	console.assert(
 		insertionCase.what == InsertWhat.BOTH,
@@ -178,14 +178,12 @@ export function evaluateBothInsertion(
 	if (arrivalWindow == undefined) {
 		return undefined;
 	}
-	/*
 	if (
 		promisedTimes != undefined &&
 		!keepsPromises(insertionCase, arrivalWindow, passengerDuration, promisedTimes)
 	) {
 		return undefined;
 	}
-	*/
 	const taxiDuration =
 		prevLegDuration +
 		nextLegDuration +
@@ -236,8 +234,8 @@ export function evaluateNewTours(
 	busStopTimes: Interval[][],
 	routingResults: RoutingResults,
 	travelDurations: (number | undefined)[],
-	allowedTimes: Interval[]
-	//promisedTimes?: PromisedTimes
+	allowedTimes: Interval[],
+	promisedTimes?: PromisedTimes
 ): (Insertion | undefined)[][] {
 	const bestEvaluations = new Array<(Insertion | undefined)[]>(busStopTimes.length);
 	for (let i = 0; i != busStopTimes.length; ++i) {
@@ -283,8 +281,8 @@ export function evaluateNewTours(
 						busStopIdx,
 						undefined,
 						undefined,
-						allowedTimes
-						//promisedTimes
+						allowedTimes,
+						promisedTimes
 					);
 					if (
 						resultNewTour != undefined &&
@@ -360,7 +358,7 @@ const getOldDrivingTime = (
 	}
 	return prev.nextLegDuration;
 };
-/*
+
 const keepsPromises = (
 	insertionCase: InsertionType,
 	arrivalWindow: Interval,
@@ -372,7 +370,7 @@ const keepsPromises = (
 			roundToUnit(interval.startTime, MINUTE, Math.floor),
 			roundToUnit(interval.endTime, MINUTE, Math.ceil)
 		);
-	}
+	};
 	const w = arrivalWindow.shift(
 		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? directDuration : -directDuration
 	);
@@ -423,4 +421,3 @@ const keepsPromises = (
 	}
 	return true;
 };
-*/
