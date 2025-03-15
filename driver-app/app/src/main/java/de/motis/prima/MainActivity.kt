@@ -30,6 +30,8 @@ class MainActivity : AppCompatActivity() {
 
         if (cameraGranted) {
             setContent { Nav() }
+        } else {
+            setContent { PermissionInfo() }
         }
     }
 
