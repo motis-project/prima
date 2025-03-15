@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -314,10 +315,11 @@ fun ShowCustomerDetails(
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp)
                         .padding(bottom = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Button(
                         onClick = {
-                            if (event.customerPhone != null) {
+                            if (event.customerPhone != "") {
                                 phoneCall(event.customerPhone, context)
                             }
                         }
@@ -329,31 +331,43 @@ fun ShowCustomerDetails(
 
                         )
                     }
-                    Spacer(modifier = Modifier.width(200.dp))
 
                     val ticketStatus = viewModel.getTicketStatus(event.ticketHash)
-                    if (ticketStatus == ValidationStatus.OK) {
-                        Box(
-                            modifier = Modifier.padding(top = 8.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_check),
-                                contentDescription = "Localized description",
-                                Modifier
-                                    .size(width = 36.dp, height = 36.dp)
-                                    .background(color = Color.Green)
-
-                            )
-                        }
-                    } else {
+                    if (ticketStatus == null) {
                         Box(
                             modifier = Modifier.padding(top = 8.dp)
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_hourglass),
                                 contentDescription = "Localized description",
-                                Modifier.size(width = 36.dp, height = 36.dp)
+                                Modifier.size(width = 28.dp, height = 28.dp)
 
+                            )
+                        }
+                    } else if (ticketStatus == ValidationStatus.OK) {
+                        Box (
+                            modifier = Modifier.padding(top = 12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Done,
+                                contentDescription = "Localized description",
+                                tint = Color.White,
+                                modifier = Modifier
+                                    .size(width = 32.dp, height = 32.dp)
+                                    .background(Color.Green)
+                            )
+                        }
+                    } else if (ticketStatus == ValidationStatus.FAILED) {
+                        Box (
+                            modifier = Modifier.padding(top = 12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Done,
+                                contentDescription = "Localized description",
+                                tint = Color.Green,
+                                modifier = Modifier
+                                    .size(width = 30.dp, height = 30.dp)
+                                    .background(Color.White)
                             )
                         }
                     }

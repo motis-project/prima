@@ -50,7 +50,7 @@ fun Leg(
     Scaffold(
         topBar = {
             TopBar(
-                if (eventGroupIndex != 0) "leg/$tourId/${eventGroupIndex - 1}" else "tours",
+                if (eventGroupIndex != 0) "leg/$tourId/${eventGroupIndex - 1}" else "preview/$tourId",
                 "Fahrt",
                 true,
                 listOf(
