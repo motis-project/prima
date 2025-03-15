@@ -25,6 +25,8 @@
 	import { onMount } from 'svelte';
 	import Message from '$lib/ui/Message.svelte';
 	import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
+	import type { Range } from './Range';
+	import { split } from './Range';
 	import type { LngLatLike } from 'maplibre-gl';
 	import { HOUR, MINUTE } from '$lib/util/time';
 	import type { ToursWithRequests, TourWithRequests } from '$lib/util/getToursTypes';
@@ -35,11 +37,6 @@
 	const { data, form } = $props();
 
 	type Vehicle = NonNullable<typeof data.vehicles>[0];
-
-	type Range = {
-		startTime: UnixtimeMs;
-		endTime: UnixtimeMs;
-	};
 
 	// ===
 	// API
@@ -129,18 +126,6 @@
 		data.tours.filter((t) => vehicleId == t.vehicleId && overlaps(t, cell));
 
 	const isAvailable = (v: Vehicle, cell: Range) => v.availability.some((a) => overlaps(a, cell));
-
-	const split = (range: Range, size: number): Array<Range> => {
-		let cells: Array<Range> = [];
-		let prev = new Date(range.startTime);
-		let t = new Date(range.startTime);
-		t.setMinutes(t.getMinutes() + size);
-		for (; t.getTime() <= range.endTime; t.setMinutes(t.getMinutes() + size)) {
-			cells.push({ startTime: prev.getTime(), endTime: t.getTime() });
-			prev = new Date(t);
-		}
-		return cells;
-	};
 
 	// =========
 	// Selection
@@ -334,6 +319,45 @@
 			return 'bg-yellow-100';
 		}
 	};
+
+	const heatmapColor = (cell: Range) => {
+		let max = 20;
+		for (let heat of data.heatarray) {
+			if (heat.cell.startTime == cell.startTime && heat.cell.endTime == cell.endTime) {
+				// logarithmisch für stark schwankende Werte:
+				//let normval = Math.floor(10 * (Math.log(heat.heat + 1)) / Math.log(max + 1));
+				let normval = Math.floor((heat.heat / max) * 10);
+				normval = heat.heat > 0 ? Math.max(1, normval) : 0;
+				switch (normval) {
+					case 0:
+						return;
+					case 1:
+						return 'bg-rose-100';
+					case 2:
+						return 'bg-rose-200';
+					case 3:
+						return 'bg-rose-300';
+					case 4:
+						return 'bg-rose-400';
+					case 5:
+						return 'bg-rose-500';
+					case 6:
+						return 'bg-rose-600';
+					case 7:
+						return 'bg-rose-700';
+					case 8:
+						return 'bg-rose-800';
+					case 9:
+						return 'bg-rose-900';
+					case 10:
+						return 'bg-rose-950';
+					default:
+						return;
+				}
+			}
+		}
+		return;
+	};
 </script>
 
 <svelte:window onmouseup={() => selectionFinish()} />
@@ -430,6 +454,37 @@
 					{/each}
 				</tr>
 			{/each}
+			<tr>
+				<td
+					class="h-full pr-2 align-middle font-mono text-sm font-semibold leading-none tracking-tight"
+				>
+					<HoverCard.Root>
+						<HoverCard.Trigger>{'Auslastung'}</HoverCard.Trigger>
+						<HoverCard.Content>
+							<!-- Anpassen, wenn logarithmische Skalierung verwendet wird. -->
+							Eine Heatmap, die die Verfügbarkeiten der anderen Taxiunternehmer anzeigt. Farbcodierung:
+							linear, [1, 10]
+						</HoverCard.Content>
+					</HoverCard.Root>
+				</td>
+				{#each split(range, 60) as x}
+					<td>
+						<table class="w-full">
+							<tbody>
+								<tr>
+									{#each split(x, 15) as cell}
+										<td>
+											<div
+												class={['w-8', 'h-8', 'border', 'rounded-md', heatmapColor(cell)].join(' ')}
+											></div>
+										</td>
+									{/each}
+								</tr>
+							</tbody>
+						</table>
+					</td>
+				{/each}
+			</tr>
 		</tbody>
 	</table>
 {/snippet}

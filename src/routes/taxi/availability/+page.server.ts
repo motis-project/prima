@@ -5,6 +5,11 @@ import type { Actions, RequestEvent } from './$types';
 import { fail } from '@sveltejs/kit';
 import { msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
+import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
+import type { Range } from './Range';
+import { split } from './Range';
+import { groupBy } from '$lib/util/groupBy';
+import { Interval } from '$lib/server/util/interval';
 
 export async function load(event: RequestEvent) {
 	const companyId = event.locals.session?.companyId;
@@ -56,9 +61,68 @@ export async function load(event: RequestEvent) {
 		company.lat !== null &&
 		company.lng !== null;
 
+	// HEATMAP
+	const heatmapInfos = await db
+		.selectFrom('company as company1')
+		.innerJoin('company as company2', 'company1.zone', 'company2.zone')
+		.innerJoin('vehicle', 'company2.id', 'vehicle.company')
+		.innerJoin('availability', 'vehicle.id', 'availability.vehicle')
+		.where('availability.startTime', '<', toTime.getTime())
+		.where('availability.endTime', '>', fromTime.getTime())
+		.where('company1.id', '=', companyId)
+		.where('company2.id', '!=', companyId)
+		.select([
+			'availability.startTime',
+			'availability.endTime',
+			'availability.vehicle',
+			'vehicle.company'
+		])
+		.execute();
+
+	const mergedheatinfos = groupBy(
+		heatmapInfos,
+		(a) => a.vehicle,
+		(a) => new Interval(a.startTime, a.endTime)
+	);
+	mergedheatinfos.forEach((heatmap, vehicle) =>
+		mergedheatinfos.set(vehicle, Interval.merge(heatmap))
+	);
+
+	type heatinfo = {
+		cell: Range;
+		heat: number;
+	};
+	const heatarray: heatinfo[] = [];
+	const isAInsideB = (rangeA: Range, Bstart: UnixtimeMs, Bend: UnixtimeMs) => {
+		return (
+			rangeA.startTime >= Bstart &&
+			rangeA.startTime < Bend &&
+			rangeA.endTime >= Bstart &&
+			rangeA.endTime <= Bend
+		);
+	};
+	const range: Range = { startTime: fromTime.getTime(), endTime: toTime.getTime() };
+	const hours = split(range, 60);
+	let heatcount = 0;
+	for (const hour of hours) {
+		const cell = split(hour, 15);
+		for (const onecell of cell) {
+			mergedheatinfos.forEach((heatIntervals) => {
+				for (const interval of heatIntervals) {
+					if (isAInsideB(onecell, interval.startTime, interval.endTime)) {
+						heatcount++;
+					}
+				}
+			});
+			heatarray.push({ cell: onecell, heat: heatcount });
+			heatcount = 0;
+		}
+	}
+
 	return {
 		tours: await tours,
 		vehicles: await vehicles,
+		heatarray,
 		utcDate,
 		companyDataComplete,
 		companyCoordinates: companyDataComplete
