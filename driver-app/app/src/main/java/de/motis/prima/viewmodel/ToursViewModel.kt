@@ -2,9 +2,11 @@ package de.motis.prima.viewmodel
 
 import android.util.Log
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.motis.prima.app.NotificationHelper
 import de.motis.prima.data.DataRepository
 import de.motis.prima.data.Ticket
 import de.motis.prima.data.ValidationStatus
@@ -32,7 +34,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ToursViewModel @Inject constructor(
     private val apiService: ApiService,
-    private val repository: DataRepository
+    private val repository: DataRepository,
+    private val notificationHelper: NotificationHelper
 ) : ViewModel() {
     private val _tours = MutableStateFlow<List<Tour>>(emptyList())
     val tours: StateFlow<List<Tour>> = _tours.asStateFlow()
@@ -54,6 +57,7 @@ class ToursViewModel @Inject constructor(
     private val scannedTickets = repository.scannedTickets
 
     init {
+        notificationHelper.createNotificationChannel()
         startFetchingTours()
         startReportingScans()
     }
@@ -118,9 +122,16 @@ class ToursViewModel @Inject constructor(
                         val pickup = newItem.events.first()
                         val currentDay = Date().formatTo("yyyy-MM-dd")
                         val pickupDate = Date(pickup.scheduledTimeStart)
+                        val pickupDay = pickupDate.formatTo("yyyy-MM-dd")
+                        val pickupTime = pickupDate.formatTo("HH:mm")
 
-                        if (pickupDate.formatTo("yyyy-MM-dd") == currentDay) {
-                            // TODO: notifications
+                        Log.d("test", "$pickupDay, $currentDay")
+                        if (pickupDay == currentDay) {
+                            Log.d("test", pickupTime)
+                            sendNotification(
+                                "Neue Fahrt",
+                                "Um: $pickupTime in ${pickup.address}"
+                            )
                         }
                     }
                     _tours.value = newTours
@@ -130,6 +141,10 @@ class ToursViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun sendNotification(title: String, msg: String) {
+        notificationHelper.showNotification(title, msg)
     }
 
     private fun retryFailedReport(ticket: Ticket) {

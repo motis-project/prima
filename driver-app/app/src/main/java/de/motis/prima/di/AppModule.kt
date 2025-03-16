@@ -6,6 +6,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import de.motis.prima.app.NotificationHelper
 import de.motis.prima.data.CookieStore
 import de.motis.prima.data.DataRepository
 import de.motis.prima.data.DataStoreManager
@@ -31,5 +32,11 @@ object AppModule {
     @Singleton
     fun provideDataRepository(dataStoreManager: DataStoreManager): DataRepository {
         return DataRepository(dataStoreManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNotificationHelper(@ApplicationContext context: Context): NotificationHelper {
+        return NotificationHelper(context)
     }
 }
