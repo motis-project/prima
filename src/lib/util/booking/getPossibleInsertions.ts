@@ -1,4 +1,4 @@
-import type { Capacities } from '$lib/server/booking/Capacities';
+import type { Capacities } from './Capacities';
 
 export type Range = {
 	earliestPickup: number;

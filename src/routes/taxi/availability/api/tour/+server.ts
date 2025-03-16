@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { sql } from 'kysely';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
-import { getPossibleInsertions } from '$lib/server/booking/getPossibleInsertions';
+import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import { getLatestEventTime } from '$lib/util/getLatestEventTime';
 
 export const POST = async (event) => {
@@ -74,14 +74,15 @@ export const POST = async (event) => {
 			'Found a request which contains no events. requestId: ' +
 				movedTour.requests.find((r) => r.events.length === 0)?.id
 		);
-		if(vehicleId === undefined) {
+		if (vehicleId === undefined) {
 			return;
 		}
-		const newVehicle = await db.selectFrom('vehicle')
+		const newVehicle = await db
+			.selectFrom('vehicle')
 			.where('vehicle.id', '=', vehicleId)
 			.select(['vehicle.bikes', 'vehicle.luggage', 'vehicle.wheelchairs', 'vehicle.passengers'])
 			.executeTakeFirst();
-		if(!newVehicle){
+		if (!newVehicle) {
 			return;
 		}
 		const events = movedTour.requests.flatMap((r) =>

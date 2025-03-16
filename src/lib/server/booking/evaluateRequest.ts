@@ -2,11 +2,11 @@ import { batchOneToManyCarRouting } from '$lib/server/util/batchOneToManyCarRout
 import { Interval } from '$lib/util/interval';
 import type { Coordinates } from '$lib/util/Coordinates';
 import type { BusStop } from './BusStop';
-import type { Capacities } from './Capacities';
-import { getPossibleInsertions } from './getPossibleInsertions';
+import type { Capacities } from '$lib/util/booking/Capacities';
+import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import type { Company } from './getBookingAvailability';
 import type { PromisedTimes } from './PromisedTimes';
-import type { Range } from './getPossibleInsertions';
+import type { Range } from '$lib/util/booking/getPossibleInsertions';
 import { gatherRoutingCoordinates, routing } from './routing';
 import {
 	BUFFER_TIME,

@@ -4,7 +4,7 @@ import { bookingSchema, schemaDefinitions } from '../whitelist/WhitelistRequest'
 import { db } from '$lib/server/db';
 import type { RequestEvent } from './$types';
 import { bookRide, type ExpectedConnection } from '$lib/server/booking/bookRide';
-import type { Capacities } from '$lib/server/booking/Capacities';
+import type { Capacities } from '$lib/util/booking/Capacities';
 import { insertRequest } from './query';
 import { json } from '@sveltejs/kit';
 

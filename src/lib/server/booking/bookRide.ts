@@ -1,5 +1,5 @@
 import type { Transaction } from 'kysely';
-import type { Capacities } from '$lib/server/booking/Capacities';
+import type { Capacities } from '$lib/util/booking/Capacities';
 import type { Database } from '$lib/server/db';
 import { Interval } from '$lib/util/interval';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';

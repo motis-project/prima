@@ -3,7 +3,7 @@ import {
 	type BusStop,
 	type BusStopWithISOStrings
 } from '$lib/server/booking/BusStop';
-import type { Capacities } from '$lib/server/booking/Capacities';
+import type { Capacities } from '$lib/util/booking/Capacities';
 import type { Coordinates } from '$lib/util/Coordinates';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 

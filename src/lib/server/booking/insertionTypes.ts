@@ -1,5 +1,5 @@
 import type { VehicleWithInterval } from './getBookingAvailability';
-import type { Range } from './getPossibleInsertions';
+import type { Range } from '$lib/util/booking/getPossibleInsertions';
 
 export enum InsertWhere {
 	BEFORE_FIRST_EVENT,

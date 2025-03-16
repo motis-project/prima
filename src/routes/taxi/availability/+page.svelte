@@ -31,6 +31,7 @@
 	import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 	import { getLatestEventTime } from '$lib/util/getLatestEventTime';
 	import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
+	import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 
 	const { data, form } = $props();
 
@@ -306,12 +307,30 @@
 		);
 	};
 
+	const acceptsAnyTour = (v: Vehicle) => {
+		return draggedTours === null
+			? false
+			: draggedTours.tours.some((tour) => {
+					const events = tour.requests.flatMap((r) => r.events);
+					const possibleInsertions = getPossibleInsertions(
+						v,
+						{ bikes: 0, wheelchairs: 0, passengers: 0, luggage: 0 },
+						events
+					);
+					return (
+						possibleInsertions.length == 1 &&
+						possibleInsertions[0].earliestPickup === 0 &&
+						possibleInsertions[0].latestDropoff === events.length
+					);
+				});
+	};
+
 	const cellColor = (id: number, v: Vehicle, cell: Range) => {
 		let tours = getTours(id, cell);
+		if (hasDraggedTour(id, cell)) {
+			return !acceptsAnyTour(v) || hasOverlap() ? 'bg-red-500' : 'bg-orange-200';
+		}
 		if (tours.length != 0) {
-			if (hasDraggedTour(id, cell)) {
-				return hasOverlap() ? 'bg-red-500' : 'bg-orange-200';
-			}
 			if (!tours.some((t) => isTourDragable(t))) {
 				if (tours.length > 1) {
 					return 'bg-orange-600 bg-opacity-70';
