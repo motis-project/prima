@@ -42,6 +42,7 @@
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { LocateFixed } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
+	import { MAX_MATCHING_DISTANCE } from '$lib/constants';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -103,6 +104,7 @@
 						directModes: ['WALK', 'ODM'],
 						luggage: luggageToInt(luggage),
 						fastestDirectFactor: 1.6,
+						maxMatchingDistance: MAX_MATCHING_DISTANCE,
 						passengers
 					}
 				} as PlanData)
