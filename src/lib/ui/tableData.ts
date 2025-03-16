@@ -53,7 +53,8 @@ const displayUnixtimeMs = (t: UnixtimeMs, displayTime?: boolean) => {
 };
 
 const getTourCost = (tour: TourWithRequests) => {
-	return Math.max(0, (tour.fare ?? 0) - FIXED_PRICE * getCustomerCount(tour, true));
+	const customerCount = getCustomerCount(tour, true);
+	return customerCount === 0 ? 0 : Math.max(0, (tour.fare ?? 0) - FIXED_PRICE * customerCount);
 };
 
 const displayDuration = (duration: number) => {
@@ -74,7 +75,9 @@ const getStatus = (r: TourWithRequests) => {
 			? r.endTime < Date.now()
 				? 'Taxameterstand nicht eingetragen'
 				: 'geplant'
-			: 'beendet';
+			: r.requests.flatMap((request) => request.events).some((e) => e.ticketChecked)
+				? 'beendet'
+				: 'beendet - Ticket nicht gescannt';
 };
 
 const firstTourColAdmin: Column<TourWithRequests> = {
@@ -202,10 +205,12 @@ export const subtractionColsAdmin: Column<Subtractions>[] = [
 ];
 
 export const subtractionColsCompany = subtractionColsAdmin.slice(1);
+
 const summationLast = (tiebreak: (a: CompanyRow, b: CompanyRow) => number) => {
 	return (a: CompanyRow, b: CompanyRow) =>
 		a.companyId === -1 ? 1 : b.companyId === -1 ? -1 : tiebreak(a, b);
 };
+
 export const companyColsAdmin: Column<CompanyRow>[] = [
 	{
 		text: ['Unternehmen'],
@@ -248,4 +253,39 @@ export const companyColsAdmin: Column<CompanyRow>[] = [
 	}
 ];
 
-export const companyColsCompany = companyColsAdmin.slice(1);
+export const companyColsCompany: Column<CompanyRow>[] = [
+	{
+		text: ['Kunden'],
+		sort: summationLast((a: CompanyRow, b: CompanyRow) => a.customerCount - b.customerCount),
+		toTableEntry: (r: CompanyRow) => r.customerCount
+	},
+	{
+		text: ['erschienene', 'Kunden'],
+		sort: summationLast(
+			(a: CompanyRow, b: CompanyRow) => a.verifiedCustomerCount - b.verifiedCustomerCount
+		),
+		toTableEntry: (r: CompanyRow) => r.verifiedCustomerCount
+	},
+	{
+		text: ['Taxameterstand', 'kumuliert'],
+		sort: summationLast((a: CompanyRow, b: CompanyRow) => a.taxameter - b.taxameter),
+		toTableEntry: (r: CompanyRow) => getEuroString(r.taxameter)
+	},
+	{
+		text: ['Einnahmen ohne', 'Obergrenze'],
+		sort: summationLast((a: CompanyRow, b: CompanyRow) => a.uncapped - b.uncapped),
+		toTableEntry: (r: CompanyRow) => getEuroString(r.uncapped)
+	},
+	{
+		text: ['Einnahmen mit', 'Obergrenze'],
+		sort: summationLast((a: CompanyRow, b: CompanyRow) => a.capped - b.capped),
+		toTableEntry: (r: CompanyRow) => getEuroString(r.capped)
+	},
+	{
+		text: ['Abzüge'],
+		sort: summationLast(
+			(a: CompanyRow, b: CompanyRow) => a.uncapped - a.capped - b.uncapped + b.capped
+		),
+		toTableEntry: (r: CompanyRow) => getEuroString(r.uncapped - r.capped)
+	}
+];
