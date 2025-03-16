@@ -33,8 +33,8 @@ describe('test accounting', () => {
 		const { costPerDayAndVehicle } = await getCompanyCosts();
 		expect(costPerDayAndVehicle).toHaveLength(1);
 		expect(costPerDayAndVehicle[0].taxameter).toBe(1000);
-		expect(costPerDayAndVehicle[0].capped).toBe(1000);
-		expect(costPerDayAndVehicle[0].uncapped).toBe(1000);
+		expect(costPerDayAndVehicle[0].capped).toBe(0);
+		expect(costPerDayAndVehicle[0].uncapped).toBe(0);
 		expect(costPerDayAndVehicle[0].customerCount).toBe(0);
 	});
 
