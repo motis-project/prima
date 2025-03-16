@@ -200,14 +200,22 @@
 							<p class="my-2 text-sm">{t.booking.disclaimer}</p>
 
 							<Dialog.Footer>
-								{@const first = page.state.selectedItinerary.legs.find(
+								{@const firstOdmIndex = page.state.selectedItinerary.legs.findIndex(
 									(l: Leg) => l.mode === 'ODM'
 								)}
-								{@const last = page.state.selectedItinerary.legs.findLast(
+								{@const firstOdm =
+									firstOdmIndex === -1
+										? undefined
+										: page.state.selectedItinerary.legs[firstOdmIndex]}
+								{@const lastOdmIndex = page.state.selectedItinerary.legs.findLastIndex(
 									(l: Leg) => l.mode === 'ODM'
 								)}
-								{@const isSpecial = (stopName: string) =>
-									stopName === 'START' || stopName === 'END'}
+								{@const lastOdm =
+									lastOdmIndex === -1 ? undefined : page.state.selectedItinerary.legs[lastOdmIndex]}
+								{@const isDirectODM =
+									page.state.selectedItinerary.legs.length === 1 &&
+									page.state.selectedItinerary.legs[0].mode === 'ODM'}
+
 								<form method="post" use:enhance>
 									<input
 										type="hidden"
@@ -217,53 +225,47 @@
 									<input
 										type="hidden"
 										name="startFixed1"
-										value={isSpecial(first.from.name) ? '1' : '0'}
+										value={isDirectODM
+											? timeType === 'departure'
+												? '1'
+												: '0'
+											: firstOdmIndex === 0
+												? '0'
+												: '1'}
 									/>
-									<input
-										type="hidden"
-										name="startFixed2"
-										value={isSpecial(last.to.name) ? '1' : '0'}
-									/>
-									<input
-										type="hidden"
-										name="fromAddress1"
-										value={isSpecial(first.from.name) ? from.label : first.from.name}
-									/>
-									<input
-										type="hidden"
-										name="toAddress1"
-										value={isSpecial(first.to.name) ? to.label : first.to.name}
-									/>
-									<input
-										type="hidden"
-										name="fromAddress2"
-										value={isSpecial(last.from.name) ? from.label : last.from.name}
-									/>
-									<input
-										type="hidden"
-										name="toAddress2"
-										value={isSpecial(last.to.name) ? to.label : last.to.name}
-									/>
-									<input type="hidden" name="fromLat1" value={first.from.lat} />
-									<input type="hidden" name="fromLng1" value={first.from.lon} />
-									<input type="hidden" name="toLat1" value={first.to.lat} />
-									<input type="hidden" name="toLng1" value={first.to.lon} />
-									<input type="hidden" name="fromLat2" value={last.from.lat} />
-									<input type="hidden" name="fromLng2" value={last.from.lon} />
-									<input type="hidden" name="toLat2" value={last.to.lat} />
-									<input type="hidden" name="toLng2" value={last.to.lon} />
+									<input type="hidden" name="startFixed2" value="1" />
+									<input type="hidden" name="fromAddress1" value={firstOdm.from.name} />
+									<input type="hidden" name="toAddress1" value={firstOdm.to.name} />
+									<input type="hidden" name="fromAddress2" value={lastOdm.from.name} />
+									<input type="hidden" name="toAddress2" value={lastOdm.to.name} />
+									<input type="hidden" name="fromLat1" value={firstOdm.from.lat} />
+									<input type="hidden" name="fromLng1" value={firstOdm.from.lon} />
+									<input type="hidden" name="toLat1" value={firstOdm.to.lat} />
+									<input type="hidden" name="toLng1" value={firstOdm.to.lon} />
+									<input type="hidden" name="fromLat2" value={lastOdm.from.lat} />
+									<input type="hidden" name="fromLng2" value={lastOdm.from.lon} />
+									<input type="hidden" name="toLat2" value={lastOdm.to.lat} />
+									<input type="hidden" name="toLng2" value={lastOdm.to.lon} />
 									<input
 										type="hidden"
 										name="startTime1"
-										value={new Date(first.startTime).getTime()}
+										value={new Date(firstOdm.startTime).getTime()}
 									/>
-									<input type="hidden" name="endTime1" value={new Date(first.endTime).getTime()} />
+									<input
+										type="hidden"
+										name="endTime1"
+										value={new Date(firstOdm.endTime).getTime()}
+									/>
 									<input
 										type="hidden"
 										name="startTime2"
-										value={new Date(last.startTime).getTime()}
+										value={new Date(lastOdm.startTime).getTime()}
 									/>
-									<input type="hidden" name="endTime2" value={new Date(last.endTime).getTime()} />
+									<input
+										type="hidden"
+										name="endTime2"
+										value={new Date(lastOdm.endTime).getTime()}
+									/>
 									<input type="hidden" name="passengers" value={passengers} />
 									<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
 									<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
