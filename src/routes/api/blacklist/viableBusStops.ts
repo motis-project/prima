@@ -142,6 +142,9 @@ export const getViableBusStops = async (
 		busStopIntervals: Interval[][],
 		capacities: Capacities
 	): Promise<BlacklistingResult[]> => {
+		if (!busStopIntervals.some((x) => x.length !== 0)) {
+			return Promise.resolve(new Array<BlacklistingResult>());
+		}
 		return withBusStops(busStops, busStopIntervals)
 			.selectFrom('zone')
 			.where(covers(userChosen))
