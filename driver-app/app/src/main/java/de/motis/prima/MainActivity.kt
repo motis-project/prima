@@ -7,7 +7,40 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import dagger.hilt.android.AndroidEntryPoint
+
+// Light Theme Colors
+private val LightColorScheme = lightColorScheme(
+    primary = Color(0xFF6200EE),
+    onPrimary = Color.White,
+    background = Color.White,
+    onBackground = Color.Black
+)
+
+// Dark Theme Colors
+private val DarkColorScheme = darkColorScheme(
+    primary = Color(0xFFBB86FC),
+    onPrimary = Color.Black,
+    background = Color.Black,
+    onBackground = Color.White
+)
+
+@Composable
+fun MyAppTheme(
+    darkTheme: Boolean = true,//isSystemInDarkTheme(), // Detect system theme
+    content: @Composable () -> Unit
+) {
+    val colors = if (darkTheme) DarkColorScheme else LightColorScheme
+
+    MaterialTheme(
+        colorScheme = colors,
+        //typography = Typography, // Optional: Define custom typography
+        content = content
+    )
+}
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -29,7 +62,7 @@ class MainActivity : AppCompatActivity() {
         val cameraGranted = permissions[Manifest.permission.CAMERA] ?: false
 
         if (cameraGranted) {
-            setContent { Nav() }
+            setContent { MyAppTheme { Nav() } }
         } else {
             setContent { PermissionInfo() }
         }
