@@ -18,9 +18,9 @@
 	{#if form?.msg}
 		<Message msg={form.msg} class="mb-4" />
 	{:else if !data.rated}
-		<form class="mb-4 flex flex-col gap-4" method="post" use:enhance>
+		<form class="my-4 flex flex-col gap-4" method="post" use:enhance>
 			<div class="flex justify-between">
-				<span>Wie war die Fahrt?</span>
+				<span>{t.rating.howHasJourneyBeen}</span>
 				<div class="flex gap-4">
 					<label>
 						<input type="radio" name="rating" value="good" />
@@ -33,11 +33,11 @@
 				</div>
 			</div>
 			<div class="field">
-				<Label for="comment">Ihr Feedback</Label>
+				<Label for="comment">{t.rating.yourFeedback}</Label>
 				<Textarea name="comment" class="h-auto" rows={3} />
 			</div>
 			<input type="hidden" name="id" value={data.id} />
-			<Button type="submit">Feedback abschicken</Button>
+			<Button type="submit">{t.rating.sendFeedback}</Button>
 		</form>
 	{/if}
 

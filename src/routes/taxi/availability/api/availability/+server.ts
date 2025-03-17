@@ -1,15 +1,12 @@
-import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, MIN_PREP } from '$lib/constants';
-import { getAllowedTimes } from '$lib/server/booking/evaluateRequest';
+import { EARLIEST_SHIFT_START, LATEST_SHIFT_END } from '$lib/constants';
 import { db, type Database } from '$lib/server/db';
-import { Interval } from '$lib/server/util/interval';
-import { nowOrSimulationTime } from '$lib/util/time.js';
-import { HOUR, MINUTE } from '$lib/util/time';
+import { Interval } from '$lib/util/interval';
+import { getAllowedTimes } from '$lib/util/getAllowedTimes';
+import { HOUR } from '$lib/util/time';
 import { json } from '@sveltejs/kit';
 import { sql, type Insertable, type Selectable } from 'kysely';
+import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
 
-function getFirstAlterableTime() {
-	return Math.ceil((nowOrSimulationTime().getTime() + MIN_PREP) / (15 * MINUTE)) * 15 * MINUTE;
-}
 type Availability = Selectable<Database['availability']>;
 type NewAvailability = Insertable<Database['availability']>;
 
@@ -42,11 +39,10 @@ export const DELETE = async ({ locals, request }) => {
 		throw 'invalid params';
 	}
 
-	const restrictedFrom = Math.max(getFirstAlterableTime(), from);
-	if (to <= restrictedFrom) {
+	const toRemove = new Interval(from, to).intersect(getAlterableTimeframe());
+	if (toRemove === undefined) {
 		return json({});
 	}
-	const toRemove = new Interval(restrictedFrom, to);
 	console.log('remove availability vehicle=', vehicleId, 'toRemove=', toRemove);
 	await db.transaction().execute(async (trx) => {
 		await sql`LOCK TABLE availability IN ACCESS EXCLUSIVE MODE;`.execute(trx);
@@ -122,13 +118,17 @@ export const POST = async ({ locals, request }) => {
 		throw 'invalid params';
 	}
 
-	const restrictedFrom = Math.max(from, getFirstAlterableTime());
-	if (to <= restrictedFrom) {
+	const interval = new Interval(from, to).intersect(getAlterableTimeframe());
+	if (interval === undefined) {
 		return json({});
 	}
-	const interval = new Interval(restrictedFrom, to);
 	await Promise.all(
-		getAllowedTimes(restrictedFrom, to, EARLIEST_SHIFT_START - HOUR, LATEST_SHIFT_END + HOUR)
+		getAllowedTimes(
+			interval.startTime,
+			interval.endTime,
+			EARLIEST_SHIFT_START - HOUR,
+			LATEST_SHIFT_END + HOUR
+		)
 			.map((allowed) => allowed.intersect(interval))
 			.filter((a) => a != undefined)
 			.map((availability) =>

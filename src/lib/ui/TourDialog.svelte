@@ -17,9 +17,9 @@
 	import GeoJSON from '$lib/map/GeoJSON.svelte';
 	import Layer from '$lib/map/Layer.svelte';
 
-	import type { TourWithRequests } from '$lib/server/db/getTours';
+	import type { TourWithRequests } from '$lib/util/getToursTypes';
 	import type { PlanResponse } from '$lib/openapi';
-	import { MIN_PREP } from '$lib/constants';
+	import { LOCALE, MIN_PREP } from '$lib/constants';
 	import { carRouting } from '$lib/util/carRouting';
 	import { polylineToGeoJSON } from '$lib/util/polylineToGeoJSON';
 	import { getTourInfoShort } from '$lib/util/getTourInfoShort';
@@ -151,12 +151,12 @@
 				{#if tour}
 					<div class="rounded bg-primary-foreground p-2">Startzeit</div>
 					<div class="rounded bg-primary-foreground p-2 text-right">
-						{new Date(tour!.startTime).toLocaleString('de-DE').slice(0, -3)}
+						{new Date(tour!.startTime).toLocaleString(LOCALE).slice(0, -3)}
 					</div>
 
 					<div class="rounded bg-primary-foreground p-2">Endzeit</div>
 					<div class="rounded bg-primary-foreground p-2 text-right">
-						{new Date(tour!.endTime).toLocaleString('de-DE').slice(0, -3)}
+						{new Date(tour!.endTime).toLocaleString(LOCALE).slice(0, -3)}
 					</div>
 
 					<div class="rounded bg-primary-foreground p-2">Kennzeichen</div>
@@ -265,7 +265,7 @@
 							<Table.Row class={`${tour!.cancelled ? 'bg-destructive' : 'bg-primary-background'}`}>
 								<Table.Cell>
 									{new Date(getScheduledEventTime(event))
-										.toLocaleString('de-DE')
+										.toLocaleString(LOCALE)
 										.slice(0, -3)
 										.replace(',', ' ')}
 								</Table.Cell>

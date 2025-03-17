@@ -1,4 +1,3 @@
-import { MINUTE } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
 export enum INTERVAL_RELATION {
@@ -109,13 +108,6 @@ export class Interval {
 
 	shift(x: number): Interval {
 		return new Interval(this.startTime + x, this.endTime + x);
-	}
-
-	round(): Interval {
-		return new Interval(
-			Math.floor(this.startTime / MINUTE) * MINUTE,
-			Math.ceil(this.endTime / MINUTE) * MINUTE
-		);
 	}
 
 	static intersect(a: Interval[], b: Interval[]): Interval[] {

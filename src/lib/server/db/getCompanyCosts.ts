@@ -1,11 +1,13 @@
 import { CAP, FIXED_PRICE, OVER_CAP_FACTOR } from '$lib/constants';
 import type { VehicleId } from '$lib/server/booking/VehicleId';
 import { db } from '$lib/server/db';
-import { getToursWithRequests, type TourWithRequests } from '$lib/server/db/getTours';
-import { Interval } from '$lib/server/util/interval';
+import { getToursWithRequests } from '$lib/server/db/getTours';
+import type { TourWithRequests } from '$lib/util/getToursTypes';
+import { Interval } from '$lib/util/interval';
 import { groupBy } from '$lib/util/groupBy';
-import { DAY, HOUR } from '$lib/util/time';
+import { DAY, HOUR, roundToUnit } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
+import { getOffset } from '$lib/util/getOffset';
 
 export async function getCompanyCosts(companyId?: number) {
 	const tours: (TourWithRequests & { interval: Interval })[] = (
@@ -22,7 +24,7 @@ export async function getCompanyCosts(companyId?: number) {
 			tours: [],
 			earliestTime: Date.now(),
 			latestTime: Date.now(),
-			companyCostsPerDay: []
+			costPerDayAndVehicle: []
 		};
 	}
 	const earliestTime =
@@ -42,25 +44,14 @@ export async function getCompanyCosts(companyId?: number) {
 		.execute();
 
 	// create an array of intervals representing the individual days in the two relevant years
-	const getOffset = (t: UnixtimeMs) => {
-		return (
-			parseInt(
-				new Date(t).toLocaleString('de-DE', {
-					hour: '2-digit',
-					hour12: false,
-					timeZone: 'Europe/Berlin'
-				})
-			) - 12
-		);
-	};
 	const firstDay = new Date(earliestTime - DAY);
-	const firstDayStart = Math.floor(firstDay.getTime() / DAY) * DAY;
+	const firstDayStart = roundToUnit(firstDay.getTime(), DAY, Math.floor);
 	const days = Array.from({ length: Math.ceil((latestTime - firstDayStart) / DAY) }, (_, i) => {
 		const offset = getOffset(firstDayStart + DAY * i + HOUR * 12);
 		const offsetNextDay = getOffset(firstDayStart + DAY * (i + 1) + HOUR * 12);
 		return new Interval(
-			firstDayStart + DAY * i - offset * HOUR,
-			firstDayStart + DAY * (i + 1) - offsetNextDay * HOUR
+			firstDayStart + DAY * i - offset,
+			firstDayStart + DAY * (i + 1) - offsetNextDay
 		);
 	});
 	// group availabilities by vehicle
@@ -83,12 +74,24 @@ export async function getCompanyCosts(companyId?: number) {
 					availabilitiesPerDayAndVehicle[dayIdx].set(
 						vehicle,
 						(availabilitiesPerDayAndVehicle[dayIdx].get(vehicle) ?? 0) +
-							availability.getDurationMs()
+							(day.intersect(availability)?.getDurationMs() ?? 0)
 					);
 				}
 			})
 		);
 	});
+
+	const companyByVehicle = new Map<
+		number,
+		{ name: string | null; id: number; licensePlate: string }
+	>();
+	tours.forEach((t) =>
+		companyByVehicle.set(t.vehicleId, {
+			name: t.companyName,
+			id: t.companyId,
+			licensePlate: t.licensePlate
+		})
+	);
 
 	// cumulate the total taxameter readings on every relevant day for each vehicle
 	const taxameterPerDayAndVehicle = new Array<
@@ -142,6 +145,10 @@ export async function getCompanyCosts(companyId?: number) {
 				customerCount: number;
 				timestamp: UnixtimeMs;
 				verifiedCustomerCount: number;
+				availabilityDuration: UnixtimeMs;
+				companyName: string | null;
+				licensePlate: string;
+				companyId: number;
 			}
 		>
 	>();
@@ -155,6 +162,10 @@ export async function getCompanyCosts(companyId?: number) {
 				customerCount: number;
 				timestamp: UnixtimeMs;
 				verifiedCustomerCount: number;
+				availabilityDuration: UnixtimeMs;
+				companyName: string | null;
+				licensePlate: string;
+				companyId: number;
 			}
 		>();
 		if (taxameterPerDayAndVehicle[d] == undefined) {
@@ -171,65 +182,11 @@ export async function getCompanyCosts(companyId?: number) {
 				capped,
 				customerCount: taxameter.customerCount,
 				timestamp: taxameter.timestamp,
-				verifiedCustomerCount: taxameter.verifiedCustomerCount
-			});
-		});
-	}
-	const companyByVehicle = new Map<number, { name: string | null; id: number }>();
-	tours.forEach((t) => companyByVehicle.set(t.vehicleId, { name: t.companyName, id: t.companyId }));
-
-	// Gather the daily (soft-capped and uncapped) costs per day and company
-	const companyCostsPerDay = new Array<
-		Map<
-			number,
-			{
-				taxameter: number;
-				capped: number;
-				uncapped: number;
-				companyName: string | null;
-				availabilityDuration: number;
-				customerCount: number;
-				timestamp: UnixtimeMs;
-				verifiedCustomerCount: number;
-			}
-		>
-	>();
-	for (let d = 0; d != days.length; ++d) {
-		companyCostsPerDay[d] = new Map<
-			number,
-			{
-				taxameter: number;
-				capped: number;
-				uncapped: number;
-				companyName: string | null;
-				availabilityDuration: number;
-				customerCount: number;
-				timestamp: UnixtimeMs;
-				verifiedCustomerCount: number;
-			}
-		>();
-		if (costPerDayAndVehicle[d] === undefined) {
-			continue;
-		}
-		costPerDayAndVehicle[d].forEach((cost, vehicle) => {
-			const company = companyByVehicle.get(vehicle)!;
-			companyCostsPerDay[d].set(company.id, {
-				capped: (companyCostsPerDay[d].get(company.id)?.capped ?? 0) + cost.capped,
-				uncapped:
-					(companyCostsPerDay[d].get(company.id)?.uncapped ?? 0) +
-					(costPerDayAndVehicle[d].get(vehicle)?.uncapped ?? 0),
-				companyName: company.name,
-				availabilityDuration:
-					(companyCostsPerDay[d].get(company.id)?.availabilityDuration ?? 0) +
-					(availabilitiesPerDayAndVehicle[d]?.get(vehicle) ?? 0),
-				customerCount:
-					(companyCostsPerDay[d].get(company.id)?.customerCount ?? 0) +
-					(costPerDayAndVehicle[d].get(vehicle)?.customerCount ?? 0),
-				verifiedCustomerCount:
-					(companyCostsPerDay[d].get(company.id)?.verifiedCustomerCount ?? 0) +
-					(costPerDayAndVehicle[d].get(vehicle)?.verifiedCustomerCount ?? 0),
-				taxameter: (companyCostsPerDay[d].get(company.id)?.taxameter ?? 0) + cost.taxameter,
-				timestamp: cost.timestamp
+				verifiedCustomerCount: taxameter.verifiedCustomerCount,
+				availabilityDuration: availabilitiesPerDayAndVehicle[d].get(vehicle) ?? 0,
+				companyName: companyByVehicle.get(vehicle)!.name,
+				licensePlate: companyByVehicle.get(vehicle)!.licensePlate,
+				companyId: companyByVehicle.get(vehicle)!.id
 			});
 		});
 	}
@@ -237,22 +194,11 @@ export async function getCompanyCosts(companyId?: number) {
 		tours,
 		earliestTime,
 		latestTime,
-		companyCostsPerDay: companyCostsPerDay.flatMap((companyCosts) =>
-			Array.from(companyCosts).map(
+		costPerDayAndVehicle: costPerDayAndVehicle.flatMap((vehicleCosts) =>
+			Array.from(vehicleCosts).map(
 				([
-					companyId,
+					vehicleId,
 					{
-						capped,
-						uncapped,
-						companyName,
-						availabilityDuration,
-						customerCount,
-						taxameter,
-						timestamp,
-						verifiedCustomerCount
-					}
-				]) => {
-					return {
 						companyId,
 						capped,
 						uncapped,
@@ -261,7 +207,22 @@ export async function getCompanyCosts(companyId?: number) {
 						customerCount,
 						taxameter,
 						timestamp,
-						verifiedCustomerCount
+						verifiedCustomerCount,
+						licensePlate
+					}
+				]) => {
+					return {
+						companyId,
+						capped: verifiedCustomerCount === 0 ? 0 : capped,
+						uncapped: verifiedCustomerCount === 0 ? 0 : uncapped,
+						companyName,
+						availabilityDuration,
+						customerCount,
+						taxameter,
+						timestamp,
+						verifiedCustomerCount,
+						vehicleId,
+						licensePlate
 					};
 				}
 			)

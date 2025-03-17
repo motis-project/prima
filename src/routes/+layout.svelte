@@ -41,24 +41,27 @@
 	]);
 </script>
 
-<div class="flex h-full flex-col">
+<div class="flex h-full w-full flex-col">
 	{#if data.pendingRating}
 		<Alert.Root class="mb-2">
 			<CircleAlert class="size-4" />
 			<Alert.Title></Alert.Title>
 			<Alert.Description>
-				Vielen Dank dass Sie das ÖPNV Taxi benutzt haben. <br />
-				Wie war es?
+				{t.rating.thanksForUsing}<br />
+				{t.rating.howHasItBeen}
 				<a class="font-bold underline" href="/rating/{data.pendingRating.id}">
-					Geben Sie uns Ihr Feedback.
+					{t.rating.giveFeedback}
 				</a>
 			</Alert.Description>
 		</Alert.Root>
 	{/if}
-	<div class="flex grow flex-col overflow-y-auto">
-		<div id="searchmask-container" class="grow p-2 pb-6 md:flex md:items-center md:justify-center">
+	<div class="flex grow flex-col pb-16">
+		<div
+			id="searchmask-container"
+			class="grow overflow-x-auto p-2 py-6 md:mx-auto md:flex md:items-center"
+		>
 			{@render children()}
 		</div>
 	</div>
-	<Menu class="shrink" {items} />
+	<Menu {items} />
 </div>

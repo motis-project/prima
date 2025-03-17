@@ -67,16 +67,11 @@ export const getTours = async (
 		.execute();
 };
 
-export type Tours = Awaited<ReturnType<typeof getTours>>;
-export type Tour = Tours[0];
-export type TourEvent = Tour['events'][0];
-
 export const getToursWithRequests = async (
 	selectCancelled: boolean,
 	companyId?: number,
 	timeRange?: [UnixtimeMs, UnixtimeMs]
 ) => {
-	console.log({ companyId });
 	return await db
 		.selectFrom('tour')
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
@@ -147,7 +142,3 @@ export const getToursWithRequests = async (
 		])
 		.execute();
 };
-
-export type ToursWithRequests = Awaited<ReturnType<typeof getToursWithRequests>>;
-export type TourWithRequests = ToursWithRequests[0];
-export type TourRequest = TourWithRequests['requests'][0];

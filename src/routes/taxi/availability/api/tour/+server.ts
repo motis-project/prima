@@ -4,16 +4,9 @@ import { sql } from 'kysely';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { getPossibleInsertions } from '$lib/server/booking/getPossibleInsertions';
 import { nowOrSimulationTime } from '$lib/util/time.js';
+import { getLatestEventTime } from '$lib/util/getLatestEventTime';
 
 export const POST = async (event) => {
-	function getLatestEventTime(ev: {
-		communicatedTime: number;
-		scheduledTimeEnd: number;
-		scheduledTimeStart: number;
-	}) {
-		return Math.max(...[ev.scheduledTimeStart, ev.scheduledTimeEnd, ev.communicatedTime]);
-	}
-
 	const companyId = event.locals.session?.companyId;
 	if (!companyId) {
 		throw 'no company id';
@@ -44,6 +37,7 @@ export const POST = async (event) => {
 			.select((eb) => [
 				'tour.departure',
 				'tour.arrival',
+				'tour.id',
 				'vehicle.passengers',
 				'vehicle.bikes',
 				'vehicle.wheelchairs',
@@ -57,6 +51,7 @@ export const POST = async (event) => {
 							'request.wheelchairs',
 							'request.luggage',
 							'request.passengers',
+							'request.id',
 							jsonArrayFrom(
 								eb
 									.selectFrom('event')
@@ -75,10 +70,15 @@ export const POST = async (event) => {
 		if (!movedTour) {
 			return;
 		}
-		console.assert(movedTour.requests.length != 0, 'Found a tour which contains no requests.');
+		console.assert(
+			movedTour.requests.length != 0,
+			'Found a tour which contains no requests. tourId: ',
+			movedTour.id
+		);
 		console.assert(
 			!movedTour.requests.some((r) => r.events.length == 0),
-			'Found a request which contains no events.'
+			'Found a request which contains no events. requestId: ' +
+				movedTour.requests.find((r) => r.events.length === 0)?.id
 		);
 		const events = movedTour.requests.flatMap((r) =>
 			r.events.map((e) => {

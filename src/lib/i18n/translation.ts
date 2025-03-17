@@ -87,6 +87,7 @@ export type Translations = {
 
 		// Feedback
 		feedbackThank: string;
+		feedbackMissing: string;
 	};
 	admin: {
 		completedToursSubtitle: string;
@@ -122,6 +123,11 @@ export type Translations = {
 		verify: string;
 	};
 	rating: {
+		thanksForUsing: string;
+		howHasItBeen: string;
+		giveFeedback: string;
+		howHasJourneyBeen: string;
+		yourFeedback: string;
 		good: string;
 		bad: string;
 		sendFeedback: string;

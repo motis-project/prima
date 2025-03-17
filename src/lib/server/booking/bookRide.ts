@@ -1,7 +1,7 @@
 import type { Transaction } from 'kysely';
 import type { Capacities } from '$lib/server/booking/Capacities';
 import type { Database } from '$lib/server/db';
-import { Interval } from '$lib/server/util/interval';
+import { Interval } from '$lib/util/interval';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import { MAX_TRAVEL } from '$lib/constants';
 import { getBookingAvailability } from '$lib/server/booking/getBookingAvailability';
@@ -78,11 +78,11 @@ export async function bookRide(
 			userChosen,
 			[{ ...busStop, times: [busTime] }],
 			required,
-			startFixed
-			//{
-			//	pickup: c.startTime,
-			//	dropoff: c.targetTime
-			//}
+			startFixed,
+			{
+				pickup: c.startTime,
+				dropoff: c.targetTime
+			}
 		)
 	)[0][0];
 	if (best == undefined) {

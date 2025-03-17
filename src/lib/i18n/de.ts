@@ -30,7 +30,7 @@ const translations: Translations = {
 		enterYourCode: 'Bitte geben Sie den Code ein.',
 		codeExpiredSentAnother:
 			'Dieser Code ist abgelaufen. Wir haben Ihnen einen neuen Code geschickt.',
-		incorrectCode: 'Falscher Code.',
+		incorrectCode: 'Falscher oder abgelaufener Code.',
 		newCodeSent: 'Wir haben einen neuen Code an Ihre E-Mail-Adresse geschickt.',
 		enterNewPassword: 'Bitte geben Sie Ihr neues Passwort ein.',
 		passwordChanged: 'Passwort erfolgreich geändert.',
@@ -87,7 +87,8 @@ const translations: Translations = {
 		cancelled: 'Diese Fahrt wurde storniert.',
 
 		// Feedback
-		feedbackThank: 'Vielen Dank für Ihr Feedback!'
+		feedbackThank: 'Vielen Dank für Ihr Feedback!',
+		feedbackMissing: 'Kein Feedback gegeben'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',
@@ -127,6 +128,11 @@ const translations: Translations = {
 		verify: 'Verifizieren'
 	},
 	rating: {
+		thanksForUsing: 'Vielen Dank, dass Sie das ÖPNV Taxi benutzt haben.',
+		howHasItBeen: 'Wie war es?',
+		giveFeedback: 'Geben Sie uns Ihr Feedback.',
+		howHasJourneyBeen: 'Wie war die Fahrt?',
+		yourFeedback: 'Ihr Feedback',
 		good: 'gut',
 		bad: 'schlecht',
 		sendFeedback: 'Feedback abschicken'

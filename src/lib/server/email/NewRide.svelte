@@ -13,7 +13,7 @@
 	Fahrt:
 	<ul>
 		<li>Geplanter Start: {new Date(departure).toLocaleDateString('de')}</li>
-		<li>Geplanter Ankunft: {new Date(arrival).toLocaleDateString('de')}</li>
+		<li>Geplante Ankunft: {new Date(arrival).toLocaleDateString('de')}</li>
 	</ul>
 
 	<p>Link zur Fahrt: <a href={tourLink}>{tourLink}</a></p>

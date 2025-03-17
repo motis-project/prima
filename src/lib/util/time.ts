@@ -19,3 +19,6 @@ export function nowOrSimulationTime() {
     }
     return PUBLIC_SIMULATION_TIME ? new Date(PUBLIC_SIMULATION_TIME) : new Date();
 }
+export function roundToUnit(n: number, unit: number, roundFn: (n: number) => number) {
+	return roundFn(n / unit) * unit;
+}

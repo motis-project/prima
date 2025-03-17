@@ -85,7 +85,9 @@
 
 	{#if showTicket}
 		<div class="flex h-full w-full items-center justify-center">
-			<QrCode value={data.ticketCode} />
+			<div class="flex h-[210px] w-[210px] items-center justify-center bg-white">
+				<QrCode value={data.ticketCode} />
+			</div>
 		</div>
 		<Card.Root class="my-2">
 			<Card.Content>
