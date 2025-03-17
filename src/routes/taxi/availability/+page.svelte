@@ -308,21 +308,19 @@
 	};
 
 	const acceptsAnyTour = (v: Vehicle) => {
-		return draggedTours === null
-			? false
-			: draggedTours.tours.some((tour) => {
-					const events = tour.requests.flatMap((r) => r.events);
-					const possibleInsertions = getPossibleInsertions(
-						v,
-						{ bikes: 0, wheelchairs: 0, passengers: 0, luggage: 0 },
-						events
-					);
-					return (
-						possibleInsertions.length == 1 &&
-						possibleInsertions[0].earliestPickup === 0 &&
-						possibleInsertions[0].latestDropoff === events.length
-					);
-				});
+		return draggedTours!.tours.some((tour) => {
+			const events = tour.requests.flatMap((r) => r.events);
+			const possibleInsertions = getPossibleInsertions(
+				v,
+				{ bikes: 0, wheelchairs: 0, passengers: 0, luggage: 0 },
+				events
+			);
+			return (
+				possibleInsertions.length == 1 &&
+				possibleInsertions[0].earliestPickup === 0 &&
+				possibleInsertions[0].latestDropoff === events.length
+			);
+		});
 	};
 
 	const cellColor = (id: number, v: Vehicle, cell: Range) => {

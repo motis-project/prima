@@ -1,4 +1,4 @@
-import { json } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { sql } from 'kysely';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
@@ -75,7 +75,9 @@ export const POST = async (event) => {
 				movedTour.requests.find((r) => r.events.length === 0)?.id
 		);
 		if (vehicleId === undefined) {
-			return;
+			return error(400, {
+				message: 'Keine Fahrzeug-id angegeben'
+			});
 		}
 		const newVehicle = await db
 			.selectFrom('vehicle')
@@ -83,7 +85,9 @@ export const POST = async (event) => {
 			.select(['vehicle.bikes', 'vehicle.luggage', 'vehicle.wheelchairs', 'vehicle.passengers'])
 			.executeTakeFirst();
 		if (!newVehicle) {
-			return;
+			return error(400, {
+				message: 'Keine Fahrzeug-id angegeben'
+			});
 		}
 		const events = movedTour.requests.flatMap((r) =>
 			r.events.map((e) => {
