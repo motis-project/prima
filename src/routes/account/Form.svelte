@@ -10,6 +10,7 @@
 
 	const { msg, type }: { msg?: Msg; type: 'signup' | 'login' } = $props();
 	const isSignup = type === 'signup';
+	const requiredField = isSignup ? ' *' : '';
 </script>
 
 <div class="flex flex-col">
@@ -17,18 +18,18 @@
 		<Message class="mb-6" {msg} />
 		{#if isSignup}
 			<div class="field">
-				<Label for="name">{t.account.name}{isSignup ? ' *' : ''}</Label>
+				<Label for="name">{t.account.name}{requiredField}</Label>
 				<Input name="name" type="text" placeholder={t.account.name} />
 			</div>
 		{/if}
 
 		<div class="field">
-			<Label for="email">{t.account.email}{isSignup ? ' *' : ''}</Label>
+			<Label for="email">{t.account.email}{requiredField}</Label>
 			<Input name="email" type="email" placeholder={t.account.email} />
 		</div>
 
 		<div class="field">
-			<Label for="password">{t.account.password}{isSignup ? ' *' : ''}</Label>
+			<Label for="password">{t.account.password}{requiredField}</Label>
 			<Input name="password" type="password" placeholder={t.account.password} />
 		</div>
 
