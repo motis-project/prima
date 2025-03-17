@@ -213,8 +213,8 @@ export async function getCompanyCosts(companyId?: number) {
 				]) => {
 					return {
 						companyId,
-						capped,
-						uncapped,
+						capped: verifiedCustomerCount === 0 ? 0 : capped,
+						uncapped: verifiedCustomerCount === 0 ? 0 : uncapped,
 						companyName,
 						availabilityDuration,
 						customerCount,
