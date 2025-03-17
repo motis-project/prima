@@ -33,6 +33,15 @@
 		</form>
 	</Panel>
 
+	<Panel title={t.account.changePhone} subtitle={t.account.changePhoneSubtitle}>
+		<form method="post" action="/account/settings?/changePhone" class="mt-8">
+			<Input name="phone" type="phone" placeholder={t.account.phone} />
+			<div class="mt-4 flex justify-end">
+				<Button type="submit" variant="outline">{t.account.changePhone}</Button>
+			</div>
+		</form>
+	</Panel>
+
 	<Panel title={t.account.logout} subtitle={''}>
 		<form method="post" action="/account/settings?/logout" class="mt-8">
 			<div class="mt-4 flex justify-end">
