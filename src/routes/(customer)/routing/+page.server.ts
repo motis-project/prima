@@ -1,5 +1,5 @@
 import { bookRide, toExpectedConnectionWithISOStrings } from '$lib/server/booking/bookRide';
-import type { Capacities } from '$lib/server/booking/Capacities';
+import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
 import { readFloat, readInt } from '$lib/server/util/readForm';
 import { sql } from 'kysely';

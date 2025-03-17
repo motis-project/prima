@@ -1,5 +1,5 @@
 import type { ExpectedConnection } from '$lib/server/booking/bookRide';
-import type { Capacities } from '$lib/server/booking/Capacities';
+import type { Capacities } from '$lib/util/booking/Capacities';
 import type { DirectDrivingDurations } from '$lib/server/booking/getDirectDrivingDurations';
 import type { EventGroupUpdate } from '$lib/server/booking/getEventGroupInfo';
 import type { Insertion, NeighbourIds } from '$lib/server/booking/insertion';

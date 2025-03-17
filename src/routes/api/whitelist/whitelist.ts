@@ -1,4 +1,4 @@
-import type { Capacities } from '$lib/server/booking/Capacities';
+import type { Capacities } from '$lib/util/booking/Capacities';
 import { getBookingAvailability } from '$lib/server/booking/getBookingAvailability';
 import { MAX_TRAVEL } from '$lib/constants';
 import { Interval } from '$lib/util/interval';

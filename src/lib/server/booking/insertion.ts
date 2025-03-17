@@ -25,8 +25,8 @@ import type { PromisedTimes } from './PromisedTimes';
 import { Interval } from '$lib/util/interval';
 import type { RoutingResults } from './routing';
 import type { Company, Event } from './getBookingAvailability';
-import type { Capacities } from './Capacities';
-import { isValid } from './getPossibleInsertions';
+import type { Capacities } from '$lib/util/booking/Capacities';
+import { isValid } from '$lib/util/booking/getPossibleInsertions';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 import { roundToUnit, MINUTE } from '$lib/util/time';
 

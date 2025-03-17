@@ -14,7 +14,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		(!session?.companyId && event.url.pathname.startsWith('/api/driver')) ||
 		(!session?.companyId && event.url.pathname.startsWith('/api/cancelTour'))
 	) {
-		return error(403);
+		error(403);
 	}
 	if (token && session) {
 		setSessionTokenCookie(event, token, new Date(session.expiresAt));
@@ -23,13 +23,13 @@ const authHandle: Handle = async ({ event, resolve }) => {
 			!event.url.pathname.startsWith('/account/verify-email') &&
 			!event.url.pathname.startsWith('/account/settings')
 		) {
-			return redirect(302, '/account/verify-email');
+			redirect(302, '/account/verify-email');
 		}
 		if (
 			event.url.pathname.startsWith('/account/login') ||
 			event.url.pathname.startsWith('/account/signup')
 		) {
-			return redirect(302, '/account');
+			redirect(302, '/account');
 		}
 	} else {
 		if (
@@ -40,14 +40,14 @@ const authHandle: Handle = async ({ event, resolve }) => {
 				event.url.pathname !== '/account/reset-password' &&
 				event.url.pathname !== '/account/request-password-reset')
 		) {
-			return redirect(302, '/account/login');
+			redirect(302, '/account/login');
 		}
 		deleteSessionTokenCookie(event);
 	}
 
 	event.locals.session = session;
 
-	return resolve(event);
+	return await resolve(event);
 };
 
 export const handle = authHandle;

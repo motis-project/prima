@@ -2,7 +2,7 @@ import { MAX_TRAVEL, WGS84 } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
 import type { Coordinates } from '$lib/util/Coordinates';
 import { sql, type ExpressionBuilder, type Transaction } from 'kysely';
-import type { Capacities } from './Capacities';
+import type { Capacities } from '$lib/util/booking/Capacities';
 import { db, type Database } from '$lib/server/db';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { covers } from '$lib/server/db/covers';

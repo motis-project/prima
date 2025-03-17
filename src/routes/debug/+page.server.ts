@@ -4,7 +4,7 @@ import { readFloat } from '$lib/server/util/readForm';
 import { bookRide } from '$lib/server/booking/bookRide';
 import { sql } from 'kysely';
 import { whitelist } from '../api/whitelist/whitelist';
-import type { Capacities } from '$lib/server/booking/Capacities';
+import type { Capacities } from '$lib/util/booking/Capacities';
 import type { Translations } from '$lib/i18n/translation';
 import { insertRequest } from '../api/booking/query';
 
