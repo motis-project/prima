@@ -12,7 +12,10 @@ import { deleteSessionTokenCookie, invalidateSession } from '$lib/server/auth/se
 import { verifyPhone } from '$lib/server/verifyPhone';
 
 export function load(event: PageServerLoadEvent) {
-	return { email: event.locals.session!.email };
+	return {
+		email: event.locals.session!.email,
+		phone: event.locals.session!.phone
+	};
 }
 
 export const actions: Actions = {
