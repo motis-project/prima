@@ -9,28 +9,35 @@
 	import { Label } from '$lib/shadcn/label';
 
 	const { msg, type }: { msg?: Msg; type: 'signup' | 'login' } = $props();
+	const isSignup = type === 'signup';
 </script>
 
 <div class="flex flex-col">
 	<form method="post" class="flex flex-col gap-6">
 		<Message class="mb-6" {msg} />
-
-		{#if type === 'signup'}
+		{#if isSignup}
 			<div class="field">
-				<Label for="name">{t.account.name}</Label>
+				<Label for="name">{t.account.name}{isSignup ? ' *' : ''}</Label>
 				<Input name="name" type="text" placeholder={t.account.name} />
 			</div>
 		{/if}
 
 		<div class="field">
-			<Label for="email">{t.account.email}</Label>
+			<Label for="email">{t.account.email}{isSignup ? ' *' : ''}</Label>
 			<Input name="email" type="email" placeholder={t.account.email} />
 		</div>
 
 		<div class="field">
-			<Label for="password">{t.account.password}</Label>
+			<Label for="password">{t.account.password}{isSignup ? ' *' : ''}</Label>
 			<Input name="password" type="password" placeholder={t.account.password} />
 		</div>
+
+		{#if isSignup}
+			<div class="field">
+				<Label for="phone">{t.account.phone}</Label>
+				<Input name="phone" type="phone" placeholder={t.account.phone} />
+			</div>
+		{/if}
 
 		<Button type="submit" class="w-full" variant="outline">
 			{type == 'signup' ? t.account.create : t.account.login}
