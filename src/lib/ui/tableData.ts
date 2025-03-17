@@ -240,6 +240,20 @@ export const companyColsAdmin: Column<CompanyRow>[] = [
 		toTableEntry: (r: CompanyRow) => getEuroString(r.uncapped)
 	},
 	{
+		text: ['Obergrenze'],
+		sort: (a: CompanyRow, b: CompanyRow) => a.availabilityDuration - b.availabilityDuration,
+		toTableEntry: (r: CompanyRow) => getEuroString((r.availabilityDuration / HOUR) * CAP)
+	},
+	{
+		text: ['über', 'Obergrenze'],
+		sort: (a: CompanyRow, b: CompanyRow) =>
+			a.uncapped -
+			(a.availabilityDuration / HOUR) * CAP -
+			(b.uncapped - (b.availabilityDuration / HOUR) * CAP),
+		toTableEntry: (r: CompanyRow) =>
+			getEuroString(Math.max(r.uncapped - (r.availabilityDuration / HOUR) * CAP, 0))
+	},
+	{
 		text: ['Kosten mit', 'Obergrenze'],
 		sort: summationLast((a: CompanyRow, b: CompanyRow) => a.capped - b.capped),
 		toTableEntry: (r: CompanyRow) => getEuroString(r.capped)
@@ -275,6 +289,20 @@ export const companyColsCompany: Column<CompanyRow>[] = [
 		text: ['Einnahmen ohne', 'Obergrenze'],
 		sort: summationLast((a: CompanyRow, b: CompanyRow) => a.uncapped - b.uncapped),
 		toTableEntry: (r: CompanyRow) => getEuroString(r.uncapped)
+	},
+	{
+		text: ['Obergrenze'],
+		sort: (a: CompanyRow, b: CompanyRow) => a.availabilityDuration - b.availabilityDuration,
+		toTableEntry: (r: CompanyRow) => getEuroString((r.availabilityDuration / HOUR) * CAP)
+	},
+	{
+		text: ['über', 'Obergrenze'],
+		sort: (a: CompanyRow, b: CompanyRow) =>
+			a.uncapped -
+			(a.availabilityDuration / HOUR) * CAP -
+			(b.uncapped - (b.availabilityDuration / HOUR) * CAP),
+		toTableEntry: (r: CompanyRow) =>
+			getEuroString(Math.max(r.uncapped - (r.availabilityDuration / HOUR) * CAP, 0))
 	},
 	{
 		text: ['Einnahmen mit', 'Obergrenze'],
