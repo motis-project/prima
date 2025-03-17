@@ -61,6 +61,11 @@ export async function setup(page: Page) {
 }
 
 
+/* Requirements
+- set PUBLIC_SIMULATION_TIME=2025-03-10T00:00:00+0100 in .env
+- Motis: Use OSM, GTFS and config.yml from this link:
+  https://next.hessenbox.de/index.php/s/pHPpdj3aBNarQg9
+*/
 test('Boooking', async ({ page }) => {
 	test.setTimeout(600_000);
 
@@ -80,11 +85,11 @@ test('Boooking', async ({ page }) => {
 	await page.getByLabel('Kostenpflichtig buchen').getByRole('button', { name: 'Kostenpflichtig buchen' }).click();
 
 	await page.goto('http://localhost:5173/taxi/availability?offset=-60&date=2025-03-10');	
-	await expect(page.getByTestId('GR-TU-11-2025-03-10T18:45:00.000Z').locator('div')).toHaveClass('.*bg-yellow-100.*');
-	await expect(page.getByTestId('GR-TU-11-2025-03-10T19:00:00.000Z').locator('div')).toHaveClass('.*bg-orange-400.*');
-	await expect(page.getByTestId('GR-TU-11-2025-03-10T19:15:00.000Z').locator('div')).toHaveClass('.*bg-orange-400.*');
-	await expect(page.getByTestId('GR-TU-11-2025-03-10T19:30:00.000Z').locator('div')).toHaveClass('.*bg-orange-400.*');
-	await expect(page.getByTestId('GR-TU-11-2025-03-10T19:45:00.000Z').locator('div')).toHaveClass('.*bg-yellow-100.*');
+	await expect(page.getByTestId('GR-TU-11-2025-03-10T18:45:00.000Z').locator('div')).toHaveClass(/bg-yellow-100/);
+	await expect(page.getByTestId('GR-TU-11-2025-03-10T19:00:00.000Z').locator('div')).toHaveClass(/bg-orange-400/);
+	await expect(page.getByTestId('GR-TU-11-2025-03-10T19:15:00.000Z').locator('div')).toHaveClass(/bg-orange-400/);
+	await expect(page.getByTestId('GR-TU-11-2025-03-10T19:30:00.000Z').locator('div')).toHaveClass(/bg-orange-400/);
+	await expect(page.getByTestId('GR-TU-11-2025-03-10T19:45:00.000Z').locator('div')).toHaveClass(/bg-yellow-100/);
 
 	await page.getByTestId('GR-TU-11-2025-03-10T19:00:00.000Z').locator('div').click();
 	await expect(page.getByRole('dialog', { name: 'Tour Details' })).toBeVisible();
@@ -109,13 +114,33 @@ test('Boooking', async ({ page }) => {
 	await page.getByLabel('Kostenpflichtig buchen').getByRole('button', { name: 'Kostenpflichtig buchen' }).click();
 
 	await page.getByRole('link', { name: 'Verfügbarkeit' }).click();
-	await expect(page.getByTestId('GR-TU-12-2025-03-10T19:00:00.000Z').locator('div')).toHaveClass('w-8 h-8 border rounded-md bg-yellow-100');
-	await expect(page.getByTestId('GR-TU-12-2025-03-10T19:15:00.000Z').locator('div')).toHaveClass('w-8 h-8 border rounded-md bg-orange-400');
-	await expect(page.getByTestId('GR-TU-12-2025-03-10T19:30:00.000Z').locator('div')).toHaveClass('w-8 h-8 border rounded-md bg-orange-400');
-	await expect(page.getByTestId('GR-TU-12-2025-03-10T19:45:00.000Z').locator('div')).toHaveClass('w-8 h-8 border rounded-md bg-orange-400');
-	await expect(page.getByTestId('GR-TU-12-2025-03-10T20:00:00.000Z').locator('div')).toHaveClass('w-8 h-8 border rounded-md bg-yellow-100');
+	await expect(page.getByTestId('GR-TU-12-2025-03-10T19:00:00.000Z').locator('div')).toHaveClass(/bg-yellow-100/);
+	await expect(page.getByTestId('GR-TU-12-2025-03-10T19:15:00.000Z').locator('div')).toHaveClass(/bg-orange-400/);
+	await expect(page.getByTestId('GR-TU-12-2025-03-10T19:30:00.000Z').locator('div')).toHaveClass(/bg-orange-400/);
+	await expect(page.getByTestId('GR-TU-12-2025-03-10T19:45:00.000Z').locator('div')).toHaveClass(/bg-orange-400/);
+	await expect(page.getByTestId('GR-TU-12-2025-03-10T20:00:00.000Z').locator('div')).toHaveClass(/bg-yellow-100/);
 	await page.getByTestId('GR-TU-12-2025-03-10T19:30:00.000Z').locator('div').click();
 	await expect(page.getByRole('dialog', { name: 'Tour Details' })).toBeVisible();
 	await page.getByRole('button', { name: 'Close' }).click();
 
+	// Stornieren: Schleife --> Görlitz
+	await page.getByRole('link', {name: 'Abrechnung' }).click();
+	await expect(page.locator('#searchmask-container')).toContainText('Fahrzeug Abfahrt Ankunft Kundenerschienene Kunden Taxameterstand Kosten GR-TU-1110.03.2025, 20:0510.03.2025, 20:40100.00€0.00€GR-TU-1210.03.2025, 20:1510.03.2025, 20:50100.00€0.00€');
+  	await page.getByRole('link', { name: 'Verfügbarkeit' }).click();
+  	await page.getByTestId('GR-TU-11-2025-03-10T19:30:00.000Z').locator('div').click();
+  	await page.getByText('Stornieren').click();
+  	await page.getByRole('textbox').fill('Test23');
+  	await page.getByRole('button', { name: 'Stornieren bestätigen' }).click();
+
+	await expect(page.getByTestId('GR-TU-11-2025-03-10T18:45:00.000Z').locator('div')).toHaveClass(/bg-yellow-100/);
+	await expect(page.getByTestId('GR-TU-11-2025-03-10T19:00:00.000Z').locator('div')).toHaveClass(/bg-yellow-100/);
+	await expect(page.getByTestId('GR-TU-11-2025-03-10T19:15:00.000Z').locator('div')).toHaveClass(/bg-yellow-100/);
+	await expect(page.getByTestId('GR-TU-11-2025-03-10T19:30:00.000Z').locator('div')).toHaveClass(/bg-yellow-100/);
+	await expect(page.getByTestId('GR-TU-11-2025-03-10T19:45:00.000Z').locator('div')).toHaveClass(/bg-yellow-100/);
+
+  	await page.getByRole('link', { name: 'Abrechnung' }).click();
+  	await page.getByRole('combobox').nth(4).selectOption('0');
+	await expect(page.locator('#searchmask-container')).toContainText('Fahrzeug Abfahrt Ankunft Kundenerschienene Kunden Taxameterstand Kosten GR-TU-1110.03.2025, 20:0510.03.2025, 20:40100.00€0.00€');
+  	await page.getByRole('combobox').nth(4).selectOption('1');
+  	await expect(page.locator('#searchmask-container')).toContainText('Fahrzeug Abfahrt Ankunft Kundenerschienene Kunden Taxameterstand Kosten GR-TU-1210.03.2025, 20:1510.03.2025, 20:50100.00€0.00€');
 });
