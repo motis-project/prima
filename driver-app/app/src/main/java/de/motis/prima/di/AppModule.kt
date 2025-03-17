@@ -10,6 +10,8 @@ import de.motis.prima.app.NotificationHelper
 import de.motis.prima.data.CookieStore
 import de.motis.prima.data.DataRepository
 import de.motis.prima.data.DataStoreManager
+import de.motis.prima.data.TicketStore
+import io.realm.kotlin.Realm
 import javax.inject.Singleton
 
 @Module
@@ -30,8 +32,14 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideDataRepository(dataStoreManager: DataStoreManager): DataRepository {
-        return DataRepository(dataStoreManager)
+    fun provideTicketStore(realm: Realm): TicketStore {
+        return TicketStore(realm)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDataRepository(dataStoreManager: DataStoreManager, ticketStore: TicketStore): DataRepository {
+        return DataRepository(dataStoreManager, ticketStore)
     }
 
     @Provides

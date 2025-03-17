@@ -43,8 +43,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.data.DataRepository
-import de.motis.prima.data.ValidationStatus
 import de.motis.prima.services.Event
+import de.motis.prima.data.ValidationStatus
 import java.util.Date
 import javax.inject.Inject
 
@@ -344,7 +344,7 @@ fun ShowCustomerDetails(
 
                             )
                         }
-                    } else if (ticketStatus == ValidationStatus.OK) {
+                    } else if (ticketStatus == ValidationStatus.DONE) {
                         Box (
                             modifier = Modifier.padding(top = 12.dp)
                         ) {
@@ -357,7 +357,7 @@ fun ShowCustomerDetails(
                                     .background(Color.Green)
                             )
                         }
-                    } else if (ticketStatus == ValidationStatus.FAILED) {
+                    } else if (ticketStatus == ValidationStatus.CHECKED_IN) {
                         Box (
                             modifier = Modifier.padding(top = 12.dp)
                         ) {

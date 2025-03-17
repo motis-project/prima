@@ -5,6 +5,7 @@ import de.motis.prima.EventGroup
 import de.motis.prima.Location
 import de.motis.prima.services.Tour
 import de.motis.prima.services.Vehicle
+import io.realm.kotlin.query.RealmResults
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,38 +13,35 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.security.MessageDigest
 import javax.inject.Inject
 
-enum class ValidationStatus {
-    FAILED, REJECTED, OK
-}
-
-data class Ticket(
-    val requestId: Int,
-    val ticketCode: String,
-    var validationStatus: ValidationStatus
-)
-
 class DataRepository @Inject constructor(
-    private val dataStoreManager: DataStoreManager
+    private val dataStoreManager: DataStoreManager,
+    private val ticketStore: TicketStore
 ) {
-    private val _scannedTickets = MutableStateFlow(mutableMapOf<String, Ticket>())
-    val scannedTickets = _scannedTickets.asStateFlow()
+    //private val _scannedTickets = MutableStateFlow(mutableMapOf<String, Ticket>())
+    //val scannedTickets = _scannedTickets.asStateFlow()
+    val storedTickets = ticketStore.storedTickets
+
+    private val _pendingValidationTickets = MutableStateFlow<List<TicketObject>>(emptyList())
+    val pendingValidationTickets = _pendingValidationTickets.asStateFlow()
 
     fun getTicketStatus(ticketCode: String): ValidationStatus? {
-        var res: ValidationStatus?
+        /*var res: ValidationStatus?
         res = _scannedTickets.value[ticketCode]?.validationStatus
         if (res == null) {
             res = _scannedTickets.value[md5(ticketCode)]?.validationStatus
         }
-        return res
+        return res*/
+
+        return ticketStore.getTicketStatus(ticketCode)
     }
 
     fun updateScannedTickets(ticket: Ticket) {
-        val entry = _scannedTickets.value[md5(ticket.ticketCode)]
+        /*val entry = _scannedTickets.value[md5(ticket.ticketCode)]
         if (entry != null) {
             entry.validationStatus = ticket.validationStatus
         } else {
             _scannedTickets.value[md5(ticket.ticketCode)] = ticket
-        }
+        }*/
     }
 
     fun md5(input: String): String {
@@ -126,5 +124,15 @@ class DataRepository @Inject constructor(
 
     fun getEventGroup(id: String): EventGroup? {
         return _eventGroups.value.find { e -> e.id == id }
+    }
+
+    suspend fun updateTicketStore(ticket: Ticket) {
+        ticketStore.update(ticket)
+        _pendingValidationTickets.value = ticketStore
+            .getTicketsByValidationStatus(ValidationStatus.CHECKED_IN)
+    }
+
+    fun getTicketsByValidationStatus(status: ValidationStatus): RealmResults<TicketObject> {
+        return ticketStore.getTicketsByValidationStatus(status)
     }
 }

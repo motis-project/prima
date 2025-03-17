@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.app.NotificationHelper
 import de.motis.prima.data.DataRepository
@@ -54,12 +55,21 @@ class ToursViewModel @Inject constructor(
     val selectedVehicle = repository.selectedVehicle
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    private val scannedTickets = repository.scannedTickets
+    //private val scannedTickets = repository.scannedTickets
 
     init {
         notificationHelper.createNotificationChannel()
         startFetchingTours()
         startReportingScans()
+
+        /* test
+        viewModelScope.launch {
+            repository.storeTicket(Ticket(0, "foo", ValidationStatus.OK))
+            val storedTickets = repository.getAllTickets()
+            for (t in storedTickets) {
+                Log.d("test", "${t.ticketCode}, ${ValidationStatus.valueOf(t.validationStatus)}")
+            }
+        }*/
     }
 
     private fun refreshTours() {
@@ -134,6 +144,7 @@ class ToursViewModel @Inject constructor(
                             )
                         }
                     }
+                    newTours.sortedBy { t -> t.events[0].scheduledTimeStart }
                     _tours.value = newTours
                     repository.setTours(newTours)
                 } else {
@@ -152,11 +163,11 @@ class ToursViewModel @Inject constructor(
             try {
                 val response = apiService.validateTicket(ticket.requestId, ticket.ticketCode)
                 if (response.isSuccessful) {
-                    ticket.validationStatus = ValidationStatus.OK
-                    repository.updateScannedTickets(ticket)
+                    ticket.validationStatus = ValidationStatus.DONE
+                    repository.updateTicketStore(ticket)
                 } else {
                     ticket.validationStatus = ValidationStatus.REJECTED
-                    repository.updateScannedTickets(ticket)
+                    repository.updateTicketStore(ticket)
                 }
             } catch (e: Exception) {
                 Log.d("error", "Network Error: ${e.message!!}")
@@ -167,13 +178,20 @@ class ToursViewModel @Inject constructor(
     private fun startReportingScans() {
         viewModelScope.launch {
             while (true) {
-                val failedReports = scannedTickets.value.entries
-                    .filter { e -> e.value.validationStatus == ValidationStatus.FAILED }
+                val failedReports = repository.getTicketsByValidationStatus(ValidationStatus.CHECKED_IN)
                 Log.d("debug", "failedReports: $failedReports")
                 for (report in failedReports) {
-                    retryFailedReport(report.value)
+                    retryFailedReport(
+                        Ticket(
+                            report.requestId,
+                            report.ticketHash,
+                            report.ticketCode,
+                            ValidationStatus.valueOf(report.validationStatus)
+                        )
+                    )
                 }
-                delay(120000) // 2 min
+                //delay(120000) // 2 min
+                delay(3000)
             }
         }
     }

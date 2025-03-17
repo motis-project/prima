@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.dagger.hilt.android")
     kotlin("kapt")
+    id("io.realm.kotlin")
 }
 
 android {
@@ -63,9 +64,11 @@ dependencies {
     implementation(libs.androidx.material3.android)
     implementation(libs.material)
 
-    implementation("com.google.dagger:hilt-android:2.51.1")
-    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.21")
+    implementation(libs.realm)
+
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+    implementation(libs.kotlin.stdlib)
 
     implementation(libs.okhttp)
     implementation(libs.retrofit)

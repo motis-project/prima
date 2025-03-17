@@ -105,7 +105,7 @@ fun TicketScan(
                                 Log.d("debug", "$event")
                                 if (event != null) {
                                     ticketValid = true
-                                    viewModel.reportTicketScan(event.requestId, result)
+                                    viewModel.reportTicketScan(event.requestId, event.ticketHash, result)
                                 }
                             }
                             isScanning = false

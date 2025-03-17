@@ -187,8 +187,9 @@ fun Fare(
                 }
                 Spacer(modifier = Modifier.height(100.dp))
                 val scannedTickets by viewModel.scannedTickets.collectAsState()
-                val failedReports = scannedTickets.entries
-                    .filter { e -> e.value.validationStatus == ValidationStatus.FAILED }
+                val failedReports = scannedTickets
+                    .filter { e -> e.validationStatus == ValidationStatus.CHECKED_IN.name }
+                //val failedReports = repository.getTicketsByValidationStatus(ValidationStatus.FAILED)
 
                 if (failedReports.isNotEmpty()) {
                     Text(
@@ -205,7 +206,7 @@ fun Fare(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        ticket.value.requestId.toString(),
+                                        ticket.requestId.toString(),
                                         fontSize = 16.sp
                                     )
                                 }

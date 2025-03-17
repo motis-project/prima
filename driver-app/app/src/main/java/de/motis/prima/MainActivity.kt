@@ -47,7 +47,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        requestPermissions()
+        //requestPermissions()
+        setContent { Nav()  }
     }
 
     private val permissionsLauncher = registerForActivityResult(
@@ -62,7 +63,8 @@ class MainActivity : AppCompatActivity() {
         val cameraGranted = permissions[Manifest.permission.CAMERA] ?: false
 
         if (cameraGranted) {
-            setContent { MyAppTheme { Nav() } }
+            //setContent { MyAppTheme { Nav() } }
+            setContent { Nav()  }
         } else {
             setContent { PermissionInfo() }
         }

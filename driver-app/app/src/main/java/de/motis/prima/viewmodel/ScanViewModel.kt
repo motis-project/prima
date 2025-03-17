@@ -17,24 +17,24 @@ class ScanViewModel @Inject constructor(
     private val apiService: ApiService,
     private val repository: DataRepository
 ) : ViewModel() {
-    fun reportTicketScan(requestId: Int, ticketCode: String) {
+    fun reportTicketScan(requestId: Int, ticketHash: String, ticketCode: String) {
         val ticketStatus = repository.getTicketStatus(ticketCode)
         val shouldReport =
-            ticketStatus != ValidationStatus.OK && ticketStatus != ValidationStatus.REJECTED
+            ticketStatus != ValidationStatus.DONE && ticketStatus != ValidationStatus.REJECTED
         Log.d("debug", "shouldReport: $shouldReport, ticketStatus: $ticketStatus")
         if (shouldReport) {
             viewModelScope.launch {
-                var validationStatus = ValidationStatus.OK
+                var validationStatus = ValidationStatus.DONE
                 try {
                     val response = apiService.validateTicket(requestId, ticketCode)
                     if (!response.isSuccessful) {
                         validationStatus = ValidationStatus.REJECTED
                     }
                 } catch (e: Exception) {
-                    validationStatus = ValidationStatus.FAILED
+                    validationStatus = ValidationStatus.CHECKED_IN
                     Log.d("error", "Network Error: ${e.message!!}")
                 } finally {
-                    repository.updateScannedTickets(Ticket(requestId, ticketCode, validationStatus))
+                    repository.updateTicketStore(Ticket(requestId, ticketHash, ticketCode, validationStatus))
                 }
             }
         }
