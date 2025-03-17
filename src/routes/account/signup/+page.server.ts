@@ -57,7 +57,7 @@ export const actions: Actions = {
 		const name = formData.get('name');
 		const email = formData.get('email');
 		const password = formData.get('password');
-		const phone = formData.get('phone');
+		let phone = formData.get('phone');
 		if (
 			typeof name !== 'string' ||
 			name.length < 2 ||
@@ -80,9 +80,12 @@ export const actions: Actions = {
 		if (!ipBucket.consume(clientIP, 1)) {
 			return fail(429, { msg: msg('tooManyRequests'), email });
 		}
-		const phoneRegex = /^\+?[0-9]{0,14}$/;
-		if (phone != null && (typeof phone !== 'string' || !phoneRegex.test(phone))) {
-			return fail(400, { msg: msg('invalidPhone'), phone: '' });
+		const phoneRegex = /^\+?(?:[ ]?[-]?[ ]?\d){0,15}$/;
+		if (phone != null) {
+			if (typeof phone !== 'string' || !phoneRegex.test(phone)) {
+				return fail(400, { msg: msg('invalidPhone'), phone: '' });
+			}
+			phone = phone.replaceAll('-', '').replaceAll(' ', '');
 		}
 		const user = await createUser(name, email, password, phone);
 		try {
