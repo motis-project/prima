@@ -7,7 +7,7 @@
 	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import { t } from '$lib/i18n/translation';
 
-	const { form } = $props();
+	const { data, form } = $props();
 </script>
 
 <Meta title="Account | {PUBLIC_PROVIDER}" />
@@ -26,7 +26,7 @@
 
 	<Panel title={t.account.changeEmail} subtitle={t.account.changeEmailSubtitle}>
 		<form method="post" action="/account/settings?/changeEmail" class="mt-8">
-			<Input name="email" type="email" placeholder={t.account.email} />
+			<Input name="email" type="email" placeholder={data.email} />
 			<div class="mt-4 flex justify-end">
 				<Button type="submit" variant="outline">{t.account.changeEmail}</Button>
 			</div>
@@ -35,7 +35,11 @@
 
 	<Panel title={t.account.changePhone} subtitle={t.account.changePhoneSubtitle}>
 		<form method="post" action="/account/settings?/changePhone" class="mt-8">
-			<Input name="phone" type="phone" placeholder={t.account.phone} />
+			<Input
+				name="phone"
+				type="phone"
+				placeholder={data.phone === null ? t.account.phone : data.phone}
+			/>
 			<div class="mt-4 flex justify-end">
 				<Button type="submit" variant="outline">{t.account.changePhone}</Button>
 			</div>

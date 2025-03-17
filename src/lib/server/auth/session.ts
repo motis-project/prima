@@ -21,6 +21,7 @@ export async function validateSessionToken(token: string | undefined) {
 			'session.userId',
 			'session.expiresAt',
 			'user.name',
+			'user.phone',
 			'user.email',
 			'user.isEmailVerified',
 			'user.emailVerificationCode',
