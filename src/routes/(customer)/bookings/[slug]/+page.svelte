@@ -52,7 +52,7 @@
 					</Button>
 				{/if}
 
-				{#if data.communicatedTime >= Date.now()}
+				{#if data.communicatedTime >= Date.now() && !data.ticketChecked}
 					<AlertDialog.Root>
 						<AlertDialog.Trigger class={buttonVariants({ variant: 'destructive' })}>
 							{t.booking.cancel}

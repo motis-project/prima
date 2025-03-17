@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import type { RequestEvent } from './$types';
-import { json } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 import { sql } from 'kysely';
 import { sendMail } from '$lib/server/sendMail';
 import CancelNotificationCustomer from '$lib/server/email/CancelNotificationCustomer.svelte';
@@ -17,6 +17,7 @@ export const POST = async (event: RequestEvent) => {
 		.selectFrom('tour')
 		.where('tour.id', '=', p.tourId)
 		.select((eb) => [
+			'tour.fare',
 			jsonArrayFrom(
 				eb
 					.selectFrom('request')
@@ -25,6 +26,7 @@ export const POST = async (event: RequestEvent) => {
 					.select((eb) => [
 						'user.email',
 						'user.name',
+						'request.ticketChecked',
 						jsonArrayFrom(
 							eb
 								.selectFrom('event')
@@ -38,6 +40,17 @@ export const POST = async (event: RequestEvent) => {
 		.executeTakeFirst();
 	if (tour === undefined) {
 		return json({});
+	}
+	if (tour.requests.some((r) => r.ticketChecked)) {
+		error(400, {
+			message: 'Es wurde bereits ein Ticket gescannt - die Tour kann nicht storniert werden.'
+		});
+	}
+	if (tour.fare === null) {
+		error(400, {
+			message:
+				'Der Taxameterstand wurde bereits eingetragen - die Tour kann nicht storniert werden.'
+		});
 	}
 	console.assert(tour.requests.length != 0, 'Found a tour with no requests');
 	for (const request of tour.requests) {
