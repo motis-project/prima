@@ -26,6 +26,7 @@
 	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 	import { PUBLIC_MOTIS_URL } from '$env/static/public';
 	import CancelMessageDialog from './CancelMessageDialog.svelte';
+	import { nowOrSimulationTime } from '$lib/util/time';
 
 	let {
 		tours = $bindable(),
@@ -88,7 +89,7 @@
 		}
 	});
 
-	const threshold = new Date();
+	const threshold = nowOrSimulationTime();
 	threshold.setMinutes(threshold.getMinutes() + MIN_PREP);
 </script>
 
@@ -140,7 +141,7 @@
 		<Card.Header>
 			<div class="flex w-full items-center justify-between">
 				<Card.Title>Übersicht</Card.Title>
-				{#if tour && !tour.cancelled && !isAdmin && tour.endTime > Date.now()}
+				{#if tour && !tour.cancelled && !isAdmin && tour.endTime > nowOrSimulationTime().getTime()}
 					<CancelMessageDialog bind:tour={tours![tourIndex]} />
 				{/if}
 			</div>
@@ -308,7 +309,7 @@
 								<Table.Cell>
 									{#if event.isPickup && event.ticketChecked}
 										<span class="text-green-500">Ticket verifiziert</span>
-									{:else if event.isPickup && !event.cancelled && event.scheduledTimeEnd + event.nextLegDuration < Date.now()}
+									{:else if event.isPickup && !event.cancelled && event.scheduledTimeEnd + event.nextLegDuration < nowOrSimulationTime().getTime()}
 										<span class="text-red-500">Ticket nicht verifiziert</span>
 									{:else if event.cancelled}
 										<span class="text-red-500">Storniert</span>

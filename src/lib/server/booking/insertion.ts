@@ -28,6 +28,7 @@ import type { Company, Event } from './getBookingAvailability';
 import type { Capacities } from './Capacities';
 import { isValid } from './getPossibleInsertions';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
+import { nowOrSimulationTime } from '$lib/util/time';
 import { roundToUnit, MINUTE } from '$lib/util/time';
 
 export type InsertionEvaluation = {
@@ -248,7 +249,7 @@ export function evaluateNewTours(
 		where: InsertWhere.BEFORE_FIRST_EVENT,
 		direction: startFixed ? InsertDirection.BUS_STOP_PICKUP : InsertDirection.BUS_STOP_DROPOFF
 	};
-	const prepTime = Date.now() + MIN_PREP;
+	const prepTime = nowOrSimulationTime().getTime() + MIN_PREP;
 
 	companies.forEach((company, companyIdx) => {
 		company.vehicles.forEach((vehicle) => {

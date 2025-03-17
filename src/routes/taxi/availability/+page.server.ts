@@ -5,6 +5,7 @@ import type { Actions, RequestEvent } from './$types';
 import { fail } from '@sveltejs/kit';
 import { msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
+import { nowOrSimulationTime } from '$lib/util/time';
 
 export async function load(event: RequestEvent) {
 	const companyId = event.locals.session?.companyId;
@@ -18,7 +19,7 @@ export async function load(event: RequestEvent) {
 	const utcDate =
 		localDateParam && timezoneOffset
 			? new Date(new Date(localDateParam!).getTime() + Number(timezoneOffset) * 60 * 1000)
-			: new Date();
+			: nowOrSimulationTime();
 	const fromTime = new Date(utcDate);
 	fromTime.setHours(utcDate.getHours() - 1);
 	const toTime = new Date(utcDate);

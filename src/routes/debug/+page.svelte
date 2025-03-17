@@ -10,6 +10,7 @@
 	import { enhance } from '$app/forms';
 	import Layer from '$lib/map/Layer.svelte';
 	import { PUBLIC_MOTIS_URL } from '$env/static/public';
+	import { nowOrSimulationTime } from '$lib/util/time.js';
 
 	const { data, form } = $props();
 
@@ -121,7 +122,7 @@
 						<input type="hidden" value={start.lng} name="fromLng" />
 						<input type="hidden" value={destination.lat} name="toLat" />
 						<input type="hidden" value={destination.lng} name="toLng" />
-						<input type="text" value={new Date().toISOString()} name="time" />
+						<input type="text" value={nowOrSimulationTime().toISOString()} name="time" />
 						<Button type="submit">Suchen</Button>
 					</form>
 				</div>

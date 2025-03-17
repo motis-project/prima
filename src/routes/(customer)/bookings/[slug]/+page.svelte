@@ -18,6 +18,7 @@
 	import * as Card from '$lib/shadcn/card';
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { odmPrice } from '$lib/util/odmPrice';
+	import { nowOrSimulationTime } from '$lib/util/time';
 
 	const { data } = $props();
 
@@ -52,7 +53,7 @@
 					</Button>
 				{/if}
 
-				{#if data.communicatedTime >= Date.now()}
+				{#if data.communicatedTime >= nowOrSimulationTime().getTime()}
 					<AlertDialog.Root>
 						<AlertDialog.Trigger class={buttonVariants({ variant: 'destructive' })}>
 							{t.booking.cancel}
