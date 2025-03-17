@@ -9,6 +9,7 @@ import { MINUTE } from '$lib/util/time';
 import { sendMail } from '$lib/server/sendMail';
 import EmailVerification from '$lib/server/email/EmailVerification.svelte';
 import { deleteSessionTokenCookie, invalidateSession } from '$lib/server/auth/session';
+import { verifyPhone } from '$lib/server/verifyPhone';
 
 export function load(event: PageServerLoadEvent) {
 	return { email: event.locals.session!.email };
@@ -24,7 +25,11 @@ export const actions: Actions = {
 			return fail(400, { msg: msg('weakPassword') });
 		}
 		const passwordHash = await hashPassword(password);
-		await db.updateTable('user').set({ passwordHash }).execute();
+		await db
+			.updateTable('user')
+			.where('user.id', '=', event.locals.session!.userId!)
+			.set({ passwordHash })
+			.execute();
 		return { msg: msg('passwordChanged', 'success') };
 	},
 
@@ -65,6 +70,19 @@ export const actions: Actions = {
 		}
 
 		return { msg: msg('checkInboxToVerify', 'success') };
+	},
+
+	changePhone: async function changePhone(event: RequestEvent) {
+		const phone = verifyPhone((await event.request.formData()).get('phone'));
+		if (phone != null && typeof phone !== 'string') {
+			return phone;
+		}
+		await db
+			.updateTable('user')
+			.where('user.id', '=', event.locals.session!.userId!)
+			.set({ phone })
+			.execute();
+		return { msg: msg('phoneChanged', 'success') };
 	},
 
 	logout: async (event: RequestEvent) => {

@@ -35,6 +35,7 @@ const translations: Translations = {
 		newCodeSent: 'Wir haben einen neuen Code an Ihre E-Mail-Adresse geschickt.',
 		enterNewPassword: 'Bitte geben Sie Ihr neues Passwort ein.',
 		passwordChanged: 'Passwort erfolgreich geändert.',
+		phoneChanged: 'Telefonnummer erfolgreich geändert.',
 		enterEmail: 'Geben Sie Ihre E-Mail-Adresse ein.',
 		oldEmail: 'Dies ist die bereits verwendete E-Mail-Adresse.',
 		checkInboxToVerify:
@@ -116,8 +117,10 @@ const translations: Translations = {
 		resetPassword: 'Passwort zurücksetzen',
 		resetPasswordSubtitle: 'Passwort ändern',
 		changeEmail: 'E-Mail-Adresse ändern',
+		changePhone: 'Telefonnummer ändern',
 		changeEmailSubtitle:
 			'Ändern Sie Ihre E-Mail-Adresse. Wir werden Ihnen einen neuen Code zur Verifizierung senden.',
+		changePhoneSubtitle: 'Ändern Sie Ihre Telefonnummer.',
 		logout: 'Abmelden',
 		logoutSubtitle: 'Aus dem Konto abmelden. Sie können sich jederzeit wieder anmelden.',
 		code: 'Code',

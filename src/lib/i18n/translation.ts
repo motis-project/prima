@@ -36,6 +36,7 @@ export type Translations = {
 		newCodeSent: string;
 		enterNewPassword: string;
 		passwordChanged: string;
+		phoneChanged: string;
 		enterEmail: string;
 		oldEmail: string;
 		checkInboxToVerify: string;
@@ -110,9 +111,11 @@ export type Translations = {
 		emailVerification: string;
 		verifySubtitle: string;
 		changeEmail: string;
+		changePhone: string;
 		resetPassword: string;
 		resetPasswordSubtitle: string;
 		changeEmailSubtitle: string;
+		changePhoneSubtitle: string;
 		logout: string;
 		logoutSubtitle: string;
 		code: string;

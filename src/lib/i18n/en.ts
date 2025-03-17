@@ -34,6 +34,7 @@ const translations: Translations = {
 		newCodeSent: 'We sent a new code to your inbox.',
 		enterNewPassword: 'Please enter your new password.',
 		passwordChanged: 'Password changed successfully.',
+		phoneChanged: 'Phone number changed successfully.',
 		enterEmail: 'Enter your email address.',
 		oldEmail: 'This is your old email address.',
 		checkInboxToVerify: 'Please check your inbox to verify your new email address.',
@@ -112,8 +113,10 @@ const translations: Translations = {
 		resetPassword: 'Reset Password',
 		resetPasswordSubtitle: 'Change your password',
 		changeEmail: 'Reset Email',
+		changePhone: 'Reset Phone Number',
 		changeEmailSubtitle:
 			'Change your email address. We will send you an email with a verification code.',
+		changePhoneSubtitle: 'Change your phone number.',
 		logout: 'Logout',
 		logoutSubtitle: 'Log out of your account. You can log in later any time.',
 		code: 'Code',
