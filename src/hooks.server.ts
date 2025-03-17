@@ -14,7 +14,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		(!session?.companyId && event.url.pathname.startsWith('/api/driver')) ||
 		(!session?.companyId && event.url.pathname.startsWith('/api/cancelTour'))
 	) {
-		return error(403);
+		error(403);
 	}
 	if (token && session) {
 		setSessionTokenCookie(event, token, new Date(session.expiresAt));

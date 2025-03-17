@@ -75,7 +75,7 @@ export const POST = async (event) => {
 				movedTour.requests.find((r) => r.events.length === 0)?.id
 		);
 		if (vehicleId === undefined) {
-			return error(400, {
+			error(400, {
 				message: 'Keine Fahrzeug-id angegeben'
 			});
 		}
@@ -85,7 +85,7 @@ export const POST = async (event) => {
 			.select(['vehicle.bikes', 'vehicle.luggage', 'vehicle.wheelchairs', 'vehicle.passengers'])
 			.executeTakeFirst();
 		if (!newVehicle) {
-			return error(400, {
+			error(400, {
 				message: 'Keine Fahrzeug-id angegeben'
 			});
 		}
