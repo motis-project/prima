@@ -69,7 +69,7 @@ export async function setup(page: Page) {
 }
 
 /* Requirements
-- set PUBLIC_SIMULATION_TIME=2025-03-10T00:00:00+0100 in .env
+- set environment variable SIMULATION_TIME=2025-03-10T00:00:00+0100
 - Motis: Use OSM, GTFS and config.yml from this link:
   https://next.hessenbox.de/index.php/s/pHPpdj3aBNarQg9
 */
@@ -81,6 +81,8 @@ test('Boooking', async ({ page }) => {
 
 	// Schleife --> Görlitz (Fwd)
 	await page.goto('http://localhost:5173/routing');
+	await page.click('#bits-1');
+	await page.locator('input[type="datetime-local"]').fill('2025-03-10T00:00');
 	await page.getByRole('textbox', { name: 'Von' }).click();
 	await page
 		.getByRole('combobox', { name: 'Von' })
