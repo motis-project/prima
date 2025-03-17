@@ -19,7 +19,7 @@ import { PUBLIC_PROVIDER } from '$env/static/public';
 
 const ipBucket = new RefillingTokenBucket<string>(3, 10);
 
-async function createUser(name: string, email: string, password: string) {
+async function createUser(name: string, email: string, password: string, phone: string | null) {
 	const passwordHash = await hashPassword(password);
 	return await db
 		.insertInto('user')
@@ -31,7 +31,7 @@ async function createUser(name: string, email: string, password: string) {
 			emailVerificationCode: generateRandomOTP(),
 			emailVerificationExpiresAt: Date.now() + 10 * MINUTE,
 			passwordResetCode: null,
-			phone: null,
+			phone,
 			companyId: null,
 			isTaxiOwner: false,
 			isAdmin: false
@@ -57,6 +57,7 @@ export const actions: Actions = {
 		const name = formData.get('name');
 		const email = formData.get('email');
 		const password = formData.get('password');
+		let phone = formData.get('phone');
 		if (
 			typeof name !== 'string' ||
 			name.length < 2 ||
@@ -79,7 +80,14 @@ export const actions: Actions = {
 		if (!ipBucket.consume(clientIP, 1)) {
 			return fail(429, { msg: msg('tooManyRequests'), email });
 		}
-		const user = await createUser(name, email, password);
+		const phoneRegex = /^\+?(?:[ ]?[-]?[ ]?\d){0,15}$/;
+		if (phone != null) {
+			if (typeof phone !== 'string' || !phoneRegex.test(phone)) {
+				return fail(400, { msg: msg('invalidPhone'), phone: '' });
+			}
+			phone = phone.replaceAll('-', '').replaceAll(' ', '');
+		}
+		const user = await createUser(name, email, password, phone);
 		try {
 			await sendMail(Welcome, `Willkommen zu ${PUBLIC_PROVIDER}`, email, {
 				code: user.emailVerificationCode

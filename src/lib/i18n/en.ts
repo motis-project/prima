@@ -19,6 +19,7 @@ const translations: Translations = {
 		// Account
 		enterEmailAndPassword: 'Please enter your email and password.',
 		invalidEmail: 'Invalid email address.',
+		invalidPhone: 'Invalid phone number.',
 		emailAlreadyRegistered: 'Email already registered.',
 		weakPassword: 'Weak password.',
 		tooManyRequests: 'Too many requests.',
@@ -96,6 +97,7 @@ const translations: Translations = {
 		name: 'Name',
 		email: 'Email',
 		password: 'Password',
+		phone: 'Phone Number',
 		create: 'Create Account',
 		forgotPassword: 'Forgot your password?',
 		signupConditions: (tos: string, privacy: string, provider: string) =>

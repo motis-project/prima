@@ -21,6 +21,7 @@ export type Translations = {
 		// Account
 		enterEmailAndPassword: string;
 		invalidEmail: string;
+		invalidPhone: string;
 		emailAlreadyRegistered: string;
 		weakPassword: string;
 		tooManyRequests: string;
@@ -97,6 +98,7 @@ export type Translations = {
 		name: string;
 		email: string;
 		password: string;
+		phone: string;
 		create: string;
 		forgotPassword: string;
 		signupConditions: (tos: string, privacy: string, provider: string) => string;
