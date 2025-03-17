@@ -140,7 +140,7 @@
 		<Card.Header>
 			<div class="flex w-full items-center justify-between">
 				<Card.Title>Übersicht</Card.Title>
-				{#if tour && !tour.cancelled && !isAdmin && tour.endTime > Date.now()}
+				{#if tour && !tour.cancelled && !isAdmin && tour.endTime > Date.now() && !tour.requests.some((r) => r.ticketChecked) && tour.fare != null}
 					<CancelMessageDialog bind:tour={tours![tourIndex]} />
 				{/if}
 			</div>

@@ -19,6 +19,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			'request.wheelchairs',
 			'request.cancelled',
 			'request.ticketCode',
+			'request.ticketChecked',
 			'request.customer',
 			'request.id as requestId',
 			'event.communicatedTime'

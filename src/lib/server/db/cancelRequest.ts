@@ -3,9 +3,9 @@ import { db } from '.';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { sendMail } from '$lib/server/sendMail';
 import CancelNotificationCompany from '$lib/server/email/CancelNotificationCompany.svelte';
+import { error } from '@sveltejs/kit';
 
 export const cancelRequest = async (requestId: number, userId: number) => {
-	await sql`CALL cancel_request(${requestId}, ${userId}, ${Date.now()})`.execute(db);
 	const tour = await db
 		.selectFrom('request as cancelled_request')
 		.where('cancelled_request.id', '=', requestId)
@@ -13,6 +13,7 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 		.select((eb) => [
 			'tour.id',
 			'tour.departure',
+			'cancelled_request.ticketChecked',
 			jsonArrayFrom(
 				eb
 					.selectFrom('request as cancelled_request')
@@ -44,6 +45,12 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 	if (tour === undefined) {
 		return;
 	}
+	if (tour.ticketChecked === true) {
+		error(400, {
+			message: 'Das Ticket wurde bereits gescannt - die Buchung kann nicht storniert werden.'
+		});
+	}
+	await sql`CALL cancel_request(${requestId}, ${userId}, ${Date.now()})`.execute(db);
 	for (const companyOwner of tour.companyOwners) {
 		try {
 			await sendMail(CancelNotificationCompany, 'Stornierte Buchung', companyOwner.email, {
