@@ -134,7 +134,13 @@ fun Fare(
                         onValueChange = {
                             if (it.contains(',') || it.contains('.'))
                                 focusManager.moveFocus(FocusDirection.Next)
-                            if (it.isDigitsOnly()) fareEuro = it
+                            if (it.isDigitsOnly()) {
+                                if (it.length == 1 && it[0] == '0') {
+                                    fareEuro = ""
+                                } else if (it.length <= 3) {
+                                    fareEuro = it
+                                }
+                            }
 
                             val displayEuro = fareEuro.ifEmpty { "0" }
                             val displayCent =

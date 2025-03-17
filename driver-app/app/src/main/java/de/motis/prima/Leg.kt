@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -100,14 +101,13 @@ fun Leg(
 
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(),
+                    .fillMaxSize(),
                 horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Bottom
             ) {
                 Box(
                     modifier = Modifier
-                        .padding(top = 64.dp)
+                        .padding(bottom = 56.dp)
                 ) {
                     if (!isLastStop) {
                         Button(
@@ -155,15 +155,16 @@ fun ShowEventGroup(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            val height = screenHeight * 0.8f
             Box(
                 modifier = Modifier
-                    .height(screenHeight * 0.7f)
+                    .height(height)
                     .width(screenWidth * 0.9f)
             ) {
                 EventGroup(
                     navController,
                     currentEventGroup,
-                    screenHeight * 0.6f
+                    height
                 )
             }
         }

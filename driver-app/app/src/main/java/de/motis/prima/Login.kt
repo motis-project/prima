@@ -1,6 +1,7 @@
 package de.motis.prima
 
 import android.app.Activity
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import de.motis.prima.services.Vehicle
 import de.motis.prima.viewmodel.LoginViewModel
 import kotlinx.coroutines.launch
 
@@ -55,13 +57,14 @@ fun Login(
         activity?.finish()
     }
 
-    val selectedVehicle by viewModel.selectedVehicle.collectAsState(0)
+    val selectedVehicle by viewModel.selectedVehicle.collectAsState(Vehicle(0, ""))
+    Log.d("test", "selectedVehicle: $selectedVehicle")
 
     LaunchedEffect(key1 = viewModel) {
         launch {
             viewModel.navigationEvent.collect { shouldNavigate ->
                 if (shouldNavigate) {
-                    if (selectedVehicle == 0) {
+                    if (selectedVehicle.id == 0) {
                         navController.navigate("vehicles")
                     } else {
                         navController.navigate("tours")

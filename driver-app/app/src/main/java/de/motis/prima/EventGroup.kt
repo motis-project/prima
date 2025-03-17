@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
@@ -28,6 +30,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -99,8 +102,7 @@ fun EventGroup(
     Card(
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
+            .fillMaxSize()
     ) {
         Column(
             modifier = Modifier
@@ -162,11 +164,11 @@ fun EventGroup(
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .padding(top = 20.dp)
-                    .height(height * 0.75f)
+                    .height(height * 0.7f)
             ) {
                 LazyColumn(
                     modifier = Modifier
-                        .height(height * 0.75f)
+                        .fillMaxSize()
                         .background(Color.White)
                 ) {
                     items(items = eventGroup.events, itemContent = { event ->
@@ -178,12 +180,14 @@ fun EventGroup(
 
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(height * 0.25f)
+                    .fillMaxSize()
                     .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.Bottom
             ) {
                 val context = LocalContext.current
+                val buttonSize = 32.dp
+
                 Button(
                     onClick = {
                         openGoogleMapsNavigation(eventGroup.location, context)
@@ -193,7 +197,7 @@ fun EventGroup(
                         painter = painterResource(id = R.drawable.ic_compass),
                         contentDescription = "Localized description",
                         Modifier
-                            .size(width = 32.dp, height = 32.dp)
+                            .size(width = buttonSize, height = buttonSize)
                     )
                 }
 
@@ -214,10 +218,11 @@ fun EventGroup(
                                 navOptions
                             )
                         },
+                        modifier = Modifier.size(width = buttonSize, height = buttonSize)
                     ) {
                         Text(
                             text = "QR",
-                            fontSize = 27.sp,
+                            fontSize = 28.sp,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -317,58 +322,63 @@ fun ShowCustomerDetails(
                         .padding(bottom = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Button(
-                        onClick = {
-                            if (event.customerPhone != "") {
+                    if (event.customerPhone != "") {
+                        Button(
+                            onClick = {
                                 phoneCall(event.customerPhone, context)
                             }
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Call,
-                            contentDescription = "Localized description",
-                            Modifier.size(width = 26.dp, height = 26.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Call,
+                                contentDescription = "Localized description",
+                                Modifier.size(width = 26.dp, height = 26.dp)
 
-                        )
+                            )
+                        }
                     }
 
                     val ticketStatus = viewModel.getTicketStatus(event.ticketHash)
-                    if (ticketStatus == null) {
-                        Box(
-                            modifier = Modifier.padding(top = 8.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_hourglass),
-                                contentDescription = "Localized description",
-                                Modifier.size(width = 28.dp, height = 28.dp)
 
-                            )
-                        }
-                    } else if (ticketStatus == ValidationStatus.DONE) {
-                        Box (
-                            modifier = Modifier.padding(top = 12.dp)
+                    Box(
+                        modifier = Modifier.padding(top = 8.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Done,
-                                contentDescription = "Localized description",
-                                tint = Color.White,
-                                modifier = Modifier
-                                    .size(width = 32.dp, height = 32.dp)
-                                    .background(Color.Green)
+                            Text(
+                                text = "Ticket-Validierung:  ",
+                                fontSize = 20.sp,
+                                textAlign = TextAlign.Center
                             )
-                        }
-                    } else if (ticketStatus == ValidationStatus.CHECKED_IN) {
-                        Box (
-                            modifier = Modifier.padding(top = 12.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Done,
-                                contentDescription = "Localized description",
-                                tint = Color.Green,
-                                modifier = Modifier
-                                    .size(width = 30.dp, height = 30.dp)
-                                    .background(Color.White)
-                            )
+
+                            if (ticketStatus == null) {
+                                Icon(
+                                    imageVector = Icons.Default.Clear,
+                                    contentDescription = "Localized description",
+                                    tint = Color.Red,
+                                    modifier = Modifier
+                                        .size(width = 30.dp, height = 30.dp)
+                                        .background(Color.White)
+                                )
+                            } else if (ticketStatus == ValidationStatus.DONE) {
+                                Icon(
+                                    imageVector = Icons.Default.Done,
+                                    contentDescription = "Localized description",
+                                    tint = Color.White,
+                                    modifier = Modifier
+                                        .size(width = 32.dp, height = 32.dp)
+                                        .background(Color.Green)
+                                )
+                            } else if (ticketStatus == ValidationStatus.CHECKED_IN) {
+                                Icon(
+                                    imageVector = Icons.Default.Done,
+                                    contentDescription = "Localized description",
+                                    tint = Color.Green,
+                                    modifier = Modifier
+                                        .size(width = 30.dp, height = 30.dp)
+                                        .background(Color.White)
+                                )
+                            }
                         }
                     }
                 }

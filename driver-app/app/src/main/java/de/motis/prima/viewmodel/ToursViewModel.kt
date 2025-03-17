@@ -104,14 +104,14 @@ class ToursViewModel @Inject constructor(
                 val response = apiService.getTours(start, end)
                 emit(response)
             } catch (e: Exception) {
-                fetchAttempts.intValue++
+                /*fetchAttempts.intValue++
                 if (fetchAttempts.intValue - 3 < 0) {
                     _loading.value = true
                 }
                 if (fetchAttempts.intValue > 3) {
                     _loading.value = false
                     _networkError.value = true
-                }
+                }*/
                 Log.e("error", "Exception: ${e.message}")
             }
             delay(10000) // 10 sec

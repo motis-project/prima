@@ -40,6 +40,9 @@ class VehiclesViewModel @Inject constructor(
                     if (response.isSuccessful) {
                         repository.setVehicles(response.body() ?: emptyList())
                         _loading.value = false
+                    } else if (response.code() == 403) {
+                        _loading.value = false
+                        Log.d("error", "kein Fahrer")
                     } else {
                         Log.d("error", response.toString())
                     }

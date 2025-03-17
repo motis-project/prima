@@ -1,5 +1,6 @@
 package de.motis.prima.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,12 +31,28 @@ class LoginViewModel @Inject constructor(
         return !cookieStore.isEmpty()
     }
 
+    fun logout() {
+        viewModelScope.launch {
+            try {
+                cookieStore.clearCookies()
+            } catch (e: Exception) {
+                Log.d("error", "Error while logout.")
+            }
+        }
+    }
+
     fun login(email: String, password: String) {
         viewModelScope.launch {
             try {
                 val response = apiService.login(email, password)
                 if (response.isSuccessful) {
-                    _navigationEvent.emit(true)
+                    val r = apiService.validateTicket(0, "")
+                    if (r.code() == 404) {
+                        _navigationEvent.emit(true)
+                    } else {
+                        logout()
+                        _loginErrorEvent.emit(true)
+                    }
                 } else {
                     _loginErrorEvent.emit(true)
                 }
