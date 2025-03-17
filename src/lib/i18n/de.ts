@@ -18,6 +18,7 @@ const translations: Translations = {
 		// Account
 		enterEmailAndPassword: 'Bitte geben Sie Ihre E-Mail und Ihr Passwort ein.',
 		invalidEmail: 'Ungültige E-Mail-Adresse.',
+		invalidPhone: 'Ungültige Telefonnummer.',
 		emailAlreadyRegistered: 'Diese E-Mail-Adresse ist bereits registriert.',
 		weakPassword: 'Bitte wählen Sie ein stärkeres Passwort.',
 		tooManyRequests: 'Zu viele Anfragen.',
@@ -98,6 +99,7 @@ const translations: Translations = {
 		name: 'Name',
 		email: 'E-Mail',
 		password: 'Passwort',
+		phone: 'Telefonnummer',
 		create: 'Nutzerkonto erstellen',
 		forgotPassword: 'Passwort vergessen?',
 		signupConditions: (tos: string, privacy: string, provider: string) =>
