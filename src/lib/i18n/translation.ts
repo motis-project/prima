@@ -167,6 +167,7 @@ export type Translations = {
 	tripIntermediateStops: (n: number) => string;
 	sharingProvider: string;
 	roundtripStationReturnConstraint: string;
+	meetingPointNavigation: string;
 	noItinerariesFound: string;
 	bookingInfo: string;
 	changeBookingInfo: string;

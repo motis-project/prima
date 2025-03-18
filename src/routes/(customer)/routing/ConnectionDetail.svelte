@@ -59,6 +59,17 @@
 
 {#snippet streetLeg(l: Leg)}
 	<div class="flex flex-col gap-y-4 py-12 pl-8 text-muted-foreground">
+		{#if l.mode === 'ODM'}
+			<Button
+				onclick={() =>
+					window.open(
+						`https://www.google.com/maps/dir/?api=1&destination=${l.from.lat},${l.from.lon}&travelmode=walking`
+					)}
+				class="ml-6 w-fit"
+			>
+				{t.meetingPointNavigation}
+			</Button>
+		{/if}
 		<span class="ml-6">
 			{formatDurationSec(l.duration)}
 			{getModeName(l)}
