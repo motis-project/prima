@@ -17,7 +17,7 @@ export const BUFFER_TIME = 0;
 export const EARLIEST_SHIFT_START = 6 * HOUR;
 export const LATEST_SHIFT_END = 21 * HOUR;
 export const FIXED_PRICE = 300;
-export const CAP = 3500;
+export const CAP = 4000;
 export const OVER_CAP_FACTOR = 0.25;
 export const MONTHS = [
 	'Janurar',
