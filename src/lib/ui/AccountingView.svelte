@@ -60,6 +60,7 @@
 					acc.availabilityDuration += current.availabilityDuration;
 					acc.customerCount += current.customerCount;
 					acc.verifiedCustomerCount += current.verifiedCustomerCount;
+					acc.overCap += current.overCap;
 					return acc;
 				},
 				{
@@ -68,7 +69,8 @@
 					taxameter: 0,
 					availabilityDuration: 0,
 					customerCount: 0,
-					verifiedCustomerCount: 0
+					verifiedCustomerCount: 0,
+					overCap: 0
 				}
 			);
 		};

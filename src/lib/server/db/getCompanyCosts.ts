@@ -222,7 +222,11 @@ export async function getCompanyCosts(companyId?: number) {
 						timestamp,
 						verifiedCustomerCount,
 						vehicleId,
-						licensePlate
+						licensePlate,
+						overCap: Math.max(
+							verifiedCustomerCount === 0 ? 0 : uncapped - (availabilityDuration / HOUR) * CAP,
+							0
+						)
 					};
 				}
 			)
