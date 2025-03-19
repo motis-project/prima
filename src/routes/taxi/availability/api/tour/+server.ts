@@ -79,7 +79,7 @@ export const POST = async (event) => {
 				message: 'Keine Fahrzeug-id angegeben'
 			});
 		}
-		const newVehicle = await db
+		const newVehicle = await trx
 			.selectFrom('vehicle')
 			.where('vehicle.id', '=', vehicleId)
 			.select(['vehicle.bikes', 'vehicle.luggage', 'vehicle.wheelchairs', 'vehicle.passengers'])
