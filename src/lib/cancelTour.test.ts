@@ -56,4 +56,50 @@ describe('tests for cancelling tours', () => {
 			expect(e.message).toBe('tour cancelled');
 		});
 	});
+
+	it('cancel tour with fare', async () => {
+		const c = await addCompany(1);
+		const mockUserId = (await addTestUser(c)).id;
+		sessionToken = 'generateSessionToken()';
+		await createSession(sessionToken, mockUserId);
+		const v = await addTaxi(c, { passengers: 0, bikes: 0, wheelchairs: 0, luggage: 0 });
+		const t = await setTour(v, 0, 0, 1);
+		const r = (await setRequest(t!.id, mockUserId, '')).id;
+		await setEvent(r, 0, true, 1, 1);
+		await setEvent(r, 0, false, 1, 1);
+		const r2 = (await setRequest(t!.id, mockUserId, '')).id;
+		await setEvent(r2, 0, true, 1, 1);
+		await setEvent(r2, 0, false, 1, 1);
+
+		await cancelTour(t!.id, 'tour cancelled');
+		const events = await selectEvents();
+		events.forEach((e) => {
+			expect(e.ec).toBe(false);
+			expect(e.rc).toBe(false);
+			expect(e.tc).toBe(false);
+		});
+	});
+
+	it('cancel tour with checked ticket', async () => {
+		const c = await addCompany(1);
+		const mockUserId = (await addTestUser(c)).id;
+		sessionToken = 'generateSessionToken()';
+		await createSession(sessionToken, mockUserId);
+		const v = await addTaxi(c, { passengers: 0, bikes: 0, wheelchairs: 0, luggage: 0 });
+		const t = await setTour(v, 0, 0);
+		const r = (await setRequest(t!.id, mockUserId, '', 1, true)).id;
+		await setEvent(r, 0, true, 1, 1);
+		await setEvent(r, 0, false, 1, 1);
+		const r2 = (await setRequest(t!.id, mockUserId, '')).id;
+		await setEvent(r2, 0, true, 1, 1);
+		await setEvent(r2, 0, false, 1, 1);
+
+		await cancelTour(t!.id, 'tour cancelled');
+		const events = await selectEvents();
+		events.forEach((e) => {
+			expect(e.ec).toBe(false);
+			expect(e.rc).toBe(false);
+			expect(e.tc).toBe(false);
+		});
+	});
 });
