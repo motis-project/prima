@@ -12,7 +12,6 @@ export const POST = async (event: RequestEvent) => {
 	if (!company || !p.tourId || p.message == null || p.message == undefined) {
 		return json({});
 	}
-	await sql`CALL cancel_tour(${p.tourId}, ${company}, ${p.message})`.execute(db);
 	const tour = await db
 		.selectFrom('tour')
 		.where('tour.id', '=', p.tourId)
@@ -52,6 +51,7 @@ export const POST = async (event: RequestEvent) => {
 				'Der Taxameterstand wurde bereits eingetragen - die Tour kann nicht storniert werden.'
 		});
 	}
+	await sql`CALL cancel_tour(${p.tourId}, ${company}, ${p.message})`.execute(db);
 	console.assert(tour.requests.length != 0, 'Found a tour with no requests');
 	for (const request of tour.requests) {
 		console.assert(request.events.length != 0, 'Found a request with no events');
