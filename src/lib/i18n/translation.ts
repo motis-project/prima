@@ -172,6 +172,7 @@ export type Translations = {
 	bookingInfo: string;
 	changeBookingInfo: string;
 	booking: {
+		bookHere: string;
 		summary: string;
 		header: string;
 		disclaimer: string;

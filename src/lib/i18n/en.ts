@@ -193,6 +193,7 @@ const translations: Translations = {
 	changeBookingInfo: 'Change your search options and booking information.',
 
 	booking: {
+		bookHere: 'Hier buchen. Preis',
 		summary: 'Booking summary',
 		header: 'Book ride (incurs cost)',
 		disclaimer:

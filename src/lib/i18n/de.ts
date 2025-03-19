@@ -198,6 +198,7 @@ const translations: Translations = {
 	changeBookingInfo: 'Ändern Sie Ihre Such- und Buchungsangaben.',
 
 	booking: {
+		bookHere: 'Hier buchen. Preis',
 		summary: 'Buchungszusammenfassung',
 		header: 'Kostenpflichtig buchen',
 		disclaimer:
