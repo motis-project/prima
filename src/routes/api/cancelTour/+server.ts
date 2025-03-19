@@ -45,7 +45,7 @@ export const POST = async (event: RequestEvent) => {
 			message: 'Es wurde bereits ein Ticket gescannt - die Tour kann nicht storniert werden.'
 		});
 	}
-	if (tour.fare === null) {
+	if (tour.fare !== null) {
 		error(400, {
 			message:
 				'Der Taxameterstand wurde bereits eingetragen - die Tour kann nicht storniert werden.'
