@@ -25,7 +25,7 @@
 </script>
 
 {#snippet odmInfo(it: Itinerary)}
-	<Info class="size-4" /> Hier buchen. Preis {odmPrice(it, passengers)} €
+	<Info class="size-4" /> {t.booking.bookHere} {odmPrice(it, passengers)} €
 {/snippet}
 
 {#if baseResponse}
