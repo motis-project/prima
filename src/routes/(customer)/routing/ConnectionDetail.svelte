@@ -31,7 +31,7 @@
 )}
 	<Time
 		variant="schedule"
-		class="w-16 font-semibold"
+		class="w-16 py-1 font-semibold leading-tight"
 		queriedTime={timestamp}
 		{isRealtime}
 		{timestamp}
@@ -39,26 +39,29 @@
 	/>
 	<Time
 		variant="realtime"
-		class="w-16 font-semibold"
+		class="w-16 py-1 font-semibold leading-tight"
 		{isRealtime}
 		{timestamp}
 		{scheduledTimestamp}
 	/>
 	{#if stopId}
 		<Button
-			class="justify-normal overflow-hidden text-ellipsis text-wrap text-left text-[length:inherit] leading-5"
+			class="h-auto min-h-14 justify-normal gap-0 overflow-x-hidden text-wrap py-1 text-left text-[length:inherit] leading-tight"
 			variant="link"
 			onclick={() => onClickStop(name, stopId, new Date(timestamp))}
 		>
 			{name}
 		</Button>
 	{:else}
-		<span>{name}</span>
+		<span
+			class="inline-flex h-auto min-h-14 items-center justify-normal gap-0 overflow-x-hidden text-wrap px-4 py-1 text-left text-[length:inherit] leading-tight"
+			>{name}</span
+		>
 	{/if}
 {/snippet}
 
 {#snippet streetLeg(l: Leg)}
-	<div class="flex flex-col gap-y-4 py-12 pl-8 text-muted-foreground">
+	<div class="flex flex-col gap-y-4 py-8 pl-8 text-muted-foreground">
 		{#if l.mode === 'ODM'}
 			<Button
 				onclick={() =>
@@ -121,7 +124,7 @@
 				{/if}
 			</div>
 
-			<div class="relative left-4 border-l-4 pl-6 pt-4" style={routeBorderColor(l)}>
+			<div class="relative left-4 border-l-4 pl-6 pt-2" style={routeBorderColor(l)}>
 				<div class="grid grid-cols-[max-content_max-content_auto] items-center gap-y-6">
 					{@render stopTimes(
 						l.startTime,
@@ -138,12 +141,12 @@
 					</div>
 				{/if}
 				{#if l.intermediateStops?.length === 0}
-					<div class="flex items-center py-8 pl-1 text-muted-foreground md:pl-4">
+					<div class="flex items-center py-6 pl-1 text-muted-foreground md:pl-4">
 						{t.tripIntermediateStops(0)}
 					</div>
 				{:else}
-					<details class="my-2 [&_svg]:open:-rotate-180">
-						<summary class="flex items-center py-8 pl-1 text-muted-foreground md:pl-4">
+					<details class="mt-2 [&_svg]:open:-rotate-180">
+						<summary class="flex items-center py-6 pl-1 text-muted-foreground md:pl-4">
 							<svg
 								class="rotate-0 transform transition-all duration-300"
 								fill="none"
@@ -162,7 +165,7 @@
 								<span class="text-nowrap">({formatDurationSec(l.duration)})</span>
 							</span>
 						</summary>
-						<div class="mb-1 grid grid-cols-[max-content_max-content_auto] items-center gap-y-4">
+						<div class="grid grid-cols-[max-content_max-content_auto] items-center gap-y-0">
 							{#each l.intermediateStops! as s}
 								{@render stopTimes(s.arrival!, s.scheduledArrival!, l.realTime, s.name!, s.stopId)}
 							{/each}
@@ -184,12 +187,12 @@
 
 				{#if isLast || (isLastPred && next!.duration === 0)}
 					<!-- fill visual gap -->
-					<div class="pb-2"></div>
+					<div class="pb-8"></div>
 				{/if}
 			</div>
 		{:else if !(isLast && l.duration === 0) && ((i == 0 && l.duration !== 0) || !next || !next.routeShortName || l.mode != 'WALK' || (pred && (pred.mode == 'BIKE' || pred.mode == 'RENTAL')))}
 			<Route {onClickTrip} {l} />
-			<div class="relative left-4 border-l-4 pl-6 pt-4" style={routeBorderColor(l)}>
+			<div class="relative left-4 border-l-4 pl-6 pt-2" style={routeBorderColor(l)}>
 				<div class="grid grid-cols-[max-content_max-content_auto] items-center gap-y-6">
 					{@render stopTimes(
 						l.startTime,
@@ -201,20 +204,24 @@
 				</div>
 				{@render streetLeg(l)}
 				{#if !isLast}
-					<div class="grid grid-cols-[max-content_max-content_auto] items-center gap-y-6 pb-4">
+					<div class="grid grid-cols-[max-content_max-content_auto] items-center gap-y-6 pb-2">
 						{@render stopTimes(l.endTime, l.scheduledEndTime, l.realTime, l.to.name, l.to.stopId)}
 					</div>
+				{/if}
+				{#if isLast || (isLastPred && next!.duration === 0)}
+					<!-- fill visual gap -->
+					<div class="pb-4"></div>
 				{/if}
 			</div>
 		{/if}
 	{/each}
 	<div class="relative left-4 pl-6">
 		<div
-			class="absolute left-[-6px] top-[0px] h-[15px] w-[15px] rounded-full"
+			class="absolute left-[-5px] top-[0px] h-[15px] w-[15px] rounded-full"
 			style={routeColor(lastLeg!)}
 		></div>
 		<div
-			class="relative bottom-[7px] left-[2.5px] grid grid-cols-[max-content_max-content_auto] items-center gap-y-6"
+			class="relative left-[4px] top-[-20px] grid grid-cols-[max-content_max-content_auto] items-center gap-y-6"
 		>
 			{@render stopTimes(
 				lastLeg!.endTime,
