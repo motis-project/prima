@@ -161,13 +161,13 @@ fun QRCodeScanner(
         when {
             isGranted -> {
                 hasPermission = true
-                Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Erlaubnis erteilt.", Toast.LENGTH_SHORT).show()
             }
 
             showRationale -> {
                 Toast.makeText(
                     context,
-                    "Permission Denied. You can enable it in settings.",
+                    "Erlaubnis verwehrt. Sie können dies in den Systemeinstellungen ändern",
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -203,9 +203,9 @@ fun QRCodeScanner(
                 )
             }
 
-            permanentlyDenied -> {
+            /*permanentlyDenied -> {
                 PermissionDeniedDialog(navController, context)
-            }
+            }*/
 
             hasPermission -> {
                 AndroidView(
@@ -253,7 +253,7 @@ fun QRCodeScanner(
                     contentAlignment = Alignment.Center
                 ) {
                     Button(onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }) {
-                        Text("Request Camera Permission")
+                        Text("Erlaubnis zur Verwendung der Kamera erfragen")
                     }
                 }
             }
@@ -286,7 +286,7 @@ private fun processImage(
             }
         }
         .addOnFailureListener { e ->
-            Log.e("error", "QR Code scanning failed", e)
+            Log.e("error", "Scan des QR-Codes fehlgeschlagen", e)
         }
         .addOnCompleteListener {
             imageProxy.close()
@@ -297,8 +297,8 @@ private fun processImage(
 fun PermissionRationaleDialog(onDismiss: () -> Unit, onRequestPermission: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Camera Permission Needed") },
-        text = { Text("We need camera access to scan QR codes.") },
+        title = { Text("Erlaubnis zur Verwendung der Kamera wird benötigt") },
+        text = { Text("Die App benötigt den Zugriff auf die Kamera zum scannen von QR-Codes.") },
         confirmButton = {
             Button(onClick = onRequestPermission) { Text("Grant Permission") }
         },
@@ -308,7 +308,7 @@ fun PermissionRationaleDialog(onDismiss: () -> Unit, onRequestPermission: () -> 
     )
 }
 
-@Composable
+/*@Composable
 fun PermissionDeniedDialog(navController: NavController, context: Context) {
     AlertDialog(
         onDismissRequest = {},
@@ -321,7 +321,7 @@ fun PermissionDeniedDialog(navController: NavController, context: Context) {
             Button(onClick = { navController.navigate("tours") }) { Text("Cancel") }
         }
     )
-}
+}*/
 
 // Function to check if rationale should be shown
 fun shouldShowRequestPermissionRationale(context: Context, permission: String): Boolean {

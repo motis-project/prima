@@ -45,7 +45,7 @@ data class EventGroup(
     val arrivalTime: Long,
     val location: Location,
     val address: String,
-    val events: MutableList<Event>,
+    val events: List<Event>,
     var stopIndex: Int,
     var hasPickup: Boolean
 )
@@ -63,8 +63,6 @@ fun TourPreview(
     tourId: Int,
     viewModel: TourViewModel = hiltViewModel()
 ) {
-    val eventGroups = viewModel.eventGroups.collectAsState().value
-
     Scaffold(
         topBar = {
             TopBar(
@@ -85,7 +83,7 @@ fun TourPreview(
             Row(
                 horizontalArrangement = Arrangement.Center
             ) {
-                WayPointsView(eventGroups)
+                WayPointsView(viewModel)
             }
 
             Spacer(modifier = Modifier.height(48.dp))
@@ -112,14 +110,16 @@ fun TourPreview(
 }
 
 @Composable
-fun WayPointsView(eventGroups: List<EventGroup>) {
+fun WayPointsView(viewModel: TourViewModel) {
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
+            val eventGroups = viewModel.eventGroups.collectAsState()
+            Log.d("error", "UI: $eventGroups")
             LazyColumn {
-                items(items = eventGroups, itemContent = { eventGroup ->
+                items(items = eventGroups.value, itemContent = { eventGroup ->
                     WayPointPreview(eventGroup)
                 })
             }
@@ -132,17 +132,10 @@ fun WayPointPreview(
     eventGroup: EventGroup
 ) {
     val scheduledTime: String
-    var city = "GPS Navigation"
-    val event = eventGroup.events[0]
+    val event = eventGroup.events[0] // TODO
 
     try {
         scheduledTime = Date(event.scheduledTimeStart).formatTo("HH:mm")
-        if (event.address != "") {
-            val parts = event.address.split(',')
-            if (parts.size == 2) {
-                city = parts[1]
-            }
-        }
     } catch (e: Exception) {
         Log.d("error", "Failed to read event details")
         return
@@ -175,7 +168,7 @@ fun WayPointPreview(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = city,
+                    text = event.address,
                     fontSize = 24.sp,
                     textAlign = TextAlign.Center
                 )

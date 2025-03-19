@@ -65,7 +65,8 @@ data class Event(
     val passengers: Int,
     val wheelchairs: Int,
     val requestId: Int,
-    val ticketHash: String
+    val ticketHash: String,
+    val ticketChecked: Boolean
 )
 
 data class Tour(

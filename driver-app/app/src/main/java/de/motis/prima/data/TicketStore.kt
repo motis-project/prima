@@ -31,7 +31,6 @@ class TicketObject : RealmObject {
 class TicketStore @Inject constructor(private val realm: Realm) {
 
     private val _storedTickets = MutableStateFlow(getAll())
-    //private val _storedTickets = MutableStateFlow(emptyList<TicketObject>())
     val storedTickets = _storedTickets.asStateFlow()
 
     suspend fun update(ticket: Ticket) {
@@ -50,10 +49,6 @@ class TicketStore @Inject constructor(private val realm: Realm) {
         return realm.query<TicketObject>().find()
     }
 
-    fun getTicketById(requestId: String): TicketObject? {
-        return realm.query<TicketObject>("requestId == $0", requestId).first().find()
-    }
-
     fun getTicketStatus(ticketCode: String): ValidationStatus? {
         val ticket = realm.query<TicketObject>("ticketCode == $0", ticketCode).first().find()
         return if (ticket != null) {
@@ -69,8 +64,8 @@ class TicketStore @Inject constructor(private val realm: Realm) {
 
     suspend fun deleteTicket(requestId: String) {
         realm.write {
-            val user = query<TicketObject>("id == $0", requestId).first().find()
-            user?.let { delete(it) }
+            val ticket = query<TicketObject>("id == $0", requestId).first().find()
+            ticket?.let { delete(it) }
         }
     }
 

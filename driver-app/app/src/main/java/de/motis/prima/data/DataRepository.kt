@@ -15,33 +15,16 @@ import javax.inject.Inject
 
 class DataRepository @Inject constructor(
     private val dataStoreManager: DataStoreManager,
-    private val ticketStore: TicketStore
+    private val ticketStore: TicketStore,
+    private val tourStore: TourStore
 ) {
-    //private val _scannedTickets = MutableStateFlow(mutableMapOf<String, Ticket>())
-    //val scannedTickets = _scannedTickets.asStateFlow()
     val storedTickets = ticketStore.storedTickets
+    val storedTours = tourStore.storedTours
 
     private val _pendingValidationTickets = MutableStateFlow<List<TicketObject>>(emptyList())
-    val pendingValidationTickets = _pendingValidationTickets.asStateFlow()
 
     fun getTicketStatus(ticketCode: String): ValidationStatus? {
-        /*var res: ValidationStatus?
-        res = _scannedTickets.value[ticketCode]?.validationStatus
-        if (res == null) {
-            res = _scannedTickets.value[md5(ticketCode)]?.validationStatus
-        }
-        return res*/
-
         return ticketStore.getTicketStatus(ticketCode)
-    }
-
-    fun updateScannedTickets(ticket: Ticket) {
-        /*val entry = _scannedTickets.value[md5(ticket.ticketCode)]
-        if (entry != null) {
-            entry.validationStatus = ticket.validationStatus
-        } else {
-            _scannedTickets.value[md5(ticket.ticketCode)] = ticket
-        }*/
     }
 
     fun md5(input: String): String {
@@ -65,61 +48,71 @@ class DataRepository @Inject constructor(
     private val _tours = MutableStateFlow<List<Tour>>(emptyList())
     val tours: StateFlow<List<Tour>> = _tours.asStateFlow()
 
-    fun setTours(tours: List<Tour>) {
+    suspend fun setTours(tours: List<Tour>) {
         _tours.value = tours
-    }
+        for (tour in tours) {
+            val ticketValidated = tour.events.find { e -> e.ticketChecked } == null
+            val fareReported = tour.fare != 0
+            val tourDTO = TourDTO(tour.tourId, ticketValidated, tour.fare, fareReported)
+            tourStore.update(tourDTO)
 
-    private val _selectedTourId = MutableStateFlow<Int>(0)
-    val selectedTourId: StateFlow<Int> = _selectedTourId.asStateFlow()
-
-    fun setSelectedTourId(id: Int) {
-        _selectedTourId.value = id
+            for (event in tour.events) {
+                val validationStatus =
+                    if (event.ticketChecked) ValidationStatus.DONE else ValidationStatus.REJECTED
+                ticketStore.update(Ticket(
+                    event.requestId,
+                    event.ticketHash,
+                    "",
+                    validationStatus
+                ))
+            }
+        }
     }
 
     private val _eventGroups = MutableStateFlow<List<EventGroup>>(emptyList())
     val eventGroups: StateFlow<List<EventGroup>> = _eventGroups.asStateFlow()
 
-    fun updateEventGroups() {
-        val events = _tours.value.find { t -> t.tourId == _selectedTourId.value }?.events
+    fun updateEventGroups(tourId: Int) {
+        val events = _tours.value.find { t -> t.tourId == tourId }?.events
         if (events == null) {
             _eventGroups.value = emptyList()
             return
         }
 
-        val eventGroups = mutableListOf<EventGroup>()
+        val tmpEventGroups = mutableListOf<EventGroup>()
+        val groupIDs = mutableSetOf<String>()
 
         for (event in events) {
-            val matchingGroups = eventGroups.filter { group -> group.id == event.eventGroup }
-            // size of matchingGroups should be 0 or 1
-            if (matchingGroups.isEmpty()) {
-                eventGroups.add(
+            groupIDs.add(event.eventGroup)
+        }
+
+        for (id in groupIDs) {
+            val group = events.filter { e -> e.eventGroup == id }
+            if (group.isNotEmpty()) {
+                tmpEventGroups.add(
                     EventGroup(
-                        event.eventGroup,
-                        event.scheduledTimeStart,
-                        Location(event.lat, event.lng),
-                        event.address,
-                        mutableListOf(event),
+                        group[0].eventGroup,
+                        group[0].scheduledTimeStart,
+                        Location(group[0].lat, group[0].lng),
+                        group[0].address,
+                        group,
                         0,
                         false
                     )
                 )
-            } else if (matchingGroups.size == 1) {
-                matchingGroups[0].events.add(event)
-            } else {
-                Log.d("error", "buildEventGroups: groupId not unique")
             }
         }
 
-        if (eventGroups.isNotEmpty()) {
-            eventGroups.sortBy { it.arrivalTime }
-            eventGroups.forEachIndexed { index, group ->
+        if (tmpEventGroups.isNotEmpty()) {
+            tmpEventGroups.sortBy { it.arrivalTime }
+            tmpEventGroups.forEachIndexed { index, group ->
                 group.stopIndex = index
                 val pickupEvent = group.events.find { e -> e.isPickup }
                 group.hasPickup = (pickupEvent != null)
             }
         }
 
-        _eventGroups.value = eventGroups
+        _eventGroups.value = tmpEventGroups
     }
 
     fun getEventGroup(id: String): EventGroup? {
@@ -130,6 +123,10 @@ class DataRepository @Inject constructor(
         ticketStore.update(ticket)
         _pendingValidationTickets.value = ticketStore
             .getTicketsByValidationStatus(ValidationStatus.CHECKED_IN)
+    }
+
+    suspend fun updateTourStore(tour: TourDTO) {
+        tourStore.update(tour)
     }
 
     fun getTicketsByValidationStatus(status: ValidationStatus): RealmResults<TicketObject> {

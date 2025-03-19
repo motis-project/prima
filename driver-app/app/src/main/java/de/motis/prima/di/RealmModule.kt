@@ -5,6 +5,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import de.motis.prima.data.TicketObject
+import de.motis.prima.data.TourObject
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
 import javax.inject.Singleton
@@ -16,14 +17,17 @@ object RealmModule {
     @Provides
     @Singleton
     fun provideRealmConfiguration(): RealmConfiguration {
-        return RealmConfiguration.Builder(setOf(TicketObject::class))
-            .build()
+        return RealmConfiguration.Builder(
+            setOf(
+                TicketObject::class,
+                TourObject::class
+            )).build()
     }
 
     @Provides
     @Singleton
     fun provideRealm(realmConfiguration: RealmConfiguration): Realm {
-        Realm.deleteRealm(realmConfiguration)
+        //Realm.deleteRealm(realmConfiguration)
         return Realm.open(realmConfiguration)
     }
 }

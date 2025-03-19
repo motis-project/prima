@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Done
@@ -30,6 +31,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,8 +48,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.data.DataRepository
-import de.motis.prima.services.Event
 import de.motis.prima.data.ValidationStatus
+import de.motis.prima.services.Event
 import java.util.Date
 import javax.inject.Inject
 
@@ -55,9 +57,7 @@ import javax.inject.Inject
 class EventGroupViewModel @Inject constructor(
     private val repository: DataRepository
 ) : ViewModel() {
-    fun getTicketStatus(ticketCode: String): ValidationStatus? {
-        return repository.getTicketStatus(ticketCode)
-    }
+    val storedTickets = repository.storedTickets
 }
 
 fun openGoogleMapsNavigation(to: Location, context: Context) {
@@ -97,6 +97,7 @@ fun phoneCall(number: String, context: Context) {
 fun EventGroup(
     navController: NavController,
     eventGroup: EventGroup,
+    nav: String,
     height: Dp,
 ) {
     Card(
@@ -128,7 +129,7 @@ fun EventGroup(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "GPS Navigation",
+                            text = "--",
                             fontSize = 24.sp,
                             textAlign = TextAlign.Center
                         )
@@ -181,27 +182,12 @@ fun EventGroup(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.Center,
+                    .padding(top = 32.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
                 val context = LocalContext.current
-                val buttonSize = 32.dp
-
-                Button(
-                    onClick = {
-                        openGoogleMapsNavigation(eventGroup.location, context)
-                    }
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_compass),
-                        contentDescription = "Localized description",
-                        Modifier
-                            .size(width = buttonSize, height = buttonSize)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
+                val buttonHeight = 64.dp
 
                 if (eventGroup.hasPickup) {
                     val navOptions = NavOptions.Builder()
@@ -218,14 +204,41 @@ fun EventGroup(
                                 navOptions
                             )
                         },
-                        modifier = Modifier.size(width = buttonSize, height = buttonSize)
+                        modifier = Modifier.height(buttonHeight)
                     ) {
-                        Text(
-                            text = "QR",
-                            fontSize = 28.sp,
-                            textAlign = TextAlign.Center
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_qr),
+                            contentDescription = "Localized description"
                         )
                     }
+                }
+
+                Button(
+                    onClick = {
+                        openGoogleMapsNavigation(eventGroup.location, context)
+                    },
+                    modifier = Modifier.height(buttonHeight)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_map_marker),
+                        contentDescription = "Localized description"
+                    )
+                }
+
+                Button(
+                    onClick = { navController.navigate(nav) },
+                    modifier = Modifier.height(buttonHeight)
+                ) {
+                    /*Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "Localized description",
+                        tint = Color.White,
+                        modifier = Modifier.size(50.dp)
+                    )*/
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_arrow_right),
+                        contentDescription = "Localized description"
+                    )
                 }
             }
         }
@@ -238,6 +251,8 @@ fun ShowCustomerDetails(
     viewModel: EventGroupViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+
+    val storedTickets = viewModel.storedTickets.collectAsState()
 
     Card(
         modifier = Modifier
@@ -252,8 +267,9 @@ fun ShowCustomerDetails(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    imageVector = if (event.isPickup) Icons.AutoMirrored.Filled.ArrowForward else Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Localized description",
+                    tint = Color.White,
                     modifier = Modifier.background(
                         if (event.isPickup) Color.Green else Color.Red
                     )
@@ -337,7 +353,12 @@ fun ShowCustomerDetails(
                         }
                     }
 
-                    val ticketStatus = viewModel.getTicketStatus(event.ticketHash)
+                    var ticketStatus: ValidationStatus? = null
+                    val ticketObject = storedTickets.value
+                        .find { t -> t.ticketHash == event.ticketHash }
+                    if (ticketObject != null) {
+                        ticketStatus = ValidationStatus.valueOf(ticketObject.validationStatus)
+                    }
 
                     Box(
                         modifier = Modifier.padding(top = 8.dp)
@@ -345,17 +366,24 @@ fun ShowCustomerDetails(
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "Ticket-Validierung:  ",
+                            /*Text(
+                                text = "Ticket:  ",
                                 fontSize = 20.sp,
                                 textAlign = TextAlign.Center
+                            )*/
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_qr),
+                                contentDescription = "Localized description",
+                                modifier = Modifier
+                                    .size(width = 30.dp, height = 30.dp)
+                                    .background(Color.White)
                             )
 
                             if (ticketStatus == null) {
                                 Icon(
                                     imageVector = Icons.Default.Clear,
                                     contentDescription = "Localized description",
-                                    tint = Color.Red,
+                                    tint = Color.Gray,
                                     modifier = Modifier
                                         .size(width = 30.dp, height = 30.dp)
                                         .background(Color.White)
@@ -373,10 +401,19 @@ fun ShowCustomerDetails(
                                 Icon(
                                     imageVector = Icons.Default.Done,
                                     contentDescription = "Localized description",
-                                    tint = Color.Green,
+                                    tint = Color.Gray,
                                     modifier = Modifier
                                         .size(width = 30.dp, height = 30.dp)
                                         .background(Color.White)
+                                )
+                            } else if (ticketStatus == ValidationStatus.REJECTED) {
+                                Icon(
+                                    imageVector = Icons.Default.Done,
+                                    contentDescription = "Localized description",
+                                    tint = Color.White,
+                                    modifier = Modifier
+                                        .size(width = 30.dp, height = 30.dp)
+                                        .background(Color.Red)
                                 )
                             }
                         }

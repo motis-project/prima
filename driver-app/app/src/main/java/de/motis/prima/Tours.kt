@@ -45,6 +45,7 @@ import androidx.navigation.NavController
 import de.motis.prima.services.Event
 import de.motis.prima.services.Tour
 import de.motis.prima.viewmodel.ToursViewModel
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -247,7 +248,7 @@ fun ShowTours(
             ) {
                 items(items = tours, itemContent = { tour ->
                     ConstraintLayout(modifier = Modifier.clickable {
-                        viewModel.selectTour(tour.tourId)
+                        viewModel.updateEventGroups(tour.tourId)
                         navController.navigate("preview/${tour.tourId}")
                     }) {
                         val city: String

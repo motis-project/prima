@@ -8,12 +8,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -29,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +46,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import de.motis.prima.data.ValidationStatus
 import de.motis.prima.viewmodel.FareViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -53,10 +59,13 @@ fun Fare(
     val snackbarHostState = remember { SnackbarHostState() }
     val networkErrorMessage = stringResource(id = R.string.network_error)
     val inputErrorMessage = stringResource(id = R.string.fare_input_error)
+    var reportSuccessful by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = viewModel) {
         launch {
             viewModel.reportSuccessEvent.collect {
+                reportSuccessful = true
+                delay(2000)
                 navController.navigate("tours") {
                     launchSingleTop = true
                 }
@@ -115,9 +124,17 @@ fun Fare(
                 var fareEuro by remember { mutableStateOf("") }
                 var fareCent by remember { mutableStateOf("") }
 
+                val storedTours = viewModel.storedTours.collectAsState()
+                val storedFare = storedTours.value.find { t -> t.tourId == tourId }?.fare
+
+                var displayFare = "0,00"
+                if (storedFare != null) {
+                    displayFare = (storedFare.toFloat() / 100).toString().replace('.', ',')
+                }
+
                 Spacer(modifier = Modifier.height(40.dp))
                 Text(
-                    text = fare,
+                    text = if (displayFare != "0,00") displayFare else fare,
                     fontSize = 52.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -191,11 +208,25 @@ fun Fare(
                         text = stringResource(id = R.string.send_fare_button_text), fontSize = 20.sp
                     )
                 }
-                Spacer(modifier = Modifier.height(100.dp))
+
+                if (reportSuccessful) {
+                    Box(
+                        modifier = Modifier.height(100.dp),//.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Done,
+                            contentDescription = "Localized description",
+                            tint = Color.Green,
+                            modifier = Modifier.size(64.dp)
+
+                        )
+                    }
+                }
+
                 val scannedTickets by viewModel.scannedTickets.collectAsState()
                 val failedReports = scannedTickets
                     .filter { e -> e.validationStatus == ValidationStatus.CHECKED_IN.name }
-                //val failedReports = repository.getTicketsByValidationStatus(ValidationStatus.FAILED)
 
                 if (failedReports.isNotEmpty()) {
                     Text(

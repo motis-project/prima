@@ -1,28 +1,22 @@
 package de.motis.prima
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
@@ -44,8 +38,6 @@ fun Leg(
     eventGroupIndex: Int,
     legViewModel: LegViewModel = hiltViewModel()
 ) {
-    Log.d("debug", "eventGroupIndex: $eventGroupIndex")
-
     val eventGroups = legViewModel.eventGroups.collectAsState().value
 
     Scaffold(
@@ -64,108 +56,47 @@ fun Leg(
             )
         }
     ) { contentPadding ->
-        var isLastStop = false
-
-        if (eventGroupIndex + 1 == eventGroups.size) {
-            isLastStop = true
-        }
-
-        Column(Modifier.fillMaxHeight()) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(contentPadding)
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .padding(contentPadding)
-                ) {
-                    Text(
-                        text = "${eventGroupIndex + 1} / ${eventGroups.size}",
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
                 if (eventGroups.isNotEmpty()) {
-                    ShowEventGroup(
-                        navController,
-                        eventGroups[eventGroupIndex]
-                    )
-                }
-            }
+                    var nav = "leg/$tourId/${eventGroupIndex + 1}"
+                    if (eventGroupIndex + 1 == eventGroups.size) {
+                        nav = "fare/$tourId"
+                    }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxSize(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                Box(
-                    modifier = Modifier
-                        .padding(bottom = 56.dp)
-                ) {
-                    if (!isLastStop) {
-                        Button(
-                            modifier = Modifier.width(300.dp),
-                            onClick = {
-                                navController.navigate("leg/$tourId/${eventGroupIndex + 1}")
-                            }
+                    BoxWithConstraints {
+                        val screenWidth = maxWidth
+                        val screenHeight = maxHeight
+
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            Text(
-                                text = "Nächstes Ziel",
-                                fontSize = 24.sp,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    } else {
-                        Button(
-                            modifier = Modifier.width(300.dp),
-                            onClick = {
-                                navController.navigate("fare/$tourId") {}
+                            val height = screenHeight * 0.95f
+                            Box(
+                                modifier = Modifier
+                                    .height(height)
+                                    .width(screenWidth * 0.98f)
+                            ) {
+                                EventGroup(
+                                    navController,
+                                    eventGroups[eventGroupIndex],
+                                    nav,
+                                    height
+                                )
                             }
-                        ) {
-                            Text(
-                                text = "Fahrt abgeschlossen",
-                                fontSize = 24.sp,
-                                textAlign = TextAlign.Center
-                            )
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun ShowEventGroup(
-    navController: NavController,
-    currentEventGroup: EventGroup
-) {
-    BoxWithConstraints {
-        val screenWidth = maxWidth
-        val screenHeight = maxHeight
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            val height = screenHeight * 0.8f
-            Box(
-                modifier = Modifier
-                    .height(height)
-                    .width(screenWidth * 0.9f)
-            ) {
-                EventGroup(
-                    navController,
-                    currentEventGroup,
-                    height
-                )
             }
         }
     }

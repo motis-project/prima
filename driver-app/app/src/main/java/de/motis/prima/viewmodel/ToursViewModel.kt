@@ -55,21 +55,12 @@ class ToursViewModel @Inject constructor(
     val selectedVehicle = repository.selectedVehicle
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    //private val scannedTickets = repository.scannedTickets
-
     init {
         notificationHelper.createNotificationChannel()
         startFetchingTours()
         startReportingScans()
 
-        /* test
-        viewModelScope.launch {
-            repository.storeTicket(Ticket(0, "foo", ValidationStatus.OK))
-            val storedTickets = repository.getAllTickets()
-            for (t in storedTickets) {
-                Log.d("test", "${t.ticketCode}, ${ValidationStatus.valueOf(t.validationStatus)}")
-            }
-        }*/
+        Log.d("test", repository.storedTours.value.size.toString())
     }
 
     private fun refreshTours() {
@@ -80,7 +71,7 @@ class ToursViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                _loading.value = true
+                //_loading.value = true
                 val response = apiService.getTours(start, end)
                 if (response.isSuccessful) {
                     _tours.value = response.body() ?: emptyList()
@@ -190,8 +181,7 @@ class ToursViewModel @Inject constructor(
                         )
                     )
                 }
-                //delay(120000) // 2 min
-                delay(3000)
+                delay(120000) // 2 min
             }
         }
     }
@@ -206,8 +196,7 @@ class ToursViewModel @Inject constructor(
         refreshTours()
     }
 
-    fun selectTour(id: Int) {
-        repository.setSelectedTourId(id)
-        repository.updateEventGroups()
+    fun updateEventGroups(tourId: Int) {
+        repository.updateEventGroups(tourId)
     }
 }

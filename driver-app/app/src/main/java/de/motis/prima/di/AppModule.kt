@@ -11,6 +11,7 @@ import de.motis.prima.data.CookieStore
 import de.motis.prima.data.DataRepository
 import de.motis.prima.data.DataStoreManager
 import de.motis.prima.data.TicketStore
+import de.motis.prima.data.TourStore
 import io.realm.kotlin.Realm
 import javax.inject.Singleton
 
@@ -38,8 +39,18 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideDataRepository(dataStoreManager: DataStoreManager, ticketStore: TicketStore): DataRepository {
-        return DataRepository(dataStoreManager, ticketStore)
+    fun provideTourStore(realm: Realm): TourStore {
+        return TourStore(realm)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDataRepository(
+        dataStoreManager: DataStoreManager,
+        ticketStore: TicketStore,
+        tourStore: TourStore
+    ): DataRepository {
+        return DataRepository(dataStoreManager, ticketStore, tourStore)
     }
 
     @Provides

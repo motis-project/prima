@@ -1,10 +1,12 @@
 package de.motis.prima.viewmodel
 
-import android.util.Log
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.data.DataRepository
+import de.motis.prima.data.TourDTO
+import de.motis.prima.data.TourObject
 import de.motis.prima.services.ApiService
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -14,7 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class FareViewModel @Inject constructor(
     private val apiService: ApiService,
-    repository: DataRepository
+    private val repository: DataRepository
 ) : ViewModel() {
     private val _networkErrorEvent = MutableSharedFlow<Unit>()
     val networkErrorEvent = _networkErrorEvent.asSharedFlow()
@@ -26,9 +28,9 @@ class FareViewModel @Inject constructor(
     val reportSuccessEvent = _reportSuccessEvent.asSharedFlow()
 
     val scannedTickets = repository.storedTickets
+    val storedTours = repository.storedTours
 
     fun reportFare(tourId: Int, fare: String) {
-        Log.d("debug", "$tourId, $fare")
         viewModelScope.launch {
             var fareCent = 0
             try {
@@ -38,13 +40,20 @@ class FareViewModel @Inject constructor(
             }
 
             if (fareCent > 0) {
+                var fareReported = false
                 try {
                     val response = apiService.reportFare(tourId, fareCent)
                     if (response.isSuccessful) {
+                        fareReported = true
                         _reportSuccessEvent.emit(Unit)
                     }
                 } catch (e: Exception) {
+                    fareReported = false
                     _networkErrorEvent.emit(Unit)
+                } finally {
+                    repository.updateTourStore(
+                        TourDTO(tourId, false, fareCent, fareReported)
+                    )
                 }
             }
         }
