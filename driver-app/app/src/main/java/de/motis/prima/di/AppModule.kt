@@ -12,6 +12,7 @@ import de.motis.prima.data.DataRepository
 import de.motis.prima.data.DataStoreManager
 import de.motis.prima.data.TicketStore
 import de.motis.prima.data.TourStore
+import de.motis.prima.services.ApiService
 import io.realm.kotlin.Realm
 import javax.inject.Singleton
 
@@ -48,9 +49,10 @@ object AppModule {
     fun provideDataRepository(
         dataStoreManager: DataStoreManager,
         ticketStore: TicketStore,
-        tourStore: TourStore
+        tourStore: TourStore,
+        apiService: ApiService
     ): DataRepository {
-        return DataRepository(dataStoreManager, ticketStore, tourStore)
+        return DataRepository(dataStoreManager, ticketStore, tourStore, apiService)
     }
 
     @Provides

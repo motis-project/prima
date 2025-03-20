@@ -2,10 +2,8 @@ package de.motis.prima.viewmodel
 
 import android.util.Log
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.app.NotificationHelper
 import de.motis.prima.data.DataRepository
@@ -38,8 +36,9 @@ class ToursViewModel @Inject constructor(
     private val repository: DataRepository,
     private val notificationHelper: NotificationHelper
 ) : ViewModel() {
-    private val _tours = MutableStateFlow<List<Tour>>(emptyList())
-    val tours: StateFlow<List<Tour>> = _tours.asStateFlow()
+    private val _toursCache = MutableStateFlow<List<Tour>>(emptyList())
+    //val toursCache: StateFlow<List<Tour>> = _toursCache.asStateFlow()
+    var toursCache = repository.toursCache
 
     private val _loading = MutableStateFlow(false)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
@@ -55,15 +54,16 @@ class ToursViewModel @Inject constructor(
     val selectedVehicle = repository.selectedVehicle
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    val eventGroups = repository.eventGroups
+    var initialFetch = false
+
     init {
         notificationHelper.createNotificationChannel()
-        startFetchingTours()
+        //startRefreshingTours()
         startReportingScans()
-
-        Log.d("test", repository.storedTours.value.size.toString())
     }
 
-    private fun refreshTours() {
+    private fun fetchTours() {
         val displayDay = _displayDate.value
         val nextDay = displayDay.plusDays(1)
         val start = displayDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -71,12 +71,14 @@ class ToursViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                //_loading.value = true
                 val response = apiService.getTours(start, end)
                 if (response.isSuccessful) {
-                    _tours.value = response.body() ?: emptyList()
-                    _loading.value = false
-                    repository.setTours(_tours.value)
+                    val fetchedTours = response.body() ?: emptyList()
+                    if (_toursCache.value != fetchedTours) {
+                        fetchedTours.sortedBy { t -> t.events[0].scheduledTimeStart }
+                        _toursCache.value = fetchedTours
+                        //repository.setTours(fetchedTours)
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("error", "Exception: ${e.message}")
@@ -84,7 +86,48 @@ class ToursViewModel @Inject constructor(
         }
     }
 
-    private fun fetchTours(): Flow<Response<List<Tour>>> = flow {
+    /*private fun startRefreshingTours() {
+        initialFetch = true
+        CoroutineScope(Dispatchers.IO).launch {
+            refreshTours().collect { response ->
+                if (response.isSuccessful) {
+                    val fetchedTours = response.body() ?: emptyList()
+                    fetchAttempts.intValue = 1
+                    _networkError.value = false
+
+                    if (fetchedTours.size > _toursCache.value.size) {
+                        val newItem = fetchedTours.last()
+                        val pickup = newItem.events.first()
+                        val currentDay = Date().formatTo("yyyy-MM-dd")
+                        val pickupDate = Date(pickup.scheduledTimeStart)
+                        val pickupDay = pickupDate.formatTo("yyyy-MM-dd")
+                        val pickupTime = pickupDate.formatTo("HH:mm")
+
+                        if (pickupDay == currentDay && !initialFetch) {
+                            Log.d("test", "noftify!")
+                            sendNotification(
+                                "Neue Fahrt",
+                                "Um: $pickupTime in ${pickup.address}"
+                            )
+                        }
+                    }
+
+                    if (_toursCache.value != fetchedTours) {
+                        fetchedTours.sortedBy { t -> t.events[0].scheduledTimeStart }
+                        _toursCache.value = fetchedTours
+                        repository.setTours(fetchedTours)
+                    }
+                } else {
+                    _networkError.value = true
+                    fetchAttempts.intValue++
+                    Log.d("debug", "fetchTours: $response")
+                }
+                initialFetch = false
+            }
+        }
+    }
+
+    private fun refreshTours(): Flow<Response<List<Tour>>> = flow {
         while (true) {
             val displayDay = _displayDate.value
             val nextDay = displayDay.plusDays(1)
@@ -94,7 +137,7 @@ class ToursViewModel @Inject constructor(
             try {
                 val response = apiService.getTours(start, end)
                 emit(response)
-            } catch (e: Exception) {
+            } catch (e: Exception) {//TODO: first try? else: do not disturb
                 /*fetchAttempts.intValue++
                 if (fetchAttempts.intValue - 3 < 0) {
                     _loading.value = true
@@ -107,43 +150,7 @@ class ToursViewModel @Inject constructor(
             }
             delay(10000) // 10 sec
         }
-    }.flowOn(Dispatchers.IO)
-
-    private fun startFetchingTours() {
-        CoroutineScope(Dispatchers.IO).launch {
-            fetchTours().collect { response ->
-                if (response.isSuccessful) {
-                    val newTours = response.body() ?: emptyList()
-                    fetchAttempts.intValue = 1
-                    _loading.value = false
-                    _networkError.value = false
-
-                    if (tours.value.isNotEmpty() && newTours.size > tours.value.size) {
-                        val newItem = newTours.last()
-                        val pickup = newItem.events.first()
-                        val currentDay = Date().formatTo("yyyy-MM-dd")
-                        val pickupDate = Date(pickup.scheduledTimeStart)
-                        val pickupDay = pickupDate.formatTo("yyyy-MM-dd")
-                        val pickupTime = pickupDate.formatTo("HH:mm")
-
-                        Log.d("test", "$pickupDay, $currentDay")
-                        if (pickupDay == currentDay) {
-                            Log.d("test", pickupTime)
-                            sendNotification(
-                                "Neue Fahrt",
-                                "Um: $pickupTime in ${pickup.address}"
-                            )
-                        }
-                    }
-                    newTours.sortedBy { t -> t.events[0].scheduledTimeStart }
-                    _tours.value = newTours
-                    repository.setTours(newTours)
-                } else {
-                    Log.d("debug", "fetchTours: $response")
-                }
-            }
-        }
-    }
+    }.flowOn(Dispatchers.IO)*/
 
     private fun sendNotification(title: String, msg: String) {
         notificationHelper.showNotification(title, msg)
@@ -188,15 +195,17 @@ class ToursViewModel @Inject constructor(
 
     fun incrementDate() {
         _displayDate.value = _displayDate.value.plusDays(1)
-        refreshTours()
+        fetchTours()
     }
 
     fun decrementDate() {
         _displayDate.value = _displayDate.value.minusDays(1)
-        refreshTours()
+        fetchTours()
     }
 
     fun updateEventGroups(tourId: Int) {
+        _loading.value = true
         repository.updateEventGroups(tourId)
+        _loading.value = false
     }
 }

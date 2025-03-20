@@ -61,7 +61,7 @@ fun Tours(
     val loading by viewModel.loading.collectAsState()
     val networkError by viewModel.networkError.collectAsState()
     val vehicle = viewModel.selectedVehicle.collectAsState()
-    val tours by viewModel.tours.collectAsState()
+    val tours by viewModel.toursCache.collectAsState()
     val date by viewModel.displayDate.collectAsState()
     val displayTours: List<Tour>
     val vehicleId = vehicle.value?.id ?: 0
@@ -143,7 +143,8 @@ fun Tours(
                     ErrorInfo(stringResource(id = R.string.network_error))
                 }
             } else {
-                ShowTours(navController, displayTours)
+                //ShowTours(navController, displayTours)
+                ShowTours(navController, toursForVehicle)
             }
         }
     }
@@ -242,6 +243,7 @@ fun ShowTours(
                 )
             }
         } else {
+            val loading by viewModel.loading.collectAsState()
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -249,7 +251,8 @@ fun ShowTours(
                 items(items = tours, itemContent = { tour ->
                     ConstraintLayout(modifier = Modifier.clickable {
                         viewModel.updateEventGroups(tour.tourId)
-                        navController.navigate("preview/${tour.tourId}")
+                        if (!loading)
+                            navController.navigate("preview/${tour.tourId}")
                     }) {
                         val city: String
                         val displayTime: String
