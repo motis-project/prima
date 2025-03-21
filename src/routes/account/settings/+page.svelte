@@ -17,7 +17,7 @@
 
 	<Panel title={t.account.resetPassword} subtitle={t.account.resetPasswordSubtitle}>
 		<form method="post" action="/account/settings?/changePassword">
-			<Input name="password" type="password" placeholder={t.account.password} />
+			<Input name="password" type="password" placeholder={t.account.newPassword} />
 			<div class="mt-4 flex justify-end">
 				<Button type="submit" variant="outline">{t.account.resetPassword}</Button>
 			</div>
