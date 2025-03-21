@@ -25,6 +25,7 @@ export type Column<T> = {
 	text: string[];
 	sort: undefined | ((r1: T, r2: T) => number);
 	toTableEntry: (r: T) => string | number;
+	toColumnStyle?: (r: T) => string;
 };
 
 export const getEuroString = (price: number | null) => {
@@ -73,7 +74,7 @@ const getStatus = (r: TourWithRequests) => {
 	return r.cancelled
 		? r.message === null
 			? 'von Kunden storniert'
-			: 'storniert'
+			: 'von Unternehmer storniert'
 		: r.fare === null
 			? r.endTime < Date.now()
 				? 'Taxameterstand nicht eingetragen'
@@ -132,7 +133,17 @@ const restTourCols = (isAdmin: boolean): Column<TourWithRequests>[] => {
 			text: ['Status'],
 			sort: (t1: TourWithRequests, t2: TourWithRequests) =>
 				getStatus(t1) < getStatus(t2) ? -1 : 1,
-			toTableEntry: (r: TourWithRequests) => getStatus(r)
+			toTableEntry: (r: TourWithRequests) => getStatus(r),
+			toColumnStyle: (r: TourWithRequests) => {
+				const status = getStatus(r);
+				if (status.startsWith('beendet')) {
+					return status === 'beendet' ? 'text-green-500' : 'text-red-500';
+				}
+				if (status.includes('storniert')) {
+					return 'text-orange-400';
+				}
+				return '';
+			}
 		}
 	];
 };

@@ -16,6 +16,7 @@
 			text: string[];
 			sort: undefined | ((r1: T, r2: T) => number);
 			toTableEntry: (r: T) => string | number;
+			toColumnStyle?: (r: T) => string;
 		}[];
 		isAdmin: boolean;
 		getRowStyle?: (row: T) => string;
@@ -80,7 +81,9 @@
 					}}
 				>
 					{#each cols as col}
-						<Table.Cell>{col.toTableEntry(row)}</Table.Cell>
+						<Table.Cell class={col.toColumnStyle ? col.toColumnStyle(row) : ''}
+							>{col.toTableEntry(row)}</Table.Cell
+						>
 					{/each}
 				</Table.Row>
 			{/each}

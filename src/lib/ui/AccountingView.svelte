@@ -287,7 +287,7 @@
 		bind:rows={currentRowsToursTable}
 		cols={isAdmin ? tourColsAdmin : tourColsCompany}
 		{isAdmin}
-		getRowStyle={(row: TourWithRequests) => 'cursor-pointer '}
+		getRowStyle={(_) => 'cursor-pointer '}
 		bind:selectedRow={selectedToursTableRow}
 		bindSelectedRow={true}
 	/>
