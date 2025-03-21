@@ -18,18 +18,20 @@
 		<Message class="mb-6" {msg} />
 		{#if isSignup}
 			<div class="field">
-				<Label for="name">{t.account.name}{requiredField}</Label>
+				<Label for="name">{t.account.name}<span class="text-red-500">{requiredField}</span></Label>
 				<Input name="name" type="text" placeholder={t.account.name} />
 			</div>
 		{/if}
 
 		<div class="field">
-			<Label for="email">{t.account.email}{requiredField}</Label>
+			<Label for="email">{t.account.email}<span class="text-red-500">{requiredField}</span></Label>
 			<Input name="email" type="email" placeholder={t.account.email} />
 		</div>
 
 		<div class="field">
-			<Label for="password">{t.account.password}{requiredField}</Label>
+			<Label for="password">
+				{t.account.password}<span class="text-red-500">{requiredField}</span>
+			</Label>
 			<Input name="password" type="password" placeholder={t.account.password} />
 		</div>
 
