@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.EventGroup
 import de.motis.prima.data.DataRepository
+import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.data.Ticket
 import de.motis.prima.data.ValidationStatus
 import de.motis.prima.services.ApiService
@@ -21,7 +22,6 @@ class ScanViewModel @Inject constructor(
         val ticketStatus = repository.getTicketStatus(ticketCode)
         val shouldReport =
             ticketStatus != ValidationStatus.DONE && ticketStatus != ValidationStatus.REJECTED
-        Log.d("debug", "shouldReport: $shouldReport, ticketStatus: $ticketStatus")
         if (shouldReport) {
             viewModelScope.launch {
                 var validationStatus = ValidationStatus.DONE
@@ -48,7 +48,7 @@ class ScanViewModel @Inject constructor(
         }
     }
 
-    fun getEventGroup(id: String): EventGroup? {
+    fun getEventGroup(id: String): EventObjectGroup? {
         return repository.getEventGroup(id)
     }
 }

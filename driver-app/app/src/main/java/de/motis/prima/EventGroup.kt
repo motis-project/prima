@@ -48,8 +48,9 @@ import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.data.DataRepository
+import de.motis.prima.data.EventObject
+import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.data.ValidationStatus
-import de.motis.prima.services.Event
 import java.util.Date
 import javax.inject.Inject
 
@@ -96,7 +97,7 @@ fun phoneCall(number: String, context: Context) {
 @Composable
 fun EventGroup(
     navController: NavController,
-    eventGroup: EventGroup,
+    eventGroup: EventObjectGroup,
     nav: String,
     height: Dp,
 ) {
@@ -229,12 +230,6 @@ fun EventGroup(
                     onClick = { navController.navigate(nav) },
                     modifier = Modifier.height(buttonHeight)
                 ) {
-                    /*Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = "Localized description",
-                        tint = Color.White,
-                        modifier = Modifier.size(50.dp)
-                    )*/
                     Icon(
                         painter = painterResource(id = R.drawable.ic_arrow_right),
                         contentDescription = "Localized description"
@@ -247,7 +242,7 @@ fun EventGroup(
 
 @Composable
 fun ShowCustomerDetails(
-    event: Event,
+    event: EventObject,
     viewModel: EventGroupViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -366,11 +361,6 @@ fun ShowCustomerDetails(
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            /*Text(
-                                text = "Ticket:  ",
-                                fontSize = 20.sp,
-                                textAlign = TextAlign.Center
-                            )*/
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_qr),
                                 contentDescription = "Localized description",

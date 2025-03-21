@@ -1,5 +1,6 @@
 package de.motis.prima
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -46,6 +47,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import de.motis.prima.data.ValidationStatus
 import de.motis.prima.viewmodel.FareViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -57,7 +59,9 @@ fun Fare(
 ) {
     var fare by remember { mutableStateOf("0,00") }
     val snackbarHostState = remember { SnackbarHostState() }
-    val networkErrorMessage = stringResource(id = R.string.network_error)
+    //val networkErrorMessage = stringResource(id = R.string.network_error)
+    val networkErrorMessage = "Keine Internetverbindung. Der Preis wird später automatisch erneut übermittelt."
+
     val inputErrorMessage = stringResource(id = R.string.fare_input_error)
     var reportSuccessful by remember { mutableStateOf(false) }
 
@@ -75,6 +79,8 @@ fun Fare(
         launch {
             viewModel.networkErrorEvent.collect {
                 snackbarHostState.showSnackbar(message = networkErrorMessage)
+                delay(2500)
+                navController.navigate("tours")
             }
         }
 
@@ -133,8 +139,29 @@ fun Fare(
                 }
 
                 Spacer(modifier = Modifier.height(40.dp))
+                if (displayFare != "0,00") {
+                    Row(
+                        modifier = Modifier.width(200.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Gespeichert:",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.DarkGray
+                        )
+                        Text(
+                            text = displayFare,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.DarkGray
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(40.dp))
                 Text(
-                    text = if (displayFare != "0,00") displayFare else fare,
+                    text = fare,
                     fontSize = 52.sp,
                     fontWeight = FontWeight.Bold
                 )

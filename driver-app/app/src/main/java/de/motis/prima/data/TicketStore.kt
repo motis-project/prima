@@ -1,5 +1,6 @@
 package de.motis.prima.data
 
+import android.util.Log
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
 import io.realm.kotlin.query.RealmResults
@@ -34,6 +35,7 @@ class TicketStore @Inject constructor(private val realm: Realm) {
     val storedTickets = _storedTickets.asStateFlow()
 
     suspend fun update(ticket: Ticket) {
+        Log.d("test", "updateTicket DB: ${ticket.ticketCode}, ${ticket.validationStatus}")
         realm.write {
             copyToRealm(TicketObject().apply {
                 this.requestId = ticket.requestId
@@ -45,12 +47,13 @@ class TicketStore @Inject constructor(private val realm: Realm) {
         _storedTickets.value = getAll()
     }
 
-    fun getAll(): List<TicketObject> {
+    private fun getAll(): List<TicketObject> {
         return realm.query<TicketObject>().find()
     }
 
     fun getTicketStatus(ticketCode: String): ValidationStatus? {
         val ticket = realm.query<TicketObject>("ticketCode == $0", ticketCode).first().find()
+        Log.d("test", "getTicketStatus: ticket: $ticket")
         return if (ticket != null) {
             ValidationStatus.valueOf(ticket.validationStatus)
         } else {

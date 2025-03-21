@@ -1,12 +1,9 @@
 package de.motis.prima.viewmodel
 
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.data.DataRepository
-import de.motis.prima.data.TourDTO
-import de.motis.prima.data.TourObject
 import de.motis.prima.services.ApiService
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -51,9 +48,7 @@ class FareViewModel @Inject constructor(
                     fareReported = false
                     _networkErrorEvent.emit(Unit)
                 } finally {
-                    repository.updateTourStore(
-                        TourDTO(tourId, false, fareCent, fareReported)
-                    )
+                    repository.updateTourStore(tourId, fareCent, fareReported)
                 }
             }
         }

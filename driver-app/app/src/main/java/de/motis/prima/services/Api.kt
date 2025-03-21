@@ -72,8 +72,8 @@ data class Event(
 data class Tour(
     val tourId: Int,
     val fare: Int,
-    val startTime: String,
-    val endTime: String,
+    val startTime: Long,
+    val endTime: Long,
     val companyName: String,
     val companyAddress: String,
     val vehicleId: Int,

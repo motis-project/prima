@@ -102,7 +102,6 @@ fun TicketScan(
                             if (eventGroup != null) {
                                 val event =
                                     eventGroup.events.find { e -> e.ticketHash == activeHash }
-                                Log.d("debug", "$event")
                                 if (event != null) {
                                     ticketValid = true
                                     viewModel.reportTicketScan(event.requestId, event.ticketHash, result)

@@ -58,7 +58,6 @@ fun Login(
     }
 
     val selectedVehicle by viewModel.selectedVehicle.collectAsState(Vehicle(0, ""))
-    Log.d("test", "selectedVehicle: $selectedVehicle")
 
     LaunchedEffect(key1 = viewModel) {
         launch {

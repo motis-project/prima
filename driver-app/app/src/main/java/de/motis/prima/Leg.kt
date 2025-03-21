@@ -28,7 +28,7 @@ import javax.inject.Inject
 class LegViewModel @Inject constructor(
     repository: DataRepository
 ) : ViewModel() {
-    val eventGroups = repository.eventGroups
+    val eventGroups = repository.eventObjectGroups
 }
 
 @Composable

@@ -4,6 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import de.motis.prima.data.EventObject
 import de.motis.prima.data.TicketObject
 import de.motis.prima.data.TourObject
 import io.realm.kotlin.Realm
@@ -20,7 +21,8 @@ object RealmModule {
         return RealmConfiguration.Builder(
             setOf(
                 TicketObject::class,
-                TourObject::class
+                TourObject::class,
+                EventObject::class
             )).build()
     }
 

@@ -1,5 +1,7 @@
 package de.motis.prima
 
+import android.content.res.Resources
+import android.graphics.drawable.Drawable
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,6 +25,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -45,9 +53,9 @@ import androidx.navigation.NavController
 import de.motis.prima.services.Event
 import de.motis.prima.services.Tour
 import de.motis.prima.viewmodel.ToursViewModel
-import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
@@ -62,29 +70,7 @@ fun Tours(
     val networkError by viewModel.networkError.collectAsState()
     val vehicle = viewModel.selectedVehicle.collectAsState()
     val tours by viewModel.toursCache.collectAsState()
-    val date by viewModel.displayDate.collectAsState()
-    val displayTours: List<Tour>
-    val vehicleId = vehicle.value?.id ?: 0
 
-    val toursForVehicle = tours.filter { t ->
-        t.vehicleId == vehicleId
-    }
-
-    val toursPast = toursForVehicle.filter { t ->
-        Date(t.events.first().scheduledTimeStart).before(Date()) &&
-                t.vehicleId == vehicleId
-    }
-
-    val toursFuture = toursForVehicle.filter { t ->
-        Date(t.events.first().scheduledTimeStart).after(Date()) &&
-                t.vehicleId == vehicleId
-    }
-
-    if (date.dayOfYear != LocalDate.now().dayOfYear) {
-        displayTours = toursPast + toursFuture
-    } else {
-        displayTours = toursFuture
-    }
 
     Scaffold(
         topBar = {
@@ -143,8 +129,7 @@ fun Tours(
                     ErrorInfo(stringResource(id = R.string.network_error))
                 }
             } else {
-                //ShowTours(navController, displayTours)
-                ShowTours(navController, toursForVehicle)
+                ShowTours(navController, tours)
             }
         }
     }
@@ -244,11 +229,25 @@ fun ShowTours(
             }
         } else {
             val loading by viewModel.loading.collectAsState()
+            val date by viewModel.displayDate.collectAsState()
+            val today = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val displayDay = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            var displayTours = tours
+            if (today != displayDay) {
+                displayTours = viewModel.getToursForDate()
+            }
+
+            displayTours = displayTours.filter { t ->
+                t.vehicleId == viewModel.selectedVehicle.value?.id
+            }
+            displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTimeStart }
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                items(items = tours, itemContent = { tour ->
+                items(items = displayTours, itemContent = { tour ->
                     ConstraintLayout(modifier = Modifier.clickable {
                         viewModel.updateEventGroups(tour.tourId)
                         if (!loading)
@@ -280,7 +279,7 @@ fun ShowTours(
                             ""
                         }
 
-                        Card(
+                        /*Card(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -315,6 +314,147 @@ fun ShowTours(
                                             text = stringResource(id = R.string.navi_available),
                                             fontSize = 24.sp
                                         )
+                                    }
+                                }
+                            }
+                        }*/
+
+                        Card(
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
+                                .wrapContentSize()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(10.dp),
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        text = displayTime,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 24.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 12.dp),
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        text = city,
+                                        fontSize = 24.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+
+                                val now = Date()
+                                val tourDate = Date(tour.endTime)
+                                if (tourDate < now) {
+                                    Spacer(modifier = Modifier.height(40.dp))
+
+                                    //
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 30.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = "Status:",
+                                            fontSize = 24.sp,
+                                            textAlign = TextAlign.Center
+                                        )
+                                        Row {
+                                            Icon(
+                                                imageVector = Icons.Default.Done,
+                                                contentDescription = "Localized description",
+                                                tint = Color.Green,
+                                                modifier = Modifier
+                                                    .size(width = 26.dp, height = 26.dp)
+                                                    .background(Color.White)
+                                            )
+                                            IconButton(
+                                                onClick = {  },
+                                                modifier = Modifier.size(48.dp)
+                                            ) {
+                                                Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = "More Options")
+                                            }
+                                        }
+                                    }
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 30.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = "Tickets validiert:",
+                                            fontSize = 24.sp,
+                                            textAlign = TextAlign.Center
+                                        )
+
+                                        val ticketChecked = tour.events.filter { e -> e.ticketChecked }
+                                        if (ticketChecked.isNotEmpty()) {
+                                            Icon(
+                                                imageVector = Icons.Default.Done,
+                                                contentDescription = "Localized description",
+                                                tint = Color.Green,
+                                                modifier = Modifier
+                                                    .size(width = 32.dp, height = 32.dp)
+                                                    .background(Color.White)
+                                            )
+                                        } else {
+                                            Icon(
+                                                imageVector = Icons.Default.Clear,
+                                                contentDescription = "Localized description",
+                                                tint = Color.Red,
+                                                modifier = Modifier
+                                                    .size(width = 32.dp, height = 32.dp)
+                                                    .background(Color.White)
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 30.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = "Fahrpreis übermittelt:",
+                                            fontSize = 24.sp,
+                                            textAlign = TextAlign.Center
+                                        )
+
+                                        if (tour.fare != 0) {
+                                            Icon(
+                                                imageVector = Icons.Default.Done,
+                                                contentDescription = "Localized description",
+                                                tint = Color.Green,
+                                                modifier = Modifier
+                                                    .size(width = 32.dp, height = 32.dp)
+                                                    .background(Color.White)
+                                            )
+                                        } else {
+                                            Icon(
+                                                imageVector = Icons.Default.Clear,
+                                                contentDescription = "Localized description",
+                                                tint = Color.Red,
+                                                modifier = Modifier
+                                                    .size(width = 32.dp, height = 32.dp)
+                                                    .background(Color.White)
+                                            )
+                                        }
                                     }
                                 }
                             }

@@ -1,6 +1,8 @@
 package de.motis.prima
 
 import android.util.Log
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,8 +21,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -31,7 +36,10 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.data.DataRepository
+import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.services.Event
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.util.Date
 import javax.inject.Inject
 
@@ -54,7 +62,7 @@ data class EventGroup(
 class TourViewModel @Inject constructor(
     val repository: DataRepository
 ) : ViewModel() {
-    val eventGroups = repository.eventGroups
+    val eventObjectGroups = repository.eventObjectGroups
 }
 
 @Composable
@@ -116,8 +124,7 @@ fun WayPointsView(viewModel: TourViewModel) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
-            val eventGroups = viewModel.eventGroups.collectAsState()
-            Log.d("error", "UI: $eventGroups")
+            val eventGroups = viewModel.eventObjectGroups.collectAsState()
             LazyColumn {
                 items(items = eventGroups.value, itemContent = { eventGroup ->
                     WayPointPreview(eventGroup)
@@ -129,50 +136,42 @@ fun WayPointsView(viewModel: TourViewModel) {
 
 @Composable
 fun WayPointPreview(
-    eventGroup: EventGroup
+    eventGroup: EventObjectGroup
 ) {
     val scheduledTime: String
-    val event = eventGroup.events[0] // TODO
 
-    try {
-        scheduledTime = Date(event.scheduledTimeStart).formatTo("HH:mm")
+    try { //TODO
+        scheduledTime = Date(eventGroup.arrivalTime).formatTo("HH:mm")
     } catch (e: Exception) {
         Log.d("error", "Failed to read event details")
         return
     }
 
-    Card(
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
-            .wrapContentSize()
-    ) {
-        Column(modifier = Modifier.padding(10.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = scheduledTime,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = event.address,
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
+    Column(modifier = Modifier.padding(10.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = scheduledTime,
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center
+            )
         }
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = eventGroup.address,
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center
+            )
+        }
+        Spacer(modifier = Modifier.height(30.dp))
     }
 }
