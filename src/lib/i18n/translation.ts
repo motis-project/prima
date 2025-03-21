@@ -141,6 +141,7 @@ export type Translations = {
 	atDateTime: (timeType: TimeType, time: Date, isToday: boolean) => string;
 
 	journeyDetails: string;
+	transfer: string;
 	transfers: string;
 	walk: string;
 	bike: string;

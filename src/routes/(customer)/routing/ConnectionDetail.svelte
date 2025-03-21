@@ -112,6 +112,7 @@
 		{@const isLast = i == itinerary.legs.length - 1}
 		{@const isLastPred = i == itinerary.legs.length - 2}
 		{@const pred = i == 0 ? undefined : itinerary.legs[i - 1]}
+		{@const predpred = i <= 1 ? undefined : itinerary.legs[i - 2]}
 		{@const next = isLast ? undefined : itinerary.legs[i + 1]}
 
 		{#if l.routeShortName}
@@ -124,7 +125,7 @@
 							{t.arrivalOnTrack} {pred.from.track}{pred.duration ? ',' : ''}
 						{/if}
 						{#if pred.duration}
-							<span class="text-nowrap">{formatDurationSec(pred.duration)} {t.walk}</span>
+							<span class="text-nowrap">{formatDurationSec(pred.duration)} {#if predpred?.mode === 'ODM'}{t.transfer}{:else}{t.walk}{/if}</span>
 						{/if}
 						{#if pred.distance}
 							<span class="text-nowrap">({Math.round(pred.distance)} m)</span>

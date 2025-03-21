@@ -151,6 +151,7 @@ const translations: Translations = {
 		}),
 
 	journeyDetails: 'Journey Details',
+	transfer: 'transfer',
 	transfers: 'transfers',
 	walk: 'Walk',
 	bike: 'Bike',
