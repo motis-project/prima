@@ -287,9 +287,7 @@
 		bind:rows={currentRowsToursTable}
 		cols={isAdmin ? tourColsAdmin : tourColsCompany}
 		{isAdmin}
-		getRowStyle={(row: TourWithRequests) =>
-			'cursor-pointer ' +
-			(row.cancelled ? (row.message === null ? 'bg-orange-500' : 'bg-destructive') : 'bg-white-0')}
+		getRowStyle={(_) => 'cursor-pointer '}
 		bind:selectedRow={selectedToursTableRow}
 		bindSelectedRow={true}
 	/>

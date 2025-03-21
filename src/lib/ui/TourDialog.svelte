@@ -261,7 +261,7 @@
 				<Table.Body>
 					{#if events}
 						{#each events as event}
-							<Table.Row class={`${tour!.cancelled ? 'bg-destructive' : 'bg-primary-background'}`}>
+							<Table.Row>
 								<Table.Cell>
 									{new Date(getScheduledEventTime(event))
 										.toLocaleString(LOCALE)
@@ -311,7 +311,7 @@
 									{:else if event.isPickup && !event.cancelled && event.scheduledTimeEnd + event.nextLegDuration < Date.now()}
 										<span class="text-red-500">Ticket nicht verifiziert</span>
 									{:else if event.cancelled}
-										<span class="text-red-500">Storniert</span>
+										<span class="text-orange-400">Storniert</span>
 									{/if}
 								</Table.Cell>
 							</Table.Row>
