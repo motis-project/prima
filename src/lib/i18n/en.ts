@@ -227,9 +227,7 @@ const translations: Translations = {
 		noCancel: 'No, I do not want to cancel.'
 	},
 	addToFavs: 'add to favourites',
-	displayFavsList: 'display favourites',
-	start: 'Start',
-	target: 'Target'
+	displayFavsList: 'display favourites'
 };
 
 export default translations;

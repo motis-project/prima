@@ -159,12 +159,12 @@
 
 	const favsCols: Column<{ start: string; target: string }>[] = [
 		{
-			text: [t.start],
+			text: [t.from],
 			sort: undefined,
 			toTableEntry: (r: { start: string; target: string }) => r.start
 		},
 		{
-			text: [t.target],
+			text: [t.to],
 			sort: undefined,
 			toTableEntry: (r: { start: string; target: string }) => r.target
 		}
