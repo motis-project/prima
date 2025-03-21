@@ -90,6 +90,9 @@ export type Translations = {
 		// Feedback
 		feedbackThank: string;
 		feedbackMissing: string;
+
+		invalidFrom: string;
+		invalidTo: string;
 	};
 	admin: {
 		completedToursSubtitle: string;

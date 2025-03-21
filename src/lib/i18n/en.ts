@@ -88,7 +88,10 @@ const translations: Translations = {
 
 		// Feedback
 		feedbackThank: 'Thank you very much for your feedback!',
-		feedbackMissing: 'No feedback given'
+		feedbackMissing: 'No feedback given',
+
+		invalidFrom: 'Invalid start address.',
+		invalidTo: 'Invalid destination address.'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',

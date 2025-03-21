@@ -280,7 +280,6 @@ export const actions = {
 	},
 	fav: async ({ request, locals }) => {
 		const user = locals.session?.userId;
-		const message: Msg | undefined = undefined;
 		if (!user) {
 			return { msg: msg('accountDoesNotExist') };
 		}
@@ -291,32 +290,26 @@ export const actions = {
 		const sLng = formData.get('fromLng');
 		const tLat = formData.get('toLat');
 		const tLng = formData.get('toLng');
-		if (
-			typeof from !== 'string' ||
-			typeof to !== 'string' ||
-			typeof sLat !== 'string' ||
-			typeof tLat !== 'string' ||
-			typeof sLng !== 'string' ||
-			typeof tLng !== 'string'
-		) {
-			return { msg: msg('unkownError') };
+		if (typeof from !== 'string' || typeof sLat !== 'string' || typeof sLng !== 'string') {
+			return { msg: msg('invalidFrom') };
+		}
+		if (typeof to !== 'string' || typeof tLat !== 'string' || typeof tLng !== 'string') {
+			return { msg: msg('invalidTo') };
 		}
 		const startLat = parseFloat(sLat);
 		const startLng = parseFloat(sLng);
 		const targetLat = parseFloat(tLat);
 		const targetLng = parseFloat(tLng);
-		if (
-			typeof startLat !== 'number' ||
-			typeof targetLat !== 'number' ||
-			typeof startLng !== 'number' ||
-			typeof targetLng !== 'number'
-		) {
-			return { msg: msg('unkownError') };
+		if (typeof startLat !== 'number' || typeof startLng !== 'number') {
+			return { msg: msg('invalidFrom') };
+		}
+		if (typeof targetLat !== 'number' || typeof targetLng !== 'number') {
+			return { msg: msg('invalidTo') };
 		}
 		await db
 			.insertInto('favourites')
 			.values({ start: from, target: to, user, startLat, startLng, targetLat, targetLng })
 			.execute();
-		return { msg: message };
+		return {};
 	}
 };

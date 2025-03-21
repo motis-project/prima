@@ -90,7 +90,10 @@ const translations: Translations = {
 
 		// Feedback
 		feedbackThank: 'Vielen Dank für Ihr Feedback!',
-		feedbackMissing: 'Kein Feedback gegeben'
+		feedbackMissing: 'Kein Feedback gegeben',
+
+		invalidFrom: 'Invalid start address.',
+		invalidTo: 'Invalid destination address.'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',
