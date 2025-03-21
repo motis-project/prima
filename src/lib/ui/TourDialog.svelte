@@ -123,7 +123,7 @@
 			</div>
 		</Dialog.Header>
 		<Dialog.Description>
-			<div class="grid grid-cols-2 grid-rows-auto gap-4">
+			<div class="grid-rows-auto grid grid-cols-2 gap-4">
 				{@render overview()}
 				{@render mapView()}
 				<div class="col-span-2">{@render details()}</div>
