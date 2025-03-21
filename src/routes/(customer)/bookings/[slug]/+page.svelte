@@ -104,6 +104,7 @@
 			onClickStop={(_name: string, stopId: string, time: Date) =>
 				goto(`/routing?stopId=${stopId}&time=${time.getTime()}`)}
 			onClickTrip={(tripId: string) => goto(`/routing?tripId=${tripId}`)}
+			licensePlate={data.licensePlate}
 		/>
 	{/if}
 </div>

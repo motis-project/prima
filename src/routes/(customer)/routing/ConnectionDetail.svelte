@@ -12,11 +12,13 @@
 	const {
 		itinerary,
 		onClickStop,
-		onClickTrip
+		onClickTrip,
+		licensePlate
 	}: {
 		itinerary: Itinerary;
 		onClickStop: (name: string, stopId: string, time: Date) => void;
 		onClickTrip: (tripId: string) => void;
+		licensePlate?: string;
 	} = $props();
 
 	const lastLeg = $derived(itinerary.legs.findLast((l) => l.duration !== 0));
@@ -72,6 +74,20 @@
 			>
 				{t.meetingPointNavigation}
 			</Button>
+			{#if licensePlate != undefined}
+				<div class="ml-6 flex w-fit rounded-md border-2 border-black bg-white p-1 shadow">
+					<div
+						class="mr-2 flex h-8 min-w-5 items-center justify-center rounded bg-blue-700 p-1 text-white"
+					>
+						<div class="text-sm font-bold">D</div>
+					</div>
+					<div
+						class="flex h-8 items-center px-2 text-2xl font-bold uppercase tracking-wider text-black"
+					>
+						{licensePlate}
+					</div>
+				</div>
+			{/if}
 		{/if}
 		<span class="ml-6">
 			{formatDurationSec(l.duration)}

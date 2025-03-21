@@ -11,6 +11,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.selectFrom('journey')
 		.innerJoin('request', 'journey.request1', 'request.id')
 		.innerJoin('event', 'event.request', 'request.id')
+		.innerJoin('tour', 'tour.id', 'request.tour')
+		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 		.orderBy('event.communicatedTime', 'asc')
 		.select([
 			'json',
@@ -22,7 +24,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			'request.ticketChecked',
 			'request.customer',
 			'request.id as requestId',
-			'event.communicatedTime'
+			'event.communicatedTime',
+			'vehicle.licensePlate'
 		])
 		.where('journey.id', '=', parseInt(params.slug))
 		.where('user', '=', locals.session!.userId!)
