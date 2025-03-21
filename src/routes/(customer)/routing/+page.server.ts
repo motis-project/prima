@@ -11,7 +11,12 @@ import NewRide from '$lib/server/email/NewRide.svelte';
 import type { PageServerLoadEvent } from './$types';
 
 export async function load(event: PageServerLoadEvent) {
-	const userId = event.locals.session!.userId;
+	const userId = event.locals.session?.userId;
+	if (!userId) {
+		return {
+			favs: []
+		};
+	}
 	return {
 		favs: await db
 			.selectFrom('favourites')
@@ -286,7 +291,6 @@ export const actions = {
 		const sLng = formData.get('fromLng');
 		const tLat = formData.get('toLat');
 		const tLng = formData.get('toLng');
-		console.log({ from }, { to }, { sLat }, { sLng }, { tLat }, { tLng });
 		if (
 			typeof from !== 'string' ||
 			typeof to !== 'string' ||
@@ -302,10 +306,10 @@ export const actions = {
 		const targetLat = parseFloat(tLat);
 		const targetLng = parseFloat(tLng);
 		if (
-			typeof sLat !== 'number' ||
-			typeof tLat !== 'number' ||
-			typeof sLng !== 'number' ||
-			typeof tLng !== 'number'
+			typeof startLat !== 'number' ||
+			typeof targetLat !== 'number' ||
+			typeof startLng !== 'number' ||
+			typeof targetLng !== 'number'
 		) {
 			return { msg: msg('unkownError') };
 		}

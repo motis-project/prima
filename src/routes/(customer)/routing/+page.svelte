@@ -417,7 +417,7 @@
 						</Dialog.Content>
 					</Dialog.Root>
 				{/if}
-				{#if from.label && to.label && !displayingFavourite()}
+				{#if from.label && to.label && !displayingFavourite() && data.isLoggedIn}
 					<form method="post" action="?/fav" use:enhance>
 						<input type="hidden" name="from" value={from.label} />
 						<input type="hidden" name="fromLat" value={from.value.match?.lat} />
