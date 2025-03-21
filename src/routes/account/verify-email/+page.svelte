@@ -6,11 +6,12 @@
 	import Message from '$lib/ui/Message.svelte';
 	import Panel from '$lib/ui/Panel.svelte';
 	import { t } from '$lib/i18n/translation.js';
+	import { PUBLIC_PROVIDER } from '$env/static/public';
 
 	const { data, form } = $props();
 </script>
 
-<Meta title="E-Mail Verification | triptix.tech" />
+<Meta title="E-Mail Verification | {PUBLIC_PROVIDER}" />
 
 <Panel title={t.account.emailVerification} subtitle={t.account.verifySubtitle}>
 	<div class="flex flex-col">
