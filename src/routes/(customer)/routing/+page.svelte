@@ -105,6 +105,7 @@
 						luggage: luggageToInt(luggage),
 						fastestDirectFactor: 1.6,
 						maxMatchingDistance: MAX_MATCHING_DISTANCE,
+						maxTravelTime: 1440,
 						passengers
 					}
 				} as PlanData)
