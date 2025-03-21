@@ -222,7 +222,11 @@ const translations: Translations = {
 			'Cancellation cannot be undone. Cancellation less than 24 hours before the trip will incur costs.',
 		cancelTrip: 'Cancel Trip',
 		noCancel: 'No, I do not want to cancel.'
-	}
+	},
+	addToFavs: 'add to favourites',
+	displayFavsList: 'display favourites',
+	start: 'Start',
+	target: 'Target'
 };
 
 export default translations;

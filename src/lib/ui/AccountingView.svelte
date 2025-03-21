@@ -286,7 +286,6 @@
 	<SortableTable
 		bind:rows={currentRowsToursTable}
 		cols={isAdmin ? tourColsAdmin : tourColsCompany}
-		{isAdmin}
 		getRowStyle={(row: TourWithRequests) =>
 			'cursor-pointer ' +
 			(row.cancelled ? (row.message === null ? 'bg-orange-500' : 'bg-destructive') : 'bg-white-0')}
@@ -301,7 +300,6 @@
 	<SortableTable
 		bind:rows={currentRowsSubtractionsTable}
 		cols={isAdmin ? subtractionColsAdmin : subtractionColsCompany}
-		{isAdmin}
 	/>
 {/snippet}
 
@@ -309,7 +307,6 @@
 	<SortableTable
 		bind:rows={currentCompanyRows}
 		cols={isAdmin ? companyColsAdmin : companyColsCompany}
-		{isAdmin}
 		fixLastRow={isAdmin}
 	/>
 {/snippet}

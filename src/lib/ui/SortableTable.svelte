@@ -17,7 +17,6 @@
 			sort: undefined | ((r1: T, r2: T) => number);
 			toTableEntry: (r: T) => string | number;
 		}[];
-		isAdmin: boolean;
 		getRowStyle?: (row: T) => string;
 		selectedRow?: undefined | T[];
 		bindSelectedRow?: boolean;

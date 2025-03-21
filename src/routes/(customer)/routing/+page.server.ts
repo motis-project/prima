@@ -8,6 +8,26 @@ import { msg, type Msg } from '$lib/msg';
 import { redirect } from '@sveltejs/kit';
 import { sendMail } from '$lib/server/sendMail';
 import NewRide from '$lib/server/email/NewRide.svelte';
+import type { PageServerLoadEvent } from './$types';
+
+export async function load(event: PageServerLoadEvent) {
+	const userId = event.locals.session!.userId;
+	return {
+		favs: await db
+			.selectFrom('favourites')
+			.where('favourites.user', '=', userId)
+			.orderBy('favourites.id', 'asc')
+			.select([
+				'favourites.start',
+				'favourites.target',
+				'favourites.startLat',
+				'favourites.startLng',
+				'favourites.targetLat',
+				'favourites.targetLng'
+			])
+			.execute()
+	};
+}
 
 const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 	for (const e of l1) {
@@ -19,7 +39,7 @@ const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 };
 
 export const actions = {
-	default: async ({ request, locals }): Promise<{ msg: Msg }> => {
+	routing: async ({ request, locals }): Promise<{ msg: Msg }> => {
 		const user = locals.session?.userId;
 		if (!user) {
 			return { msg: msg('accountDoesNotExist') };
@@ -252,5 +272,47 @@ export const actions = {
 		}
 
 		return { msg: message! };
+	},
+	fav: async ({ request, locals }) => {
+		const user = locals.session?.userId;
+		const message: Msg | undefined = undefined;
+		if (!user) {
+			return { msg: msg('accountDoesNotExist') };
+		}
+		const formData = await request.formData();
+		const from = formData.get('from');
+		const to = formData.get('to');
+		const sLat = formData.get('fromLat');
+		const sLng = formData.get('fromLng');
+		const tLat = formData.get('toLat');
+		const tLng = formData.get('toLng');
+		console.log({ from }, { to }, { sLat }, { sLng }, { tLat }, { tLng });
+		if (
+			typeof from !== 'string' ||
+			typeof to !== 'string' ||
+			typeof sLat !== 'string' ||
+			typeof tLat !== 'string' ||
+			typeof sLng !== 'string' ||
+			typeof tLng !== 'string'
+		) {
+			return { msg: msg('unkownError') };
+		}
+		const startLat = parseFloat(sLat);
+		const startLng = parseFloat(sLng);
+		const targetLat = parseFloat(tLat);
+		const targetLng = parseFloat(tLng);
+		if (
+			typeof sLat !== 'number' ||
+			typeof tLat !== 'number' ||
+			typeof sLng !== 'number' ||
+			typeof tLng !== 'number'
+		) {
+			return { msg: msg('unkownError') };
+		}
+		await db
+			.insertInto('favourites')
+			.values({ start: from, target: to, user, startLat, startLng, targetLat, targetLng })
+			.execute();
+		return { msg: message };
 	}
 };

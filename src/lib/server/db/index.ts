@@ -98,6 +98,16 @@ export interface Database {
 		rating: number | null;
 		comment: string | null;
 	};
+	favourites: {
+		id: Generated<number>;
+		user: number;
+		start: string;
+		startLat: number;
+		startLng: number;
+		target: string;
+		targetLat: number;
+		targetLng: number;
+	};
 }
 
 export const pool = new pg.Pool({ connectionString: env.DATABASE_URL });

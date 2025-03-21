@@ -40,9 +40,12 @@
 	import { updateStartDest } from '$lib/util/updateStartDest';
 	import { odmPrice } from '$lib/util/odmPrice';
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
-	import { LocateFixed } from 'lucide-svelte';
+	import { LocateFixed, Star } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
 	import { MAX_MATCHING_DISTANCE } from '$lib/constants';
+	import SortableTable from '$lib/ui/SortableTable.svelte';
+	import type { Column } from '$lib/ui/tableData';
+	import { isSamePlace } from '$lib/util/booking/isSamePlace';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -153,7 +156,68 @@
 	const applyPosition = (position: { coords: { latitude: number; longitude: number } }) => {
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
 	};
+
+	const favsCols: Column<{ start: string; target: string }>[] = [
+		{
+			text: [t.start],
+			sort: undefined,
+			toTableEntry: (r: { start: string; target: string }) => r.start
+		},
+		{
+			text: [t.target],
+			sort: undefined,
+			toTableEntry: (r: { start: string; target: string }) => r.target
+		}
+	];
+
+	let selectedFav:
+		| {
+				start: string;
+				target: string;
+				startLat: number;
+				startLng: number;
+				targetLat: number;
+				targetLng: number;
+		  }[]
+		| undefined = $state(undefined);
+
+	$effect(() => {
+		if (selectedFav && selectedFav.length != 0) {
+			const fav = selectedFav[0];
+			from = posToLocation({ lat: fav.startLat, lng: fav.startLng }, 0, fav.start);
+			to = posToLocation({ lat: fav.targetLat, lng: fav.targetLng }, 0, fav.target);
+			isFavsOpen = false;
+		}
+	});
+
+	let isFavsOpen = $state(false);
+
+	const displayingFavourite = () => {
+		return data.favs.some(
+			(fav) =>
+				from.value.match &&
+				to.value.match &&
+				isSamePlace(
+					{ lat: fav.startLat, lng: fav.startLng },
+					{ lat: from.value.match.lat, lng: from.value.match.lon }
+				) &&
+				isSamePlace(
+					{ lat: fav.targetLat, lng: fav.targetLng },
+					{ lat: to.value.match.lat, lng: to.value.match.lon }
+				)
+		);
+	};
 </script>
+
+{#snippet favs()}
+	<SortableTable
+		getRowStyle={(_) => 'cursor-pointer '}
+		rows={data.favs}
+		cols={favsCols}
+		bind:selectedRow={selectedFav}
+		bindSelectedRow={true}
+	/>
+{/snippet}
 
 <div class="md:min-h-[70dvh] md:w-96">
 	<Message msg={form?.msg} class="mb-4" />
@@ -216,7 +280,7 @@
 									page.state.selectedItinerary.legs.length === 1 &&
 									page.state.selectedItinerary.legs[0].mode === 'ODM'}
 
-								<form method="post" use:enhance>
+								<form method="post" action="routing" use:enhance>
 									<input
 										type="hidden"
 										name="json"
@@ -340,6 +404,30 @@
 				</Button>
 			</div>
 			<div class="flex gap-2">
+				{#if data.favs.length != 0}
+					<Dialog.Root bind:open={isFavsOpen}>
+						<Dialog.Trigger
+							title={t.displayFavsList}
+							class={cn(buttonVariants({ variant: 'default' }))}
+						>
+							<Star /><ChevronDown />
+						</Dialog.Trigger>
+						<Dialog.Content class="flex-col sm:max-w-[425px]">
+							{@render favs()}
+						</Dialog.Content>
+					</Dialog.Root>
+				{/if}
+				{#if from.label && to.label && !displayingFavourite()}
+					<form method="post" action="?/fav" use:enhance>
+						<input type="hidden" name="from" value={from.label} />
+						<input type="hidden" name="fromLat" value={from.value.match?.lat} />
+						<input type="hidden" name="fromLng" value={from.value.match?.lon} />
+						<input type="hidden" name="to" value={to.label} />
+						<input type="hidden" name="toLat" value={to.value.match?.lat} />
+						<input type="hidden" name="toLng" value={to.value.match?.lon} />
+						<Button type="submit" title={t.addToFavs}><Star /></Button>
+					</form>
+				{/if}
 				<Dialog.Root>
 					<Dialog.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
 						{t.atDateTime(
