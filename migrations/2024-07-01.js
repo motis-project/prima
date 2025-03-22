@@ -413,11 +413,11 @@ $$ LANGUAGE plpgsql;
 `.execute(db);
 
 	await sql`
-CREATE OR REPLACE PROCEDURE cancel_request(
+CREATE OR REPLACE FUNCTION cancel_request(
 	p_request_id INTEGER,
 	p_user_id INTEGER,
 	p_now BIGINT
-) AS $$
+) RETURNS BOOLEAN AS $$
 DECLARE
 	v_tour_id INTEGER;
 	v_all_requests_cancelled BOOLEAN;
@@ -428,7 +428,7 @@ BEGIN
 	    WHERE r.customer = p_user_id
 			AND r.id = p_request_id
 	) THEN
-	    RETURN;
+	    RETURN FALSE;
 	END IF;
 
 	IF (
@@ -439,7 +439,7 @@ BEGIN
 		ORDER BY e.communicated_time ASC
 		LIMIT 1
 	) <= p_now THEN
-		RETURN;
+		RETURN FALSE;
 	END IF;
 
 	UPDATE request r
@@ -463,6 +463,8 @@ BEGIN
 	UPDATE event e
 	SET cancelled = TRUE
 	WHERE e.request = p_request_id;
+
+	RETURN v_all_requests_cancelled;
 END;
 $$ LANGUAGE plpgsql;
 `.execute(db);

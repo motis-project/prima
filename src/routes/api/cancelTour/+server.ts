@@ -5,6 +5,7 @@ import { sql } from 'kysely';
 import { sendMail } from '$lib/server/sendMail';
 import CancelNotificationCustomer from '$lib/server/email/CancelNotificationCustomer.svelte';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
+import { updateDirectDurations } from '$lib/server/booking/updateDirectDuration';
 
 export const POST = async (event: RequestEvent) => {
 	const company = event.locals.session!.companyId;
@@ -19,6 +20,9 @@ export const POST = async (event: RequestEvent) => {
 			.where('tour.id', '=', p.tourId)
 			.select((eb) => [
 				'tour.fare',
+				'tour.vehicle',
+				'tour.id',
+				'tour.departure',
 				jsonArrayFrom(
 					eb
 						.selectFrom('request')
@@ -54,6 +58,7 @@ export const POST = async (event: RequestEvent) => {
 			});
 		}
 		await sql`CALL cancel_tour(${p.tourId}, ${company}, ${p.message})`.execute(trx);
+		await updateDirectDurations(tour.vehicle, tour.id, tour.departure, trx);
 		console.assert(tour.requests.length != 0, 'Found a tour with no requests');
 		for (const request of tour.requests) {
 			console.assert(request.events.length != 0, 'Found a request with no events');

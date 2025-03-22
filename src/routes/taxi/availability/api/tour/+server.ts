@@ -4,6 +4,7 @@ import { sql } from 'kysely';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import { getLatestEventTime } from '$lib/util/getLatestEventTime';
+import { updateDirectDurations } from '$lib/server/booking/updateDirectDuration';
 
 export const POST = async (event) => {
 	const companyId = event.locals.session?.companyId;
@@ -36,6 +37,7 @@ export const POST = async (event) => {
 				'tour.departure',
 				'tour.arrival',
 				'tour.id',
+				'tour.vehicle',
 				jsonArrayFrom(
 					eb
 						.selectFrom('request')
@@ -77,6 +79,11 @@ export const POST = async (event) => {
 		if (vehicleId === undefined) {
 			error(400, {
 				message: 'Keine Fahrzeug-id angegeben'
+			});
+		}
+		if (vehicleId === movedTour.vehicle) {
+			error(400, {
+				message: 'Neue Fahrzeug-id stimmt mit alter überein.'
 			});
 		}
 		const newVehicle = await trx
@@ -134,6 +141,14 @@ export const POST = async (event) => {
 				.set({ vehicle: vehicleId })
 				.where('id', '=', tourId)
 				.executeTakeFirst();
+				
+			await updateDirectDurations(
+				movedTour.vehicle,
+				movedTour.id,
+				movedTour.departure,
+				trx,
+				vehicleId
+			);
 		}
 	});
 	return json({});
