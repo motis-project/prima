@@ -37,7 +37,7 @@ import { isValid } from '$lib/util/booking/getPossibleInsertions';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 import { roundToUnit, MINUTE } from '$lib/util/time';
 import { iterateAllInsertions } from './iterateAllInsertions';
-import { type Range } from '$lib/util/booking/getPossibleInsertions'
+import { type Range } from '$lib/util/booking/getPossibleInsertions';
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 
 export type InsertionEvaluation = {
@@ -569,9 +569,9 @@ export function evaluatePairInsertions(
 	busStopEvaluations: (SingleInsertionEvaluation | undefined)[][][],
 	userChosenEvaluations: (SingleInsertionEvaluation | undefined)[]
 ): (Insertion | undefined)[][] {
-	const bestEvaluations: (Insertion | undefined)[][] = new Array<
-		(Insertion | undefined)[]
-	>(busStopTimes.length);
+	const bestEvaluations: (Insertion | undefined)[][] = new Array<(Insertion | undefined)[]>(
+		busStopTimes.length
+	);
 	for (let i = 0; i != busStopTimes.length; ++i) {
 		bestEvaluations[i] = new Array<Insertion | undefined>(busStopTimes[i].length);
 	}
@@ -790,8 +790,6 @@ const keepsPromises = (
 	}
 	return true;
 };
-
-
 
 export const takeBest = (
 	evals1: (Insertion | undefined)[][],

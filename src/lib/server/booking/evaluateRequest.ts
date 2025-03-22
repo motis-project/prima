@@ -16,7 +16,12 @@ import {
 	MAX_PASSENGER_WAITING_TIME_PICKUP,
 	PASSENGER_CHANGE_DURATION
 } from '$lib/constants';
-import { evaluateNewTours, evaluatePairInsertions, evaluateSingleInsertions, takeBest } from './insertion';
+import {
+	evaluateNewTours,
+	evaluatePairInsertions,
+	evaluateSingleInsertions,
+	takeBest
+} from './insertion';
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 
 export async function evaluateRequest(
