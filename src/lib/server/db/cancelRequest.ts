@@ -56,8 +56,10 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 		if (tour.ticketChecked === true) {
 			return;
 		}
-		const queryResult = await sql<boolean>`SELECT cancel_request(${requestId}, ${userId}, ${Date.now()}) AS wasTourCancelled`
-			.execute(trx);
+		const queryResult =
+			await sql<boolean>`SELECT cancel_request(${requestId}, ${userId}, ${Date.now()}) AS wasTourCancelled`.execute(
+				trx
+			);
 		console.assert(queryResult.rows.length === 1);
 		if (queryResult.rows[0]) {
 			await updateDirectDurations(tour.vehicle, tour.id, tour.departure, trx);
