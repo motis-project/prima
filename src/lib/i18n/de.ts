@@ -155,6 +155,7 @@ const translations: Translations = {
 		}),
 
 	journeyDetails: 'Verbindungsdetails',
+	transfer: 'Umstieg',
 	transfers: 'Umstiege',
 	walk: 'Fußweg',
 	bike: 'Fahrrad',

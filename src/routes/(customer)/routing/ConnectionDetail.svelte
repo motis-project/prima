@@ -112,6 +112,7 @@
 		{@const isLast = i == itinerary.legs.length - 1}
 		{@const isLastPred = i == itinerary.legs.length - 2}
 		{@const pred = i == 0 ? undefined : itinerary.legs[i - 1]}
+		{@const predpred = i <= 1 ? undefined : itinerary.legs[i - 2]}
 		{@const next = isLast ? undefined : itinerary.legs[i + 1]}
 
 		{#if l.routeShortName}
@@ -124,7 +125,10 @@
 							{t.arrivalOnTrack} {pred.from.track}{pred.duration ? ',' : ''}
 						{/if}
 						{#if pred.duration}
-							<span class="text-nowrap">{formatDurationSec(pred.duration)} {t.walk}</span>
+							<span class="text-nowrap"
+								>{formatDurationSec(pred.duration)}
+								{#if predpred?.mode === 'ODM'}{t.transfer}{:else}{t.walk}{/if}</span
+							>
 						{/if}
 						{#if pred.distance}
 							<span class="text-nowrap">({Math.round(pred.distance)} m)</span>
@@ -206,8 +210,22 @@
 					<div class="pb-8"></div>
 				{/if}
 			</div>
-		{:else if !(isLast && l.duration === 0) && ((i == 0 && l.duration !== 0) || !next || !next.routeShortName || l.mode != 'WALK' || (pred && (pred.mode == 'BIKE' || pred.mode == 'RENTAL')))}
-			<Route {onClickTrip} {l} />
+		{:else if !(isLast && l.duration === 0) && ((i == 0 && l.duration !== 0) || !next || !next.routeShortName || l.mode != 'WALK' || (pred && (pred.mode == 'BIKE' || pred.mode == 'RENTAL'))) && !(isLastPred && l.mode === 'WALK' && next && next.mode === 'ODM')}
+			<div class="flex w-full items-center justify-between space-x-1">
+				<Route {onClickTrip} {l} />
+				{#if l.mode === 'ODM' && pred}
+					<div class="h-0 shrink grow border-t"></div>
+					<div class="content-center px-2 text-sm leading-none text-muted-foreground">
+						{#if pred.mode === 'WALK' && pred.duration}
+							<span class="text-nowrap">{formatDurationSec(pred.duration)} {t.transfer}</span>
+						{/if}
+						{#if pred.distance}
+							<span class="text-nowrap">({Math.round(pred.distance)} m)</span>
+						{/if}
+					</div>
+					<div class="h-0 shrink grow border-t"></div>
+				{/if}
+			</div>
 			<div class="relative left-4 border-l-4 pl-6 pt-2" style={routeBorderColor(l)}>
 				<div class="grid grid-cols-[max-content_max-content_auto] items-center gap-y-6">
 					{@render stopTimes(
