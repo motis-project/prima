@@ -24,6 +24,7 @@ test('Move tour to vehicle with cancelled tour', async ({ page }) => {
 	// Open TourDialog
 	await page.mouse.down();
 	await page.mouse.up();
+	await page.waitForTimeout(250);
 	// Cancel Tour
 	await page.getByText('Stornieren').click();
 	await page.getByRole('textbox').fill('test');
