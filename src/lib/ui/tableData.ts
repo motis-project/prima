@@ -73,8 +73,8 @@ const displayDuration = (duration: number) => {
 const getStatus = (r: TourWithRequests) => {
 	return r.cancelled
 		? r.message === null
-			? 'von Kunden storniert'
-			: 'von Unternehmer storniert'
+			? 'vom Kunden storniert'
+			: 'vom Unternehmen storniert'
 		: r.fare === null
 			? r.endTime < Date.now()
 				? 'Taxameterstand nicht eingetragen'
@@ -141,6 +141,9 @@ const restTourCols = (isAdmin: boolean): Column<TourWithRequests>[] => {
 				}
 				if (status.includes('storniert')) {
 					return 'text-orange-400';
+				}
+				if(status === 'Taxameterstand nicht eingetragen') {
+					return 'text-red-500';
 				}
 				return '';
 			}
