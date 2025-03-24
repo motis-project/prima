@@ -359,7 +359,7 @@ fun ShowTours(
                                 if (tourDate < now) {
                                     Spacer(modifier = Modifier.height(40.dp))
 
-                                    //
+                                    /*
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -387,7 +387,7 @@ fun ShowTours(
                                                 Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = "More Options")
                                             }
                                         }
-                                    }
+                                    }*/
 
                                     Row(
                                         modifier = Modifier
@@ -397,7 +397,7 @@ fun ShowTours(
                                     ) {
                                         Text(
                                             text = "Tickets validiert:",
-                                            fontSize = 24.sp,
+                                            fontSize = 20.sp,
                                             textAlign = TextAlign.Center
                                         )
 
@@ -432,19 +432,27 @@ fun ShowTours(
                                     ) {
                                         Text(
                                             text = "Fahrpreis übermittelt:",
-                                            fontSize = 24.sp,
+                                            fontSize = 20.sp,
                                             textAlign = TextAlign.Center
                                         )
 
                                         if (tour.fare != 0) {
-                                            Icon(
-                                                imageVector = Icons.Default.Done,
-                                                contentDescription = "Localized description",
-                                                tint = Color.Green,
-                                                modifier = Modifier
-                                                    .size(width = 32.dp, height = 32.dp)
-                                                    .background(Color.White)
-                                            )
+                                            Row {
+                                                Text(
+                                                    text = (tour.fare.toFloat()/100).toString(),
+                                                    fontSize = 20.sp,
+                                                    textAlign = TextAlign.Center
+                                                )
+                                                Spacer(modifier = Modifier.width(10.dp))
+                                                Icon(
+                                                    imageVector = Icons.Default.Done,
+                                                    contentDescription = "Localized description",
+                                                    tint = Color.Green,
+                                                    modifier = Modifier
+                                                        .size(width = 32.dp, height = 32.dp)
+                                                        .background(Color.White)
+                                                )
+                                            }
                                         } else {
                                             Icon(
                                                 imageVector = Icons.Default.Clear,
