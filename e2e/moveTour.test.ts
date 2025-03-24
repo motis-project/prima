@@ -12,7 +12,7 @@ test('Move tour to vehicle with cancelled tour', async ({ page }) => {
 	await page.mouse.down();
 	await moveMouse(page, `GR-TU-12-${dayString}T08:00:00.000Z`);
 	await page.mouse.up();
-	await page.waitForTimeout(250);
+	await page.waitForTimeout(500);
 
 	await expect(page.getByTestId(`GR-TU-11-${dayString}T08:00:00.000Z`).locator('div')).toHaveCSS(
 		'background-color',
