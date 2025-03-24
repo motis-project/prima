@@ -126,6 +126,7 @@ export const POST = async (event) => {
 					eb('tour.arrival', '>', movedTour.departure)
 				])
 			)
+			.where('tour.cancelled', '=', false)
 			.selectAll()
 			.execute();
 		if (collidingTours.length == 0) {
