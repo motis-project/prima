@@ -125,7 +125,10 @@
 							{t.arrivalOnTrack} {pred.from.track}{pred.duration ? ',' : ''}
 						{/if}
 						{#if pred.duration}
-							<span class="text-nowrap">{formatDurationSec(pred.duration)} {#if predpred?.mode === 'ODM'}{t.transfer}{:else}{t.walk}{/if}</span>
+							<span class="text-nowrap"
+								>{formatDurationSec(pred.duration)}
+								{#if predpred?.mode === 'ODM'}{t.transfer}{:else}{t.walk}{/if}</span
+							>
 						{/if}
 						{#if pred.distance}
 							<span class="text-nowrap">({Math.round(pred.distance)} m)</span>
