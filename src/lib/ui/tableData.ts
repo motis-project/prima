@@ -84,7 +84,7 @@ const getStatus = (r: TourWithRequests) => {
 				: 'beendet - Ticket nicht gescannt';
 };
 
-const tourColsAdmin = [
+export const tourColsAdmin = [
 	{
 		text: ['Unternehmen'],
 		sort: (a: TourWithRequests, b: TourWithRequests) => a.companyId - b.companyId,
