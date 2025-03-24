@@ -31,7 +31,6 @@ test('Move tour to vehicle with cancelled tour', async ({ page }) => {
 	await page.getByText('Stornieren bestätigen').click();
 	// Book new Tour
 	await page.goto('/debug');
-	await page.waitForTimeout(1000);
 
 	await page.getByRole('textbox').fill(`${dayString}T08:30:00Z`);
 	await page.getByRole('button', { name: 'Suchen' }).click();
