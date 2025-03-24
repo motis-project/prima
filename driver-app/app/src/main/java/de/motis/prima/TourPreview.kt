@@ -1,0 +1,177 @@
+package de.motis.prima
+
+import android.util.Log
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.key
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
+import dagger.hilt.android.lifecycle.HiltViewModel
+import de.motis.prima.data.DataRepository
+import de.motis.prima.data.EventObjectGroup
+import de.motis.prima.services.Event
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import java.util.Date
+import javax.inject.Inject
+
+data class Location(
+    val latitude: Double,
+    val longitude: Double,
+)
+
+data class EventGroup(
+    val id: String,
+    val arrivalTime: Long,
+    val location: Location,
+    val address: String,
+    val events: List<Event>,
+    var stopIndex: Int,
+    var hasPickup: Boolean
+)
+
+@HiltViewModel
+class TourViewModel @Inject constructor(
+    val repository: DataRepository
+) : ViewModel() {
+    val eventObjectGroups = repository.eventObjectGroups
+}
+
+@Composable
+fun TourPreview(
+    navController: NavController,
+    tourId: Int,
+    viewModel: TourViewModel = hiltViewModel()
+) {
+    Scaffold(
+        topBar = {
+            TopBar(
+                "tours",
+                stringResource(id = R.string.tour_preview_header),
+                true,
+                emptyList(),
+                navController
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            Spacer(modifier = Modifier.height(42.dp))
+            Row(
+                horizontalArrangement = Arrangement.Center
+            ) {
+                WayPointsView(viewModel)
+            }
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button(
+                    modifier = Modifier.width(300.dp),
+                    onClick = {
+                        navController.navigate("leg/$tourId/0")
+                    }
+                ) {
+                    Text(
+                        text = "Fahrt starten",
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun WayPointsView(viewModel: TourViewModel) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            val eventGroups = viewModel.eventObjectGroups.collectAsState()
+            LazyColumn {
+                items(items = eventGroups.value, itemContent = { eventGroup ->
+                    WayPointPreview(eventGroup)
+                })
+            }
+        }
+    }
+}
+
+@Composable
+fun WayPointPreview(
+    eventGroup: EventObjectGroup
+) {
+    val scheduledTime: String
+
+    try { //TODO
+        scheduledTime = Date(eventGroup.arrivalTime).formatTo("HH:mm")
+    } catch (e: Exception) {
+        Log.d("error", "Failed to read event details")
+        return
+    }
+
+    Column(modifier = Modifier.padding(10.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = scheduledTime,
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = eventGroup.address,
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center
+            )
+        }
+        Spacer(modifier = Modifier.height(30.dp))
+    }
+}
