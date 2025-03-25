@@ -13,7 +13,8 @@ function lngLatToStr(pos: maplibregl.LngLatLike) {
 export const oneToManyCarRouting = async (
 	one: maplibregl.LngLatLike,
 	many: maplibregl.LngLatLike[],
-	arriveBy: boolean
+	arriveBy: boolean,
+	maxDuration?: number
 ): Promise<(number | undefined)[]> => {
 	return await oneToMany({
 		baseUrl: PUBLIC_MOTIS_URL,
@@ -21,7 +22,7 @@ export const oneToManyCarRouting = async (
 		query: {
 			one: lngLatToStr(one),
 			many: many.map(lngLatToStr),
-			max: MAX_TRAVEL / SECOND,
+			max: maxDuration === undefined ? MAX_TRAVEL / SECOND : maxDuration,
 			maxMatchingDistance: MAX_MATCHING_DISTANCE,
 			mode: 'CAR',
 			arriveBy

@@ -128,9 +128,9 @@ export const addTestUser = async (company?: number) => {
 	return await db
 		.insertInto('user')
 		.values({
-			email: 'test@user.de',
+			email: company === undefined ? 'test@user.de' : 'company@owner.de',
 			name: '',
-			isTaxiOwner: false,
+			isTaxiOwner: company !== undefined,
 			isAdmin: false,
 			isEmailVerified: true,
 			passwordHash:

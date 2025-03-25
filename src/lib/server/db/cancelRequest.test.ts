@@ -15,15 +15,19 @@ beforeEach(async () => {
 	await clearDatabase();
 }, 60000);
 
+const inNiesky1 = { lat: 51.29468377345111, lng: 14.833542206420248 };
+const inNiesky2 = { lat: 51.29544187321241, lng: 14.820560314788537 };
+
 describe('tests for cancelling requests', () => {
 	it('cancel request', async () => {
 		const u = await addTestUser();
 		const c = await addCompany(1);
+		await addTestUser(c);
 		const v = await addTaxi(c, { passengers: 0, bikes: 0, wheelchairs: 0, luggage: 0 });
 		const t = await setTour(v, 0, 0);
 		const r = (await setRequest(t!.id, u.id, '')).id;
-		const e1 = await setEvent(r, Date.now() + 7200, true, 1, 1);
-		const e2 = await setEvent(r, Date.now() + 7200, false, 1, 1);
+		const e1 = await setEvent(r, Date.now() + 7200, true, inNiesky1.lat, inNiesky1.lng);
+		const e2 = await setEvent(r, Date.now() + 7200, false, inNiesky2.lat, inNiesky2.lng);
 		const r2 = (await setRequest(t!.id, u.id, '')).id;
 		await setEvent(r2, Date.now() + 7200, true, 1, 1);
 		await setEvent(r2, Date.now() + 7200, false, 1, 1);
