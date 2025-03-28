@@ -43,7 +43,8 @@ export async function bookRide(
 	required: Capacities,
 	startFixed: boolean,
 	trx?: Transaction<Database>,
-	blockedVehicleId?: number
+	blockedVehicleId?: number,
+	testMode?: boolean
 ) {
 	console.log('BS');
 	const searchInterval = new Interval(c.startTime, c.targetTime);
@@ -79,6 +80,7 @@ export async function bookRide(
 			[{ ...busStop, times: [busTime] }],
 			required,
 			startFixed,
+			testMode ? undefined :
 			{
 				pickup: c.startTime,
 				dropoff: c.targetTime

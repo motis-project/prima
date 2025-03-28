@@ -39,6 +39,7 @@ export const POST = async (event: RequestEvent) => {
 			{ status: 200 }
 		);
 	}
+	console.log("BOOKING API PARAMS START: ", JSON.stringify(p, null, '\t'), "BOOKING API PARAMS END");
 	let firstMileRequestId: number | undefined = undefined;
 	let lastMileRequestId: number | undefined = undefined;
 	let message: string | undefined = undefined;
@@ -59,7 +60,7 @@ export const POST = async (event: RequestEvent) => {
 			if (firstConnection != undefined) {
 				blockedVehicleId = firstConnection.best.vehicle;
 			}
-			secondConnection = await bookRide(p.connection2, p.capacities, true, trx, blockedVehicleId);
+			secondConnection = await bookRide(p.connection2, p.capacities, true, trx, blockedVehicleId, true);
 			if (secondConnection == undefined) {
 				message = 'Die Anfrage für die zweite Meile kann nicht erfüllt werden.';
 				return;
@@ -112,6 +113,7 @@ export const POST = async (event: RequestEvent) => {
 					trx
 				)) ?? null;
 		}
+		console.log("BOOKING API SUCCESS");
 		message = 'Die Anfrage wurde erfolgreich bearbeitet.';
 		success = true;
 		return;
