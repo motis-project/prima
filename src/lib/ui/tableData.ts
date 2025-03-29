@@ -55,8 +55,10 @@ const displayUnixtimeMs = (t: UnixtimeMs, displayTime?: boolean) => {
 };
 
 const getTourCost = (tour: TourWithRequests) => {
-	const cost = (tour.fare ?? 0) - FIXED_PRICE * getCustomerCount(tour, false);
-	return getCustomerCount(tour, true) === 0 ? Math.min(0, cost) : cost;
+	return (
+		(getCustomerCount(tour, true) === 0 ? 0 : (tour.fare ?? 0)) -
+		FIXED_PRICE * getCustomerCount(tour, false)
+	);
 };
 
 const displayDuration = (duration: number) => {
