@@ -54,7 +54,7 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 						.select(['user.name', 'user.email'])
 				).as('companyOwners')
 			])
-			.executeTakeFirst()!;
+			.executeTakeFirst();
 		if (tourInfo === undefined) {
 			console.log(
 				'Tour was undefined unexpectedly in cancelRequest cannot send notification Emails, requestId: ',
