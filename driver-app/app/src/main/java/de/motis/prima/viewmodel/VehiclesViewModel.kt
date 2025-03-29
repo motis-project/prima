@@ -57,8 +57,6 @@ class VehiclesViewModel @Inject constructor(
     }
 
     fun selectVehicle(vehicle: Vehicle) {
-        viewModelScope.launch {
-            repository.setSelectedVehicle(vehicle)
-        }
+        repository.setSelectedVehicle(vehicle)
     }
 }

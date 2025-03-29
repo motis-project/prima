@@ -1,8 +1,7 @@
 package de.motis.prima.data
 
 import android.util.Log
-import de.motis.prima.EventGroup
-import de.motis.prima.Location
+import androidx.lifecycle.viewModelScope
 import de.motis.prima.app.NotificationHelper
 import de.motis.prima.formatTo
 import de.motis.prima.services.ApiService
@@ -39,71 +38,145 @@ class DataRepository @Inject constructor(
 
     private val _pendingValidationTickets = MutableStateFlow<List<TicketObject>>(emptyList())
 
-    val tmp = startRefreshingTours()
-    val channel = notificationHelper.createNotificationChannel()
-
-    private val _toursCache = MutableStateFlow<List<Tour>>(emptyList())
+    val _toursCache = MutableStateFlow<List<Tour>>(emptyList())
     val toursCache: StateFlow<List<Tour>> = _toursCache.asStateFlow()
 
-    fun updateToursCache(tours: List<Tour>) {
-        _toursCache.value = tours
+    val _toursForDate = MutableStateFlow<List<Tour>>(emptyList())
+    val toursForDate = _toursForDate.asStateFlow()
+
+    private val _displayDate = MutableStateFlow(LocalDate.now())
+    val displayDate = _displayDate.asStateFlow()
+
+    private val _networkError = MutableStateFlow(false)
+    val networkError = _networkError.asStateFlow()
+
+    val selectedVehicle: Flow<Vehicle> = dataStoreManager.selectedVehicleFlow
+    private var _vehicleId = 0
+
+    init {
+        startRefreshingTours()
+        notificationHelper.createNotificationChannel()
+    }
+
+    fun resetDate() {
+        _displayDate.value = LocalDate.now()
     }
 
     private fun refreshTours(): Flow<Response<List<Tour>>> = flow {
         while (true) {
             val today = LocalDate.now()
-            val tomorrow = today.plusDays(1)
-            val start = today.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            val end = tomorrow.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-            try {
-                val response = apiService.getTours(start, end)
-                emit(response)
-            } catch (e: Exception) {
-                Log.e("error", "Exception: ${e.message}")
+            if (today == displayDate.value) {
+                Log.d("refresh", "refresh")
+                val tomorrow = today.plusDays(1)
+                val start = today.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                val end = tomorrow.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+                try {
+                    val response = apiService.getTours(start, end)
+                    emit(response)
+                } catch (e: Exception) {
+                    _networkError.value = true
+                    val toursDate = getToursForDate(_displayDate.value, selectedVehicle.first().id)
+                    _toursForDate.value = toursDate
+                }
+                delay(10000) // 10 sec
             }
-            delay(10000) // 10 sec
         }
     }.flowOn(Dispatchers.IO)
 
     private fun startRefreshingTours() {
         CoroutineScope(Dispatchers.IO).launch {
+            _vehicleId = selectedVehicle.first().id
+            _toursForDate.value = getToursForDate(_displayDate.value, selectedVehicle.first().id)
             refreshTours().collect { response ->
                 if (response.isSuccessful) {
-                    var fetchedTours = response.body() ?: emptyList()
+                    _networkError.value = false
+                    val fetchedTours = response.body() ?: emptyList()
 
-                    fetchedTours = fetchedTours.sortedBy { t -> t.events[0].scheduledTimeStart }
+                    var tours = fetchedTours.filter { t -> t.vehicleId == selectedVehicle.first().id }
+                    tours = tours.sortedBy { t -> t.events[0].scheduledTimeStart }
 
-                    if (fetchedTours.size > _toursCache.value.size) {
-                        val newItem = fetchedTours.last()
+                    val toursDate = getToursForDate(_displayDate.value, selectedVehicle.first().id)
+
+                    if (tours.size > toursDate.size) {
+                        val newItem = tours.last()
                         val pickup = newItem.events.first()
                         val currentDay = Date().formatTo("yyyy-MM-dd")
                         val pickupDate = Date(pickup.scheduledTimeStart)
                         val pickupDay = pickupDate.formatTo("yyyy-MM-dd")
                         val pickupTime = pickupDate.formatTo("HH:mm")
 
-                        Log.d("test", "update: vehicle: ${selectedVehicle.first().id}")
-                        if (pickupDay == currentDay && newItem.vehicleId == selectedVehicle.first().id) {
-                            notificationHelper.showNotification(
+                        if (pickupDay == currentDay) {
+                            showNotification(
                                 "Neue Fahrt",
                                 "$pickupTime, ${pickup.address}"
                             )
                         }
                     }
 
-                    _toursCache.value = fetchedTours
                     setTours(fetchedTours)
+                    _toursCache.value = tours
                 } else {
+                    _networkError.value = true
                     Log.d("debug", "fetchTours: $response")
                 }
             }
         }
     }
 
-    fun getToursForDate(date: LocalDate): List<Tour> {
+    private fun fetchTours() {
+        val displayDay = _displayDate.value
+        val nextDay = displayDay.plusDays(1)
+        val start = displayDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val end = nextDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = apiService.getTours(start, end)
+                if (response.isSuccessful) {
+                    _networkError.value = false
+                    val fetchedTours = response.body() ?: emptyList()
+
+                    var tours = fetchedTours.filter { t -> t.vehicleId == _vehicleId }
+                    tours = tours.sortedBy { t -> t.events[0].scheduledTimeStart }
+
+                    _toursForDate.value = getToursForDate(_displayDate.value, _vehicleId)
+                    _toursCache.value = tours
+
+                    setTours(fetchedTours)
+                }
+            } catch (e: Exception) {
+                _networkError.value = true
+                _toursForDate.value = getToursForDate(_displayDate.value, _vehicleId)
+            }
+        }
+    }
+
+    fun incrementDate() {
+        _displayDate.value = _displayDate.value.plusDays(1)
+        fetchTours()
+        _toursForDate.value = getToursForDate(_displayDate.value, _vehicleId)
+    }
+
+    fun decrementDate() {
+        _displayDate.value = _displayDate.value.minusDays(1)
+        fetchTours()
+        _toursForDate.value = getToursForDate(_displayDate.value, _vehicleId)
+    }
+
+    fun showNotification(title: String, msg: String) {
+        notificationHelper.showNotification(title, msg)
+    }
+
+    fun getToursForDate(date: LocalDate, vehicleId: Int): List<Tour> {
         val start = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val end = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        return tourStore.getToursForInterval(start, end)
+        val tours = tourStore.getToursForInterval(start, end)
+        Log.d("test", "getToursForDate: ${tours}")
+        var res = tours.filter { t -> t.vehicleId == vehicleId }
+        res = res.sortedBy { t -> t.events[0].scheduledTimeStart }
+        return res
     }
 
     fun getTicketStatus(ticketCode: String): ValidationStatus? {
@@ -115,10 +188,13 @@ class DataRepository @Inject constructor(
         return bytes.joinToString("") { "%02x".format(it) }
     }
 
-    val selectedVehicle: Flow<Vehicle> = dataStoreManager.selectedVehicleFlow
-
-    suspend fun setSelectedVehicle(vehicle: Vehicle) {
-        dataStoreManager.setSelectedVehicle(vehicle)
+    fun setSelectedVehicle(vehicle: Vehicle) {
+        _displayDate.value = LocalDate.now()
+        _vehicleId = vehicle.id
+        fetchTours()
+        CoroutineScope(Dispatchers.IO).launch {
+            dataStoreManager.setSelectedVehicle(vehicle)
+        }
     }
 
     private val _vehicles = MutableStateFlow<List<Vehicle>>(emptyList())
@@ -132,7 +208,7 @@ class DataRepository @Inject constructor(
     val tours: StateFlow<List<Tour>> = _tours.asStateFlow()
 
     suspend fun setTours(tours: List<Tour>) {
-        Log.d("test", "setTours")
+        Log.d("test", "setTours: ${tours}")
         _tours.value = tours
         for (tour in tours) {
             val ticketValidated = tour.events.find { e -> e.ticketChecked } == null
@@ -144,9 +220,8 @@ class DataRepository @Inject constructor(
     private val _eventObjectGroups = MutableStateFlow<List<EventObjectGroup>>(emptyList())
     val eventObjectGroups: StateFlow<List<EventObjectGroup>> = _eventObjectGroups.asStateFlow()
 
-    fun updateEventGroups(tourId: Int) {//}: List<EventObjectGroup> {
+    fun updateEventGroups(tourId: Int) {
         _eventObjectGroups.value = tourStore.getEventGroupsForTour(tourId)
-        //return tourStore.getEventGroupsForTour(tourId)
     }
 
     fun getEventGroup(id: String): EventObjectGroup? {

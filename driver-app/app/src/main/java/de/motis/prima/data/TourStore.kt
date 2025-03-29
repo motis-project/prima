@@ -47,6 +47,7 @@ class EventObject : RealmObject {
     var requestId: Int = 0
     var ticketHash: String = ""
     var ticketChecked: Boolean = false
+    var cancelled: Boolean = false
 }
 
 data class EventObjectGroup(
@@ -56,7 +57,8 @@ data class EventObjectGroup(
     val address: String,
     val events: List<EventObject>,
     var stopIndex: Int,
-    var hasPickup: Boolean
+    var hasPickup: Boolean,
+    var cancelled: Boolean,
 )
 
 class TourStore @Inject constructor(private var realm: Realm) {
@@ -65,6 +67,7 @@ class TourStore @Inject constructor(private var realm: Realm) {
     val storedTours = _storedTours.asStateFlow()
 
     suspend fun update(tour: Tour, ticketValidated: Boolean, fareReported: Boolean) {
+        // update EventObjects
         realm.write {
             for (event in tour.events) {
                 copyToRealm(EventObject().apply {
@@ -90,10 +93,12 @@ class TourStore @Inject constructor(private var realm: Realm) {
                     this.requestId = event.requestId
                     this.ticketHash = event.ticketHash
                     this.ticketChecked = event.ticketChecked
+                    this.cancelled = event.cancelled
                 }, updatePolicy = io.realm.kotlin.UpdatePolicy.ALL)
             }
         }
 
+        // update TourObjects
         realm.write {
             copyToRealm(TourObject().apply {
                 this.tourId = tour.tourId
@@ -105,6 +110,8 @@ class TourStore @Inject constructor(private var realm: Realm) {
                 this.vehicleId = tour.vehicleId
             }, updatePolicy = io.realm.kotlin.UpdatePolicy.ALL)
         }
+
+        // update StateFlow
         _storedTours.value = getAll()
     }
 
@@ -130,7 +137,6 @@ class TourStore @Inject constructor(private var realm: Realm) {
     fun getToursForInterval(start: Long, end: Long): List<Tour> {
         var tours = mutableListOf<Tour>()
         val tourObjects = realm.query<TourObject>("startTime > $0 AND endTime < $1", start, end).find()
-        Log.d("foo", "${tourObjects.size}")
         for (tour in tourObjects) {
             val events = mutableListOf<Event>()
             val eventObjects = getEventsForTour(tour.tourId)
@@ -157,7 +163,8 @@ class TourStore @Inject constructor(private var realm: Realm) {
                     wheelchairs = e.wheelchairs,
                     requestId = e.requestId,
                     ticketHash = e.ticketHash,
-                    ticketChecked = e.ticketChecked
+                    ticketChecked = e.ticketChecked,
+                    cancelled = e.cancelled
                 ))
             }
 
@@ -166,7 +173,7 @@ class TourStore @Inject constructor(private var realm: Realm) {
                 fare = tour.fare,
                 startTime = tour.startTime,
                 endTime = tour.endTime,
-                "",
+                companyName = "",
                 companyAddress = "",
                 vehicleId = tour.vehicleId,
                 licensePlate = "",
@@ -182,9 +189,7 @@ class TourStore @Inject constructor(private var realm: Realm) {
 
     fun getEventGroupsForTour(tourId: Int): List<EventObjectGroup> {
         val events = realm.query<EventObject>("tour == $0", tourId).find()
-        Log.d("test", "${tourId}")
-        Log.d("test", "${events.size}")
-        val tmpEventGroups = mutableListOf<EventObjectGroup>()
+        val eventGroups = mutableListOf<EventObjectGroup>()
         val groupIDs = mutableSetOf<String>()
 
         for (event in events) {
@@ -194,30 +199,40 @@ class TourStore @Inject constructor(private var realm: Realm) {
         for (id in groupIDs) {
             val group = events.filter { e -> e.eventGroup == id }
             if (group.isNotEmpty()) {
-                tmpEventGroups.add(
+
+                // all events in group cancelled -> eventGroup cancelled
+                var cancelled = true
+                for (e in group) {
+                    if (!e.cancelled) cancelled = false
+                }
+
+                eventGroups.add(
                     EventObjectGroup(
                         group[0].eventGroup,
                         group[0].scheduledTimeStart,
                         Location(group[0].lat, group[0].lng),
                         group[0].address,
                         group,
-                        0,
-                        false
+                        stopIndex = 0,
+                        hasPickup = false,
+                        cancelled = cancelled
                     )
                 )
             }
         }
 
-        if (tmpEventGroups.isNotEmpty()) {
-            tmpEventGroups.sortBy { it.arrivalTime }
-            tmpEventGroups.forEachIndexed { index, group ->
+        if (eventGroups.isNotEmpty()) {
+            eventGroups.sortBy { it.arrivalTime }
+            eventGroups.forEachIndexed { index, group ->
                 group.stopIndex = index
                 val pickupEvent = group.events.find { e -> e.isPickup }
                 group.hasPickup = (pickupEvent != null)
             }
         }
 
-        return tmpEventGroups
+        //TODO: filter out cancelled eventGroups?
+
+        return eventGroups
     }
 
     suspend fun deleteTour(requestId: String) {

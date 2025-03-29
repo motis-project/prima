@@ -66,11 +66,9 @@ fun Tours(
     navController: NavController,
     viewModel: ToursViewModel = hiltViewModel()
 ) {
-    val loading by viewModel.loading.collectAsState()
-    val networkError by viewModel.networkError.collectAsState()
     val vehicle = viewModel.selectedVehicle.collectAsState()
-    val tours by viewModel.toursCache.collectAsState()
-
+    val toursToday by viewModel.toursCache.collectAsState()
+    val toursDate by viewModel.toursForDate.collectAsState()
 
     Scaffold(
         topBar = {
@@ -110,27 +108,34 @@ fun Tours(
                 }
             }
 
-            if (loading) {
+            val date by viewModel.displayDate.collectAsState()
+            val today = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val displayDay = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            val networkError by viewModel.networkError.collectAsState()
+            if (networkError) {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(contentPadding),
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    Text(
+                        text = "offline",
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center,
+                        color = Color.Red
+                    )
                 }
-            } else if (networkError) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(contentPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    ErrorInfo(stringResource(id = R.string.network_error))
-                }
-            } else {
-                ShowTours(navController, tours)
             }
+
+            var displayTours = toursToday
+            if (networkError || today != displayDay) {
+                displayTours = toursDate
+                Log.d("test", "toursDate: ${toursDate.size}")
+            }
+
+            ShowTours(navController, displayTours)
         }
     }
 }
@@ -229,25 +234,12 @@ fun ShowTours(
             }
         } else {
             val loading by viewModel.loading.collectAsState()
-            val date by viewModel.displayDate.collectAsState()
-            val today = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            val displayDay = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-
-            var displayTours = tours
-            if (today != displayDay) {
-                displayTours = viewModel.getToursForDate()
-            }
-
-            displayTours = displayTours.filter { t ->
-                t.vehicleId == viewModel.selectedVehicle.value?.id
-            }
-            displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTimeStart }
 
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                items(items = displayTours, itemContent = { tour ->
+                items(items = tours, itemContent = { tour ->
                     ConstraintLayout(modifier = Modifier.clickable {
                         viewModel.updateEventGroups(tour.tourId)
                         if (!loading)

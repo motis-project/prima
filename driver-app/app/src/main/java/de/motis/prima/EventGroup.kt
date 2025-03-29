@@ -276,6 +276,18 @@ fun ShowCustomerDetails(
                         contentDescription = "Localized description"
                     )
                 }
+
+                if (event.cancelled) {
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Icon(
+                        imageVector = Icons.Default.Done,
+                        contentDescription = "Localized description",
+                        tint = Color.Red,
+                        modifier = Modifier.size(24.dp)
+
+                    )
+                }
+
                 Spacer(modifier = Modifier.width(20.dp))
                 Icon(
                     imageVector = Icons.Default.Person,

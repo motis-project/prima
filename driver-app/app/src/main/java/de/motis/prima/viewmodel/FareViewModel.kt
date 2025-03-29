@@ -42,6 +42,7 @@ class FareViewModel @Inject constructor(
                     val response = apiService.reportFare(tourId, fareCent)
                     if (response.isSuccessful) {
                         fareReported = true
+                        repository.resetDate()
                         _reportSuccessEvent.emit(Unit)
                     }
                 } catch (e: Exception) {

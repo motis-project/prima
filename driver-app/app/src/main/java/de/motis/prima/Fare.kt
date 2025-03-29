@@ -238,7 +238,7 @@ fun Fare(
 
                 if (reportSuccessful) {
                     Box(
-                        modifier = Modifier.height(100.dp),//.fillMaxSize(),
+                        modifier = Modifier.height(100.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -255,7 +255,7 @@ fun Fare(
                 val failedReports = scannedTickets
                     .filter { e -> e.validationStatus == ValidationStatus.CHECKED_IN.name }
 
-                if (failedReports.isNotEmpty()) {
+                if (failedReports.isNotEmpty()) { //TODO
                     Text(
                         "Fehlgeschlagene Ticket-Validierungen",
                         fontSize = 16.sp,
