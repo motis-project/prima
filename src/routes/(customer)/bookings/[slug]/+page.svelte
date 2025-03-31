@@ -25,12 +25,12 @@
 </script>
 
 <div class="flex h-full flex-col gap-4 md:min-h-[70dvh] md:w-96">
-	{#if !data.cancelled}
-		<div class="flex items-center justify-between gap-4">
-			<Button variant="outline" size="icon" onclick={() => window.history.back()}>
-				<ChevronLeft />
-			</Button>
+	<div class="flex items-center justify-between gap-4">
+		<Button variant="outline" size="icon" onclick={() => window.history.back()}>
+			<ChevronLeft />
+		</Button>
 
+		{#if !data.cancelled}
 			<div class="flex flex-row gap-2">
 				{#if showTicket}
 					<Button
@@ -77,10 +77,10 @@
 					</AlertDialog.Root>
 				{/if}
 			</div>
-		</div>
-	{:else}
-		<Message msg={msg('cancelled')} />
-	{/if}
+		{:else}
+			<Message msg={msg('cancelled')} />
+		{/if}
+	</div>
 
 	{#if showTicket}
 		<div class="flex h-full w-full items-center justify-center">
