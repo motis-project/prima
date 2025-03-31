@@ -248,7 +248,7 @@
 
 	let tables = [
 		{ label: 'pro Tour', value: 1, component: tourTable },
-		{ label: 'pro Tag', value: 2, component: subtractionTable },
+		{ label: 'pro Tag und Fahrzeug', value: 2, component: subtractionTable },
 		{ label: isAdmin ? 'pro Unternehmen' : 'Summe', value: 3, component: companyTable }
 	];
 
@@ -369,7 +369,7 @@
 			pro Tour als CSV exportieren
 		</Button>
 		<Button type="submit" onclick={() => csvExportDayTable(currentRowsSubtractionsTable)}>
-			pro Tag als CSV exportieren
+			pro Tag und Fahrzeug als CSV exportieren
 		</Button>
 	</div>
 {/snippet}

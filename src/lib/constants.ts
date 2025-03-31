@@ -20,7 +20,7 @@ export const FIXED_PRICE = 300;
 export const CAP = 4000;
 export const OVER_CAP_FACTOR = 0.25;
 export const MONTHS = [
-	'Janurar',
+	'Januar',
 	'Februar',
 	'März',
 	'April',
