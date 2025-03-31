@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.realm)
 
     implementation(libs.hilt.android)
+    implementation(libs.androidx.activity.ktx)
     kapt(libs.hilt.compiler)
     implementation(libs.kotlin.stdlib)
 

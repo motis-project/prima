@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -47,7 +48,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import de.motis.prima.data.ValidationStatus
 import de.motis.prima.viewmodel.FareViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -59,7 +59,6 @@ fun Fare(
 ) {
     var fare by remember { mutableStateOf("0,00") }
     val snackbarHostState = remember { SnackbarHostState() }
-    //val networkErrorMessage = stringResource(id = R.string.network_error)
     val networkErrorMessage = "Keine Internetverbindung. Der Preis wird später automatisch erneut übermittelt."
 
     val inputErrorMessage = stringResource(id = R.string.fare_input_error)
@@ -141,7 +140,7 @@ fun Fare(
                 Spacer(modifier = Modifier.height(40.dp))
                 if (displayFare != "0,00") {
                     Row(
-                        modifier = Modifier.width(200.dp),
+                        modifier = Modifier.fillMaxWidth().padding(60.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
@@ -151,7 +150,7 @@ fun Fare(
                             color = Color.DarkGray
                         )
                         Text(
-                            text = displayFare,
+                            text = viewModel.getFareString(tourId),
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.DarkGray

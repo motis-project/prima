@@ -54,4 +54,15 @@ class FareViewModel @Inject constructor(
             }
         }
     }
+
+    fun getFareString(tourId: Int): String {
+        val _tour = repository.getTour(tourId)
+        var res = ""
+        if (_tour != null) {
+            val fare = ((_tour!!.fare) * 1.0 / 100)
+            val rounded = String.format("%.2f", fare).replace('.', ',')
+            res = "$rounded Euro"
+        }
+        return res
+    }
 }

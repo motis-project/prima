@@ -67,13 +67,7 @@ fun TopBar(
             )
         },
         navigationIcon = {
-            IconButton(onClick = {
-                if (navBack != null) {
-                    navController.navigate(navBack)
-                } else {
-                    navController.popBackStack()
-                }
-            }) {
+            IconButton(onClick = { navController.popBackStack() }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Localized description"

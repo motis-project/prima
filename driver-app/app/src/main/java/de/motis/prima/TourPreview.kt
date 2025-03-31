@@ -23,7 +23,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -37,10 +39,15 @@ import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.data.DataRepository
 import de.motis.prima.data.EventObjectGroup
+import de.motis.prima.data.TourObject
 import de.motis.prima.services.Event
+import de.motis.prima.services.Tour
+import io.realm.kotlin.internal.realmValueToRealmUUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.time.LocalDate
 import java.util.Date
+import java.util.Formatter
 import javax.inject.Inject
 
 data class Location(
@@ -48,7 +55,7 @@ data class Location(
     val longitude: Double,
 )
 
-data class EventGroup(
+data class EventGroup(//TODO
     val id: String,
     val arrivalTime: Long,
     val location: Location,
@@ -63,6 +70,37 @@ class TourViewModel @Inject constructor(
     val repository: DataRepository
 ) : ViewModel() {
     val eventObjectGroups = repository.eventObjectGroups
+    val pendingValidationTickets = repository.pendingValidationTickets
+
+    private var _tour: TourObject? = null
+
+    fun isInPAst(tourId: Int): Boolean {
+        _tour = repository.getTour(tourId)
+        if (_tour != null) {
+            val now = Date()
+            val endTime = Date(_tour!!.endTime)
+            return endTime < now
+        }
+        return false
+    }
+
+    fun getFareString(): String {
+        var res = ""
+        if (_tour != null) {
+            val fare = ((_tour!!.fare) * 1.0 / 100)
+            val rounded = String.format("%.2f", fare).replace('.', ',')
+            res = "$rounded Euro"
+        }
+        return res
+    }
+
+    fun hasPendingValidations(tourId: Int): Boolean {
+        return repository.hasPendingValidations(tourId)
+    }
+
+    fun hasInvalidatedTickets(tourId: Int): Boolean {
+        return repository.hasInvalidatedTickets(tourId)
+    }
 }
 
 @Composable
@@ -91,26 +129,10 @@ fun TourPreview(
             Row(
                 horizontalArrangement = Arrangement.Center
             ) {
-                WayPointsView(viewModel)
-            }
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Button(
-                    modifier = Modifier.width(300.dp),
-                    onClick = {
-                        navController.navigate("leg/$tourId/0")
-                    }
-                ) {
-                    Text(
-                        text = "Fahrt starten",
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
+                if (viewModel.isInPAst(tourId)) {
+                    RetroView(viewModel, navController, tourId)
+                } else {
+                    WayPointsView(viewModel, navController, tourId)
                 }
             }
         }
@@ -118,7 +140,7 @@ fun TourPreview(
 }
 
 @Composable
-fun WayPointsView(viewModel: TourViewModel) {
+fun WayPointsView(viewModel: TourViewModel, navController: NavController, tourId: Int) {
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -129,6 +151,97 @@ fun WayPointsView(viewModel: TourViewModel) {
                 items(items = eventGroups.value, itemContent = { eventGroup ->
                     WayPointPreview(eventGroup)
                 })
+            }
+        }
+        Spacer(modifier = Modifier.height(48.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Button(
+                modifier = Modifier.width(300.dp),
+                onClick = {
+                    navController.navigate("leg/$tourId/0")
+                }
+            ) {
+                Text(
+                    text = "Fahrt starten",
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun RetroView(viewModel: TourViewModel, navController: NavController, tourId: Int) {
+
+    val pendingValidationTickets by viewModel.pendingValidationTickets.collectAsState()
+
+    Column(
+        modifier = Modifier.fillMaxSize().padding(30.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Fahrpreis:",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = viewModel.getFareString(),
+                fontSize = 24.sp
+            )
+        }
+
+        if (viewModel.hasPendingValidations(tourId).not()
+            && viewModel.hasInvalidatedTickets(tourId)) {
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Die Fahrt enthält unvalidierte Tickets.",
+                    fontSize = 24.sp,
+                    color = Color.Red
+                )
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = {
+                        navController.navigate("fare/$tourId")
+                    }
+                ) {
+                    Text(
+                        text = "Ändern",
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            for (ticket in pendingValidationTickets) {
+                Text(
+                    text = "${ticket.requestId}, ${ticket.validationStatus}",
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }

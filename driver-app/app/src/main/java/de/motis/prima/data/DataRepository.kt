@@ -1,12 +1,12 @@
 package de.motis.prima.data
 
 import android.util.Log
-import androidx.lifecycle.viewModelScope
 import de.motis.prima.app.NotificationHelper
 import de.motis.prima.formatTo
 import de.motis.prima.services.ApiService
 import de.motis.prima.services.Tour
 import de.motis.prima.services.Vehicle
+import io.realm.kotlin.ext.query
 import io.realm.kotlin.query.RealmResults
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,11 +37,12 @@ class DataRepository @Inject constructor(
     val storedTours = tourStore.storedTours
 
     private val _pendingValidationTickets = MutableStateFlow<List<TicketObject>>(emptyList())
+    val pendingValidationTickets = _pendingValidationTickets.asStateFlow()
 
-    val _toursCache = MutableStateFlow<List<Tour>>(emptyList())
+    private val _toursCache = MutableStateFlow<List<Tour>>(emptyList())
     val toursCache: StateFlow<List<Tour>> = _toursCache.asStateFlow()
 
-    val _toursForDate = MutableStateFlow<List<Tour>>(emptyList())
+    private val _toursForDate = MutableStateFlow<List<Tour>>(emptyList())
     val toursForDate = _toursForDate.asStateFlow()
 
     private val _displayDate = MutableStateFlow(LocalDate.now())
@@ -56,10 +57,6 @@ class DataRepository @Inject constructor(
     init {
         startRefreshingTours()
         notificationHelper.createNotificationChannel()
-    }
-
-    fun resetDate() {
-        _displayDate.value = LocalDate.now()
     }
 
     private fun refreshTours(): Flow<Response<List<Tour>>> = flow {
@@ -109,7 +106,6 @@ class DataRepository @Inject constructor(
 
                         if (pickupDay == currentDay) {
                             showNotification(
-                                "Neue Fahrt",
                                 "$pickupTime, ${pickup.address}"
                             )
                         }
@@ -153,6 +149,12 @@ class DataRepository @Inject constructor(
         }
     }
 
+    fun resetDate() {
+        _displayDate.value = LocalDate.now()
+        fetchTours()
+        _toursForDate.value = getToursForDate(_displayDate.value, _vehicleId)
+    }
+
     fun incrementDate() {
         _displayDate.value = _displayDate.value.plusDays(1)
         fetchTours()
@@ -165,11 +167,11 @@ class DataRepository @Inject constructor(
         _toursForDate.value = getToursForDate(_displayDate.value, _vehicleId)
     }
 
-    fun showNotification(title: String, msg: String) {
-        notificationHelper.showNotification(title, msg)
+    private fun showNotification(msg: String) {
+        notificationHelper.showNotification("Neue Fahrt", msg)
     }
 
-    fun getToursForDate(date: LocalDate, vehicleId: Int): List<Tour> {
+    private fun getToursForDate(date: LocalDate, vehicleId: Int): List<Tour> {
         val start = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val end = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val tours = tourStore.getToursForInterval(start, end)
@@ -207,7 +209,7 @@ class DataRepository @Inject constructor(
     private val _tours = MutableStateFlow<List<Tour>>(emptyList())
     val tours: StateFlow<List<Tour>> = _tours.asStateFlow()
 
-    suspend fun setTours(tours: List<Tour>) {
+    private suspend fun setTours(tours: List<Tour>) {
         Log.d("test", "setTours: ${tours}")
         _tours.value = tours
         for (tour in tours) {
@@ -244,5 +246,24 @@ class DataRepository @Inject constructor(
 
     fun getToursUnreportedFare(): List<TourObject> {
         return tourStore.getToursUnreportedFare()
+    }
+
+    fun getTour(id: Int): TourObject? {
+        return tourStore.getTour(id)
+    }
+
+    fun hasPendingValidations(tourId: Int): Boolean {
+        for (id in tourStore.getPickupRequestIDs(tourId)) {
+            if (_pendingValidationTickets.value.find { e -> e.requestId == id } != null ) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun hasInvalidatedTickets(tourId: Int): Boolean {
+        val pickupEvents = tourStore.getEventsForTour(tourId).filter { e -> e.isPickup }
+        val invalidated = pickupEvents.filter { e -> e.ticketChecked.not() }
+        return invalidated.isNotEmpty()
     }
 }

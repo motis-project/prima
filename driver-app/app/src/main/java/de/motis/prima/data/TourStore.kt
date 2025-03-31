@@ -66,9 +66,9 @@ class TourStore @Inject constructor(private var realm: Realm) {
     private val _storedTours = MutableStateFlow(getAll())
     val storedTours = _storedTours.asStateFlow()
 
-    suspend fun update(tour: Tour, ticketValidated: Boolean, fareReported: Boolean) {
+    fun update(tour: Tour, ticketValidated: Boolean, fareReported: Boolean) {
         // update EventObjects
-        realm.write {
+        realm.writeBlocking {
             for (event in tour.events) {
                 copyToRealm(EventObject().apply {
                     this.id = event.id
@@ -99,7 +99,7 @@ class TourStore @Inject constructor(private var realm: Realm) {
         }
 
         // update TourObjects
-        realm.write {
+        realm.writeBlocking {
             copyToRealm(TourObject().apply {
                 this.tourId = tour.tourId
                 this.ticketValidated = ticketValidated
@@ -116,7 +116,7 @@ class TourStore @Inject constructor(private var realm: Realm) {
     }
 
     suspend fun updateFare(tourId: Int, fareCent: Int, fareReported: Boolean) {
-        realm.write {
+        realm.writeBlocking {
             copyToRealm(TourObject().apply {
                 this.tourId = tourId
                 this.fare = fareCent
@@ -183,7 +183,7 @@ class TourStore @Inject constructor(private var realm: Realm) {
         return tours
     }
 
-    private fun getEventsForTour(tourId: Int): List<EventObject> {
+    fun getEventsForTour(tourId: Int): List<EventObject> {
         return realm.query<EventObject>("tour == $0", tourId).find()
     }
 
@@ -235,11 +235,19 @@ class TourStore @Inject constructor(private var realm: Realm) {
         return eventGroups
     }
 
-    suspend fun deleteTour(requestId: String) {
-        realm.write {
-            val tour = query<TourObject>("id == $0", requestId).first().find()
-            tour?.let { delete(it) }
+    fun getTour(id: Int): TourObject? {
+        return realm.query<TourObject>("tourId == $0", id).first().find()
+    }
+
+    fun getPickupRequestIDs(tourId: Int): Set<Int> {
+        var res: MutableSet<Int> = mutableSetOf()
+        val pickupEvents = getEventsForTour(tourId).filter { e -> e.isPickup }
+
+        for (e in pickupEvents) {
+            res.add(e.requestId)
         }
+
+        return res
     }
 
     fun clear() {
