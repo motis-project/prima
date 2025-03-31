@@ -16,7 +16,7 @@
 <div>
 	Guten Tag {name},
 	<p>
-		Deine Fahrt von {start} nach {target}, die {isToday
+		Ihre Fahrt von {start} nach {target}, die {isToday
 			? 'heute'
 			: 'am ' + startDate.toLocaleDateString('de')} um
 		{startDate.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' })} beginnen sollte wurde

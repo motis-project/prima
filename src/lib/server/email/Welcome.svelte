@@ -8,7 +8,7 @@
 <div>
 	Willkommen zu {PUBLIC_PROVIDER},
 	<p>
-		Bitte aktiviere Deinen Account, indem Du auf diesen Link klickst:<br />
+		Bitte aktivieren Sie Ihren Account, indem Sie auf diesen Link klicken:<br />
 		<a href="{ORIGIN}/account/verify-email/?code={code}" target="_blank">
 			{ORIGIN}/verify-email/?code={code}
 		</a>
