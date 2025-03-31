@@ -5,6 +5,11 @@ import { sendMail } from '$lib/server/sendMail';
 import CancelNotificationCompany from '$lib/server/email/CancelNotificationCompany.svelte';
 
 export const cancelRequest = async (requestId: number, userId: number) => {
+	console.log(
+		'Cancel Request PARAMS START: ',
+		JSON.stringify({ requestId, userId }, null, '\t'),
+		'Cancel Request PARAMS END'
+	);
 	await db.transaction().execute(async (trx) => {
 		await sql`LOCK TABLE tour, request, event, "user" IN ACCESS EXCLUSIVE MODE;`.execute(trx);
 		const tour = await trx
@@ -44,9 +49,17 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 			])
 			.executeTakeFirst();
 		if (tour === undefined) {
+			console.log(
+				'Cancel Request early exit - cannot find request in database. requestId: ',
+				requestId
+			);
 			return;
 		}
 		if (tour.ticketChecked === true) {
+			console.log(
+				'Cancel Request early exit - the ticket of the user trying to cancel is already checked: ',
+				requestId
+			);
 			return;
 		}
 		await sql`CALL cancel_request(${requestId}, ${userId}, ${Date.now()})`.execute(trx);
@@ -66,5 +79,6 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 				);
 			}
 		}
+		console.log('Cancel Request success. requestId: ', requestId);
 	});
 };
