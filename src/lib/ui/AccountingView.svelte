@@ -223,7 +223,7 @@
 			lastRow.push(getEuroString(sum));
 			data.push(lastRow);
 		}
-		const csvContent = Papa.unparse(data, { header: true });
+		const csvContent = Papa.unparse(data, { header: true, delimiter: ';' });
 		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 		saveAs(blob, filename);
 	};
