@@ -102,6 +102,7 @@ export async function getCompanyCosts(companyId?: number) {
 				customerCount: number;
 				timestamp: UnixtimeMs;
 				verifiedCustomerCount: number;
+				uncapped: number;
 			}
 		>
 	>(days.length);
@@ -113,24 +114,34 @@ export async function getCompanyCosts(companyId?: number) {
 				customerCount: number;
 				timestamp: UnixtimeMs;
 				verifiedCustomerCount: number;
+				uncapped: number;
 			}
 		>();
 		tours.forEach((tour) => {
 			if (day.overlaps(tour.interval)) {
+				const tourTaxameter = tour.fare ?? 0;
+				const tourVerifiedCustomerCount = tour.requests.reduce(
+					(acc, current) => (current.ticketChecked ? current.passengers : 0) + acc,
+					0
+				);
+				const tourCustomerCount = tour.requests.reduce(
+					(acc, current) => current.passengers + acc,
+					0
+				);
 				taxameterPerDayAndVehicle[dayIdx].set(tour.vehicleId, {
 					taxameter:
-						(taxameterPerDayAndVehicle[dayIdx].get(tour.vehicleId)?.taxameter ?? 0) +
-						(tour.fare ?? 0),
+						(taxameterPerDayAndVehicle[dayIdx].get(tour.vehicleId)?.taxameter ?? 0) + tourTaxameter,
 					customerCount:
 						(taxameterPerDayAndVehicle[dayIdx].get(tour.vehicleId)?.customerCount ?? 0) +
-						tour.requests.reduce((acc, current) => current.passengers + acc, 0),
+						tourCustomerCount,
 					timestamp: tour.startTime,
 					verifiedCustomerCount:
 						(taxameterPerDayAndVehicle[dayIdx].get(tour.vehicleId)?.verifiedCustomerCount ?? 0) +
-						tour.requests.reduce(
-							(acc, current) => (current.ticketChecked ? current.passengers : 0) + acc,
-							0
-						)
+						tourVerifiedCustomerCount,
+					uncapped:
+						(taxameterPerDayAndVehicle[dayIdx].get(tour.vehicleId)?.uncapped ?? 0) +
+						(tourVerifiedCustomerCount === 0 ? 0 : tourTaxameter) -
+						tourCustomerCount * FIXED_PRICE
 				});
 			}
 		});
@@ -173,13 +184,11 @@ export async function getCompanyCosts(companyId?: number) {
 		}
 		taxameterPerDayAndVehicle[d].forEach((taxameter, vehicle) => {
 			const costCap = ((availabilitiesPerDayAndVehicle[d]?.get(vehicle) ?? 0) * CAP) / HOUR;
-			const uncapped =
-				(taxameter.verifiedCustomerCount === 0 ? 0 : taxameter.taxameter) -
-				taxameter.customerCount * FIXED_PRICE;
 			const capped =
-				Math.min(costCap, uncapped) + Math.max(uncapped - costCap, 0) * OVER_CAP_FACTOR;
+				Math.min(costCap, taxameter.uncapped) +
+				Math.max(taxameter.uncapped - costCap, 0) * OVER_CAP_FACTOR;
 			costPerDayAndVehicle[d].set(vehicle, {
-				uncapped,
+				uncapped: taxameter.uncapped,
 				taxameter: taxameter.taxameter,
 				capped,
 				customerCount: taxameter.customerCount,
