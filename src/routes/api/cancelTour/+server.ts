@@ -32,7 +32,7 @@ export const POST = async (event: RequestEvent) => {
 								eb
 									.selectFrom('event')
 									.whereRef('event.request', '=', 'request.id')
-									.orderBy('isPickup', 'asc')
+									.orderBy('isPickup', 'desc')
 									.select(['event.address', 'event.communicatedTime'])
 							).as('events')
 						])

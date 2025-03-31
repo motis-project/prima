@@ -8,13 +8,25 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 	await db.transaction().execute(async (trx) => {
 		await sql`LOCK TABLE tour, request, event, "user" IN ACCESS EXCLUSIVE MODE;`.execute(trx);
 		const tour = await trx
+			.selectFrom('request')
+			.where('request.id', '=', requestId)
+			.innerJoin('tour', 'tour.id', 'request.tour')
+			.select(['tour.id', 'tour.departure', 'request.ticketChecked'])
+			.executeTakeFirst();
+		if (tour === undefined) {
+			return;
+		}
+		if (tour.ticketChecked === true) {
+			return;
+		}
+		await sql`CALL cancel_request(${requestId}, ${userId}, ${Date.now()})`.execute(trx);
+		const tourInfo = await trx
 			.selectFrom('request as cancelled_request')
 			.where('cancelled_request.id', '=', requestId)
 			.innerJoin('tour', 'tour.id', 'cancelled_request.tour')
 			.select((eb) => [
 				'tour.id',
 				'tour.departure',
-				'cancelled_request.ticketChecked',
 				jsonArrayFrom(
 					eb
 						.selectFrom('request as cancelled_request')
@@ -43,26 +55,26 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 				).as('companyOwners')
 			])
 			.executeTakeFirst();
-		if (tour === undefined) {
+		if (tourInfo === undefined) {
+			console.log(
+				'Tour was undefined unexpectedly in cancelRequest cannot send notification Emails, requestId: ',
+				requestId
+			);
 			return;
 		}
-		if (tour.ticketChecked === true) {
-			return;
-		}
-		await sql`CALL cancel_request(${requestId}, ${userId}, ${Date.now()})`.execute(trx);
-		for (const companyOwner of tour.companyOwners) {
+		for (const companyOwner of tourInfo.companyOwners) {
 			try {
 				await sendMail(CancelNotificationCompany, 'Stornierte Buchung', companyOwner.email, {
-					events: tour.events,
+					events: tourInfo.events,
 					name: companyOwner.name,
-					departure: tour.departure
+					departure: tourInfo.departure
 				});
 			} catch {
 				console.log(
 					'Failed to send cancellation email to company with email: ',
 					companyOwner.email,
 					' tourId: ',
-					tour.id
+					tourInfo.id
 				);
 			}
 		}
