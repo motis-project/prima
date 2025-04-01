@@ -153,6 +153,7 @@ const translations: Translations = {
 			year: isToday ? undefined : '2-digit'
 		}),
 
+	cancelledJourneys: 'Past and Cancelled Journeys',
 	journeyDetails: 'Journey Details',
 	transfer: 'transfer',
 	transfers: 'transfers',

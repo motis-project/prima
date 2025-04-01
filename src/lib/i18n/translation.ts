@@ -143,6 +143,7 @@ export type Translations = {
 
 	atDateTime: (timeType: TimeType, time: Date, isToday: boolean) => string;
 
+	cancelledJourneys: string;
 	journeyDetails: string;
 	transfer: string;
 	transfers: string;
