@@ -288,6 +288,9 @@
 			{onClickTrip}
 		/>
 	{:else if page.state.stop}
+		<Button variant="outline" size="icon" onclick={() => window.history.back()}>
+			<ChevronLeft />
+		</Button>
 		<StopTimes
 			arriveBy={false}
 			time={page.state.stop.time}

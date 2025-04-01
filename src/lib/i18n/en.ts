@@ -200,7 +200,7 @@ const translations: Translations = {
 		disclaimer:
 			"Cancel your ride 24h early if you don't want to take it. In case you do not cancel your ride in time or don't show up, you are liable to pay the full costs of the taxi.",
 		noLuggage: 'No luggage',
-		handLuggage: 'Light luggage',
+		handLuggage: 'Hand luggage',
 		heavyLuggage: 'Heavy luggage',
 		foldableWheelchair: 'Foldable wheelchair',
 		withFoldableWheelchair: 'With foldable wheelchair',
