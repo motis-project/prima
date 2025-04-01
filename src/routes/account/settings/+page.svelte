@@ -18,9 +18,10 @@
 
 	<Panel title={t.account.resetPassword} subtitle={t.account.resetPasswordSubtitle}>
 		<form method="post" action="/account/settings?/changePassword">
+			<Input name="oldPassword" type="password" placeholder={t.account.oldPassword} class="mb-3" />
 			<div class="field relative">
 				<Input
-					name="password"
+					name="newPassword"
 					type="password"
 					placeholder={t.account.newPassword}
 					onfocus={() => (showTooltip = true)}
