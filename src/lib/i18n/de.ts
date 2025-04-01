@@ -154,6 +154,7 @@ const translations: Translations = {
 			year: isToday ? undefined : '2-digit'
 		}),
 
+	cancelledJourneys: 'Vergangene und stornierte Fahrten',
 	journeyDetails: 'Verbindungsdetails',
 	transfer: 'Umstieg',
 	transfers: 'Umstiege',

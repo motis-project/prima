@@ -13,7 +13,7 @@
 		baseQuery,
 		info
 	}: {
-		it: Itinerary;
+		it: Itinerary & { startAddress?: string; targetAddress?: string };
 		baseQuery?: PlanData | undefined;
 		info?: Snippet<[Itinerary]> | undefined;
 	} = $props();
@@ -43,6 +43,11 @@
 			{it.transfers}
 			{t.transfers}
 		</div>
+		{#if it.startAddress !== undefined && it.targetAddress !== undefined}
+			<span class="break-words text-left">
+				{it.startAddress} -> {it.targetAddress}
+			</span>
+		{/if}
 		<span class="text-left">
 			<Time
 				class="inline"
