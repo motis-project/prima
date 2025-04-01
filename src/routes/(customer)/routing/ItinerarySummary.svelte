@@ -4,7 +4,7 @@
 	import { formatDurationSec } from './formatDuration';
 	import Time from './Time.svelte';
 	import type { Itinerary, Leg, PlanData } from '$lib/openapi';
-	import { getModeStyle, routeColor } from './modeStyle';
+	import { getModeStyle, routeColor } from '$lib/ui/modeStyle';
 	import { t } from '$lib/i18n/translation';
 	import type { Snippet } from 'svelte';
 

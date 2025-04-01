@@ -94,3 +94,7 @@ details summary::-webkit-details-marker {
 .equal-col-size {
 	grid-auto-columns: 1fr;
 }
+
+.maplibregl-ctrl-group .maplibregl-ctrl-geolocate {
+	display: none;
+}
