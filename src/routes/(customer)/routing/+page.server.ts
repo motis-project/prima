@@ -236,7 +236,7 @@ export const actions = {
 					.select((eb) => [
 						'user.email',
 						'user.name',
-						db
+						eb
 							.selectFrom('event')
 							.where('event.request', '=', request1)
 							.orderBy('event.scheduledTimeStart', 'asc')
