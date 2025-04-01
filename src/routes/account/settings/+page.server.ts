@@ -1,4 +1,4 @@
-import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
+import { error, fail, redirect, type RequestEvent } from '@sveltejs/kit';
 import type { Actions, PageServerLoadEvent } from './$types';
 import { msg } from '$lib/msg';
 import { hashPassword, isStrongPassword, verifyPasswordHash } from '$lib/server/auth/password';
@@ -12,10 +12,18 @@ import { deleteSessionTokenCookie, invalidateSession } from '$lib/server/auth/se
 import { verifyPhone } from '$lib/server/verifyPhone';
 import { getUserPasswordHash } from '$lib/server/auth/user';
 
-export function load(event: PageServerLoadEvent) {
+export async function load(event: PageServerLoadEvent) {
+	const user = await db
+		.selectFrom('user')
+		.where('user.id', '=', event.locals.session!.userId)
+		.select(['user.email', 'user.phone'])
+		.executeTakeFirst();
+	if (user === undefined) {
+		error(404, { message: 'User not found' });
+	}
 	return {
-		email: event.locals.session!.email,
-		phone: event.locals.session!.phone
+		email: user.email,
+		phone: user.phone
 	};
 }
 
