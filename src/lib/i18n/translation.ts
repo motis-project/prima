@@ -29,12 +29,14 @@ export type Translations = {
 		failedToSendPasswordResetEmail: string;
 		accountDoesNotExist: string;
 		invalidPassword: string;
+		invalidOldPassword: string;
 		new: string;
 		enterYourCode: string;
 		codeExpiredSentAnother: string;
 		incorrectCode: string;
 		newCodeSent: string;
 		enterNewPassword: string;
+		enterOldPassword: string;
 		passwordChanged: string;
 		phoneChanged: string;
 		enterEmail: string;
@@ -124,6 +126,7 @@ export type Translations = {
 		passwordResetRequest: string;
 		passwordResetRequestSubtitle: string;
 		newPassword: string;
+		oldPassword: string;
 		resendCode: string;
 		verify: string;
 	};

@@ -1,7 +1,7 @@
 import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
 import type { Actions, PageServerLoadEvent } from './$types';
 import { msg } from '$lib/msg';
-import { hashPassword, isStrongPassword } from '$lib/server/auth/password';
+import { hashPassword, isStrongPassword, verifyPasswordHash } from '$lib/server/auth/password';
 import { isEmailAvailable } from '$lib/server/auth/email';
 import { db } from '$lib/server/db';
 import { generateRandomOTP } from '$lib/server/auth/utils';
@@ -10,6 +10,7 @@ import { sendMail } from '$lib/server/sendMail';
 import EmailVerification from '$lib/server/email/EmailVerification.svelte';
 import { deleteSessionTokenCookie, invalidateSession } from '$lib/server/auth/session';
 import { verifyPhone } from '$lib/server/verifyPhone';
+import { getUserPasswordHash } from '$lib/server/auth/user';
 
 export function load(event: PageServerLoadEvent) {
 	return {
@@ -20,14 +21,24 @@ export function load(event: PageServerLoadEvent) {
 
 export const actions: Actions = {
 	changePassword: async function verifyCode(event: RequestEvent) {
-		const password = (await event.request.formData()).get('password');
-		if (typeof password !== 'string' || password === '') {
+		const userId = event.locals.session!.userId;
+		const formData = await event.request.formData();
+		const newPassword = formData.get('newPassword');
+		const oldPassword = formData.get('oldPassword');
+		if (typeof newPassword !== 'string' || newPassword === '') {
 			return fail(400, { msg: msg('enterNewPassword') });
 		}
-		if (!(await isStrongPassword(password))) {
+		if (typeof oldPassword !== 'string' || oldPassword === '') {
+			return fail(400, { msg: msg('enterOldPassword') });
+		}
+		if (!(await isStrongPassword(newPassword))) {
 			return fail(400, { msg: msg('weakPassword') });
 		}
-		const passwordHash = await hashPassword(password);
+		const oldPasswordHash = await getUserPasswordHash(userId);
+		if (!(await verifyPasswordHash(oldPasswordHash, oldPassword))) {
+			return fail(400, { msg: msg('invalidOldPassword') });
+		}
+		const passwordHash = await hashPassword(newPassword);
 		await db
 			.updateTable('user')
 			.where('user.id', '=', event.locals.session!.userId!)
