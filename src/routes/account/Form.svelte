@@ -11,6 +11,7 @@
 	const { msg, type }: { msg?: Msg; type: 'signup' | 'login' } = $props();
 	const isSignup = type === 'signup';
 	const requiredField = isSignup ? ' *' : '';
+	let showTooltip = $state(false);
 </script>
 
 <div class="flex flex-col">
@@ -29,10 +30,28 @@
 		</div>
 
 		<div class="field">
-			<Label for="password">
-				{t.account.password}<span class="text-red-500">{requiredField}</span>
-			</Label>
-			<Input name="password" type="password" placeholder={t.account.password} />
+			<div class="field relative">
+				<Label for="password">
+					{t.account.password}<span class="text-red-500">{requiredField}</span>
+				</Label>
+
+				<Input
+					id="password"
+					name="password"
+					type="password"
+					placeholder={t.account.password}
+					onfocus={() => (showTooltip = true)}
+					onblur={() => (showTooltip = false)}
+				/>
+
+				{#if showTooltip && isSignup}
+					<div
+						class="absolute bottom-full mt-1 w-64 rounded bg-gray-800 p-2 text-xs text-white shadow-lg"
+					>
+						🔒 Das Passwort muss mindestens 8 Zeichen enthalten.
+					</div>
+				{/if}
+			</div>
 		</div>
 
 		{#if isSignup}
@@ -43,12 +62,12 @@
 		{/if}
 
 		<Button type="submit" class="w-full" variant="outline">
-			{type == 'signup' ? t.account.create : t.account.login}
+			{isSignup ? t.account.create : t.account.login}
 			<ChevronRightIcon />
 		</Button>
 	</form>
 	<p class="mx-auto mt-8 max-w-72 text-center text-xs text-muted-foreground">
-		{#if type == 'signup'}
+		{#if isSignup}
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 			{@html t.account.signupConditions(
 				`<a href="/tos" class="border-b border-dotted border-muted-foreground whitespace-nowrap">${t.account.tos}</a>`,
