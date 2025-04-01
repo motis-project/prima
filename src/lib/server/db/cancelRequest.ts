@@ -5,7 +5,11 @@ import { sendMail } from '$lib/server/sendMail';
 import CancelNotificationCompany from '$lib/server/email/CancelNotificationCompany.svelte';
 
 export const cancelRequest = async (requestId: number, userId: number) => {
-	console.log("Cancel Request PARAMS START: ", JSON.stringify({requestId, userId}, null, '\t'), " Cancel Request PARAMS END");
+	console.log(
+		'Cancel Request PARAMS START: ',
+		JSON.stringify({ requestId, userId }, null, '\t'),
+		' Cancel Request PARAMS END'
+	);
 	await db.transaction().execute(async (trx) => {
 		await sql`LOCK TABLE tour, request, event, "user" IN ACCESS EXCLUSIVE MODE;`.execute(trx);
 		const tour = await trx
@@ -15,11 +19,17 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 			.select(['tour.id', 'tour.departure', 'request.ticketChecked'])
 			.executeTakeFirst();
 		if (tour === undefined) {
-			console.log("Cancel Request early exit - cannot find tour associated with requestId in db. ", {requestId, userId});
+			console.log(
+				'Cancel Request early exit - cannot find tour associated with requestId in db. ',
+				{ requestId, userId }
+			);
 			return;
 		}
 		if (tour.ticketChecked === true) {
-			console.log("Cancel Request early exit - cannot cancel request, ticket was checked. ", {requestId, userId})
+			console.log('Cancel Request early exit - cannot cancel request, ticket was checked. ', {
+				requestId,
+				userId
+			});
 			return;
 		}
 		await sql`CALL cancel_request(${requestId}, ${userId}, ${Date.now()})`.execute(trx);
@@ -81,6 +91,6 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 				);
 			}
 		}
-		console.log("Cancel Request - success", {requestId, userId});
+		console.log('Cancel Request - success', { requestId, userId });
 	});
 };
