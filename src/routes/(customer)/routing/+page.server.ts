@@ -233,12 +233,37 @@ export const actions = {
 					.innerJoin('tour', 'request.tour', 'tour.id')
 					.innerJoin('vehicle', 'tour.vehicle', 'vehicle.id')
 					.innerJoin('user', 'vehicle.company', 'user.companyId')
-					.select([
+					.select((eb) => [
 						'user.email',
 						'user.name',
-						'tour.departure',
-						'tour.arrival',
-						'tour.id as tourId'
+						db
+							.selectFrom('event')
+							.where('event.request', '=', request1)
+							.orderBy('event.scheduledTimeStart', 'asc')
+							.limit(1)
+							.select('address')
+							.as('firstAddress'),
+						eb
+							.selectFrom('event')
+							.where('event.request', '=', request1)
+							.orderBy('event.scheduledTimeStart', 'asc')
+							.limit(1)
+							.select('event.scheduledTimeStart')
+							.as('firstTime'),
+						eb
+							.selectFrom('event')
+							.where('event.request', '=', request1)
+							.orderBy('event.scheduledTimeStart', 'desc')
+							.limit(1)
+							.select('address')
+							.as('lastAddress'),
+						eb
+							.selectFrom('event')
+							.where('event.request', '=', request1)
+							.orderBy('event.scheduledTimeStart', 'desc')
+							.limit(1)
+							.select('event.scheduledTimeStart')
+							.as('lastTime')
 					])
 					.where('request.id', '=', request1!)
 					.where('user.isTaxiOwner', '=', true)
