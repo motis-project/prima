@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ORIGIN } from '$env/static/private';
 	import EmailFooter from './EmailFooter.svelte';
-	const { departure, arrival, name, tourId } = $props();
+	const { firstAddress, lastAddress, firstTime, lastTime, name, tourId } = $props();
 	const tourLink = $derived(`${ORIGIN}/taxi/tours/?tourId=${tourId}`);
 </script>
 
@@ -9,11 +9,27 @@
 	Guten Tag {name},
 
 	<p>Es wurde eine neue Buchung angenommen:</p>
-
-	Fahrt:
 	<ul>
-		<li>Geplanter Start: {new Date(departure).toLocaleDateString('de')}</li>
-		<li>Geplante Ankunft: {new Date(arrival).toLocaleDateString('de')}</li>
+		<li>Erster Halt: {firstAddress}</li>
+		<li>Letzter Halt: {lastAddress}</li>
+		<li>
+			Geplanter Start: {new Date(firstTime).toLocaleString('de', {
+				year: 'numeric',
+				month: '2-digit',
+				day: '2-digit',
+				hour: '2-digit',
+				minute: '2-digit'
+			})}
+		</li>
+		<li>
+			Geplante Ankunft: {new Date(lastTime).toLocaleString('de', {
+				year: 'numeric',
+				month: '2-digit',
+				day: '2-digit',
+				hour: '2-digit',
+				minute: '2-digit'
+			})}
+		</li>
 	</ul>
 
 	<p>Link zur Fahrt: <a href={tourLink}>{tourLink}</a></p>
