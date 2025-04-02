@@ -17,6 +17,7 @@
 			sort: undefined | ((r1: T, r2: T) => number);
 			toTableEntry: (r: T) => string | number;
 			toColumnStyle?: (r: T) => string;
+			hidden?: boolean;
 		}[];
 		isAdmin: boolean;
 		getRowStyle?: (row: T) => string;
@@ -66,7 +67,9 @@
 		<Table.Header>
 			<Table.Row>
 				{#each cols as col, i}
-					{@render tableHead(col.text, i, col.sort != undefined)}
+					{#if !col.hidden}
+						{@render tableHead(col.text, i, col.sort != undefined)}
+					{/if}
 				{/each}
 			</Table.Row>
 		</Table.Header>
@@ -81,9 +84,11 @@
 					}}
 				>
 					{#each cols as col}
-						<Table.Cell class={col.toColumnStyle ? col.toColumnStyle(row) : ''}
-							>{col.toTableEntry(row)}</Table.Cell
-						>
+						{#if !col.hidden}
+							<Table.Cell class={col.toColumnStyle ? col.toColumnStyle(row) : ''}
+								>{col.toTableEntry(row)}</Table.Cell
+							>
+						{/if}
 					{/each}
 				</Table.Row>
 			{/each}

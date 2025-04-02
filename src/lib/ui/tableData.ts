@@ -26,6 +26,7 @@ export type Column<T> = {
 	sort: undefined | ((r1: T, r2: T) => number);
 	toTableEntry: (r: T) => string | number;
 	toColumnStyle?: (r: T) => string;
+	hidden?: boolean;
 };
 
 export const getEuroString = (price: number | null) => {
@@ -94,6 +95,26 @@ export const tourColsAdmin = [
 		text: ['Fahrzeug'],
 		sort: (a: TourWithRequests, b: TourWithRequests) => a.vehicleId - b.vehicleId,
 		toTableEntry: (r: TourWithRequests) => r.licensePlate ?? ''
+	},
+	{
+		text: ['Von'],
+		sort: undefined,
+		toTableEntry: (r: TourWithRequests) => {
+			const events = r.requests.flatMap((r) => r.events);
+			events.sort((a, b) => a.scheduledTimeStart - b.scheduledTimeStart);
+			return events[0].address;
+		},
+		hidden: true
+	},
+	{
+		text: ['Nach'],
+		sort: undefined,
+		toTableEntry: (r: TourWithRequests) => {
+			const events = r.requests.flatMap((r) => r.events);
+			events.sort((a, b) => a.scheduledTimeStart - b.scheduledTimeStart);
+			return events[events.length - 1].address;
+		},
+		hidden: true
 	},
 	{
 		text: ['Abfahrt'],
