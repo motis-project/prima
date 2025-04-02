@@ -25,6 +25,7 @@
 		"@sveltejs/adapter-node": "^5.2.11",
 		"@sveltejs/kit": "^2.16.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
+		"@types/polyline": "^0.1.32",
 		"autoprefixer": "^10.4.20",
 		"bits-ui": "1.0.0-next.87",
 		"clsx": "^2.1.1",
@@ -63,6 +64,7 @@
 		"@types/papaparse": "^5.3.15",
 		"@types/pg": "^8.11.11",
 		"@types/uuid": "^10.0.0",
+		"colord": "^2.9.3",
 		"file-saver": "^2.0.5",
 		"geojson": "^0.5.0",
 		"html-to-text": "^9.0.5",
@@ -72,6 +74,7 @@
 		"maplibre-gl": "^5.0.1",
 		"papaparse": "^5.5.2",
 		"pg": "^8.13.1",
+		"polyline": "^0.2.0",
 		"svelte-qrcode": "^1.0.1",
 		"uuid": "^11.0.5"
 	}

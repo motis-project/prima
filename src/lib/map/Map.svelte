@@ -13,7 +13,8 @@
 		transformRequest,
 		center,
 		children,
-		class: className
+		class: className,
+		onLoad
 	}: {
 		map?: maplibregl.Map;
 		style: maplibregl.StyleSpecification | undefined;
@@ -24,6 +25,7 @@
 		zoom: number;
 		children?: Snippet;
 		class: string;
+		onLoad?: (map: maplibregl.Map) => void;
 	} = $props();
 
 	let currStyle: maplibregl.StyleSpecification | undefined = undefined;
@@ -70,6 +72,9 @@
 			ctx.map = tmp;
 			currStyle = style;
 			currentZoom = zoom;
+			if (onLoad) {
+				onLoad(map);
+			}
 		});
 
 		tmp.on('moveend', async () => {
@@ -80,7 +85,7 @@
 
 		return {
 			destroy() {
-				tmp.remove();
+				tmp?.remove();
 				ctx.map = undefined;
 			}
 		};

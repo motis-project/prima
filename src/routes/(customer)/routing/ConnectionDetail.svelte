@@ -7,7 +7,7 @@
 	import { formatDistanceMeters, formatDurationSec } from './formatDuration';
 	import { getModeName } from './getModeName';
 	import Route from './Route.svelte';
-	import { routeBorderColor, routeColor } from './modeStyle';
+	import { routeBorderColor, routeColor } from '$lib/ui/modeStyle';
 
 	const {
 		itinerary,
