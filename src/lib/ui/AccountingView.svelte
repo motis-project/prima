@@ -173,6 +173,7 @@
 			allLicensePlates.push({ licensePlate: tour.licensePlate, companyName: tour.companyName });
 		}
 	}
+	allLicensePlates.sort((lp1, lp2) => (lp1.licensePlate > lp2.licensePlate ? 1 : -1));
 	let licensePlates = $derived(
 		(selectedCompanyIdx === -1
 			? allLicensePlates
