@@ -1,5 +1,5 @@
 import { plan, type PlanResponse } from '$lib/openapi';
-import { MAX_TRAVEL } from '$lib/constants';
+import { MAX_MATCHING_DISTANCE, MAX_TRAVEL } from '$lib/constants';
 import { lngLatToStr } from './lngLatToStr';
 import { SECOND } from './time';
 import { PUBLIC_MOTIS_URL } from '$env/static/public';
@@ -15,6 +15,7 @@ export const carRouting = (
 			toPlace: lngLatToStr(to),
 			directModes: ['CAR'],
 			transitModes: [],
+			maxMatchingDistance: MAX_MATCHING_DISTANCE,
 			maxDirectTime: MAX_TRAVEL / SECOND,
 			detailedTransfers: false
 		}
