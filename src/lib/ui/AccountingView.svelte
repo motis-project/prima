@@ -126,6 +126,7 @@
 	const getNewRows = <T,>(filters: ((row: T) => boolean)[], rows: T[]) => {
 		const ignoredFilters = [
 			-1 === selectedCompanyIdx,
+			-1 === selectedLicensePlateIdx,
 			-1 === selectedMonthIdx,
 			-1 === selectedQuarterIdx,
 			range.start === undefined,
@@ -160,13 +161,29 @@
 	}
 	companyNames.sort((a, b) => (a.toLowerCase() < b.toLowerCase() ? -1 : 1));
 	let selectedCompanyIdx = $state(-1);
+	let selectedLicensePlateIdx = $state(-1);
 	let selectedMonthIdx = $state(-1);
 	let selectedQuarterIdx = $state(-1);
 	let selectedYearIdx = $state(-1);
 	let selectedYear = $derived(selectedYearIdx === -1 ? -1 : years[selectedYearIdx]);
 
+	const allLicensePlates: { licensePlate: string; companyName: string | null }[] = [];
+	for (let tour of tours) {
+		if (allLicensePlates.find((c) => c.licensePlate == tour.licensePlate) === undefined) {
+			allLicensePlates.push({ licensePlate: tour.licensePlate, companyName: tour.companyName });
+		}
+	}
+	allLicensePlates.sort((lp1, lp2) => (lp1.licensePlate > lp2.licensePlate ? 1 : -1));
+	let licensePlates = $derived(
+		(selectedCompanyIdx === -1
+			? allLicensePlates
+			: allLicensePlates.filter((lp) => lp.companyName === companyNames[selectedCompanyIdx])
+		).map((lp) => lp.licensePlate)
+	);
+
 	const tourFilters = [
 		(row: TourWithRequests) => row.companyName === companyNames[selectedCompanyIdx],
+		(row: TourWithRequests) => row.licensePlate === licensePlates[selectedLicensePlateIdx],
 		(row: TourWithRequests) => selectedMonthIdx === new Date(row.startTime).getMonth(),
 		(row: TourWithRequests) => {
 			const month = new Date(row.startTime).getMonth();
@@ -186,6 +203,7 @@
 
 	const subtractionFilters = [
 		(row: Subtractions) => row.companyName === companyNames[selectedCompanyIdx],
+		(row: Subtractions) => row.licensePlate === licensePlates[selectedLicensePlateIdx],
 		(row: Subtractions) => new Date(row.timestamp).getMonth() === selectedMonthIdx,
 		(row: Subtractions) => {
 			const month = new Date(row.timestamp).getMonth();
@@ -270,6 +288,7 @@
 
 	function resetFilter() {
 		selectedCompanyIdx = -1;
+		selectedLicensePlateIdx = -1;
 		selectedMonthIdx = -1;
 		selectedQuarterIdx = -1;
 		range.start = undefined;
@@ -322,6 +341,12 @@
 				disabled={null}
 			/>
 		{/if}
+		<Select
+			bind:selectedIdx={selectedLicensePlateIdx}
+			entries={licensePlates}
+			initial={'Fahrzeug'}
+			disabled={null}
+		/>
 		<Select
 			bind:selectedIdx={selectedMonthIdx}
 			entries={MONTHS}
