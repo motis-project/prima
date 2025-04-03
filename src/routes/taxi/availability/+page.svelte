@@ -489,7 +489,7 @@
 		</div>
 	</div>
 
-	<Card.Content class="mt-8">
+	<Card.Content>
 		<div class="mb-4 min-h-12">
 			<Message msg={message} fadeDuration={800} />
 		</div>
