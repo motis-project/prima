@@ -5,16 +5,22 @@
 	import { t } from '$lib/i18n/translation';
 	import type { FadeParams, TransitionConfig } from 'svelte/transition';
 
-	const { msg, class: className, fadeDuration }: { msg: Msg | undefined; class?: string; fadeDuration?: number } = $props();
+	const {
+		msg,
+		class: className,
+		fadeDuration
+	}: { msg: Msg | undefined; class?: string; fadeDuration?: number } = $props();
 
 	function fade(_: Element, { delay, duration }: FadeParams): TransitionConfig {
-		return duration == undefined ? {} : {
-			delay,
-			duration,
-			css: (t) => {
-				return `opacity: ${t};`;
-			}
-		};
+		return duration == undefined
+			? {}
+			: {
+					delay,
+					duration,
+					css: (t) => {
+						return `opacity: ${t};`;
+					}
+				};
 	}
 </script>
 

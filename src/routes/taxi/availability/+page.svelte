@@ -55,7 +55,7 @@
 		message = form?.msg;
 		timeout = setTimeout(() => {
 			message = undefined;
-		}, 4000);
+		}, 5000);
 	});
 
 	type Vehicle = NonNullable<typeof data.vehicles>[0];
@@ -513,7 +513,7 @@
 
 	<Card.Content class="mt-8">
 		<div class="min-h-12">
-			<Message msg={message} class="mb-4" />
+			<Message msg={message} class="mb-4" fadeDuration={800} />
 		</div>
 		{#if !data.companyDataComplete}
 			<div class="flex min-h-[45vh] w-full flex-col items-center justify-center">
