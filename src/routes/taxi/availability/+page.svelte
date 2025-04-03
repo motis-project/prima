@@ -396,7 +396,7 @@
 					<td
 						class="h-full pr-2 align-middle font-mono text-sm font-semibold leading-none tracking-tight"
 					>
-						<AddVehicle vehicle={v} text={v.licensePlate} width={32} />
+						<AddVehicle vehicle={v} text={v.licensePlate} />
 					</td>
 					{#each split(range, 60) as x}
 						<td>
@@ -485,13 +485,13 @@
 					<ChevronRight class="size-4" />
 				</Button>
 			</div>
-			<AddVehicle text="Fahrzeug hinzufügen" />
+			<AddVehicle text="Fahrzeug hinzufügen" useWFit={true} />
 		</div>
 	</div>
 
 	<Card.Content class="mt-8">
-		<div class="min-h-12">
-			<Message msg={message} class="mb-4" fadeDuration={800} />
+		<div class="mb-4 min-h-12">
+			<Message msg={message} fadeDuration={800} />
 		</div>
 		{#if !data.companyDataComplete}
 			<div class="flex min-h-[45vh] w-full flex-col items-center justify-center">

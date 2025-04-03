@@ -11,7 +11,7 @@
 	const {
 		text,
 		vehicle,
-		width
+		useWFit
 	}: {
 		text: string;
 		vehicle?: {
@@ -22,12 +22,11 @@
 			bikes: number;
 			id: number;
 		};
-		width?: number;
+		useWFit?: boolean;
 	} = $props();
 
 	let popoverOpen = $state(false);
 	let v = $derived(vehicle);
-	let w = width == undefined ? 'w-fit' : `w-${width}`;
 </script>
 
 <Popover.Root bind:open={popoverOpen}>
@@ -35,7 +34,7 @@
 		data-testid={v?.licensePlate ?? 'add-vehicle'}
 		class={buttonVariants({
 			variant: 'outline',
-			class: `${w} justify-start text-left font-normal`
+			class: `${useWFit ? 'w-fit' : `w-32`} justify-start text-left font-normal`
 		})}
 	>
 		{#if v == undefined}
