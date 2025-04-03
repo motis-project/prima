@@ -8,7 +8,8 @@
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import { enhance } from '$app/forms';
 
-	const data: {
+	const {text, vehicle, width}: {
+		text: string;
 		vehicle?: {
 			luggage: number;
 			licensePlate: string;
@@ -17,30 +18,32 @@
 			bikes: number;
 			id: number;
 		};
-		text: string;
+		width?: number;
 	} = $props();
 
-	let vehicle = $derived(data.vehicle);
 	let popoverOpen = $state(false);
+	let v = $derived(vehicle);
+	let w = $derived(width == undefined ? 'w-fit' : `w-${4 * Math.ceil(width * 0.7)}`);
+	console.log({width})
 </script>
 
 <Popover.Root bind:open={popoverOpen}>
 	<Popover.Trigger
-		data-testid={vehicle?.licensePlate ?? 'add-vehicle'}
+		data-testid={v?.licensePlate ?? 'add-vehicle'}
 		class={buttonVariants({
 			variant: 'outline',
-			class: 'w-fit justify-start text-left font-normal'
+			class: `${w} justify-start text-left font-normal`
 		})}
 	>
-		{#if vehicle == undefined}
+		{#if v == undefined}
 			<Plus class="mr-2 size-4" />
 		{/if}
-		{data.text}
+		{text}
 	</Popover.Trigger>
 	<Popover.Content>
 		<form
 			method="post"
-			action={vehicle != undefined ? '?/alterVehicle' : '?/addVehicle'}
+			action={v != undefined ? '?/alterVehicle' : '?/addVehicle'}
 			class="flex flex-col gap-4"
 			use:enhance={() => {
 				return async ({ result, update }) => {
@@ -52,7 +55,7 @@
 			}}
 		>
 			<h2 class="font-medium leading-none">
-				{vehicle == undefined ? 'Neues Fahrzeug' : 'Fahrzeug anpassen'}
+				{v == undefined ? 'Neues Fahrzeug' : 'Fahrzeug anpassen'}
 			</h2>
 			<div class="field">
 				<Label for="licensePlate">Nummernschild:</Label>
@@ -60,12 +63,12 @@
 					name="licensePlate"
 					type="string"
 					placeholder="DA-AB-1234"
-					value={vehicle?.licensePlate ?? undefined}
+					value={v?.licensePlate ?? undefined}
 				/>
 			</div>
 			<div>
 				<h6 class="mb-1">Maximale Passagieranzahl:</h6>
-				<RadioGroup.Root name="passengers" value={vehicle?.passengers?.toString() ?? '3'}>
+				<RadioGroup.Root name="passengers" value={v?.passengers?.toString() ?? '3'}>
 					<div class="flex items-center gap-2">
 						<RadioGroup.Item value="3" id="r1" />
 						<Label for="r1">3 Passagiere</Label>
@@ -82,12 +85,12 @@
 			</div>
 			<div class="flex flex-col gap-2">
 				<div class="flex items-center gap-2">
-					<Checkbox checked={(vehicle?.bikes ?? 0) > 0} name="bike" aria-labelledby="bike-label" />
+					<Checkbox checked={(v?.bikes ?? 0) > 0} name="bike" aria-labelledby="bike-label" />
 					<Label for="bike" class="text-sm font-medium leading-none">Fahrradmitnahme</Label>
 				</div>
 				<div class="flex items-center gap-2">
 					<Checkbox
-						checked={(vehicle?.wheelchairs ?? 0) > 0}
+						checked={(v?.wheelchairs ?? 0) > 0}
 						name="wheelchair"
 						aria-labelledby="wheelchair-label"
 					/>
@@ -102,12 +105,12 @@
 					name="luggage"
 					type="number"
 					placeholder="4"
-					value={vehicle?.luggage?.toString() ?? '4'}
+					value={v?.luggage?.toString() ?? '4'}
 				/>
 			</div>
-			<input type="hidden" name="id" value={vehicle?.id} />
+			<input type="hidden" name="id" value={v?.id} />
 			<Button type="submit" variant="outline" data-testid="create-vehicle">
-				{vehicle == undefined ? 'Fahrzeug anlegen' : 'Änderungen speichern'}
+				{v == undefined ? 'Fahrzeug anlegen' : 'Änderungen speichern'}
 			</Button>
 		</form>
 	</Popover.Content>
