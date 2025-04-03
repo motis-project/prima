@@ -5,10 +5,10 @@
 	import { t } from '$lib/i18n/translation';
 	import type { FadeParams, TransitionConfig } from 'svelte/transition';
 
-	const { msg, class: className }: { msg: Msg | undefined; class?: string } = $props();
+	const { msg, class: className, fadeDuration }: { msg: Msg | undefined; class?: string; fadeDuration?: number } = $props();
 
 	function fade(_: Element, { delay, duration }: FadeParams): TransitionConfig {
-		return {
+		return duration == undefined ? {} : {
 			delay,
 			duration,
 			css: (t) => {
@@ -22,7 +22,7 @@
 	<div
 		transition:fade={{
 			delay: 0,
-			duration: 1000
+			duration: fadeDuration
 		}}
 	>
 		<Alert.Root class={className} variant={msg.type === 'success' ? 'default' : 'destructive'}>
