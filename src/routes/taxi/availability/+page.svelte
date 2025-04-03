@@ -32,8 +32,22 @@
 	import { getLatestEventTime } from '$lib/util/getLatestEventTime';
 	import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
 	import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
+	import type { Msg } from '$lib/msg';
 
 	const { data, form } = $props();
+	const vehicles = $derived.by(() => {
+		return [...data.vehicles].sort((a, b) => a.id - b.id);
+	});
+	let message: Msg | undefined = $state(undefined);
+	let timeout: undefined | ReturnType<typeof setTimeout> = undefined;
+
+	$effect(() => {
+		clearTimeout(timeout);
+		message = form?.msg;
+		timeout = setTimeout(() => {
+			message = undefined;
+		}, 4000);
+	});
 
 	type Vehicle = NonNullable<typeof data.vehicles>[0];
 
@@ -378,13 +392,15 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each data.vehicles as v}
+			{#each vehicles as v}
 				<tr>
 					<td
 						class="h-full pr-2 align-middle font-mono text-sm font-semibold leading-none tracking-tight"
 					>
 						<HoverCard.Root>
-							<HoverCard.Trigger>{v.licensePlate}</HoverCard.Trigger>
+							<HoverCard.Trigger>
+								<AddVehicle vehicle={v} text={v.licensePlate}></AddVehicle>
+							</HoverCard.Trigger>
 							<HoverCard.Content>
 								<ul class="list-inside list-disc">
 									<li>Anzahl Passagiere: {v.passengers}</li>
@@ -481,13 +497,14 @@
 					<ChevronRight class="size-4" />
 				</Button>
 			</div>
-			<AddVehicle />
+			<AddVehicle text="Fahrzeug hinzufügen" />
 		</div>
 	</div>
 
 	<Card.Content class="mt-8">
-		<Message msg={form?.msg} class="mb-4" />
-
+		<div class="min-h-12">
+			<Message msg={message} class="mb-4" />
+		</div>
 		{#if !data.companyDataComplete}
 			<div class="flex min-h-[45vh] w-full flex-col items-center justify-center">
 				<h2 class="mb-4 text-xl font-semibold leading-none tracking-tight">
@@ -497,7 +514,7 @@
 					Fahrzeuge können erst angelegt werden, wenn die Unternehmens-Stammdaten vollständig sind.
 				</p>
 			</div>
-		{:else if data.vehicles.length === 0}
+		{:else if vehicles.length === 0}
 			<div class="flex min-h-[45vh] w-full flex-col items-center justify-center">
 				<h2 class="mb-4 text-xl font-semibold leading-none tracking-tight">
 					Kein Fahrzeug vorhanden.

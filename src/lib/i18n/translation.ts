@@ -64,8 +64,10 @@ export type Translations = {
 		invalidSeats: string;
 		invalidLicensePlate: string;
 		invalidStorage: string;
+		insufficientCapacities: string;
 		duplicateLicensePlate: string;
 		vehicleAddedSuccessfully: string;
+		vehicleAlteredSuccessfully: string;
 
 		// Request
 		requestCancelled: string;

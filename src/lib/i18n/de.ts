@@ -65,8 +65,11 @@ const translations: Translations = {
 		invalidSeats: 'Ungültige Sitzzahl.',
 		invalidLicensePlate: 'Ungültiges Kennzeichen.',
 		invalidStorage: 'Ungültiger Stauraum.',
+		insufficientCapacities:
+			'Eine auf diesem Fahrzeug geplante Tour ist mit den neuen Kapazitätsangaben nicht durchführbar.',
 		duplicateLicensePlate: 'Kennzeichen existiert bereits.',
 		vehicleAddedSuccessfully: 'Fahrzeug erfolgreich angelegt.',
+		vehicleAlteredSuccessfully: ' Fahrzeug erfolgreich geändert',
 
 		//Request
 		requestCancelled: 'Fahrt storniert',
