@@ -8,7 +8,11 @@
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import { enhance } from '$app/forms';
 
-	const {text, vehicle, width}: {
+	const {
+		text,
+		vehicle,
+		width
+	}: {
 		text: string;
 		vehicle?: {
 			luggage: number;
@@ -24,7 +28,7 @@
 	let popoverOpen = $state(false);
 	let v = $derived(vehicle);
 	let w = $derived(width == undefined ? 'w-fit' : `w-${4 * Math.ceil(width * 0.7)}`);
-	console.log({width})
+	console.log({ width });
 </script>
 
 <Popover.Root bind:open={popoverOpen}>
@@ -101,12 +105,7 @@
 			</div>
 			<div class="field">
 				<Label for="luggage">Gepäckstücke:</Label>
-				<Input
-					name="luggage"
-					type="number"
-					placeholder="4"
-					value={v?.luggage?.toString() ?? '4'}
-				/>
+				<Input name="luggage" type="number" placeholder="4" value={v?.luggage?.toString() ?? '4'} />
 			</div>
 			<input type="hidden" name="id" value={v?.id} />
 			<Button type="submit" variant="outline" data-testid="create-vehicle">

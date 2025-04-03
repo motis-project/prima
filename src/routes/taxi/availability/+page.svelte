@@ -43,9 +43,9 @@
 	let maxLicensePlateLength = $derived.by(() => {
 		let max = 0;
 		data.vehicles.forEach((v) => {
-		if(v.licensePlate.length > max) {
-			max = v.licensePlate.length;
-		}
+			if (v.licensePlate.length > max) {
+				max = v.licensePlate.length;
+			}
 		});
 		return max;
 	});
@@ -408,7 +408,8 @@
 					>
 						<HoverCard.Root>
 							<HoverCard.Trigger>
-								<AddVehicle vehicle={v} text={v.licensePlate} width={maxLicensePlateLength}></AddVehicle>
+								<AddVehicle vehicle={v} text={v.licensePlate} width={maxLicensePlateLength}
+								></AddVehicle>
 							</HoverCard.Trigger>
 							<HoverCard.Content>
 								<ul class="list-inside list-disc">

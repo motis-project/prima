@@ -153,6 +153,8 @@ export const actions: Actions = {
 			return fail(400, { msg: msg('invalidStorage') });
 		}
 		let success = false;
+		let duplicateLicensePlate = false;
+		let unknownError = false;
 		await db.transaction().execute(async (trx) => {
 			await sql`LOCK TABLE tour IN ACCESS EXCLUSIVE MODE;`.execute(trx);
 			const tours = await trx
@@ -206,20 +208,35 @@ export const actions: Actions = {
 				return;
 			}
 
-			await trx
-				.updateTable('vehicle')
-				.where('vehicle.id', '=', id)
-				.set({
-					luggage,
-					licensePlate,
-					passengers,
-					wheelchairs: !wheelchair ? 0 : 1,
-					bikes: !bike ? 0 : 1
-				})
-				.execute();
-
+			try {
+				await trx
+					.updateTable('vehicle')
+					.where('vehicle.id', '=', id)
+					.set({
+						luggage,
+						licensePlate,
+						passengers,
+						wheelchairs: !wheelchair ? 0 : 1,
+						bikes: !bike ? 0 : 1
+					})
+					.execute();
+			} catch (e) {
+				// @ts-expect-error: 'e' is of type 'unknown'
+				if (e.constraint == 'vehicle_license_plate_key') {
+					duplicateLicensePlate = true;
+					return;
+				}
+				unknownError = true;
+				return;
+			}
 			success = true;
 		});
+		if (duplicateLicensePlate) {
+			return fail(400, { msg: msg('duplicateLicensePlate') });
+		}
+		if (unknownError) {
+			return fail(400, { msg: msg('unkownError') });
+		}
 		return success
 			? { msg: msg('vehicleAlteredSuccessfully', 'success') }
 			: fail(400, { msg: msg('insufficientCapacities') });
