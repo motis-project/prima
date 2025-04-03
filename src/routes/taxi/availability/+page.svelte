@@ -10,7 +10,6 @@
 	import CalendarIcon from 'lucide-svelte/icons/calendar';
 	import { Calendar } from '$lib/shadcn/calendar';
 	import * as Popover from '$lib/shadcn/popover';
-	import * as HoverCard from '$lib/shadcn/hover-card';
 
 	import { SvelteDate } from 'svelte/reactivity';
 	import { Button, buttonVariants } from '$lib/shadcn/button';
