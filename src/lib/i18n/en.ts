@@ -63,8 +63,10 @@ const translations: Translations = {
 		invalidSeats: 'Invalid number of passengers',
 		invalidLicensePlate: 'Invalid license plate.',
 		invalidStorage: 'Invalid storage space.',
+		insufficientCapacities: 'Updated capacities are insufficient for planned tour on this vehicle.',
 		duplicateLicensePlate: 'Duplicate license plate.',
 		vehicleAddedSuccessfully: 'Vehicle added successfully.',
+		vehicleAlteredSuccessfully: 'Vehicle altered successfully',
 
 		//Request
 		requestCancelled: 'Ride cancelled',
