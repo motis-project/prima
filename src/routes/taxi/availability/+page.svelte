@@ -40,15 +40,6 @@
 	});
 	let message: Msg | undefined = $state(undefined);
 	let timeout: undefined | ReturnType<typeof setTimeout> = undefined;
-	let maxLicensePlateLength = $derived.by(() => {
-		let max = 0;
-		data.vehicles.forEach((v) => {
-			if (v.licensePlate.length > max) {
-				max = v.licensePlate.length;
-			}
-		});
-		return max;
-	});
 
 	$effect(() => {
 		clearTimeout(timeout);
@@ -406,19 +397,7 @@
 					<td
 						class="h-full pr-2 align-middle font-mono text-sm font-semibold leading-none tracking-tight"
 					>
-						<HoverCard.Root>
-							<HoverCard.Trigger>
-								<AddVehicle vehicle={v} text={v.licensePlate} width={maxLicensePlateLength}
-								></AddVehicle>
-							</HoverCard.Trigger>
-							<HoverCard.Content>
-								<ul class="list-inside list-disc">
-									<li>Anzahl Passagiere: {v.passengers}</li>
-									<li>Rollstuhl: {v.wheelchairs === 0 ? 'Nein' : 'Ja'}</li>
-									<li>Gepäckstücke: {v.luggage}</li>
-								</ul>
-							</HoverCard.Content>
-						</HoverCard.Root>
+						<AddVehicle vehicle={v} text={v.licensePlate} width={32} />
 					</td>
 					{#each split(range, 60) as x}
 						<td>

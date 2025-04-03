@@ -27,8 +27,7 @@
 
 	let popoverOpen = $state(false);
 	let v = $derived(vehicle);
-	let w = $derived(width == undefined ? 'w-fit' : `w-${4 * Math.ceil(width * 0.7)}`);
-	console.log({ width });
+	let w = width == undefined ? 'w-fit' : `w-${width}`;
 </script>
 
 <Popover.Root bind:open={popoverOpen}>

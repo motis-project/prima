@@ -66,7 +66,7 @@ const translations: Translations = {
 		insufficientCapacities: 'Updated capacities are insufficient for planned tour on this vehicle.',
 		duplicateLicensePlate: 'Duplicate license plate.',
 		vehicleAddedSuccessfully: 'Vehicle added successfully.',
-		vehicleAlteredSuccessfully: ' Vehicle altered successfully',
+		vehicleAlteredSuccessfully: 'Vehicle altered successfully',
 
 		//Request
 		requestCancelled: 'Ride cancelled',
