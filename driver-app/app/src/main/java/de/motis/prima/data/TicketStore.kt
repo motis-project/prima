@@ -35,7 +35,6 @@ class TicketStore @Inject constructor(private val realm: Realm) {
     val storedTickets = _storedTickets.asStateFlow()
 
     suspend fun update(ticket: Ticket) {
-        Log.d("test", "updateTicket DB: ${ticket.ticketCode}, ${ticket.validationStatus}")
         realm.write {
             copyToRealm(TicketObject().apply {
                 this.requestId = ticket.requestId
@@ -53,7 +52,6 @@ class TicketStore @Inject constructor(private val realm: Realm) {
 
     fun getTicketStatus(ticketCode: String): ValidationStatus? {
         val ticket = realm.query<TicketObject>("ticketCode == $0", ticketCode).first().find()
-        Log.d("test", "getTicketStatus: ticket: $ticket")
         return if (ticket != null) {
             ValidationStatus.valueOf(ticket.validationStatus)
         } else {

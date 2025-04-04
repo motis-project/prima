@@ -135,7 +135,7 @@ class TourStore @Inject constructor(private var realm: Realm) {
     }
 
     fun getToursForInterval(start: Long, end: Long): List<Tour> {
-        var tours = mutableListOf<Tour>()
+        val tours = mutableListOf<Tour>()
         val tourObjects = realm.query<TourObject>("startTime > $0 AND endTime < $1", start, end).find()
         for (tour in tourObjects) {
             val events = mutableListOf<Event>()

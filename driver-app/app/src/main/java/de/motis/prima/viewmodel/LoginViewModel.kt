@@ -27,11 +27,14 @@ class LoginViewModel @Inject constructor(
     private val _networkErrorEvent = MutableSharedFlow<Unit>()
     val networkErrorEvent = _networkErrorEvent.asSharedFlow()
 
+    private val _accountErrorEvent = MutableSharedFlow<Boolean>()
+    val accountErrorEvent = _accountErrorEvent.asSharedFlow()
+
     fun isLoggedIn(): Boolean {
         return !cookieStore.isEmpty()
     }
 
-    fun logout() {
+    private fun logout() {
         viewModelScope.launch {
             try {
                 cookieStore.clearCookies()
@@ -51,7 +54,7 @@ class LoginViewModel @Inject constructor(
                         _navigationEvent.emit(true)
                     } else {
                         logout()
-                        _loginErrorEvent.emit(true)
+                        _accountErrorEvent.emit(true)
                     }
                 } else {
                     _loginErrorEvent.emit(true)

@@ -21,6 +21,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -45,7 +46,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -78,18 +82,20 @@ fun TicketScan(
     ) { contentPadding ->
         var isScanning by remember { mutableStateOf(true) }
         var ticketValid by remember { mutableStateOf(false) }
+        var showDialog by remember { mutableStateOf(false) }
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(contentPadding),
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
                 modifier = Modifier
                     .width(300.dp)
-                    .height(300.dp),
+                    .height(300.dp)
+                    .padding(top = 200.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (isScanning) {
@@ -121,20 +127,66 @@ fun TicketScan(
                             modifier = Modifier.size(64.dp)
 
                         )
+                        LaunchedEffect(Unit) {
+                            delay(500)
+                            navController.popBackStack()
+                        }
                     } else {
-                        Icon(
+                        /*Icon(
                             imageVector = Icons.Default.Clear,
                             contentDescription = "Localized description",
                             tint = Color.Red,
                             modifier = Modifier.size(64.dp)
 
-                        )
+                        )*/
+                        showDialog = true
                     }
+                }
+            }
 
-                    LaunchedEffect(Unit) {
-                        delay(400)
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDialog = false },
+                    title = { Text("Ticket ungültig") },
+                    //text = { Text("Beförderung zum normalen Taxi-Tarif") },
+                    icon = {Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "Localized description",
+                        tint = Color.Red,
+                        modifier = Modifier.size(64.dp)
+
+                    )},
+                    confirmButton = {
+                        Button(onClick = {
+                            showDialog = false
+                            navController.popBackStack()
+                        }) {
+                            Text("Ok")
+                        }
+                    },
+                    /*dismissButton = {
+                        Button(onClick = { showDialog = false }) {
+                            Text("Nein")
+                        }
+                    }*/
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth().height(110.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = {
                         navController.popBackStack()
                     }
+                ) {
+                    Text(
+                        text = "Zurück",
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }

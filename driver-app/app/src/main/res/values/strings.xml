@@ -27,4 +27,6 @@
     <string name="network_error">Bitte überprüfen Sie Ihre Internetverbindung.</string>
     <string name="reload">Aktualisieren</string>
     <string name="tour_preview_header">Tour Übersicht</string>
+    <string name="account_error">Ihr Nutzerkonto ist nicht freigeschaltet.</string>
+    <string name="invalidated_tickets">Es wurden nicht alle Tickets gescannt. Fahrt trotzdem fortsetzen?</string>
 </resources>

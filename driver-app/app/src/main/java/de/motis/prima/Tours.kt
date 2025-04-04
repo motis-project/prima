@@ -26,21 +26,17 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,8 +51,6 @@ import androidx.navigation.NavController
 import de.motis.prima.services.Event
 import de.motis.prima.services.Tour
 import de.motis.prima.viewmodel.ToursViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.ZoneId
@@ -113,7 +107,8 @@ fun Tours(
             DateSelect(viewModel)
 
             val date by viewModel.displayDate.collectAsState()
-            val today = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val today =
+                LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
             val displayDay = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
             val networkError by viewModel.networkError.collectAsState()
@@ -137,10 +132,12 @@ fun Tours(
 
             var displayTours = toursToday
             if (networkError || displayDay != today) {
+                Log.d("test", "displayTours = toursDate")
                 displayTours = toursDate
             }
             if (today == displayDay && !showAll) {
                 displayTours = toursToday.filter { t -> Date(t.endTime) > Date() }
+                displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTimeStart }
             }
 
             ShowTours(navController, displayTours)
@@ -175,7 +172,7 @@ fun DateSelect(
                     contentDescription = "Localized description",
                     modifier = Modifier
                         .size(width = 48.dp, height = 24.dp)
-                        .background(Color.LightGray)
+                        .background(Color(215, 207, 222))
                         .border(
                             border = BorderStroke(2.dp, Color.LightGray),
                             shape = RoundedCornerShape(6.dp)
@@ -210,7 +207,7 @@ fun DateSelect(
                     contentDescription = "Localized description",
                     modifier = Modifier
                         .size(width = 48.dp, height = 24.dp)
-                        .background(Color.LightGray)
+                        .background(Color(215, 207, 222))
                         .border(
                             border = BorderStroke(2.dp, Color.LightGray),
                             shape = RoundedCornerShape(6.dp)
@@ -223,7 +220,7 @@ fun DateSelect(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 20.dp),
+            .padding(top = 12.dp, bottom = 20.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -233,7 +230,13 @@ fun DateSelect(
                     viewModel.resetDate()
                 },
                 modifier = Modifier
-                    .size(width = 100.dp, height = 36.dp)
+                    .size(width = 100.dp, height = 36.dp),
+                colors = ButtonColors(
+                    containerColor = Color(215, 207, 222),
+                    contentColor = Color.Black,
+                    disabledContainerColor = Color.White,
+                    disabledContentColor = Color.White
+                )
             ) {
                 Text(
                     text = "Heute", fontSize = 16.sp
@@ -241,13 +244,13 @@ fun DateSelect(
             }
         } else {
             Switch(
-                checked = showAll,
-                onCheckedChange = { viewModel._showAll.value = it }
+                checked = !showAll,
+                onCheckedChange = { viewModel._showAll.value = !it }
             )
             Text(
-                text = "Alle zeigen",
+                text = "Nur ausstehende",
                 modifier = Modifier.padding(start = 8.dp),
-                fontSize = 20.sp
+                fontSize = 16.sp
             )
         }
     }
@@ -259,17 +262,10 @@ fun ShowTours(
     tours: List<Tour>,
     viewModel: ToursViewModel = hiltViewModel()
 ) {
-    /*val snackbarHostState = remember { SnackbarHostState() }
-    LaunchedEffect(key1 = viewModel) {
-        launch {
-            viewModel.tourSelected.collect {
-                snackbarHostState.showSnackbar(message = "tour clicked")
-            }
-        }
-    }*/
-
-    Row(
-        modifier = Modifier.padding(top = 30.dp)
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.padding(10.dp).fillMaxSize(),
+        colors = CardColors(Color.White, Color.Black, Color.White, Color.White)
     ) {
         if (tours.isEmpty()) {
             Box(
@@ -290,6 +286,7 @@ fun ShowTours(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(Color.White)
             ) {
                 items(items = tours, itemContent = { tour ->
                     ConstraintLayout(modifier = Modifier.clickable {
@@ -328,8 +325,9 @@ fun ShowTours(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
-                                .wrapContentSize()
+                                .padding(10.dp)
+                                .wrapContentSize(),
+                            colors = CardColors(Color(234, 232, 235), Color.Black, Color.White, Color.White)
                         ) {
                             Column(
                                 modifier = Modifier.padding(10.dp),

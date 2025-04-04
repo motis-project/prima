@@ -18,6 +18,8 @@ class NotificationHelper(private val context: Context) {
         const val NOTIFICATION_ID = 1
     }
 
+    private val manager: NotificationManager = context.getSystemService(NotificationManager::class.java)
+
     fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -25,7 +27,6 @@ class NotificationHelper(private val context: Context) {
                 "My Notifications",
                 NotificationManager.IMPORTANCE_DEFAULT
             )
-            val manager = context.getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
         }
     }
@@ -51,5 +52,9 @@ class NotificationHelper(private val context: Context) {
             .build()
 
         NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
+    }
+
+    fun cancel() {
+        manager.cancelAll()
     }
 }

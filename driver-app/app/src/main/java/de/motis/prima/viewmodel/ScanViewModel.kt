@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.motis.prima.EventGroup
 import de.motis.prima.data.DataRepository
 import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.data.Ticket

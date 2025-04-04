@@ -50,6 +50,7 @@ fun Login(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     var isLoginFailed by remember { mutableStateOf(false) }
+    var accountError by remember { mutableStateOf(false) }
     val networkErrorMessage = stringResource(id = R.string.login_error_message)
 
     val activity = (LocalContext.current as? Activity)
@@ -64,9 +65,15 @@ fun Login(
             viewModel.navigationEvent.collect { shouldNavigate ->
                 if (shouldNavigate) {
                     if (selectedVehicle.id == 0) {
-                        navController.navigate("vehicles")
+                        navController.navigate("vehicles") {
+                            popUpTo("login") { inclusive = true }
+                            launchSingleTop = true
+                        }
                     } else {
-                        navController.navigate("tours")
+                        navController.navigate("tours") {
+                            popUpTo("login") { inclusive = true }
+                            launchSingleTop = true
+                        }
                     }
                 }
             }
@@ -75,6 +82,12 @@ fun Login(
         launch {
             viewModel.loginErrorEvent.collect { error ->
                 isLoginFailed = error
+            }
+        }
+
+        launch {
+            viewModel.accountErrorEvent.collect { error ->
+                accountError = error
             }
         }
 
@@ -124,6 +137,13 @@ fun Login(
                     isLoginFailed ->
                         Text(
                             text = stringResource(id = R.string.wrong_login_data),
+                            color = Color.Red,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    accountError ->
+                        Text(
+                            text = stringResource(id = R.string.account_error),
                             color = Color.Red,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(bottom = 8.dp)

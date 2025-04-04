@@ -6,7 +6,6 @@ import de.motis.prima.formatTo
 import de.motis.prima.services.ApiService
 import de.motis.prima.services.Tour
 import de.motis.prima.services.Vehicle
-import io.realm.kotlin.ext.query
 import io.realm.kotlin.query.RealmResults
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -64,7 +63,6 @@ class DataRepository @Inject constructor(
             val today = LocalDate.now()
 
             if (today == displayDate.value) {
-                Log.d("refresh", "refresh")
                 val tomorrow = today.plusDays(1)
                 val start = today.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
                 val end = tomorrow.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -97,17 +95,26 @@ class DataRepository @Inject constructor(
                     val toursDate = getToursForDate(_displayDate.value, selectedVehicle.first().id)
 
                     if (tours.size > toursDate.size) {
-                        val newItem = tours.last()
-                        val pickup = newItem.events.first()
-                        val currentDay = Date().formatTo("yyyy-MM-dd")
-                        val pickupDate = Date(pickup.scheduledTimeStart)
-                        val pickupDay = pickupDate.formatTo("yyyy-MM-dd")
-                        val pickupTime = pickupDate.formatTo("HH:mm")
+                        for (tour in tours) {
+                            if (toursDate.find { t -> t.tourId == tour.tourId} == null) {
+                                // tour unseen
+                                try {
+                                    val pickup = tour.events.first()
+                                    val currentDay = Date().formatTo("yyyy-MM-dd")
+                                    val pickupDate = Date(pickup.scheduledTimeStart)
+                                    val pickupDay = pickupDate.formatTo("yyyy-MM-dd")
+                                    val pickupTime = pickupDate.formatTo("HH:mm")
 
-                        if (pickupDay == currentDay) {
-                            showNotification(
-                                "$pickupTime, ${pickup.address}"
-                            )
+                                    if (pickupDay == currentDay) {
+                                        showNotification(
+                                            "$pickupTime, ${pickup.address}"
+                                        )
+                                    }
+                                } catch (e: Exception) {
+                                    Log.d("error", e.message!!)
+                                }
+                                break // only notify on the first unseen tour
+                            }
                         }
                     }
 
@@ -115,7 +122,6 @@ class DataRepository @Inject constructor(
                     _toursCache.value = tours
                 } else {
                     _networkError.value = true
-                    Log.d("debug", "fetchTours: $response")
                 }
             }
         }
@@ -137,10 +143,10 @@ class DataRepository @Inject constructor(
                     var tours = fetchedTours.filter { t -> t.vehicleId == _vehicleId }
                     tours = tours.sortedBy { t -> t.events[0].scheduledTimeStart }
 
+                    setTours(fetchedTours)
+
                     _toursForDate.value = getToursForDate(_displayDate.value, _vehicleId)
                     _toursCache.value = tours
-
-                    setTours(fetchedTours)
                 }
             } catch (e: Exception) {
                 _networkError.value = true
@@ -171,11 +177,14 @@ class DataRepository @Inject constructor(
         notificationHelper.showNotification("Neue Fahrt", msg)
     }
 
+    fun cancelNotifications() {
+        notificationHelper.cancel()
+    }
+
     private fun getToursForDate(date: LocalDate, vehicleId: Int): List<Tour> {
         val start = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val end = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val tours = tourStore.getToursForInterval(start, end)
-        Log.d("test", "getToursForDate: ${tours}")
         var res = tours.filter { t -> t.vehicleId == vehicleId }
         res = res.sortedBy { t -> t.events[0].scheduledTimeStart }
         return res
@@ -209,8 +218,7 @@ class DataRepository @Inject constructor(
     private val _tours = MutableStateFlow<List<Tour>>(emptyList())
     val tours: StateFlow<List<Tour>> = _tours.asStateFlow()
 
-    private suspend fun setTours(tours: List<Tour>) {
-        Log.d("test", "setTours: ${tours}")
+    private fun setTours(tours: List<Tour>) {
         _tours.value = tours
         for (tour in tours) {
             val ticketValidated = tour.events.find { e -> e.ticketChecked } == null
@@ -265,5 +273,21 @@ class DataRepository @Inject constructor(
         val pickupEvents = tourStore.getEventsForTour(tourId).filter { e -> e.isPickup }
         val invalidated = pickupEvents.filter { e -> e.ticketChecked.not() }
         return invalidated.isNotEmpty()
+    }
+
+    fun hasValidTicket(tourId: Int, eventId: Int): Boolean {
+        val event = tourStore.getEventsForTour(tourId).find { e -> e.id == eventId }
+        if (event != null) {
+            return event.ticketChecked
+        }
+        return false
+    }
+
+    fun isTourStarted(tourId: Int): Boolean {
+        val tour = tourStore.getTour(tourId)
+        if (tour != null) {
+            return Date(tour.startTime) < Date()
+        }
+        return false
     }
 }

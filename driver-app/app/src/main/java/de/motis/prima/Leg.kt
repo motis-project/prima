@@ -19,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.data.DataRepository
@@ -26,9 +27,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LegViewModel @Inject constructor(
-    repository: DataRepository
+    private val repository: DataRepository
 ) : ViewModel() {
     val eventGroups = repository.eventObjectGroups
+
+    fun isTourStarted(tourId: Int): Boolean {
+        return repository.isTourStarted(tourId)
+    }
 }
 
 @Composable
@@ -70,7 +75,11 @@ fun Leg(
                 if (eventGroups.isNotEmpty()) {
                     var nav = "leg/$tourId/${eventGroupIndex + 1}"
                     if (eventGroupIndex + 1 == eventGroups.size) {
-                        nav = "fare/$tourId"
+                        if (legViewModel.isTourStarted(tourId)) {
+                            nav = "fare/$tourId"
+                        } else {
+                            nav = "tours"
+                        }
                     }
 
                     BoxWithConstraints {
@@ -84,14 +93,14 @@ fun Leg(
                             val height = screenHeight * 0.95f
                             Box(
                                 modifier = Modifier
-                                    .height(height)
-                                    .width(screenWidth * 0.98f)
+                                    //.height(height)
+                                    //.width(screenWidth * 0.98f)
                             ) {
                                 EventGroup(
                                     navController,
                                     eventGroups[eventGroupIndex],
                                     nav,
-                                    height
+                                    tourId
                                 )
                             }
                         }

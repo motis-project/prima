@@ -57,18 +57,30 @@ fun Fare(
     tourId: Int,
     viewModel: FareViewModel = hiltViewModel(),
 ) {
-    var fare by remember { mutableStateOf("0,00") }
     val snackbarHostState = remember { SnackbarHostState() }
     val networkErrorMessage = "Keine Internetverbindung. Der Preis wird später automatisch erneut übermittelt."
 
     val inputErrorMessage = stringResource(id = R.string.fare_input_error)
     var reportSuccessful by remember { mutableStateOf(false) }
 
+    val storedTours = viewModel.storedTours.collectAsState()
+    val storedFare = storedTours.value.find { t -> t.tourId == tourId }?.fare
+
+    var fare by remember { mutableStateOf("0,00") }
+
+    var fareEuro by remember { mutableStateOf("") }
+    var fareCent by remember { mutableStateOf("") }
+
+    var displayFare = "0,00"
+    if (storedFare != null) {
+        displayFare = (storedFare.toFloat() / 100).toString().replace('.', ',')
+    }
+
     LaunchedEffect(key1 = viewModel) {
         launch {
             viewModel.reportSuccessEvent.collect {
                 reportSuccessful = true
-                delay(2000)
+                delay(1000)
                 navController.navigate("tours") {
                     launchSingleTop = true
                 }
@@ -119,42 +131,35 @@ fun Fare(
     ) { contentPadding ->
         ConstraintLayout(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(contentPadding)
         ) {
             Column(
-                modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                var fareEuro by remember { mutableStateOf("") }
-                var fareCent by remember { mutableStateOf("") }
-
-                val storedTours = viewModel.storedTours.collectAsState()
-                val storedFare = storedTours.value.find { t -> t.tourId == tourId }?.fare
-
-                var displayFare = "0,00"
-                if (storedFare != null) {
-                    displayFare = (storedFare.toFloat() / 100).toString().replace('.', ',')
-                }
-
-                Spacer(modifier = Modifier.height(40.dp))
                 if (displayFare != "0,00") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(60.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    Column(
+                        modifier = Modifier.padding(top = 20.dp)
                     ) {
-                        Text(
-                            text = "Gespeichert:",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.DarkGray
-                        )
-                        Text(
-                            text = viewModel.getFareString(tourId),
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.DarkGray
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "Gespeichert:",
+                                fontSize = 18.sp,
+                                color = Color.DarkGray
+                            )
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = viewModel.getFareString(tourId),
+                                fontSize = 18.sp,
+                                color = Color.DarkGray
+                            )
+                        }
                     }
                 }
 
@@ -168,8 +173,8 @@ fun Fare(
 
                 Row(
                     modifier = Modifier
-                        .width(300.dp)
-                        .padding(20.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     val focusManager = LocalFocusManager.current
                     OutlinedTextField(
@@ -224,7 +229,7 @@ fun Fare(
                         singleLine = true
                     )
                 }
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(60.dp))
                 Button(
                     onClick = {
                         viewModel.reportFare(tourId, fare)
@@ -250,7 +255,7 @@ fun Fare(
                     }
                 }
 
-                val scannedTickets by viewModel.scannedTickets.collectAsState()
+                /*val scannedTickets by viewModel.scannedTickets.collectAsState()
                 val failedReports = scannedTickets
                     .filter { e -> e.validationStatus == ValidationStatus.CHECKED_IN.name }
 
@@ -276,7 +281,7 @@ fun Fare(
                             })
                         }
                     }
-                }
+                }*/
             }
         }
     }

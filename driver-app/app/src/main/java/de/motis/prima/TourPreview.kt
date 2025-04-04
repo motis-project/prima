@@ -2,32 +2,31 @@ package de.motis.prima
 
 import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,30 +39,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.data.DataRepository
 import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.data.TourObject
-import de.motis.prima.services.Event
-import de.motis.prima.services.Tour
-import io.realm.kotlin.internal.realmValueToRealmUUID
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import java.time.LocalDate
 import java.util.Date
-import java.util.Formatter
 import javax.inject.Inject
-
-data class Location(
-    val latitude: Double,
-    val longitude: Double,
-)
-
-data class EventGroup(//TODO
-    val id: String,
-    val arrivalTime: Long,
-    val location: Location,
-    val address: String,
-    val events: List<Event>,
-    var stopIndex: Int,
-    var hasPickup: Boolean
-)
 
 @HiltViewModel
 class TourViewModel @Inject constructor(
@@ -73,6 +50,10 @@ class TourViewModel @Inject constructor(
     val pendingValidationTickets = repository.pendingValidationTickets
 
     private var _tour: TourObject? = null
+
+    init {
+        repository.cancelNotifications()
+    }
 
     fun isInPAst(tourId: Int): Boolean {
         _tour = repository.getTour(tourId)
@@ -119,21 +100,15 @@ fun TourPreview(
                 navController
             )
         }
-    ) { innerPadding ->
+    ) { contentPadding ->
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
+                .padding(contentPadding)
         ) {
-            Spacer(modifier = Modifier.height(42.dp))
-            Row(
-                horizontalArrangement = Arrangement.Center
-            ) {
-                if (viewModel.isInPAst(tourId)) {
-                    RetroView(viewModel, navController, tourId)
-                } else {
-                    WayPointsView(viewModel, navController, tourId)
-                }
+            if (viewModel.isInPAst(tourId)) {
+                RetroView(viewModel, navController, tourId)
+            } else {
+                WayPointsView(viewModel, navController, tourId)
             }
         }
     }
@@ -143,23 +118,53 @@ fun TourPreview(
 fun WayPointsView(viewModel: TourViewModel, navController: NavController, tourId: Int) {
     Column {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
+            modifier = Modifier.fillMaxWidth().weight(1f),
         ) {
-            val eventGroups = viewModel.eventObjectGroups.collectAsState()
-            LazyColumn {
-                items(items = eventGroups.value, itemContent = { eventGroup ->
-                    WayPointPreview(eventGroup)
-                })
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .padding(10.dp)
+            ) {
+                val eventGroups = viewModel.eventObjectGroups.collectAsState()
+                LazyColumn(
+                    modifier = Modifier
+                        .background(Color.White)
+                        .fillMaxSize(),
+                ) {
+                    var index = 0
+                    val maxIndex = eventGroups.value.size - 1
+                    items(items = eventGroups.value, itemContent = { eventGroup ->
+                        WayPointPreview(eventGroup)
+
+                        if (index < maxIndex) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier.size(48.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_dropdown),
+                                        contentDescription = "Localized description"
+                                    )
+                                }
+                            }
+                        }
+
+                        index++
+                    })
+                }
             }
         }
-        Spacer(modifier = Modifier.height(48.dp))
+
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
+            modifier = Modifier.fillMaxWidth().height(120.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Button(
-                modifier = Modifier.width(300.dp),
                 onClick = {
                     navController.navigate("leg/$tourId/0")
                 }
@@ -176,7 +181,6 @@ fun WayPointsView(viewModel: TourViewModel, navController: NavController, tourId
 
 @Composable
 fun RetroView(viewModel: TourViewModel, navController: NavController, tourId: Int) {
-
     val pendingValidationTickets by viewModel.pendingValidationTickets.collectAsState()
 
     Column(
@@ -202,12 +206,12 @@ fun RetroView(viewModel: TourViewModel, navController: NavController, tourId: In
             && viewModel.hasInvalidatedTickets(tourId)) {
 
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Die Fahrt enthält unvalidierte Tickets.",
+                    text = "Die Fahrt enthält kein validiertes Ticket.",
                     fontSize = 24.sp,
                     color = Color.Red
                 )
@@ -260,31 +264,37 @@ fun WayPointPreview(
         return
     }
 
-    Column(modifier = Modifier.padding(10.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
+    Card(
+        modifier = Modifier
+            .padding(10.dp),
+        colors = CardColors(Color.White, Color.Black, Color.White, Color.White)
+    ) {
+        Column(
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = scheduledTime,
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
-                textAlign = TextAlign.Center
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = scheduledTime,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp, bottom = 12.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = eventGroup.address,
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
-        Spacer(modifier = Modifier.height(4.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = eventGroup.address,
-                fontSize = 24.sp,
-                textAlign = TextAlign.Center
-            )
-        }
-        Spacer(modifier = Modifier.height(30.dp))
     }
 }
