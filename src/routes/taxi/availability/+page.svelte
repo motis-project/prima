@@ -474,7 +474,7 @@
 						{df.format(value.toDate(getLocalTimeZone()))}
 					</Popover.Trigger>
 					<Popover.Content class="w-auto p-0">
-						<Calendar type="single" bind:value locale={LOCALE}/>
+						<Calendar type="single" bind:value locale={LOCALE} />
 					</Popover.Content>
 				</Popover.Root>
 				<Button variant="outline" size="icon" onclick={() => (value = value.add({ days: 1 }))}>
