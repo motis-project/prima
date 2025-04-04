@@ -210,7 +210,7 @@ const translations: Translations = {
 		summary: 'Buchungszusammenfassung',
 		header: 'Kostenpflichtig buchen',
 		disclaimer:
-			'Stornieren Sie die Fahrt mind. 24h vorher, falls Sie die Fahrt nicht wahrnehmen können. Sollten Sie nicht rechtzeitig stornieren, wird Ihnen die Taxi-Fahrt voll in Rechnung gestellt.',
+			'Stornieren Sie die Fahrt mind. eine Stunde vorher, falls Sie die Fahrt nicht wahrnehmen können. Sollten Sie nicht rechtzeitig stornieren, wird Ihnen die Anfahrt des Taxis voll in Rechnung gestellt.',
 		noLuggage: 'Kein Gepäck',
 		handLuggage: 'Handgepäck',
 		heavyLuggage: 'Schweres Gepäck',
