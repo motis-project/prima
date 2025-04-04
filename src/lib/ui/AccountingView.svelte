@@ -23,7 +23,7 @@
 		type CompanyRow,
 		type Subtractions
 	} from './tableData.js';
-	import { MONTHS, QUARTERS } from '$lib/constants.js';
+	import { LOCALE, MONTHS, QUARTERS } from '$lib/constants.js';
 	import type { UnixtimeMs } from '$lib/util/UnixtimeMs.js';
 	import TourDialog from './TourDialog.svelte';
 
@@ -374,7 +374,7 @@
 					: range.start + ' - ' + range.end}</Dialog.Trigger
 			>
 			<Dialog.Content class="sm:max-w-[600px]">
-				<RangeCalendar bind:value={range} class="rounded-md border" />
+				<RangeCalendar bind:value={range} class="rounded-md border" locale={LOCALE} />
 			</Dialog.Content>
 		</Dialog.Root>
 		<Select
