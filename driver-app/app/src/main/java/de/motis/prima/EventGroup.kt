@@ -315,66 +315,72 @@ fun ShowCustomerDetails(
                     )
                 }
 
-                if (event.wheelchairs > 0) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_wheelchair),
-                        contentDescription = "Localized description"
-                    )
+                Box() {
+                    if (event.wheelchairs > 0) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_wheelchair),
+                            contentDescription = "Localized description"
+                        )
+                    }
+
+                    if (event.cancelled) {
+                        Icon(
+                            imageVector = Icons.Default.Done,
+                            contentDescription = "Localized description",
+                            tint = Color.Red,
+                            modifier = Modifier.size(24.dp)
+
+                        )
+                    }
                 }
 
-                if (event.cancelled) {
-                    Icon(
-                        imageVector = Icons.Default.Done,
-                        contentDescription = "Localized description",
-                        tint = Color.Red,
-                        modifier = Modifier.size(24.dp)
+                Row {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Localized description"
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "${event.passengers}",
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(30.dp))
 
-                    )
-                }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_luggage),
+                            contentDescription = "Localized description"
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "${event.luggage}",
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(30.dp))
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Localized description"
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${event.passengers}",
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_luggage),
-                        contentDescription = "Localized description"
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${event.luggage}",
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_bike),
-                        contentDescription = "Localized description"
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${event.bikes}",
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_bike),
+                            contentDescription = "Localized description"
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "${event.bikes}",
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(20.dp))
