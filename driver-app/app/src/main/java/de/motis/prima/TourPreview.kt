@@ -103,19 +103,48 @@ fun TourPreview(
     ) { contentPadding ->
         Column(
             modifier = Modifier
-                .padding(contentPadding)
+                .padding(contentPadding),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            if (viewModel.isInPAst(tourId)) {
-                RetroView(viewModel, navController, tourId)
-            } else {
-                WayPointsView(viewModel, navController, tourId)
+            Box(
+                modifier = Modifier
+                    .height(400.dp)
+            ) {
+                if (viewModel.isInPAst(tourId)) {
+                    RetroView(viewModel, navController, tourId)
+                } else {
+                    WayPointsView(viewModel)
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .height(250.dp)
+            ) {
+                //TODO: show wheelchair / child seat (with age) requirements
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = {
+                        navController.navigate("leg/$tourId/0")
+                    }
+                ) {
+                    Text(
+                        text = "Fahrt starten",
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun WayPointsView(viewModel: TourViewModel, navController: NavController, tourId: Int) {
+fun WayPointsView(viewModel: TourViewModel) {
     Column {
         Row(
             modifier = Modifier.fillMaxWidth().weight(1f),
@@ -156,24 +185,6 @@ fun WayPointsView(viewModel: TourViewModel, navController: NavController, tourId
                         index++
                     })
                 }
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth().height(120.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Button(
-                onClick = {
-                    navController.navigate("leg/$tourId/0")
-                }
-            ) {
-                Text(
-                    text = "Fahrt starten",
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
             }
         }
     }
