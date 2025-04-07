@@ -19,7 +19,7 @@ const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 };
 
 export const actions = {
-	default: async ({ request, locals }): Promise<{ msg: Msg }> => {
+	odm: async ({ request, locals }): Promise<{ msg: Msg }> => {
 		const user = locals.session?.userId;
 		if (!user) {
 			return { msg: msg('accountDoesNotExist') };
@@ -277,5 +277,31 @@ export const actions = {
 		}
 
 		return { msg: message! };
+	},
+	public: async ({ request, locals }): Promise<{ msg: Msg }> => {
+		const user = locals.session?.userId;
+		if (!user) {
+			return { msg: msg('accountDoesNotExist') };
+		}
+
+		const formData = await request.formData();
+		const json = formData.get('json');
+		console.log('SAVING JOURNEY');
+		if (typeof json != 'string') {
+			return { msg: msg('unknownError') };
+		}
+		const id = (
+			await db
+				.insertInto('journey')
+				.values({
+					user,
+					json,
+					request1: null,
+					request2: null
+				})
+				.returning('id')
+				.executeTakeFirstOrThrow()
+		).id;
+		return redirect(302, `/bookings/${id}`);
 	}
 };
