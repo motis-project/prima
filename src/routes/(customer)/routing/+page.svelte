@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import { goto, pushState } from '$app/navigation';
+	import { goto, invalidateAll, pushState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 
@@ -44,6 +44,9 @@
 	import { posToLocation } from '$lib/map/Location';
 	import { MAX_MATCHING_DISTANCE } from '$lib/constants';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
+	import SortableTable from '$lib/ui/SortableTable.svelte';
+	import type { Column } from '$lib/ui/tableData';
+	import * as Card from '$lib/shadcn/card';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -120,10 +123,24 @@
 	$effect(() => {
 		if (baseQuery) {
 			clearTimeout(searchDebounceTimer);
-			searchDebounceTimer = setTimeout(() => {
+			searchDebounceTimer = setTimeout(async () => {
+				if (from.label && from.value.match && to.label && to.value.match) {
+					const formData = new FormData();
+					formData.append('fromAddress', from.label);
+					formData.append('fromLat', from.value.match.lat.toString());
+					formData.append('fromLon', from.value.match.lon.toString());
+					formData.append('toAddress', to.label);
+					formData.append('toLat', to.value.match.lat.toString());
+					formData.append('toLon', to.value.match.lon.toString());
+					await fetch('?/fav', {
+						method: 'POST',
+						body: formData
+					});
+				}
 				const base = plan<true>(baseQuery).then(updateStartDest(from, to));
 				baseResponse = base;
 				routingResponses = [base];
+				await invalidateAll();
 			}, 400);
 		}
 	});
@@ -155,6 +172,62 @@
 	const applyPosition = (position: { coords: { latitude: number; longitude: number } }) => {
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
 	};
+
+	let selectedToFav: { address: string; lat: number; lng: number }[] | undefined =
+		$state(undefined);
+	let selectedFromFav: { address: string; lat: number; lng: number }[] | undefined =
+		$state(undefined);
+	let selectedFav:
+		| {
+				fromAddress: string;
+				fromLat: number;
+				fromLng: number;
+				toAddress: string;
+				toLat: number;
+				toLng: number;
+		  }[]
+		| undefined = $state(undefined);
+	const favsCols: Column<{
+		fromAddress: string;
+		fromLat: number;
+		fromLng: number;
+		toAddress: string;
+		toLat: number;
+		toLng: number;
+	}>[] = [
+		{
+			text: [t.from],
+			sort: undefined,
+			toTableEntry: (r: { fromAddress: string }) => r.fromAddress
+		},
+		{
+			text: [t.to],
+			sort: undefined,
+			toTableEntry: (r: { toAddress: string }) => r.toAddress
+		}
+	];
+
+	$effect(() => {
+		if (selectedFromFav && selectedFromFav.length != 0) {
+			const fav = selectedFromFav[0];
+			from = posToLocation({ lat: fav.lat, lng: fav.lng }, 0, fav.address);
+		}
+	});
+
+	$effect(() => {
+		if (selectedToFav && selectedToFav.length != 0) {
+			const fav = selectedToFav[0];
+			to = posToLocation({ lat: fav.lat, lng: fav.lng }, 0, fav.address);
+		}
+	});
+
+	$effect(() => {
+		if (selectedFav && selectedFav.length != 0) {
+			const fav = selectedFav[0];
+			from = posToLocation({ lat: fav.fromLat, lng: fav.fromLng }, 0, fav.fromAddress);
+			to = posToLocation({ lat: fav.toLat, lng: fav.toLng }, 0, fav.toAddress);
+		}
+	});
 </script>
 
 <div class="md:min-h-[70dvh] md:w-96">
@@ -166,6 +239,8 @@
 			bind:selected={from}
 			items={fromItems}
 			onValueChange={() => history.back()}
+			favs={data.favs}
+			bind:selectedFav={selectedFromFav}
 		/>
 	{:else if page.state.selectTo}
 		<AddressTypeahead
@@ -173,6 +248,8 @@
 			bind:selected={to}
 			items={toItems}
 			onValueChange={() => history.back()}
+			favs={data.favs}
+			bind:selectedFav={selectedToFav}
 		/>
 	{:else if page.state.showMap}
 		<PopupMap bind:from bind:to itinerary={page.state.selectedItinerary} />
@@ -219,7 +296,7 @@
 									page.state.selectedItinerary.legs.length === 1 &&
 									page.state.selectedItinerary.legs[0].mode === 'ODM'}
 
-								<form method="post" use:enhance>
+								<form method="post" action="?/routing" use:enhance>
 									<input
 										type="hidden"
 										name="json"
@@ -452,6 +529,22 @@
 					</Dialog.Content>
 				</Dialog.Root>
 			</div>
+			{#if baseQuery == undefined && data.favouriteRoutes && data.favouriteRoutes.length != 0}
+				<Card.Root class="mt-2">
+					<Card.Header>
+						<Card.Title>{t.favourites}</Card.Title>
+					</Card.Header>
+					<Card.Content>
+						<SortableTable
+							getRowStyle={(_) => 'cursor-pointer '}
+							rows={data.favouriteRoutes}
+							cols={favsCols}
+							bind:selectedRow={selectedFav}
+							bindSelectedRow={true}
+						/>
+					</Card.Content>
+				</Card.Root>
+			{/if}
 			<div bind:this={connectionsEl} class="flex grow flex-col gap-4">
 				<ItineraryList
 					{baseQuery}

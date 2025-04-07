@@ -305,7 +305,6 @@
 	<SortableTable
 		bind:rows={currentRowsToursTable}
 		cols={isAdmin ? tourColsAdmin : tourColsCompany}
-		{isAdmin}
 		getRowStyle={(_) => 'cursor-pointer '}
 		bind:selectedRow={selectedToursTableRow}
 		bindSelectedRow={true}
@@ -318,7 +317,6 @@
 	<SortableTable
 		bind:rows={currentRowsSubtractionsTable}
 		cols={isAdmin ? subtractionColsAdmin : subtractionColsCompany}
-		{isAdmin}
 	/>
 {/snippet}
 
@@ -326,7 +324,6 @@
 	<SortableTable
 		bind:rows={currentCompanyRows}
 		cols={isAdmin ? companyColsAdmin : companyColsCompany}
-		{isAdmin}
 		fixLastRow={isAdmin}
 	/>
 {/snippet}
