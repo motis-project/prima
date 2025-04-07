@@ -11,8 +11,6 @@ import EmailVerification from '$lib/server/email/EmailVerification.svelte';
 import { deleteSessionTokenCookie, invalidateSession } from '$lib/server/auth/session';
 import { verifyPhone } from '$lib/server/verifyPhone';
 import { getUserPasswordHash } from '$lib/server/auth/user';
-import { jsonArrayFrom } from 'kysely/helpers/postgres';
-import { cancelRequest } from '$lib/server/db/cancelRequest';
 import { randomBytes } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -136,20 +134,21 @@ export const actions: Actions = {
 						.where('request.cancelled', '=', false)
 						.where('request.ticketChecked', '=', false)
 						.where('event.communicatedTime', '>=', now)
-						.select((eb)=>eb.fn.count<number>('request.id').distinct().as('value'))
+						.select((eb) => eb.fn.count<number>('request.id').distinct().as('value'))
 						.as('requests'),
 					eb
-  						.selectFrom('vehicle')
-  						.whereRef('vehicle.company', '=', 'user.companyId')
-  						.innerJoin('availability', 'availability.vehicle', 'vehicle.id')
-  						.where('availability.endTime', '>', now + HOUR)
+						.selectFrom('vehicle')
+						.whereRef('vehicle.company', '=', 'user.companyId')
+						.innerJoin('availability', 'availability.vehicle', 'vehicle.id')
+						.where('availability.endTime', '>', now + HOUR)
 						.select((eb) => eb.fn.count<number>('availability.id').as('value'))
 						.as('availabilities'),
-					eb.selectFrom('vehicle')
-  						.innerJoin('tour', 'tour.vehicle', 'vehicle.id')
-  						.where('tour.arrival', '>', now)
-  						.select((eb) => eb.fn.count<number>('tour.id').as('value'))
-  						.as('tours'),
+					eb
+						.selectFrom('vehicle')
+						.innerJoin('tour', 'tour.vehicle', 'vehicle.id')
+						.where('tour.arrival', '>', now)
+						.select((eb) => eb.fn.count<number>('tour.id').as('value'))
+						.as('tours'),
 					eb
 						.selectFrom('user as user_to_delete')
 						.innerJoin('company', 'user.companyId', 'company.id')
@@ -164,8 +163,8 @@ export const actions: Actions = {
 				deleteStatus = DELETE_USER_STATUS.ERROR_USER_NOT_FOUND;
 				return;
 			}
-			if(user.isTaxiOwner && user.entrepreneurs === 1) {
-				if(user.availabilities != 0 && user.tours != 0 && user.entrepreneurs === 1) {
+			if (user.isTaxiOwner && user.entrepreneurs === 1) {
+				if (user.availabilities != 0 && user.tours != 0 && user.entrepreneurs === 1) {
 					deleteStatus = DELETE_USER_STATUS.REMAINING_TOURS_AND_AVAILABILITIES;
 					return;
 				}
@@ -178,7 +177,7 @@ export const actions: Actions = {
 					return;
 				}
 			}
-			if(user.requests != 0) {
+			if (user.requests != 0) {
 				deleteStatus = DELETE_USER_STATUS.REMAINING_REQUESTS;
 				return;
 			}
@@ -239,7 +238,10 @@ export const actions: Actions = {
 			case DELETE_USER_STATUS.UNKNOWN_DB_ERROR:
 				return fail(400, { msg: msg('unknownError') });
 			case DELETE_USER_STATUS.EMAIL_CONFLICT:
-				console.log("Multiple conflicts with randomly generated email when trying to delete user: ", userId);
+				console.log(
+					'Multiple conflicts with randomly generated email when trying to delete user: ',
+					userId
+				);
 				return fail(400, { msg: msg('unknownError') });
 			case DELETE_USER_STATUS.INITIAL:
 				return fail(400, { msg: msg('unknownError') });

@@ -48,8 +48,9 @@ const translations: Translations = {
 			'Ihr Account kann nicht gelöscht werden so lange sie der einzige Unternehmensadministrator in ihrem Unternehmen sind und es noch geplante Fahrten für Ihr Unternehmen gibt.',
 		remainingAvailabilities:
 			'Ihr Account kann nicht gelöscht werden so lange sie der einzige Unternehmensadministrator in ihrem Unternehmen sind und es noch Verfügbarkeiten in der Zukunft für Ihr Unternehmen gibt.',
-		remainingRequests: 'Ihr Account kann nicht gelöscht werden so lange sie ausstehende Taxifahrten haben.',
-		remainingToursAndAvailabilities: 
+		remainingRequests:
+			'Ihr Account kann nicht gelöscht werden so lange sie ausstehende Taxifahrten haben.',
+		remainingToursAndAvailabilities:
 			'Ihr Account kann nicht gelöscht werden so lange sie der einzige Unternehmensadministrator in ihrem Unternehmen sind und es noch geplante Fahrten und Verfügbarkeiten in der Zukunft für Ihr Unternehmen gibt.',
 
 		// Admin

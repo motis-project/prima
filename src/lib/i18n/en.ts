@@ -47,7 +47,7 @@ const translations: Translations = {
 		remainingAvailabilities:
 			'We cannot delete your account while you are the only administrator of your company and there are availabilities in the future for your company.',
 		remainingRequests: 'We cannot delete your account while you have planned journeys.',
-		remainingToursAndAvailabilities: 
+		remainingToursAndAvailabilities:
 			'We cannot delete your account while you are the only administrator of your company and there are planned tours and availabilities in the future for your company.',
 
 		// Admin
