@@ -16,7 +16,7 @@ export type Translations = {
 		companies: string;
 	};
 	msg: {
-		unkownError: string;
+		unknownError: string;
 
 		// Account
 		enterEmailAndPassword: string;
@@ -178,6 +178,8 @@ export type Translations = {
 	noItinerariesFound: string;
 	bookingInfo: string;
 	changeBookingInfo: string;
+	storeItinerary: string;
+	removeItinerary: string;
 	booking: {
 		bookHere: string;
 		summary: string;
