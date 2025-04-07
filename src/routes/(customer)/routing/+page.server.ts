@@ -36,7 +36,7 @@ export async function load(event: PageServerLoadEvent) {
 				'favouriteRoutes.fromId'
 			)
 			.innerJoin('favouriteLocations as toLocations', 'toLocations.id', 'favouriteRoutes.toId')
-			.limit(10)
+			.limit(5)
 			.select([
 				'toLocations.address as toAddress',
 				'toLocations.lat as toLat',

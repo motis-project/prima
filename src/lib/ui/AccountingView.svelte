@@ -305,7 +305,7 @@
 	<SortableTable
 		bind:rows={currentRowsToursTable}
 		cols={isAdmin ? tourColsAdmin : tourColsCompany}
-		getRowStyle={(_: TourWithRequests) => 'cursor-pointer '}
+		getRowStyle={(_) => 'cursor-pointer '}
 		bind:selectedRow={selectedToursTableRow}
 		bindSelectedRow={true}
 	/>
