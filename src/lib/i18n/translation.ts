@@ -47,6 +47,7 @@ export type Translations = {
 		remainingAvailabilities: string;
 		remainingRequests: string;
 		remainingToursAndAvailabilities: string;
+		deleteAccount: string;
 
 		// Admin
 		userDoesNotExist: string;

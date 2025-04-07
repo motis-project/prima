@@ -52,6 +52,8 @@ const translations: Translations = {
 			'Ihr Account kann nicht gelöscht werden so lange sie ausstehende Taxifahrten haben.',
 		remainingToursAndAvailabilities:
 			'Ihr Account kann nicht gelöscht werden so lange sie der einzige Unternehmensadministrator in ihrem Unternehmen sind und es noch geplante Fahrten und Verfügbarkeiten in der Zukunft für Ihr Unternehmen gibt.',
+		deleteAccount:
+			'Vorsicht, das Löschen Ihres Accounts kann nicht Rückgängig gemacht werden. Wir können Ihren Account nur löschen, falls Sie in der Zukunft keine geplanten Fahrten haben.',
 
 		// Admin
 		userDoesNotExist: 'Nutzer existiert nicht.',

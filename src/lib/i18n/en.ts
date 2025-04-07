@@ -49,6 +49,8 @@ const translations: Translations = {
 		remainingRequests: 'We cannot delete your account while you have planned journeys.',
 		remainingToursAndAvailabilities:
 			'We cannot delete your account while you are the only administrator of your company and there are planned tours and availabilities in the future for your company.',
+		deleteAccount:
+			'Deleting your account can not be undone! We can only remove your account, if you have no future planned tours.',
 
 		// Admin
 		userDoesNotExist: 'User does not exist.',

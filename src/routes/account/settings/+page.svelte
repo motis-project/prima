@@ -80,10 +80,7 @@
 				</Dialog.Trigger>
 				<Dialog.Content>
 					<p class="my-2">
-						{'Vorsicht, das Löschen Ihres Accounts kann nicht Rückgängig gemacht werden.'}
-					</p>
-					<p class="my-2">
-						{`Vorsicht, das Löschen Ihres Accounts kann nicht Rückgängig gemacht werden. Sie haben noch ${2} geplante Fahrten. Wenn Sie Ihr Konto löschen werden diese storniert. Bei Stornierungen weniger als eine Stunde vor Fahrtbeginn fallen Kosten für die Anfahrt an.`}
+						{t.msg.deleteAccount}
 					</p>
 					<form method="post" action="/account/settings?/deleteAccount" class="mt-8">
 						<Button type="submit" variant="destructive">{t.account.deleteAccount}</Button>
