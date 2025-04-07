@@ -65,7 +65,7 @@
 		});
 	};
 
-	const removeAvailability = async (vehicleId: number, from: UnixtimeMs, to: UnixtimeMs) => {
+	export const removeAvailability = async (vehicleId: number, from: UnixtimeMs, to: UnixtimeMs) => {
 		return await fetch('/taxi/availability/api/availability', {
 			method: 'DELETE',
 			body: JSON.stringify({ vehicleId, from, to })

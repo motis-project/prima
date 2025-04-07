@@ -14,7 +14,7 @@ const translations: Translations = {
 	},
 	msg: {
 		// Unknown error
-		unkownError: 'Unkown Error',
+		unknownError: 'Unkown Error',
 
 		// Account
 		enterEmailAndPassword: 'Please enter your email and password.',
@@ -42,6 +42,13 @@ const translations: Translations = {
 		checkInboxToVerify: 'Please check your inbox to verify your new email address.',
 		passwordResetSuccess:
 			'Your password has been reset successfully. Please login with your new password.',
+		remainingTours:
+			'We cannot delete your account while you are the only administrator of your company and there are planned tours for your company.',
+		remainingAvailabilities:
+			'We cannot delete your account while you are the only administrator of your company and there are availabilities in the future for your company.',
+		remainingRequests: 'We cannot delete your account while you have planned journeys.',
+		remainingToursAndAvailabilities: 
+			'We cannot delete your account while you are the only administrator of your company and there are planned tours and availabilities in the future for your company.',
 
 		// Admin
 		userDoesNotExist: 'User does not exist.',
@@ -123,6 +130,7 @@ const translations: Translations = {
 		changePhoneSubtitle: 'Change your phone number.',
 		logout: 'Logout',
 		logoutSubtitle: 'Log out of your account. You can log in later any time.',
+		deleteAccount: 'Delete Account',
 		code: 'Code',
 		passwordReset: 'Reset Password',
 		passwordResetSubtitle: 'Choose a new password.',
