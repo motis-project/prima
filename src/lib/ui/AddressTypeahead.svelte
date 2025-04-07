@@ -8,6 +8,10 @@
 	import { language } from '$lib/i18n/translation';
 	import maplibregl from 'maplibre-gl';
 	import { onMount } from 'svelte';
+	import { t } from '$lib/i18n/translation';
+	import type { Column } from './tableData';
+	import SortableTable from './SortableTable.svelte';
+	import * as Card from '$lib/shadcn/card';
 
 	export type Location = {
 		label?: string;
@@ -47,14 +51,28 @@
 		selected = $bindable(),
 		onValueChange,
 		placeholder,
-		name
+		name,
+		favs,
+		selectedFav = $bindable()
 	}: {
 		items?: Array<Location>;
 		selected?: Location;
 		onValueChange?: (m: Location) => void;
 		placeholder?: string;
 		name?: string;
+		favs?: { address: string; lat: number; lng: number }[];
+		selectedFav?: { address: string; lat: number; lng: number }[];
 	} = $props();
+
+	let f = $derived(favs);
+
+	const favsCols: Column<{ address: string; lat: number; lng: number }>[] = [
+		{
+			text: [t.favourites],
+			sort: undefined,
+			toTableEntry: (r: { address: string }) => r.address
+		}
+	];
 
 	let inputValue = $state('');
 	let value = $state('');
@@ -157,6 +175,25 @@
 	onMount(() => ref?.focus());
 </script>
 
+{#snippet favourites()}
+	{#if f != undefined}
+		<Card.Root class="mt-5">
+			<Card.Header>
+				<Card.Title>{t.favourites}</Card.Title>
+			</Card.Header>
+			<Card.Content>
+				<SortableTable
+					getRowStyle={(_) => 'cursor-pointer '}
+					rows={f}
+					cols={favsCols}
+					bind:selectedRow={selectedFav}
+					bindSelectedRow={true}
+				/>
+			</Card.Content></Card.Root
+		>
+	{/if}
+{/snippet}
+
 <Combobox.Root
 	type="single"
 	allowDeselect={false}
@@ -212,3 +249,4 @@
 		</Combobox.Portal>
 	{/if}
 </Combobox.Root>
+{@render favourites()}

@@ -95,7 +95,10 @@ const translations: Translations = {
 
 		// Feedback
 		feedbackThank: 'Vielen Dank für Ihr Feedback!',
-		feedbackMissing: 'Kein Feedback gegeben'
+		feedbackMissing: 'Kein Feedback gegeben',
+
+		invalidFrom: 'Invalid start address.',
+		invalidTo: 'Invalid destination address.'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',
@@ -175,6 +178,7 @@ const translations: Translations = {
 	odm: 'ÖPNV-Taxi - Buchung erforderlich!',
 	from: 'Von',
 	to: 'Nach',
+	favourites: 'Favoriten',
 	arrival: 'Ankunft',
 	departure: 'Abfahrt',
 	duration: 'Dauer',
@@ -235,7 +239,9 @@ const translations: Translations = {
 		noCancel: 'Nein, Fahrt nicht stornieren.',
 		cancelDescription:
 			'Die Stornierung der Fahrt kann nicht rückgängig gemacht werden. Eine Stornierung weniger als 24 Stunden vor der Fahrt ist mit Kosten verbunden.'
-	}
+	},
+	addToFavs: 'zu Favoriten hinzufügen',
+	displayFavsList: 'Favoriten anzeigen'
 };
 
 export default translations;

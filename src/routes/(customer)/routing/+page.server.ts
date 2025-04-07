@@ -8,6 +8,46 @@ import { msg, type Msg } from '$lib/msg';
 import { redirect } from '@sveltejs/kit';
 import { sendMail } from '$lib/server/sendMail';
 import NewRide from '$lib/server/email/NewRide.svelte';
+import type { PageServerLoadEvent } from './$types';
+import { isSamePlace } from '$lib/util/booking/isSamePlace';
+
+export async function load(event: PageServerLoadEvent) {
+	const userId = event.locals.session?.userId;
+	if (!userId) {
+		return {
+			favs: []
+		};
+	}
+	return {
+		favs: await db
+			.selectFrom('favouriteLocations')
+			.where('favouriteLocations.user', '=', userId)
+			.orderBy('favouriteLocations.count', 'desc')
+			.select(['favouriteLocations.address', 'favouriteLocations.lat', 'favouriteLocations.lng'])
+			.limit(5)
+			.execute(),
+		favouriteRoutes: await db
+			.selectFrom('favouriteRoutes')
+			.where('favouriteRoutes.user', '=', userId)
+			.orderBy('favouriteRoutes.count desc')
+			.innerJoin(
+				'favouriteLocations as fromLocations',
+				'fromLocations.id',
+				'favouriteRoutes.fromId'
+			)
+			.innerJoin('favouriteLocations as toLocations', 'toLocations.id', 'favouriteRoutes.toId')
+			.limit(10)
+			.select([
+				'toLocations.address as toAddress',
+				'toLocations.lat as toLat',
+				'toLocations.lng as toLng',
+				'fromLocations.address as fromAddress',
+				'fromLocations.lat as fromLat',
+				'fromLocations.lng as fromLng'
+			])
+			.execute()
+	};
+}
 
 const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 	for (const e of l1) {
@@ -19,7 +59,7 @@ const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 };
 
 export const actions = {
-	default: async ({ request, locals }): Promise<{ msg: Msg }> => {
+	routing: async ({ request, locals }): Promise<{ msg: Msg }> => {
 		const user = locals.session?.userId;
 		if (!user) {
 			return { msg: msg('accountDoesNotExist') };
@@ -277,5 +317,98 @@ export const actions = {
 		}
 
 		return { msg: message! };
+	},
+	fav: async ({ request, locals }) => {
+		const user = locals.session?.userId;
+		if (!user || typeof user != 'number') {
+			return { msg: msg('accountDoesNotExist') };
+		}
+		const formData = await request.formData();
+		const fromAddress = formData.get('fromAddress');
+		const fromLat = formData.get('fromLat');
+		const fromLon = formData.get('fromLon');
+		const toAddress = formData.get('toAddress');
+		const toLat = formData.get('toLat');
+		const toLon = formData.get('toLon');
+		if (
+			typeof fromAddress !== 'string' ||
+			typeof fromLat !== 'string' ||
+			typeof fromLon !== 'string'
+		) {
+			return { msg: msg('invalidFrom') };
+		}
+		let lat = parseFloat(fromLat);
+		let lng = parseFloat(fromLon);
+		if (typeof lat !== 'number' || typeof lng !== 'number') {
+			return { msg: msg('invalidFrom') };
+		}
+		let currentFavs = await db
+			.selectFrom('favouriteLocations')
+			.where('user', '=', user)
+			.selectAll()
+			.execute();
+		const fromMatch = currentFavs.find((fav) => isSamePlace(fav, { lat, lng }));
+		let fromId = undefined;
+		if (fromMatch) {
+			await db
+				.updateTable('favouriteLocations')
+				.where('user', '=', user)
+				.where('favouriteLocations.id', '=', fromMatch.id)
+				.set({ count: fromMatch.count + 1 })
+				.execute();
+		} else {
+			fromId = (await db
+				.insertInto('favouriteLocations')
+				.values({ lat, lng, address: fromAddress, user, count: 0 })
+				.returning('id')
+				.executeTakeFirst())!.id;
+		}
+
+		if (typeof toAddress !== 'string' || typeof toLat !== 'string' || typeof toLon !== 'string') {
+			return { msg: msg('invalidFrom') };
+		}
+		lat = parseFloat(toLat);
+		lng = parseFloat(toLon);
+		if (isNaN(lat) || isNaN(lng)) {
+			return { msg: msg('invalidFrom') };
+		}
+		currentFavs = await db
+			.selectFrom('favouriteLocations')
+			.where('user', '=', user)
+			.selectAll()
+			.execute();
+		const toMatch = currentFavs.find((fav) => isSamePlace(fav, { lat, lng }));
+		let toId = undefined;
+		if (toMatch) {
+			await db
+				.updateTable('favouriteLocations')
+				.where('user', '=', user)
+				.where('favouriteLocations.id', '=', toMatch.id)
+				.set({ count: toMatch.count + 1 })
+				.execute();
+		} else {
+			toId = (await db
+				.insertInto('favouriteLocations')
+				.values({ lat, lng, address: toAddress, user, count: 0 })
+				.returning(['favouriteLocations.id'])
+				.executeTakeFirst())!.id;
+		}
+		toId = toId ?? toMatch?.id;
+		fromId = fromId ?? fromMatch?.id;
+		if (toId == undefined || fromId == undefined) {
+			return {};
+		}
+		if (fromMatch && toMatch) {
+			await db
+				.updateTable('favouriteRoutes')
+				.where('user', '=', user)
+				.where('fromId', '=', fromMatch.id)
+				.where('toId', '=', toMatch.id)
+				.set((eb) => ({ count: eb('count', '+', 1) }))
+				.execute();
+		} else {
+			await db.insertInto('favouriteRoutes').values({ user, toId, fromId, count: 0 }).execute();
+		}
+		return {};
 	}
 };
