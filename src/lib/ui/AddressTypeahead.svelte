@@ -64,7 +64,7 @@
 		selectedFav?: { address: string; lat: number; lng: number }[];
 	} = $props();
 
-	let f = $derived(favs);
+	let favRows = $derived(favs);
 
 	const favsCols: Column<{ address: string; lat: number; lng: number }>[] = [
 		{
@@ -176,7 +176,7 @@
 </script>
 
 {#snippet favourites()}
-	{#if f != undefined}
+	{#if favRows != undefined && favRows.length != 0}
 		<Card.Root class="mt-5">
 			<Card.Header>
 				<Card.Title>{t.favourites}</Card.Title>
@@ -184,7 +184,7 @@
 			<Card.Content>
 				<SortableTable
 					getRowStyle={(_) => 'cursor-pointer '}
-					rows={f}
+					rows={favRows}
 					cols={favsCols}
 					bind:selectedRow={selectedFav}
 					bindSelectedRow={true}
