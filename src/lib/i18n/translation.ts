@@ -204,8 +204,6 @@ export type Translations = {
 		cancelTrip: string;
 		noCancel: string;
 	};
-	addToFavs: string;
-	displayFavsList: string;
 };
 
 const translations: Map<string, Translations> = new Map(Object.entries({ en, de }));
