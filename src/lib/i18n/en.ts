@@ -14,7 +14,7 @@ const translations: Translations = {
 	},
 	msg: {
 		// Unknown error
-		unknownError: 'Unkown Error',
+		unknownError: 'Unknown Error',
 
 		// Account
 		enterEmailAndPassword: 'Please enter your email and password.',

@@ -230,7 +230,7 @@ export const actions: Actions = {
 			return fail(400, { msg: msg('duplicateLicensePlate') });
 		}
 		if (unknownError) {
-			return fail(400, { msg: msg('unkownError') });
+			return fail(400, { msg: msg('unknownError') });
 		}
 		return success
 			? { msg: msg('vehicleAlteredSuccessfully', 'success') }
