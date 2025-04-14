@@ -15,10 +15,10 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 			.where('cancelled_request.id', '=', requestId)
 			.innerJoin('tour', 'tour.id', 'cancelled_request.tour')
 			.select((eb) => [
-				'tour.id',
-				'tour.departure',
 				'cancelled_request.ticketChecked',
 				'tour.vehicle',
+				'tour.id',
+				'tour.departure',
 				jsonArrayFrom(
 					eb
 						.selectFrom('request as cancelled_request')
