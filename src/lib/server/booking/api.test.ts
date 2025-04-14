@@ -403,8 +403,8 @@ describe('Whitelist and Booking API Tests', () => {
 		});
 		const whiteResponse = await white(body).then((r) => r.json());
 		const connection1: ExpectedConnection = {
-			start: {...inNiesky1, address: 'start address'},
-			target: {...inNiesky2, address: 'target address'},
+			start: { ...inNiesky1, address: 'start address' },
+			target: { ...inNiesky2, address: 'target address' },
 			startTime: whiteResponse.direct[0].pickupTime,
 			targetTime: whiteResponse.direct[0].dropoffTime
 		};
@@ -432,8 +432,8 @@ describe('Whitelist and Booking API Tests', () => {
 		});
 		const whiteResponse2 = await white(body2).then((r) => r.json());
 		const appendConnection: ExpectedConnection = {
-			start: {...inNiesky2, address: 'start address'},
-			target: {...inNiesky1, address: 'target address'},
+			start: { ...inNiesky2, address: 'start address' },
+			target: { ...inNiesky1, address: 'target address' },
 			startTime: whiteResponse2.direct[0].pickupTime,
 			targetTime: whiteResponse2.direct[0].dropoffTime
 		};
@@ -460,8 +460,8 @@ describe('Whitelist and Booking API Tests', () => {
 		});
 		const whiteResponse3 = await white(body3).then((r) => r.json());
 		const appendConnection2: ExpectedConnection = {
-			start: {...inNiesky1, address: 'start address'},
-			target: {...inNiesky2, address: 'target address'},
+			start: { ...inNiesky1, address: 'start address' },
+			target: { ...inNiesky2, address: 'target address' },
 			startTime: whiteResponse3.direct[0]!.pickupTime,
 			targetTime: whiteResponse3.direct[0]!.dropoffTime
 		};

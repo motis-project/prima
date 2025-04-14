@@ -1,6 +1,4 @@
 import {
-	EARLIEST_SHIFT_START,
-	LATEST_SHIFT_END,
 	MIN_PREP,
 	PASSENGER_CHANGE_DURATION,
 	PASSENGER_TIME_COST_FACTOR,
@@ -38,7 +36,6 @@ import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 import { roundToUnit, MINUTE } from '$lib/util/time';
 import { iterateAllInsertions } from './iterateAllInsertions';
 import { type Range } from '$lib/util/booking/getPossibleInsertions';
-import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 
 export type InsertionEvaluation = {
 	pickupTime: number;
