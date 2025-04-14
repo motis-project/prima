@@ -219,7 +219,7 @@
 									page.state.selectedItinerary.legs.length === 1 &&
 									page.state.selectedItinerary.legs[0].mode === 'ODM'}
 
-								<form method="post" use:enhance action="?/odm">
+								<form method="post" use:enhance action="?/routing">
 									<input
 										type="hidden"
 										name="json"
