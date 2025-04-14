@@ -20,31 +20,31 @@ export async function insertRequest(
 	trx: Transaction<Database>
 ): Promise<number> {
 	mergeTourList = mergeTourList.filter((id) => id != connection.tour);
-	const approachDurations = new Array<{ id: number; approach_duration: number }>();
+	const approachDurations = new Array<{ id: number; prev_leg_duration: number }>();
 	if (neighbourIds.nextDropoff != neighbourIds.nextPickup && neighbourIds.nextPickup) {
 		approachDurations.push({
 			id: neighbourIds.nextPickup,
-			approach_duration: connection.pickupNextLegDuration
+			prev_leg_duration: connection.pickupNextLegDuration
 		});
 	}
 	if (neighbourIds.nextDropoff) {
 		approachDurations.push({
 			id: neighbourIds.nextDropoff,
-			approach_duration: connection.dropoffNextLegDuration
+			prev_leg_duration: connection.dropoffNextLegDuration
 		});
 	}
 
-	const returnDurations = new Array<{ id: number; return_duration: number }>();
+	const returnDurations = new Array<{ id: number; next_leg_duration: number }>();
 	if (neighbourIds.prevPickup) {
 		returnDurations.push({
 			id: neighbourIds.prevPickup,
-			return_duration: connection.pickupPrevLegDuration
+			next_leg_duration: connection.pickupPrevLegDuration
 		});
 	}
 	if (neighbourIds.prevDropoff != neighbourIds.prevPickup && neighbourIds.prevDropoff) {
 		returnDurations.push({
 			id: neighbourIds.prevDropoff,
-			return_duration: connection.dropoffPrevLegDuration
+			next_leg_duration: connection.dropoffPrevLegDuration
 		});
 	}
 	return (

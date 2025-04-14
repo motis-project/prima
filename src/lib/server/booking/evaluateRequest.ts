@@ -16,7 +16,12 @@ import {
 	MAX_PASSENGER_WAITING_TIME_PICKUP,
 	PASSENGER_CHANGE_DURATION
 } from '$lib/constants';
-import { evaluateNewTours } from './insertion';
+import {
+	evaluateNewTours,
+	evaluatePairInsertions,
+	evaluateSingleInsertions,
+	takeBest
+} from './insertion';
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 
 export async function evaluateRequest(
@@ -99,5 +104,25 @@ export async function evaluateRequest(
 		allowedTimes,
 		promisedTimes
 	);
-	return newTourEvaluations;
+	const { busStopEvaluations, bothEvaluations, userChosenEvaluations } = evaluateSingleInsertions(
+		companies,
+		startFixed,
+		expandedSearchInterval,
+		insertionRanges,
+		busStopTimes,
+		routingResults,
+		directDurations,
+		allowedTimes,
+		promisedTimes
+	);
+	const pairEvaluations = evaluatePairInsertions(
+		companies,
+		startFixed,
+		insertionRanges,
+		busStopTimes,
+		busStopEvaluations,
+		userChosenEvaluations
+	);
+	const best = takeBest(takeBest(bothEvaluations, newTourEvaluations), pairEvaluations);
+	return best;
 }

@@ -344,10 +344,6 @@ BEGIN
 	SET tour = p_target_tour_id
 	WHERE tour = ANY(p_merge_tour_list);
 
-	UPDATE event
-	SET tour = p_target_tour_id
-	WHERE tour = ANY(p_merge_tour_list);
-
 	UPDATE tour
 	SET 
 			arrival = CASE WHEN p_arrival IS NOT NULL THEN p_arrival ELSE arrival END,

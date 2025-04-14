@@ -387,4 +387,94 @@ describe('Whitelist and Booking API Tests', () => {
 		const tours = await getTours();
 		expect(tours.length).toBe(1);
 	}, 30000);
+
+	it('create tour concetanation, where pickup and dropoff are not inserted between the same 2 events', async () => {
+		const company = await addCompany(Zone.NIESKY, inNiesky3);
+		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
+		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));
+		const body = JSON.stringify({
+			start: inNiesky1,
+			target: inNiesky2,
+			startBusStops: [],
+			targetBusStops: [],
+			directTimes: [inXMinutes(70)],
+			startFixed: false,
+			capacities
+		});
+		const whiteResponse = await white(body).then((r) => r.json());
+		const connection1: ExpectedConnection = {
+			start: {...inNiesky1, address: 'start address'},
+			target: {...inNiesky2, address: 'target address'},
+			startTime: whiteResponse.direct[0].pickupTime,
+			targetTime: whiteResponse.direct[0].dropoffTime
+		};
+		const bookingBody = JSON.stringify({
+			connection1,
+			connection2: null,
+			capacities
+		});
+
+		await booking(bookingBody);
+		const tours = await getTours();
+		expect(tours.length).toBe(1);
+		expect(tours[0].requests.length).toBe(1);
+
+		// Add an other request, which should be appended to the existing tour.
+		// The new requests start will be the last requests destination and as such some of the events will share the same eventgroup
+		const body2 = JSON.stringify({
+			start: inNiesky2,
+			target: inNiesky1,
+			startBusStops: [],
+			targetBusStops: [],
+			directTimes: [inXMinutes(75)],
+			startFixed: false,
+			capacities
+		});
+		const whiteResponse2 = await white(body2).then((r) => r.json());
+		const appendConnection: ExpectedConnection = {
+			start: {...inNiesky2, address: 'start address'},
+			target: {...inNiesky1, address: 'target address'},
+			startTime: whiteResponse2.direct[0].pickupTime,
+			targetTime: whiteResponse2.direct[0].dropoffTime
+		};
+		const bookingBodyAppend = JSON.stringify({
+			connection1: appendConnection,
+			connection2: null,
+			capacities
+		});
+		await booking(bookingBodyAppend);
+		const tours2 = await getTours();
+		expect(tours2.length).toBe(1);
+		expect(tours2[0].requests.length).toBe(2);
+
+		// Add an other request, which should be appended to the existing tour.
+		// The new requests start will be the last requests destination and as such some of the events will share the same eventgroup
+		const body3 = JSON.stringify({
+			start: inNiesky1,
+			target: inNiesky2,
+			startBusStops: [],
+			targetBusStops: [],
+			directTimes: [inXMinutes(75)],
+			startFixed: false,
+			capacities
+		});
+		const whiteResponse3 = await white(body3).then((r) => r.json());
+		const appendConnection2: ExpectedConnection = {
+			start: {...inNiesky1, address: 'start address'},
+			target: {...inNiesky2, address: 'target address'},
+			startTime: whiteResponse3.direct[0]!.pickupTime,
+			targetTime: whiteResponse3.direct[0]!.dropoffTime
+		};
+		const bookingBodyAppend2 = JSON.stringify({
+			connection1: appendConnection2,
+			connection2: null,
+			capacities
+		});
+		await booking(bookingBodyAppend2);
+		const tours3 = await getTours();
+		expect(tours3.length).toBe(1);
+		expect(tours3[0].requests.length).toBe(3);
+
+		//doWhitelistTimesMatchBooking(whiteResponse3.direct[0]!, tours3);
+	});
 });

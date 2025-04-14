@@ -18,6 +18,7 @@ const selectEvents = (eb: ExpressionBuilder<Database, 'tour'>) => {
 				'tour.id as tourId',
 				'tour.arrival',
 				'tour.departure',
+				'tour.directDuration',
 				'event.id',
 				'event.communicatedTime',
 				'event.scheduledTimeStart',
