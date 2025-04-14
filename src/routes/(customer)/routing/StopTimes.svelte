@@ -86,6 +86,7 @@
 					isRealtime={t.realTime}
 					{timestamp}
 					{scheduledTimestamp}
+					queriedTime={queryTime.toISOString()}
 				/>
 				<Time
 					class="ml-2"
@@ -93,6 +94,7 @@
 					isRealtime={t.realTime}
 					{timestamp}
 					{scheduledTimestamp}
+					queriedTime={queryTime.toISOString()}
 				/>
 				<div class="col-span-5 ml-4 flex items-center text-muted-foreground">
 					<div><ArrowRight class="h-4 w-4 stroke-muted-foreground" /></div>

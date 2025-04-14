@@ -110,7 +110,7 @@
 		<ConnectionDetail
 			itinerary={data.journey}
 			onClickStop={(_name: string, stopId: string, time: Date) =>
-				goto(`/routing?stopId=${stopId}&time=${time.getTime()}`)}
+				goto(`/routing?stopId=${stopId}&time=${time.toISOString()}`)}
 			onClickTrip={(tripId: string) => goto(`/routing?tripId=${tripId}`)}
 			licensePlate={data.licensePlate}
 		/>

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import { goto, pushState } from '$app/navigation';
+	import { goto, pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 
 	import ArrowUpDown from 'lucide-svelte/icons/arrow-up-down';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
@@ -128,20 +128,37 @@
 		}
 	});
 
-	let connectionsEl = $state<HTMLDivElement>();
-	onMount(() => {
-		if (connectionsEl) {
-			connectionsEl.scrollTop = 48;
-		}
+	onMount(async () => {
+		await tick();
+		applyPageStateFromURL();
 	});
 
-	const onClickTrip = async (tripId: string) => {
+	const applyPageStateFromURL = () => {
+		if (browser && urlParams) {
+			if (urlParams.has('tripId')) {
+				onClickTrip(urlParams.get('tripId')!, true);
+			}
+			if (urlParams.has('stopId')) {
+				console.log(urlParams);
+				const time = urlParams.has('time') ? new Date(urlParams.get('time')!) : new Date();
+				onClickStop('', urlParams.get('stopId')!, time, true);
+			}
+		}
+	};
+
+	const onClickTrip = async (tripId: string, replace = false) => {
 		const { data: itinerary, error } = await trip({ query: { tripId } });
 		if (error) {
 			alert(error);
 			return;
 		}
-		pushState('', { selectedItinerary: itinerary });
+		const updateState = replace ? replaceState : pushState;
+		updateState('', { selectedItinerary: itinerary });
+	};
+
+	const onClickStop = (name: string, stopId: string, time: Date, replace = false) => {
+		const updateState = replace ? replaceState : pushState;
+		updateState('', { stop: { name, stopId, time } });
 	};
 
 	const getLocation = () => {
@@ -291,12 +308,7 @@
 			</Button>
 		</div>
 		<Separator class="my-4" />
-		<ConnectionDetail
-			itinerary={page.state.selectedItinerary}
-			onClickStop={(name: string, stopId: string, time: Date) =>
-				pushState('', { stop: { name, stopId, time } })}
-			{onClickTrip}
-		/>
+		<ConnectionDetail itinerary={page.state.selectedItinerary} {onClickStop} {onClickTrip} />
 	{:else if page.state.stop}
 		<Button variant="outline" size="icon" onclick={() => window.history.back()}>
 			<ChevronLeft />
@@ -318,7 +330,7 @@
 		<div class="flex h-full flex-col gap-4">
 			<Button
 				size="icon"
-				variant="default"
+				variant="outline"
 				onclick={() => pushState('', { showMap: true })}
 				class="ml-auto"
 			>
@@ -452,7 +464,7 @@
 					</Dialog.Content>
 				</Dialog.Root>
 			</div>
-			<div bind:this={connectionsEl} class="flex grow flex-col gap-4">
+			<div class="flex grow flex-col gap-4">
 				<ItineraryList
 					{baseQuery}
 					{baseResponse}
