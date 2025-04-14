@@ -43,10 +43,10 @@
 		die
 		{isStartToday ? 'heute' : 'am ' + startDate!.toLocaleDateString('de')} von
 		{startDate!.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' })} bis
-		{endDate!.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' })} stattfindet.
+		{endDate!.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' })} geplant ist gab es Änderungen.
 	</p>
 	<p>
-		wird die Taxifahrt von einem anderen Fahrzeug mit dem Kennzeichen {newLicensePlate} durchgeführt.
+		Die Taxifahrt wird von einem anderen Fahrzeug mit dem Kennzeichen {newLicensePlate} durchgeführt.
 	</p>
 	<EmailFooter />
 </div>
