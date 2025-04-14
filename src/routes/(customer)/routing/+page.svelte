@@ -211,6 +211,7 @@
 		if (selectedFromFav && selectedFromFav.length != 0) {
 			const fav = selectedFromFav[0];
 			from = posToLocation({ lat: fav.lat, lng: fav.lng }, 0, fav.address);
+			history.back();
 		}
 	});
 
@@ -218,6 +219,7 @@
 		if (selectedToFav && selectedToFav.length != 0) {
 			const fav = selectedToFav[0];
 			to = posToLocation({ lat: fav.lat, lng: fav.lng }, 0, fav.address);
+			history.back();
 		}
 	});
 
