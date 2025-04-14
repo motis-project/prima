@@ -84,7 +84,7 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 			);
 			return;
 		}
-		if (tour.ticketChecked === true) {
+		if (tour.ticketChecked) {
 			return;
 		}
 		const queryResult = await sql<{
@@ -95,16 +95,16 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 		console.log({ queryResult }, { q: queryResult.rows[0].wastourcancelled });
 		console.assert(queryResult.rows.length === 1);
 		if (queryResult.rows[0].wastourcancelled) {
-			await updateDirectDurations(tour.vehicle, tour.id, tour.departure, trx);
+			await updateDirectDurations(tourInfo.vehicle, tour.id, tour.departure, trx);
 		} else {
 			updateLegDurations(
-				tour.events,
-				{ lat: tour.companyOwners[0].lat!, lng: tour.companyOwners[0].lng! },
+				tourInfo.events,
+				{ lat: tourInfo.companyOwners[0].lat!, lng: tourInfo.companyOwners[0].lng! },
 				requestId,
 				trx
 			);
 		}
-		for (const companyOwner of tour.companyOwners) {
+		for (const companyOwner of tourInfo.companyOwners) {
 			try {
 				await sendMail(CancelNotificationCompany, 'Stornierte Buchung', companyOwner.email, {
 					events: tourInfo.events,
