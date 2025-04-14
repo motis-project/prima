@@ -158,7 +158,7 @@ async function updateLegDurations(
 			}
 			await trx
 				.updateTable('event')
-				.set({ nextLegDuration: (await oneToManyCarRouting(events[prevIdx], [company], true))[0] })
+				.set({ nextLegDuration: (await oneToManyCarRouting(company, [events[prevIdx]], false))[0] })
 				.where('event.id', '=', events[prevIdx].eventid)
 				.executeTakeFirst();
 			return;
