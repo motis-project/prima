@@ -12,7 +12,7 @@
 	} = $props();
 	events.sort((e1: TourEvent, e2: TourEvent) => e1.communicatedTime - e2.communicatedTime);
 	console.log(
-		'sending cancelation notice mail to company: ',
+		'sending new license plate notice mail to customer: ',
 		{ name },
 		{ newLicensePlate },
 		{ events }
@@ -20,8 +20,8 @@
 	const startTime = events[0].communicatedTime;
 	const endTime = events[events.length - 1].communicatedTime;
 	const today = new Date(Date.now());
-	const startDate = startTime == undefined ? undefined : new Date(startTime);
-	const endDate = endTime == undefined ? undefined : new Date(endTime);
+	const startDate = new Date(startTime);
+	const endDate = new Date(endTime);
 	const firstEventDate = new Date(events[0].communicatedTime);
 	const isStartToday =
 		new Date(
