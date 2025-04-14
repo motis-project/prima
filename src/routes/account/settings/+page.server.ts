@@ -147,6 +147,7 @@ export const actions: Actions = {
 						.selectFrom('vehicle')
 						.innerJoin('tour', 'tour.vehicle', 'vehicle.id')
 						.where('tour.arrival', '>', now)
+						.where('tour.cancelled', '=', false)
 						.select((eb) => eb.fn.count<number>('tour.id').as('value'))
 						.as('tours'),
 					eb
