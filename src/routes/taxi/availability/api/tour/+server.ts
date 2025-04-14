@@ -185,7 +185,7 @@ export const POST = async (event) => {
 				.executeTakeFirst();
 			for (const customer of movedTour.customers) {
 				try {
-					console.log("MOVE TOUR - sending NewVehicleNotification to ", customer.email)
+					console.log('MOVE TOUR - sending NewVehicleNotification to ', customer.email);
 					await sendMail(NewVehicleNotification, 'Fahrzeugwechsel', customer.email, {
 						events: movedTour.requests.flatMap((r) => r.events),
 						name: customer.name,
