@@ -10,7 +10,14 @@ import { updateDirectDurations } from '$lib/server/booking/updateDirectDuration'
 export const POST = async (event: RequestEvent) => {
 	const company = event.locals.session!.companyId;
 	const p = await event.request.json();
+	console.log(
+		'Cancel Tour PARAMS START: ',
+		JSON.stringify(p, null, '\t'),
+		{ company },
+		'Cancel Tour PARAMS END'
+	);
 	if (!company || !p.tourId || p.message == null || p.message == undefined) {
+		console.log('Cancel Tour early exit - invalid params tourId: ', p.tour);
 		return json({});
 	}
 	await db.transaction().execute(async (trx) => {
@@ -36,7 +43,7 @@ export const POST = async (event: RequestEvent) => {
 								eb
 									.selectFrom('event')
 									.whereRef('event.request', '=', 'request.id')
-									.orderBy('isPickup', 'asc')
+									.orderBy('isPickup', 'desc')
 									.select(['event.address', 'event.communicatedTime'])
 							).as('events')
 						])
@@ -44,14 +51,17 @@ export const POST = async (event: RequestEvent) => {
 			])
 			.executeTakeFirst();
 		if (tour === undefined) {
+			console.log('Cancel Tour early exit - cannot find Tour in Database. tourId: ', p.tour);
 			return json({});
 		}
 		if (tour.requests.some((r) => r.ticketChecked)) {
+			console.log('Cancel Tour early exit - Tour had scanned ticket. tourId: ', p.tour);
 			error(400, {
 				message: 'Es wurde bereits ein Ticket gescannt - die Tour kann nicht storniert werden.'
 			});
 		}
 		if (tour.fare !== null) {
+			console.log('Cancel Tour early exit - fare was already registered. tourId: ', p.tour);
 			error(400, {
 				message:
 					'Der Taxameterstand wurde bereits eingetragen - die Tour kann nicht storniert werden.'
@@ -80,5 +90,6 @@ export const POST = async (event: RequestEvent) => {
 			}
 		}
 	});
+	console.log('Cancel Tour succes. tourId: ', p.tour);
 	return json({});
 };

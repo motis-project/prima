@@ -8,9 +8,35 @@ import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
 import { HOUR } from '$lib/util/time';
 
 export const cancelRequest = async (requestId: number, userId: number) => {
+	console.log(
+		'Cancel Request PARAMS START: ',
+		JSON.stringify({ requestId, userId }, null, '\t'),
+		' Cancel Request PARAMS END'
+	);
 	await db.transaction().execute(async (trx) => {
 		await sql`LOCK TABLE tour, request, event, "user" IN ACCESS EXCLUSIVE MODE;`.execute(trx);
 		const tour = await trx
+			.selectFrom('request')
+			.where('request.id', '=', requestId)
+			.innerJoin('tour', 'tour.id', 'request.tour')
+			.select(['tour.id', 'tour.departure', 'request.ticketChecked'])
+			.executeTakeFirst();
+		if (tour === undefined) {
+			console.log(
+				'Cancel Request early exit - cannot find tour associated with requestId in db. ',
+				{ requestId, userId }
+			);
+			return;
+		}
+		if (tour.ticketChecked === true) {
+			console.log('Cancel Request early exit - cannot cancel request, ticket was checked. ', {
+				requestId,
+				userId
+			});
+			return;
+		}
+		await sql`CALL cancel_request(${requestId}, ${userId}, ${Date.now()})`.execute(trx);
+		const tourInfo = await trx
 			.selectFrom('request as cancelled_request')
 			.where('cancelled_request.id', '=', requestId)
 			.innerJoin('tour', 'tour.id', 'cancelled_request.tour')
@@ -51,7 +77,11 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 				).as('companyOwners')
 			])
 			.executeTakeFirst();
-		if (tour === undefined) {
+		if (tourInfo === undefined) {
+			console.log(
+				'Tour was undefined unexpectedly in cancelRequest cannot send notification Emails, requestId: ',
+				requestId
+			);
 			return;
 		}
 		if (tour.ticketChecked === true) {
@@ -77,19 +107,20 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 		for (const companyOwner of tour.companyOwners) {
 			try {
 				await sendMail(CancelNotificationCompany, 'Stornierte Buchung', companyOwner.email, {
-					events: tour.events,
+					events: tourInfo.events,
 					name: companyOwner.name,
-					departure: tour.departure
+					departure: tourInfo.departure
 				});
 			} catch {
 				console.log(
 					'Failed to send cancellation email to company with email: ',
 					companyOwner.email,
 					' tourId: ',
-					tour.id
+					tourInfo.id
 				);
 			}
 		}
+		console.log('Cancel Request - success', { requestId, userId });
 	});
 };
 

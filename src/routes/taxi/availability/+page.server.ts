@@ -5,7 +5,10 @@ import type { Actions, RequestEvent } from './$types';
 import { fail } from '@sveltejs/kit';
 import { msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
+import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
+import { sql } from 'kysely';
 
+const LICENSE_PLATE_REGEX = /^([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})$/;
 export async function load(event: RequestEvent) {
 	const companyId = event.locals.session?.companyId;
 	if (!companyId) {
@@ -88,10 +91,7 @@ export const actions: Actions = {
 			return fail(400, { msg: msg('invalidSeats') });
 		}
 
-		if (
-			typeof licensePlate !== 'string' ||
-			!/^([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})$/.test(licensePlate)
-		) {
+		if (typeof licensePlate !== 'string' || !LICENSE_PLATE_REGEX.test(licensePlate)) {
 			return fail(400, { msg: msg('invalidLicensePlate') });
 		}
 
@@ -120,5 +120,120 @@ export const actions: Actions = {
 		}
 
 		return { msg: msg('vehicleAddedSuccessfully', 'success') };
+	},
+
+	alterVehicle: async (event: RequestEvent) => {
+		const company = event.locals.session?.companyId;
+		if (!company) {
+			throw 'company not defined';
+		}
+
+		const formData = await event.request.formData();
+		const licensePlate = formData.get('licensePlate');
+		const bike = formData.get('bike');
+		const wheelchair = formData.get('wheelchair');
+		const luggage = readInt(formData.get('luggage'));
+		const passengers = readInt(formData.get('passengers'));
+		const id = readInt(formData.get('id'));
+
+		if (passengers !== 3 && passengers !== 5 && passengers !== 7) {
+			return fail(400, { msg: msg('invalidSeats') });
+		}
+
+		if (typeof licensePlate !== 'string' || !LICENSE_PLATE_REGEX.test(licensePlate)) {
+			return fail(400, { msg: msg('invalidLicensePlate') });
+		}
+
+		if (isNaN(luggage) || luggage <= 0 || luggage >= 11) {
+			return fail(400, { msg: msg('invalidStorage') });
+		}
+		let success = false;
+		let duplicateLicensePlate = false;
+		let unknownError = false;
+		await db.transaction().execute(async (trx) => {
+			await sql`LOCK TABLE tour IN ACCESS EXCLUSIVE MODE;`.execute(trx);
+			const tours = await trx
+				.selectFrom('tour')
+				.where('tour.vehicle', '=', id)
+				.where('tour.arrival', '>', Date.now())
+				.where('tour.cancelled', '=', false)
+				.select((eb) => [
+					'tour.id',
+					jsonArrayFrom(
+						eb
+							.selectFrom('event')
+							.innerJoin('request', 'request.id', 'event.request')
+							.whereRef('request.tour', '=', 'tour.id')
+							.where('request.cancelled', '=', false)
+							.select([
+								'event.isPickup',
+								'request.passengers',
+								'request.bikes',
+								'request.wheelchairs',
+								'request.luggage'
+							])
+					).as('events')
+				])
+				.execute();
+
+			if (
+				tours.some((t) => {
+					const possibleInsertions = getPossibleInsertions(
+						{
+							luggage,
+							wheelchairs: !wheelchair ? 0 : 1,
+							bikes: !bike ? 0 : 1,
+							passengers
+						},
+						{
+							luggage: 0,
+							bikes: 0,
+							wheelchairs: 0,
+							passengers: 0
+						},
+						t.events
+					);
+					return (
+						possibleInsertions.length != 1 ||
+						possibleInsertions[0].earliestPickup != 0 ||
+						possibleInsertions[0].latestDropoff != t.events.length
+					);
+				})
+			) {
+				return;
+			}
+
+			try {
+				await trx
+					.updateTable('vehicle')
+					.where('vehicle.id', '=', id)
+					.set({
+						luggage,
+						licensePlate,
+						passengers,
+						wheelchairs: !wheelchair ? 0 : 1,
+						bikes: !bike ? 0 : 1
+					})
+					.execute();
+			} catch (e) {
+				// @ts-expect-error: 'e' is of type 'unknown'
+				if (e.constraint == 'vehicle_license_plate_key') {
+					duplicateLicensePlate = true;
+					return;
+				}
+				unknownError = true;
+				return;
+			}
+			success = true;
+		});
+		if (duplicateLicensePlate) {
+			return fail(400, { msg: msg('duplicateLicensePlate') });
+		}
+		if (unknownError) {
+			return fail(400, { msg: msg('unkownError') });
+		}
+		return success
+			? { msg: msg('vehicleAlteredSuccessfully', 'success') }
+			: fail(400, { msg: msg('insufficientCapacities') });
 	}
 };

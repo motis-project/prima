@@ -12,6 +12,7 @@ declare global {
 			selectTo?: boolean;
 			selectedItinerary?: Itinerary | null;
 			stop?: { name: string; stopId: string; time: Date };
+			showMap?: boolean;
 		}
 		// interface Platform {}
 	}

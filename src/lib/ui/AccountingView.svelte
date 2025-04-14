@@ -23,7 +23,7 @@
 		type CompanyRow,
 		type Subtractions
 	} from './tableData.js';
-	import { MONTHS, QUARTERS } from '$lib/constants.js';
+	import { LOCALE, MONTHS, QUARTERS } from '$lib/constants.js';
 	import type { UnixtimeMs } from '$lib/util/UnixtimeMs.js';
 	import TourDialog from './TourDialog.svelte';
 
@@ -126,6 +126,7 @@
 	const getNewRows = <T,>(filters: ((row: T) => boolean)[], rows: T[]) => {
 		const ignoredFilters = [
 			-1 === selectedCompanyIdx,
+			-1 === selectedLicensePlateIdx,
 			-1 === selectedMonthIdx,
 			-1 === selectedQuarterIdx,
 			range.start === undefined,
@@ -160,13 +161,29 @@
 	}
 	companyNames.sort((a, b) => (a.toLowerCase() < b.toLowerCase() ? -1 : 1));
 	let selectedCompanyIdx = $state(-1);
+	let selectedLicensePlateIdx = $state(-1);
 	let selectedMonthIdx = $state(-1);
 	let selectedQuarterIdx = $state(-1);
 	let selectedYearIdx = $state(-1);
 	let selectedYear = $derived(selectedYearIdx === -1 ? -1 : years[selectedYearIdx]);
 
+	const allLicensePlates: { licensePlate: string; companyName: string | null }[] = [];
+	for (let tour of tours) {
+		if (allLicensePlates.find((c) => c.licensePlate == tour.licensePlate) === undefined) {
+			allLicensePlates.push({ licensePlate: tour.licensePlate, companyName: tour.companyName });
+		}
+	}
+	allLicensePlates.sort((lp1, lp2) => (lp1.licensePlate > lp2.licensePlate ? 1 : -1));
+	let licensePlates = $derived(
+		(selectedCompanyIdx === -1
+			? allLicensePlates
+			: allLicensePlates.filter((lp) => lp.companyName === companyNames[selectedCompanyIdx])
+		).map((lp) => lp.licensePlate)
+	);
+
 	const tourFilters = [
 		(row: TourWithRequests) => row.companyName === companyNames[selectedCompanyIdx],
+		(row: TourWithRequests) => row.licensePlate === licensePlates[selectedLicensePlateIdx],
 		(row: TourWithRequests) => selectedMonthIdx === new Date(row.startTime).getMonth(),
 		(row: TourWithRequests) => {
 			const month = new Date(row.startTime).getMonth();
@@ -186,6 +203,7 @@
 
 	const subtractionFilters = [
 		(row: Subtractions) => row.companyName === companyNames[selectedCompanyIdx],
+		(row: Subtractions) => row.licensePlate === licensePlates[selectedLicensePlateIdx],
 		(row: Subtractions) => new Date(row.timestamp).getMonth() === selectedMonthIdx,
 		(row: Subtractions) => {
 			const month = new Date(row.timestamp).getMonth();
@@ -223,7 +241,7 @@
 			lastRow.push(getEuroString(sum));
 			data.push(lastRow);
 		}
-		const csvContent = Papa.unparse(data, { header: true });
+		const csvContent = Papa.unparse(data, { header: true, delimiter: ';' });
 		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 		saveAs(blob, filename);
 	};
@@ -248,7 +266,7 @@
 
 	let tables = [
 		{ label: 'pro Tour', value: 1, component: tourTable },
-		{ label: 'pro Tag', value: 2, component: subtractionTable },
+		{ label: 'pro Tag und Fahrzeug', value: 2, component: subtractionTable },
 		{ label: isAdmin ? 'pro Unternehmen' : 'Summe', value: 3, component: companyTable }
 	];
 
@@ -270,6 +288,7 @@
 
 	function resetFilter() {
 		selectedCompanyIdx = -1;
+		selectedLicensePlateIdx = -1;
 		selectedMonthIdx = -1;
 		selectedQuarterIdx = -1;
 		range.start = undefined;
@@ -323,6 +342,12 @@
 			/>
 		{/if}
 		<Select
+			bind:selectedIdx={selectedLicensePlateIdx}
+			entries={licensePlates}
+			initial={'Fahrzeug'}
+			disabled={null}
+		/>
+		<Select
 			bind:selectedIdx={selectedMonthIdx}
 			entries={MONTHS}
 			initial={'Monat'}
@@ -349,7 +374,7 @@
 					: range.start + ' - ' + range.end}</Dialog.Trigger
 			>
 			<Dialog.Content class="sm:max-w-[600px]">
-				<RangeCalendar bind:value={range} class="rounded-md border" />
+				<RangeCalendar bind:value={range} class="rounded-md border" locale={LOCALE} />
 			</Dialog.Content>
 		</Dialog.Root>
 		<Select
@@ -369,7 +394,7 @@
 			pro Tour als CSV exportieren
 		</Button>
 		<Button type="submit" onclick={() => csvExportDayTable(currentRowsSubtractionsTable)}>
-			pro Tag als CSV exportieren
+			pro Tag und Fahrzeug als CSV exportieren
 		</Button>
 	</div>
 {/snippet}

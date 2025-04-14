@@ -7,13 +7,13 @@
 <div>
 	Hallo {name},
 	<p>
-		Du hast eine Zurücksetzung Deines Passworts beantragt. Bitte benutze den folgenden Link, um ein
-		neues Passwort zu setzen:<br />
+		Sie haben eine Zurücksetzung Ihres Passworts beantragt. Bitte benutzen Sie den folgenden Link,
+		um ein neues Passwort zu setzen:<br />
 		<a href="{ORIGIN}/account/reset-password/?code={code}&email={email}" target="_blank">
 			{ORIGIN}/account/reset-password/?code={code}&email={email}
 		</a>
 	</p>
-	<p>Falls Du kein Passwort angefordert hast, kannst Du diese E-Mail ignorieren.</p>
+	<p>Falls Sie kein Passwort angefordert haben, können Sie diese E-Mail ignorieren.</p>
 
 	<EmailFooter />
 </div>

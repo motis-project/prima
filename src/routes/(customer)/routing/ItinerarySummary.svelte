@@ -4,7 +4,7 @@
 	import { formatDurationSec } from './formatDuration';
 	import Time from './Time.svelte';
 	import type { Itinerary, Leg, PlanData } from '$lib/openapi';
-	import { getModeStyle, routeColor } from './modeStyle';
+	import { getModeStyle, routeColor } from '$lib/ui/modeStyle';
 	import { t } from '$lib/i18n/translation';
 	import type { Snippet } from 'svelte';
 
@@ -13,7 +13,7 @@
 		baseQuery,
 		info
 	}: {
-		it: Itinerary;
+		it: Itinerary & { startAddress?: string; targetAddress?: string };
 		baseQuery?: PlanData | undefined;
 		info?: Snippet<[Itinerary]> | undefined;
 	} = $props();
@@ -43,6 +43,11 @@
 			{it.transfers}
 			{t.transfers}
 		</div>
+		{#if it.startAddress !== undefined && it.targetAddress !== undefined}
+			<span class="break-words text-left">
+				{it.startAddress} -> {it.targetAddress}
+			</span>
+		{/if}
 		<span class="text-left">
 			<Time
 				class="inline"

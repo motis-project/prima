@@ -8,6 +8,7 @@
 	import { t } from '$lib/i18n/translation';
 
 	const { data, form } = $props();
+	let showTooltip = $state(false);
 </script>
 
 <Meta title="Account | {PUBLIC_PROVIDER}" />
@@ -17,9 +18,25 @@
 
 	<Panel title={t.account.resetPassword} subtitle={t.account.resetPasswordSubtitle}>
 		<form method="post" action="/account/settings?/changePassword">
-			<Input name="password" type="password" placeholder={t.account.newPassword} />
-			<div class="mt-4 flex justify-end">
-				<Button type="submit" variant="outline">{t.account.resetPassword}</Button>
+			<Input name="oldPassword" type="password" placeholder={t.account.oldPassword} class="mb-3" />
+			<div class="field relative">
+				<Input
+					name="newPassword"
+					type="password"
+					placeholder={t.account.newPassword}
+					onfocus={() => (showTooltip = true)}
+					onblur={() => (showTooltip = false)}
+				/>
+				{#if showTooltip}
+					<div
+						class="absolute bottom-full mt-1 w-64 rounded bg-gray-800 p-2 text-xs text-white shadow-lg"
+					>
+						🔒 Das Passwort muss mindestens 8 Zeichen enthalten.
+					</div>
+				{/if}
+				<div class="mt-4 flex justify-end">
+					<Button type="submit" variant="outline">{t.account.resetPassword}</Button>
+				</div>
 			</div>
 		</form>
 	</Panel>

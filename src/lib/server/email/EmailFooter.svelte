@@ -5,6 +5,6 @@
 
 <p>
 	Liebe Grüße<br />
-	Dein {PUBLIC_PROVIDER} Team<br />
+	Ihr {PUBLIC_PROVIDER} Team<br />
 	<a href={ORIGIN} target="_blank">{ORIGIN}</a><br />
 </p>

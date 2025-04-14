@@ -10,7 +10,6 @@
 	import CalendarIcon from 'lucide-svelte/icons/calendar';
 	import { Calendar } from '$lib/shadcn/calendar';
 	import * as Popover from '$lib/shadcn/popover';
-	import * as HoverCard from '$lib/shadcn/hover-card';
 
 	import { SvelteDate } from 'svelte/reactivity';
 	import { Button, buttonVariants } from '$lib/shadcn/button';
@@ -32,8 +31,22 @@
 	import { getLatestEventTime } from '$lib/util/getLatestEventTime';
 	import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
 	import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
+	import type { Msg } from '$lib/msg';
 
 	const { data, form } = $props();
+	const vehicles = $derived.by(() => {
+		return [...data.vehicles].sort((a, b) => a.id - b.id);
+	});
+	let message: Msg | undefined = $state(undefined);
+	let timeout: undefined | ReturnType<typeof setTimeout> = undefined;
+
+	$effect(() => {
+		clearTimeout(timeout);
+		message = form?.msg;
+		timeout = setTimeout(() => {
+			message = undefined;
+		}, 5000);
+	});
 
 	type Vehicle = NonNullable<typeof data.vehicles>[0];
 
@@ -378,21 +391,12 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each data.vehicles as v}
+			{#each vehicles as v}
 				<tr>
 					<td
 						class="h-full pr-2 align-middle font-mono text-sm font-semibold leading-none tracking-tight"
 					>
-						<HoverCard.Root>
-							<HoverCard.Trigger>{v.licensePlate}</HoverCard.Trigger>
-							<HoverCard.Content>
-								<ul class="list-inside list-disc">
-									<li>Anzahl Passagiere: {v.passengers}</li>
-									<li>Rollstuhl: {v.wheelchairs === 0 ? 'Nein' : 'Ja'}</li>
-									<li>Gepäckstücke: {v.luggage}</li>
-								</ul>
-							</HoverCard.Content>
-						</HoverCard.Root>
+						<AddVehicle vehicle={v} text={v.licensePlate} />
 					</td>
 					{#each split(range, 60) as x}
 						<td>
@@ -474,20 +478,21 @@
 						{df.format(value.toDate(getLocalTimeZone()))}
 					</Popover.Trigger>
 					<Popover.Content class="w-auto p-0">
-						<Calendar type="single" bind:value />
+						<Calendar type="single" bind:value locale={LOCALE} />
 					</Popover.Content>
 				</Popover.Root>
 				<Button variant="outline" size="icon" onclick={() => (value = value.add({ days: 1 }))}>
 					<ChevronRight class="size-4" />
 				</Button>
 			</div>
-			<AddVehicle />
+			<AddVehicle text="Fahrzeug hinzufügen" useWFit={true} />
 		</div>
 	</div>
 
-	<Card.Content class="mt-8">
-		<Message msg={form?.msg} class="mb-4" />
-
+	<Card.Content>
+		<div class="mb-4 min-h-12">
+			<Message msg={message} fadeDuration={800} />
+		</div>
 		{#if !data.companyDataComplete}
 			<div class="flex min-h-[45vh] w-full flex-col items-center justify-center">
 				<h2 class="mb-4 text-xl font-semibold leading-none tracking-tight">
@@ -497,7 +502,7 @@
 					Fahrzeuge können erst angelegt werden, wenn die Unternehmens-Stammdaten vollständig sind.
 				</p>
 			</div>
-		{:else if data.vehicles.length === 0}
+		{:else if vehicles.length === 0}
 			<div class="flex min-h-[45vh] w-full flex-col items-center justify-center">
 				<h2 class="mb-4 text-xl font-semibold leading-none tracking-tight">
 					Kein Fahrzeug vorhanden.

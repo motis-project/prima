@@ -40,9 +40,10 @@
 	import { updateStartDest } from '$lib/util/updateStartDest';
 	import { odmPrice } from '$lib/util/odmPrice';
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
-	import { LocateFixed } from 'lucide-svelte';
+	import { LocateFixed, MapIcon } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
 	import { MAX_MATCHING_DISTANCE } from '$lib/constants';
+	import PopupMap from '$lib/ui/PopupMap.svelte';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -173,12 +174,13 @@
 			items={toItems}
 			onValueChange={() => history.back()}
 		/>
+	{:else if page.state.showMap}
+		<PopupMap bind:from bind:to itinerary={page.state.selectedItinerary} />
 	{:else if page.state.selectedItinerary}
 		<div class="flex items-center justify-between gap-4">
 			<Button variant="outline" size="icon" onclick={() => window.history.back()}>
 				<ChevronLeft />
 			</Button>
-
 			{#if page.state.selectedItinerary.legs.some((l: Leg) => l.mode === 'ODM')}
 				{#if data.isLoggedIn}
 					<Dialog.Root>
@@ -279,6 +281,14 @@
 					<Button href="/account" variant="outline">{t.booking.loginToBook}</Button>
 				{/if}
 			{/if}
+			<Button
+				size="icon"
+				variant="outline"
+				onclick={() =>
+					pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
+			>
+				<MapIcon class="h-[1.2rem] w-[1.2rem]" />
+			</Button>
 		</div>
 		<Separator class="my-4" />
 		<ConnectionDetail
@@ -288,6 +298,9 @@
 			{onClickTrip}
 		/>
 	{:else if page.state.stop}
+		<Button variant="outline" size="icon" onclick={() => window.history.back()}>
+			<ChevronLeft />
+		</Button>
 		<StopTimes
 			arriveBy={false}
 			time={page.state.stop.time}
@@ -303,6 +316,14 @@
 			page.state.selectTo}
 	>
 		<div class="flex h-full flex-col gap-4">
+			<Button
+				size="icon"
+				variant="default"
+				onclick={() => pushState('', { showMap: true })}
+				class="ml-auto"
+			>
+				<MapIcon class="h-[1.2rem] w-[1.2rem]" />
+			</Button>
 			<div class="relative flex flex-col gap-4">
 				<Input
 					placeholder={t.from}

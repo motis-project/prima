@@ -56,7 +56,7 @@ export default defineConfig({
 		{
 			name: 'driver app',
 			testMatch: 'driver.test.ts',
-			dependencies: ['availability']
+			dependencies: ['move tour']
 		}
 	]
 });

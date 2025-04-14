@@ -27,6 +27,7 @@ const translations: Translations = {
 			'E-Mail zum Zurücksetzen des Passworts konnte nicht gesendet werden.',
 		accountDoesNotExist: 'Nutzerkonto existiert nicht.',
 		invalidPassword: 'Ungültiges Passwort.',
+		invalidOldPassword: 'Das alte Passwort ist ungültig.',
 		new: 'Neu hier? <a href="/account/signup" class="link">Erstellen Sie ein neues Nutzerkonto!</a>',
 		enterYourCode: 'Bitte geben Sie den Code ein.',
 		codeExpiredSentAnother:
@@ -34,6 +35,7 @@ const translations: Translations = {
 		incorrectCode: 'Falscher oder abgelaufener Code.',
 		newCodeSent: 'Wir haben einen neuen Code an Ihre E-Mail-Adresse geschickt.',
 		enterNewPassword: 'Bitte geben Sie Ihr neues Passwort ein.',
+		enterOldPassword: 'Bitte geben Sie Ihr altes Passwort ein.',
 		passwordChanged: 'Passwort erfolgreich geändert.',
 		phoneChanged: 'Telefonnummer erfolgreich geändert.',
 		enterEmail: 'Geben Sie Ihre E-Mail-Adresse ein.',
@@ -63,8 +65,11 @@ const translations: Translations = {
 		invalidSeats: 'Ungültige Sitzzahl.',
 		invalidLicensePlate: 'Ungültiges Kennzeichen.',
 		invalidStorage: 'Ungültiger Stauraum.',
+		insufficientCapacities:
+			'Eine auf diesem Fahrzeug geplante Tour ist mit den neuen Kapazitätsangaben nicht durchführbar.',
 		duplicateLicensePlate: 'Kennzeichen existiert bereits.',
 		vehicleAddedSuccessfully: 'Fahrzeug erfolgreich angelegt.',
+		vehicleAlteredSuccessfully: ' Fahrzeug erfolgreich geändert',
 
 		//Request
 		requestCancelled: 'Fahrt storniert',
@@ -129,6 +134,7 @@ const translations: Translations = {
 		passwordResetRequest: 'Passwort zurücksetzen',
 		passwordResetRequestSubtitle: 'Wir schicken Ihnen einen Code an Ihre E-Mail-Adresse.',
 		newPassword: 'Neues Passwort',
+		oldPassword: 'Altes Passwort',
 		resendCode: 'Code erneut senden',
 		verify: 'Verifizieren'
 	},
@@ -154,7 +160,9 @@ const translations: Translations = {
 			year: isToday ? undefined : '2-digit'
 		}),
 
+	cancelledJourneys: 'Vergangene und stornierte Fahrten',
 	journeyDetails: 'Verbindungsdetails',
+	transfer: 'Umstieg',
 	transfers: 'Umstiege',
 	walk: 'Fußweg',
 	bike: 'Fahrrad',

@@ -7,7 +7,7 @@
 <div>
 	Guten Tag {name},
 	<p>
-		Bitte verifiziere Deine E-Mail Addresse:<br />
+		Bitte verifizieren Sie Ihre E-Mail Addresse:<br />
 		<a href="{ORIGIN}/account/verify-email/?code={code}" target="_blank">
 			{ORIGIN}/verify-email/?code={code}
 		</a>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { t } from '$lib/i18n/translation';
-	import { getModeStyle, routeColor, type LegLike } from './modeStyle';
+	import { getModeStyle, routeColor, type LegLike } from '$lib/ui/modeStyle';
 	import { cn } from './utils';
 
 	const {

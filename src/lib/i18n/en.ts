@@ -27,12 +27,14 @@ const translations: Translations = {
 		failedToSendPasswordResetEmail: 'Failed to send the password reset email.',
 		accountDoesNotExist: 'Account does not exist.',
 		invalidPassword: 'Invalid password.',
+		invalidOldPassword: 'Invalid old password.',
 		new: 'New here? <a class="link" href="/account/signup">Create an account!</a>',
 		enterYourCode: 'Please enter your code.',
 		codeExpiredSentAnother: 'The verification code expired. We sent another code.',
 		incorrectCode: 'Wrong or expired code.',
 		newCodeSent: 'We sent a new code to your inbox.',
 		enterNewPassword: 'Please enter your new password.',
+		enterOldPassword: 'Please enter your old password.',
 		passwordChanged: 'Password changed successfully.',
 		phoneChanged: 'Phone number changed successfully.',
 		enterEmail: 'Enter your email address.',
@@ -61,8 +63,10 @@ const translations: Translations = {
 		invalidSeats: 'Invalid number of passengers',
 		invalidLicensePlate: 'Invalid license plate.',
 		invalidStorage: 'Invalid storage space.',
+		insufficientCapacities: 'Updated capacities are insufficient for planned tour on this vehicle.',
 		duplicateLicensePlate: 'Duplicate license plate.',
 		vehicleAddedSuccessfully: 'Vehicle added successfully.',
+		vehicleAlteredSuccessfully: 'Vehicle altered successfully',
 
 		//Request
 		requestCancelled: 'Ride cancelled',
@@ -125,6 +129,7 @@ const translations: Translations = {
 		passwordResetRequest: 'Request Password Reset',
 		passwordResetRequestSubtitle: 'We will send a reset code to this email.',
 		newPassword: 'New Password',
+		oldPassword: 'Old Password',
 		resendCode: 'Resend code',
 		verify: 'Verify'
 	},
@@ -150,7 +155,9 @@ const translations: Translations = {
 			year: isToday ? undefined : '2-digit'
 		}),
 
+	cancelledJourneys: 'Past and Cancelled Journeys',
 	journeyDetails: 'Journey Details',
+	transfer: 'transfer',
 	transfers: 'transfers',
 	walk: 'Walk',
 	bike: 'Bike',
@@ -199,7 +206,7 @@ const translations: Translations = {
 		disclaimer:
 			"Cancel your ride 24h early if you don't want to take it. In case you do not cancel your ride in time or don't show up, you are liable to pay the full costs of the taxi.",
 		noLuggage: 'No luggage',
-		handLuggage: 'Light luggage',
+		handLuggage: 'Hand luggage',
 		heavyLuggage: 'Heavy luggage',
 		foldableWheelchair: 'Foldable wheelchair',
 		withFoldableWheelchair: 'With foldable wheelchair',

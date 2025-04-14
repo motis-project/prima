@@ -3,7 +3,7 @@
 	import { plan, type Itinerary, type PlanData, type PlanResponse } from '$lib/openapi';
 	import LoaderCircle from 'lucide-svelte/icons/loader-circle';
 	import Info from 'lucide-svelte/icons/info';
-	import { t } from '$lib/i18n/translation';
+	import { t, language } from '$lib/i18n/translation';
 	import ItinerarySummary from './ItinerarySummary.svelte';
 	import { odmPrice } from '$lib/util/odmPrice';
 
@@ -22,6 +22,11 @@
 		updateStartDest: (r: { data: PlanResponse | undefined }) => PlanResponse | undefined;
 		passengers: number;
 	} = $props();
+
+	const localDate = (timestamp: string) => {
+		const d = new Date(timestamp);
+		return d.toLocaleString(language, { weekday: 'long' }) + ', ' + d.toLocaleDateString();
+	};
 </script>
 
 {#snippet odmInfo(it: Itinerary)}
@@ -67,7 +72,14 @@
 								</div>
 							{/if}
 
-							{#each r.itineraries as it}
+							{#each r.itineraries as it, index}
+								{#if index > 0 && localDate(r.itineraries[index - 1].startTime) != localDate(it.startTime)}
+									<div class="my-5 flex w-full items-center justify-between space-x-1">
+										<div class="h-0 shrink grow border-t"></div>
+										<div class="px-2 font-bold">{localDate(it.startTime)}</div>
+										<div class="h-0 shrink grow border-t"></div>
+									</div>
+								{/if}
 								{@const hasODM = it.legs.some((l) => l.mode === 'ODM')}
 								<button onclick={() => selectItinerary(it)}>
 									<ItinerarySummary {it} {baseQuery} info={hasODM ? odmInfo : undefined} />

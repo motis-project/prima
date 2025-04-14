@@ -10,7 +10,7 @@
 
 	// @ts-expect-error Cannot find module 'svelte-qrcode'
 	import QrCode from 'svelte-qrcode';
-	import { goto } from '$app/navigation';
+	import { goto, pushState } from '$app/navigation';
 	import { enhance } from '$app/forms';
 	import Message from '$lib/ui/Message.svelte';
 	import { msg } from '$lib/msg';
@@ -18,6 +18,9 @@
 	import * as Card from '$lib/shadcn/card';
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { odmPrice } from '$lib/util/odmPrice';
+	import { MapIcon } from 'lucide-svelte';
+	import PopupMap from '$lib/ui/PopupMap.svelte';
+	import { page } from '$app/state';
 
 	const { data } = $props();
 
@@ -25,12 +28,12 @@
 </script>
 
 <div class="flex h-full flex-col gap-4 md:min-h-[70dvh] md:w-96">
-	{#if !data.cancelled}
-		<div class="flex items-center justify-between gap-4">
-			<Button variant="outline" size="icon" onclick={() => window.history.back()}>
-				<ChevronLeft />
-			</Button>
+	<div class="flex items-center justify-between gap-4">
+		<Button variant="outline" size="icon" onclick={() => window.history.back()}>
+			<ChevronLeft />
+		</Button>
 
+		{#if !data.cancelled}
 			<div class="flex flex-row gap-2">
 				{#if showTicket}
 					<Button
@@ -77,12 +80,17 @@
 					</AlertDialog.Root>
 				{/if}
 			</div>
-		</div>
-	{:else}
-		<Message msg={msg('cancelled')} />
-	{/if}
+		{:else}
+			<Message msg={msg('cancelled')} />
+		{/if}
+		<Button size="icon" variant="outline" onclick={() => pushState('', { showMap: true })}>
+			<MapIcon class="h-[1.2rem] w-[1.2rem]" />
+		</Button>
+	</div>
 
-	{#if showTicket}
+	{#if page.state.showMap}
+		<PopupMap itinerary={data.journey} />
+	{:else if showTicket}
 		<div class="flex h-full w-full items-center justify-center">
 			<div class="flex h-[210px] w-[210px] items-center justify-center bg-white">
 				<QrCode value={data.ticketCode} />
