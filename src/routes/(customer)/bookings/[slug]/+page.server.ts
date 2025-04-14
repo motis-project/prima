@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import type { Itinerary } from '$lib/openapi';
@@ -9,10 +9,10 @@ import { cancelRequest } from '$lib/server/db/cancelRequest';
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const journey = await db
 		.selectFrom('journey')
-		.innerJoin('request', 'journey.request1', 'request.id')
-		.innerJoin('event', 'event.request', 'request.id')
-		.innerJoin('tour', 'tour.id', 'request.tour')
-		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
+		.leftJoin('request', 'journey.request1', 'request.id')
+		.leftJoin('event', 'event.request', 'request.id')
+		.leftJoin('tour', 'tour.id', 'request.tour')
+		.leftJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 		.orderBy('event.communicatedTime', 'asc')
 		.select([
 			'json',
@@ -25,7 +25,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			'request.customer',
 			'request.id as requestId',
 			'event.communicatedTime',
-			'vehicle.licensePlate'
+			'vehicle.licensePlate',
+			'journey.id as journeyId'
 		])
 		.where('journey.id', '=', parseInt(params.slug))
 		.where('user', '=', locals.session!.userId!)
@@ -43,10 +44,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions = {
-	default: async ({ request, locals }): Promise<{ msg: Msg }> => {
+	cancel: async ({ request, locals }): Promise<{ msg: Msg }> => {
 		const formData = await request.formData();
 		const requestId = readInt(formData.get('requestId'));
 		await cancelRequest(requestId, locals.session!.userId!);
 		return { msg: msg('requestCancelled', 'success') };
+	},
+	remove: async ({ request, locals }) => {
+		const formData = await request.formData();
+		const journeyId = readInt(formData.get('journeyId'));
+		await db
+			.deleteFrom('journey')
+			.where('journey.id', '=', journeyId)
+			.where('user', '=', locals.session!.userId!)
+			.execute();
+		return redirect(302, `/bookings`);
 	}
 };
