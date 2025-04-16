@@ -173,7 +173,7 @@ export const POST = async (event) => {
 					.where(
 						'request.id',
 						'in',
-						movedTour.requests.map((r) => r.id)
+						requestIds
 					)
 					.execute();
 			}
