@@ -4,9 +4,6 @@ import { sql } from 'kysely';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import { getLatestEventTime } from '$lib/util/getLatestEventTime';
-import { sendMail } from '$lib/server/sendMail';
-import NewVehicleNotification from '$lib/server/email/NewVehicleNotification.svelte';
-import { MINUTE } from '$lib/util/time';
 
 export const POST = async (event) => {
 	const companyId = event.locals.session?.companyId;
@@ -20,7 +17,6 @@ export const POST = async (event) => {
 		JSON.stringify({ tourId, vehicleId, companyId }, null, '\t'),
 		'MOVE TOUR PARAMS END'
 	);
-	const now = Date.now();
 	await db.transaction().execute(async (trx) => {
 		await sql`LOCK TABLE tour IN ACCESS EXCLUSIVE MODE;`.execute(trx);
 		const movedTour = await trx
@@ -55,6 +51,7 @@ export const POST = async (event) => {
 							'request.luggage',
 							'request.passengers',
 							'request.id',
+							'request.customer',
 							jsonArrayFrom(
 								eb
 									.selectFrom('event')
@@ -68,19 +65,7 @@ export const POST = async (event) => {
 									])
 							).as('events')
 						])
-				).as('requests'),
-				jsonArrayFrom(
-					eb
-						.selectFrom('request')
-						.innerJoin('user', 'user.id', 'request.customer')
-						.innerJoin('event', 'event.request', 'request.id')
-						.whereRef('tour.id', '=', 'request.tour')
-						.where('request.cancelled', '=', false)
-						.where('event.communicatedTime', '>', now - 15 * MINUTE)
-						.where('event.communicatedTime', '<', now + 15 * MINUTE)
-						.where('event.isPickup', '=', true)
-						.select(['user.name', 'user.email'])
-				).as('customers')
+				).as('requests')
 			])
 			.executeTakeFirst();
 		if (!movedTour) {
@@ -174,33 +159,29 @@ export const POST = async (event) => {
 			.selectAll()
 			.execute();
 		if (collidingTours.length == 0) {
-			console.log(
-				'MOVE TOUR early exit - there is a collision with another tour of the target vehicle. tourId: ',
-				tourId
-			);
 			await trx
 				.updateTable('tour')
 				.set({ vehicle: vehicleId })
 				.where('id', '=', tourId)
 				.executeTakeFirst();
-			for (const customer of movedTour.customers) {
-				try {
-					console.log('MOVE TOUR - sending NewVehicleNotification to ', customer.email);
-					await sendMail(NewVehicleNotification, 'Fahrzeugwechsel', customer.email, {
-						events: movedTour.requests.flatMap((r) => r.events),
-						name: customer.name,
-						newLicensePlate: newVehicle.licensePlate
-					});
-				} catch {
-					console.log(
-						'Failed to send cancellation email to customer with email: ',
-						customer.email,
-						' tourId: ',
-						movedTour.id
-					);
-					return json({});
-				}
+			const now = Date.now();
+			const requestIds = movedTour.requests.map((r) => r.id);
+			if (requestIds.length !== 0) {
+				await db
+					.updateTable('request')
+					.set({ licensePlateUpdatedAt: now })
+					.where(
+						'request.id',
+						'in',
+						movedTour.requests.map((r) => r.id)
+					)
+					.execute();
 			}
+		} else {
+			console.log(
+				'MOVE TOUR early exit - there is a collision with another tour of the target vehicle. tourId: ',
+				tourId
+			);
 		}
 	});
 	return json({});

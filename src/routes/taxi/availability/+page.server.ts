@@ -7,9 +7,6 @@ import { msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
 import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import { sql } from 'kysely';
-import { sendMail } from '$lib/server/sendMail';
-import NewVehicleNotification from '$lib/server/email/NewVehicleNotification.svelte';
-import { MINUTE } from '$lib/util/time';
 
 const LICENSE_PLATE_REGEX = /^([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})$/;
 export async function load(event: RequestEvent) {
@@ -176,21 +173,11 @@ export const actions: Actions = {
 								'request.passengers',
 								'request.bikes',
 								'request.wheelchairs',
-								'request.luggage'
+								'request.luggage',
+								'request.customer',
+								'request.id as requestId'
 							])
-					).as('events'),
-					jsonArrayFrom(
-						eb
-							.selectFrom('request')
-							.innerJoin('user', 'user.id', 'request.customer')
-							.innerJoin('event', 'event.request', 'request.id')
-							.whereRef('tour.id', '=', 'request.tour')
-							.where('request.cancelled', '=', false)
-							.where('event.communicatedTime', '>', now - 15 * MINUTE)
-							.where('event.communicatedTime', '<', now + 15 * MINUTE)
-							.where('event.isPickup', '=', true)
-							.select(['user.name', 'user.email'])
-					).as('customers')
+					).as('events')
 				])
 				.execute();
 
@@ -243,21 +230,11 @@ export const actions: Actions = {
 				return;
 			}
 			for (const tour of tours) {
-				for (const customer of tour.customers) {
-					try {
-						await sendMail(NewVehicleNotification, 'Fahrzeugwechsel', customer.email, {
-							events: tour.events,
-							name: customer.name,
-							newLicensePlate: licensePlate
-						});
-					} catch {
-						console.log(
-							'Failed to send new vehicle notification email to customer with email: ',
-							customer.email,
-							' tourId: ',
-							tour.id
-						);
-					}
+				const requestIds = tour.events.filter((e) => e.isPickup).map((r) => r.requestId);
+				if (requestIds.length !== 0) {
+					db.updateTable('request')
+						.set({ licensePlateUpdatedAt: now })
+						.where('request.id', 'in', requestIds);
 				}
 			}
 			success = true;
