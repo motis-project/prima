@@ -13,6 +13,7 @@ import { verifyPhone } from '$lib/server/verifyPhone';
 import { getUserPasswordHash } from '$lib/server/auth/user';
 import { randomBytes } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
+import { sql } from 'kysely';
 
 export async function load(event: PageServerLoadEvent) {
 	const user = await db
@@ -120,6 +121,9 @@ export const actions: Actions = {
 		const userId = event.locals.session!.userId;
 		const now = Date.now();
 		await db.transaction().execute(async (trx) => {
+			await sql`LOCK TABLE availability, tour, request, event, "user" IN ACCESS EXCLUSIVE MODE;`.execute(
+				trx
+			);
 			const user = await trx
 				.selectFrom('user')
 				.where('user.id', '=', userId)
@@ -134,7 +138,7 @@ export const actions: Actions = {
 						.where('request.cancelled', '=', false)
 						.where('request.ticketChecked', '=', false)
 						.where('event.communicatedTime', '>=', now)
-						.select((eb) => eb.fn.count<number>('request.id').distinct().as('value'))
+						.select((eb) => eb.fn.count<number>('request.id').as('value'))
 						.as('requests'),
 					eb
 						.selectFrom('vehicle')
