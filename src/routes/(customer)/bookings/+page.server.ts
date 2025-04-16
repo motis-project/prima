@@ -24,12 +24,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 			'tour.arrival'
 		])
 		.where('user', '=', locals.session!.userId!)
+		.where('journey.json', 'is not', null)
 		.execute();
 	return {
 		journeys: journeys.map((journey) => {
 			return {
 				journey: {
-					...(JSON.parse(journey.json) as Itinerary),
+					...(JSON.parse(journey.json!) as Itinerary),
 					startAddress: journey.addresses[0].address,
 					targetAddress: journey.addresses[1].address
 				},

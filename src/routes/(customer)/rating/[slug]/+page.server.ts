@@ -12,6 +12,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.select(['json', 'rating'])
 		.where('journey.id', '=', parseInt(params.slug))
 		.where('user', '=', locals.session!.userId)
+		.where('journey.json', 'is not', null)
 		.executeTakeFirst();
 
 	if (journey == undefined) {
@@ -19,7 +20,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	return {
-		journey: JSON.parse(journey.json) as Itinerary,
+		journey: JSON.parse(journey.json!) as Itinerary,
 		rated: !!journey.rating,
 		id: params.slug
 	};
