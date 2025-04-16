@@ -90,7 +90,6 @@
 					<Label for="address">Unternehmenssitz</Label>
 					<AddressTypeahead
 						name="address"
-						items={[]}
 						onValueChange={(l: Location) => (companyAddress = l)}
 						placeholder={'Unternehmenssitz'}
 						bind:selected={companyAddress}

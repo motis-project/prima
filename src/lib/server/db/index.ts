@@ -104,6 +104,8 @@ export interface Database {
 		address: string;
 		lat: number;
 		lng: number;
+		level: number;
+		lastTimestamp: number;
 		count: number;
 	};
 	favouriteRoutes: {
@@ -111,6 +113,7 @@ export interface Database {
 		user: number;
 		fromId: number;
 		toId: number;
+		lastTimestamp: number;
 		count: number;
 	};
 }
