@@ -16,7 +16,7 @@ export type Translations = {
 		companies: string;
 	};
 	msg: {
-		unkownError: string;
+		unknownError: string;
 
 		// Account
 		enterEmailAndPassword: string;
@@ -43,6 +43,11 @@ export type Translations = {
 		oldEmail: string;
 		checkInboxToVerify: string;
 		passwordResetSuccess: string;
+		remainingTours: string;
+		remainingAvailabilities: string;
+		remainingRequests: string;
+		remainingToursAndAvailabilities: string;
+		deleteAccount: string;
 
 		// Admin
 		userDoesNotExist: string;
@@ -122,6 +127,7 @@ export type Translations = {
 		changePhoneSubtitle: string;
 		logout: string;
 		logoutSubtitle: string;
+		deleteAccount: string;
 		code: string;
 		passwordReset: string;
 		passwordResetSubtitle: string;
