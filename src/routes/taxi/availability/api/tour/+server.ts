@@ -170,11 +170,7 @@ export const POST = async (event) => {
 				await db
 					.updateTable('request')
 					.set({ licensePlateUpdatedAt: now })
-					.where(
-						'request.id',
-						'in',
-						requestIds
-					)
+					.where('request.id', 'in', requestIds)
 					.execute();
 			}
 		} else {
