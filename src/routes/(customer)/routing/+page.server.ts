@@ -20,57 +20,9 @@ export async function load(event: PageServerLoadEvent) {
 			favouriteRoutes: []
 		};
 	}
-	return {
-		favouriteLocations: await db
-			.with('top_favourites', (qb) =>
-				qb
-					.selectFrom('favouriteLocations')
-					.select((eb) => [
-						eb.lit(1).$castTo<number>().as('sort_order'),
-						'address',
-						'lat',
-						'lng',
-						'level',
-						'count',
-						'id'
-					])
-					.where('user', '=', userId)
-					.orderBy('count', 'desc')
-					.limit(5)
-			)
-			.with('latest', (qb) =>
-				qb
-					.selectFrom('favouriteLocations')
-					.select((eb) => [
-						eb.lit(2).$castTo<number>().as('sort_order'),
-						'address',
-						'lat',
-						'lng',
-						'level',
-						'count',
-						'id'
-					])
-					.where('user', '=', userId)
-					.where('lastTimestamp', '>=', Date.now() - DAY)
-					.orderBy('lastTimestamp', 'desc')
-					.limit(1)
-			)
-			.with('combined', (qb) =>
-				qb.selectFrom('latest').selectAll().unionAll(qb.selectFrom('top_favourites').selectAll())
-			)
-			.with('ranked', (qb) =>
-				qb
-					.selectFrom('combined')
-					.selectAll()
-					.select(sql<number>`ROW_NUMBER() OVER (PARTITION BY id)`.as('rn'))
-			)
-			.selectFrom('ranked')
-			.orderBy('ranked.sort_order', 'desc')
-			.orderBy('ranked.count', 'desc')
-			.select(['ranked.address', 'ranked.lat', 'ranked.lng', 'ranked.level'])
-			.where('ranked.rn', '=', 1)
-			.execute(),
-		favouriteRoutes: await db
+	console.log(
+		'test: ',
+		await db
 			.with('top_favourites', (qb) =>
 				qb
 					.selectFrom('favouriteRoutes')
@@ -81,7 +33,8 @@ export async function load(event: PageServerLoadEvent) {
 					)
 					.innerJoin('favouriteLocations as toLocations', 'toLocations.id', 'favouriteRoutes.toId')
 					.select((eb) => [
-						eb.lit(1).$castTo<number>().as('sort_order'),
+						eb.lit(1).$castTo<number>().as('sort_order_1'),
+						'favouriteRoutes.count as sort_order_2',
 						'toLocations.address as toAddress',
 						'toLocations.lat as toLat',
 						'toLocations.lng as toLng',
@@ -90,7 +43,6 @@ export async function load(event: PageServerLoadEvent) {
 						'fromLocations.lat as fromLat',
 						'fromLocations.lng as fromLng',
 						'fromLocations.level as fromLevel',
-						'favouriteRoutes.count',
 						'favouriteRoutes.id'
 					])
 					.where('favouriteRoutes.user', '=', userId)
@@ -106,7 +58,8 @@ export async function load(event: PageServerLoadEvent) {
 					)
 					.innerJoin('favouriteLocations as toLocations', 'toLocations.id', 'favouriteRoutes.toId')
 					.select((eb) => [
-						eb.lit(2).$castTo<number>().as('sort_order'),
+						eb.lit(2).$castTo<number>().as('sort_order_1'),
+						eb.ref('favouriteRoutes.lastTimestamp').$castTo<number>().as('sort_order_2'),
 						'toLocations.address as toAddress',
 						'toLocations.lat as toLat',
 						'toLocations.lng as toLng',
@@ -115,13 +68,12 @@ export async function load(event: PageServerLoadEvent) {
 						'fromLocations.lat as fromLat',
 						'fromLocations.lng as fromLng',
 						'fromLocations.level as fromLevel',
-						'favouriteRoutes.count',
 						'favouriteRoutes.id'
 					])
 					.where('favouriteRoutes.user', '=', userId)
 					.where('favouriteRoutes.lastTimestamp', '>=', Date.now() - DAY)
 					.orderBy('favouriteRoutes.lastTimestamp', 'desc')
-					.limit(1)
+					.limit(2)
 			)
 			.with('combined', (qb) =>
 				qb.selectFrom('latest').selectAll().unionAll(qb.selectFrom('top_favourites').selectAll())
@@ -133,9 +85,149 @@ export async function load(event: PageServerLoadEvent) {
 					.select(sql<number>`ROW_NUMBER() OVER (PARTITION BY id)`.as('rn'))
 			)
 			.selectFrom('ranked')
-			.orderBy('ranked.sort_order', 'desc')
-			.orderBy('ranked.count', 'desc')
-			.select(['ranked.fromAddress', 'ranked.toAddress', 'ranked.fromLat', 'ranked.toLat', 'ranked.fromLng', 'ranked.toLng', 'ranked.fromLevel', 'ranked.toLevel'])
+			.orderBy('ranked.sort_order_2', 'desc')
+			.select([
+				'ranked.fromAddress',
+				'ranked.toAddress',
+				'ranked.fromLat',
+				'ranked.toLat',
+				'ranked.fromLng',
+				'ranked.toLng',
+				'ranked.fromLevel',
+				'ranked.toLevel',
+				'sort_order_2'
+			])
+			.where('ranked.rn', '=', 1)
+			.where('sort_order_1', '=', 2)
+			.execute()
+	);
+	return {
+		favouriteLocations: await db
+			.with('top_favourites', (qb) =>
+				qb
+					.selectFrom('favouriteLocations')
+					.select((eb) => [
+						eb.lit(1).$castTo<number>().as('sort_order_1'),
+						'address',
+						'lat',
+						'lng',
+						'level',
+						'count as sort_order_2',
+						'lastTimestamp',
+						'id'
+					])
+					.where('user', '=', userId)
+					.orderBy('count', 'desc')
+					.limit(5)
+			)
+			.with('latest', (qb) =>
+				qb
+					.selectFrom('favouriteLocations')
+					.select((eb) => [
+						eb.lit(2).$castTo<number>().as('sort_order_1'),
+						'address',
+						'lat',
+						'lng',
+						'level',
+						'count as sort_order_2',
+						'lastTimestamp',
+						'id'
+					])
+					.where('user', '=', userId)
+					.where('lastTimestamp', '>=', Date.now() - DAY)
+					.orderBy('lastTimestamp', 'desc')
+					.limit(2)
+			)
+			.with('combined', (qb) =>
+				qb.selectFrom('latest').selectAll().unionAll(qb.selectFrom('top_favourites').selectAll())
+			)
+			.with('ranked', (qb) =>
+				qb
+					.selectFrom('combined')
+					.selectAll()
+					.select(sql<number>`ROW_NUMBER() OVER (PARTITION BY id)`.as('rn'))
+			)
+			.selectFrom('ranked')
+			.orderBy('ranked.sort_order_1', 'desc')
+			.orderBy('ranked.sort_order_2', 'desc')
+			.select(['ranked.address', 'ranked.lat', 'ranked.lng', 'ranked.level'])
+			.where('ranked.rn', '=', 1)
+			.execute(),
+		favouriteRoutes: await db
+			.with('top_favourites', (qb) =>
+				qb
+					.selectFrom('favouriteRoutes')
+					.innerJoin(
+						'favouriteLocations as fromLocations',
+						'fromLocations.id',
+						'favouriteRoutes.fromId'
+					)
+					.innerJoin('favouriteLocations as toLocations', 'toLocations.id', 'favouriteRoutes.toId')
+					.select((eb) => [
+						eb.lit(1).$castTo<number>().as('sort_order_1'),
+						'favouriteRoutes.count as sort_order_2',
+						'toLocations.address as toAddress',
+						'toLocations.lat as toLat',
+						'toLocations.lng as toLng',
+						'toLocations.level as toLevel',
+						'fromLocations.address as fromAddress',
+						'fromLocations.lat as fromLat',
+						'fromLocations.lng as fromLng',
+						'fromLocations.level as fromLevel',
+						'favouriteRoutes.id'
+					])
+					.where('favouriteRoutes.user', '=', userId)
+					.orderBy('favouriteRoutes.count', 'desc')
+			)
+			.with('latest', (qb) =>
+				qb
+					.selectFrom('favouriteRoutes')
+					.innerJoin(
+						'favouriteLocations as fromLocations',
+						'fromLocations.id',
+						'favouriteRoutes.fromId'
+					)
+					.innerJoin('favouriteLocations as toLocations', 'toLocations.id', 'favouriteRoutes.toId')
+					.select((eb) => [
+						eb.lit(2).$castTo<number>().as('sort_order_1'),
+						eb.ref('favouriteRoutes.lastTimestamp').$castTo<number>().as('sort_order_2'),
+						'toLocations.address as toAddress',
+						'toLocations.lat as toLat',
+						'toLocations.lng as toLng',
+						'toLocations.level as toLevel',
+						'fromLocations.address as fromAddress',
+						'fromLocations.lat as fromLat',
+						'fromLocations.lng as fromLng',
+						'fromLocations.level as fromLevel',
+						'favouriteRoutes.id'
+					])
+					.where('favouriteRoutes.user', '=', userId)
+					.where('favouriteRoutes.lastTimestamp', '>=', Date.now() - DAY)
+					.orderBy('favouriteRoutes.lastTimestamp', 'desc')
+					.limit(2)
+			)
+			.with('combined', (qb) =>
+				qb.selectFrom('latest').selectAll().unionAll(qb.selectFrom('top_favourites').selectAll())
+			)
+			.with('ranked', (qb) =>
+				qb
+					.selectFrom('combined')
+					.selectAll()
+					.select(sql<number>`ROW_NUMBER() OVER (PARTITION BY id)`.as('rn'))
+			)
+			.selectFrom('ranked')
+			.orderBy('ranked.sort_order_1', 'desc')
+			.orderBy('ranked.sort_order_2', 'desc')
+			.select([
+				'ranked.fromAddress',
+				'ranked.toAddress',
+				'ranked.fromLat',
+				'ranked.toLat',
+				'ranked.fromLng',
+				'ranked.toLng',
+				'ranked.fromLevel',
+				'ranked.toLevel'
+			])
 			.where('ranked.rn', '=', 1)
 			.execute()
 	};
