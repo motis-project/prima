@@ -226,6 +226,7 @@ const translations: Translations = {
 			}
 		},
 		totalPrice: 'Gesamtpreis (Bezahlung im Taxi)',
+		cashOnly: 'Nur Barzahlung ⚠️',
 		cancel: 'Stornieren',
 		loginToBook: 'Einloggen zum Buchen',
 		connection: 'Verbindung',

@@ -21,6 +21,8 @@
 		<span class="font-bold">{price} €</span>
 	</li>
 
+	<li>{t.booking.cashOnly}</li>
+
 	<li>{t.booking.bookingFor(passengers)}</li>
 
 	{#if wheelchair}
