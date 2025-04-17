@@ -1,11 +1,49 @@
+import { setAnonymousUserId } from '$lib/constants';
 import {
 	validateSessionToken,
 	setSessionTokenCookie,
 	deleteSessionTokenCookie
 } from '$lib/server/auth/session';
+import { db } from '$lib/server/db';
+import { generateSecurePassword } from '$lib/server/util/generatePassword';
 import { error, redirect, type Handle } from '@sveltejs/kit';
+import { sql } from 'kysely';
+
+let anonymousUserCreated = false;
+const anonymousEmail = 'anonymous@abc.de';
 
 const authHandle: Handle = async ({ event, resolve }) => {
+	if (!anonymousUserCreated) {
+		await db.transaction().execute(async (trx) => {
+			await sql`LOCK TABLE "user" IN ACCESS EXCLUSIVE MODE;`.execute(trx);
+			const existing = await trx
+				.selectFrom('user')
+				.select('id')
+				.where('user.email', '=', anonymousEmail)
+				.executeTakeFirst();
+			if (!existing) {
+				setAnonymousUserId(
+					(
+						await trx
+							.insertInto('user')
+							.values({
+								email: anonymousEmail,
+								name: 'Anonym',
+								passwordHash: generateSecurePassword(16),
+								isEmailVerified: false,
+								isTaxiOwner: false,
+								isAdmin: false
+							})
+							.returning('user.id')
+							.executeTakeFirst()
+					)?.id
+				);
+			} else {
+				setAnonymousUserId(existing.id);
+			}
+			anonymousUserCreated = true;
+		});
+	}
 	const token = event.cookies.get('session');
 	const session = await validateSessionToken(token);
 	if (
