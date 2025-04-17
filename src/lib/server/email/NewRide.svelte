@@ -2,7 +2,7 @@
 	import { ORIGIN } from '$env/static/private';
 	import EmailFooter from './EmailFooter.svelte';
 	const { firstAddress, lastAddress, firstTime, lastTime, name, tourId } = $props();
-	const tourLink = $derived(`${ORIGIN}/taxi/tours/?tourId=${tourId}`);
+	const tourLink = $derived(`${ORIGIN}/taxi/accounting/?tourId=${tourId}`);
 </script>
 
 <div>

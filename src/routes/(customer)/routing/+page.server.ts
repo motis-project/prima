@@ -236,6 +236,7 @@ export const actions = {
 					.select((eb) => [
 						'user.email',
 						'user.name',
+						'tour.id as tourId',
 						eb
 							.selectFrom('event')
 							.where('event.request', '=', request1)
