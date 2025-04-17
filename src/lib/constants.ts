@@ -1,4 +1,4 @@
-import { HOUR, MINUTE } from '$lib/util/time';
+import { DAY, HOUR, MINUTE } from '$lib/util/time';
 
 export const TZ = 'Europe/Berlin';
 export const LOCALE = 'de-DE';
@@ -34,12 +34,13 @@ export const MONTHS = [
 	'Dezember'
 ];
 export const QUARTERS = ['Quartal 1', 'Quartal 2', 'Quartal 3', 'Quartal 4'];
-export const anonymousPrecision = 0.001;
-export let anonymousId = 0;
+export const TIME_TO_ANONYMIZATION = 45 * DAY;
+export const anonymousLatLngPrecision = 0.001;
+export let anonymousUserId = 0;
 
-export function setAnonymousId(id: number | undefined) {
+export function setAnonymousUserId(id: number | undefined) {
 	if (id === undefined) {
 		return;
 	}
-	anonymousId = id;
+	anonymousUserId = id;
 }

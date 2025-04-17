@@ -1,4 +1,4 @@
-import { setAnonymousId } from '$lib/constants';
+import { setAnonymousUserId } from '$lib/constants';
 import {
 	validateSessionToken,
 	setSessionTokenCookie,
@@ -22,7 +22,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 				.where('user.email', '=', anonymousEmail)
 				.executeTakeFirst();
 			if (!existing) {
-				setAnonymousId(
+				setAnonymousUserId(
 					(
 						await trx
 							.insertInto('user')
@@ -39,7 +39,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 					)?.id
 				);
 			} else {
-				setAnonymousId(existing.id);
+				setAnonymousUserId(existing.id);
 			}
 			anonymousUserCreated = true;
 		});

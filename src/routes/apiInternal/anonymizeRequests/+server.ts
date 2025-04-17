@@ -3,8 +3,8 @@ import { INTERNAL_API_TOKEN } from '$env/static/private';
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { sql } from 'kysely';
-import { anonymousId, anonymousPrecision } from '$lib/constants';
-import { TIME_TO_ANONYMIZATION } from '$lib/util/time';
+import { anonymousUserId, anonymousLatLngPrecision } from '$lib/constants';
+import { TIME_TO_ANONYMIZATION } from '$lib/constants';
 
 export const POST = async (event: RequestEvent) => {
 	const token = event.request.headers.get('internal-token');
@@ -15,7 +15,7 @@ export const POST = async (event: RequestEvent) => {
 	const anonymizationTimestamp = Date.now() - TIME_TO_ANONYMIZATION;
 	await db
 		.updateTable('request')
-		.set({ customer: anonymousId })
+		.set({ customer: anonymousUserId })
 		.from('tour')
 		.whereRef('tour.id', '=', 'request.tour')
 		.where('tour.arrival', '<', anonymizationTimestamp)
@@ -24,8 +24,8 @@ export const POST = async (event: RequestEvent) => {
 	await db
 		.updateTable('event')
 		.set({
-			lat: sql<number>`event.lat + (RANDOM() * ${anonymousPrecision})`,
-			lng: sql<number>`event.lng + (RANDOM() * ${anonymousPrecision})`
+			lat: sql<number>`event.lat + (RANDOM() * ${anonymousLatLngPrecision})`,
+			lng: sql<number>`event.lng + (RANDOM() * ${anonymousLatLngPrecision})`
 		})
 		.from('request')
 		.innerJoin('tour', 'request.tour', 'tour.id')
