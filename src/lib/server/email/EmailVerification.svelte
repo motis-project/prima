@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { ORIGIN } from '$env/static/private';
+	import DisplayCode from './DisplayCode.svelte';
 	import EmailFooter from './EmailFooter.svelte';
 	const { code, name } = $props();
 </script>
@@ -13,15 +14,7 @@
 		</a>
 		<br />oder verwenden sie den Code:<br />
 	</p>
-	<div style="width: 100%;">
-		<div
-			style="border: 1px solid #d1d5db; padding: 12px 24px; display: inline-block; margin-left: 20px;"
-		>
-			<p style="margin: 0; font-family: monospace; font-weight: 300;">
-				{code}
-			</p>
-		</div>
-	</div>
+	<DisplayCode {code} />
 
 	<EmailFooter />
 </div>
