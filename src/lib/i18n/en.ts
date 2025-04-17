@@ -220,6 +220,7 @@ const translations: Translations = {
 			}
 		},
 		totalPrice: 'Total price (payable in the taxi)',
+		cashOnly: 'Cash only ⚠️',
 		cancel: 'Cancel',
 		loginToBook: 'Login to book',
 		connection: 'Connection',
