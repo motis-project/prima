@@ -152,6 +152,7 @@ export const actions: Actions = {
 		let unknownError = false;
 		await db.transaction().execute(async (trx) => {
 			await sql`LOCK TABLE tour IN ACCESS EXCLUSIVE MODE;`.execute(trx);
+			const now = Date.now();
 			const tours = await trx
 				.selectFrom('tour')
 				.where('tour.vehicle', '=', id)
@@ -167,10 +168,14 @@ export const actions: Actions = {
 							.where('request.cancelled', '=', false)
 							.select([
 								'event.isPickup',
+								'event.address',
+								'event.communicatedTime',
 								'request.passengers',
 								'request.bikes',
 								'request.wheelchairs',
-								'request.luggage'
+								'request.luggage',
+								'request.customer',
+								'request.id as requestId'
 							])
 					).as('events')
 				])
@@ -223,6 +228,14 @@ export const actions: Actions = {
 				}
 				unknownError = true;
 				return;
+			}
+			for (const tour of tours) {
+				const requestIds = tour.events.filter((e) => e.isPickup).map((r) => r.requestId);
+				if (requestIds.length !== 0) {
+					db.updateTable('request')
+						.set({ licensePlateUpdatedAt: now })
+						.where('request.id', 'in', requestIds);
+				}
 			}
 			success = true;
 		});

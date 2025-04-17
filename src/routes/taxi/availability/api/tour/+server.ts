@@ -51,6 +51,7 @@ export const POST = async (event) => {
 							'request.luggage',
 							'request.passengers',
 							'request.id',
+							'request.customer',
 							jsonArrayFrom(
 								eb
 									.selectFrom('event')
@@ -59,7 +60,8 @@ export const POST = async (event) => {
 										'event.scheduledTimeStart',
 										'event.scheduledTimeEnd',
 										'event.communicatedTime',
-										'event.isPickup'
+										'event.isPickup',
+										'event.address'
 									])
 							).as('events')
 						])
@@ -89,7 +91,13 @@ export const POST = async (event) => {
 		const newVehicle = await trx
 			.selectFrom('vehicle')
 			.where('vehicle.id', '=', vehicleId)
-			.select(['vehicle.bikes', 'vehicle.luggage', 'vehicle.wheelchairs', 'vehicle.passengers'])
+			.select([
+				'vehicle.bikes',
+				'vehicle.luggage',
+				'vehicle.wheelchairs',
+				'vehicle.passengers',
+				'vehicle.licensePlate'
+			])
 			.executeTakeFirst();
 		if (!newVehicle) {
 			console.log(
@@ -151,15 +159,25 @@ export const POST = async (event) => {
 			.selectAll()
 			.execute();
 		if (collidingTours.length == 0) {
-			console.log(
-				'MOVE TOUR early exit - there is a collision with another tour of the target vehicle. tourId: ',
-				tourId
-			);
 			await trx
 				.updateTable('tour')
 				.set({ vehicle: vehicleId })
 				.where('id', '=', tourId)
 				.executeTakeFirst();
+			const now = Date.now();
+			const requestIds = movedTour.requests.map((r) => r.id);
+			if (requestIds.length !== 0) {
+				await db
+					.updateTable('request')
+					.set({ licensePlateUpdatedAt: now })
+					.where('request.id', 'in', requestIds)
+					.execute();
+			}
+		} else {
+			console.log(
+				'MOVE TOUR early exit - there is a collision with another tour of the target vehicle. tourId: ',
+				tourId
+			);
 		}
 	});
 	return json({});
