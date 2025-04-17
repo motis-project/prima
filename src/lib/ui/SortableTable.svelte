@@ -19,7 +19,6 @@
 			toColumnStyle?: (r: T) => string;
 			hidden?: boolean;
 		}[];
-		isAdmin: boolean;
 		getRowStyle?: (row: T) => string;
 		selectedRow?: undefined | T[];
 		bindSelectedRow?: boolean;

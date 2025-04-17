@@ -94,6 +94,9 @@ export type Translations = {
 		// Feedback
 		feedbackThank: string;
 		feedbackMissing: string;
+
+		invalidFrom: string;
+		invalidTo: string;
 	};
 	admin: {
 		completedToursSubtitle: string;
@@ -160,6 +163,7 @@ export type Translations = {
 	odm: string;
 	from: string;
 	to: string;
+	favourites: string;
 	arrival: string;
 	departure: string;
 	duration: string;

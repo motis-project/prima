@@ -95,7 +95,10 @@ const translations: Translations = {
 
 		// Feedback
 		feedbackThank: 'Vielen Dank für Ihr Feedback!',
-		feedbackMissing: 'Kein Feedback gegeben'
+		feedbackMissing: 'Kein Feedback gegeben',
+
+		invalidFrom: 'Invalide Start Addresse.',
+		invalidTo: 'Invalide Ziel Addresse.'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',
@@ -175,6 +178,7 @@ const translations: Translations = {
 	odm: 'ÖPNV-Taxi - Buchung erforderlich!',
 	from: 'Von',
 	to: 'Nach',
+	favourites: 'Favoriten',
 	arrival: 'Ankunft',
 	departure: 'Abfahrt',
 	duration: 'Dauer',

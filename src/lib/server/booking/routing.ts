@@ -5,7 +5,7 @@ import type { InsertionInfo } from './insertionTypes';
 import { iterateAllInsertions } from './iterateAllInsertions';
 import type { VehicleId } from './VehicleId';
 import type { Range } from '$lib/util/booking/getPossibleInsertions';
-import { isSamePlace } from './isSamePlace';
+import { isSamePlace } from '$lib/util/booking/isSamePlace';
 import { batchOneToManyCarRouting } from '$lib/server/util/batchOneToManyCarRouting';
 
 export type InsertionRoutingResult = {

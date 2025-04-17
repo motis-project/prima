@@ -92,7 +92,10 @@ const translations: Translations = {
 
 		// Feedback
 		feedbackThank: 'Thank you very much for your feedback!',
-		feedbackMissing: 'No feedback given'
+		feedbackMissing: 'No feedback given',
+
+		invalidFrom: 'Invalid start address.',
+		invalidTo: 'Invalid destination address.'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',
@@ -170,6 +173,7 @@ const translations: Translations = {
 	odm: 'Public Transport Taxi, booking required!',
 	from: 'From',
 	to: 'To',
+	favourites: 'Favourites',
 	arrival: 'Arrival',
 	departure: 'Departure',
 	duration: 'Duration',

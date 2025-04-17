@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import { goto, pushState } from '$app/navigation';
+	import { goto, invalidateAll, pushState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 
@@ -44,6 +44,9 @@
 	import { posToLocation } from '$lib/map/Location';
 	import { MAX_MATCHING_DISTANCE } from '$lib/constants';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
+	import * as Card from '$lib/shadcn/card';
+	import FavouritesList from '$lib/ui/FavouriteLocations.svelte';
+	import FavouriteRoutes from '$lib/ui/FavouriteRoutes.svelte';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -120,10 +123,26 @@
 	$effect(() => {
 		if (baseQuery) {
 			clearTimeout(searchDebounceTimer);
-			searchDebounceTimer = setTimeout(() => {
+			searchDebounceTimer = setTimeout(async () => {
+				if (from.label && from.value.match && to.label && to.value.match) {
+					const formData = new FormData();
+					formData.append('fromAddress', from.label);
+					formData.append('fromLat', from.value.match.lat.toString());
+					formData.append('fromLon', from.value.match.lon.toString());
+					formData.append('fromLevel', from.value.match.level?.toString() ?? '0');
+					formData.append('toAddress', to.label);
+					formData.append('toLat', to.value.match.lat.toString());
+					formData.append('toLon', to.value.match.lon.toString());
+					formData.append('toLevel', to.value.match.level?.toString() ?? '0');
+					await fetch('?/updateFavourites', {
+						method: 'POST',
+						body: formData
+					});
+				}
 				const base = plan<true>(baseQuery).then(updateStartDest(from, to));
 				baseResponse = base;
 				routingResponses = [base];
+				await invalidateAll();
 			}, 400);
 		}
 	});
@@ -155,11 +174,69 @@
 	const applyPosition = (position: { coords: { latitude: number; longitude: number } }) => {
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
 	};
+
+	let selectedToFavourite:
+		| { address: string; lat: number; lng: number; level: number }[]
+		| undefined = $state(undefined);
+	let selectedFromFavourite:
+		| { address: string; lat: number; lng: number; level: number }[]
+		| undefined = $state(undefined);
+	let selectedRouteFavourite:
+		| {
+				fromAddress: string;
+				fromLat: number;
+				fromLng: number;
+				fromLevel: number;
+				toAddress: string;
+				toLat: number;
+				toLng: number;
+				toLevel: number;
+		  }[]
+		| undefined = $state(undefined);
+
+	$effect(() => {
+		if (selectedFromFavourite && selectedFromFavourite.length != 0) {
+			const favourite = selectedFromFavourite[0];
+			from = posToLocation(
+				{ lat: favourite.lat, lng: favourite.lng },
+				favourite.level,
+				favourite.address
+			);
+			history.back();
+		}
+	});
+
+	$effect(() => {
+		if (selectedToFavourite && selectedToFavourite.length != 0) {
+			const favourite = selectedToFavourite[0];
+			to = posToLocation(
+				{ lat: favourite.lat, lng: favourite.lng },
+				favourite.level,
+				favourite.address
+			);
+			history.back();
+		}
+	});
+
+	$effect(() => {
+		if (selectedRouteFavourite && selectedRouteFavourite.length != 0) {
+			const favourite = selectedRouteFavourite[0];
+			from = posToLocation(
+				{ lat: favourite.fromLat, lng: favourite.fromLng },
+				favourite.fromLevel,
+				favourite.fromAddress
+			);
+			to = posToLocation(
+				{ lat: favourite.toLat, lng: favourite.toLng },
+				favourite.toLevel,
+				favourite.toAddress
+			);
+		}
+	});
 </script>
 
 <div class="md:min-h-[70dvh] md:w-96">
 	<Message msg={form?.msg} class="mb-4" />
-
 	{#if page.state.selectFrom}
 		<AddressTypeahead
 			placeholder={t.from}
@@ -167,12 +244,20 @@
 			items={fromItems}
 			onValueChange={() => history.back()}
 		/>
+		<FavouritesList
+			bind:selectedFavourite={selectedFromFavourite}
+			favourites={data.favouriteLocations}
+		/>
 	{:else if page.state.selectTo}
 		<AddressTypeahead
 			placeholder={t.to}
 			bind:selected={to}
 			items={toItems}
 			onValueChange={() => history.back()}
+		/>
+		<FavouritesList
+			bind:selectedFavourite={selectedToFavourite}
+			favourites={data.favouriteLocations}
 		/>
 	{:else if page.state.showMap}
 		<PopupMap bind:from bind:to itinerary={page.state.selectedItinerary} />
@@ -219,7 +304,7 @@
 									page.state.selectedItinerary.legs.length === 1 &&
 									page.state.selectedItinerary.legs[0].mode === 'ODM'}
 
-								<form method="post" use:enhance>
+								<form method="post" action="?/booking" use:enhance>
 									<input
 										type="hidden"
 										name="json"
@@ -452,6 +537,16 @@
 					</Dialog.Content>
 				</Dialog.Root>
 			</div>
+			{#if baseQuery == undefined && data.favouriteRoutes && data.favouriteRoutes.length != 0}
+				<Card.Root class="mt-2">
+					<Card.Content>
+						<FavouriteRoutes
+							bind:selectedFavourite={selectedRouteFavourite}
+							favourites={data.favouriteRoutes}
+						/>
+					</Card.Content>
+				</Card.Root>
+			{/if}
 			<div bind:this={connectionsEl} class="flex grow flex-col gap-4">
 				<ItineraryList
 					{baseQuery}
