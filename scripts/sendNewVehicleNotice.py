@@ -11,5 +11,5 @@ if not token:
 if not origin:
     raise ValueError("ORIGIN not found in environment")
 
-url = origin + "/api/sendNewVehicleNotice"
+url = origin + "/apiInternal/sendNewVehicleNotice"
 response = requests.post(url, headers={"internal-token": token})

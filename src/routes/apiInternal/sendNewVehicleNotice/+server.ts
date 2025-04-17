@@ -34,7 +34,7 @@ export const POST = async (event) => {
 			.select((eb) => [
 				'user.name',
 				'user.email',
-				'user.id',
+				'request.id as requestId',
 				'vehicle.licensePlate',
 				'tour.id as tourId',
 				jsonArrayFrom(
@@ -62,10 +62,10 @@ export const POST = async (event) => {
 				);
 			}
 		}
-		const requestIds = requests.map((r) => r.id);
-		if (requestIds.length === 0) {
+		if (requests.length === 0) {
 			return;
 		}
+		const requestIds = requests.map((r) => r.requestId);
 		await trx
 			.updateTable('request')
 			.set({ licensePlateUpdatedAt: null })
