@@ -536,7 +536,9 @@ export const actions = {
 			.selectAll()
 			.execute();
 		const fromMatch = currentFavourites.find(
-			(fav) => isSamePlace(fav, { lat: fromLatitude, lng: fromLongtitude }) && fav.level === fromLvl
+			(favourite) =>
+				isSamePlace(favourite, { lat: fromLatitude, lng: fromLongtitude }) &&
+				favourite.level === fromLvl
 		);
 		let fromId = undefined;
 		if (fromMatch) {
@@ -582,7 +584,8 @@ export const actions = {
 			.selectAll()
 			.execute();
 		const toMatch = currentFavourites.find(
-			(fav) => isSamePlace(fav, { lat: toLatitude, lng: toLongitude }) && fav.level === toLvl
+			(favourite) =>
+				isSamePlace(favourite, { lat: toLatitude, lng: toLongitude }) && favourite.level === toLvl
 		);
 		let toId = undefined;
 		if (toMatch) {

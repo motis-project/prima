@@ -17,13 +17,13 @@
 	};
 	let {
 		favourites,
-		selectedFav = $bindable()
+		selectedFavourite = $bindable()
 	}: {
 		favourites: FavouriteRoute[];
-		selectedFav?: FavouriteRoute[];
+		selectedFavourite?: FavouriteRoute[];
 	} = $props();
 
-	let favRows = $derived(favourites);
+	let favouriteRows = $derived(favourites);
 </script>
 
 <div>
@@ -36,11 +36,11 @@
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
-			{#each favRows as row}
+			{#each favouriteRows as row}
 				<Table.Row
 					class={'cursor-pointer'}
 					onclick={() => {
-						selectedFav = [row];
+						selectedFavourite = [row];
 					}}
 				>
 					<Table.Cell>

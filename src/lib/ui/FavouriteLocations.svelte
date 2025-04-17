@@ -6,15 +6,15 @@
 
 	let {
 		favourites,
-		selectedFav = $bindable()
+		selectedFavourite = $bindable()
 	}: {
 		favourites: { address: string; lat: number; lng: number; level: number }[];
-		selectedFav?: { address: string; lat: number; lng: number; level: number }[];
+		selectedFavourite?: { address: string; lat: number; lng: number; level: number }[];
 	} = $props();
 
-	let favRows = $derived(favourites);
+	let favouriteRows = $derived(favourites);
 
-	const favouritesCols: Column<{ address: string; lat: number; lng: number }>[] = [
+	const favouriteCols: Column<{ address: string; lat: number; lng: number }>[] = [
 		{
 			text: [t.favourites],
 			sort: undefined,
@@ -23,14 +23,14 @@
 	];
 </script>
 
-{#if favRows.length != 0}
+{#if favouriteRows.length != 0}
 	<Card.Root class="mt-5">
 		<Card.Content>
 			<SortableTable
 				getRowStyle={(_) => 'cursor-pointer '}
-				rows={favRows}
-				cols={favouritesCols}
-				bind:selectedRow={selectedFav}
+				rows={favouriteRows}
+				cols={favouriteCols}
+				bind:selectedRow={selectedFavourite}
 				bindSelectedRow={true}
 			/>
 		</Card.Content></Card.Root

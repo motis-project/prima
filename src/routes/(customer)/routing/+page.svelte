@@ -125,7 +125,6 @@
 			clearTimeout(searchDebounceTimer);
 			searchDebounceTimer = setTimeout(async () => {
 				if (from.label && from.value.match && to.label && to.value.match) {
-					console.log('upd favs');
 					const formData = new FormData();
 					formData.append('fromAddress', from.label);
 					formData.append('fromLat', from.value.match.lat.toString());
@@ -176,11 +175,13 @@
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
 	};
 
-	let selectedToFav: { address: string; lat: number; lng: number; level: number }[] | undefined =
-		$state(undefined);
-	let selectedFromFav: { address: string; lat: number; lng: number; level: number }[] | undefined =
-		$state(undefined);
-	let selectedFav:
+	let selectedToFavourite:
+		| { address: string; lat: number; lng: number; level: number }[]
+		| undefined = $state(undefined);
+	let selectedFromFavourite:
+		| { address: string; lat: number; lng: number; level: number }[]
+		| undefined = $state(undefined);
+	let selectedRouteFavourite:
 		| {
 				fromAddress: string;
 				fromLat: number;
@@ -194,8 +195,8 @@
 		| undefined = $state(undefined);
 
 	$effect(() => {
-		if (selectedFromFav && selectedFromFav.length != 0) {
-			const favourite = selectedFromFav[0];
+		if (selectedFromFavourite && selectedFromFavourite.length != 0) {
+			const favourite = selectedFromFavourite[0];
 			from = posToLocation(
 				{ lat: favourite.lat, lng: favourite.lng },
 				favourite.level,
@@ -206,8 +207,8 @@
 	});
 
 	$effect(() => {
-		if (selectedToFav && selectedToFav.length != 0) {
-			const favourite = selectedToFav[0];
+		if (selectedToFavourite && selectedToFavourite.length != 0) {
+			const favourite = selectedToFavourite[0];
 			to = posToLocation(
 				{ lat: favourite.lat, lng: favourite.lng },
 				favourite.level,
@@ -218,8 +219,8 @@
 	});
 
 	$effect(() => {
-		if (selectedFav && selectedFav.length != 0) {
-			const favourite = selectedFav[0];
+		if (selectedRouteFavourite && selectedRouteFavourite.length != 0) {
+			const favourite = selectedRouteFavourite[0];
 			from = posToLocation(
 				{ lat: favourite.fromLat, lng: favourite.fromLng },
 				favourite.fromLevel,
@@ -243,7 +244,10 @@
 			items={fromItems}
 			onValueChange={() => history.back()}
 		/>
-		<FavouritesList bind:selectedFav={selectedFromFav} favourites={data.favouriteLocations} />
+		<FavouritesList
+			bind:selectedFavourite={selectedFromFavourite}
+			favourites={data.favouriteLocations}
+		/>
 	{:else if page.state.selectTo}
 		<AddressTypeahead
 			placeholder={t.to}
@@ -251,7 +255,10 @@
 			items={toItems}
 			onValueChange={() => history.back()}
 		/>
-		<FavouritesList bind:selectedFav={selectedToFav} favourites={data.favouriteLocations} />
+		<FavouritesList
+			bind:selectedFavourite={selectedToFavourite}
+			favourites={data.favouriteLocations}
+		/>
 	{:else if page.state.showMap}
 		<PopupMap bind:from bind:to itinerary={page.state.selectedItinerary} />
 	{:else if page.state.selectedItinerary}
@@ -533,7 +540,10 @@
 			{#if baseQuery == undefined && data.favouriteRoutes && data.favouriteRoutes.length != 0}
 				<Card.Root class="mt-2">
 					<Card.Content>
-						<FavouriteRoutes bind:selectedFav favourites={data.favouriteRoutes} />
+						<FavouriteRoutes
+							bind:selectedFavourite={selectedRouteFavourite}
+							favourites={data.favouriteRoutes}
+						/>
 					</Card.Content>
 				</Card.Root>
 			{/if}
