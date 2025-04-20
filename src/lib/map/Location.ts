@@ -9,9 +9,9 @@ export type Location = {
 	};
 };
 
-export function posToLocation(pos: maplibregl.LngLatLike, level: number): Location {
+export function posToLocation(pos: maplibregl.LngLatLike, level: number, l?: string): Location {
 	const { lat, lng } = maplibregl.LngLat.convert(pos);
-	const label = `${lat},${lng},${level}`;
+	const label = l ? l : `${lat},${lng},${level}`;
 	return {
 		label,
 		value: {

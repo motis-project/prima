@@ -8,6 +8,230 @@ import { msg, type Msg } from '$lib/msg';
 import { redirect } from '@sveltejs/kit';
 import { sendMail } from '$lib/server/sendMail';
 import NewRide from '$lib/server/email/NewRide.svelte';
+import type { PageServerLoadEvent } from './$types';
+import { isSamePlace } from '$lib/util/booking/isSamePlace';
+import { DAY } from '$lib/util/time';
+
+export async function load(event: PageServerLoadEvent) {
+	const userId = event.locals.session?.userId;
+	if (!userId) {
+		return {
+			favouriteLocations: [],
+			favouriteRoutes: []
+		};
+	}
+	console.log(
+		'test: ',
+		await db
+			.with('top_favourites', (qb) =>
+				qb
+					.selectFrom('favouriteRoutes')
+					.innerJoin(
+						'favouriteLocations as fromLocations',
+						'fromLocations.id',
+						'favouriteRoutes.fromId'
+					)
+					.innerJoin('favouriteLocations as toLocations', 'toLocations.id', 'favouriteRoutes.toId')
+					.select((eb) => [
+						eb.lit(1).$castTo<number>().as('sort_order_1'),
+						'favouriteRoutes.count as sort_order_2',
+						'toLocations.address as toAddress',
+						'toLocations.lat as toLat',
+						'toLocations.lng as toLng',
+						'toLocations.level as toLevel',
+						'fromLocations.address as fromAddress',
+						'fromLocations.lat as fromLat',
+						'fromLocations.lng as fromLng',
+						'fromLocations.level as fromLevel',
+						'favouriteRoutes.id'
+					])
+					.where('favouriteRoutes.user', '=', userId)
+					.orderBy('favouriteRoutes.count', 'desc')
+			)
+			.with('latest', (qb) =>
+				qb
+					.selectFrom('favouriteRoutes')
+					.innerJoin(
+						'favouriteLocations as fromLocations',
+						'fromLocations.id',
+						'favouriteRoutes.fromId'
+					)
+					.innerJoin('favouriteLocations as toLocations', 'toLocations.id', 'favouriteRoutes.toId')
+					.select((eb) => [
+						eb.lit(2).$castTo<number>().as('sort_order_1'),
+						eb.ref('favouriteRoutes.lastTimestamp').$castTo<number>().as('sort_order_2'),
+						'toLocations.address as toAddress',
+						'toLocations.lat as toLat',
+						'toLocations.lng as toLng',
+						'toLocations.level as toLevel',
+						'fromLocations.address as fromAddress',
+						'fromLocations.lat as fromLat',
+						'fromLocations.lng as fromLng',
+						'fromLocations.level as fromLevel',
+						'favouriteRoutes.id'
+					])
+					.where('favouriteRoutes.user', '=', userId)
+					.where('favouriteRoutes.lastTimestamp', '>=', Date.now() - DAY)
+					.orderBy('favouriteRoutes.lastTimestamp', 'desc')
+					.limit(2)
+			)
+			.with('combined', (qb) =>
+				qb.selectFrom('latest').selectAll().unionAll(qb.selectFrom('top_favourites').selectAll())
+			)
+			.with('ranked', (qb) =>
+				qb
+					.selectFrom('combined')
+					.selectAll()
+					.select(sql<number>`ROW_NUMBER() OVER (PARTITION BY id)`.as('rn'))
+			)
+			.selectFrom('ranked')
+			.orderBy('ranked.sort_order_2', 'desc')
+			.select([
+				'ranked.fromAddress',
+				'ranked.toAddress',
+				'ranked.fromLat',
+				'ranked.toLat',
+				'ranked.fromLng',
+				'ranked.toLng',
+				'ranked.fromLevel',
+				'ranked.toLevel',
+				'sort_order_2'
+			])
+			.where('ranked.rn', '=', 1)
+			.where('sort_order_1', '=', 2)
+			.execute()
+	);
+	return {
+		favouriteLocations: await db
+			.with('top_favourites', (qb) =>
+				qb
+					.selectFrom('favouriteLocations')
+					.select((eb) => [
+						eb.lit(1).$castTo<number>().as('sort_order_1'),
+						'address',
+						'lat',
+						'lng',
+						'level',
+						'count as sort_order_2',
+						'lastTimestamp',
+						'id'
+					])
+					.where('user', '=', userId)
+					.orderBy('count', 'desc')
+					.limit(5)
+			)
+			.with('latest', (qb) =>
+				qb
+					.selectFrom('favouriteLocations')
+					.select((eb) => [
+						eb.lit(2).$castTo<number>().as('sort_order_1'),
+						'address',
+						'lat',
+						'lng',
+						'level',
+						'count as sort_order_2',
+						'lastTimestamp',
+						'id'
+					])
+					.where('user', '=', userId)
+					.where('lastTimestamp', '>=', Date.now() - DAY)
+					.orderBy('lastTimestamp', 'desc')
+					.limit(2)
+			)
+			.with('combined', (qb) =>
+				qb.selectFrom('latest').selectAll().unionAll(qb.selectFrom('top_favourites').selectAll())
+			)
+			.with('ranked', (qb) =>
+				qb
+					.selectFrom('combined')
+					.selectAll()
+					.select(sql<number>`ROW_NUMBER() OVER (PARTITION BY id)`.as('rn'))
+			)
+			.selectFrom('ranked')
+			.orderBy('ranked.sort_order_1', 'desc')
+			.orderBy('ranked.sort_order_2', 'desc')
+			.select(['ranked.address', 'ranked.lat', 'ranked.lng', 'ranked.level'])
+			.where('ranked.rn', '=', 1)
+			.execute(),
+		favouriteRoutes: await db
+			.with('top_favourites', (qb) =>
+				qb
+					.selectFrom('favouriteRoutes')
+					.innerJoin(
+						'favouriteLocations as fromLocations',
+						'fromLocations.id',
+						'favouriteRoutes.fromId'
+					)
+					.innerJoin('favouriteLocations as toLocations', 'toLocations.id', 'favouriteRoutes.toId')
+					.select((eb) => [
+						eb.lit(1).$castTo<number>().as('sort_order_1'),
+						'favouriteRoutes.count as sort_order_2',
+						'toLocations.address as toAddress',
+						'toLocations.lat as toLat',
+						'toLocations.lng as toLng',
+						'toLocations.level as toLevel',
+						'fromLocations.address as fromAddress',
+						'fromLocations.lat as fromLat',
+						'fromLocations.lng as fromLng',
+						'fromLocations.level as fromLevel',
+						'favouriteRoutes.id'
+					])
+					.where('favouriteRoutes.user', '=', userId)
+					.orderBy('favouriteRoutes.count', 'desc')
+			)
+			.with('latest', (qb) =>
+				qb
+					.selectFrom('favouriteRoutes')
+					.innerJoin(
+						'favouriteLocations as fromLocations',
+						'fromLocations.id',
+						'favouriteRoutes.fromId'
+					)
+					.innerJoin('favouriteLocations as toLocations', 'toLocations.id', 'favouriteRoutes.toId')
+					.select((eb) => [
+						eb.lit(2).$castTo<number>().as('sort_order_1'),
+						eb.ref('favouriteRoutes.lastTimestamp').$castTo<number>().as('sort_order_2'),
+						'toLocations.address as toAddress',
+						'toLocations.lat as toLat',
+						'toLocations.lng as toLng',
+						'toLocations.level as toLevel',
+						'fromLocations.address as fromAddress',
+						'fromLocations.lat as fromLat',
+						'fromLocations.lng as fromLng',
+						'fromLocations.level as fromLevel',
+						'favouriteRoutes.id'
+					])
+					.where('favouriteRoutes.user', '=', userId)
+					.where('favouriteRoutes.lastTimestamp', '>=', Date.now() - DAY)
+					.orderBy('favouriteRoutes.lastTimestamp', 'desc')
+					.limit(2)
+			)
+			.with('combined', (qb) =>
+				qb.selectFrom('latest').selectAll().unionAll(qb.selectFrom('top_favourites').selectAll())
+			)
+			.with('ranked', (qb) =>
+				qb
+					.selectFrom('combined')
+					.selectAll()
+					.select(sql<number>`ROW_NUMBER() OVER (PARTITION BY id)`.as('rn'))
+			)
+			.selectFrom('ranked')
+			.orderBy('ranked.sort_order_1', 'desc')
+			.orderBy('ranked.sort_order_2', 'desc')
+			.select([
+				'ranked.fromAddress',
+				'ranked.toAddress',
+				'ranked.fromLat',
+				'ranked.toLat',
+				'ranked.fromLng',
+				'ranked.toLng',
+				'ranked.fromLevel',
+				'ranked.toLevel'
+			])
+			.where('ranked.rn', '=', 1)
+			.execute()
+	};
+}
 
 const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 	for (const e of l1) {
@@ -19,7 +243,7 @@ const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 };
 
 export const actions = {
-	default: async ({ request, locals }): Promise<{ msg: Msg }> => {
+	booking: async ({ request, locals }): Promise<{ msg: Msg }> => {
 		const user = locals.session?.userId;
 		if (!user) {
 			return { msg: msg('accountDoesNotExist') };
@@ -277,5 +501,151 @@ export const actions = {
 		}
 
 		return { msg: message! };
+	},
+	updateFavourites: async ({ request, locals }) => {
+		const user = locals.session?.userId;
+		if (!user || typeof user != 'number') {
+			return { msg: msg('accountDoesNotExist') };
+		}
+		const formData = await request.formData();
+		const fromAddress = formData.get('fromAddress');
+		const fromLat = formData.get('fromLat');
+		const fromLon = formData.get('fromLon');
+		const fromLevel = formData.get('fromLevel');
+		const toAddress = formData.get('toAddress');
+		const toLat = formData.get('toLat');
+		const toLon = formData.get('toLon');
+		const toLevel = formData.get('toLevel');
+		if (
+			typeof fromAddress !== 'string' ||
+			typeof fromLat !== 'string' ||
+			typeof fromLevel !== 'string' ||
+			typeof fromLon !== 'string'
+		) {
+			return { msg: msg('invalidFrom') };
+		}
+		const fromLatitude = parseFloat(fromLat);
+		const fromLongtitude = parseFloat(fromLon);
+		const fromLvl = parseInt(fromLevel);
+		if (isNaN(fromLatitude) || isNaN(fromLongtitude) || isNaN(fromLvl)) {
+			return { msg: msg('invalidFrom') };
+		}
+		let currentFavourites = await db
+			.selectFrom('favouriteLocations')
+			.where('user', '=', user)
+			.selectAll()
+			.execute();
+		const fromMatch = currentFavourites.find(
+			(favourite) =>
+				isSamePlace(favourite, { lat: fromLatitude, lng: fromLongtitude }) &&
+				favourite.level === fromLvl
+		);
+		let fromId = undefined;
+		if (fromMatch) {
+			await db
+				.updateTable('favouriteLocations')
+				.where('user', '=', user)
+				.where('favouriteLocations.id', '=', fromMatch.id)
+				.set({ count: fromMatch.count + 1, lastTimestamp: Date.now() })
+				.execute();
+		} else {
+			fromId = (await db
+				.insertInto('favouriteLocations')
+				.values({
+					lat: fromLatitude,
+					lng: fromLongtitude,
+					level: fromLvl,
+					address: fromAddress,
+					user,
+					count: 1,
+					lastTimestamp: Date.now()
+				})
+				.returning('id')
+				.executeTakeFirst())!.id;
+		}
+
+		if (
+			typeof toAddress !== 'string' ||
+			typeof toLat !== 'string' ||
+			typeof toLon !== 'string' ||
+			typeof toLevel !== 'string'
+		) {
+			return { msg: msg('invalidFrom') };
+		}
+		const toLatitude = parseFloat(toLat);
+		const toLongitude = parseFloat(toLon);
+		const toLvl = parseInt(toLevel);
+		if (isNaN(toLatitude) || isNaN(toLongitude) || isNaN(toLvl)) {
+			return { msg: msg('invalidFrom') };
+		}
+		currentFavourites = await db
+			.selectFrom('favouriteLocations')
+			.where('user', '=', user)
+			.selectAll()
+			.execute();
+		const toMatch = currentFavourites.find(
+			(favourite) =>
+				isSamePlace(favourite, { lat: toLatitude, lng: toLongitude }) && favourite.level === toLvl
+		);
+		let toId = undefined;
+		if (toMatch) {
+			await db
+				.updateTable('favouriteLocations')
+				.where('user', '=', user)
+				.where('favouriteLocations.id', '=', toMatch.id)
+				.set({ count: toMatch.count + 1, lastTimestamp: Date.now() })
+				.execute();
+		} else {
+			toId = (await db
+				.insertInto('favouriteLocations')
+				.values({
+					lat: toLatitude,
+					lng: toLongitude,
+					level: toLvl,
+					address: toAddress,
+					user,
+					count: 1,
+					lastTimestamp: Date.now()
+				})
+				.returning(['favouriteLocations.id'])
+				.executeTakeFirst())!.id;
+		}
+		toId = toId ?? toMatch?.id;
+		fromId = fromId ?? fromMatch?.id;
+		if (
+			toId == undefined ||
+			fromId == undefined ||
+			isSamePlace({ lat: fromLatitude, lng: fromLongtitude }, { lat: toLatitude, lng: toLongitude })
+		) {
+			return {};
+		}
+		if (fromMatch && toMatch) {
+			const currentFavouriteRoutes = await db
+				.selectFrom('favouriteRoutes')
+				.where('user', '=', user)
+				.where('fromId', '=', fromMatch.id)
+				.where('toId', '=', toMatch.id)
+				.select(['favouriteRoutes.id'])
+				.executeTakeFirst();
+			if (currentFavouriteRoutes) {
+				await db
+					.updateTable('favouriteRoutes')
+					.where('favouriteRoutes.id', '=', currentFavouriteRoutes.id)
+					.set((eb) => ({ count: eb('count', '+', 1), lastTimestamp: Date.now() }))
+					.returning('favouriteRoutes.id')
+					.execute();
+			} else {
+				await db
+					.insertInto('favouriteRoutes')
+					.values({ user, toId, fromId, count: 1, lastTimestamp: Date.now() })
+					.execute();
+			}
+		} else {
+			await db
+				.insertInto('favouriteRoutes')
+				.values({ user, toId, fromId, count: 1, lastTimestamp: Date.now() })
+				.execute();
+		}
+		return {};
 	}
 };

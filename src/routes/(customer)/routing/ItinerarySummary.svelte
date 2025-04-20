@@ -7,6 +7,7 @@
 	import { getModeStyle, routeColor } from '$lib/ui/modeStyle';
 	import { t } from '$lib/i18n/translation';
 	import type { Snippet } from 'svelte';
+	import DisplayAddresses from '$lib/ui/DisplayAddresses.svelte';
 
 	const {
 		it,
@@ -45,7 +46,7 @@
 		</div>
 		{#if it.startAddress !== undefined && it.targetAddress !== undefined}
 			<span class="break-words text-left">
-				{it.startAddress} -> {it.targetAddress}
+				<DisplayAddresses fromAddress={it.startAddress} toAddress={it.targetAddress} />
 			</span>
 		{/if}
 		<span class="text-left">
