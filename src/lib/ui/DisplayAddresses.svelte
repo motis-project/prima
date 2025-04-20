@@ -1,22 +1,23 @@
 <script lang="ts">
-	import MapPin from 'lucide-svelte/icons/map-pin';
-	import Circle from 'lucide-svelte/icons/circle';
-	import Dots from 'lucide-svelte/icons/ellipsis-vertical';
+	import { Circle, MapPin } from 'lucide-svelte';
 
-	const { fromAddress, toAddress }: { fromAddress: string; toAddress: string } = $props();
+	const { fromAddress, toAddress } = $props();
+
+	let fromHeight = $state(0);
+	let toHeight = $state(0);
+	let topMargin = $derived((fromHeight - 16) / 2);
+	let botMargin = $derived((toHeight - 20) / 2);
 </script>
 
-<div class="grid grid-cols-[auto_1fr] grid-rows-[auto_auto_auto] gap-x-2">
-	<div class="flex items-center justify-center">
-		<Circle size={12} />
+<div class="flex flex-row gap-1 text-sm">
+	<div class="flex flex-col items-center justify-between">
+		<Circle class="h-4 w-4" style="margin-top: {topMargin}px" />
+		<div class="min-h-4 w-px flex-1 border-l border-dashed border-foreground"></div>
+		<MapPin class="h-5 w-5" style="margin-bottom: {botMargin}px" />
 	</div>
-	<div>{fromAddress}</div>
-	<div class="flex flex-col items-center justify-center gap-1">
-		<Dots size={13} />
+	<div class="flex flex-col justify-between break-all">
+		<div bind:offsetHeight={fromHeight}>{fromAddress}</div>
+		<div class="min-h-4"></div>
+		<div bind:offsetHeight={toHeight}>{toAddress}</div>
 	</div>
-	<div></div>
-	<div class="flex items-center justify-center">
-		<MapPin size={12} />
-	</div>
-	<div>{toAddress}</div>
 </div>
