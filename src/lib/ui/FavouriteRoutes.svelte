@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { t } from '$lib/i18n/translation';
 	import * as Table from '$lib/shadcn/table/index';
-	import MapPin from 'lucide-svelte/icons/map-pin';
-	import Circle from 'lucide-svelte/icons/circle';
-	import Dots from 'lucide-svelte/icons/ellipsis-vertical';
+	import DisplayAddresses from './DisplayAddresses.svelte';
 
 	type FavouriteRoute = {
 		fromAddress: string;
@@ -44,20 +42,7 @@
 					}}
 				>
 					<Table.Cell>
-						<div class="grid grid-cols-[auto_1fr] grid-rows-[auto_auto_auto] gap-x-2">
-							<div class="flex items-center justify-center">
-								<Circle size={12} />
-							</div>
-							<div>{row.fromAddress}</div>
-							<div class="flex flex-col items-center justify-center gap-1">
-								<Dots size={13} />
-							</div>
-							<div></div>
-							<div class="flex items-center justify-center">
-								<MapPin size={12} />
-							</div>
-							<div>{row.toAddress}</div>
-						</div>
+						<DisplayAddresses fromAddress={row.fromAddress} toAddress={row.toAddress} />
 					</Table.Cell>
 				</Table.Row>
 			{/each}
