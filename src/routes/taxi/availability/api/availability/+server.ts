@@ -4,7 +4,7 @@ import { Interval } from '$lib/util/interval';
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 import { HOUR } from '$lib/util/time';
 import { json } from '@sveltejs/kit';
-import { sql, type Insertable, type Selectable } from 'kysely';
+import { type Insertable, type Selectable } from 'kysely';
 import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
 import { lockTablesStatement } from '$lib/server/db/lockTables';
 

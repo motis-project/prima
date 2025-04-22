@@ -1,6 +1,5 @@
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { sql } from 'kysely';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import { getLatestEventTime } from '$lib/util/getLatestEventTime';

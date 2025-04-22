@@ -2,7 +2,6 @@ import { bookRide, toExpectedConnectionWithISOStrings } from '$lib/server/bookin
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
 import { readFloat, readInt } from '$lib/server/util/readForm';
-import { sql } from 'kysely';
 import { insertRequest } from '../../api/booking/query';
 import { msg, type Msg } from '$lib/msg';
 import { redirect } from '@sveltejs/kit';

@@ -1,5 +1,4 @@
 import { Validator } from 'jsonschema';
-import { sql } from 'kysely';
 import { bookingSchema, schemaDefinitions } from '../whitelist/WhitelistRequest';
 import { db } from '$lib/server/db';
 import type { RequestEvent } from './$types';
