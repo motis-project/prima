@@ -4,6 +4,7 @@ import { sql } from 'kysely';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import { getLatestEventTime } from '$lib/util/getLatestEventTime';
+import { lockTablesStatement } from '$lib/server/db/lockTables';
 
 export const POST = async (event) => {
 	const companyId = event.locals.session?.companyId;
@@ -18,7 +19,7 @@ export const POST = async (event) => {
 		'MOVE TOUR PARAMS END'
 	);
 	await db.transaction().execute(async (trx) => {
-		await sql`LOCK TABLE tour IN ACCESS EXCLUSIVE MODE;`.execute(trx);
+		await lockTablesStatement(['tour', 'request', 'event', 'vehicle']).execute(trx);
 		const movedTour = await trx
 			.selectFrom('tour')
 			.where(({ eb }) =>

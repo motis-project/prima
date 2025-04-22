@@ -7,6 +7,7 @@ import { bookRide, type ExpectedConnection } from '$lib/server/booking/bookRide'
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { insertRequest } from './query';
 import { json } from '@sveltejs/kit';
+import { lockTablesStatement } from '$lib/server/db/lockTables';
 
 export type BookingParameters = {
 	connection1: ExpectedConnection | null;
@@ -44,7 +45,7 @@ export const POST = async (event: RequestEvent) => {
 	let message: string | undefined = undefined;
 	let success = false;
 	await db.transaction().execute(async (trx) => {
-		await sql`LOCK TABLE tour, request, event, availability IN ACCESS EXCLUSIVE MODE;`.execute(trx);
+		await lockTablesStatement(['tour', 'request', 'event', 'availability', 'vehicle']).execute(trx);
 		let firstConnection = undefined;
 		let secondConnection = undefined;
 		if (p.connection1 != null) {

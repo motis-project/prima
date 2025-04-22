@@ -3,6 +3,7 @@ import { db } from '.';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { sendMail } from '$lib/server/sendMail';
 import CancelNotificationCompany from '$lib/server/email/CancelNotificationCompany.svelte';
+import { lockTablesStatement } from './lockTables';
 
 export const cancelRequest = async (requestId: number, userId: number) => {
 	console.log(
@@ -11,7 +12,7 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 		' Cancel Request PARAMS END'
 	);
 	await db.transaction().execute(async (trx) => {
-		await sql`LOCK TABLE tour, request, event, "user" IN ACCESS EXCLUSIVE MODE;`.execute(trx);
+		await lockTablesStatement(['tour', 'request', 'event', 'user']).execute(trx);
 		const tour = await trx
 			.selectFrom('request')
 			.where('request.id', '=', requestId)
