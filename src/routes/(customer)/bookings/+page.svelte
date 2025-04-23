@@ -40,7 +40,12 @@
 {/snippet}
 
 <div class="flex flex-col gap-4">
+	{#if plannedJourneys.length === 0 && pastJourneys.length === 0}
+		{t.noBookings}
+	{/if}
 	{@render journeyList(plannedJourneys)}
-	{t.cancelledJourneys}
+	{#if pastJourneys.length !== 0}
+		{t.cancelledJourneys}
+	{/if}
 	{@render journeyList(pastJourneys)}
 </div>

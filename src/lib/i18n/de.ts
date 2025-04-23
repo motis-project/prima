@@ -161,6 +161,7 @@ const translations: Translations = {
 		}),
 
 	cancelledJourneys: 'Vergangene und stornierte Fahrten',
+	noBookings: 'Sie haben bisher keine gebuchten oder gespeicherten Fahrten.',
 	journeyDetails: 'Verbindungsdetails',
 	transfer: 'Umstieg',
 	transfers: 'Umstiege',

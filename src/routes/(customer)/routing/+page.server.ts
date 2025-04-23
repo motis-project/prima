@@ -19,7 +19,7 @@ const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 };
 
 export const actions = {
-	routing: async ({ request, locals }): Promise<{ msg: Msg }> => {
+	bookItineraryWithOdm: async ({ request, locals }): Promise<{ msg: Msg }> => {
 		const user = locals.session?.userId;
 		if (!user) {
 			return { msg: msg('accountDoesNotExist') };
@@ -278,7 +278,7 @@ export const actions = {
 
 		return { msg: message! };
 	},
-	public: async ({ request, locals }): Promise<{ msg: Msg }> => {
+	storeItineraryWithNoOdm: async ({ request, locals }): Promise<{ msg: Msg }> => {
 		const user = locals.session?.userId;
 		if (!user) {
 			return { msg: msg('accountDoesNotExist') };
