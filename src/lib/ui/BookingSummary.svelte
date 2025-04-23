@@ -16,6 +16,8 @@
 
 <div class="mb-2">{t.booking.summary}:</div>
 <ul class="flex list-inside list-disc flex-col gap-2">
+	<li>{t.booking.cashOnly}</li>
+
 	<li>
 		{t.booking.totalPrice}:
 		<span class="font-bold">{price} €</span>

@@ -219,7 +219,8 @@ const translations: Translations = {
 					return `${passengers} persons`;
 			}
 		},
-		totalPrice: 'Total price (payable in the taxi)',
+		totalPrice: 'Total price',
+		cashOnly: 'Cash payment only',
 		cancel: 'Cancel',
 		loginToBook: 'Login to book',
 		connection: 'Connection',

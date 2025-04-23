@@ -225,7 +225,8 @@ const translations: Translations = {
 					return `Buchung für ${passengers} Personen`;
 			}
 		},
-		totalPrice: 'Gesamtpreis (Bezahlung im Taxi)',
+		totalPrice: 'Gesamtpreis',
+		cashOnly: 'Nur Barzahlung im Taxi',
 		cancel: 'Stornieren',
 		loginToBook: 'Einloggen zum Buchen',
 		connection: 'Verbindung',
