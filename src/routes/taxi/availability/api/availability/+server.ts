@@ -4,8 +4,9 @@ import { Interval } from '$lib/util/interval';
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 import { HOUR } from '$lib/util/time';
 import { json } from '@sveltejs/kit';
-import { sql, type Insertable, type Selectable } from 'kysely';
+import { type Insertable, type Selectable } from 'kysely';
 import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
+import { lockTablesStatement } from '$lib/server/db/lockTables';
 
 type Availability = Selectable<Database['availability']>;
 type NewAvailability = Insertable<Database['availability']>;
@@ -45,12 +46,12 @@ export const DELETE = async ({ locals, request }) => {
 	}
 	console.log('remove availability vehicle=', vehicleId, 'toRemove=', toRemove);
 	await db.transaction().execute(async (trx) => {
-		await sql`LOCK TABLE availability IN ACCESS EXCLUSIVE MODE;`.execute(trx);
+		await lockTablesStatement(['availability', 'vehicle']).execute(trx);
 		const overlapping = await trx
 			.selectFrom('availability')
 			.where(({ eb }) =>
 				eb.and([
-					eb('vehicle', '=', vehicleId),
+					eb('availability.vehicle', '=', vehicleId),
 					eb('availability.startTime', '<', to),
 					eb('availability.endTime', '>', from),
 					eb.exists(

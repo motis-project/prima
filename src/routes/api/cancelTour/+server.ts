@@ -5,6 +5,7 @@ import { sql } from 'kysely';
 import { sendMail } from '$lib/server/sendMail';
 import CancelNotificationCustomer from '$lib/server/email/CancelNotificationCustomer.svelte';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
+import { lockTablesStatement } from '$lib/server/db/lockTables';
 
 export const POST = async (event: RequestEvent) => {
 	const company = event.locals.session!.companyId;
@@ -20,7 +21,7 @@ export const POST = async (event: RequestEvent) => {
 		return json({});
 	}
 	await db.transaction().execute(async (trx) => {
-		await sql`LOCK TABLE tour, request, event, "user" IN ACCESS EXCLUSIVE MODE;`.execute(trx);
+		await lockTablesStatement(['tour', 'request', 'event', 'user', 'vehicle']).execute(trx);
 		const tour = await trx
 			.selectFrom('tour')
 			.where('tour.id', '=', p.tourId)

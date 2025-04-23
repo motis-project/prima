@@ -2,12 +2,12 @@ import { bookRide, toExpectedConnectionWithISOStrings } from '$lib/server/bookin
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
 import { readFloat, readInt } from '$lib/server/util/readForm';
-import { sql } from 'kysely';
 import { insertRequest } from '../../api/booking/query';
 import { msg, type Msg } from '$lib/msg';
 import { redirect } from '@sveltejs/kit';
 import { sendMail } from '$lib/server/sendMail';
 import NewRide from '$lib/server/email/NewRide.svelte';
+import { lockTablesStatement } from '$lib/server/db/lockTables';
 
 const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 	for (const e of l1) {
@@ -140,7 +140,7 @@ export const actions = {
 		let request1: number | null = null;
 		let request2: number | null = null;
 		await db.transaction().execute(async (trx) => {
-			await sql`LOCK TABLE tour, request, event, availability IN ACCESS EXCLUSIVE MODE;`.execute(
+			await lockTablesStatement(['tour', 'request', 'event', 'availability', 'vehicle']).execute(
 				trx
 			);
 
