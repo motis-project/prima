@@ -156,7 +156,7 @@ const translations: Translations = {
 		}),
 
 	cancelledJourneys: 'Past and Cancelled Journeys',
-	noBookings: 'There are no bookings or stored itiniraries yet.',
+	noBookings: 'There are no bookings or stored itineraries yet.',
 	journeyDetails: 'Journey Details',
 	transfer: 'transfer',
 	transfers: 'transfers',
