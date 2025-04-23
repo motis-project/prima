@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { cn } from '$lib/shadcn/utils';
+	import { MINUTE } from '$lib/util/time';
 
 	let {
 		value = $bindable(),
@@ -14,10 +15,10 @@
 	$effect(() => {
 		if (el !== undefined) {
 			value.setSeconds(0, 0);
-			const dateTimeLocalValue = new Date(value.getTime() - value.getTimezoneOffset() * 60000)
-				.toISOString()
-				.slice(0, -1);
-			el.value = dateTimeLocalValue;
+			const dateTimeLocalValue = new Date(value.getTime() - value.getTimezoneOffset() * MINUTE);
+			if (!isNaN(dateTimeLocalValue.getTime())) {
+				el.value = dateTimeLocalValue.toISOString().slice(0, -1);
+			}
 		}
 	});
 </script>
@@ -33,6 +34,8 @@
 		// @ts-expect-error target exists, value exists
 		const dateTimeLocalValue = e.target!.value!;
 		const fakeUtcTime = new Date(`${dateTimeLocalValue}Z`);
-		value = new Date(fakeUtcTime.getTime() + fakeUtcTime.getTimezoneOffset() * 60000);
+		if (!isNaN(fakeUtcTime.getTime())) {
+			value = new Date(fakeUtcTime.getTime() + fakeUtcTime.getTimezoneOffset() * MINUTE);
+		}
 	}}
 />
