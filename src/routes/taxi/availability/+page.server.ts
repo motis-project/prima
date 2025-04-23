@@ -116,7 +116,7 @@ export const actions: Actions = {
 			if (e.constraint == 'vehicle_license_plate_key') {
 				return fail(400, { msg: msg('duplicateLicensePlate') });
 			}
-			return fail(400, { msg: msg('unkownError') });
+			return fail(400, { msg: msg('unknownError') });
 		}
 
 		return { msg: msg('vehicleAddedSuccessfully', 'success') };
@@ -230,7 +230,7 @@ export const actions: Actions = {
 			return fail(400, { msg: msg('duplicateLicensePlate') });
 		}
 		if (unknownError) {
-			return fail(400, { msg: msg('unkownError') });
+			return fail(400, { msg: msg('unknownError') });
 		}
 		return success
 			? { msg: msg('vehicleAlteredSuccessfully', 'success') }

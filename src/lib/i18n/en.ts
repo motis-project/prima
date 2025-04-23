@@ -14,7 +14,7 @@ const translations: Translations = {
 	},
 	msg: {
 		// Unknown error
-		unkownError: 'Unkown Error',
+		unknownError: 'Unknown Error',
 
 		// Account
 		enterEmailAndPassword: 'Please enter your email and password.',
@@ -156,6 +156,7 @@ const translations: Translations = {
 		}),
 
 	cancelledJourneys: 'Past and Cancelled Journeys',
+	noBookings: 'There are no bookings or stored itineraries yet.',
 	journeyDetails: 'Journey Details',
 	transfer: 'transfer',
 	transfers: 'transfers',
@@ -198,6 +199,8 @@ const translations: Translations = {
 
 	bookingInfo: 'Booking Information',
 	changeBookingInfo: 'Change your search options and booking information.',
+	storeItinerary: 'Save Itinerary',
+	removeItinerary: 'Remove Itinerary',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',

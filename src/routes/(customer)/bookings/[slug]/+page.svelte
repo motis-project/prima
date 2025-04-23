@@ -21,10 +21,12 @@
 	import { MapIcon } from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
+	import { type Leg } from '$lib/openapi/types.gen';
 
 	const { data } = $props();
 
 	let showTicket = $state(false);
+	const isOdm = data.journey.legs.some((l: Leg) => l.mode === 'ODM');
 </script>
 
 <div class="flex h-full flex-col gap-4 md:min-h-[70dvh] md:w-96">
@@ -33,64 +35,71 @@
 			<ChevronLeft />
 		</Button>
 
-		{#if !data.cancelled}
-			<div class="flex flex-row gap-2">
-				{#if showTicket}
-					<Button
-						onclick={() => {
-							showTicket = !showTicket;
-						}}
-					>
-						<Waypoints class="mr-1 size-4" />
-						{t.booking.connection}
-					</Button>
-				{:else}
-					<Button
-						onclick={() => {
-							showTicket = !showTicket;
-						}}
-					>
-						<QrCodeIcon class="mr-1 size-4" />
-						{t.booking.ticket}
-					</Button>
-				{/if}
+		{#if isOdm}
+			{#if !data.cancelled}
+				<div class="flex flex-row gap-2">
+					{#if showTicket}
+						<Button
+							onclick={() => {
+								showTicket = !showTicket;
+							}}
+						>
+							<Waypoints class="mr-1 size-4" />
+							{t.booking.connection}
+						</Button>
+					{:else}
+						<Button
+							onclick={() => {
+								showTicket = !showTicket;
+							}}
+						>
+							<QrCodeIcon class="mr-1 size-4" />
+							{t.booking.ticket}
+						</Button>
+					{/if}
 
-				{#if data.communicatedTime >= Date.now() && !data.ticketChecked}
-					<AlertDialog.Root>
-						<AlertDialog.Trigger class={buttonVariants({ variant: 'destructive' })}>
-							{t.booking.cancel}
-						</AlertDialog.Trigger>
-						<AlertDialog.Content class="w-[90%]">
-							<AlertDialog.Header>
-								<AlertDialog.Title>{t.booking.cancelHeadline}</AlertDialog.Title>
-								<AlertDialog.Description>
-									{t.booking.cancelDescription}
-								</AlertDialog.Description>
-							</AlertDialog.Header>
-							<AlertDialog.Footer class="mt-4">
-								<AlertDialog.Cancel>{t.booking.noCancel}</AlertDialog.Cancel>
-								<form method="post" use:enhance>
-									<input type="hidden" name="requestId" value={data.requestId} />
-									<AlertDialog.Action>
-										{t.booking.cancelTrip}
-									</AlertDialog.Action>
-								</form>
-							</AlertDialog.Footer>
-						</AlertDialog.Content>
-					</AlertDialog.Root>
-				{/if}
-			</div>
+					{#if data.communicatedTime! >= Date.now() && !data.ticketChecked}
+						<AlertDialog.Root>
+							<AlertDialog.Trigger class={buttonVariants({ variant: 'destructive' })}>
+								{t.booking.cancel}
+							</AlertDialog.Trigger>
+							<AlertDialog.Content class="w-[90%]">
+								<AlertDialog.Header>
+									<AlertDialog.Title>{t.booking.cancelHeadline}</AlertDialog.Title>
+									<AlertDialog.Description>
+										{t.booking.cancelDescription}
+									</AlertDialog.Description>
+								</AlertDialog.Header>
+								<AlertDialog.Footer class="mt-4">
+									<AlertDialog.Cancel>{t.booking.noCancel}</AlertDialog.Cancel>
+									<form method="post" use:enhance action="?/cancel">
+										<input type="hidden" name="requestId" value={data.requestId} />
+										<AlertDialog.Action>
+											{t.booking.cancelTrip}
+										</AlertDialog.Action>
+									</form>
+								</AlertDialog.Footer>
+							</AlertDialog.Content>
+						</AlertDialog.Root>
+					{/if}
+				</div>
+			{:else}
+				<Message msg={msg('cancelled')} />
+			{/if}
+			<Button size="icon" variant="outline" onclick={() => pushState('', { showMap: true })}>
+				<MapIcon class="h-[1.2rem] w-[1.2rem]" />
+			</Button>
 		{:else}
-			<Message msg={msg('cancelled')} />
+			<form method="post" action="?/remove" class="flex grow">
+				<input type="hidden" name="journeyId" value={data.journeyId} />
+				<Button type="submit" class="grow">{t.removeItinerary}</Button>
+			</form>
 		{/if}
-		<Button size="icon" variant="outline" onclick={() => pushState('', { showMap: true })}>
-			<MapIcon class="h-[1.2rem] w-[1.2rem]" />
-		</Button>
 	</div>
 
-	{#if page.state.showMap}
+	{#if page.state.showMap && isOdm}
 		<PopupMap itinerary={data.journey} />
-	{:else if showTicket}
+	{:else if showTicket && isOdm}
 		<div class="flex h-full w-full items-center justify-center">
 			<div class="flex h-[210px] w-[210px] items-center justify-center bg-white">
 				<QrCode value={data.ticketCode} />
@@ -99,10 +108,10 @@
 		<Card.Root class="my-2">
 			<Card.Content>
 				<BookingSummary
-					passengers={data.passengers}
+					passengers={data.passengers!}
 					wheelchair={data.wheelchairs !== 0}
-					luggage={data.luggage}
-					price={odmPrice(data.journey, data.passengers)}
+					luggage={data.luggage!}
+					price={odmPrice(data.journey, data.passengers!)}
 				/>
 			</Card.Content>
 		</Card.Root>
@@ -112,7 +121,7 @@
 			onClickStop={(_name: string, stopId: string, time: Date) =>
 				goto(`/routing?stopId=${stopId}&time=${time.toISOString()}`)}
 			onClickTrip={(tripId: string) => goto(`/routing?tripId=${tripId}`)}
-			licensePlate={data.licensePlate}
+			licensePlate={data.licensePlate ?? ''}
 		/>
 	{/if}
 </div>

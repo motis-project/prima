@@ -93,7 +93,7 @@ export interface Database {
 		id: Generated<number>;
 		json: string;
 		user: number;
-		request1: number;
+		request1: number | null;
 		request2: number | null;
 		rating: number | null;
 		comment: string | null;

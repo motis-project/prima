@@ -7,13 +7,16 @@
 	import { getModeStyle, routeColor } from '$lib/ui/modeStyle';
 	import { t } from '$lib/i18n/translation';
 	import type { Snippet } from 'svelte';
+	import DisplayAddresses from '$lib/ui/DisplayAddresses.svelte';
 
 	const {
 		it,
 		baseQuery,
-		info
+		info,
+		showAddress
 	}: {
-		it: Itinerary & { startAddress?: string; targetAddress?: string };
+		showAddress?: boolean;
+		it: Itinerary;
 		baseQuery?: PlanData | undefined;
 		info?: Snippet<[Itinerary]> | undefined;
 	} = $props();
@@ -43,9 +46,12 @@
 			{it.transfers}
 			{t.transfers}
 		</div>
-		{#if it.startAddress !== undefined && it.targetAddress !== undefined}
+		{#if showAddress}
 			<span class="break-words text-left">
-				{it.startAddress} -> {it.targetAddress}
+				<DisplayAddresses
+					fromAddress={it.legs[0].from.name}
+					toAddress={it.legs[it.legs.length - 1].to.name}
+				/>
 			</span>
 		{/if}
 		<span class="text-left">

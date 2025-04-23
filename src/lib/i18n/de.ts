@@ -13,7 +13,7 @@ const translations: Translations = {
 		companies: 'Unternehmen'
 	},
 	msg: {
-		unkownError: 'Unbekannter Fehler.',
+		unknownError: 'Unbekannter Fehler.',
 
 		// Account
 		enterEmailAndPassword: 'Bitte geben Sie Ihre E-Mail und Ihr Passwort ein.',
@@ -161,6 +161,7 @@ const translations: Translations = {
 		}),
 
 	cancelledJourneys: 'Vergangene und stornierte Fahrten',
+	noBookings: 'Sie haben bisher keine gebuchten oder gespeicherten Fahrten.',
 	journeyDetails: 'Verbindungsdetails',
 	transfer: 'Umstieg',
 	transfers: 'Umstiege',
@@ -204,6 +205,8 @@ const translations: Translations = {
 
 	bookingInfo: 'Buchungsangaben',
 	changeBookingInfo: 'Ändern Sie Ihre Such- und Buchungsangaben.',
+	storeItinerary: 'Reisekette speichern',
+	removeItinerary: 'Reisekette entfernen',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',

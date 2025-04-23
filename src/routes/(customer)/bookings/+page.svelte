@@ -5,8 +5,12 @@
 	import type { Itinerary } from '$lib/openapi';
 
 	const { data } = $props();
-	const pastJourneys = data.journeys.filter((j) => j.cancelled || j.arrival < Date.now());
-	const plannedJourneys = data.journeys.filter((j) => !j.cancelled && j.arrival >= Date.now());
+	const pastJourneys = data.journeys.filter(
+		(j) => j.cancelled || new Date(j.journey.endTime).getTime() < Date.now()
+	);
+	const plannedJourneys = data.journeys.filter(
+		(j) => !j.cancelled && new Date(j.journey.endTime).getTime() >= Date.now()
+	);
 </script>
 
 {#snippet cancelled()}
@@ -16,27 +20,32 @@
 
 {#snippet journeyList(
 	journeys: {
-		journey: Itinerary & {
-			startAddress: string;
-			targetAddress: string;
-		};
+		journey: Itinerary;
 		id: number;
-		ticketCode: string;
-		cancelled: boolean;
-		arrival: number;
+		ticketCode: string | null;
+		cancelled: boolean | null;
 	}[]
 )}
 	<div class="flex flex-col gap-4">
 		{#each journeys as it}
 			<a href="/bookings/{it.id}">
-				<ItinerarySummary it={it.journey} info={it.cancelled ? cancelled : undefined} />
+				<ItinerarySummary
+					it={it.journey}
+					info={it.cancelled ? cancelled : undefined}
+					showAddress={true}
+				/>
 			</a>
 		{/each}
 	</div>
 {/snippet}
 
 <div class="flex flex-col gap-4">
+	{#if plannedJourneys.length === 0 && pastJourneys.length === 0}
+		{t.noBookings}
+	{/if}
 	{@render journeyList(plannedJourneys)}
-	{t.cancelledJourneys}
+	{#if pastJourneys.length !== 0}
+		{t.cancelledJourneys}
+	{/if}
 	{@render journeyList(pastJourneys)}
 </div>

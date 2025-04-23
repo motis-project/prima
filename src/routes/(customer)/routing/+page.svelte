@@ -236,7 +236,7 @@
 									page.state.selectedItinerary.legs.length === 1 &&
 									page.state.selectedItinerary.legs[0].mode === 'ODM'}
 
-								<form method="post" use:enhance>
+								<form method="post" action="?/bookItineraryWithOdm" use:enhance>
 									<input
 										type="hidden"
 										name="json"
@@ -297,6 +297,11 @@
 				{:else}
 					<Button href="/account" variant="outline">{t.booking.loginToBook}</Button>
 				{/if}
+			{:else}
+				<form method="post" action="?/storeItineraryWithNoOdm" class="flex grow">
+					<input type="hidden" name="json" value={JSON.stringify(page.state.selectedItinerary)} />
+					<Button type="submit" class="grow">{t.storeItinerary}</Button>
+				</form>
 			{/if}
 			<Button
 				size="icon"
