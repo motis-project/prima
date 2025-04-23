@@ -4,12 +4,19 @@
 	import SortableTable from './SortableTable.svelte';
 	import * as Card from '$lib/shadcn/card';
 
+	export type Favourite = {
+		address: string;
+		lat: number;
+		lng: number;
+		level: number;
+	};
+
 	let {
 		favourites,
 		selectedFavourite = $bindable()
 	}: {
-		favourites: { address: string; lat: number; lng: number; level: number }[];
-		selectedFavourite?: { address: string; lat: number; lng: number; level: number }[];
+		favourites: Favourite[];
+		selectedFavourite?: Favourite[];
 	} = $props();
 
 	let favouriteRows = $derived(favourites);
@@ -33,6 +40,6 @@
 				bind:selectedRow={selectedFavourite}
 				bindSelectedRow={true}
 			/>
-		</Card.Content></Card.Root
-	>
+		</Card.Content>
+	</Card.Root>
 {/if}

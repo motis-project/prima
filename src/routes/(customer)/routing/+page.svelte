@@ -45,7 +45,7 @@
 	import { MAX_MATCHING_DISTANCE } from '$lib/constants';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import * as Card from '$lib/shadcn/card';
-	import FavouritesList from '$lib/ui/FavouriteLocations.svelte';
+	import FavouritesList, { type Favourite } from '$lib/ui/FavouriteLocations.svelte';
 	import FavouriteRoutes from '$lib/ui/FavouriteRoutes.svelte';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
@@ -175,24 +175,20 @@
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
 	};
 
-	let selectedToFavourite:
-		| { address: string; lat: number; lng: number; level: number }[]
-		| undefined = $state(undefined);
-	let selectedFromFavourite:
-		| { address: string; lat: number; lng: number; level: number }[]
-		| undefined = $state(undefined);
-	let selectedRouteFavourite:
-		| {
-				fromAddress: string;
-				fromLat: number;
-				fromLng: number;
-				fromLevel: number;
-				toAddress: string;
-				toLat: number;
-				toLng: number;
-				toLevel: number;
-		  }[]
-		| undefined = $state(undefined);
+	let selectedToFavourite = $state<Favourite[]>();
+	let selectedFromFavourite = $state<Favourite[]>();
+	let selectedRouteFavourite = $state<
+		{
+			fromAddress: string;
+			fromLat: number;
+			fromLng: number;
+			fromLevel: number;
+			toAddress: string;
+			toLat: number;
+			toLng: number;
+			toLevel: number;
+		}[]
+	>();
 
 	$effect(() => {
 		if (selectedFromFavourite && selectedFromFavourite.length != 0) {
