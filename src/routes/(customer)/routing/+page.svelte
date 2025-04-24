@@ -52,6 +52,14 @@
 	const urlParams = browser ? new URLSearchParams(window.location.search) : undefined;
 
 	let passengers = $state(1);
+	let kidsZeroToTwo = $state(0);
+	let kidsThreeToFour = $state(0);
+	let kidsFiveToSix = $state(0);
+	let maxKidsZeroToTwo = $derived(passengers - 1 - kidsThreeToFour - kidsFiveToSix);
+	let maxKidsThreeToFour = $derived(passengers - 1 - kidsZeroToTwo - kidsFiveToSix);
+	let maxKidsFiveToSix = $derived(passengers - 1 - kidsZeroToTwo - kidsThreeToFour);
+	let minimumPassengers = $derived(1 + kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix);
+	let kids = $derived(kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix);
 	let wheelchair = $state(false);
 	let luggage = $state<LuggageType>('none');
 	let time = $state<Date>(new Date());
@@ -214,7 +222,7 @@
 								{passengers}
 								{wheelchair}
 								luggage={luggageToInt(luggage)}
-								price={odmPrice(page.state.selectedItinerary, passengers)}
+								price={odmPrice(page.state.selectedItinerary, passengers, kids)}
 							/>
 
 							<p class="my-2 text-sm">{t.booking.disclaimer}</p>
@@ -287,6 +295,9 @@
 										value={new Date(lastOdm.endTime).getTime()}
 									/>
 									<input type="hidden" name="passengers" value={passengers} />
+									<input type="hidden" name="kidsZeroToTwo" value={kidsZeroToTwo} />
+									<input type="hidden" name="kidsThreeToFour" value={kidsThreeToFour} />
+									<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
 									<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
 									<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
 									<Button type="submit" variant="outline">{t.booking.header}</Button>
@@ -426,12 +437,19 @@
 							</Dialog.Description>
 						</Dialog.Header>
 
-						<div class="md-4 grid grid-cols-2 grid-rows-2 items-center gap-4">
+						<div class="md-4 grid grid-cols-2 grid-rows-2 items-center">
 							<Label>{t.booking.passengerNumber}</Label>
-							<Input type="number" bind:value={passengers} min="1" max="6" />
+							<Input type="number" bind:value={passengers} min={minimumPassengers} max="6" />
+							<Label class="col-span-2">where x are children in the age group:</Label>
+							<Label>0 to 2 years</Label>
+							<Input type="number" bind:value={kidsZeroToTwo} min="0" max={maxKidsZeroToTwo} />
+							<Label>3 to 4 years</Label>
+							<Input type="number" bind:value={kidsThreeToFour} min="0" max={maxKidsThreeToFour} />
+							<Label>5 to 6 years</Label>
+							<Input type="number" bind:value={kidsFiveToSix} min="0" max={maxKidsFiveToSix} />
 
-							<Label class="flex items-center gap-2">
-								<WheelchairIcon class="size-5 shrink-0" />
+							<Label class="mt-2 flex items-center gap-2">
+								<WheelchairIcon class="mt-2 size-5 shrink-0" />
 								{t.booking.foldableWheelchair}
 							</Label>
 							<Switch class="justify-self-end" bind:checked={wheelchair} />
@@ -475,6 +493,7 @@
 					{baseResponse}
 					{routingResponses}
 					{passengers}
+					{kids}
 					selectItinerary={(selectedItinerary) => {
 						goto('?detail', { state: { selectedItinerary } });
 					}}

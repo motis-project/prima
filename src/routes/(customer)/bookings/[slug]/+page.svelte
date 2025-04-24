@@ -111,7 +111,11 @@
 					passengers={data.passengers!}
 					wheelchair={data.wheelchairs !== 0}
 					luggage={data.luggage!}
-					price={odmPrice(data.journey, data.passengers!)}
+					price={odmPrice(
+						data.journey,
+						data.passengers!,
+						data.kidsZeroToTwo! + data.kidsThreeToFour! + data.kidsFiveToSix!
+					)}
 				/>
 			</Card.Content>
 		</Card.Root>

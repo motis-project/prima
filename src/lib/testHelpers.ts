@@ -89,7 +89,10 @@ export const setRequest = async (
 			customer,
 			ticketCode,
 			ticketChecked: ticketChecked == undefined ? false : ticketChecked,
-			cancelled: false
+			cancelled: false,
+			kidsFiveToSix: 0,
+			kidsThreeToFour: 0,
+			kidsZeroToTwo: 0
 		})
 		.returning('id')
 		.executeTakeFirstOrThrow();

@@ -28,6 +28,9 @@ export const actions = {
 		const formData = await request.formData();
 
 		const passengers = readInt(formData.get('passengers'));
+		const kidsZeroToTwo = readInt(formData.get('kidsZeroToTwo'));
+		const kidsThreeToFour = readInt(formData.get('kidsThreeToFour'));
+		const kidsFiveToSix = readInt(formData.get('kidsFiveToSix'));
 		const luggage = readInt(formData.get('luggage'));
 		const wheelchairs = readInt(formData.get('wheelchairs'));
 		const json = formData.get('json');
@@ -52,6 +55,9 @@ export const actions = {
 
 		console.log('BOOKING PARAMS =', {
 			passengers,
+			kidsZeroToTwo,
+			kidsThreeToFour,
+			kidsFiveToSix,
 			luggage,
 			wheelchairs,
 			startFixed1,
@@ -93,7 +99,8 @@ export const actions = {
 			isNaN(toLat2) ||
 			isNaN(toLng2) ||
 			isNaN(startTime2) ||
-			isNaN(endTime2)
+			isNaN(endTime2) ||
+			passengers <= kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix
 		) {
 			throw 'invalid booking params';
 		}
@@ -186,6 +193,9 @@ export const actions = {
 					firstBooking!.dropoffEventGroup,
 					firstBooking!.neighbourIds,
 					firstBooking!.directDurations,
+					kidsZeroToTwo,
+					kidsThreeToFour,
+					kidsFiveToSix,
 					trx
 				);
 			}
@@ -201,6 +211,9 @@ export const actions = {
 					secondBooking!.dropoffEventGroup,
 					secondBooking!.neighbourIds,
 					secondBooking!.directDurations,
+					kidsZeroToTwo,
+					kidsThreeToFour,
+					kidsFiveToSix,
 					trx
 				);
 			}

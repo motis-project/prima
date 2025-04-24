@@ -39,8 +39,18 @@ const getCustomerCount = (tour: TourWithRequests, countOnlyVerified: boolean) =>
 	let customers = 0;
 	tour.requests.forEach((r) => {
 		if (!countOnlyVerified || r.ticketChecked) {
-			customers += r.passengers;
+			customers +=
+				r.passengers -
+				(countOnlyVerified ? r.kidsZeroToTwo + r.kidsThreeToFour + r.kidsFiveToSix : 0);
 		}
+	});
+	return customers;
+};
+
+const getKidsCount = (tour: TourWithRequests) => {
+	let customers = 0;
+	tour.requests.forEach((r) => {
+		customers += r.kidsZeroToTwo + r.kidsThreeToFour + r.kidsFiveToSix;
 	});
 	return customers;
 };
@@ -131,6 +141,11 @@ export const tourColsAdmin = [
 		sort: (t1: TourWithRequests, t2: TourWithRequests) =>
 			getCustomerCount(t1, false) - getCustomerCount(t2, false),
 		toTableEntry: (r: TourWithRequests) => getCustomerCount(r, false)
+	},
+	{
+		text: ['davon Kinder'],
+		sort: (t1: TourWithRequests, t2: TourWithRequests) => getKidsCount(t1) - getKidsCount(t2),
+		toTableEntry: (r: TourWithRequests) => getKidsCount(r)
 	},
 	{
 		text: ['erschienene', 'Kunden'],

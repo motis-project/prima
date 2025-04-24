@@ -13,7 +13,8 @@
 		baseQuery,
 		selectItinerary,
 		updateStartDest,
-		passengers
+		passengers,
+		kids
 	}: {
 		routingResponses: Array<Promise<PlanResponse | undefined>>;
 		baseResponse: Promise<PlanResponse | undefined> | undefined;
@@ -21,6 +22,7 @@
 		selectItinerary: (it: Itinerary) => void;
 		updateStartDest: (r: { data: PlanResponse | undefined }) => PlanResponse | undefined;
 		passengers: number;
+		kids: number;
 	} = $props();
 
 	const localDate = (timestamp: string) => {
@@ -30,7 +32,7 @@
 </script>
 
 {#snippet odmInfo(it: Itinerary)}
-	<Info class="size-4" /> {t.booking.bookHere} {odmPrice(it, passengers)} €
+	<Info class="size-4" /> {t.booking.bookHere} {odmPrice(it, passengers, kids)} €
 {/snippet}
 
 {#if baseResponse}

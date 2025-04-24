@@ -80,6 +80,9 @@ export interface Database {
 	request: {
 		id: Generated<number>;
 		passengers: number;
+		kidsZeroToTwo: number;
+		kidsThreeToFour: number;
+		kidsFiveToSix: number;
 		wheelchairs: number;
 		bikes: number;
 		luggage: number;
