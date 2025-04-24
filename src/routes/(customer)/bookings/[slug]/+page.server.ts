@@ -1,7 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
-import type { Itinerary } from '$lib/openapi';
 import { msg, type Msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
 import { cancelRequest } from '$lib/server/db/cancelRequest';
@@ -39,7 +38,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	return {
 		...journey,
-		journey: JSON.parse(journey.json) as Itinerary
+		journey: journey.json
 	};
 };
 

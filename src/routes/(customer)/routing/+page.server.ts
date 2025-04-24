@@ -8,6 +8,7 @@ import { redirect } from '@sveltejs/kit';
 import { sendMail } from '$lib/server/sendMail';
 import NewRide from '$lib/server/email/NewRide.svelte';
 import { lockTablesStatement } from '$lib/server/db/lockTables';
+import type { Itinerary } from '$lib/openapi';
 
 const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 	for (const e of l1) {
@@ -96,6 +97,14 @@ export const actions = {
 			isNaN(endTime2)
 		) {
 			throw 'invalid booking params';
+		}
+
+		let parsedJson: undefined | Itinerary = undefined;
+		try {
+			parsedJson = JSON.parse(json) as Itinerary;
+		} catch (e) {
+			console.log(e, json);
+			return { msg: msg('unknownError') };
 		}
 
 		const capacities: Capacities = {
@@ -218,7 +227,7 @@ export const actions = {
 					.insertInto('journey')
 					.values({
 						user,
-						json,
+						json: parsedJson,
 						request1: request1!,
 						request2
 					})
@@ -291,12 +300,19 @@ export const actions = {
 		if (typeof json != 'string') {
 			return { msg: msg('unknownError') };
 		}
+		let parsedJson: undefined | Itinerary = undefined;
+		try {
+			parsedJson = JSON.parse(json) as Itinerary;
+		} catch (e) {
+			console.log(e, json);
+			return { msg: msg('unknownError') };
+		}
 		const id = (
 			await db
 				.insertInto('journey')
 				.values({
 					user,
-					json,
+					json: parsedJson,
 					request1: null,
 					request2: null
 				})
