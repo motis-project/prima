@@ -3,7 +3,7 @@
 import { render } from 'svelte/server';
 import { convert } from 'html-to-text';
 import { env } from '$env/dynamic/private';
-import { PUBLIC_PROVIDER } from '$env/static/public';
+import nodemailer from 'nodemailer';
 
 export type EmailContent = {
 	text: string;
@@ -21,30 +21,23 @@ export function generateMail(template: any, props: any): EmailContent {
 	return { html, text };
 }
 
-async function send(subject: string, email: string, content: EmailContent) {
-	await fetch('https://api.scaleway.com/transactional-email/v1alpha1/regions/fr-par/emails', {
-		method: 'POST',
-		headers: {
-			Accept: 'application/json',
-			'Content-Type': 'application/json',
-			'X-Auth-Token': env.SCW_SECRET_KEY
-		},
-		body: JSON.stringify({
-			project_id: env.SCW_DEFAULT_PROJECT_ID,
-			from: {
-				name: PUBLIC_PROVIDER,
-				email: env.EMAIL_SENDER
-			},
-			to: [{ email }],
-			subject,
-			...content
-		})
-	}).then((response) => {
-		if (!response.ok) {
-			console.log('sending email failed: ', response);
-			throw new Error('Bad response from server');
+export async function send(subject: string, email: string, content: EmailContent) {
+	const transporter = nodemailer.createTransport({
+		host: env.MAIL_HOST,
+		port: 465,
+		secure: true,
+		auth: {
+			user: env.MAIL_USERNAME,
+			pass: env.MAIL_SECRET_KEY
 		}
-		return response;
+	});
+
+	await transporter.sendMail({
+		from: env.EMAIL_SENDER,
+		to: email,
+		subject: subject,
+		html: content.html,
+		text: content.text
 	});
 }
 
