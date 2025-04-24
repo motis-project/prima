@@ -440,7 +440,7 @@
 						<div class="md-4 grid grid-cols-2 grid-rows-2 items-center">
 							<Label>{t.booking.passengerNumber}</Label>
 							<Input type="number" bind:value={passengers} min={minimumPassengers} max="6" />
-							<Label class="col-span-2">where x are children in the age group:</Label>
+							<Label class="col-span-2">{t.booking.kidsDescription}</Label>
 							<Label>0 to 2 years</Label>
 							<Input type="number" bind:value={kidsZeroToTwo} min="0" max={maxKidsZeroToTwo} />
 							<Label>3 to 4 years</Label>

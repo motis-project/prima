@@ -39,9 +39,7 @@ const getCustomerCount = (tour: TourWithRequests, countOnlyVerified: boolean) =>
 	let customers = 0;
 	tour.requests.forEach((r) => {
 		if (!countOnlyVerified || r.ticketChecked) {
-			customers +=
-				r.passengers -
-				(countOnlyVerified ? r.kidsZeroToTwo + r.kidsThreeToFour + r.kidsFiveToSix : 0);
+			customers += r.passengers;
 		}
 	});
 	return customers;
@@ -68,7 +66,7 @@ const displayUnixtimeMs = (t: UnixtimeMs, displayTime?: boolean) => {
 const getTourCost = (tour: TourWithRequests) => {
 	return (
 		(getCustomerCount(tour, true) === 0 ? 0 : (tour.fare ?? 0)) -
-		FIXED_PRICE * getCustomerCount(tour, false)
+		FIXED_PRICE * (getCustomerCount(tour, false) - getKidsCount(tour))
 	);
 };
 

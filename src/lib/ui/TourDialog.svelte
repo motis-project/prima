@@ -328,55 +328,13 @@
 									{/if}
 								</Table.Cell>
 								{#if events?.some((e) => e.kidsZeroToTwo !== 0)}
-									<Table.Cell
-										class="flex flex-row gap-2 {event.isPickup ? 'text-green-500' : 'text-red-500'}"
-									>
-										{#if event.kidsZeroToTwo !== 0}
-											{#if event.isPickup}
-												<ArrowRight class="size-4" />
-											{:else}
-												<ArrowLeft class="size-4" />
-											{/if}
-											<BabyIcon class="size-4" />
-											{event.kidsZeroToTwo}
-										{/if}
-									</Table.Cell>
+									{@render kids(event.isPickup, event.kidsZeroToTwo)}
 								{/if}
-
 								{#if events?.some((e) => e.kidsThreeToFour !== 0)}
-									<Table.Cell
-										class="flex items-center gap-2 {event.isPickup
-											? 'text-green-500'
-											: 'text-red-500'}"
-									>
-										{#if event.kidsThreeToFour !== 0}
-											{#if event.isPickup}
-												<ArrowRight class="size-4" />
-											{:else}
-												<ArrowLeft class="size-4" />
-											{/if}
-											<BabyIcon class="size-4" />
-											{event.kidsThreeToFour}
-										{/if}
-									</Table.Cell>
+									{@render kids(event.isPickup, event.kidsThreeToFour)}
 								{/if}
-
 								{#if events?.some((e) => e.kidsFiveToSix !== 0)}
-									<Table.Cell
-										class="flex items-center gap-2 {event.isPickup
-											? 'text-green-500'
-											: 'text-red-500'}"
-									>
-										{#if event.kidsFiveToSix !== 0}
-											{#if event.isPickup}
-												<ArrowRight class="size-4" />
-											{:else}
-												<ArrowLeft class="size-4" />
-											{/if}
-											<BabyIcon class="size-4" />
-											{event.kidsFiveToSix}
-										{/if}
-									</Table.Cell>
+									{@render kids(event.isPickup, event.kidsFiveToSix)}
 								{/if}
 								<Table.Cell>
 									{#if event.isPickup && event.ticketChecked}
@@ -411,4 +369,22 @@
 			</div>
 		</Card.Content>
 	</Card.Root>
+{/snippet}
+
+{#snippet kids(isPickup: boolean, kids: number)}
+	<Table.Cell class={isPickup ? 'text-green-500' : 'text-red-500'}>
+		{#if kids !== 0}
+			<span class="flex items-center">
+				<span class="flex items-center gap-1">
+					{#if isPickup}
+						<ArrowRight class="size-4" />
+					{:else}
+						<ArrowLeft class="size-4" />
+					{/if}
+					<BabyIcon class="size-4" />
+				</span>
+				{kids}
+			</span>
+		{/if}
+	</Table.Cell>
 {/snippet}
