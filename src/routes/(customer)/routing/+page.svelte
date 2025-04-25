@@ -441,11 +441,11 @@
 							<Label>{t.booking.passengerNumber}</Label>
 							<Input type="number" bind:value={passengers} min={minimumPassengers} max="6" />
 							<Label class="col-span-2">{t.booking.kidsDescription}</Label>
-							<Label>0 to 2 years</Label>
+							<Label>{t.booking.kidsZeroToTwo}</Label>
 							<Input type="number" bind:value={kidsZeroToTwo} min="0" max={maxKidsZeroToTwo} />
-							<Label>3 to 4 years</Label>
+							<Label>{t.booking.kidsThreeToFour}</Label>
 							<Input type="number" bind:value={kidsThreeToFour} min="0" max={maxKidsThreeToFour} />
-							<Label>5 to 6 years</Label>
+							<Label>{t.booking.kidsFiveToSix}</Label>
 							<Input type="number" bind:value={kidsFiveToSix} min="0" max={maxKidsFiveToSix} />
 
 							<Label class="mt-2 flex items-center gap-2">

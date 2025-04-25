@@ -213,6 +213,9 @@ const translations: Translations = {
 		heavyLuggage: 'Heavy luggage',
 		kidsDescription:
 			'Please specify how many of these passengers fall into the following age groups:',
+		kidsZeroToTwo: '0 - 2 years',
+		kidsThreeToFour: '3 - 4 years',
+		kidsFiveToSix: '5 - 6 years',
 		foldableWheelchair: 'Foldable wheelchair',
 		withFoldableWheelchair: 'With foldable wheelchair',
 		passengerNumber: 'Number of people',
