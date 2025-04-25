@@ -46,11 +46,11 @@ const getCustomerCount = (tour: TourWithRequests, countOnlyVerified: boolean) =>
 };
 
 const getKidsCount = (tour: TourWithRequests) => {
-	let customers = 0;
+	let kids = 0;
 	tour.requests.forEach((r) => {
-		customers += r.kidsZeroToTwo + r.kidsThreeToFour + r.kidsFiveToSix;
+		kids += r.kidsZeroToTwo + r.kidsThreeToFour + r.kidsFiveToSix;
 	});
-	return customers;
+	return kids;
 };
 
 const displayUnixtimeMs = (t: UnixtimeMs, displayTime?: boolean) => {
