@@ -304,7 +304,7 @@ export const actions = {
 		try {
 			parsedJson = JSON.parse(json) as Itinerary;
 		} catch (e) {
-			console.log(e, json);
+			console.log('Unable to parse journey string: ', json);
 			return { msg: msg('unknownError') };
 		}
 		const id = (
