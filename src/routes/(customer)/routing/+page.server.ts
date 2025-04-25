@@ -104,7 +104,7 @@ export const actions = {
 			parsedJson = JSON.parse(json) as Itinerary;
 		} catch (_) {
 			console.log(
-				'Unable to parse journey with odm to string: ',
+				'Unable to parse journey with odm as Itinerary: ',
 				json,
 				{ passengers },
 				{ luggage },
@@ -329,7 +329,7 @@ export const actions = {
 		try {
 			parsedJson = JSON.parse(json) as Itinerary;
 		} catch (_) {
-			console.log('Unable to parse journey with no odm to string: ', json, { user });
+			console.log('Unable to parse journey with no odm as Itinerary: ', json, { user });
 			return { msg: msg('unknownError') };
 		}
 		const id = (
