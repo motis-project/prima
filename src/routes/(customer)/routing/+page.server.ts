@@ -102,8 +102,8 @@ export const actions = {
 		let parsedJson: undefined | Itinerary = undefined;
 		try {
 			parsedJson = JSON.parse(json) as Itinerary;
-		} catch (e) {
-			console.log(e, json);
+		} catch (_) {
+			console.log("Unable to parse journey string: ", json);
 			return { msg: msg('unknownError') };
 		}
 
