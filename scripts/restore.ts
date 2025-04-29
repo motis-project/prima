@@ -11,7 +11,6 @@ const BACKUP_FOLDER = path.join(__dirname, '..', 'db_backups');
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const PGPASSWORD = process.env.PGPASSWORD;
-const DB_NAME = 'prima';
 
 const executeCommand = (command: string): Promise<void> => {
 	return new Promise((resolve, reject) => {
@@ -61,13 +60,13 @@ const restoreDatabase = async () => {
 		const fullBackupTimestamp = extractTimestamp(fullBackupFile);
 
 		const incrementalBackupFiles = files
-		.filter(
-		  (file) =>
-			file.startsWith('incremental_backup') &&
-			file.endsWith('.sql') &&
-			extractTimestamp(file) > fullBackupTimestamp
-		)
-		.sort();
+			.filter(
+				(file) =>
+					file.startsWith('incremental_backup') &&
+					file.endsWith('.sql') &&
+					extractTimestamp(file) > fullBackupTimestamp
+			)
+			.sort();
 
 		if (incrementalBackupFiles.length > 0) {
 			incrementalBackupFiles.sort();
