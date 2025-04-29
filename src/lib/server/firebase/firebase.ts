@@ -23,6 +23,9 @@ export enum TourChange {
 
 export type NotificationData = {
 	tourId: number;
+	pickupTime: number;
+	vehicleId: number;
+	wheelchairs: number;
 	change: TourChange;
 };
 

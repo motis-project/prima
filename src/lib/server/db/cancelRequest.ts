@@ -17,10 +17,32 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 	await db.transaction().execute(async (trx) => {
 		await lockTablesStatement(['tour', 'request', 'event', 'user']).execute(trx);
 		const tour = await trx
-			.selectFrom('request')
-			.where('request.id', '=', requestId)
-			.innerJoin('tour', 'tour.id', 'request.tour')
-			.select(['tour.id as tourId', 'request.ticketChecked'])
+			.selectFrom('request as cancelled_request')
+			.where('cancelled_request.id', '=', requestId)
+			.innerJoin('tour as relevant_tour', 'relevant_tour.id', 'cancelled_request.tour')
+			.select((eb) => [
+				'tour as relevant_tour.id as tourId',
+				'cancelled_request.ticketChecked',
+				jsonArrayFrom(
+					eb
+						.selectFrom('relevant_tour')
+						.innerJoin('request as relevant_request', 'relevant_request.tour', 'relevant_tour.id')
+						.select((eb) => [
+							'relevant_request.wheelchairs',
+							jsonArrayFrom(
+								eb
+									.selectFrom('event')
+									.whereRef('event.request', '=', 'relevant_request.id')
+									.select([
+										'event.scheduledTimeStart',
+										'event.scheduledTimeEnd',
+										'event.isPickup',
+										'event.request as requestId'
+									])
+							).as('events')
+						])
+				).as('requests')
+			])
 			.executeTakeFirst();
 		if (tour === undefined) {
 			console.log(
@@ -44,6 +66,7 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 			.select((eb) => [
 				'tour.id',
 				'tour.departure',
+				'tour.vehicle',
 				jsonArrayFrom(
 					eb
 						.selectFrom('request as cancelled_request')
@@ -97,10 +120,14 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 			}
 		}
 
-		tourInfo.events.sort((e) => getScheduledEventTime(e));
-		if (tourInfo.events[0].cancelled) {
+		const firstEvent = tour.requests.flatMap((r) => r.events).sort((e) => e.scheduledTimeStart)[0];
+		const wheelchairs = tour.requests.reduce((prev, curr) => prev + curr.wheelchairs, 0);
+		if (firstEvent.requestId === requestId) {
 			await sendNotifications(tourInfo.companyOwners[0].companyId, {
 				tourId: tour.tourId,
+				pickupTime: getScheduledEventTime(firstEvent),
+				vehicleId: tourInfo.vehicle,
+				wheelchairs,
 				change: TourChange.CANCELLED
 			});
 		}

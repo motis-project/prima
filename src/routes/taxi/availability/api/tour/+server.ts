@@ -6,6 +6,7 @@ import { getLatestEventTime } from '$lib/util/getLatestEventTime';
 import { lockTablesStatement } from '$lib/server/db/lockTables';
 import { sendNotifications } from '$lib/server/firebase/notifications.js';
 import { TourChange } from '$lib/server/firebase/firebase';
+import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 
 export const POST = async (event) => {
 	const companyId = event.locals.session?.companyId;
@@ -163,7 +164,17 @@ export const POST = async (event) => {
 				.where('id', '=', tourId)
 				.executeTakeFirst();
 
-			await sendNotifications(companyId, { tourId, change: TourChange.MOVED });
+			const firstEvent = movedTour.requests
+				.sort((r) => r.events[0].scheduledTimeStart)[0]
+				.events.filter((e) => e.isPickup)[0];
+			const wheelchairs = movedTour.requests.reduce((prev, curr) => prev + curr.wheelchairs, 0);
+			await sendNotifications(companyId, {
+				tourId,
+				pickupTime: getScheduledEventTime(firstEvent),
+				vehicleId,
+				wheelchairs,
+				change: TourChange.MOVED
+			});
 		}
 	});
 	return json({});

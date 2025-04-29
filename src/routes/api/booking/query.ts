@@ -76,6 +76,9 @@ export async function insertRequest(
 
 	await sendNotifications(notificationParams!.companyId, {
 		tourId: notificationParams!.tourId,
+		pickupTime: connection.pickupTime,
+		wheelchairs: capacities.wheelchairs,
+		vehicleId: connection.vehicle,
 		change: TourChange.BOOKED
 	});
 
