@@ -25,10 +25,12 @@ vite.config.ts.timestamp-*
 
 /screenshots
 
-
 # OSM + GTFS
 GTFS.zip
 osm.pbf
 /motis
 
 /package-lock.json
+
+# Driver app
+driver-app/app/google-services.json

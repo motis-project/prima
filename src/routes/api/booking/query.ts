@@ -3,8 +3,10 @@ import type { Capacities } from '$lib/util/booking/Capacities';
 import type { DirectDrivingDurations } from '$lib/server/booking/getDirectDrivingDurations';
 import type { EventGroupUpdate } from '$lib/server/booking/getEventGroupInfo';
 import type { Insertion, NeighbourIds } from '$lib/server/booking/insertion';
-import type { Database } from '$lib/server/db';
+import { db, type Database } from '$lib/server/db';
 import { sql, Transaction } from 'kysely';
+import { sendNotifications } from '$lib/server/firebase/notifications';
+import { TourChange } from '$lib/server/firebase/firebase';
 
 export async function insertRequest(
 	connection: Insertion,
@@ -47,7 +49,8 @@ export async function insertRequest(
 			return_duration: connection.dropoffPrevLegDuration
 		});
 	}
-	return (
+
+	const requestId = (
 		await sql<{ request: number }>`
         SELECT create_and_merge_tours(
             ROW(${capacities.passengers}, ${capacities.wheelchairs}, ${capacities.bikes}, ${capacities.luggage}, ${customer}),
@@ -62,6 +65,21 @@ export async function insertRequest(
             ROW(${direct.thisTour?.tourId ?? null}, ${direct.thisTour?.directDrivingDuration ?? null})
        ) AS request`.execute(trx)
 	).rows[0].request;
+
+	const notificationParams = await db
+		.selectFrom('tour')
+		.innerJoin('request', 'request.tour', 'tour.id')
+		.innerJoin('vehicle', 'tour.vehicle', 'vehicle.id')
+		.where('request.id', '=', requestId)
+		.select(['tour.id as tourId', 'vehicle.company as companyId'])
+		.executeTakeFirst();
+
+	await sendNotifications(notificationParams!.companyId, {
+		tourId: notificationParams!.tourId,
+		change: TourChange.BOOKED
+	});
+
+	return requestId;
 }
 //TODOS:
 // communicated/scheduled times

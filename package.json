@@ -78,6 +78,7 @@
 		"pg": "^8.13.1",
 		"polyline": "^0.2.0",
 		"svelte-qrcode": "^1.0.1",
-		"uuid": "^11.0.5"
+		"uuid": "^11.0.5",
+		"firebase-admin": "^13.2.0"
 	}
 }

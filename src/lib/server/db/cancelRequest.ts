@@ -4,6 +4,9 @@ import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { sendMail } from '$lib/server/sendMail';
 import CancelNotificationCompany from '$lib/server/email/CancelNotificationCompany.svelte';
 import { lockTablesStatement } from './lockTables';
+import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
+import { sendNotifications } from '../firebase/notifications';
+import { TourChange } from '../firebase/firebase';
 
 export const cancelRequest = async (requestId: number, userId: number) => {
 	console.log(
@@ -17,7 +20,7 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 			.selectFrom('request')
 			.where('request.id', '=', requestId)
 			.innerJoin('tour', 'tour.id', 'request.tour')
-			.select(['tour.id', 'tour.departure', 'request.ticketChecked'])
+			.select(['tour.id as tourId', 'request.ticketChecked'])
 			.executeTakeFirst();
 		if (tour === undefined) {
 			console.log(
@@ -53,6 +56,7 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 							'event.scheduledTimeStart',
 							'event.scheduledTimeEnd',
 							'event.cancelled',
+							'event.isPickup',
 							'cancelled_tour.id as tourid'
 						])
 				).as('events'),
@@ -65,7 +69,7 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 						.innerJoin('user', 'user.companyId', 'company.id')
 						.where('request.id', '=', requestId)
 						.where('user.isTaxiOwner', '=', true)
-						.select(['user.name', 'user.email'])
+						.select(['user.name', 'user.email', 'company.id as companyId'])
 				).as('companyOwners')
 			])
 			.executeTakeFirst();
@@ -92,6 +96,15 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 				);
 			}
 		}
+
+		tourInfo.events.sort((e) => getScheduledEventTime(e));
+		if (tourInfo.events[0].cancelled) {
+			await sendNotifications(tourInfo.companyOwners[0].companyId, {
+				tourId: tour.tourId,
+				change: TourChange.CANCELLED
+			});
+		}
+
 		console.log('Cancel Request - success', { requestId, userId });
 	});
 };

@@ -6,6 +6,8 @@ import { sendMail } from '$lib/server/sendMail';
 import CancelNotificationCustomer from '$lib/server/email/CancelNotificationCustomer.svelte';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { lockTablesStatement } from '$lib/server/db/lockTables';
+import { sendNotifications } from '$lib/server/firebase/notifications';
+import { TourChange } from '$lib/server/firebase/firebase';
 
 export const POST = async (event: RequestEvent) => {
 	const company = event.locals.session!.companyId;
@@ -85,6 +87,8 @@ export const POST = async (event: RequestEvent) => {
 				return json({});
 			}
 		}
+
+		await sendNotifications(company, { tourId: p.tourId, change: TourChange.CANCELLED });
 	});
 	console.log('Cancel Tour succes. tourId: ', p.tour);
 	return json({});

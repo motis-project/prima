@@ -4,6 +4,8 @@ import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import { getLatestEventTime } from '$lib/util/getLatestEventTime';
 import { lockTablesStatement } from '$lib/server/db/lockTables';
+import { sendNotifications } from '$lib/server/firebase/notifications.js';
+import { TourChange } from '$lib/server/firebase/firebase';
 
 export const POST = async (event) => {
 	const companyId = event.locals.session?.companyId;
@@ -160,6 +162,8 @@ export const POST = async (event) => {
 				.set({ vehicle: vehicleId })
 				.where('id', '=', tourId)
 				.executeTakeFirst();
+
+			await sendNotifications(companyId, { tourId, change: TourChange.MOVED });
 		}
 	});
 	return json({});
