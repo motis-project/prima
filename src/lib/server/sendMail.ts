@@ -22,23 +22,27 @@ export function generateMail(template: any, props: any): EmailContent {
 }
 
 export async function send(subject: string, email: string, content: EmailContent) {
-	const transporter = nodemailer.createTransport({
-		host: env.MAIL_HOST,
-		port: 465,
-		secure: true,
-		auth: {
-			user: env.MAIL_USERNAME,
-			pass: env.MAIL_SECRET_KEY
-		}
-	});
+	try {
+		const transporter = nodemailer.createTransport({
+			host: env.MAIL_HOST,
+			port: 465,
+			secure: true,
+			auth: {
+				user: env.MAIL_USERNAME,
+				pass: env.MAIL_SECRET_KEY
+			}
+		});
 
-	await transporter.sendMail({
-		from: env.EMAIL_SENDER,
-		to: email,
-		subject: subject,
-		html: content.html,
-		text: content.text
-	});
+		await transporter.sendMail({
+			from: env.EMAIL_SENDER,
+			to: email,
+			subject: subject,
+			html: content.html,
+			text: content.text
+		});
+	} catch (e) {
+		console.log('Error when sending Email: ', e);
+	}
 }
 
 export async function sendMail(template: any, subject: string, email: string, props: any) {
