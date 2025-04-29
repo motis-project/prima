@@ -23,6 +23,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			'request.ticketChecked',
 			'request.customer',
 			'request.id as requestId',
+			'request.kidsZeroToTwo',
+			'request.kidsThreeToFour',
+			'request.kidsFiveToSix',
 			'event.communicatedTime',
 			'vehicle.licensePlate',
 			'journey.id as journeyId'

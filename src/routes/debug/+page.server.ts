@@ -90,6 +90,9 @@ export const actions = {
 				booking.dropoffEventGroup,
 				booking.neighbourIds,
 				booking.directDurations,
+				0,
+				0,
+				0,
 				trx
 			);
 		});

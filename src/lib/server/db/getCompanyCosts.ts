@@ -140,6 +140,11 @@ export async function getCompanyCosts(companyId?: number, tourId?: number) {
 					(acc, current) => current.passengers + acc,
 					0
 				);
+				const tourKidsCount = tour.requests.reduce(
+					(acc, current) =>
+						current.kidsZeroToTwo + current.kidsThreeToFour + current.kidsFiveToSix + acc,
+					0
+				);
 				costPerDayAndVehicle[dayIdx].set(tour.vehicleId, {
 					taxameter:
 						(costPerDayAndVehicle[dayIdx].get(tour.vehicleId)?.taxameter ?? 0) + tourTaxameter,
@@ -153,7 +158,7 @@ export async function getCompanyCosts(companyId?: number, tourId?: number) {
 					uncapped:
 						(costPerDayAndVehicle[dayIdx].get(tour.vehicleId)?.uncapped ?? 0) +
 						(tourVerifiedCustomerCount === 0 ? 0 : tourTaxameter) -
-						tourCustomerCount * FIXED_PRICE,
+						(tourCustomerCount - tourKidsCount) * FIXED_PRICE,
 					availabilityDuration: availabilitiesPerDayAndVehicle[dayIdx].get(tour.vehicleId) ?? 0,
 					companyName: companyByVehicle.get(tour.vehicleId)!.name,
 					licensePlate: companyByVehicle.get(tour.vehicleId)!.licensePlate,

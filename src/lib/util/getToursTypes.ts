@@ -7,3 +7,4 @@ export type TourEvent = Tour['events'][0];
 export type ToursWithRequests = Awaited<ReturnType<typeof getToursWithRequests>>;
 export type TourWithRequests = ToursWithRequests[0];
 export type TourRequest = TourWithRequests['requests'][0];
+export type TourWithRequestsEvent = TourRequest['events'][0];
