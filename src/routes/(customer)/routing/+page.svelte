@@ -437,7 +437,7 @@
 							</Dialog.Description>
 						</Dialog.Header>
 
-						<div class="md-4 grid grid-cols-2 grid-rows-2 items-center">
+						<div class="md-4 grid grid-cols-2 grid-rows-2 items-center gap-4">
 							<Label>{t.booking.passengerNumber}</Label>
 							<Input type="number" bind:value={passengers} min={minimumPassengers} max="6" />
 							<Label class="col-span-2">{t.booking.kidsDescription}</Label>
@@ -448,8 +448,8 @@
 							<Label>{t.booking.kidsFiveToSix}</Label>
 							<Input type="number" bind:value={kidsFiveToSix} min="0" max={maxKidsFiveToSix} />
 
-							<Label class="mt-2 flex items-center gap-2">
-								<WheelchairIcon class="mt-2 size-5 shrink-0" />
+							<Label class="flex items-center gap-2">
+								<WheelchairIcon class="size-5 shrink-0" />
 								{t.booking.foldableWheelchair}
 							</Label>
 							<Switch class="justify-self-end" bind:checked={wheelchair} />
