@@ -45,10 +45,12 @@ const getCustomerCount = (tour: TourWithRequests, countOnlyVerified: boolean) =>
 	return customers;
 };
 
-const getKidsCount = (tour: TourWithRequests) => {
+const getKidsCount = (tour: TourWithRequests, countOnlyVerified: boolean) => {
 	let kids = 0;
 	tour.requests.forEach((r) => {
-		kids += r.kidsZeroToTwo + r.kidsThreeToFour + r.kidsFiveToSix;
+		if (!countOnlyVerified || r.ticketChecked) {
+			kids += r.kidsZeroToTwo + r.kidsThreeToFour + r.kidsFiveToSix;
+		}
 	});
 	return kids;
 };
@@ -66,7 +68,7 @@ const displayUnixtimeMs = (t: UnixtimeMs, displayTime?: boolean) => {
 const getTourCost = (tour: TourWithRequests) => {
 	return (
 		(getCustomerCount(tour, true) === 0 ? 0 : (tour.fare ?? 0)) -
-		FIXED_PRICE * (getCustomerCount(tour, false) - getKidsCount(tour))
+		FIXED_PRICE * (getCustomerCount(tour, true) - getKidsCount(tour, true))
 	);
 };
 
@@ -142,14 +144,18 @@ export const tourColsAdmin = [
 	},
 	{
 		text: ['davon Kinder'],
-		sort: (t1: TourWithRequests, t2: TourWithRequests) => getKidsCount(t1) - getKidsCount(t2),
-		toTableEntry: (r: TourWithRequests) => getKidsCount(r)
+		sort: (t1: TourWithRequests, t2: TourWithRequests) =>
+			getKidsCount(t1, false) - getKidsCount(t2, false),
+		toTableEntry: (r: TourWithRequests) => getKidsCount(r, false)
 	},
 	{
-		text: ['erschienene', 'Kunden'],
+		text: ['erschienene', 'zahlende', 'Kunden'],
 		sort: (t1: TourWithRequests, t2: TourWithRequests) =>
-			getCustomerCount(t1, true) - getCustomerCount(t2, true),
-		toTableEntry: (r: TourWithRequests) => getCustomerCount(r, true)
+			getCustomerCount(t1, true) -
+			getKidsCount(t1, true) -
+			getCustomerCount(t2, true) +
+			getKidsCount(t2, true),
+		toTableEntry: (r: TourWithRequests) => getCustomerCount(r, true) - getKidsCount(r, true)
 	},
 	{
 		text: ['Taxameterstand'],

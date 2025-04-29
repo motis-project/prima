@@ -133,16 +133,13 @@ export async function getCompanyCosts(companyId?: number, tourId?: number) {
 			if (day.overlaps(tour.interval)) {
 				const tourTaxameter = tour.fare ?? 0;
 				const tourVerifiedCustomerCount = tour.requests.reduce(
-					(acc, current) => (current.ticketChecked ? current.passengers : 0) + acc,
-					0
-				);
-				const tourCustomerCount = tour.requests.reduce(
-					(acc, current) => current.passengers + acc,
-					0
-				);
-				const tourKidsCount = tour.requests.reduce(
 					(acc, current) =>
-						current.kidsZeroToTwo + current.kidsThreeToFour + current.kidsFiveToSix + acc,
+						(current.ticketChecked
+							? current.passengers -
+								current.kidsZeroToTwo -
+								current.kidsThreeToFour -
+								current.kidsFiveToSix
+							: 0) + acc,
 					0
 				);
 				costPerDayAndVehicle[dayIdx].set(tour.vehicleId, {
@@ -150,7 +147,7 @@ export async function getCompanyCosts(companyId?: number, tourId?: number) {
 						(costPerDayAndVehicle[dayIdx].get(tour.vehicleId)?.taxameter ?? 0) + tourTaxameter,
 					customerCount:
 						(costPerDayAndVehicle[dayIdx].get(tour.vehicleId)?.customerCount ?? 0) +
-						tourCustomerCount,
+						tour.requests.reduce((acc, current) => current.passengers + acc, 0),
 					timestamp: tour.startTime,
 					verifiedCustomerCount:
 						(costPerDayAndVehicle[dayIdx].get(tour.vehicleId)?.verifiedCustomerCount ?? 0) +
@@ -158,7 +155,7 @@ export async function getCompanyCosts(companyId?: number, tourId?: number) {
 					uncapped:
 						(costPerDayAndVehicle[dayIdx].get(tour.vehicleId)?.uncapped ?? 0) +
 						(tourVerifiedCustomerCount === 0 ? 0 : tourTaxameter) -
-						(tourCustomerCount - tourKidsCount) * FIXED_PRICE,
+						tourVerifiedCustomerCount * FIXED_PRICE,
 					availabilityDuration: availabilitiesPerDayAndVehicle[dayIdx].get(tour.vehicleId) ?? 0,
 					companyName: companyByVehicle.get(tour.vehicleId)!.name,
 					licensePlate: companyByVehicle.get(tour.vehicleId)!.licensePlate,
