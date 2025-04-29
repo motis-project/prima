@@ -1,7 +1,6 @@
 import admin from 'firebase-admin';
-import { env } from '$env/dynamic/private';
 
-if (!admin.apps.length) {
+/*if (!admin.apps.length) {
 	admin.initializeApp({
 		credential: admin.credential.cert({
 			projectId: env.FIREBASE_PROJECT_ID,
@@ -9,11 +8,11 @@ if (!admin.apps.length) {
 			clientEmail: env.FIREBASE_CLIENT_EMAIL
 		})
 	});
-}
+}*/
 
-export const adminAuth = admin.auth();
-export const adminMessaging = admin.messaging();
-export const adminDb = admin.firestore();
+//export const adminAuth = admin.auth();
+//export const adminMessaging = admin.messaging();
+//export const adminDb = admin.firestore();
 
 export enum TourChange {
 	BOOKED,
@@ -41,7 +40,7 @@ export async function sendMsg(token: string, title: string, body: string, data: 
 		}
 	};
 
-	adminMessaging
+	admin.messaging()
 		.send(message, false)
 		.then((response) => {
 			console.log('Successfully sent message:', response);
