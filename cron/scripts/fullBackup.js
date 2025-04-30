@@ -11,7 +11,7 @@ if (!existsSync(BACKUP_DIR)) {
 	mkdirSync(BACKUP_DIR, { recursive: true });
 }
 
-const dbUrl = process.env.DATABASE_URL;
+const dbUrl = process.env.DATABASE_URL_INTERNAL;
 const dbUser = process.env.POSTGRES_USER;
 const dbPassword = process.env.POSTGRES_PASSWORD;
 const targetDatabase = process.env.POSTGRES_DB || 'prima';
@@ -73,7 +73,7 @@ function cleanupOldBackups() {
 	}
 }
 
-function extractTimestamp(filename: string): string {
+function extractTimestamp(filename) {
 	const match = filename.match(/_(\d{4}_\d{2}_\d{2}_\d{2}_\d{2})/);
 	return match ? match[1] : '';
 }

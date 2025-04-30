@@ -15,7 +15,7 @@ if (!existsSync(BACKUP_DIR)) {
 	mkdirSync(BACKUP_DIR, { recursive: true });
 }
 
-const dbUrl = process.env.DATABASE_URL;
+const dbUrl = process.env.DATABASE_URL_INTERNAL;
 if (!dbUrl) {
 	throw new Error('DATABASE_URL is not set in the environment.');
 }
