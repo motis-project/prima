@@ -1,66 +1,43 @@
 import { exec } from 'child_process';
-import { mkdirSync, existsSync, renameSync } from 'fs';
 import path from 'path';
 import { config } from 'dotenv';
+import { mkdirSync, existsSync, readdirSync, unlinkSync } from 'fs';
 
 config();
 
-const BACKUP_DIR = '/app/db_backups'; // Define where backups will be saved
-const WAL_ARCHIVE_DIR = '/path/to/archive'; // Define where WAL segments will be archived
+// Directory where WAL archive backups are stored
+const WAL_ARCHIVE_DIR = '/app/db_backups/wal_archives'; // Change as per your setup
 
-// Make sure the backup directories exist
-if (!existsSync(BACKUP_DIR)) {
-    mkdirSync(BACKUP_DIR, { recursive: true });
-}
+// Ensure the WAL archive directory exists
 if (!existsSync(WAL_ARCHIVE_DIR)) {
-    mkdirSync(WAL_ARCHIVE_DIR, { recursive: true });
+  mkdirSync(WAL_ARCHIVE_DIR, { recursive: true });
 }
 
-// This function will back up WAL files
-function backupWAL() {
-    const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, '_');
-    const backupFileName = `wal_backup_${timestamp}.tar.gz`;
-    const backupFilePath = path.join(BACKUP_DIR, backupFileName);
+const dbUrl = process.env.DATABASE_URL_INTERNAL;
+const dbUser = process.env.POSTGRES_USER;
+const dbPassword = process.env.POSTGRES_PASSWORD;
+const targetDatabase = process.env.POSTGRES_DB || 'prima';
 
-    console.log(`Starting WAL backup: ${backupFilePath}`);
+const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, '_');
+const FILE_NAME = `incremental_backup_${timestamp}.tar.gz`;
+const BACKUP_FILE_PATH = path.join(WAL_ARCHIVE_DIR, FILE_NAME);
 
-    // Archive current WAL files
-    const command = `tar -czf ${backupFilePath} -C ${WAL_ARCHIVE_DIR} .`;
-    exec(command, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`WAL backup failed: ${error.message}`);
-            return;
-        }
-        if (stderr) {
-            console.warn(`Warning during WAL backup: ${stderr}`);
-        }
-        console.log(`WAL backup completed and saved at: ${backupFilePath}`);
-    });
+function performIncrementalBackup() {
+  const command = `PGPASSWORD=${dbPassword} pg_basebackup -h ${dbUrl} -U ${dbUser} -D ${BACKUP_FILE_PATH} -Ft -z`;
+
+  console.log(`Starting incremental backup: ${FILE_NAME}`);
+
+  exec(command, (error, _, stderr) => {
+    if (error) {
+      console.error(`Error during backup: ${error.message}`);
+      return;
+    }
+    if (stderr) {
+      console.warn(`Backup stderr: ${stderr}`);
+    }
+
+    console.log(`Incremental backup saved at: ${BACKUP_FILE_PATH}`);
+  });
 }
 
-// Function to check for new WAL files and backup
-function archiveWALFiles() {
-    const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, '_');
-    const archiveFileName = `wal_segment_${timestamp}.log`;
-    const archiveFilePath = path.join(WAL_ARCHIVE_DIR, archiveFileName);
-
-    // You might want to fetch new WAL files here using PostgreSQL commands
-    const command = `cp /path/to/pg_wal/* ${archiveFilePath}`;
-
-    exec(command, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Failed to copy WAL segments: ${error.message}`);
-            return;
-        }
-        if (stderr) {
-            console.warn(`Warning during WAL copy: ${stderr}`);
-        }
-        console.log(`WAL segment copied and saved at: ${archiveFilePath}`);
-
-        // After copying WAL files, back them up
-        backupWAL();
-    });
-}
-
-// Run the backup process
-archiveWALFiles();
+performIncrementalBackup();
