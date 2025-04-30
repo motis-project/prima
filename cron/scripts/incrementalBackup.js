@@ -5,7 +5,7 @@ import path from 'path';
 
 config();
 
-const BACKUP_DIR = './db_backups';
+const BACKUP_DIR = '/app/db_backups';
 
 const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, '_');
 const FILE_NAME = `incremental_backup_${timestamp}.sql`;

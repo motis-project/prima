@@ -5,7 +5,7 @@ import { mkdirSync, existsSync, readdirSync, unlinkSync } from 'fs';
 
 config();
 
-const BACKUP_DIR = './db_backups';
+const BACKUP_DIR = '/app/db_backups';
 
 if (!existsSync(BACKUP_DIR)) {
 	mkdirSync(BACKUP_DIR, { recursive: true });
