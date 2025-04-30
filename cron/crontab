@@ -1,5 +1,6 @@
 # Cron job to run full backup script every week on Sunday at 3:00 AM
-* * * * * /usr/local/bin/node /app/scripts/fullBackup.js >> /var/log/cron.log 2>&1
+0 3 * * 0 /usr/local/bin/node /app/scripts/fullBackup.js >> /var/log/cron.log 2>&1
 
-# Cron job to run incremental backup script every 15 minutes
-* * * * * /usr/local/bin/node /app/scripts/incrementalBackup.js >> /var/log/cron.log 2>&1
+# Cron jobs to run incremental backup script every 15 minutes, except on sundays between 2:00 and 3:59
+*/15 0-1,4-23 * * * /usr/local/bin/node /app/scripts/incrementalBackup.js >> /var/log/cron.log 2>&1
+*/15 * * * 1-6 /usr/local/bin/node /app/scripts/incrementalBackup.js >> /var/log/cron.log 2>&1

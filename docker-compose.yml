@@ -12,7 +12,13 @@ services:
       - type: volume
         source: data-volume
         target: /var/lib/postgresql/data
-
+      - ./pg_archive:/var/lib/postgresql/data/archive
+    environment:
+      POSTGRES_DB: prima
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pw
+    command: ["sh", "-c", "echo \"archive_mode = on\" >> /usr/share/postgresql/postgresql.conf.sample && echo \"archive_command = 'cp %p /var/lib/postgresql/data/archive/%f'\" >> /usr/share/postgresql/postgresql.conf.sample && postgres"]
+  
   adminer:
     image: adminer
     restart: always
@@ -64,7 +70,7 @@ services:
     volumes:
       - ./cron/scripts:/app/scripts
       - ./cron/crontab:/etc/cron.d/cron-jobs
-      - ./db_backups:/app/db_backups # Mounting host directory for backups
+      - ./db_backups:/app/db_backups
     command:
       [
         'sh',
