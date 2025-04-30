@@ -64,8 +64,13 @@ services:
     volumes:
       - ./cron/scripts:/app/scripts
       - ./cron/crontab:/etc/cron.d/cron-jobs
-      - ./db_backups:/app/db_backups  # Mounting host directory for backups
-    command: ["sh", "-c", "printenv | grep -v \"no_proxy\" > /etc/environment && cron && tail -f /var/log/cron.log"]
+      - ./db_backups:/app/db_backups # Mounting host directory for backups
+    command:
+      [
+        'sh',
+        '-c',
+        'printenv | grep -v "no_proxy" > /etc/environment && cron && tail -f /var/log/cron.log'
+      ]
 
 volumes:
   data-volume:
