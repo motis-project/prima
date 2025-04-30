@@ -8,6 +8,7 @@ import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { lockTablesStatement } from '$lib/server/db/lockTables';
 import { sendNotifications } from '$lib/server/firebase/notifications';
 import { TourChange } from '$lib/server/firebase/firebase';
+import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 
 export const POST = async (event: RequestEvent) => {
 	const company = event.locals.session!.companyId;
@@ -29,6 +30,7 @@ export const POST = async (event: RequestEvent) => {
 			.where('tour.id', '=', p.tourId)
 			.select((eb) => [
 				'tour.fare',
+				'tour.vehicle',
 				jsonArrayFrom(
 					eb
 						.selectFrom('request')
@@ -38,12 +40,19 @@ export const POST = async (event: RequestEvent) => {
 							'user.email',
 							'user.name',
 							'request.ticketChecked',
+							'request.wheelchairs',
 							jsonArrayFrom(
 								eb
 									.selectFrom('event')
 									.whereRef('event.request', '=', 'request.id')
 									.orderBy('isPickup', 'desc')
-									.select(['event.address', 'event.communicatedTime'])
+									.select([
+										'event.address',
+										'event.communicatedTime',
+										'event.scheduledTimeStart',
+										'event.scheduledTimeEnd',
+										'isPickup'
+									])
 							).as('events')
 						])
 				).as('requests')
@@ -88,7 +97,15 @@ export const POST = async (event: RequestEvent) => {
 			}
 		}
 
-		await sendNotifications(company, { tourId: p.tourId, change: TourChange.CANCELLED });
+		const firstEvent = tour.requests.flatMap((r) => r.events).sort((e) => e.scheduledTimeStart)[0];
+		const wheelchairs = tour.requests.reduce((prev, curr) => prev + curr.wheelchairs, 0);
+		await sendNotifications(company, {
+			tourId: p.tourId,
+			pickupTime: getScheduledEventTime(firstEvent),
+			vehicleId: tour.vehicle,
+			wheelchairs,
+			change: TourChange.CANCELLED
+		});
 	});
 	console.log('Cancel Tour succes. tourId: ', p.tour);
 	return json({});
