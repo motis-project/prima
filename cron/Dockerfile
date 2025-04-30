@@ -14,11 +14,10 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
-COPY scripts /app/scripts
+COPY cron/scripts /app/scripts
 COPY cron/crontab /etc/cron.d/cron-jobs
 
 RUN chmod 0644 /etc/cron.d/cron-jobs && \
-    chmod +x /app/scripts/*.sh && \
     crontab /etc/cron.d/cron-jobs && \
     touch /var/log/cron.log
 
