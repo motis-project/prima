@@ -1,5 +1,9 @@
 import { db } from '$lib/server/db/index.js';
-import { sendMsg, TourChange, type NotificationData } from '$lib/server/firebase/firebase';
+import {
+	sendPushNotification,
+	TourChange,
+	type NotificationData
+} from '$lib/server/firebase/firebase';
 
 async function getTokens(companyId: number) {
 	const tokens = await db
@@ -15,23 +19,24 @@ export async function sendNotifications(companyId: number, data: NotificationDat
 	const tokens = await getTokens(companyId);
 
 	let title = 'Änderung einer Fahrt';
+	let body: string = '';
+
 	switch (data.change) {
 		case TourChange.BOOKED:
 			title = 'Neue Fahrt';
+			body = `Neue Tour um ${data.pickupTime}`;
 			break;
 		case TourChange.MOVED:
 			title = 'Fahrt verschoben';
+			body = `Tour um ${data.pickupTime} wurde einem anderen Fahrzeug zugwiesen.`;
 			break;
 		case TourChange.CANCELLED:
 			title = 'Fahrt abgesagt';
+			body = `Tour um ${data.pickupTime} wurde abgesagt.`;
 			break;
 	}
 
 	tokens.forEach((token) => {
-		try {
-			sendMsg(token.fcmToken, title, '', data);
-		} catch (error) {
-			console.log(error);
-		}
+		sendPushNotification(token.fcmToken, title, body, data);
 	});
 }

@@ -1,4 +1,5 @@
 import admin from 'firebase-admin';
+import { db } from '$lib/server/db/index.js';
 
 /*if (!admin.apps.length) {
 	admin.initializeApp({
@@ -9,10 +10,6 @@ import admin from 'firebase-admin';
 		})
 	});
 }*/
-
-//export const adminAuth = admin.auth();
-//export const adminMessaging = admin.messaging();
-//export const adminDb = admin.firestore();
 
 export enum TourChange {
 	BOOKED,
@@ -28,27 +25,44 @@ export type NotificationData = {
 	change: TourChange;
 };
 
-export async function sendMsg(token: string, title: string, body: string, data: NotificationData) {
-	const tourId = data.tourId.toString();
-	const change = data.change.toString();
-	const message = {
-		token,
-		notification: {
-			title,
-			body
-		},
-		data: {
-			tourId,
-			change
-		}
-	};
-
-	admin.messaging()
-		.send(message, false)
-		.then((response) => {
-			console.log('Successfully sent message:', response);
-		})
-		.catch((error) => {
-			console.error('Error sending message:', error);
+export async function sendPushNotification(
+	token: string,
+	title: string,
+	body: string,
+	data: NotificationData
+) {
+	try {
+		const response = await admin.messaging().send({
+			token,
+			notification: {
+				title,
+				body
+			},
+			data: {
+				tourId: data.tourId.toString(),
+				pickupTime: data.pickupTime.toString(),
+				vehicleId: data.vehicleId.toString(),
+				wheelchairs: data.wheelchairs.toString(),
+				change: data.change.toString()
+			}
 		});
+
+		return { success: true, messageId: response };
+	} catch (error: any) {
+		console.error('FCM error:', error);
+
+		if (error.code === 'messaging/invalid-registration-token') {
+			try {
+				await db.deleteFrom('fcmToken').where('fcmToken', '=', token).executeTakeFirst();
+			} catch (e) {
+				console.error(e);
+			}
+
+			return { success: false, error: 'Invalid device token' };
+		} else if (error.code === 'messaging/registration-token-not-registered') {
+			return { success: false, error: 'Token not registered' };
+		}
+
+		return { success: false, error: 'Unknown error occurred' };
+	}
 }
