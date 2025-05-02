@@ -17,15 +17,17 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 	await db.transaction().execute(async (trx) => {
 		await lockTablesStatement(['tour', 'request', 'event', 'user']).execute(trx);
 		const tour = await trx
-			.selectFrom('request as cancelled_request')
-			.where('cancelled_request.id', '=', requestId)
-			.innerJoin('tour as relevant_tour', 'relevant_tour.id', 'cancelled_request.tour')
+			.selectFrom('request')
+			.where('request.id', '=', requestId)
+			.innerJoin('tour as relevant_tour', 'relevant_tour.id', 'request.tour')
 			.select((eb) => [
-				'tour as relevant_tour.id as tourId',
-				'cancelled_request.ticketChecked',
+				'relevant_tour.id as tourId',
+				'request.ticketChecked',
 				jsonArrayFrom(
 					eb
-						.selectFrom('relevant_tour')
+						.selectFrom('request as cancelled_request')
+						.where('cancelled_request.id', '=', requestId)
+						.innerJoin('tour as relevant_tour', 'cancelled_request.tour', 'relevant_tour.id')
 						.innerJoin('request as relevant_request', 'relevant_request.tour', 'relevant_tour.id')
 						.select((eb) => [
 							'relevant_request.wheelchairs',
