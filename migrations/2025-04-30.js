@@ -7,3 +7,5 @@ export async function up(db) {
 		.addUniqueConstraint('device_company', ['device_id', 'company'])
 		.execute();
 }
+
+export async function down() { }

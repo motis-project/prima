@@ -6,7 +6,7 @@ import CancelNotificationCompany from '$lib/server/email/CancelNotificationCompa
 import { lockTablesStatement } from './lockTables';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 import { sendNotifications } from '../firebase/notifications';
-import { TourChange } from '../firebase/firebase';
+import { TourChange } from '$lib/server/firebase/firebase';
 
 export const cancelRequest = async (requestId: number, userId: number) => {
 	console.log(

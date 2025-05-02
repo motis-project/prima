@@ -14,3 +14,5 @@ export async function up(db) {
         .alterColumn("lng", (col) => col.setDataType(sql`double precision`))
         .execute();
 }
+
+export async function down() { }
