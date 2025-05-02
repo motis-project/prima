@@ -66,14 +66,19 @@ const displayUnixtimeMs = (t: UnixtimeMs, displayTime?: boolean) => {
 };
 
 const isPlanned = (tour: TourWithRequests) => {
-	return !tour.cancelled && tour.fare === null && !tour.requests.flatMap((request) => request.events).some((e) => e.ticketChecked) && tour.endTime > Date.now();
-}
+	return (
+		!tour.cancelled &&
+		tour.fare === null &&
+		!tour.requests.flatMap((request) => request.events).some((e) => e.ticketChecked) &&
+		tour.endTime > Date.now()
+	);
+};
 
 const getTourCost = (tour: TourWithRequests) => {
-	return isPlanned(tour) ? 0 : (
-		(getCustomerCount(tour, true) === 0 ? 0 : (tour.fare ?? 0)) -
-		FIXED_PRICE * (getCustomerCount(tour, true) - getKidsCount(tour, true))
-	);
+	return isPlanned(tour)
+		? 0
+		: (getCustomerCount(tour, true) === 0 ? 0 : (tour.fare ?? 0)) -
+				FIXED_PRICE * (getCustomerCount(tour, true) - getKidsCount(tour, true));
 };
 
 const displayDuration = (duration: number) => {
@@ -168,8 +173,9 @@ export const tourColsAdmin = [
 	},
 	{
 		text: ['Ausgleichsleistung'],
-		sort: (t1: TourWithRequests, t2: TourWithRequests) => getTourCost(t1) ?? 0 - getTourCost(t2) ?? 0,
-		toTableEntry: (r: TourWithRequests) => isPlanned(r) ? '-' : getEuroString(getTourCost(r))
+		sort: (t1: TourWithRequests, t2: TourWithRequests) =>
+			getTourCost(t1) ?? 0 - getTourCost(t2) ?? 0,
+		toTableEntry: (r: TourWithRequests) => (isPlanned(r) ? '-' : getEuroString(getTourCost(r)))
 	},
 	{
 		text: ['Status'],
