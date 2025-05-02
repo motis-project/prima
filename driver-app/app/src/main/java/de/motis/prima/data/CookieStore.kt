@@ -1,14 +1,14 @@
-package de.motis.prima.services
+package de.motis.prima.data
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
 
 class CookieStore(context: Context) : CookieJar {
-    private val preferences: SharedPreferences = context.getSharedPreferences("cookies", Context.MODE_PRIVATE)
+    private val preferences: SharedPreferences =
+        context.getSharedPreferences("cookies", Context.MODE_PRIVATE)
 
     override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
         val editor = preferences.edit()
@@ -20,16 +20,10 @@ class CookieStore(context: Context) : CookieJar {
     override fun loadForRequest(url: HttpUrl): List<Cookie> {
         val cookiesString = preferences.getString(url.host, null)
         if (cookiesString.isNullOrEmpty()) {
-            Log.d("Cookie", "No stored cookie found.")
             return listOf()
         }
-        Log.d("cookie", "Cookie is $cookiesString")
 
-        val cookie = Cookie.parse(url, cookiesString)
-        if (cookie == null) {
-            Log.d("Cookie", "No cookie for host found.")
-            return listOf()
-        }
+        val cookie = Cookie.parse(url, cookiesString) ?: return listOf()
         return listOf(cookie)
     }
 
