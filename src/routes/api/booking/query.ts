@@ -3,7 +3,7 @@ import type { Capacities } from '$lib/util/booking/Capacities';
 import type { DirectDrivingDurations } from '$lib/server/booking/getDirectDrivingDurations';
 import type { EventGroupUpdate } from '$lib/server/booking/getEventGroupInfo';
 import type { Insertion, NeighbourIds } from '$lib/server/booking/insertion';
-import { db, type Database } from '$lib/server/db';
+import { type Database } from '$lib/server/db';
 import { sql, Transaction } from 'kysely';
 import { sendNotifications } from '$lib/server/firebase/notifications';
 import { TourChange } from '$lib/server/firebase/firebase';
@@ -69,7 +69,7 @@ export async function insertRequest(
        ) AS request`.execute(trx)
 	).rows[0].request;
 
-	const notificationParams = await db
+	const notificationParams = await trx
 		.selectFrom('tour')
 		.innerJoin('request', 'request.tour', 'tour.id')
 		.innerJoin('vehicle', 'tour.vehicle', 'vehicle.id')
