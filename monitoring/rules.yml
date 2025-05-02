@@ -1,0 +1,17 @@
+groups:
+- name: down
+  rules:
+  - alert: down
+    expr: probe_success == 0
+    for: 3m
+    labels:
+      severity: page
+    annotations:
+      summary: Prima is down
+  - alert: disk
+    expr: node_filesystem_avail_bytes{mountpoint=~"/"}/node_filesystem_size_bytes{mountpoint=~"/"} < 0.2
+    for: 3m
+    labels:
+      severity: page
+    annotations:
+      summary: Prima Disk is full

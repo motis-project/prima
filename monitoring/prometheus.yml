@@ -1,0 +1,63 @@
+global:
+  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 1m # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+           - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  - "rules.yml"
+
+scrape_configs:
+  - job_name: "node"
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["node-exporter:9100"]
+  - job_name: "motis"
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["motis-server:8080"]
+  - job_name: "sql"
+    scrape_interval: 1m
+    static_configs:
+      - targets: ["sql-exporter:9399"]
+  - job_name: "blackbox"
+    scrape_interval: 1m
+    metrics_path: /probe
+    params:
+      module: [http_2xx]  # Look for a HTTP 200 response.
+    static_configs:
+      - targets:
+        - https://app.primaplusoev.de/routing
+        - https://prima-motis.motis-project.de/api/v1/map/initial 
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115  # The blackbox exporter's real hostname:port.
+  - job_name: 'routing'
+    scrape_interval: 5m
+    scrape_timeout: 20s
+    metrics_path: /probe
+    params:
+      module: [routing]
+    static_configs:
+      - targets:
+        - https://prima-motis.motis-project.de/api/v1/plan?arriveBy=false&fromPlace=51.5446031%2C14.5355952%2C0&toPlace=51.0493286%2C13.7381437%2C0&preTransitModes=WALK,ODM&postTransitModes=WALK,ODM&directModes=WALK,ODM&luggage=0&fastestDirectFactor=1.6&maxMatchingDistance=250&maxTravelTime=1440&passengers=1
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115  # The blackbox exporter's real hostname:port.
+
+

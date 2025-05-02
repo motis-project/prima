@@ -1,0 +1,272 @@
+# Global settings and defaults.
+global:
+  # Subtracted from Prometheus' scrape_timeout to give us some headroom and prevent Prometheus from
+  # timing out first.
+  scrape_timeout_offset: 500ms
+  # Minimum interval between collector runs: by default (0s) collectors are executed on every scrape.
+  min_interval: 0s
+  # Maximum number of open connections to any one target. Metric queries will run concurrently on
+  # multiple connections.
+  max_connections: 1
+  # Maximum number of idle connections to any one target.
+  max_idle_connections: 1
+  # Maximum amount of time a connection may be reused to any one target. Infinite by default.
+  #  max_connection_lifetime: 10m
+
+# The target to monitor and the list of collectors to execute on it.
+target:
+  # Target name (optional). Setting this field enables extra metrics e.g. `up` and `scrape_duration` with
+  # the `target` label that are always returned on a scrape.
+  name: "primadb"
+  # Data source name always has a URI schema that matches the driver name. In some cases (e.g. MySQL)
+  # the schema gets dropped or replaced to match the driver expected DSN format.
+  data_source_name: 'postgresql://postgres:pw@db:5432/prima?sslmode=disable'
+
+  # Collectors (referenced by name) to execute on the target.
+  # Glob patterns are supported (see <https://pkg.go.dev/path/filepath#Match> for syntax).
+  collectors: [prima,database,server]
+
+  # In case you need to connect to a backend that only responds to a limited set of commands (e.g. pgbouncer) or
+  # a data warehouse you don't want to keep online all the time (due to the extra cost), you might want to disable `ping`
+  # enable_ping: true
+# This example contains two collectors, one to collect server metrics, and a second to collect database level metrics.
+# All metrics are prefixed accoring to which collector they originate from "pg_db_" or "pg_server_".
+# Many of these have been copied from https://github.com/prometheus-community/postgres_exporter
+
+collectors:
+  - collector_name: prima
+    metrics:
+      - metric_name: prima_users_total
+        type: gauge
+        help: 'Number of users registered'
+        values:
+          - total
+        query: SELECT COUNT(*) as total FROM public.user
+      - metric_name: prima_requests_total
+        type: gauge
+        help: 'Number of requests'
+        key_labels:
+          - cancelled
+          - ticket_checked
+        values:
+          - total
+        query: SELECT COUNT(*) as total, cancelled, ticket_checked FROM public.request GROUP BY cancelled, ticket_checked
+      - metric_name: prima_sessions_total
+        type: gauge
+        help: 'Number of sessions'
+        values:
+          - total
+        query: SELECT COUNT(*) as total FROM public.session
+ 
+  - collector_name: database
+    metrics:
+      - metric_name: pg_db_stat_user_tables_seq_scan
+        type: counter
+        help: 'Number of sequential scans initiated on this table'
+        key_labels:
+          - relname
+        values:
+          - seq_scan
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_seq_tup_read
+        type: counter
+        help: 'Number of live rows fetched by sequential scans'
+        key_labels:
+          - relname
+        values:
+          - seq_tup_read
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_idx_scan
+        type: counter
+        help: 'Number of index scans initiated on this table'
+        key_labels:
+          - relname
+        values:
+          - idx_scan
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_idx_tup_fetch
+        type: counter
+        help: 'Number of live rows fetched by index scans'
+        key_labels:
+          - relname
+        values:
+          - idx_tup_fetch
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_n_tup_ins
+        type: counter
+        help: 'Total number of rows inserted'
+        key_labels:
+          - relname
+        values:
+          - n_tup_ins
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_n_tup_upd
+        type: counter
+        help: 'Total number of rows updated. (This includes row updates counted in n_tup_hot_upd and n_tup_newpage_upd, and remaining non-HOT updates.)'
+        key_labels:
+          - relname
+        values:
+          - n_tup_upd
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_n_tup_del
+        type: counter
+        help: 'Total number of rows deleted'
+        key_labels:
+          - relname
+        values:
+          - n_tup_del
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_activity_transactions
+        type: gauge
+        help: 'Number of transactions currently in progress'
+        values:
+          - transactions
+        query_ref: _db_pg_stat_activity
+
+      - metric_name: pg_db_size_bytes
+        help: 'Disk space used by the database'
+        type: gauge
+        values:
+          - size
+        query_ref: _db_pg_database_size
+
+    queries:
+      - query_name: _db_pg_database_size
+        query: |
+          select pg_database_size(current_database()) as size
+      - query_name: _db_pg_stat_user_tables
+        query: |
+          SELECT
+            relname,
+
+            COALESCE(seq_scan,0) as seq_scan,
+            COALESCE(seq_tup_read,0) as seq_tup_read,
+
+            COALESCE(idx_scan,0) as idx_scan,
+            COALESCE(idx_tup_fetch,0) as idx_tup_fetch,
+
+            COALESCE(n_tup_ins,0) as n_tup_ins,
+            COALESCE(n_tup_upd,0) as n_tup_upd,
+            COALESCE(n_tup_del,0) as n_tup_del,
+            COALESCE(n_tup_hot_upd,0) as n_tup_hot_upd,
+
+            pg_total_relation_size(relid) as total_size
+          FROM
+            pg_stat_user_tables
+      - query_name: _db_pg_stat_activity
+        query: |
+          SELECT
+              COUNT(*) as transactions,
+              MAX(EXTRACT(EPOCH FROM clock_timestamp() - pg_stat_activity.xact_start)) AS oldest_timestamp_seconds
+          FROM pg_stat_activity
+          WHERE state IS DISTINCT FROM 'idle'
+          AND query NOT LIKE 'autovacuum:%'
+          AND pg_stat_activity.xact_start IS NOT NULL;
+
+
+  - collector_name: server
+    metrics:
+
+      - metric_name: pg_server_stat_database_deadlocks
+        type: counter
+        help: 'Number of deadlocks detected in this database'
+        key_labels:
+          - datname
+        values:
+          - deadlocks
+        query_ref: _srv_pg_stat_database
+
+
+      - metric_name: pg_server_stat_database_sessions
+        type: gauge
+        help: 'Total number of sessions established to this database'
+        key_labels:
+          - datname
+        values:
+          - sessions
+        query_ref: _srv_pg_stat_database
+
+
+      - metric_name: pg_server_locks
+        type: gauge
+        help: 'Number of locks held in this database'
+        key_labels:
+          - datname
+          - mode
+        values:
+          - count
+        query_ref: _srv_pg_locks
+
+    queries:
+      - query_name: _srv_pg_locks
+        query: |
+          SELECT
+            pg_database.datname as datname,
+            -- Name of the lock mode
+            tmp.mode as mode,
+            COALESCE(count, 0) as count
+          FROM
+            (
+              VALUES
+                ('accesssharelock'),
+                ('rowsharelock'),
+                ('rowexclusivelock'),
+                ('shareupdateexclusivelock'),
+                ('sharelock'),
+                ('sharerowexclusivelock'),
+                ('exclusivelock'),
+                ('accessexclusivelock'),
+                ('sireadlock')
+            ) AS tmp(mode)
+            CROSS JOIN pg_database
+            LEFT JOIN (
+              SELECT
+                database,
+                lower(mode) AS mode,
+                count(*) AS count
+              FROM
+                pg_locks
+              WHERE
+                database IS NOT NULL
+              GROUP BY
+                database,
+                lower(mode)
+            ) AS tmp2 ON tmp.mode = tmp2.mode
+            and pg_database.oid = tmp2.database
+
+      - query_name: _srv_pg_stat_database
+        query: |
+          SELECT
+            COALESCE(datname, 'shared-objects') as datname,
+            COALESCE(numbackends, 0) as numbackends,
+            xact_commit,
+            xact_rollback,
+            blks_read,
+            blks_hit,
+            tup_returned,
+            tup_fetched,
+            tup_inserted,
+            tup_updated,
+            tup_deleted,
+            temp_files,
+            temp_bytes,
+            deadlocks,
+            blk_read_time,
+            blk_write_time,
+            session_time,
+            active_time,
+            idle_in_transaction_time,
+            sessions,
+            sessions_abandoned,
+            sessions_fatal,
+            sessions_killed
+          FROM pg_stat_database
+
+
