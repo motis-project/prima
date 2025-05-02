@@ -52,7 +52,7 @@ export async function sendPushNotification(
 				try {
 					await db.deleteFrom('fcmToken').where('fcmToken', '=', token).executeTakeFirst();
 				} catch (e) {
-					console.error(e);
+					console.log('Unable to delete fcm Token from database.', {token});
 				}
 			}
 		}
