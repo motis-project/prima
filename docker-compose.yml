@@ -2,16 +2,24 @@ version: '3'
 services:
   pg:
     image: postgis/postgis:16-3.4
-    restart: always
     container_name: pg
     ports:
       - 6500:5432
     env_file:
       - ./.env
     volumes:
-      - type: volume
-        source: data-volume
-        target: /var/lib/postgresql/data
+      - data-volume:/var/lib/postgresql/data
+      - ./db_backups:/db_backups
+    command:
+      - 'postgres'
+      - '-c'
+      - 'wal_level=logical'
+      - '-c'
+      - 'archive_mode=on'
+      - '-c'
+      - 'archive_command=cp /var/lib/postgresql/data/%p /db_backups/%f'
+      - '-c'
+      - 'log_min_messages=WARNING'
 
   adminer:
     image: adminer
@@ -50,6 +58,21 @@ services:
       - 'host.docker.internal:host-gateway'
     build:
       context: .
+
+  cron:
+    build:
+      context: .
+      dockerfile: cron/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      - pg
+    restart: always
+    container_name: cron
+    volumes:
+      - ./cron/scripts:/app/scripts
+      - ./cron/crontab:/etc/cron.d/cron-jobs:rw
+      - ./db_backups:/app/db_backups
 
 volumes:
   data-volume:
