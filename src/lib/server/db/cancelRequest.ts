@@ -4,6 +4,9 @@ import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { sendMail } from '$lib/server/sendMail';
 import CancelNotificationCompany from '$lib/server/email/CancelNotificationCompany.svelte';
 import { lockTablesStatement } from './lockTables';
+import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
+import { sendNotifications } from '../firebase/notifications';
+import { TourChange } from '$lib/server/firebase/firebase';
 
 export const cancelRequest = async (requestId: number, userId: number) => {
 	console.log(
@@ -16,8 +19,32 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 		const tour = await trx
 			.selectFrom('request')
 			.where('request.id', '=', requestId)
-			.innerJoin('tour', 'tour.id', 'request.tour')
-			.select(['tour.id', 'tour.departure', 'request.ticketChecked'])
+			.innerJoin('tour as relevant_tour', 'relevant_tour.id', 'request.tour')
+			.select((eb) => [
+				'relevant_tour.id as tourId',
+				'request.ticketChecked',
+				jsonArrayFrom(
+					eb
+						.selectFrom('request as cancelled_request')
+						.where('cancelled_request.id', '=', requestId)
+						.innerJoin('tour as relevant_tour', 'cancelled_request.tour', 'relevant_tour.id')
+						.innerJoin('request as relevant_request', 'relevant_request.tour', 'relevant_tour.id')
+						.select((eb) => [
+							'relevant_request.wheelchairs',
+							jsonArrayFrom(
+								eb
+									.selectFrom('event')
+									.whereRef('event.request', '=', 'relevant_request.id')
+									.select([
+										'event.scheduledTimeStart',
+										'event.scheduledTimeEnd',
+										'event.isPickup',
+										'event.request as requestId'
+									])
+							).as('events')
+						])
+				).as('requests')
+			])
 			.executeTakeFirst();
 		if (tour === undefined) {
 			console.log(
@@ -41,6 +68,7 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 			.select((eb) => [
 				'tour.id',
 				'tour.departure',
+				'tour.vehicle',
 				jsonArrayFrom(
 					eb
 						.selectFrom('request as cancelled_request')
@@ -53,6 +81,7 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 							'event.scheduledTimeStart',
 							'event.scheduledTimeEnd',
 							'event.cancelled',
+							'event.isPickup',
 							'cancelled_tour.id as tourid'
 						])
 				).as('events'),
@@ -65,7 +94,7 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 						.innerJoin('user', 'user.companyId', 'company.id')
 						.where('request.id', '=', requestId)
 						.where('user.isTaxiOwner', '=', true)
-						.select(['user.name', 'user.email'])
+						.select(['user.name', 'user.email', 'company.id as companyId'])
 				).as('companyOwners')
 			])
 			.executeTakeFirst();
@@ -92,6 +121,19 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 				);
 			}
 		}
+
+		const firstEvent = tour.requests.flatMap((r) => r.events).sort((e) => e.scheduledTimeStart)[0];
+		const wheelchairs = tour.requests.reduce((prev, curr) => prev + curr.wheelchairs, 0);
+		if (firstEvent.requestId === requestId && tourInfo.companyOwners.length !== 0) {
+			await sendNotifications(tourInfo.companyOwners[0].companyId, {
+				tourId: tour.tourId,
+				pickupTime: getScheduledEventTime(firstEvent),
+				vehicleId: tourInfo.vehicle,
+				wheelchairs,
+				change: TourChange.CANCELLED
+			});
+		}
+
 		console.log('Cancel Request - success', { requestId, userId });
 	});
 };
