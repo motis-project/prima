@@ -17,14 +17,14 @@ global:
 target:
   # Target name (optional). Setting this field enables extra metrics e.g. `up` and `scrape_duration` with
   # the `target` label that are always returned on a scrape.
-  name: "primadb"
+  name: 'primadb'
   # Data source name always has a URI schema that matches the driver name. In some cases (e.g. MySQL)
   # the schema gets dropped or replaced to match the driver expected DSN format.
   data_source_name: 'postgresql://postgres:pw@db:5432/prima?sslmode=disable'
 
   # Collectors (referenced by name) to execute on the target.
   # Glob patterns are supported (see <https://pkg.go.dev/path/filepath#Match> for syntax).
-  collectors: [prima,database,server]
+  collectors: [prima, database, server]
 
   # In case you need to connect to a backend that only responds to a limited set of commands (e.g. pgbouncer) or
   # a data warehouse you don't want to keep online all the time (due to the extra cost), you might want to disable `ping`
@@ -57,7 +57,7 @@ collectors:
         values:
           - total
         query: SELECT COUNT(*) as total FROM public.session
- 
+
   - collector_name: database
     metrics:
       - metric_name: pg_db_stat_user_tables_seq_scan
@@ -170,10 +170,8 @@ collectors:
           AND query NOT LIKE 'autovacuum:%'
           AND pg_stat_activity.xact_start IS NOT NULL;
 
-
   - collector_name: server
     metrics:
-
       - metric_name: pg_server_stat_database_deadlocks
         type: counter
         help: 'Number of deadlocks detected in this database'
@@ -183,7 +181,6 @@ collectors:
           - deadlocks
         query_ref: _srv_pg_stat_database
 
-
       - metric_name: pg_server_stat_database_sessions
         type: gauge
         help: 'Total number of sessions established to this database'
@@ -192,7 +189,6 @@ collectors:
         values:
           - sessions
         query_ref: _srv_pg_stat_database
-
 
       - metric_name: pg_server_locks
         type: gauge
@@ -268,5 +264,3 @@ collectors:
             sessions_fatal,
             sessions_killed
           FROM pg_stat_database
-
-
