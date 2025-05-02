@@ -4,7 +4,6 @@ import {
 	deleteSessionTokenCookie
 } from '$lib/server/auth/session';
 import { error, redirect, type Handle } from '@sveltejs/kit';
-
 import admin from 'firebase-admin';
 import { env } from '$env/dynamic/private';
 

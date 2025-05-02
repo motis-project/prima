@@ -37,7 +37,7 @@ export async function sendPushNotification(
 			}
 		});
 	} catch (error: any) {
-		console.error('FCM error:', error);
+		console.error('FCM error:', error.code);
 
 		if (error.code === 'messaging/invalid-registration-token') {
 			try {
