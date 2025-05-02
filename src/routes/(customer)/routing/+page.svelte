@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { PUBLIC_IMPRINT_URL, PUBLIC_PRIVACY_URL } from '$env/static/public';
 	import { browser } from '$app/environment';
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
@@ -501,5 +502,20 @@
 				/>
 			</div>
 		</div>
+		<p class="mx-auto mt-16 max-w-72 text-center text-xs text-muted-foreground">
+			<a
+				href={PUBLIC_IMPRINT_URL}
+				target="_blank"
+				class="whitespace-nowrap border-b border-dotted border-muted-foreground"
+				>{t.account.imprint}</a
+			>
+			|
+			<a
+				href={PUBLIC_PRIVACY_URL}
+				target="_blank"
+				class="whitespace-nowrap border-b border-dotted border-muted-foreground"
+				>{t.account.privacy_short}</a
+			>
+		</p>
 	</div>
 </div>
