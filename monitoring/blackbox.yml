@@ -1,0 +1,10 @@
+modules:
+  http_2xx:
+    prober: http
+  routing:
+    prober: http
+    http:
+      fail_if_body_not_matches_regexp:
+        - .*"WALK".*
+        - .*"Hoyerswerda Bahnhof".*
+        - .*"Dresden Bahnhof Neustadt".*
