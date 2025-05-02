@@ -154,7 +154,7 @@ export async function getCompanyCosts(companyId?: number, tourId?: number) {
 						tourVerifiedCustomerCount,
 					uncapped:
 						(costPerDayAndVehicle[dayIdx].get(tour.vehicleId)?.uncapped ?? 0) +
-						(!tour.cancelled && tour.fare === null && !tour.requests.flatMap((request) => request.events).some((e) => e.ticketChecked) && tour.endTime < Date.now() ?
+						(!tour.cancelled && tour.fare === null && !tour.requests.flatMap((request) => request.events).some((e) => e.ticketChecked) && tour.endTime > Date.now() ?
 						(tourVerifiedCustomerCount === 0 ? 0 : tourTaxameter) -
 						tourVerifiedCustomerCount * FIXED_PRICE : 0),
 					availabilityDuration: availabilitiesPerDayAndVehicle[dayIdx].get(tour.vehicleId) ?? 0,
