@@ -173,8 +173,7 @@ export const tourColsAdmin = [
 	},
 	{
 		text: ['Ausgleichsleistung'],
-		sort: (t1: TourWithRequests, t2: TourWithRequests) =>
-			getTourCost(t1) ?? 0 - getTourCost(t2) ?? 0,
+		sort: (t1: TourWithRequests, t2: TourWithRequests) => getTourCost(t1) - getTourCost(t2),
 		toTableEntry: (r: TourWithRequests) => (isPlanned(r) ? '-' : getEuroString(getTourCost(r)))
 	},
 	{
