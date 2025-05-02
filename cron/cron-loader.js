@@ -91,7 +91,6 @@ function executeCommand() {
 			process.exit(code);
 		});
 	} else {
-		console.log(`Executing command: ${args.join(' ')}`);
 		const childProcess = spawn(args[0], args.slice(1), { stdio: 'inherit' });
 
 		childProcess.on('close', (code) => {
