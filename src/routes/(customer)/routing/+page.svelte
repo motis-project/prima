@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PUBLIC_IMPRINT_URL, PUBLIC_PRIVACY_URL } from '$env/static/public';
+	import { PUBLIC_PROVIDER, PUBLIC_IMPRINT_URL, PUBLIC_PRIVACY_URL } from '$env/static/public';
 	import { browser } from '$app/environment';
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
@@ -24,6 +24,7 @@
 	import { t } from '$lib/i18n/translation';
 	import { lngLatToStr } from '$lib/util/lngLatToStr';
 
+	import Meta from '$lib/ui/Meta.svelte';
 	import AddressTypeahead from '$lib/ui/AddressTypeahead.svelte';
 	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
 
@@ -182,6 +183,8 @@
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
 	};
 </script>
+
+<Meta title={PUBLIC_PROVIDER} />
 
 <div class="md:min-h-[70dvh] md:w-96">
 	<Message msg={form?.msg} class="mb-4" />
