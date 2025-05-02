@@ -1,7 +1,6 @@
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
-import type { Itinerary } from '$lib/openapi';
 import { readInt } from '$lib/server/util/readForm';
 import { msg } from '$lib/msg';
 
@@ -19,7 +18,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	return {
-		journey: JSON.parse(journey.json) as Itinerary,
+		journey: journey.json,
 		rated: !!journey.rating,
 		id: params.slug
 	};

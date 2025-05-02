@@ -83,6 +83,9 @@ export async function up(db) {
 		.createTable('request')
 		.addColumn('id', 'serial', (col) => col.primaryKey())
 		.addColumn('passengers', 'integer', (col) => col.notNull())
+		.addColumn('kids_zero_to_two', 'integer', (col) => col.notNull())
+		.addColumn('kids_three_to_four', 'integer', (col) => col.notNull())
+		.addColumn('kids_five_to_six', 'integer', (col) => col.notNull())
 		.addColumn('wheelchairs', 'integer', (col) => col.notNull())
 		.addColumn('bikes', 'integer', (col) => col.notNull())
 		.addColumn('luggage', 'integer', (col) => col.notNull())
@@ -136,6 +139,9 @@ export async function up(db) {
 	await sql`
 		CREATE TYPE request_type AS (
 				passengers INTEGER,
+				kids_zero_to_two INTEGER,
+				kids_three_to_four INTEGER,
+				kids_five_to_six INTEGER,
 				wheelchairs INTEGER,
 				bikes INTEGER,
 				luggage INTEGER,
@@ -312,8 +318,8 @@ export async function up(db) {
 		OUT v_request_id INTEGER
 	) AS $$
 	BEGIN
-		INSERT INTO request (passengers, wheelchairs, bikes, luggage, customer, tour, ticket_code, ticket_checked, cancelled)
-		VALUES (p_request.passengers, p_request.wheelchairs, p_request.bikes, p_request.luggage, p_request.customer, p_tour_id, md5(random()::text), FALSE, FALSE)
+		INSERT INTO request (passengers, wheelchairs, bikes, luggage, customer, tour, ticket_code, ticket_checked, cancelled, kids_zero_to_two, kids_three_to_four, kids_five_to_six)
+		VALUES (p_request.passengers, p_request.wheelchairs, p_request.bikes, p_request.luggage, p_request.customer, p_tour_id, md5(random()::text), FALSE, FALSE, p_request.kids_zero_to_two, p_request.kids_three_to_four, p_request.kids_five_to_six)
 		RETURNING id INTO v_request_id;
 	END;
 	$$ LANGUAGE plpgsql;

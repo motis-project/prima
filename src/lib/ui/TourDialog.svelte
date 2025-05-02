@@ -26,6 +26,8 @@
 	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 	import { PUBLIC_MOTIS_URL } from '$env/static/public';
 	import CancelMessageDialog from './CancelMessageDialog.svelte';
+	import TableHead from '$lib/shadcn/table/table-head.svelte';
+	import { BabyIcon } from 'lucide-svelte';
 
 	let {
 		tours = $bindable(),
@@ -44,7 +46,18 @@
 
 	let tourIndex = $state(0);
 	let tour = $derived(tours && tours[tourIndex]);
-	let events = $derived(tour?.requests.flatMap((r) => r.events));
+	let events = $derived(
+		tour?.requests.flatMap((r) =>
+			r.events.map((e) => {
+				return {
+					...e,
+					kidsZeroToTwo: r.kidsZeroToTwo,
+					kidsThreeToFour: r.kidsThreeToFour,
+					kidsFiveToSix: r.kidsFiveToSix
+				};
+			})
+		)
+	);
 	let company = $derived(tour && { lat: tour.companyLat!, lng: tour.companyLng! });
 
 	const getRoutes = (): Promise<PlanResponse>[] => {
@@ -254,6 +267,15 @@
 						<Table.Head>Kunde</Table.Head>
 						<Table.Head>Tel. Kunde</Table.Head>
 						<Table.Head>Ein-/Ausstieg</Table.Head>
+						{#if events?.some((e) => e.kidsZeroToTwo !== 0)}
+							<TableHead>0-2 Jahre</TableHead>
+						{/if}
+						{#if events?.some((e) => e.kidsThreeToFour !== 0)}
+							<TableHead>3-4 Jahre</TableHead>
+						{/if}
+						{#if events?.some((e) => e.kidsFiveToSix !== 0)}
+							<TableHead>5-6 Jahre</TableHead>
+						{/if}
 						<Table.Head>Status</Table.Head>
 					</Table.Row>
 				</Table.Header>
@@ -305,6 +327,15 @@
 										</span>
 									{/if}
 								</Table.Cell>
+								{#if events?.some((e) => e.kidsZeroToTwo !== 0)}
+									{@render kids(event.isPickup, event.kidsZeroToTwo)}
+								{/if}
+								{#if events?.some((e) => e.kidsThreeToFour !== 0)}
+									{@render kids(event.isPickup, event.kidsThreeToFour)}
+								{/if}
+								{#if events?.some((e) => e.kidsFiveToSix !== 0)}
+									{@render kids(event.isPickup, event.kidsFiveToSix)}
+								{/if}
 								<Table.Cell>
 									{#if event.isPickup && event.ticketChecked}
 										<span class="text-green-500">Ticket verifiziert</span>
@@ -338,4 +369,22 @@
 			</div>
 		</Card.Content>
 	</Card.Root>
+{/snippet}
+
+{#snippet kids(isPickup: boolean, kids: number)}
+	<Table.Cell class={isPickup ? 'text-green-500' : 'text-red-500'}>
+		{#if kids !== 0}
+			<span class="flex items-center">
+				<span class="flex items-center gap-1">
+					{#if isPickup}
+						<ArrowRight class="size-4" />
+					{:else}
+						<ArrowLeft class="size-4" />
+					{/if}
+					<BabyIcon class="size-4" />
+				</span>
+				{kids}
+			</span>
+		{/if}
+	</Table.Cell>
 {/snippet}

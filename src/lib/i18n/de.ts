@@ -217,6 +217,11 @@ const translations: Translations = {
 		noLuggage: 'Kein Gepäck',
 		handLuggage: 'Handgepäck',
 		heavyLuggage: 'Schweres Gepäck',
+		kidsDescription:
+			'Bitte geben Sie an wie viele dieser Passagiere in die folgenden Altersgruppen fallen:',
+		kidsZeroToTwo: '0 - 2 Jahre',
+		kidsThreeToFour: '3 - 4 Jahre',
+		kidsFiveToSix: '5 - 6 Jahre',
 		foldableWheelchair: 'Faltbarer Rollstuhl',
 		withFoldableWheelchair: 'Mit faltbarem Rollstuhl',
 		passengerNumber: 'Anzahl Personen',

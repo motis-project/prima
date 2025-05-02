@@ -19,6 +19,9 @@ export async function insertRequest(
 	targetEventGroup: string,
 	neighbourIds: NeighbourIds,
 	direct: DirectDrivingDurations,
+	kidsZeroToTwo: number,
+	kidsThreeToFour: number,
+	kidsFiveToSix: number,
 	trx: Transaction<Database>
 ): Promise<number> {
 	mergeTourList = mergeTourList.filter((id) => id != connection.tour);
@@ -53,7 +56,7 @@ export async function insertRequest(
 	const requestId = (
 		await sql<{ request: number }>`
         SELECT create_and_merge_tours(
-            ROW(${capacities.passengers}, ${capacities.wheelchairs}, ${capacities.bikes}, ${capacities.luggage}, ${customer}),
+            ROW(${capacities.passengers}, ${kidsZeroToTwo}, ${kidsThreeToFour}, ${kidsFiveToSix}, ${capacities.wheelchairs}, ${capacities.bikes}, ${capacities.luggage}, ${customer}),
             ROW(${true}, ${c.start.lat}, ${c.start.lng}, ${connection.pickupTime}, ${connection.pickupTime}, ${connection.pickupTime}, ${connection.pickupPrevLegDuration}, ${connection.pickupNextLegDuration}, ${c.start.address}, ${startEventGroup}),
             ROW(${false}, ${c.target.lat}, ${c.target.lng}, ${connection.dropoffTime}, ${connection.dropoffTime}, ${connection.dropoffTime}, ${connection.dropoffPrevLegDuration}, ${connection.dropoffNextLegDuration}, ${c.target.address}, ${targetEventGroup}),
             ${mergeTourList},

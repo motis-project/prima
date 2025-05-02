@@ -93,6 +93,9 @@ export const POST = async (event: RequestEvent) => {
 					firstConnection!.dropoffEventGroup,
 					firstConnection!.neighbourIds,
 					firstConnection!.directDurations,
+					0,
+					0,
+					0,
 					trx
 				)) ?? null;
 		}
@@ -109,6 +112,9 @@ export const POST = async (event: RequestEvent) => {
 					secondConnection!.dropoffEventGroup,
 					secondConnection!.neighbourIds,
 					secondConnection!.directDurations,
+					0,
+					0,
+					0,
 					trx
 				)) ?? null;
 		}

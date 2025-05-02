@@ -8,6 +8,7 @@ import { redirect } from '@sveltejs/kit';
 import { sendMail } from '$lib/server/sendMail';
 import NewRide from '$lib/server/email/NewRide.svelte';
 import { lockTablesStatement } from '$lib/server/db/lockTables';
+import type { Itinerary } from '$lib/openapi';
 
 const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 	for (const e of l1) {
@@ -28,6 +29,9 @@ export const actions = {
 		const formData = await request.formData();
 
 		const passengers = readInt(formData.get('passengers'));
+		const kidsZeroToTwo = readInt(formData.get('kidsZeroToTwo'));
+		const kidsThreeToFour = readInt(formData.get('kidsThreeToFour'));
+		const kidsFiveToSix = readInt(formData.get('kidsFiveToSix'));
 		const luggage = readInt(formData.get('luggage'));
 		const wheelchairs = readInt(formData.get('wheelchairs'));
 		const json = formData.get('json');
@@ -52,6 +56,9 @@ export const actions = {
 
 		console.log('BOOKING PARAMS =', {
 			passengers,
+			kidsZeroToTwo,
+			kidsThreeToFour,
+			kidsFiveToSix,
 			luggage,
 			wheelchairs,
 			startFixed1,
@@ -93,9 +100,43 @@ export const actions = {
 			isNaN(toLat2) ||
 			isNaN(toLng2) ||
 			isNaN(startTime2) ||
-			isNaN(endTime2)
+			isNaN(endTime2) ||
+			passengers <= kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix
 		) {
 			throw 'invalid booking params';
+		}
+
+		let parsedJson: undefined | Itinerary = undefined;
+		try {
+			parsedJson = JSON.parse(json) as Itinerary;
+		} catch (_) {
+			console.log(
+				'Unable to parse journey with odm as Itinerary: ',
+				json,
+				{ passengers },
+				{ luggage },
+				{ wheelchairs },
+				{ startFixed1 },
+				{ startFixed2 },
+				{ fromAddress1 },
+				{ toAddress1 },
+				{ fromAddress2 },
+				{ toAddress2 },
+				{ fromLat1 },
+				{ fromLng1 },
+				{ toLat1 },
+				{ toLng1 },
+				{ startTime1 },
+				{ endTime1 },
+				{ fromLat2 },
+				{ fromLng2 },
+				{ toLat2 },
+				{ toLng2 },
+				{ startTime2 },
+				{ endTime2 },
+				{ user }
+			);
+			return { msg: msg('unknownError') };
 		}
 
 		const capacities: Capacities = {
@@ -186,6 +227,9 @@ export const actions = {
 					firstBooking!.dropoffEventGroup,
 					firstBooking!.neighbourIds,
 					firstBooking!.directDurations,
+					kidsZeroToTwo,
+					kidsThreeToFour,
+					kidsFiveToSix,
 					trx
 				);
 			}
@@ -201,6 +245,9 @@ export const actions = {
 					secondBooking!.dropoffEventGroup,
 					secondBooking!.neighbourIds,
 					secondBooking!.directDurations,
+					kidsZeroToTwo,
+					kidsThreeToFour,
+					kidsFiveToSix,
 					trx
 				);
 			}
@@ -218,7 +265,7 @@ export const actions = {
 					.insertInto('journey')
 					.values({
 						user,
-						json,
+						json: parsedJson,
 						request1: request1!,
 						request2
 					})
@@ -291,12 +338,19 @@ export const actions = {
 		if (typeof json != 'string') {
 			return { msg: msg('unknownError') };
 		}
+		let parsedJson: undefined | Itinerary = undefined;
+		try {
+			parsedJson = JSON.parse(json) as Itinerary;
+		} catch (_) {
+			console.log('Unable to parse journey with no odm as Itinerary: ', json, { user });
+			return { msg: msg('unknownError') };
+		}
 		const id = (
 			await db
 				.insertInto('journey')
 				.values({
 					user,
-					json,
+					json: parsedJson,
 					request1: null,
 					request2: null
 				})
