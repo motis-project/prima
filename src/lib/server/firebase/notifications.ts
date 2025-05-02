@@ -1,3 +1,4 @@
+import { LOCALE, TZ } from '$lib/constants';
 import { db } from '$lib/server/db/index.js';
 import {
 	sendPushNotification,
@@ -21,18 +22,30 @@ export async function sendNotifications(companyId: number, data: NotificationDat
 	let title = 'Änderung einer Fahrt';
 	let body: string = '';
 
+	const formatTime = (t: number) => {
+		return new Date(t).toLocaleString(LOCALE, {
+			day: '2-digit',
+			month: '2-digit',
+			year: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: false,
+			timeZone: TZ
+		});
+	};
+
 	switch (data.change) {
 		case TourChange.BOOKED:
 			title = 'Neue Fahrt';
-			body = `Neue Tour um ${data.pickupTime}`;
+			body = `Neue Tour um ${formatTime(data.pickupTime)}`;
 			break;
 		case TourChange.MOVED:
 			title = 'Fahrt verschoben';
-			body = `Tour um ${data.pickupTime} wurde einem anderen Fahrzeug zugwiesen.`;
+			body = `Tour um ${formatTime(data.pickupTime)} wurde einem anderen Fahrzeug zugwiesen.`;
 			break;
 		case TourChange.CANCELLED:
 			title = 'Fahrt abgesagt';
-			body = `Tour um ${data.pickupTime} wurde abgesagt.`;
+			body = `Tour um ${formatTime(data.pickupTime)} wurde abgesagt.`;
 			break;
 	}
 
