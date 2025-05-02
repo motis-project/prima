@@ -15,6 +15,14 @@ export type NotificationData = {
 	change: TourChange;
 };
 
+interface FCMError extends Error {
+	code: string;
+}
+
+function isFCMError(error: unknown): error is FCMError {
+	return typeof error === 'object' && error !== null && 'code' in error;
+}
+
 export async function sendPushNotification(
 	token: string,
 	title: string,
@@ -36,14 +44,16 @@ export async function sendPushNotification(
 				change: data.change.toString()
 			}
 		});
-	} catch (error: any) {
-		console.error('FCM error:', error.code);
+	} catch (error: unknown) {
+		if (isFCMError(error)) {
+			console.error('FCM error:', error.code);
 
-		if (error.code === 'messaging/invalid-registration-token') {
-			try {
-				await db.deleteFrom('fcmToken').where('fcmToken', '=', token).executeTakeFirst();
-			} catch (e) {
-				console.error(e);
+			if (error.code === 'messaging/invalid-registration-token') {
+				try {
+					await db.deleteFrom('fcmToken').where('fcmToken', '=', token).executeTakeFirst();
+				} catch (e) {
+					console.error(e);
+				}
 			}
 		}
 	}
