@@ -8,18 +8,20 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,84 +37,61 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import de.motis.prima.services.Api
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import de.motis.prima.data.DeviceInfo
+import de.motis.prima.services.Vehicle
+import de.motis.prima.viewmodel.LoginViewModel
 import kotlinx.coroutines.launch
-
-class LoginViewModel : ViewModel() {
-    // Event which will be omitted to the Login component, indicating success of the login operation
-    private val _navigationEvent = MutableSharedFlow<Boolean>()
-    val navigationEvent = _navigationEvent.asSharedFlow()
-
-    private val _loginErrorEvent = MutableSharedFlow<Boolean>()
-    val loginErrorEvent = _loginErrorEvent.asSharedFlow()
-
-    private val _networkErrorEvent = MutableSharedFlow<Unit>()
-    val networkErrorEvent = _networkErrorEvent.asSharedFlow()
-
-    fun login(email: String, password: String) {
-        viewModelScope.launch {
-            try {
-                val response = Api.apiService.login(email, password)
-                Log.d("Login Response", response.toString())
-                if (response.status == 302) {
-                    // successful login
-                    _navigationEvent.emit(true)
-                } else {
-                    _loginErrorEvent.emit(true)
-                }
-            } catch (e: Exception) {
-                Log.d("Login Response Network Error", e.message!!)
-                _networkErrorEvent.emit(Unit)
-            }
-        }
-    }
-}
 
 @Composable
 fun Login(
     navController: NavController,
-    viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: LoginViewModel = hiltViewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-
     var isLoginFailed by remember { mutableStateOf(false) }
-
-    val networkErrorMessage = stringResource(id = R.string.network_error_message)
+    var accountError by remember { mutableStateOf(false) }
+    val networkErrorMessage = stringResource(id = R.string.login_error_message)
 
     val activity = (LocalContext.current as? Activity)
     BackHandler {
         activity?.finish()
     }
 
+    val selectedVehicle by viewModel.selectedVehicle.collectAsState(Vehicle(0, ""))
+
     LaunchedEffect(key1 = viewModel) {
-        // Catching successful login event and navigation to the next screen
         launch {
             viewModel.navigationEvent.collect { shouldNavigate ->
-                Log.d("Navigation event", "Navigation triggered.")
                 if (shouldNavigate) {
-                    Log.d("Navigation event", "Navigating to vehicle selection.")
-                    navController.navigate("home") {
-                        popUpTo("login") {
-                            inclusive = true
+                    if (selectedVehicle.id == 0) {
+                        navController.navigate("vehicles") {
+                            popUpTo("login") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    } else {
+                        navController.navigate("tours") {
+                            popUpTo("login") { inclusive = true }
+                            launchSingleTop = true
                         }
                     }
                 }
             }
         }
 
-        // Catching event when login failed due to incorrect login data
         launch {
             viewModel.loginErrorEvent.collect { error ->
                 isLoginFailed = error
             }
         }
 
-        // Catching event when a network error occurs and displaying of error message
+        launch {
+            viewModel.accountErrorEvent.collect { error ->
+                accountError = error
+            }
+        }
+
         launch {
             viewModel.networkErrorEvent.collect {
                 snackbarHostState.showSnackbar(message = networkErrorMessage)
@@ -148,14 +127,24 @@ fun Login(
             }
 
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(contentPadding),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Spacer(modifier = Modifier.height(30.dp))
                 when {
                     isLoginFailed ->
                         Text(
                             text = stringResource(id = R.string.wrong_login_data),
+                            color = Color.Red,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    accountError ->
+                        Text(
+                            text = stringResource(id = R.string.account_error),
                             color = Color.Red,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(bottom = 8.dp)
@@ -189,7 +178,6 @@ fun Login(
                 Button(
                     onClick = {
                         isLoginFailed = false
-                        Log.d("Login", "E-Mail: ${email}, Password: $password")
                         viewModel.login(email, password)
                     }
                 ) {
