@@ -505,18 +505,14 @@
 				/>
 			</div>
 		</div>
-		<p class="mx-auto mt-16 max-w-72 text-center text-xs text-muted-foreground">
+		<p class="mx-auto mt-6 max-w-72 text-center text-xs text-input">
 			<a
 				href={PUBLIC_IMPRINT_URL}
 				target="_blank"
-				class="whitespace-nowrap border-b border-dotted border-muted-foreground"
-				>{t.account.imprint}</a
+				class="whitespace-nowrap border-b border-dotted border-input">{t.account.imprint}</a
 			>
 			|
-			<a
-				href={PUBLIC_PRIVACY_URL}
-				target="_blank"
-				class="whitespace-nowrap border-b border-dotted border-muted-foreground"
+			<a href={PUBLIC_PRIVACY_URL} class="whitespace-nowrap border-b border-dotted border-input"
 				>{t.account.privacy_short}</a
 			>
 		</p>
