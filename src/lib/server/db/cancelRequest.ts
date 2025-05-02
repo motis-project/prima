@@ -124,16 +124,14 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 
 		const firstEvent = tour.requests.flatMap((r) => r.events).sort((e) => e.scheduledTimeStart)[0];
 		const wheelchairs = tour.requests.reduce((prev, curr) => prev + curr.wheelchairs, 0);
-		if (firstEvent.requestId === requestId) {
-			if (tourInfo.companyOwners.length !== 0) {
-				await sendNotifications(tourInfo.companyOwners[0].companyId, {
-					tourId: tour.tourId,
-					pickupTime: getScheduledEventTime(firstEvent),
-					vehicleId: tourInfo.vehicle,
-					wheelchairs,
-					change: TourChange.CANCELLED
-				});
-			}
+		if (firstEvent.requestId === requestId && tourInfo.companyOwners.length !== 0) {
+			await sendNotifications(tourInfo.companyOwners[0].companyId, {
+				tourId: tour.tourId,
+				pickupTime: getScheduledEventTime(firstEvent),
+				vehicleId: tourInfo.vehicle,
+				wheelchairs,
+				change: TourChange.CANCELLED
+			});
 		}
 
 		console.log('Cancel Request - success', { requestId, userId });
