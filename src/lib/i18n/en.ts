@@ -108,6 +108,8 @@ const translations: Translations = {
 		signupConditions: (tos: string, privacy: string, provider: string) =>
 			`By registering, I agree to the ${tos} and the ${privacy} of ${provider}.`,
 		tos: 'terms of service',
+		imprint: 'Imprint',
+		privacy_short: 'Privacy Policy',
 		privacy: 'privacy policy',
 		login: 'Login',
 		sentAnEmailTo: 'We sent a code to',
