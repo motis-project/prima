@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { formatTime } from '$lib/util/formatTime';
 	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 	import type { TourEvent } from '$lib/util/getToursTypes';
 	import EmailFooter from './EmailFooter.svelte';
+
 	const {
 		name,
 		events,
@@ -11,24 +13,12 @@
 		events: TourEvent[];
 		departure: number;
 	} = $props();
+
 	events.sort(
 		(e1: TourEvent, e2: TourEvent) => getScheduledEventTime(e1) - getScheduledEventTime(e2)
 	);
 	console.log('sending cancelation notice mail to company: ', { name }, { events }, { departure });
 	const plannedEvents = events.filter((e) => !e.cancelled);
-	const startTime = events.length < 2 ? undefined : getScheduledEventTime(events[0]);
-	const endTime = events.length < 2 ? undefined : getScheduledEventTime(events[events.length - 1]);
-	const today = new Date(Date.now());
-	const startDate = startTime == undefined ? undefined : new Date(startTime);
-	const endDate = endTime == undefined ? undefined : new Date(endTime);
-	const departureDate = new Date(departure);
-	const isStartToday =
-		new Date(
-			departureDate.getUTCFullYear(),
-			departureDate.getUTCMonth(),
-			departureDate.getUTCDate()
-		).getTime() ===
-		new Date(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()).getTime();
 </script>
 
 <div>
@@ -39,21 +29,15 @@
 		<li>nach {events[events.length - 1].address}</li>
 	</ul>
 	<p>
-		die
-		{isStartToday ? 'heute' : 'am ' + startDate!.toLocaleDateString('de')} von
-		{startDate!.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' })} bis
-		{endDate!.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' })} stattfinden sollte.
+		die von {formatTime(getScheduledEventTime(events[0]))}
+		bis {formatTime(getScheduledEventTime(events[events.length - 1]))}
+		stattfinden sollte.
 	</p>
 	{#if plannedEvents.length > 1}
 		<p>Die folgenden Halte sind immer noch eingeplant:</p>
 		<ul>
 			{#each plannedEvents as e}
-				<li>
-					{new Date(getScheduledEventTime(e)).toLocaleTimeString('de', {
-						hour: '2-digit',
-						minute: '2-digit'
-					})}, {e.address}
-				</li>
+				<li>{formatTime(getScheduledEventTime(e))}, {e.address}</li>
 			{/each}
 		</ul>
 	{/if}
