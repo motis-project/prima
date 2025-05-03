@@ -15,7 +15,7 @@ test('Get tours', async ({ page }) => {
 	expect(response.status()).toBe(200);
 
 	const responseBody = await response.json();
-	expect(responseBody).toHaveLength(1);
+	expect(responseBody).toHaveLength(2);
 	expect(responseBody[0]).toHaveProperty('tourId');
 	expect(responseBody[0]).toHaveProperty('events');
 
@@ -46,7 +46,7 @@ test('Set ticket checked', async ({ page }) => {
 	expect(toursResponse.status()).toBe(200);
 
 	const tours = await toursResponse.json();
-	expect(tours).toHaveLength(1);
+	expect(tours).toHaveLength(2);
 	expect(tours[0]).toHaveProperty('events');
 
 	const events = tours[0]['events'];
@@ -84,7 +84,7 @@ test('Set tour fare', async ({ page }) => {
 	expect(toursResponse.status()).toBe(200);
 
 	const tours = await toursResponse.json();
-	expect(tours).toHaveLength(1);
+	expect(tours).toHaveLength(2);
 	expect(tours[0]).toHaveProperty('tourId');
 
 	const tourId = tours[0]['tourId'];
