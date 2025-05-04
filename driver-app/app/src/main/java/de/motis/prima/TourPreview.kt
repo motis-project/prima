@@ -148,7 +148,7 @@ fun TourPreview(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (isCancelled) {
+                    if (!isCancelled) {
                         Button(
                             onClick = {
                                 navController.navigate("leg/$tourId/0")
