@@ -131,14 +131,21 @@ fun Tours(
             val showAll by viewModel.showAll.collectAsState()
 
             var displayTours = toursToday
+
             if (networkError || displayDay != today) {
-                Log.d("test", "displayTours = toursDate")
                 displayTours = toursDate
             }
-            if (today == displayDay && !showAll) {
-                displayTours = toursToday.filter { t -> Date(t.endTime) > Date() }
-                displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTimeStart }
+
+            if (displayDay == today && !showAll) {
+                displayTours = toursToday.filter { t ->
+                    !viewModel.isCancelled(t.tourId) && Date(t.endTime) > Date() }
             }
+
+            if (displayDay != today) {
+                displayTours = toursToday.filter { t -> !viewModel.isCancelled(t.tourId) }
+            }
+
+            displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTimeStart }
 
             ShowTours(navController, displayTours)
         }
@@ -355,6 +362,23 @@ fun ShowTours(
                                         fontSize = 24.sp,
                                         textAlign = TextAlign.Center
                                     )
+                                }
+
+                                if (viewModel.isCancelled(tour.tourId)) {
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 12.dp),
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Text(
+                                            text = "Storniert",
+                                            fontSize = 24.sp,
+                                            textAlign = TextAlign.Center,
+                                            color = Color.Red
+                                        )
+                                    }
                                 }
 
                                 val now = Date()

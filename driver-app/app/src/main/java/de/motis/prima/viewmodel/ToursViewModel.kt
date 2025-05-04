@@ -132,4 +132,8 @@ class ToursViewModel @Inject constructor(
         }
         return res
     }
+
+    fun isCancelled(tourId: Int): Boolean {
+        return repository.isTourCancelled(tourId)
+    }
 }
