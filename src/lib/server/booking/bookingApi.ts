@@ -1,12 +1,9 @@
-import { Validator } from 'jsonschema';
-import { bookingSchema, schemaDefinitions } from '../whitelist/WhitelistRequest';
 import { db } from '$lib/server/db';
-import type { RequestEvent } from './$types';
 import { bookRide, type ExpectedConnection } from '$lib/server/booking/bookRide';
 import type { Capacities } from '$lib/util/booking/Capacities';
-import { insertRequest } from './query';
-import { json } from '@sveltejs/kit';
 import { lockTablesStatement } from '$lib/server/db/lockTables';
+import { signEntry } from '$lib/server/booking/signEntry';
+import { insertRequest } from './insertRequest';
 
 export type BookingParameters = {
 	connection1: ExpectedConnection | null;
@@ -23,24 +20,45 @@ const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 	return undefined;
 };
 
-export const POST = async (event: RequestEvent) => {
-	const customer = event.locals.session!.userId!;
+function isSignatureInvalid(c: ExpectedConnection | null) {
+	return (
+		c !== null &&
+		signEntry(
+			c.start.lat,
+			c.start.lng,
+			c.target.lat,
+			c.target.lng,
+			c.startTime,
+			c.targetTime,
+			false
+		) !== c.signature
+	);
+}
 
-	const p: BookingParameters = await event.request.json();
-	const validator = new Validator();
-	validator.addSchema(schemaDefinitions, '/schemaDefinitions');
-	const result = validator.validate(p, bookingSchema);
-	if (!result.valid) {
-		return json({ message: result.errors }, { status: 400 });
-	}
+export async function bookingApi(
+	p: BookingParameters,
+	customer: number,
+	isLocalhost: boolean,
+	kidsZeroToTwo: number,
+	kidsThreeToFour: number,
+	kidsFiveToSix: number
+): Promise<{
+	message?: string;
+	status: number;
+	request1Id?: number;
+	request2Id?: number;
+}> {
 	if (p.connection1 == null && p.connection2 == null) {
-		return json(
-			{ message: 'Es wurde weder eine Anfrage für die erste noch für die letzte Meile gestellt.' },
-			{ status: 200 }
-		);
+		return {
+			message: 'Es wurde weder eine Anfrage für die erste noch für die letzte Meile gestellt.',
+			status: 204
+		};
 	}
-	let firstMileRequestId: number | undefined = undefined;
-	let lastMileRequestId: number | undefined = undefined;
+	if (!isLocalhost && (isSignatureInvalid(p.connection1) || isSignatureInvalid(p.connection2))) {
+		return { status: 403 };
+	}
+	let request1Id: number | undefined = undefined;
+	let request2Id: number | undefined = undefined;
 	let message: string | undefined = undefined;
 	let success = false;
 	await db.transaction().execute(async (trx) => {
@@ -81,7 +99,7 @@ export const POST = async (event: RequestEvent) => {
 			}
 		}
 		if (p.connection1 != null) {
-			firstMileRequestId =
+			request1Id =
 				(await insertRequest(
 					firstConnection!.best,
 					p.capacities,
@@ -93,14 +111,14 @@ export const POST = async (event: RequestEvent) => {
 					firstConnection!.dropoffEventGroup,
 					firstConnection!.neighbourIds,
 					firstConnection!.directDurations,
-					0,
-					0,
-					0,
+					kidsZeroToTwo,
+					kidsThreeToFour,
+					kidsFiveToSix,
 					trx
 				)) ?? null;
 		}
 		if (p.connection2 != null) {
-			lastMileRequestId =
+			request2Id =
 				(await insertRequest(
 					secondConnection!.best,
 					p.capacities,
@@ -112,9 +130,9 @@ export const POST = async (event: RequestEvent) => {
 					secondConnection!.dropoffEventGroup,
 					secondConnection!.neighbourIds,
 					secondConnection!.directDurations,
-					0,
-					0,
-					0,
+					kidsZeroToTwo,
+					kidsThreeToFour,
+					kidsFiveToSix,
 					trx
 				)) ?? null;
 		}
@@ -123,7 +141,7 @@ export const POST = async (event: RequestEvent) => {
 		return;
 	});
 	if (message == undefined) {
-		return json({ status: 500 });
+		return { status: 500 };
 	}
-	return json({ message, firstMileRequestId, lastMileRequestId }, { status: success ? 200 : 400 });
-};
+	return { message, request1Id, request2Id, status: success ? 200 : 400 };
+}

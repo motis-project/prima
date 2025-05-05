@@ -1,7 +1,7 @@
 import { type Generated, CamelCasePlugin, PostgresDialect, Kysely } from 'kysely';
 import { env } from '$env/dynamic/private';
 import pg from 'pg';
-import type { Itinerary } from '$lib/openapi';
+import type { SignedItinerary } from '$lib/planAndSign';
 
 export interface Database {
 	user: {
@@ -95,7 +95,7 @@ export interface Database {
 	};
 	journey: {
 		id: Generated<number>;
-		json: Itinerary;
+		json: SignedItinerary;
 		user: number;
 		request1: number | null;
 		request2: number | null;
