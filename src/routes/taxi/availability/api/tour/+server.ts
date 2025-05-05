@@ -53,7 +53,8 @@ export const POST = async (event) => {
 							'request.wheelchairs',
 							'request.luggage',
 							'request.passengers',
-							'request.id',
+							'request.id as requestId',
+							'request.cancelled',
 							jsonArrayFrom(
 								eb
 									.selectFrom('event')
@@ -81,7 +82,7 @@ export const POST = async (event) => {
 		console.assert(
 			!movedTour.requests.some((r) => r.events.length == 0),
 			'Found a request which contains no events. requestId: ' +
-				movedTour.requests.find((r) => r.events.length === 0)?.id
+				movedTour.requests.find((r) => r.events.length === 0)?.requestId
 		);
 		if (vehicleId === undefined) {
 			console.log('MOVE TOUR early exit - no vehicle id was provided. tourId: ', tourId);
@@ -154,15 +155,24 @@ export const POST = async (event) => {
 			.selectAll()
 			.execute();
 		if (collidingTours.length == 0) {
-			console.log(
-				'MOVE TOUR early exit - there is a collision with another tour of the target vehicle. tourId: ',
-				tourId
-			);
 			await trx
 				.updateTable('tour')
 				.set({ vehicle: vehicleId })
 				.where('id', '=', tourId)
 				.executeTakeFirst();
+			const requestIds = movedTour.requests.filter((r) => !r.cancelled).map((r) => r.requestId);
+			if (requestIds.length !== 0) {
+				await trx
+					.updateTable('request')
+					.set({ licensePlateUpdatedAt: Date.now() })
+					.where('request.id', 'in', requestIds)
+					.execute();
+			}
+		} else {
+			console.log(
+				'MOVE TOUR early exit - there is a collision with another tour of the target vehicle. tourId: ',
+				tourId
+			);
 
 			const firstEvent = movedTour.requests
 				.sort((r) => r.events[0].scheduledTimeStart)[0]
