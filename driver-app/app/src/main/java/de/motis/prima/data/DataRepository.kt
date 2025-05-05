@@ -279,4 +279,8 @@ class DataRepository @Inject constructor(
         }
         return false
     }
+
+    fun isTourCancelled(tourId: Int): Boolean {
+        return tourStore.getEventsForTour(tourId).none { e -> !e.cancelled }
+    }
 }
