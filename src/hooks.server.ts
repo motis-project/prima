@@ -11,6 +11,12 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get('session');
 	const session = await validateSessionToken(token);
 	if (
+		!session &&
+		(event.url.pathname.startsWith('/admin') || event.url.pathname.startsWith('/taxi'))
+	) {
+		redirect(302, '/account/login');
+	}
+	if (
 		(!session?.isAdmin && event.url.pathname.startsWith('/admin')) ||
 		(!session?.companyId && event.url.pathname.startsWith('/taxi')) ||
 		(!session?.companyId && event.url.pathname.startsWith('/api/driver')) ||
