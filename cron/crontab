@@ -1,0 +1,2 @@
+# Cron job to run full backup script every hour
+0 * * * * /usr/local/bin/node /app/scripts/fullBackup.js >> /var/log/cron.log 2>&1
