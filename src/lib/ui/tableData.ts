@@ -66,12 +66,7 @@ const displayUnixtimeMs = (t: UnixtimeMs, displayTime?: boolean) => {
 };
 
 const isPlanned = (tour: TourWithRequests) => {
-	return (
-		!tour.cancelled &&
-		tour.fare === null &&
-		!tour.requests.flatMap((request) => request.events).some((e) => e.ticketChecked) &&
-		tour.endTime > Date.now()
-	);
+	return !tour.cancelled && tour.fare === null && tour.endTime > Date.now();
 };
 
 const getTourCost = (tour: TourWithRequests) => {
@@ -169,7 +164,7 @@ export const tourColsAdmin = [
 	{
 		text: ['Taxameterstand'],
 		sort: (t1: TourWithRequests, t2: TourWithRequests) => (t1.fare ?? 0) - (t2.fare ?? 0),
-		toTableEntry: (r: TourWithRequests) => getEuroString(r.fare)
+		toTableEntry: (r: TourWithRequests) => (isPlanned(r) ? '-' : getEuroString(r.fare ?? 0))
 	},
 	{
 		text: ['Ausgleichsleistung'],
