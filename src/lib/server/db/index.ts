@@ -88,7 +88,7 @@ export interface Database {
 		bikes: number;
 		luggage: number;
 		tour: number;
-		customer: number;
+		customer: number | null;
 		ticketCode: string;
 		ticketChecked: boolean;
 		cancelled: boolean;
