@@ -15,6 +15,7 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
 		tours: tours.map(({ interval: _, ...rest }) => rest),
 		earliestTime,
 		latestTime,
-		costPerDayAndVehicle
+		costPerDayAndVehicle,
+		tourId
 	};
 };
