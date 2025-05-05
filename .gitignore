@@ -25,7 +25,6 @@ vite.config.ts.timestamp-*
 
 /screenshots
 
-
 # OSM + GTFS
 GTFS.zip
 osm.pbf
@@ -35,3 +34,6 @@ osm.pbf
 db_backups
 
 /package-lock.json
+
+# Driver app
+driver-app/app/google-services.json

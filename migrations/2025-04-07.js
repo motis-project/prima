@@ -3,3 +3,5 @@ export async function up(db) {
         .alterColumn('request1', (col) => col.dropNotNull())
         .execute()
 }
+
+export async function down() { }

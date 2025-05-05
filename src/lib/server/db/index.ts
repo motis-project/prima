@@ -102,6 +102,11 @@ export interface Database {
 		rating: number | null;
 		comment: string | null;
 	};
+	fcmToken: {
+		deviceId: string;
+		company: number;
+		fcmToken: string;
+	};
 }
 
 export const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
