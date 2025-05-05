@@ -7,10 +7,8 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
 	const tourId = tourParam === null || isNaN(parseInt(tourParam)) ? undefined : parseInt(tourParam);
 
 	const companyId = event.locals.session!.companyId!;
-	const { tours, earliestTime, latestTime, costPerDayAndVehicle } = await getCompanyCosts(
-		companyId,
-		tourId
-	);
+	const { tours, earliestTime, latestTime, costPerDayAndVehicle } =
+		await getCompanyCosts(companyId);
 	return {
 		tours: tours.map(({ interval: _, ...rest }) => rest),
 		earliestTime,
