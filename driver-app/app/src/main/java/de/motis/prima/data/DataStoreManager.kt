@@ -2,7 +2,6 @@ package de.motis.prima.data
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.devicelock.DeviceId
 import android.provider.Settings
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -70,7 +69,7 @@ class DataStoreManager(private val context: Context) {
     }
 
     @SuppressLint("HardwareIds")
-    private fun getDeviceId(): String {
+    fun getDeviceId(): String {
         return Settings.Secure.getString(
             context.contentResolver,
             Settings.Secure.ANDROID_ID

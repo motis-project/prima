@@ -1,5 +1,7 @@
 package de.motis.prima.data
 
+import android.util.Log
+import com.google.firebase.messaging.FirebaseMessaging
 import de.motis.prima.services.ApiService
 import de.motis.prima.services.Tour
 import de.motis.prima.services.Vehicle
@@ -53,6 +55,31 @@ class DataRepository @Inject constructor(
 
     init {
         startRefreshingTours()
+    }
+
+    fun fetchFirebaseToken() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                Log.d("fcm", "Received new token")
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        dataStoreManager.setDeviceInfo(token, true)
+                    } catch (e: Exception) {
+                        Log.e("fcm", "Failed to store token", e)
+                    }
+                    val resFCM = apiService.sendDeviceInfo(dataStoreManager.getDeviceId(), token)
+                    if (resFCM.isSuccessful) {
+                        resetTokenPending()
+                        Log.d("fcm", "Token was sent to backend")
+                    } else {
+                        Log.e("fcm", "Failed to send token to backend")
+                    }
+                }
+            } else {
+                Log.w("fcm", "Fetching token failed", task.exception)
+            }
+        }
     }
 
     fun resetTokenPending() {
