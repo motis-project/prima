@@ -108,6 +108,8 @@ export type Translations = {
 		forgotPassword: string;
 		signupConditions: (tos: string, privacy: string, provider: string) => string;
 		tos: string;
+		imprint: string;
+		privacy_short: string;
 		privacy: string;
 		login: string;
 		sentAnEmailTo: string;

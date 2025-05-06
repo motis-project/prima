@@ -11,5 +11,5 @@ export const GET = async ({ locals, url }) => {
 		error(400, { message: 'Invalid time range' });
 	}
 
-	return json(await getTours(false, companyId, [fromTime, toTime]));
+	return json(await getTours(true, companyId, [fromTime, toTime]));
 };

@@ -8,8 +8,8 @@ import { DAY, HOUR, roundToUnit } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import { getOffset } from '$lib/util/getOffset';
 
-export async function getCompanyCosts(companyId?: number, tourId?: number) {
-	let tours: (TourWithRequests & { interval: Interval })[] = (
+export async function getCompanyCosts(companyId?: number) {
+	const tours: (TourWithRequests & { interval: Interval })[] = (
 		await getToursWithRequests(true, companyId)
 	).map((t) => {
 		return {
@@ -17,9 +17,6 @@ export async function getCompanyCosts(companyId?: number, tourId?: number) {
 			interval: new Interval(t.startTime, t.endTime)
 		};
 	});
-	if (tourId !== undefined) {
-		tours = tours.filter((t) => t.tourId === tourId);
-	}
 	tours.sort((t1, t2) => t1.startTime - t2.startTime);
 	if (tours.length === 0) {
 		return {

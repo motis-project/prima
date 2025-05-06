@@ -41,13 +41,15 @@
 		tours,
 		costPerDayAndVehicle,
 		earliestTime,
-		latestTime
+		latestTime,
+		selectedTourId
 	}: {
 		isAdmin: boolean;
 		tours: ToursWithRequests;
 		costPerDayAndVehicle: Subtractions[];
 		earliestTime: UnixtimeMs;
 		latestTime: UnixtimeMs;
+		selectedTourId?: number;
 	} = $props();
 
 	const updateCompanySums = (subtractionRows: Subtractions[]) => {
@@ -299,6 +301,15 @@
 	}
 
 	let selectedToursTableRow: TourWithRequests[] | undefined = $state(undefined);
+
+	$effect(() => {
+		if (selectedTourId != undefined) {
+			const tour = tours.find((t) => t.tourId === selectedTourId);
+			if (tour) {
+				selectedToursTableRow = [tour];
+			}
+		}
+	});
 </script>
 
 {#snippet tourTable()}

@@ -100,6 +100,21 @@ services:
     ports:
       - 13000:3000
 
+  cron:
+    build:
+      context: .
+      dockerfile: cron/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      - pg
+    restart: always
+    container_name: cron
+    volumes:
+      - ./cron/scripts:/app/scripts
+      - ./cron/crontab:/etc/cron.d/cron-jobs:rw
+      - ./db_backups:/app/db_backups
+
 volumes:
   data-volume:
   motis-data:

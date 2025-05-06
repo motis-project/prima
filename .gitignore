@@ -30,6 +30,9 @@ GTFS.zip
 osm.pbf
 /motis
 
+# Backups
+db_backups
+
 /package-lock.json
 
 # Driver app

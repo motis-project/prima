@@ -1,10 +1,10 @@
-import { LOCALE, TZ } from '$lib/constants';
 import { db } from '$lib/server/db/index.js';
 import {
 	sendPushNotification,
 	TourChange,
 	type NotificationData
 } from '$lib/server/firebase/firebase';
+import { formatTime } from '$lib/util/formatTime';
 
 async function getTokens(companyId: number) {
 	const tokens = await db
@@ -21,18 +21,6 @@ export async function sendNotifications(companyId: number, data: NotificationDat
 
 	let title = 'Änderung einer Fahrt';
 	let body: string = '';
-
-	const formatTime = (t: number) => {
-		return new Date(t).toLocaleString(LOCALE, {
-			day: '2-digit',
-			month: '2-digit',
-			year: '2-digit',
-			hour: '2-digit',
-			minute: '2-digit',
-			hour12: false,
-			timeZone: TZ
-		});
-	};
 
 	switch (data.change) {
 		case TourChange.BOOKED:

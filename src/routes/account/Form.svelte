@@ -1,5 +1,10 @@
 <script lang="ts">
-	import { PUBLIC_PROVIDER } from '$env/static/public';
+	import {
+		PUBLIC_PROVIDER,
+		PUBLIC_TOS_URL,
+		PUBLIC_PRIVACY_URL,
+		PUBLIC_IMPRINT_URL
+	} from '$env/static/public';
 	import ChevronRightIcon from 'lucide-svelte/icons/chevron-right';
 	import { Button } from '$lib/shadcn/button';
 	import { Input } from '$lib/shadcn/input';
@@ -70,8 +75,8 @@
 		{#if isSignup}
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 			{@html t.account.signupConditions(
-				`<a href="/tos" class="border-b border-dotted border-muted-foreground whitespace-nowrap">${t.account.tos}</a>`,
-				`<a href="/privacy" class="border-b border-dotted border-muted-foreground whitespace-nowrap">${t.account.privacy}</a>`,
+				`<a href="${PUBLIC_TOS_URL}" target="_blank" class="border-b border-dotted border-muted-foreground whitespace-nowrap">${t.account.tos}</a>`,
+				`<a href="${PUBLIC_PRIVACY_URL}" target="_blank" class="border-b border-dotted border-muted-foreground whitespace-nowrap">${t.account.privacy}</a>`,
 				PUBLIC_PROVIDER
 			)}
 		{:else}
@@ -82,5 +87,16 @@
 				{t.account.forgotPassword}
 			</a>
 		{/if}
+	</p>
+	<p class="mx-auto mt-6 max-w-72 text-center text-xs text-input">
+		<a
+			href={PUBLIC_IMPRINT_URL}
+			target="_blank"
+			class="whitespace-nowrap border-b border-dotted border-input">{t.account.imprint}</a
+		>
+		|
+		<a href={PUBLIC_PRIVACY_URL} class="whitespace-nowrap border-b border-dotted border-input"
+			>{t.account.privacy_short}</a
+		>
 	</p>
 </div>
