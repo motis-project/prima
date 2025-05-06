@@ -4,7 +4,6 @@ plugins {
     id("com.google.dagger.hilt.android")
     kotlin("kapt")
     id("io.realm.kotlin")
-    //id("com.android.application")
     id("com.google.gms.google-services")
 }
 

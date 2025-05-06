@@ -1,7 +1,6 @@
 package de.motis.prima
 
 import android.app.Activity
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -53,13 +52,12 @@ fun Login(
     var isLoginFailed by remember { mutableStateOf(false) }
     var accountError by remember { mutableStateOf(false) }
     val networkErrorMessage = stringResource(id = R.string.login_error_message)
+    val selectedVehicle by viewModel.selectedVehicle.collectAsState(Vehicle(0, ""))
 
     val activity = (LocalContext.current as? Activity)
     BackHandler {
         activity?.finish()
     }
-
-    val selectedVehicle by viewModel.selectedVehicle.collectAsState(Vehicle(0, ""))
 
     LaunchedEffect(key1 = viewModel) {
         launch {

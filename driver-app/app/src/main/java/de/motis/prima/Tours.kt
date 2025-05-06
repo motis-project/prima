@@ -252,7 +252,7 @@ fun DateSelect(
         } else {
             Switch(
                 checked = !showAll,
-                onCheckedChange = { viewModel._showAll.value = !it }
+                onCheckedChange = { viewModel.setShowAll(!it) }
             )
             Text(
                 text = "Nur ausstehende",
