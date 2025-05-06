@@ -6,7 +6,7 @@ export const PUT = async ({ locals, url }) => {
 	const deviceId = url.searchParams.get('deviceId');
 	const token = url.searchParams.get('token');
 
-	if (deviceId == null || deviceId == "" || token == null || token == "") {
+	if (deviceId == null || deviceId == '' || token == null || token == '') {
 		error(400, { message: 'Invalid deviceId or token parameter' });
 	}
 
