@@ -41,7 +41,7 @@ export async function up(db) {
                 (journey.json->'legs'->0->'from'->>'departure')::double precision > t1 AND
                 (journey.json->'legs'->0->'from'->>'departure')::double precision < t2
             LOOP
-                UPDATE journey SET user = NULL WHERE id = j.id;
+                UPDATE journey SET "user" = NULL WHERE id = j.id;
                 legs := j.json->'legs';
                 leg_index := 0;
             FOR leg IN
