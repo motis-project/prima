@@ -34,14 +34,14 @@ export async function up(db) {
             FROM journey
             LEFT JOIN request r1 ON journey.request1 = r1.id
             LEFT JOIN request r2 ON journey.request2 = r2.id
-            LEFT JOIN tour tour1 ON r1.tour = tour1.id AND tour1.arrival > t1 AND tour1.arrival < t2
-            LEFT JOIN tour tour2 ON r2.tour = tour2.id AND tour2.arrival > t1 AND tour2.arrival < t2
+            LEFT JOIN tour tour1 ON r1.tour = tour1.id
+            LEFT JOIN tour tour2 ON r2.tour = tour2.id
             WHERE
-                journey.request1 IS NOT NULL
-                OR
-                journey.request2 IS NOT NULL
-
+                journey.json->'legs'->0->'from'->>'departure' ~ '^\d+(\.\d+)?$' AND
+                (journey.json->'legs'->0->'from'->>'departure')::double precision > t1 AND
+                (journey.json->'legs'->0->'from'->>'departure')::double precision < t2
             LOOP
+                UPDATE journey SET user = NULL WHERE id = j.id;
                 legs := j.json->'legs';
                 leg_index := 0;
             FOR leg IN

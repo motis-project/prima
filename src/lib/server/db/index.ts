@@ -96,7 +96,7 @@ export interface Database {
 	journey: {
 		id: Generated<number>;
 		json: Itinerary;
-		user: number;
+		user: number | null;
 		request1: number | null;
 		request2: number | null;
 		rating: number | null;
