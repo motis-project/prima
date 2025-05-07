@@ -53,7 +53,7 @@ class DataRepository @Inject constructor(
 
     val deviceInfo: Flow<DeviceInfo> = dataStoreManager.deviceInfoFlow
 
-    val _markedTours = MutableStateFlow(mutableSetOf<Int>())
+    private val _markedTours = MutableStateFlow(mutableSetOf<Int>())
     val markedTours: StateFlow<Set<Int>> = _markedTours.asStateFlow()
 
     init {
