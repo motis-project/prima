@@ -10,9 +10,11 @@ import de.motis.prima.data.TourObject
 import de.motis.prima.data.ValidationStatus
 import de.motis.prima.services.ApiService
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -36,6 +38,11 @@ class ToursViewModel @Inject constructor(
 
     private val _showAll = MutableStateFlow(false)
     val showAll: StateFlow<Boolean> = _showAll.asStateFlow()
+
+    private val _intentSeen = MutableStateFlow(false)
+    val intentSeen: StateFlow<Boolean> = _intentSeen.asStateFlow()
+
+    val markedTours: StateFlow<Set<Int>> = repository.markedTours
 
     init {
         startReporting()
@@ -134,5 +141,15 @@ class ToursViewModel @Inject constructor(
 
     fun setShowAll(value: Boolean) {
         _showAll.value = value
+    }
+
+    fun addMarker(tourId: Int) {
+        repository.addMarker(tourId)
+        _intentSeen.value = false
+    }
+
+    fun removeMarker(tourId: Int) {
+        repository.removeMarker(tourId)
+        _intentSeen.value = true
     }
 }
