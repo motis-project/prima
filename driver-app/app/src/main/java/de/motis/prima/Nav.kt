@@ -59,7 +59,7 @@ fun Nav(intent: Intent?) {
             }
 
             composable(route = "tours") {
-                Tours(navController)
+                Tours(navController, intent)
             }
 
             composable(route = "preview/{tourId}") {
