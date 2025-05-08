@@ -48,15 +48,9 @@ fun Leg(
     Scaffold(
         topBar = {
             TopBar(
-                if (eventGroupIndex != 0) "leg/$tourId/${eventGroupIndex - 1}" else "preview/$tourId",
                 "Fahrt",
                 true,
-                listOf(
-                    NavItem(
-                        text = stringResource(id = R.string.cancel_tour),
-                        action = { navController.navigate("tours") }
-                    )
-                ),
+                emptyList(),
                 navController
             )
         }

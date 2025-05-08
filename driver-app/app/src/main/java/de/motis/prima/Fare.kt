@@ -105,7 +105,6 @@ fun Fare(
     Scaffold(
         topBar = {
             TopBar(
-                "tours",
                 stringResource(id = R.string.fare_header),
                 true,
                 listOf(
