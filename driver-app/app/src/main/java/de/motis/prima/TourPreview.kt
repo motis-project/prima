@@ -96,7 +96,6 @@ fun TourPreview(
     Scaffold(
         topBar = {
             TopBar(
-                "tours",
                 stringResource(id = R.string.tour_preview_header),
                 true,
                 emptyList(),

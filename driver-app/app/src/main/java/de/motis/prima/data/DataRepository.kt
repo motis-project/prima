@@ -53,8 +53,10 @@ class DataRepository @Inject constructor(
 
     val deviceInfo: Flow<DeviceInfo> = dataStoreManager.deviceInfoFlow
 
-    private val _markedTours = MutableStateFlow(mutableSetOf<Int>())
-    val markedTours: StateFlow<Set<Int>> = _markedTours.asStateFlow()
+    private val _markedTour = MutableStateFlow<Int>(-1)
+    val markedTour: StateFlow<Int> = _markedTour.asStateFlow()
+
+    private var fetchTours = false
 
     init {
         startRefreshingTours()
@@ -315,10 +317,10 @@ class DataRepository @Inject constructor(
     }
 
     fun addMarker(tourId: Int) {
-        _markedTours.value.add(tourId)
+        _markedTour.value = tourId
     }
 
-    fun removeMarker(tourId: Int) {
-        _markedTours.value.remove(tourId)
+    fun removeMarker() {
+        _markedTour.value = -1
     }
 }
