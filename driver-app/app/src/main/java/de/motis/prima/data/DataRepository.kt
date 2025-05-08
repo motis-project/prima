@@ -93,6 +93,10 @@ class DataRepository @Inject constructor(
         }
     }
 
+    fun stopFetchingTours() {
+        fetchTours = false
+    }
+
     private fun refreshToursDisplayDate() {
         val today = displayDate.value
 
@@ -112,7 +116,7 @@ class DataRepository @Inject constructor(
     }
 
     private fun refreshTours(): Flow<Response<List<Tour>>> = flow {
-        while (true) {
+        while (fetchTours) {
             val today = LocalDate.now()
 
             if (today == displayDate.value) {
@@ -133,7 +137,8 @@ class DataRepository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    private fun startRefreshingTours() {
+    fun startRefreshingTours() {
+        fetchTours = true
         CoroutineScope(Dispatchers.IO).launch {
             _vehicleId = selectedVehicle.first().id
             _toursForDate.value = getToursForDate(_displayDate.value, selectedVehicle.first().id)
