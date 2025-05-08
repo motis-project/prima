@@ -83,6 +83,18 @@ class TourViewModel @Inject constructor(
     fun isCancelled(tourId: Int): Boolean {
         return repository.isTourCancelled(tourId)
     }
+
+    fun getDateString(): String {
+        var dateStrng = ""
+        _tour?.let { tour ->
+            dateStrng = Date(tour.startTime).formatTo("dd.MM.yyyy")
+        }
+        return dateStrng
+    }
+
+    fun updateEventGroups(tourId: Int) {
+        repository.updateEventGroups(tourId)
+    }
 }
 
 @Composable
@@ -92,6 +104,7 @@ fun TourPreview(
     viewModel: TourViewModel = hiltViewModel()
 ) {
     val isCancelled = viewModel.isCancelled(tourId)
+    viewModel.updateEventGroups(tourId);
 
     Scaffold(
         topBar = {
@@ -113,6 +126,21 @@ fun TourPreview(
                     .fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
+                if (!isCancelled && !viewModel.isInPAst(tourId)) {
+                    Box(
+                        modifier = Modifier
+                            .height(parentHeight * 0.075f)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = viewModel.getDateString(),
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
                 Box(
                     modifier = Modifier
                         .height(parentHeight * 0.5f)
@@ -144,8 +172,7 @@ fun TourPreview(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     if (!isCancelled && !viewModel.isInPAst(tourId)) {
                         Button(
