@@ -85,7 +85,6 @@ fun Tours(
     Scaffold(
         topBar = {
             TopBar(
-                "vehicles",
                 stringResource(id = R.string.tours_header),
                 true,
                 listOf(
@@ -303,7 +302,7 @@ fun ShowTours(
             }
         } else {
             val loading by viewModel.loading.collectAsState()
-            val markedTours by viewModel.markedTours.collectAsState()
+            val markedTour by viewModel.markedTour.collectAsState()
 
             LazyColumn(
                 modifier = Modifier
@@ -315,7 +314,7 @@ fun ShowTours(
                         viewModel.updateEventGroups(tour.tourId)
                         if (!loading) {
                             navController.navigate("preview/${tour.tourId}")
-                            viewModel.removeMarker(tour.tourId)
+                            viewModel.removeMarker()
                         }
                     }) {
                         val city: String
@@ -345,7 +344,7 @@ fun ShowTours(
                         }
 
                         var cardColor = Color(234, 232, 235)
-                        if (markedTours.contains(tour.tourId)) {
+                        if (markedTour == tour.tourId) {
                             cardColor = Color(200, 255, 200)
                         }
 

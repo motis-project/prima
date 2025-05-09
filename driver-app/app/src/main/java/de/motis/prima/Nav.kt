@@ -1,7 +1,6 @@
 package de.motis.prima
 
 import android.content.Intent
-import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -27,21 +26,30 @@ fun Nav(intent: Intent?) {
     val selectedVehicle = settingsViewModel.selectedVehicle.collectAsState().value
     val loggedIn = loginViewModel.isLoggedIn()
 
+    var notifiedTourId = -1
+    intent?.let { safeIntent ->
+        runCatching {
+            val tourIdStr = safeIntent.getStringExtra("tourId")
+            tourIdStr?.let { safeTourIdStr ->
+                notifiedTourId = safeTourIdStr.toInt()
+            }
+        }
+    }
+
     if (selectedVehicle == null) {
         LoadingScreen()
     } else {
         val startDestination = if (!loggedIn) {
             "login"
         } else {
-            if (selectedVehicle.id == 0) {
+            if (notifiedTourId != -1) {
+                "preview/${notifiedTourId}"
+            }
+            else if (selectedVehicle.id == 0) {
                 "vehicles"
             } else {
                 "tours"
             }
-        }
-
-        if (intent != null) {
-            Log.d("intent", "Nav:  ${intent.getStringExtra("tourId")}")
         }
 
         val deviceInfo by loginViewModel.deviceInfo.collectAsState(DeviceInfo("", "", false))

@@ -53,11 +53,25 @@ class DataRepository @Inject constructor(
 
     val deviceInfo: Flow<DeviceInfo> = dataStoreManager.deviceInfoFlow
 
-    private val _markedTours = MutableStateFlow(mutableSetOf<Int>())
-    val markedTours: StateFlow<Set<Int>> = _markedTours.asStateFlow()
+    private val _markedTour = MutableStateFlow<Int>(-1)
+    val markedTour: StateFlow<Int> = _markedTour.asStateFlow()
+
+    private var fetchTours = false
 
     init {
+        fetchFirebaseToken()
         startRefreshingTours()
+    }
+
+    fun removeFirebaseToken() {
+        FirebaseMessaging.getInstance().deleteToken()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("fcm", "Token deleted successfully")
+                } else {
+                    Log.e("fcm", "Failed to delete token", task.exception)
+                }
+            }
     }
 
     fun fetchFirebaseToken() {
@@ -71,12 +85,16 @@ class DataRepository @Inject constructor(
                     } catch (e: Exception) {
                         Log.e("fcm", "Failed to store token", e)
                     }
-                    val resFCM = apiService.sendDeviceInfo(dataStoreManager.getDeviceId(), token)
-                    if (resFCM.isSuccessful) {
-                        resetTokenPending()
-                        Log.d("fcm", "Token was sent to backend")
-                    } else {
-                        Log.e("fcm", "Failed to send token to backend")
+                    try {
+                        val resFCM = apiService.sendDeviceInfo(dataStoreManager.getDeviceId(), token)
+                        if (resFCM.isSuccessful) {
+                            resetTokenPending()
+                            Log.d("fcm", "Token was sent to backend")
+                        } else {
+                            Log.e("fcm", "Failed to send token to backend")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("fcm", "$e")
                     }
                 }
             } else {
@@ -89,6 +107,10 @@ class DataRepository @Inject constructor(
         CoroutineScope(Dispatchers.IO).launch {
             dataStoreManager.resetTokenPending()
         }
+    }
+
+    fun stopFetchingTours() {
+        fetchTours = false
     }
 
     private fun refreshToursDisplayDate() {
@@ -110,7 +132,7 @@ class DataRepository @Inject constructor(
     }
 
     private fun refreshTours(): Flow<Response<List<Tour>>> = flow {
-        while (true) {
+        while (fetchTours) {
             val today = LocalDate.now()
 
             if (today == displayDate.value) {
@@ -131,7 +153,8 @@ class DataRepository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    private fun startRefreshingTours() {
+    fun startRefreshingTours() {
+        fetchTours = true
         CoroutineScope(Dispatchers.IO).launch {
             _vehicleId = selectedVehicle.first().id
             _toursForDate.value = getToursForDate(_displayDate.value, selectedVehicle.first().id)
@@ -199,7 +222,7 @@ class DataRepository @Inject constructor(
     }
 
     private fun getToursForDate(date: LocalDate, vehicleId: Int): List<Tour> {
-        refreshToursDisplayDate();
+        refreshToursDisplayDate()
 
         val start = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val end = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -315,10 +338,10 @@ class DataRepository @Inject constructor(
     }
 
     fun addMarker(tourId: Int) {
-        _markedTours.value.add(tourId)
+        _markedTour.value = tourId
     }
 
-    fun removeMarker(tourId: Int) {
-        _markedTours.value.remove(tourId)
+    fun removeMarker() {
+        _markedTour.value = -1
     }
 }
