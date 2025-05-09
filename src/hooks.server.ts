@@ -67,7 +67,9 @@ try {
 		name: 'prima_firebase_connection_established',
 		help: 'Whether the connection to firebase is successfully established.'
 	});
-} catch {}
+} catch {
+	/* ignored */
+}
 
 try {
 	admin.initializeApp({

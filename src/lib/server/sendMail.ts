@@ -17,7 +17,9 @@ try {
 		name: 'prima_email_errors_total',
 		help: 'Email sending errors occurred'
 	});
-} catch {}
+} catch {
+	/* ignored */
+}
 
 export function generateMail(template: any, props: any): EmailContent {
 	const html = render(template, { props }).body;

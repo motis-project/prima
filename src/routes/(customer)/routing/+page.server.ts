@@ -23,7 +23,9 @@ try {
 		name: 'prima_booking_attempts_total',
 		help: 'Booking attempts occurred'
 	});
-} catch {}
+} catch {
+	/* ignored */
+}
 
 const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 	for (const e of l1) {

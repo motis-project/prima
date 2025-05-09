@@ -8,7 +8,9 @@ try {
 		name: 'prima_firebase_errors_total',
 		help: 'Firebase errors occurred'
 	});
-} catch {}
+} catch {
+	/* ignored */
+}
 
 export enum TourChange {
 	BOOKED,
