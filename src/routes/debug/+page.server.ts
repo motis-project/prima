@@ -1,23 +1,28 @@
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { readFloat } from '$lib/server/util/readForm';
-import { bookRide } from '$lib/server/booking/bookRide';
 import { sql } from 'kysely';
 import { whitelist } from '../api/whitelist/whitelist';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import type { Translations } from '$lib/i18n/translation';
-import { insertRequest } from '../api/booking/query';
+import { getIp } from '$lib/server/getIp';
+import { error } from '@sveltejs/kit';
+import { bookingApi } from '$lib/server/booking/bookingApi';
 
 export type BookingError = { msg: keyof Translations['msg'] };
 
 export const actions = {
-	default: async ({ request, locals }): Promise<BookingError | { vehicle: number }> => {
-		const customer = locals.session?.userId;
+	default: async (event): Promise<BookingError | { request: number }> => {
+		const clientIP = getIp(event);
+		if (clientIP !== '127.0.0.1' && clientIP !== '::1' && clientIP !== '::ffff:127.0.0.1') {
+			return error(403);
+		}
+		const customer = event.locals.session?.userId;
 		if (!customer) {
 			throw 'not logged in';
 		}
 
-		const formData = await request.formData();
+		const formData = await event.request.formData();
 
 		const fromLat = readFloat(formData.get('fromLat'));
 		const fromLng = readFloat(formData.get('fromLng'));
@@ -57,47 +62,32 @@ export const actions = {
 			false
 		);
 
-		console.log('whitelistResult: ', JSON.stringify(whitelistResult, null, '\t'));
-
 		const result = whitelistResult[0][0];
 		if (result == undefined) {
 			return { msg: 'noVehicle' };
 		}
-
-		const connection = {
+		const connection1 = {
 			start,
 			target,
 			startTime: result.pickupTime,
-			targetTime: result.dropoffTime
+			targetTime: result.dropoffTime,
+			signature: ''
 		};
-		const booking = await bookRide(connection, capacities, true);
 
-		console.log('booking: ', JSON.stringify(booking, null, '\t'));
+		const bookingResponse = await bookingApi(
+			{ connection1, connection2: null, capacities },
+			customer,
+			true,
+			0,
+			0,
+			0
+		);
 
-		if (booking == undefined) {
-			return { msg: 'noVehicle' };
+		if (bookingResponse.request1Id === undefined) {
+			return { msg: 'bookingError' };
 		}
 
-		await db.transaction().execute(async (trx) => {
-			await insertRequest(
-				booking.best,
-				capacities,
-				connection,
-				customer,
-				booking.eventGroupUpdateList,
-				[...booking.mergeTourList],
-				booking.pickupEventGroup,
-				booking.dropoffEventGroup,
-				booking.neighbourIds,
-				booking.directDurations,
-				0,
-				0,
-				0,
-				trx
-			);
-		});
-
-		return { vehicle: booking.best.vehicle };
+		return { request: bookingResponse.request1Id };
 	}
 };
 

@@ -125,8 +125,8 @@
 						<Button type="submit">Suchen</Button>
 					</form>
 				</div>
-				{#if form?.vehicle}
-					<div>Vehicle: {form.vehicle}</div>
+				{#if form?.request}
+					<div>Request: {form.request}</div>
 				{/if}
 			</div>
 		</Card>

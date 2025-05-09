@@ -17,6 +17,7 @@ export type ExpectedConnection = {
 	target: Coordinates;
 	startTime: UnixtimeMs;
 	targetTime: UnixtimeMs;
+	signature: string;
 };
 
 export type ExpectedConnectionWithISoStrings = {

@@ -10,8 +10,8 @@
 	import { getStyle } from '$lib/map/style';
 	import Control from '$lib/map/Control.svelte';
 	import maplibregl from 'maplibre-gl';
-	import type { Itinerary } from '$lib/openapi';
 	import ItineraryGeoJson from './ItineraryGeoJSON.svelte';
+	import type { SignedItinerary } from '$lib/planAndSign';
 
 	let {
 		from = $bindable(),
@@ -20,7 +20,7 @@
 	}: {
 		from?: Location | undefined;
 		to?: Location | undefined;
-		itinerary?: Itinerary | undefined;
+		itinerary?: SignedItinerary | undefined;
 	} = $props();
 
 	let fromMarker = $state<maplibregl.Marker>();
