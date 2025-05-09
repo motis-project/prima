@@ -1,5 +1,14 @@
 import admin from 'firebase-admin';
 import { db } from '$lib/server/db/index.js';
+import Prom from 'prom-client';
+
+let firebase_errors: Prom.Counter | undefined;
+try {
+	firebase_errors = new Prom.Counter({
+		name: 'prima_firebase_errors_total',
+		help: 'Firebase errors occurred'
+	});
+} catch {}
 
 export enum TourChange {
 	BOOKED,
@@ -45,6 +54,7 @@ export async function sendPushNotification(
 			}
 		});
 	} catch (error: unknown) {
+		firebase_errors?.inc();
 		if (isFCMError(error)) {
 			console.error('FCM error:', error.code);
 

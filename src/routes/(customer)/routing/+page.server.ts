@@ -9,6 +9,21 @@ import { sendMail } from '$lib/server/sendMail';
 import NewRide from '$lib/server/email/NewRide.svelte';
 import { lockTablesStatement } from '$lib/server/db/lockTables';
 import type { Itinerary } from '$lib/openapi';
+import Prom from 'prom-client';
+
+let booking_errors: Prom.Counter | undefined;
+let booking_attempts: Prom.Counter | undefined;
+
+try {
+	booking_errors = new Prom.Counter({
+		name: 'prima_booking_errors_total',
+		help: 'Booking errors occurred'
+	});
+	booking_attempts = new Prom.Counter({
+		name: 'prima_booking_attempts_total',
+		help: 'Booking attempts occurred'
+	});
+} catch {}
 
 const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 	for (const e of l1) {
@@ -21,6 +36,7 @@ const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 
 export const actions = {
 	bookItineraryWithOdm: async ({ request, locals }): Promise<{ msg: Msg }> => {
+		booking_attempts?.inc();
 		const user = locals.session?.userId;
 		if (!user) {
 			return { msg: msg('accountDoesNotExist') };
@@ -103,6 +119,7 @@ export const actions = {
 			isNaN(endTime2) ||
 			passengers <= kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix
 		) {
+			booking_errors?.inc();
 			throw 'invalid booking params';
 		}
 
@@ -136,6 +153,7 @@ export const actions = {
 				{ endTime2 },
 				{ user }
 			);
+			booking_errors?.inc();
 			return { msg: msg('unknownError') };
 		}
 
@@ -323,7 +341,7 @@ export const actions = {
 
 			return redirect(302, `/bookings/${id}`);
 		}
-
+		booking_errors?.inc();
 		return { msg: message! };
 	},
 	storeItineraryWithNoOdm: async ({ request, locals }): Promise<{ msg: Msg }> => {

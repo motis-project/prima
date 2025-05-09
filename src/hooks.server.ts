@@ -5,6 +5,7 @@ import {
 } from '$lib/server/auth/session';
 import { error, redirect, type Handle } from '@sveltejs/kit';
 import admin from 'firebase-admin';
+import Prom from 'prom-client';
 import { env } from '$env/dynamic/private';
 
 const authHandle: Handle = async ({ event, resolve }) => {
@@ -60,6 +61,14 @@ const authHandle: Handle = async ({ event, resolve }) => {
 
 export const handle = authHandle;
 
+let firebase_established: Prom.Gauge | undefined;
+try {
+	firebase_established = new Prom.Gauge({
+		name: 'prima_firebase_connection_established',
+		help: 'Whether the connection to firebase is successfully established.'
+	});
+} catch {}
+
 try {
 	admin.initializeApp({
 		credential: admin.credential.cert({
@@ -68,6 +77,8 @@ try {
 			clientEmail: env.FIREBASE_CLIENT_EMAIL
 		})
 	});
+	firebase_established?.set(1);
 } catch (e) {
 	console.log(e);
+	firebase_established?.set(0);
 }
