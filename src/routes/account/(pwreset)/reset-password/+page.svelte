@@ -26,7 +26,7 @@
 
 		<div class="field">
 			<Label>{t.account.newPassword}</Label>
-			<Input name="password" type="password" placeholder="New Password" />
+			<Input name="password" type="password" />
 		</div>
 
 		<Button type="submit" variant="outline">
