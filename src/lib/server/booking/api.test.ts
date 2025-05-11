@@ -303,7 +303,8 @@ describe('Whitelist and Booking API Tests', () => {
 				whiteResponse.direct[0].pickupTime,
 				whiteResponse.direct[0].dropoffTime,
 				false
-			)
+			),
+			startFixed: false
 		};
 		const bookingBody = {
 			connection1,
@@ -383,7 +384,8 @@ describe('Whitelist and Booking API Tests', () => {
 				whiteResponse.direct[0].pickupTime,
 				roundToUnit(whiteResponse.direct[0].dropoffTime, MINUTE, Math.floor),
 				false
-			)
+			),
+			startFixed: false
 		};
 		const bookingBody = {
 			connection1,
@@ -431,7 +433,8 @@ describe('Whitelist and Booking API Tests', () => {
 				whiteResponse.direct[0].pickupTime,
 				whiteResponse.direct[0].dropoffTime,
 				false
-			)
+			),
+			startFixed: false
 		};
 		const bookingBody = {
 			connection1,

@@ -15,7 +15,8 @@ import type { SignedItinerary } from '$lib/planAndSign';
 
 function expectedConnectionFromLeg(
 	leg: Leg,
-	signature: string | undefined
+	signature: string | undefined,
+	startFixed: boolean
 ): ExpectedConnection | null {
 	return signature
 		? {
@@ -23,7 +24,8 @@ function expectedConnectionFromLeg(
 				target: { lat: leg.to.lat, lng: leg.to.lon, address: leg.to.name },
 				startTime: new Date(leg.startTime).getTime(),
 				targetTime: new Date(leg.endTime).getTime(),
-				signature
+				signature,
+				startFixed
 			}
 		: null;
 }
@@ -43,6 +45,7 @@ export const actions = {
 		const kidsZeroToTwoString = formData.get('kidsZeroToTwo');
 		const kidsThreeToFourString = formData.get('kidsThreeToFour');
 		const kidsFiveToSixString = formData.get('kidsFiveToSix');
+		const startFixedString = formData.get('startFixed');
 		const json = formData.get('json');
 
 		if (
@@ -52,7 +55,8 @@ export const actions = {
 			typeof passengersString !== 'string' ||
 			typeof kidsZeroToTwoString !== 'string' ||
 			typeof kidsThreeToFourString !== 'string' ||
-			typeof kidsFiveToSixString !== 'string'
+			typeof kidsFiveToSixString !== 'string' ||
+			typeof startFixedString !== 'string'
 		) {
 			throw 'invalid booking params';
 		}
@@ -62,6 +66,7 @@ export const actions = {
 		const kidsZeroToTwo = readInt(kidsZeroToTwoString);
 		const kidsThreeToFour = readInt(kidsThreeToFourString);
 		const kidsFiveToSix = readInt(kidsFiveToSixString);
+		const startFixed = startFixedString === '1';
 
 		if (
 			isNaN(luggage) ||
@@ -69,7 +74,8 @@ export const actions = {
 			isNaN(passengers) ||
 			isNaN(kidsZeroToTwo) ||
 			isNaN(kidsThreeToFour) ||
-			isNaN(kidsFiveToSix)
+			isNaN(kidsFiveToSix) ||
+			(startFixedString !== '1' && startFixedString !== '0')
 		) {
 			throw 'invalid booking params';
 		}
@@ -97,7 +103,8 @@ export const actions = {
 			return { msg: msg('unknownError') };
 		}
 
-		const firstOdmIndex = parsedJson!.legs.findIndex((l: Leg) => l.mode === 'ODM');
+		const legs = parsedJson!.legs;
+		const firstOdmIndex = legs.findIndex((l: Leg) => l.mode === 'ODM');
 		if (firstOdmIndex === -1) {
 			console.log(
 				'Journey with no ODM in bookItineraryWithOdm action. ',
@@ -110,9 +117,9 @@ export const actions = {
 			);
 			return { msg: msg('unknownError') };
 		}
-		const firstOdm = parsedJson!.legs[firstOdmIndex];
-		const lastOdmIndex = parsedJson!.legs.findLastIndex((l: Leg) => l.mode === 'ODM');
-		const lastOdm = parsedJson!.legs[lastOdmIndex];
+		const firstOdm = legs[firstOdmIndex];
+		const lastOdmIndex = legs.findLastIndex((l: Leg) => l.mode === 'ODM');
+		const lastOdm = legs[lastOdmIndex];
 		if (!parsedJson.signature1) {
 			console.log(
 				'Missing signature for connection1 in bookItineraryWithOdm action. ',
@@ -125,11 +132,12 @@ export const actions = {
 			);
 			return { msg: msg('unknownError') };
 		}
-		const connection1 = expectedConnectionFromLeg(firstOdm, parsedJson.signature1);
+		const isDirect = legs.length === 1;
+		const connection1 = expectedConnectionFromLeg(firstOdm, parsedJson.signature1, isDirect ? startFixed : (firstOdmIndex !== 0));
 		const connection2 =
 			firstOdmIndex === lastOdmIndex
 				? null
-				: expectedConnectionFromLeg(lastOdm, parsedJson.signature2);
+				: expectedConnectionFromLeg(lastOdm, parsedJson.signature2, true);
 
 		console.log(
 			'BOOKING: C1=',

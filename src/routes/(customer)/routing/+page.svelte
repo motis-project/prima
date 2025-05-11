@@ -245,6 +245,7 @@
 									<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
 									<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
 									<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
+									<input type="hidden" name="startFixed" value={timeType === 'departure' ? '1' : '0'}>
 									<Button type="submit" variant="outline">{t.booking.header}</Button>
 								</form>
 							</Dialog.Footer>

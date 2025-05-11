@@ -18,6 +18,7 @@ export type ExpectedConnection = {
 	startTime: UnixtimeMs;
 	targetTime: UnixtimeMs;
 	signature: string;
+	startFixed: boolean;
 };
 
 export type ExpectedConnectionWithISoStrings = {
@@ -42,15 +43,14 @@ export function toExpectedConnectionWithISOStrings(
 export async function bookRide(
 	c: ExpectedConnection,
 	required: Capacities,
-	startFixed: boolean,
 	trx?: Transaction<Database>,
 	blockedVehicleId?: number
 ) {
 	console.log('BS');
 	const searchInterval = new Interval(c.startTime, c.targetTime);
 	const expandedSearchInterval = searchInterval.expand(MAX_TRAVEL * 6, MAX_TRAVEL * 6);
-	const userChosen = !startFixed ? c.start : c.target;
-	const busStop = startFixed ? c.start : c.target;
+	const userChosen = !c.startFixed ? c.start : c.target;
+	const busStop = c.startFixed ? c.start : c.target;
 	const { companies, filteredBusStops } = await getBookingAvailability(
 		userChosen,
 		required,
@@ -71,7 +71,7 @@ export async function bookRide(
 			].vehicles.filter((v) => v.id != blockedVehicleId);
 		}
 	}
-	const busTime = startFixed ? c.startTime : c.targetTime;
+	const busTime = c.startFixed ? c.startTime : c.targetTime;
 	const best = (
 		await evaluateRequest(
 			companies,
@@ -79,7 +79,7 @@ export async function bookRide(
 			userChosen,
 			[{ ...busStop, times: [busTime] }],
 			required,
-			startFixed,
+			c.startFixed,
 			{
 				pickup: c.startTime,
 				dropoff: c.targetTime

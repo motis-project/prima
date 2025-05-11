@@ -71,7 +71,8 @@ export const actions = {
 			target,
 			startTime: result.pickupTime,
 			targetTime: result.dropoffTime,
-			signature: ''
+			signature: '',
+			startFixed: false
 		};
 
 		const bookingResponse = await bookingApi(
