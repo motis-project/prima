@@ -133,7 +133,11 @@ export const actions = {
 			return { msg: msg('unknownError') };
 		}
 		const isDirect = legs.length === 1;
-		const connection1 = expectedConnectionFromLeg(firstOdm, parsedJson.signature1, isDirect ? startFixed : (firstOdmIndex !== 0));
+		const connection1 = expectedConnectionFromLeg(
+			firstOdm,
+			parsedJson.signature1,
+			isDirect ? startFixed : firstOdmIndex !== 0
+		);
 		const connection2 =
 			firstOdmIndex === lastOdmIndex
 				? null
