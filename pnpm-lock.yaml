@@ -92,6 +92,9 @@ importers:
       polyline:
         specifier: ^0.2.0
         version: 0.2.0
+      prom-client:
+        specifier: ^15.1.3
+        version: 15.1.3
       svelte-qrcode:
         specifier: ^1.0.1
         version: 1.0.1
@@ -1342,6 +1345,9 @@ packages:
   binary-extensions@2.3.0:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
     engines: {node: '>=8'}
+
+  bintrees@1.0.2:
+    resolution: {integrity: sha512-VOMgTMwjAaUG580SXn3LacVgjurrbMme7ZZNYGSSV7mmtY6QQRh0Eg3pwIcntQ77DErK1L0NxkbetjcoXzVwKw==}
 
   bits-ui@1.0.0-next.87:
     resolution: {integrity: sha512-3NCcz/7Fwp9zEqA4sCz6oGWrL3haDkIe15EwY6GnoInbFPtH0x3ftJ00dP45BqQ/RukYHcoW1pzRlUerdcIvxA==}
@@ -2757,6 +2763,10 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
+  prom-client@15.1.3:
+    resolution: {integrity: sha512-6ZiOBfCywsD4k1BN9IX0uZhF+tJkV8q8llP64G5Hajs4JOeVLPCwpPVcpXy3BwYiUGgyJzsJJQeOIv7+hDSq8g==}
+    engines: {node: ^16 || ^18 || >=20}
+
   proto3-json-serializer@2.0.2:
     resolution: {integrity: sha512-SAzp/O4Yh02jGdRc+uIrGoe87dkN/XtwxfZ4ZyafJHymd79ozp5VG5nyZ7ygqPM5+cpLDjjGnYFUkngonyDPOQ==}
     engines: {node: '>=14.0.0'}
@@ -3052,6 +3062,9 @@ packages:
   tar@6.2.1:
     resolution: {integrity: sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==}
     engines: {node: '>=10'}
+
+  tdigest@0.1.2:
+    resolution: {integrity: sha512-+G0LLgjjo9BZX2MfdvPfH+MKLCrxlXSYec5DaPYP1fe6Iyhf0/fSmJ0bFiZ1F8BT6cGXl2LpltQptzjXKWEkKA==}
 
   teeny-request@9.0.0:
     resolution: {integrity: sha512-resvxdc6Mgb7YEThw6G6bExlXKkv6+YbuzGg9xuXxSgxJF7Ozs+o8Y9+2R3sArdWdW8nOokoQb1yrpFB0pQK2g==}
@@ -3854,8 +3867,7 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.18.0
 
-  '@opentelemetry/api@1.9.0':
-    optional: true
+  '@opentelemetry/api@1.9.0': {}
 
   '@oslojs/asn1@1.0.0':
     dependencies:
@@ -4412,6 +4424,8 @@ snapshots:
   bignumber.js@9.3.0: {}
 
   binary-extensions@2.3.0: {}
+
+  bintrees@1.0.2: {}
 
   bits-ui@1.0.0-next.87(svelte@5.19.2):
     dependencies:
@@ -5881,6 +5895,11 @@ snapshots:
 
   prettier@3.4.2: {}
 
+  prom-client@15.1.3:
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      tdigest: 0.1.2
+
   proto3-json-serializer@2.0.2:
     dependencies:
       protobufjs: 7.5.0
@@ -6251,6 +6270,10 @@ snapshots:
       minizlib: 2.1.2
       mkdirp: 1.0.4
       yallist: 4.0.0
+
+  tdigest@0.1.2:
+    dependencies:
+      bintrees: 1.0.2
 
   teeny-request@9.0.0:
     dependencies:
