@@ -170,7 +170,8 @@ export const actions: Actions = {
 								'request.passengers',
 								'request.bikes',
 								'request.wheelchairs',
-								'request.luggage'
+								'request.luggage',
+								'request.id as requestId'
 							])
 					).as('events')
 				])
@@ -223,6 +224,15 @@ export const actions: Actions = {
 				}
 				unknownError = true;
 				return;
+			}
+			for (const tour of tours) {
+				const requestIds = tour.events.filter((e) => e.isPickup).map((r) => r.requestId);
+				if (requestIds.length !== 0) {
+					trx
+						.updateTable('request')
+						.set({ licensePlateUpdatedAt: Date.now() })
+						.where('request.id', 'in', requestIds);
+				}
 			}
 			success = true;
 		});

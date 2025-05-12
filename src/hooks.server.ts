@@ -6,8 +6,14 @@ import {
 import { error, redirect, type Handle } from '@sveltejs/kit';
 import admin from 'firebase-admin';
 import { env } from '$env/dynamic/private';
+import { getIp } from '$lib/server/getIp';
 
 const authHandle: Handle = async ({ event, resolve }) => {
+	const ip = getIp(event);
+	if (!ip.startsWith('172.') && event.url.pathname.startsWith('/apiInternal')) {
+		console.log('Internal api accessed from outside localhost.', { ip });
+		error(403);
+	}
 	const token = event.cookies.get('session');
 	const session = await validateSessionToken(token);
 	if (

@@ -92,6 +92,7 @@ export interface Database {
 		ticketCode: string;
 		ticketChecked: boolean;
 		cancelled: boolean;
+		licensePlateUpdatedAt: number | null;
 	};
 	journey: {
 		id: Generated<number>;
