@@ -16,7 +16,7 @@ async function getTokens(companyId: number) {
 	return tokens;
 }
 
-export async function sendNotifications(companyId: number, data: NotificationData) {
+export async function sendNotifications(companyId: number, data: NotificationData): Promise<void> {
 	const tokens = await getTokens(companyId);
 
 	let title = 'Änderung einer Fahrt';
