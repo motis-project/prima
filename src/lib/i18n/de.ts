@@ -110,7 +110,7 @@ const translations: Translations = {
 		forgotPassword: 'Passwort vergessen?',
 		signupConditions: (tos: string, privacy: string, provider: string) =>
 			`Durch die Anmeldung stimme ich den ${tos} sowie der ${privacy} von ${provider} zu.`,
-		tos: 'Allgemeinen Geschäftsbedingungen',
+		tos: 'Beförderungsbedingungen',
 		imprint: 'Impressum',
 		privacy_short: 'Datenschutz',
 		privacy: 'Datenschutzerklärung',
