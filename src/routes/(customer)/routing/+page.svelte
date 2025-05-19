@@ -504,6 +504,10 @@
 					updateStartDest={updateStartDest(from, to)}
 				/>
 			</div>
+			<p class="mx-auto mt-6 text-sm">
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+				{@html t.introduction}
+			</p>
 		</div>
 		<p class="mx-auto mt-6 max-w-72 text-center text-xs text-input">
 			<a

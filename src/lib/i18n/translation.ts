@@ -183,6 +183,7 @@ export type Translations = {
 	changeBookingInfo: string;
 	storeItinerary: string;
 	removeItinerary: string;
+	introduction: string;
 	booking: {
 		bookHere: string;
 		summary: string;
