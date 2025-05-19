@@ -16,6 +16,8 @@ export async function setAvailability(page: Page) {
 	await login(page, TAXI_OWNER);
 	await page.goto(`/taxi/availability?offset=${offset}&date=${dayString}`);
 	await page.waitForTimeout(500);
+	page.getByTestId(`GR-TU-11-${dayString}T09:45:00.000Z`).locator('div').scrollIntoViewIfNeeded();
+	await page.waitForTimeout(500);
 	await moveMouse(page, `GR-TU-11-${dayString}T07:00:00.000Z`);
 	await page.mouse.down();
 	await moveMouse(page, `GR-TU-11-${dayString}T09:45:00.000Z`);
