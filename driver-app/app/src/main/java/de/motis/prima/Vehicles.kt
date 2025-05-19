@@ -46,7 +46,6 @@ fun Vehicles(
     Scaffold(
         topBar = {
             TopBar(
-                null,
                 stringResource(id = R.string.vehicles_header),
                 true,
                 listOf(

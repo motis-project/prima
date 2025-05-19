@@ -110,7 +110,7 @@ const translations: Translations = {
 		forgotPassword: 'Passwort vergessen?',
 		signupConditions: (tos: string, privacy: string, provider: string) =>
 			`Durch die Anmeldung stimme ich den ${tos} sowie der ${privacy} von ${provider} zu.`,
-		tos: 'Allgemeinen Geschäftsbedingungen',
+		tos: 'Beförderungsbedingungen',
 		imprint: 'Impressum',
 		privacy_short: 'Datenschutz',
 		privacy: 'Datenschutzerklärung',
@@ -209,6 +209,9 @@ const translations: Translations = {
 	changeBookingInfo: 'Ändern Sie Ihre Such- und Buchungsangaben.',
 	storeItinerary: 'Reisekette speichern',
 	removeItinerary: 'Reisekette entfernen',
+	introduction:
+		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und später Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Bisher ist die Region um Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife, Trebendorf, Weißkeißel und Weißwasser/O.L. eingebunden. Die Bedienzeiten der ÖPNV-Taxis liegen in der Regel zwischen 5 und 22 Uhr und können direkt in der obigen Fahrplanauskunft für 3€ pro Person gebucht werden.',
+	serviceArea: 'Bediengebiet ',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',

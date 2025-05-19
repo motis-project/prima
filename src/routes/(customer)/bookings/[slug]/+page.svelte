@@ -86,18 +86,18 @@
 			{:else}
 				<Message msg={msg('cancelled')} />
 			{/if}
-			<Button size="icon" variant="outline" onclick={() => pushState('', { showMap: true })}>
-				<MapIcon class="h-[1.2rem] w-[1.2rem]" />
-			</Button>
 		{:else}
 			<form method="post" action="?/remove" class="flex grow">
 				<input type="hidden" name="journeyId" value={data.journeyId} />
 				<Button type="submit" class="grow">{t.removeItinerary}</Button>
 			</form>
 		{/if}
+		<Button size="icon" variant="outline" onclick={() => pushState('', { showMap: true })}>
+			<MapIcon class="h-[1.2rem] w-[1.2rem]" />
+		</Button>
 	</div>
 
-	{#if page.state.showMap && isOdm}
+	{#if page.state.showMap}
 		<PopupMap itinerary={data.journey} />
 	{:else if showTicket && isOdm}
 		<div class="flex h-full w-full items-center justify-center">

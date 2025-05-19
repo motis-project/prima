@@ -42,7 +42,7 @@ class ToursViewModel @Inject constructor(
     private val _intentSeen = MutableStateFlow(false)
     val intentSeen: StateFlow<Boolean> = _intentSeen.asStateFlow()
 
-    val markedTours: StateFlow<Set<Int>> = repository.markedTours
+    val markedTour: StateFlow<Int> = repository.markedTour
 
     init {
         startReporting()
@@ -148,8 +148,8 @@ class ToursViewModel @Inject constructor(
         _intentSeen.value = false
     }
 
-    fun removeMarker(tourId: Int) {
-        repository.removeMarker(tourId)
+    fun removeMarker() {
+        repository.removeMarker()
         _intentSeen.value = true
     }
 }

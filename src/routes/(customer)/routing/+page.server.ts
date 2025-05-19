@@ -1,3 +1,4 @@
+import type { PageServerLoad } from './$types';
 import { bookRide, toExpectedConnectionWithISOStrings } from '$lib/server/booking/bookRide';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
@@ -9,6 +10,7 @@ import { sendMail } from '$lib/server/sendMail';
 import NewRide from '$lib/server/email/NewRide.svelte';
 import { lockTablesStatement } from '$lib/server/db/lockTables';
 import type { Itinerary } from '$lib/openapi';
+import { sql } from 'kysely';
 import Prom from 'prom-client';
 
 let booking_errors: Prom.Counter | undefined;
@@ -181,11 +183,11 @@ export const actions = {
 		const connection2 = onlyOne
 			? null
 			: {
-					start: start2,
-					target: target2,
-					startTime: startTime2,
-					targetTime: endTime2
-				};
+				start: start2,
+				target: target2,
+				startTime: startTime2,
+				targetTime: endTime2
+			};
 
 		console.log(
 			'BOOKING: C1=',
@@ -379,4 +381,21 @@ export const actions = {
 		).id;
 		return redirect(302, `/bookings/${id}`);
 	}
+};
+
+export const load: PageServerLoad = async () => {
+	const areasGeoJSON = async () => {
+		return await sql`
+		SELECT 'FeatureCollection' AS TYPE,
+			array_to_json(array_agg(f)) AS features
+		FROM
+			(SELECT 'Feature' AS TYPE,
+				ST_AsGeoJSON(lg.area, 15, 0)::json As geometry,
+				json_build_object('id', lg.id, 'name', lg.name) AS properties
+			FROM zone AS lg JOIN company ON lg.id = company.zone ) AS f`.execute(db);
+	};
+
+	return {
+		areas: (await areasGeoJSON()).rows[0]
+	};
 };

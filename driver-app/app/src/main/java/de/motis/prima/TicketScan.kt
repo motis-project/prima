@@ -72,7 +72,6 @@ fun TicketScan(
     Scaffold(
         topBar = {
             TopBar(
-                null,
                 "   Scan Ticket Code",
                 false,
                 emptyList<NavItem>(),

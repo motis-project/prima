@@ -33,7 +33,6 @@ data class NavItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
-    navBack: String?,
     title: String,
     options: Boolean,
     navItems: List<NavItem>?,
@@ -70,6 +69,8 @@ fun TopBar(
             IconButton(onClick = {
                 if (navController.previousBackStackEntry != null) {
                     navController.popBackStack()
+                } else {
+                    navController.navigate("tours")
                 }
             }) {
                 Icon(
@@ -87,6 +88,13 @@ fun TopBar(
                     expanded = dropdownExpanded,
                     onDismissRequest = { dropdownExpanded = false }
                 ) {
+                    DropdownMenuItem(
+                        onClick = {
+                            navController.navigate("tours")
+
+                        },
+                        text = { Text(text = stringResource(id = R.string.tours_header)) }
+                    )
                     for (item in navItems) {
                         DropdownMenuItem(
                             onClick = {

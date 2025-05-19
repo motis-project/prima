@@ -52,6 +52,8 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 cookieStore.clearCookies()
+                repository.stopFetchingTours()
+                repository.removeFirebaseToken()
             } catch (e: Exception) {
                 Log.d("error", "Error while logout.")
             }
@@ -67,6 +69,7 @@ class LoginViewModel @Inject constructor(
                     val resFCM = apiService
                         .sendDeviceInfo(_deviceInfo.value.deviceId, _deviceInfo.value.fcmToken)
                     if (resFCM.isSuccessful) {
+                        repository.startRefreshingTours()
                         repository.resetTokenPending()
                         _navigationEvent.emit(true)
                         Log.d("login", "User has companyID, fcmToken updated")

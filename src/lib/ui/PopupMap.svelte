@@ -12,15 +12,20 @@
 	import maplibregl from 'maplibre-gl';
 	import type { Itinerary } from '$lib/openapi';
 	import ItineraryGeoJson from './ItineraryGeoJSON.svelte';
+	import GeoJSON from '$lib/map/GeoJSON.svelte';
+	import Layer from '$lib/map/Layer.svelte';
+	import { t } from '$lib/i18n/translation';
 
 	let {
 		from = $bindable(),
 		to = $bindable(),
-		itinerary
+		itinerary,
+		areas = $bindable()
 	}: {
 		from?: Location | undefined;
 		to?: Location | undefined;
 		itinerary?: Itinerary | undefined;
+		areas?: unknown;
 	} = $props();
 
 	let fromMarker = $state<maplibregl.Marker>();
@@ -28,7 +33,7 @@
 	let level = $state(0);
 
 	let map = $state<maplibregl.Map>();
-	let center = $state<maplibregl.LngLatLike>([14.664324861365413, 51.19750601369781]);
+	let center = $state<maplibregl.LngLatLike>([14.633009555628965, 51.50654064579467]);
 
 	const geolocate = new maplibregl.GeolocateControl({
 		positionOptions: {
@@ -39,7 +44,8 @@
 
 	const init = (map: maplibregl.Map) => {
 		map.addControl(geolocate);
-		if (from || to || itinerary) {
+		if (from?.label || to?.label || itinerary) {
+			console.log(from, to, itinerary);
 			const box = new maplibregl.LngLatBounds(from?.value?.match, from?.value?.match);
 			if (to?.value?.match) {
 				box.extend(to?.value?.match);
@@ -113,6 +119,44 @@
 				<LocateFixed />
 			</Button>
 		</Control>
+		<GeoJSON id="serviceareas" data={areas as GeoJSON.GeoJSON}>
+			<Layer
+				id="areas"
+				type="fill"
+				layout={{}}
+				filter={['literal', true]}
+				paint={{
+					'fill-color': '#088',
+					'fill-opacity': 0.1,
+					'fill-outline-color': '#000'
+				}}
+			/>
+			<Layer
+				id="areas-outline"
+				type="line"
+				layout={{}}
+				filter={['literal', true]}
+				paint={{
+					'line-color': '#000',
+					'line-width': 2
+				}}
+			/>
+			<Layer
+				id="areas-labels"
+				type="symbol"
+				layout={{
+					'symbol-placement': 'point',
+					'text-field': ['concat', t.serviceArea, ['get', 'name']],
+					'text-font': ['Noto Sans Display Regular'],
+					'text-size': 16
+				}}
+				filter={['literal', true]}
+				paint={{
+					'text-color': '#000'
+				}}
+			/>
+		</GeoJSON>
+
 		{#if !itinerary}
 			<Popup trigger="click" children={contextMenu} />
 		{/if}
