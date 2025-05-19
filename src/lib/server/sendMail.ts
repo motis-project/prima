@@ -4,11 +4,22 @@ import { render } from 'svelte/server';
 import { convert } from 'html-to-text';
 import { env } from '$env/dynamic/private';
 import nodemailer from 'nodemailer';
+import Prom from 'prom-client';
 
 export type EmailContent = {
 	text: string;
 	html: string;
 };
+
+let email_errors: Prom.Counter | undefined;
+try {
+	email_errors = new Prom.Counter({
+		name: 'prima_email_errors_total',
+		help: 'Email sending errors occurred'
+	});
+} catch {
+	/* ignored */
+}
 
 export function generateMail(template: any, props: any): EmailContent {
 	const html = render(template, { props }).body;
@@ -41,6 +52,7 @@ export async function send(subject: string, email: string, content: EmailContent
 			text: content.text
 		});
 	} catch (e) {
+		email_errors?.inc();
 		console.log('Error when sending Email: ', e);
 	}
 }
