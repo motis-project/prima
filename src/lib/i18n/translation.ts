@@ -184,6 +184,8 @@ export type Translations = {
 	storeItinerary: string;
 	removeItinerary: string;
 	introduction: string;
+	serviceArea: string;
+
 	booking: {
 		bookHere: string;
 		summary: string;

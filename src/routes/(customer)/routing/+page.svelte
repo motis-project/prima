@@ -204,7 +204,7 @@
 			onValueChange={() => history.back()}
 		/>
 	{:else if page.state.showMap}
-		<PopupMap bind:from bind:to itinerary={page.state.selectedItinerary} />
+		<PopupMap bind:from bind:to itinerary={page.state.selectedItinerary} areas={data.areas} />
 	{:else if page.state.selectedItinerary}
 		<div class="flex items-center justify-between gap-4">
 			<Button variant="outline" size="icon" onclick={() => window.history.back()}>
