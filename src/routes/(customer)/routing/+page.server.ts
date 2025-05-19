@@ -183,11 +183,11 @@ export const actions = {
 		const connection2 = onlyOne
 			? null
 			: {
-				start: start2,
-				target: target2,
-				startTime: startTime2,
-				targetTime: endTime2
-			};
+					start: start2,
+					target: target2,
+					startTime: startTime2,
+					targetTime: endTime2
+				};
 
 		console.log(
 			'BOOKING: C1=',
