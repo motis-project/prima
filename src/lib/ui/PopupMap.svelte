@@ -25,7 +25,7 @@
 		from?: Location | undefined;
 		to?: Location | undefined;
 		itinerary?: Itinerary | undefined;
-		areas: unknown;
+		areas?: unknown;
 	} = $props();
 
 	let fromMarker = $state<maplibregl.Marker>();
@@ -119,7 +119,7 @@
 				<LocateFixed />
 			</Button>
 		</Control>
-		<GeoJSON id="route" data={areas as GeoJSON.GeoJSON}>
+		<GeoJSON id="serviceareas" data={areas as GeoJSON.GeoJSON}>
 			<Layer
 				id="areas"
 				type="fill"
