@@ -213,7 +213,7 @@ describe('Whitelist and Booking API Tests', () => {
 		expect(whiteResponse.direct[0]).toBe(null);
 	});
 
-	it('blacklist fail because request would require taxi to operate outside of defined shift (6:00-21:00)', async () => {
+	it('blacklist fail because request would require taxi to operate outside of defined shift (4:00-23:00)', async () => {
 		const company = await addCompany(Zone.NIESKY, inNiesky3);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));
@@ -222,7 +222,7 @@ describe('Whitelist and Booking API Tests', () => {
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(120)],
+			directTimes: [inXMinutes(240)],
 			startFixed: true,
 			capacities
 		});
@@ -233,7 +233,7 @@ describe('Whitelist and Booking API Tests', () => {
 		expect(blackResponse.direct[0]).toBe(false);
 	});
 
-	it('whitelist fail because request would require taxi to operate outside of defined shift (6:00-21:00)', async () => {
+	it('whitelist fail because request would require taxi to operate outside of defined shift (4:00-23:00)', async () => {
 		const company = await addCompany(Zone.NIESKY, inNiesky3);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));
@@ -242,7 +242,7 @@ describe('Whitelist and Booking API Tests', () => {
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(118)],
+			directTimes: [inXMinutes(238)],
 			startFixed: true,
 			capacities
 		});

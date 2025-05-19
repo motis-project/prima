@@ -1,3 +1,4 @@
+import type { PageServerLoad } from './$types';
 import { bookRide, toExpectedConnectionWithISOStrings } from '$lib/server/booking/bookRide';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
@@ -9,6 +10,7 @@ import { sendMail } from '$lib/server/sendMail';
 import NewRide from '$lib/server/email/NewRide.svelte';
 import { lockTablesStatement } from '$lib/server/db/lockTables';
 import type { Itinerary } from '$lib/openapi';
+import { sql } from 'kysely';
 
 const getCommonTour = (l1: Set<number>, l2: Set<number>) => {
 	for (const e of l1) {
@@ -359,4 +361,21 @@ export const actions = {
 		).id;
 		return redirect(302, `/bookings/${id}`);
 	}
+};
+
+export const load: PageServerLoad = async () => {
+	const areasGeoJSON = async () => {
+		return await sql`
+		SELECT 'FeatureCollection' AS TYPE,
+			array_to_json(array_agg(f)) AS features
+		FROM
+			(SELECT 'Feature' AS TYPE,
+				ST_AsGeoJSON(lg.area, 15, 0)::json As geometry,
+				json_build_object('id', lg.id, 'name', lg.name) AS properties
+			FROM zone AS lg JOIN company ON lg.id = company.zone ) AS f`.execute(db);
+	};
+
+	return {
+		areas: (await areasGeoJSON()).rows[0]
+	};
 };

@@ -116,21 +116,21 @@
 	// 5 am today
 	let base = $derived.by(() => {
 		let copy = new Date(day);
-		copy.setMinutes(copy.getMinutes() + value.toDate(TZ).getTimezoneOffset() + 300);
+		copy.setMinutes(copy.getMinutes() + value.toDate(TZ).getTimezoneOffset() + 180);
 		return copy;
 	});
 
 	// 2 pm today
 	let todayDay = $derived.by(() => {
 		let copy = new Date(base);
-		copy.setHours(base.getHours() + 9);
+		copy.setHours(base.getHours() + 11);
 		return copy;
 	});
 
 	// 10 pm today
 	let todayEvening = $derived.by(() => {
 		let copy = new Date(todayDay);
-		copy.setHours(todayDay.getHours() + 8);
+		copy.setHours(todayDay.getHours() + 10);
 		return copy;
 	});
 	console.log({ tours: data.tours });
