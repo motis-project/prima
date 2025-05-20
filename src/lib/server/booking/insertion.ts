@@ -248,7 +248,18 @@ export function evaluateNewTours(
 		where: InsertWhere.BEFORE_FIRST_EVENT,
 		direction: startFixed ? InsertDirection.BUS_STOP_PICKUP : InsertDirection.BUS_STOP_DROPOFF
 	};
-	const prepTime = Date.now() + MIN_PREP;
+	let prepTime = Date.now() + MIN_PREP;
+	const now = new Date();
+	const isWeekend =
+		(now.getDay() == 5 && now.getHours() >= 18) || now.getDay() == 6 || now.getDay() == 0;
+	if (isWeekend) {
+		const nextMonday = new Date();
+		nextMonday.setDate(nextMonday.getDate() + ((1 + 7 - nextMonday.getDay()) % 7));
+		nextMonday.setHours(10);
+		nextMonday.setMinutes(0);
+		nextMonday.setSeconds(0);
+		prepTime = nextMonday.getTime();
+	}
 
 	companies.forEach((company, companyIdx) => {
 		company.vehicles.forEach((vehicle) => {
