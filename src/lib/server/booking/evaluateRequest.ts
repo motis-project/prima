@@ -85,7 +85,7 @@ export async function evaluateRequest(
 	}
 	const allowedTimes = getAllowedTimes(earliest, latest, EARLIEST_SHIFT_START, LATEST_SHIFT_END);
 	console.log(
-		'WHITELIST REQUEST: ALLOWED TIMES (RESTRICTION FROM 6 TO 21):\n',
+		'WHITELIST REQUEST: ALLOWED TIMES (RESTRICTION FROM 4 TO 23):\n',
 		allowedTimes.map((i) => i.toString())
 	);
 	const newTourEvaluations = evaluateNewTours(
