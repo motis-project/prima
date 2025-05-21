@@ -1,12 +1,12 @@
 import { LOCALE } from '$lib/constants';
-import { PUBLIC_FIXED_PRICE } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 
 import type { Itinerary, Leg } from '$lib/openapi';
 
 export const odmPrice = (it: Itinerary, passengers: number, kids: number) =>
 	it.legs.reduce(
 		(acc: number, l: Leg) =>
-			acc + (l.mode === 'ODM' ? (passengers - kids) * parseInt(PUBLIC_FIXED_PRICE) : 0),
+			acc + (l.mode === 'ODM' ? (passengers - kids) * parseInt(env.PUBLIC_FIXED_PRICE) : 0),
 		0
 	);
 
