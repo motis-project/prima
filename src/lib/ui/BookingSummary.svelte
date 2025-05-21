@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from '$lib/i18n/translation';
+	import { getEuroString } from '$lib/util/odmPrice';
 
 	const {
 		passengers,
@@ -20,7 +21,7 @@
 
 	<li>
 		{t.booking.totalPrice}:
-		<span class="font-bold">{price} €</span>
+		<span class="font-bold">{getEuroString(price)}</span>
 	</li>
 
 	<li>{t.booking.bookingFor(passengers)}</li>

@@ -1,4 +1,4 @@
-import { CAP, FIXED_PRICE, OVER_CAP_FACTOR } from '$lib/constants';
+import { CAP, OVER_CAP_FACTOR } from '$lib/constants';
 import { db } from '$lib/server/db';
 import { getToursWithRequests } from '$lib/server/db/getTours';
 import type { TourWithRequests } from '$lib/util/getToursTypes';
@@ -139,6 +139,10 @@ export async function getCompanyCosts(companyId?: number) {
 							: 0) + acc,
 					0
 				);
+				const tourVerifiedTicketsPrice = tour.requests.reduce(
+					(acc, current) => (current.ticketChecked ? current.ticketPrice : 0) + acc,
+					0
+				);
 				costPerDayAndVehicle[dayIdx].set(tour.vehicleId, {
 					taxameter:
 						(costPerDayAndVehicle[dayIdx].get(tour.vehicleId)?.taxameter ?? 0) + tourTaxameter,
@@ -156,8 +160,7 @@ export async function getCompanyCosts(companyId?: number) {
 						!tour.requests.flatMap((request) => request.events).some((e) => e.ticketChecked) &&
 						tour.endTime > Date.now()
 							? 0
-							: (tourVerifiedCustomerCount === 0 ? 0 : tourTaxameter) -
-								tourVerifiedCustomerCount * FIXED_PRICE),
+							: (tourVerifiedCustomerCount === 0 ? 0 : tourTaxameter) - tourVerifiedTicketsPrice),
 					availabilityDuration: availabilitiesPerDayAndVehicle[dayIdx].get(tour.vehicleId) ?? 0,
 					companyName: companyByVehicle.get(tour.vehicleId)!.name,
 					licensePlate: companyByVehicle.get(tour.vehicleId)!.licensePlate,

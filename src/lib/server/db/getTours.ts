@@ -107,6 +107,7 @@ export const getToursWithRequests = async (
 						'request.kidsThreeToFour',
 						'request.kidsFiveToSix',
 						'request.ticketChecked',
+						'request.ticketPrice',
 						jsonArrayFrom(
 							eb
 								.selectFrom('event')
@@ -135,6 +136,7 @@ export const getToursWithRequests = async (
 									'request.luggage',
 									'request.passengers',
 									'request.ticketChecked',
+									'request.ticketPrice',
 									'request.wheelchairs',
 									'request.id as requestId'
 								])

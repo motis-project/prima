@@ -92,7 +92,8 @@ export const setRequest = async (
 			cancelled: false,
 			kidsFiveToSix: 0,
 			kidsThreeToFour: 0,
-			kidsZeroToTwo: 0
+			kidsZeroToTwo: 0,
+			ticketPrice: (passengers ?? 1) * 300
 		})
 		.returning('id')
 		.executeTakeFirstOrThrow();

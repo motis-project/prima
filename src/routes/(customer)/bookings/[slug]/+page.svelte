@@ -17,7 +17,6 @@
 	import { t } from '$lib/i18n/translation';
 	import * as Card from '$lib/shadcn/card';
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
-	import { odmPrice } from '$lib/util/odmPrice';
 	import { MapIcon } from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
@@ -111,11 +110,7 @@
 					passengers={data.passengers!}
 					wheelchair={data.wheelchairs !== 0}
 					luggage={data.luggage!}
-					price={odmPrice(
-						data.journey,
-						data.passengers!,
-						data.kidsZeroToTwo! + data.kidsThreeToFour! + data.kidsFiveToSix!
-					)}
+					price={data.ticketPrice!}
 				/>
 			</Card.Content>
 		</Card.Root>
