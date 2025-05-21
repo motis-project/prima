@@ -6,7 +6,7 @@
 	import Map from '$lib/map/Map.svelte';
 	import Popup from '$lib/map/Popup.svelte';
 	import Marker from '$lib/map/Marker.svelte';
-	import { PUBLIC_MOTIS_URL } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 	import { getStyle } from '$lib/map/style';
 	import Control from '$lib/map/Control.svelte';
 	import maplibregl from 'maplibre-gl';
@@ -99,7 +99,7 @@
 		bind:map
 		transformRequest={(url: string) => {
 			if (url.startsWith('/')) {
-				return { url: `${PUBLIC_MOTIS_URL}/tiles${url}` };
+				return { url: `${env.PUBLIC_MOTIS_URL}/tiles${url}` };
 			}
 		}}
 		{center}

@@ -392,7 +392,9 @@ export const load: PageServerLoad = async () => {
 			(SELECT 'Feature' AS TYPE,
 				ST_AsGeoJSON(lg.area, 15, 0)::json As geometry,
 				json_build_object('id', lg.id, 'name', lg.name) AS properties
-			FROM zone AS lg JOIN company ON lg.id = company.zone ) AS f`.execute(db);
+			FROM zone AS lg WHERE EXISTS (SELECT company.id FROM company WHERE lg.id = company.zone )) AS f`.execute(
+			db
+		);
 	};
 
 	return {

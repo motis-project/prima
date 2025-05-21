@@ -24,7 +24,7 @@
 	import { polylineToGeoJSON } from '$lib/util/polylineToGeoJSON';
 	import { getTourInfoShort } from '$lib/util/getTourInfoShort';
 	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
-	import { PUBLIC_MOTIS_URL } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 	import CancelMessageDialog from './CancelMessageDialog.svelte';
 	import TableHead from '$lib/shadcn/table/table-head.svelte';
 	import { BabyIcon } from 'lucide-svelte';
@@ -237,7 +237,7 @@
 			center={company}
 			transformRequest={(url) => {
 				if (url.startsWith('/')) {
-					return { url: `${PUBLIC_MOTIS_URL}/tiles${url}` };
+					return { url: `${env.PUBLIC_MOTIS_URL}/tiles${url}` };
 				}
 			}}
 			style={getStyle('light', 0)}

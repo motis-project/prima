@@ -12,7 +12,7 @@
 	import { getStyle } from '$lib/map/style';
 	import Map from '$lib/map/Map.svelte';
 	import Message from '$lib/ui/Message.svelte';
-	import { PUBLIC_MOTIS_URL } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 
 	const { data, form } = $props();
 
@@ -129,7 +129,7 @@
 			{center}
 			transformRequest={(url) => {
 				if (url.startsWith('/')) {
-					return { url: `${PUBLIC_MOTIS_URL}/tiles${url}` };
+					return { url: `${env.PUBLIC_MOTIS_URL}/tiles${url}` };
 				}
 			}}
 			style={getStyle('light', 0)}

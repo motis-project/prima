@@ -3,7 +3,7 @@ import { oneToMany, type Duration } from '$lib/openapi';
 import type { QuerySerializerOptions } from '@hey-api/client-fetch';
 import { SECOND, secondToMilli } from '../../util/time';
 import maplibregl from 'maplibre-gl';
-import { PUBLIC_MOTIS_URL } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 
 function lngLatToStr(pos: maplibregl.LngLatLike) {
 	const p = maplibregl.LngLat.convert(pos);
@@ -16,7 +16,7 @@ export const oneToManyCarRouting = async (
 	arriveBy: boolean
 ): Promise<(number | undefined)[]> => {
 	return await oneToMany({
-		baseUrl: PUBLIC_MOTIS_URL,
+		baseUrl: env.PUBLIC_MOTIS_URL,
 		querySerializer: { array: { explode: false } } as QuerySerializerOptions,
 		query: {
 			one: lngLatToStr(one),

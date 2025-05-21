@@ -7,7 +7,7 @@ import { type Database } from '$lib/server/db';
 import { sql, Transaction } from 'kysely';
 import { sendNotifications } from '$lib/server/firebase/notifications';
 import { TourChange } from '$lib/server/firebase/firebase';
-import { PUBLIC_FIXED_PRICE } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 
 export async function insertRequest(
 	connection: Insertion,
@@ -56,7 +56,7 @@ export async function insertRequest(
 
 	const ticketPrice =
 		(capacities.passengers - kidsZeroToTwo - kidsThreeToFour - kidsFiveToSix) *
-		parseInt(PUBLIC_FIXED_PRICE);
+		parseInt(env.PUBLIC_FIXED_PRICE);
 	const requestId = (
 		await sql<{ request: number }>`
         SELECT create_and_merge_tours(
