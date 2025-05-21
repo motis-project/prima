@@ -91,6 +91,7 @@ export interface Database {
 		customer: number;
 		ticketCode: string;
 		ticketChecked: boolean;
+		ticketPrice: number;
 		cancelled: boolean;
 	};
 	journey: {

@@ -1,5 +1,6 @@
-import { CAP, FIXED_PRICE, LOCALE } from '$lib/constants';
+import { CAP, LOCALE } from '$lib/constants';
 import type { TourWithRequests } from '$lib/util/getToursTypes';
+import { getEuroString } from '$lib/util/odmPrice';
 import { HOUR, MINUTE, SECOND } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
@@ -27,12 +28,6 @@ export type Column<T> = {
 	toTableEntry: (r: T) => string | number;
 	toColumnStyle?: (r: T) => string;
 	hidden?: boolean;
-};
-
-export const getEuroString = (price: number | null) => {
-	return new Intl.NumberFormat(LOCALE, { style: 'currency', currency: 'EUR' }).format(
-		(price ?? 0) / 100
-	);
 };
 
 const getCustomerCount = (tour: TourWithRequests, countOnlyVerified: boolean) => {
@@ -78,7 +73,10 @@ const getTourCost = (tour: TourWithRequests) => {
 	return isPlanned(tour)
 		? 0
 		: (getCustomerCount(tour, true) === 0 ? 0 : (tour.fare ?? 0)) -
-				FIXED_PRICE * (getCustomerCount(tour, true) - getKidsCount(tour, true));
+				tour.requests.reduce(
+					(acc, current) => (current.ticketChecked ? current.ticketPrice : 0) + acc,
+					0
+				);
 };
 
 const displayDuration = (duration: number) => {

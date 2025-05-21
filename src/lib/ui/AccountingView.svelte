@@ -11,10 +11,10 @@
 	import * as Dialog from '$lib/shadcn/dialog';
 	import { CalendarDate } from '@internationalized/date';
 	import { groupBy } from '$lib/util/groupBy';
+	import { getEuroString } from '$lib/util/odmPrice';
 	import {
 		companyColsAdmin,
 		companyColsCompany,
-		getEuroString,
 		subtractionColsAdmin,
 		subtractionColsCompany,
 		tourColsAdmin,

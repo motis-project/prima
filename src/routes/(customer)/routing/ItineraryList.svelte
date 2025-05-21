@@ -5,7 +5,7 @@
 	import Info from 'lucide-svelte/icons/info';
 	import { t, language } from '$lib/i18n/translation';
 	import ItinerarySummary from './ItinerarySummary.svelte';
-	import { odmPrice } from '$lib/util/odmPrice';
+	import { odmPrice, getEuroString } from '$lib/util/odmPrice';
 
 	let {
 		routingResponses,
@@ -32,7 +32,7 @@
 </script>
 
 {#snippet odmInfo(it: Itinerary)}
-	<Info class="size-4" /> {t.booking.bookHere} {odmPrice(it, passengers, kids)} €
+	<Info class="size-4" /> {t.booking.bookHere} {getEuroString(odmPrice(it, passengers, kids))}
 {/snippet}
 
 {#if baseResponse}
