@@ -204,7 +204,7 @@ const translations: Translations = {
 	storeItinerary: 'Save Itinerary',
 	removeItinerary: 'Remove Itinerary',
 	introduction:
-		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und später Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Bisher ist die Region um Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife, Trebendorf, Weißkeißel und Weißwasser/O.L. eingebunden. Die Bedienzeiten der ÖPNV-Taxis liegen in der Regel zwischen 5 und 22 Uhr und können direkt in der obigen Fahrplanauskunft für 3€ pro Person (kostenlos im Mai!) gebucht werden.',
+		'The <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> project augments public transport with on-demand taxis and, later, ride-sharing options. The goal is to ensure a service at least every two hours, even in rural areas and at off-peak times. So far, the region around Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife, Trebendorf, Weißkeißel, and Weißwasser/O.L. in Germany is included. Public transport taxis generally operate between 5 a.m. and 10 p.m. and can be booked directly using the timetable information above for €3 per person (free in May!). Bookings must be made at least one hour in advance, or by 6 p.m. on Fridays for weekends.',
 	serviceArea: 'Service area ',
 
 	booking: {
