@@ -164,6 +164,7 @@ export function evaluateBothInsertion(
 		nextLegDuration == undefined ||
 		passengerDuration == undefined
 	) {
+		console.log('duration undefined', prevLegDuration, nextLegDuration, passengerDuration);
 		return undefined;
 	}
 	const arrivalWindow = getArrivalWindow(
@@ -176,12 +177,24 @@ export function evaluateBothInsertion(
 		allowedTimes
 	);
 	if (arrivalWindow == undefined) {
+		console.log(
+			'arrival window undefined',
+			insertionCase,
+			windows,
+			passengerDuration,
+			busStopWindow,
+			prevLegDuration,
+			nextLegDuration,
+			allowedTimes
+		);
+
 		return undefined;
 	}
 	if (
 		promisedTimes != undefined &&
 		!keepsPromises(insertionCase, arrivalWindow, passengerDuration, promisedTimes)
 	) {
+		console.log('promise not kept', promisedTimes);
 		return undefined;
 	}
 	const taxiDuration =
