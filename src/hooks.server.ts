@@ -8,6 +8,9 @@ import admin from 'firebase-admin';
 import Prom from 'prom-client';
 import { env } from '$env/dynamic/private';
 
+import consoleStamp from 'console-stamp';
+consoleStamp(console);
+
 const authHandle: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get('session');
 	const session = await validateSessionToken(token);
