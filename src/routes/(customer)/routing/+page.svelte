@@ -194,14 +194,14 @@
 			placeholder={t.from}
 			bind:selected={from}
 			items={fromItems}
-			onValueChange={() => history.back()}
+			onValueChange={() => pushState('', {})}
 		/>
 	{:else if page.state.selectTo}
 		<AddressTypeahead
 			placeholder={t.to}
 			bind:selected={to}
 			items={toItems}
-			onValueChange={() => history.back()}
+			onValueChange={() => pushState('', {})}
 		/>
 	{:else if page.state.showMap}
 		<PopupMap bind:from bind:to itinerary={page.state.selectedItinerary} areas={data.areas} />
