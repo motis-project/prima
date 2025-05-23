@@ -84,6 +84,7 @@ export const getNextLegDuration = (
 		? relevantRoutingResults.company[insertionInfo.companyIdx]
 		: relevantRoutingResults.event[insertionInfo.nextEventIdxInRoutingResults];
 	if (drivingTime == undefined || drivingTime > MAX_TRAVEL) {
+		console.log('driving time undefined', drivingTime);
 		return undefined;
 	}
 	return drivingTime + PASSENGER_CHANGE_DURATION + BUFFER_TIME;

@@ -86,6 +86,7 @@ export async function bookRide(
 		)
 	)[0][0];
 	if (best == undefined) {
+		console.log('surprisingly no possible connection found: ', userChosen, busStop, busTime, best);
 		return undefined;
 	}
 	const events = companies[best.company].vehicles.find((v) => v.id == best.vehicle)!.events;

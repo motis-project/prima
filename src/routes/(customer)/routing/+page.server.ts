@@ -98,7 +98,8 @@ export const actions = {
 			toLat2,
 			toLng2,
 			startTime2,
-			endTime2
+			endTime2,
+			user
 		});
 
 		if (

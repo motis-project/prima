@@ -56,7 +56,6 @@ export async function sendPushNotification(
 			}
 		});
 	} catch (error: unknown) {
-		firebase_errors?.inc();
 		if (isFCMError(error)) {
 			console.error('FCM error:', error.code);
 
@@ -71,7 +70,11 @@ export async function sendPushNotification(
 						e
 					);
 				}
+			} else {
+				firebase_errors?.inc();
 			}
+		} else {
+			firebase_errors?.inc();
 		}
 	}
 }
