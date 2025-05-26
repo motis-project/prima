@@ -344,7 +344,6 @@
 		bind:selectedRow={selectedToursTableRow}
 		bindSelectedRow={true}
 	/>
-
 	<TourDialog bind:tours={selectedToursTableRow} {isAdmin} />
 {/snippet}
 
@@ -368,6 +367,8 @@
 		rows={currentFeedbackRows}
 		cols={feedbackCols}
 		bind:selectedRow={selectedFeedbackRowFull}
+		bindSelectedRow={true}
+		getRowStyle={(_) => 'cursor-pointer '}
 	/>
 	<TourDialog bind:tours={selectedFeedbackRow} {isAdmin} />
 {/snippet}

@@ -2,7 +2,7 @@
 	import * as Table from '$lib/shadcn/table/index';
 	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button } from '$lib/shadcn/button';
-	import type { SvelteComponent } from 'svelte';
+	import type { Column } from './tableData';
 
 	let {
 		rows = $bindable(),
@@ -13,14 +13,7 @@
 		fixLastRow
 	}: {
 		rows: T[];
-		cols: {
-			text: string[];
-			sort?: (r1: T, r2: T) => number;
-			toTableEntry: (r: T) => string | number;
-			toColumnStyle?: (r: T) => string;
-			hidden?: boolean;
-			toComponent?: (r: T) => typeof SvelteComponent | null;
-		}[];
+		cols: Column<T>[];
 		getRowStyle?: (row: T) => string;
 		selectedRow?: undefined | T[];
 		bindSelectedRow?: boolean;
@@ -87,11 +80,7 @@
 					{#each cols as col}
 						{#if !col.hidden}
 							<Table.Cell class={col.toColumnStyle ? col.toColumnStyle(row) : ''}>
-								{#if col.toComponent}
-									{col.toComponent(row)}
-								{:else}
-									{col.toTableEntry(row)}
-								{/if}
+								{col.toTableEntry(row)}
 							</Table.Cell>
 						{/if}
 					{/each}
