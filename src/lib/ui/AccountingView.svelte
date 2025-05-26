@@ -15,12 +15,14 @@
 	import {
 		companyColsAdmin,
 		companyColsCompany,
+		feedbackCols,
 		subtractionColsAdmin,
 		subtractionColsCompany,
 		tourColsAdmin,
 		tourColsCompany,
 		type Column,
 		type CompanyRow,
+		type RatedTourWithRequests,
 		type Subtractions
 	} from './tableData.js';
 	import { LOCALE, MONTHS, QUARTERS } from '$lib/constants.js';
@@ -106,6 +108,19 @@
 	let currentRowsToursTable: TourWithRequests[] = $state(tours);
 	let currentRowsSubtractionsTable: Subtractions[] = $state(costPerDayAndVehicle);
 	let currentCompanyRows: CompanyRow[] = $state(updateCompanySums(costPerDayAndVehicle));
+	let currentFeedbackRows: RatedTourWithRequests[] = $derived(
+		currentRowsToursTable.flatMap((t) =>
+			t.requests
+				.filter((r) => r.comment !== null || r.rating !== null)
+				.map((r) => {
+					return {
+						...t,
+						comment: r.comment,
+						rating: r.rating
+					};
+				})
+		)
+	);
 
 	const getNewSum = (rows: Subtractions[]) => {
 		let newSum = 0;
@@ -269,7 +284,8 @@
 	let tables = [
 		{ label: 'pro Tour', value: 1, component: tourTable },
 		{ label: 'pro Tag und Fahrzeug', value: 2, component: subtractionTable },
-		{ label: isAdmin ? 'pro Unternehmen' : 'Summe', value: 3, component: companyTable }
+		{ label: isAdmin ? 'pro Unternehmen' : 'Summe', value: 3, component: companyTable },
+		{ label: 'Feedback', value: 4, component: feedbackTable }
 	];
 
 	let selectedCompletedToursIdx = $state(-1);
@@ -301,6 +317,14 @@
 	}
 
 	let selectedToursTableRow: TourWithRequests[] | undefined = $state(undefined);
+	let selectedFeedbackRowFull: RatedTourWithRequests[] | undefined = $state(undefined);
+	let selectedFeedbackRow: TourWithRequests[] | undefined = $state(undefined);
+	$effect(() => {
+		if (selectedFeedbackRowFull !== undefined) {
+			const { rating: _rating, comment: _comment, ...rest } = selectedFeedbackRowFull[0];
+			selectedFeedbackRow = [rest];
+		}
+	});
 
 	$effect(() => {
 		if (selectedTourId != undefined) {
@@ -316,7 +340,6 @@
 	<SortableTable
 		bind:rows={currentRowsToursTable}
 		cols={isAdmin ? tourColsAdmin : tourColsCompany}
-		{isAdmin}
 		getRowStyle={(_) => 'cursor-pointer '}
 		bind:selectedRow={selectedToursTableRow}
 		bindSelectedRow={true}
@@ -329,7 +352,6 @@
 	<SortableTable
 		bind:rows={currentRowsSubtractionsTable}
 		cols={isAdmin ? subtractionColsAdmin : subtractionColsCompany}
-		{isAdmin}
 	/>
 {/snippet}
 
@@ -337,9 +359,17 @@
 	<SortableTable
 		bind:rows={currentCompanyRows}
 		cols={isAdmin ? companyColsAdmin : companyColsCompany}
-		{isAdmin}
 		fixLastRow={isAdmin}
 	/>
+{/snippet}
+
+{#snippet feedbackTable()}
+	<SortableTable
+		rows={currentFeedbackRows}
+		cols={feedbackCols}
+		bind:selectedRow={selectedFeedbackRowFull}
+	/>
+	<TourDialog bind:tours={selectedFeedbackRow} {isAdmin} />
 {/snippet}
 
 {#snippet filterOptions()}
