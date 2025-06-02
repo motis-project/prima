@@ -73,7 +73,11 @@ data class Event(
     val requestId: Int,
     val ticketHash: String,
     val ticketChecked: Boolean,
-    val cancelled: Boolean
+    val cancelled: Boolean,
+    val ticketPrice: Int,
+    val kidsZeroToTwo: Int,
+    val kidsThreeToFour: Int,
+    val kidsFiveToSix: Int,
 )
 
 data class Tour(

@@ -1,5 +1,6 @@
 package de.motis.prima
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -281,6 +282,7 @@ fun EventGroup(
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun ShowCustomerDetails(
     event: EventObject,
@@ -289,6 +291,8 @@ fun ShowCustomerDetails(
     val context = LocalContext.current
     val storedTickets = viewModel.storedTickets.collectAsState()
     var validCount = 0
+
+    val fareToPay: Double = (event.passengers - event.kidsFiveToSix - event.kidsThreeToFour - event.kidsZeroToTwo).toDouble() * event.ticketPrice / 100;
 
     Card(
         modifier = Modifier
@@ -444,6 +448,12 @@ fun ShowCustomerDetails(
                     if (hasValidTicket) {
                         ticketStatus = ValidationStatus.DONE
                     }
+
+                    Text(
+                        text = "${String.format("%.2f", fareToPay)} €",
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
 
                     Box(
                         modifier = Modifier

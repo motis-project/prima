@@ -48,6 +48,10 @@ class EventObject : RealmObject {
     var ticketHash: String = ""
     var ticketChecked: Boolean = false
     var cancelled: Boolean = false
+    var ticketPrice: Int = 0
+    var kidsZeroToTwo: Int = 0
+    var kidsThreeToFour: Int = 0
+    var kidsFiveToSix: Int = 0
 }
 
 data class EventObjectGroup(
@@ -164,7 +168,11 @@ class TourStore @Inject constructor(private var realm: Realm) {
                     requestId = e.requestId,
                     ticketHash = e.ticketHash,
                     ticketChecked = e.ticketChecked,
-                    cancelled = e.cancelled
+                    cancelled = e.cancelled,
+                    ticketPrice = e.ticketPrice,
+                    kidsZeroToTwo = e.kidsZeroToTwo,
+                    kidsThreeToFour= e.kidsThreeToFour,
+                    kidsFiveToSix = e.kidsFiveToSix
                 ))
             }
 
