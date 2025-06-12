@@ -210,8 +210,17 @@ const translations: Translations = {
 	storeItinerary: 'Reisekette speichern',
 	removeItinerary: 'Reisekette entfernen',
 	introduction:
-		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und später Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Bisher ist die Region um Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife, Trebendorf, Weißkeißel und Weißwasser/O.L. eingebunden. Die Bedienzeiten der ÖPNV-Taxis liegen in der Regel zwischen 5 und 22 Uhr und können direkt in der obigen Fahrplanauskunft für 3€ pro Person (kostenlos im Mai!) gebucht werden. Die Buchung muss mindestens eine Stunde im Voraus erfolgen bzw. bis Freitag 18 Uhr für das Wochenende.',
+		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und in Zukunft auch Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten.',
+	publicTransitTaxi: 'ÖPNV-Taxi',
 	serviceArea: 'Bediengebiet ',
+	serviceTime: 'Bedienzeit',
+	serviceTimeContent: 'i.d.R. 05:00 - 22:00 Uhr (abhängig von Taxiverfügbarkeit)',
+	regionAround: 'Region um',
+	perPerson: 'pro Person',
+	perRide: 'pro Fahrt',
+	fare: 'Fahrpreis',
+	bookingDeadline: 'Buchungsschluss',
+	bookingDeadlineContent: 'min. 1 Stunde im Voraus, bei Buchungen für das Wochenende bis Freitag 18 Uhr',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',

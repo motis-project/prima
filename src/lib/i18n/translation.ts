@@ -184,7 +184,16 @@ export type Translations = {
 	storeItinerary: string;
 	removeItinerary: string;
 	introduction: string;
+	publicTransitTaxi: string;
 	serviceArea: string;
+	serviceTime: string;
+	serviceTimeContent: string;
+	regionAround: string;
+	perPerson: string;
+	perRide: string;
+	fare: string;
+	bookingDeadline: string;
+	bookingDeadlineContent: string;
 
 	booking: {
 		bookHere: string;
