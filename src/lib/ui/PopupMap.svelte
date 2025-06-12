@@ -146,7 +146,7 @@
 				type="symbol"
 				layout={{
 					'symbol-placement': 'point',
-					'text-field': ['concat', t.serviceArea, ['get', 'name']],
+					'text-field': ['concat', t.serviceArea + ' ', ['get', 'name']],
 					'text-font': ['Noto Sans Display Regular'],
 					'text-size': 16
 				}}
