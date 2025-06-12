@@ -220,7 +220,8 @@ const translations: Translations = {
 	perRide: 'pro Fahrt',
 	fare: 'Fahrpreis',
 	bookingDeadline: 'Buchungsschluss',
-	bookingDeadlineContent: 'min. 1 Stunde im Voraus, bei Buchungen für das Wochenende bis Freitag 18 Uhr',
+	bookingDeadlineContent:
+		'min. 1 Stunde im Voraus, bei Buchungen für das Wochenende bis Freitag 18 Uhr',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',

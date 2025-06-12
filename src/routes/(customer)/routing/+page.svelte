@@ -504,12 +504,15 @@
 					updateStartDest={updateStartDest(from, to)}
 				/>
 			</div>
-			<div class="mx-auto mt-6 text-sm space-y-2">
+			<div class="mx-auto mt-6 space-y-2 text-sm">
 				<em>{@html t.publicTransitTaxi}</em>
-				<p><strong>{@html t.fare}</strong>:<br>3€ {@html t.perPerson} {@html t.perRide}</p>
-				<p><strong>{@html t.bookingDeadline}</strong>:<br>{@html t.bookingDeadlineContent}</p>	
-				<p><strong>{@html t.serviceArea}</strong>:<br>{@html t.regionAround} Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife, Trebendorf, Weißkeißel Weißwasser/O.L.<br></p>
-				<p><strong>{@html t.serviceTime}</strong>:<br>{@html t.serviceTimeContent}</p>							
+				<p><strong>{@html t.fare}</strong>:<br />3€ {@html t.perPerson} {@html t.perRide}</p>
+				<p><strong>{@html t.bookingDeadline}</strong>:<br />{@html t.bookingDeadlineContent}</p>
+				<p>
+					<strong>{@html t.serviceArea}</strong>:<br />{@html t.regionAround} Bad Muskau, Boxberg/O.L.,
+					Gablenz, Groß Düben, Krauschwitz, Schleife, Trebendorf, Weißkeißel Weißwasser/O.L.<br />
+				</p>
+				<p><strong>{@html t.serviceTime}</strong>:<br />{@html t.serviceTimeContent}</p>
 			</div>
 			<p class="mx-auto mt-6 text-sm">
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
