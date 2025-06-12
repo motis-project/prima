@@ -204,8 +204,17 @@ const translations: Translations = {
 	storeItinerary: 'Save Itinerary',
 	removeItinerary: 'Remove Itinerary',
 	introduction:
-		'The <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> project augments public transport with on-demand taxis and, later, ride-sharing options. The goal is to ensure a service at least every two hours, even in rural areas and at off-peak times. So far, the region around Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife, Trebendorf, Weißkeißel, and Weißwasser/O.L. in Germany is included. Public transport taxis generally operate between 5 a.m. and 10 p.m. and can be booked directly using the timetable information above for €3 per person (free in May!). Bookings must be made at least one hour in advance, or by 6 p.m. on Fridays for weekends.',
-	serviceArea: 'Service area ',
+		'The <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> project augments public transport with on-demand taxis and, later, ride-sharing options. The goal is to ensure a service at least every two hours, even in rural areas and at off-peak times.',
+	publicTransitTaxi: 'Public-transit Taxi',
+	serviceArea: 'Service area',
+	serviceTime: 'Service time',
+	serviceTimeContent: 'generally between 5 a.m. and 10 p.m. (depending on taxi availability)',
+	regionAround: 'Region around',
+	perPerson: 'per person',
+	perRide: 'per ride',
+	fare: 'Fare',
+	bookingDeadline: 'Booking deadline',
+	bookingDeadlineContent: 'at least 1 hour in advance, weekend bookings until Friday 6 p.m.',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
