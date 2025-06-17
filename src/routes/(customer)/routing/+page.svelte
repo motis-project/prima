@@ -182,6 +182,8 @@
 	const applyPosition = (position: { coords: { latitude: number; longitude: number } }) => {
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
 	};
+
+	let loading = $state(false);
 </script>
 
 <Meta title={PUBLIC_PROVIDER} />
@@ -248,7 +250,19 @@
 									page.state.selectedItinerary.legs.length === 1 &&
 									page.state.selectedItinerary.legs[0].mode === 'ODM'}
 
-								<form method="post" action="?/bookItineraryWithOdm" use:enhance>
+								<form
+									method="post"
+									action="?/bookItineraryWithOdm"
+									use:enhance={() => {
+										loading = true;
+										return async ({ update }) => {
+											await update();
+											window.setTimeout(() => {
+												loading = false;
+											}, 5000);
+										};
+									}}
+								>
 									<input
 										type="hidden"
 										name="json"
@@ -304,7 +318,9 @@
 									<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
 									<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
 									<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
-									<Button type="submit" variant="outline">{t.booking.header}</Button>
+									<Button type="submit" variant="outline" disabled={loading}
+										>{t.booking.header}</Button
+									>
 								</form>
 							</Dialog.Footer>
 						</Dialog.Content>
