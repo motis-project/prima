@@ -14,6 +14,8 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 		JSON.stringify({ requestId, userId }, null, '\t'),
 		' Cancel Request PARAMS END'
 	);
+	let emails = new Array<Promise<void>>();
+	let notifications: Promise<void> | undefined = undefined;
 	await db.transaction().execute(async (trx) => {
 		await lockTablesStatement(['tour', 'request', 'event', 'user']).execute(trx);
 		const tour = await trx
@@ -105,27 +107,25 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 			);
 			return;
 		}
-		for (const companyOwner of tourInfo.companyOwners) {
-			try {
-				await sendMail(CancelNotificationCompany, 'Stornierte Buchung', companyOwner.email, {
-					events: tourInfo.events,
-					name: companyOwner.name,
-					departure: tourInfo.departure
-				});
-			} catch {
+		emails = tourInfo.companyOwners.map((owner) =>
+			sendMail(CancelNotificationCompany, 'Stornierte Buchung', owner.email, {
+				events: tourInfo.events,
+				name: owner.name,
+				departure: tourInfo.departure
+			}).catch(() =>
 				console.log(
 					'Failed to send cancellation email to company with email: ',
-					companyOwner.email,
+					owner.email,
 					' tourId: ',
 					tourInfo.id
-				);
-			}
-		}
+				)
+			)
+		);
 
 		const firstEvent = tour.requests.flatMap((r) => r.events).sort((e) => e.scheduledTimeStart)[0];
 		const wheelchairs = tour.requests.reduce((prev, curr) => prev + curr.wheelchairs, 0);
 		if (firstEvent.requestId === requestId && tourInfo.companyOwners.length !== 0) {
-			await sendNotifications(tourInfo.companyOwners[0].companyId, {
+			notifications = sendNotifications(tourInfo.companyOwners[0].companyId, {
 				tourId: tour.tourId,
 				pickupTime: getScheduledEventTime(firstEvent),
 				vehicleId: tourInfo.vehicle,
@@ -136,4 +136,8 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 
 		console.log('Cancel Request - success', { requestId, userId });
 	});
+	await Promise.all(emails);
+	if (notifications) {
+		await notifications;
+	}
 };

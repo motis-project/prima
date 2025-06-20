@@ -23,6 +23,8 @@ export const POST = async (event: RequestEvent) => {
 		console.log('Cancel Tour early exit - invalid params tourId: ', p.tour);
 		return json({});
 	}
+	let emails = new Array<Promise<void>>();
+	let notifications = undefined;
 	await db.transaction().execute(async (trx) => {
 		await lockTablesStatement(['tour', 'request', 'event', 'user', 'vehicle']).execute(trx);
 		const tour = await trx
@@ -76,30 +78,26 @@ export const POST = async (event: RequestEvent) => {
 			});
 		}
 		await sql`CALL cancel_tour(${p.tourId}, ${company}, ${p.message})`.execute(trx);
-		console.assert(tour.requests.length != 0, 'Found a tour with no requests');
-		for (const request of tour.requests) {
-			console.assert(request.events.length != 0, 'Found a request with no events');
-			try {
-				await sendMail(CancelNotificationCustomer, 'Stornierte Buchung', request.email, {
-					start: request.events[0].address,
-					target: request.events[1].address,
-					startTime: request.events[0].communicatedTime,
-					name: request.name
-				});
-			} catch {
+
+		emails = tour.requests.map((request) =>
+			sendMail(CancelNotificationCustomer, 'Stornierte Buchung', request.email, {
+				start: request.events[0].address,
+				target: request.events[1].address,
+				startTime: request.events[0].communicatedTime,
+				name: request.name
+			}).catch(() =>
 				console.log(
 					'Failed to send cancellation email to customer with email: ',
 					request.email,
 					' tourId: ',
 					p.tourId
-				);
-				return json({});
-			}
-		}
+				)
+			)
+		);
 
 		const firstEvent = tour.requests.flatMap((r) => r.events).sort((e) => e.scheduledTimeStart)[0];
 		const wheelchairs = tour.requests.reduce((prev, curr) => prev + curr.wheelchairs, 0);
-		await sendNotifications(company, {
+		notifications = sendNotifications(company, {
 			tourId: p.tourId,
 			pickupTime: getScheduledEventTime(firstEvent),
 			vehicleId: tour.vehicle,
@@ -107,6 +105,10 @@ export const POST = async (event: RequestEvent) => {
 			change: TourChange.CANCELLED
 		});
 	});
+	if (notifications) {
+		await notifications;
+	}
+	Promise.all(emails);
 	console.log('Cancel Tour succes. tourId: ', p.tour);
 	return json({});
 };
