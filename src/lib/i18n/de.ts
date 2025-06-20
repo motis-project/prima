@@ -44,6 +44,16 @@ const translations: Translations = {
 			'Bitte prüfen Sie Ihr E-Mail-Postfach um Ihre neue E-Mail-Adresse zu verifizieren.',
 		passwordResetSuccess:
 			'Passwort erfolgreich zurückgesetzt. Sie können sich jetzt mit dem neuen Passwort anmelden.',
+		remainingTours:
+			'Ihr Account kann nicht gelöscht werden so lange sie der einzige Unternehmensadministrator in ihrem Unternehmen sind und es noch geplante Fahrten für Ihr Unternehmen gibt.',
+		remainingAvailabilities:
+			'Ihr Account kann nicht gelöscht werden so lange sie der einzige Unternehmensadministrator in ihrem Unternehmen sind und es noch Verfügbarkeiten in der Zukunft für Ihr Unternehmen gibt.',
+		remainingRequests:
+			'Ihr Account kann nicht gelöscht werden so lange sie ausstehende Taxifahrten haben.',
+		remainingToursAndAvailabilities:
+			'Ihr Account kann nicht gelöscht werden so lange sie der einzige Unternehmensadministrator in ihrem Unternehmen sind und es noch geplante Fahrten und Verfügbarkeiten in der Zukunft für Ihr Unternehmen gibt.',
+		deleteAccount:
+			'Vorsicht, das Löschen Ihres Accounts kann nicht Rückgängig gemacht werden. Wir können Ihren Account nur löschen, falls Sie in der Zukunft keine geplanten Fahrten haben.',
 
 		// Admin
 		userDoesNotExist: 'Nutzer existiert nicht.',
@@ -130,6 +140,7 @@ const translations: Translations = {
 		changePhoneSubtitle: 'Ändern Sie Ihre Telefonnummer.',
 		logout: 'Abmelden',
 		logoutSubtitle: 'Aus dem Konto abmelden. Sie können sich jederzeit wieder anmelden.',
+		deleteAccount: 'Konto löschen',
 		code: 'Code',
 		passwordReset: 'Passwort zurücksetzen',
 		passwordResetSubtitle: 'Hier können Sie ein neues Passwort festlegen.',

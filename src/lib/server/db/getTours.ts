@@ -2,6 +2,7 @@ import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { db } from '.';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import { sql } from 'kysely';
+import { anonymouseCustomerName } from '$lib/constants';
 
 export const getTours = async (
 	selectCancelled: boolean,
@@ -113,11 +114,11 @@ export const getToursWithRequests = async (
 								.selectFrom('event')
 								.innerJoin('request', 'request.id', 'event.request')
 								.whereRef('tour.id', '=', 'request.tour')
-								.innerJoin('user', 'user.id', 'request.customer')
+								.leftJoin('user', 'user.id', 'request.customer')
 								.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
 								.select([
 									'tour.id as tour',
-									'user.name as customerName',
+									sql<string>`COALESCE("user".name, ${anonymouseCustomerName})`.as('customerName'),
 									'user.phone as customerPhone',
 									'event.id',
 									'event.communicatedTime',

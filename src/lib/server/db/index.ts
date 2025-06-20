@@ -88,7 +88,7 @@ export interface Database {
 		bikes: number;
 		luggage: number;
 		tour: number;
-		customer: number;
+		customer: number | null;
 		ticketCode: string;
 		ticketChecked: boolean;
 		ticketPrice: number;
@@ -97,7 +97,7 @@ export interface Database {
 	journey: {
 		id: Generated<number>;
 		json: Itinerary;
-		user: number;
+		user: number | null;
 		request1: number | null;
 		request2: number | null;
 		rating: number | null;

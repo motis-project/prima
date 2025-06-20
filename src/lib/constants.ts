@@ -33,3 +33,4 @@ export const MONTHS = [
 	'Dezember'
 ];
 export const QUARTERS = ['Quartal 1', 'Quartal 2', 'Quartal 3', 'Quartal 4'];
+export const anonymouseCustomerName = 'anonymisiert';

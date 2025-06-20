@@ -6,6 +6,7 @@
 	import Meta from '$lib/ui/Meta.svelte';
 	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import { t } from '$lib/i18n/translation';
+	import * as Dialog from '$lib/shadcn/dialog';
 
 	const { data, form } = $props();
 	let showTooltip = $state(false);
@@ -69,5 +70,23 @@
 				<Button type="submit" variant="outline">{t.account.logout}</Button>
 			</div>
 		</form>
+	</Panel>
+
+	<Panel title={t.account.deleteAccount} subtitle={''}>
+		<div class="mt-4 flex justify-end">
+			<Dialog.Root>
+				<Dialog.Trigger>
+					<Button variant="destructive">{t.account.deleteAccount}</Button>
+				</Dialog.Trigger>
+				<Dialog.Content>
+					<p class="my-2">
+						{t.msg.deleteAccount}
+					</p>
+					<form method="post" action="/account/settings?/deleteAccount" class="mt-8">
+						<Button type="submit" variant="destructive">{t.account.deleteAccount}</Button>
+					</form>
+				</Dialog.Content>
+			</Dialog.Root>
+		</div>
 	</Panel>
 </div>
