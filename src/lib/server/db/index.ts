@@ -93,6 +93,7 @@ export interface Database {
 		ticketChecked: boolean;
 		ticketPrice: number;
 		cancelled: boolean;
+		licensePlateUpdatedAt: number | null;
 	};
 	journey: {
 		id: Generated<number>;
