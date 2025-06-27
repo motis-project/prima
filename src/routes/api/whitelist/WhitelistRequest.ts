@@ -97,21 +97,6 @@ export const schemaDefinitions = {
 	}
 };
 
-export const bookingSchema = {
-	$schema: 'http://json-schema.org/draft-07/schema#',
-	type: 'object',
-	properties: {
-		connection1: {
-			oneOf: [{ $ref: '/schemaDefinitions#/definitions/connection' }, { type: 'null' }]
-		},
-		connection2: {
-			oneOf: [{ $ref: '/schemaDefinitions#/definitions/connection' }, { type: 'null' }]
-		},
-		capacities: { $ref: '/schemaDefinitions#/definitions/capacities' }
-	},
-	required: ['capacities']
-};
-
 export const whitelistSchema = {
 	$schema: 'http://json-schema.org/draft-07/schema#',
 	type: 'object',

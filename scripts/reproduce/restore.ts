@@ -7,12 +7,12 @@ dotenv.config();
 
 const __dirname = new URL('.', import.meta.url).pathname;
 
-const BACKUP_FOLDER = path.join(__dirname, '..', 'db_backups');
+const BACKUP_FOLDER = path.join(__dirname, '../..', 'db_backups');
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const PGPASSWORD = process.env.PGPASSWORD;
 
-const executeCommand = (command) => {
+const executeCommand = (command: string): Promise<void> => {
 	return new Promise((resolve, reject) => {
 		exec(command, (error, stdout, stderr) => {
 			if (error) {
@@ -24,7 +24,7 @@ const executeCommand = (command) => {
 	});
 };
 
-const restoreFullBackup = async (fullBackupFile) => {
+const restoreFullBackup = async (fullBackupFile: string) => {
 	const fullBackupPath = path.join(BACKUP_FOLDER, fullBackupFile);
 	const restoreCommand = `PGPASSWORD=${PGPASSWORD} psql ${DATABASE_URL} -f ${fullBackupPath}`;
 	console.log(`Restoring full backup from ${fullBackupFile}...`);

@@ -6,7 +6,7 @@ import { fail } from '@sveltejs/kit';
 import { msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
 import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
-import { lockTablesStatement } from '$lib/server/db/lockTables';
+import { retry } from '$lib/server/db/retryQuery';
 
 const LICENSE_PLATE_REGEX = /^([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})$/;
 export async function load(event: RequestEvent) {
@@ -150,82 +150,86 @@ export const actions: Actions = {
 		let success = false;
 		let duplicateLicensePlate = false;
 		let unknownError = false;
-		await db.transaction().execute(async (trx) => {
-			await lockTablesStatement(['tour', 'request', 'event', 'vehicle']).execute(trx);
-			const tours = await trx
-				.selectFrom('tour')
-				.where('tour.vehicle', '=', id)
-				.where('tour.arrival', '>', Date.now())
-				.where('tour.cancelled', '=', false)
-				.select((eb) => [
-					'tour.id',
-					jsonArrayFrom(
-						eb
-							.selectFrom('event')
-							.innerJoin('request', 'request.id', 'event.request')
-							.whereRef('request.tour', '=', 'tour.id')
-							.where('request.cancelled', '=', false)
-							.select([
-								'event.isPickup',
-								'request.passengers',
-								'request.bikes',
-								'request.wheelchairs',
-								'request.luggage'
-							])
-					).as('events')
-				])
-				.execute();
+		await retry(() =>
+			db
+				.transaction()
+				.setIsolationLevel('serializable')
+				.execute(async (trx) => {
+					const tours = await trx
+						.selectFrom('tour')
+						.where('tour.vehicle', '=', id)
+						.where('tour.arrival', '>', Date.now())
+						.where('tour.cancelled', '=', false)
+						.select((eb) => [
+							'tour.id',
+							jsonArrayFrom(
+								eb
+									.selectFrom('event')
+									.innerJoin('request', 'request.id', 'event.request')
+									.whereRef('request.tour', '=', 'tour.id')
+									.where('request.cancelled', '=', false)
+									.select([
+										'event.isPickup',
+										'request.passengers',
+										'request.bikes',
+										'request.wheelchairs',
+										'request.luggage'
+									])
+							).as('events')
+						])
+						.execute();
 
-			if (
-				tours.some((t) => {
-					const possibleInsertions = getPossibleInsertions(
-						{
-							luggage,
-							wheelchairs: !wheelchair ? 0 : 1,
-							bikes: !bike ? 0 : 1,
-							passengers
-						},
-						{
-							luggage: 0,
-							bikes: 0,
-							wheelchairs: 0,
-							passengers: 0
-						},
-						t.events
-					);
-					return (
-						possibleInsertions.length != 1 ||
-						possibleInsertions[0].earliestPickup != 0 ||
-						possibleInsertions[0].latestDropoff != t.events.length
-					);
+					if (
+						tours.some((t) => {
+							const possibleInsertions = getPossibleInsertions(
+								{
+									luggage,
+									wheelchairs: !wheelchair ? 0 : 1,
+									bikes: !bike ? 0 : 1,
+									passengers
+								},
+								{
+									luggage: 0,
+									bikes: 0,
+									wheelchairs: 0,
+									passengers: 0
+								},
+								t.events
+							);
+							return (
+								possibleInsertions.length != 1 ||
+								possibleInsertions[0].earliestPickup != 0 ||
+								possibleInsertions[0].latestDropoff != t.events.length
+							);
+						})
+					) {
+						return;
+					}
+
+					try {
+						await trx
+							.updateTable('vehicle')
+							.where('vehicle.id', '=', id)
+							.set({
+								luggage,
+								licensePlate,
+								passengers,
+								wheelchairs: !wheelchair ? 0 : 1,
+								bikes: !bike ? 0 : 1
+							})
+							.execute();
+					} catch (e) {
+						// @ts-expect-error: 'e' is of type 'unknown'
+						if (e.constraint == 'vehicle_license_plate_key') {
+							duplicateLicensePlate = true;
+							return;
+						}
+						unknownError = true;
+						return;
+					}
+					success = true;
 				})
-			) {
-				return;
-			}
-
-			try {
-				await trx
-					.updateTable('vehicle')
-					.where('vehicle.id', '=', id)
-					.set({
-						luggage,
-						licensePlate,
-						passengers,
-						wheelchairs: !wheelchair ? 0 : 1,
-						bikes: !bike ? 0 : 1
-					})
-					.execute();
-			} catch (e) {
-				// @ts-expect-error: 'e' is of type 'unknown'
-				if (e.constraint == 'vehicle_license_plate_key') {
-					duplicateLicensePlate = true;
-					return;
-				}
-				unknownError = true;
-				return;
-			}
-			success = true;
-		});
+		);
 		if (duplicateLicensePlate) {
 			return fail(400, { msg: msg('duplicateLicensePlate') });
 		}

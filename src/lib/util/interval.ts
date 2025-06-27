@@ -31,6 +31,10 @@ export class Interval {
 		}
 	}
 
+	size() {
+		return this.endTime - this.startTime;
+	}
+
 	overlaps(other: Interval) {
 		return this.startTime < other.endTime && this.endTime > other.startTime;
 	}
