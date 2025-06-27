@@ -10,11 +10,11 @@
 	import { getStyle } from '$lib/map/style';
 	import Control from '$lib/map/Control.svelte';
 	import maplibregl from 'maplibre-gl';
-	import type { Itinerary } from '$lib/openapi';
 	import ItineraryGeoJson from './ItineraryGeoJSON.svelte';
 	import GeoJSON from '$lib/map/GeoJSON.svelte';
 	import Layer from '$lib/map/Layer.svelte';
 	import { t } from '$lib/i18n/translation';
+	import type { SignedItinerary } from '$lib/planAndSign';
 
 	let {
 		from = $bindable(),
@@ -24,7 +24,7 @@
 	}: {
 		from?: Location | undefined;
 		to?: Location | undefined;
-		itinerary?: Itinerary | undefined;
+		itinerary?: SignedItinerary | undefined;
 		areas?: unknown;
 	} = $props();
 
