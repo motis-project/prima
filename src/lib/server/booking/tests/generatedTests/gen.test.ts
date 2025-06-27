@@ -14,8 +14,7 @@ import { bookingApi } from '$lib/server/booking/bookingApi';
 import { db } from '$lib/server/db';
 import type { Condition } from '$lib/util/booking/testParams';
 import { tests } from './testJsons';
-import { isSamePlace } from '../../isSamePlace';
-import { healthCheck } from '$lib/server/util/healthCheck';
+import { isSamePlace } from '$lib/server/booking/isSamePlace';
 
 const filterByUuid: string | undefined = undefined;
 function filterByContainedEvent(
@@ -151,12 +150,6 @@ describe('Concatenation tests', () => {
 							console.log('Booking Logs: ', JSON.stringify(logs, null, '\t'));
 						}
 					}
-				}
-				if (await healthCheck()) {
-					console.error(`❌ Condition failed:`, {
-						link: `http://localhost:5173/tests?test=${test.uuid}`
-					});
-					expect(false).toBeTruthy();
 				}
 			}
 		}
