@@ -22,7 +22,7 @@ export type Translations = {
 		enterEmailAndPassword: string;
 		invalidEmail: string;
 		invalidPhone: string;
-		invalidZipCity: string,
+		invalidZipCity: string;
 		emailAlreadyRegistered: string;
 		weakPassword: string;
 		tooManyRequests: string;

@@ -103,7 +103,9 @@ const translations: Translations = {
 		name: 'Name',
 		lastName: 'Last Name',
 		firstName: 'First Name',
-		gender: (id: string) => { return { 'o': 'other', 'f': 'Ms.', 'm': 'Mr.' }[id]! },
+		gender: (id: string) => {
+			return { o: 'other', f: 'Ms.', m: 'Mr.' }[id]!;
+		},
 		email: 'Email',
 		password: 'Password',
 		phone: 'Phone Number',

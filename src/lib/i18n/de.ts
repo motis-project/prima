@@ -106,7 +106,9 @@ const translations: Translations = {
 		name: 'Name',
 		lastName: 'Nachname',
 		firstName: 'Vorname',
-		gender: (id: string) => { return { 'o': 'n/a', 'f': 'Frau', 'm': 'Herr' }[id]! },
+		gender: (id: string) => {
+			return { o: 'n/a', f: 'Frau', m: 'Herr' }[id]!;
+		},
 		email: 'E-Mail',
 		password: 'Passwort',
 		phone: 'Telefonnummer',

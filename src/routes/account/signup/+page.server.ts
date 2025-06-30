@@ -20,7 +20,16 @@ import { verifyPhone } from '$lib/server/verifyPhone';
 
 const ipBucket = new RefillingTokenBucket<string>(3, 10);
 
-async function createUser(name: string, firstName: string, gender: string, email: string, password: string, zipCode: string, city: string, phone: string | null) {
+async function createUser(
+	name: string,
+	firstName: string,
+	gender: string,
+	email: string,
+	password: string,
+	zipCode: string,
+	city: string,
+	phone: string | null
+) {
 	const passwordHash = await hashPassword(password);
 	return await db
 		.insertInto('user')
