@@ -20,7 +20,7 @@ import { verifyPhone } from '$lib/server/verifyPhone';
 
 const ipBucket = new RefillingTokenBucket<string>(3, 10);
 
-async function createUser(name: string, email: string, password: string, phone: string | null) {
+async function createUser(name: string, firstName: string, gender: string, email: string, password: string, zipCode: string, city: string, phone: string | null) {
 	const passwordHash = await hashPassword(password);
 	return await db
 		.insertInto('user')
@@ -35,7 +35,11 @@ async function createUser(name: string, email: string, password: string, phone: 
 			phone,
 			companyId: null,
 			isTaxiOwner: false,
-			isAdmin: false
+			isAdmin: false,
+			firstName,
+			gender,
+			zipCode,
+			city
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();
@@ -55,19 +59,35 @@ export const actions: Actions = {
 		}
 
 		const formData = await event.request.formData();
-		const name = formData.get('name');
+		const firstName = formData.get('firstname');
+		const gender = formData.get('gender');
+		const name = formData.get('lastname');
 		const email = formData.get('email');
 		const password = formData.get('password');
+		const zipCode = formData.get('zipcode');
+		const city = formData.get('city');
 		const phone = verifyPhone(formData.get('phone'));
 		if (
 			typeof name !== 'string' ||
 			name.length < 2 ||
+			typeof firstName !== 'string' ||
+			firstName.length < 2 ||
 			typeof email !== 'string' ||
 			email.length < 5 ||
 			typeof password !== 'string' ||
-			password.length < 3
+			password.length < 3 ||
+			typeof gender !== 'string' ||
+			gender.length != 1
 		) {
 			return fail(400, { msg: msg('enterEmailAndPassword'), email: '' });
+		}
+		if (
+			typeof zipCode !== 'string' ||
+			zipCode.length < 2 ||
+			typeof city !== 'string' ||
+			city.length < 1
+		) {
+			return fail(400, { msg: msg('invalidZipCity'), email });
 		}
 		if (!verifyEmailInput(email)) {
 			return fail(400, { msg: msg('invalidEmail'), email });
@@ -84,7 +104,7 @@ export const actions: Actions = {
 		if (phone != null && typeof phone !== 'string') {
 			return phone;
 		}
-		const user = await createUser(name, email, password, phone);
+		const user = await createUser(name, firstName, gender, email, password, zipCode, city, phone);
 		try {
 			await sendMail(Welcome, `Willkommen zu ${PUBLIC_PROVIDER}`, email, {
 				code: user.emailVerificationCode

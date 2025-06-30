@@ -18,6 +18,10 @@ export interface Database {
 		isAdmin: boolean;
 		phone: string | null;
 		companyId: number | null;
+		firstName: string;
+		gender: string;
+		zipCode: string;
+		city: string;
 	};
 	session: {
 		id: string;
