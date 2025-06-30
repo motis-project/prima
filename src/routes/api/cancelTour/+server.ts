@@ -39,6 +39,7 @@ export const POST = async (event: RequestEvent) => {
 						.select((eb) => [
 							'user.email',
 							'user.name',
+							'user.firstName',
 							'request.ticketChecked',
 							'request.wheelchairs',
 							jsonArrayFrom(
@@ -84,7 +85,7 @@ export const POST = async (event: RequestEvent) => {
 					start: request.events[0].address,
 					target: request.events[1].address,
 					startTime: request.events[0].communicatedTime,
-					name: request.name
+					name: request.firstName + ' ' + request.name
 				});
 			} catch {
 				console.log(

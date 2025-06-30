@@ -76,7 +76,10 @@ export async function signup(page: Page, credentials: UserCredentials) {
 	await expect(page.getByRole('heading', { name: 'Nutzerkonto erstellen' })).toBeVisible();
 	await page.getByRole('textbox', { name: 'E-Mail' }).fill(credentials.email);
 	await page.getByRole('textbox', { name: 'Passwort' }).fill(credentials.password);
-	await page.getByRole('textbox', { name: 'Name' }).fill(credentials.email);
+	await page.getByRole('textbox', { name: 'Nachname' }).fill(credentials.email);
+	await page.getByRole('textbox', { name: 'Vorname' }).fill('Vorname');
+	await page.getByRole('textbox', { name: 'PLZ' }).fill('ZIP');
+	await page.getByRole('textbox', { name: 'Ort', exact: true }).fill('City');
 	await page.getByRole('button', { name: 'Nutzerkonto erstellen' }).click();
 
 	await execSQL(sql`UPDATE "user" SET is_email_verified = true WHERE email = ${credentials.email}`);
