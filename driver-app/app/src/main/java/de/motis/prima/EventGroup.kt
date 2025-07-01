@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -61,7 +61,6 @@ import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.data.ValidationStatus
 import java.util.Date
 import javax.inject.Inject
-import kotlin.math.ln
 
 @HiltViewModel
 class EventGroupViewModel @Inject constructor(
@@ -111,7 +110,7 @@ fun openGoogleMapsNavigation(to: Location, context: Context) {
     }
 }
 
-fun phoneCall(number: String, context: Context) {
+fun phoneCall(number: String?, context: Context) {
     val intent = Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null))
     context.startActivity(intent)
 }
@@ -121,8 +120,8 @@ fun EventGroup(
     navController: NavController,
     eventGroup: EventObjectGroup,
     nav: String,
-    tourId: Int,//TODO
-    viewModel: EventGroupViewModel = hiltViewModel()
+    //tourId: Int,//TODO
+    //viewModel: EventGroupViewModel = hiltViewModel()
 ) {
     Column(
         modifier = Modifier
@@ -177,7 +176,7 @@ fun EventGroup(
         }
 
         // event list
-        var validCount by remember { mutableStateOf(0) }
+        var validCount by remember { mutableIntStateOf(0) }
         Card(
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier
@@ -189,7 +188,7 @@ fun EventGroup(
                     .background(Color.White)
             ) {
                 items(items = eventGroup.events, itemContent = { event ->
-                    validCount = ShowCustomerDetails(event)
+                    validCount = showCustomerDetails(event)
                 })
             }
         }
@@ -284,7 +283,7 @@ fun EventGroup(
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun ShowCustomerDetails(
+fun showCustomerDetails(
     event: EventObject,
     viewModel: EventGroupViewModel = hiltViewModel()
 ): Int {
@@ -412,8 +411,7 @@ fun ShowCustomerDetails(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Log.d("phone", event.customerPhone)
-                    if (event.customerPhone != "") {
+                    if (event.customerPhone != null && event.customerPhone != "") {
                         Button(
                             onClick = {
                                 phoneCall(event.customerPhone, context)
@@ -481,7 +479,7 @@ fun ShowCustomerDetails(
                                         .size(width = 30.dp, height = 30.dp)
                                 )
                             } else if (ticketStatus == ValidationStatus.DONE) {
-                                validCount++
+                                //validCount++//TODO
                                 Icon(
                                     imageVector = Icons.Default.Done,
                                     contentDescription = "Localized description",

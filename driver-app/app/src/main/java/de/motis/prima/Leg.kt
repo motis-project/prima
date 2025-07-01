@@ -69,7 +69,7 @@ fun Leg(
                 if (eventGroups.isNotEmpty()) {
                     var nav = "leg/$tourId/${eventGroupIndex + 1}"
                     if (eventGroupIndex + 1 == eventGroups.size) {
-                        /*if (legViewModel.isTourStarted(tourId)) {
+                        /*if (legViewModel.isTourStarted(tourId)) { TODO
                             nav = "fare/$tourId"
                         } else {
                             nav = "tours"
@@ -89,13 +89,13 @@ fun Leg(
                             Box(
                                 modifier = Modifier
                                     //.height(height)
-                                    //.width(screenWidth * 0.98f)
+                                    //.width(screenWidth * 0.98f) TODO
                             ) {
                                 EventGroup(
                                     navController,
                                     eventGroups[eventGroupIndex],
                                     nav,
-                                    tourId
+                                    //tourId
                                 )
                             }
                         }

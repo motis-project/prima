@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -39,6 +40,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -83,6 +86,9 @@ fun TicketScan(
         var ticketValid by remember { mutableStateOf(false) }
         var showDialog by remember { mutableStateOf(false) }
 
+        var fareToPay by remember { mutableDoubleStateOf(0.0) }
+        var passengerCount by remember { mutableIntStateOf(0) }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -109,7 +115,9 @@ fun TicketScan(
                                     eventGroup.events.find { e -> e.ticketHash == activeHash }
                                 if (event != null) {
                                     ticketValid = true
-                                    viewModel.reportTicketScan(event.requestId, event.ticketHash, result)
+                                    passengerCount = event.passengers - event.kidsFiveToSix - event.kidsThreeToFour - event.kidsZeroToTwo;
+                                    fareToPay = passengerCount.toDouble() * event.ticketPrice / 100;
+                                    //viewModel.reportTicketScan(event.requestId, event.ticketHash, result)//TODO
                                 }
                             }
                             isScanning = false
@@ -117,15 +125,28 @@ fun TicketScan(
                         navController
                     )
                 } else {
-
                     if (ticketValid) {
-                        Icon(
-                            imageVector = Icons.Default.Done,
-                            contentDescription = "Localized description",
-                            tint = Color.Green,
-                            modifier = Modifier.size(64.dp)
+                        Column {
+                            Icon(
+                                imageVector = Icons.Default.Done,
+                                contentDescription = "Localized description",
+                                tint = Color.Green,
+                                modifier = Modifier.size(64.dp)
 
-                        )
+                            )
+                            Text(
+                                text = "$passengerCount Personen",
+                                fontSize = 24.sp,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Text(
+                                text = "${String.format("%.2f", fareToPay)} €",
+                                fontSize = 24.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
                         LaunchedEffect(Unit) {
                             delay(500)
                             navController.popBackStack()
@@ -147,7 +168,7 @@ fun TicketScan(
                 AlertDialog(
                     onDismissRequest = { showDialog = false },
                     title = { Text("Ticket ungültig") },
-                    //text = { Text("Beförderung zum normalen Taxi-Tarif") },
+                    text = { Text("Beförderung zum normalen Taxi-Tarif") },
                     icon = {Icon(
                         imageVector = Icons.Default.Clear,
                         contentDescription = "Localized description",
