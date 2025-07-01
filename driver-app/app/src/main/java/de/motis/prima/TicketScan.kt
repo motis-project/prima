@@ -88,6 +88,7 @@ fun TicketScan(
 
         var fareToPay by remember { mutableDoubleStateOf(0.0) }
         var passengerCount by remember { mutableIntStateOf(0) }
+        var ticketPrice by remember { mutableDoubleStateOf(0.0) }
 
         Column(
             modifier = Modifier
@@ -117,6 +118,7 @@ fun TicketScan(
                                     ticketValid = true
                                     passengerCount = event.passengers - event.kidsFiveToSix - event.kidsThreeToFour - event.kidsZeroToTwo;
                                     fareToPay = passengerCount.toDouble() * event.ticketPrice / 100;
+                                    ticketPrice = (event.ticketPrice / 100).toDouble();
                                     //viewModel.reportTicketScan(event.requestId, event.ticketHash, result)//TODO
                                 }
                             }
@@ -126,39 +128,49 @@ fun TicketScan(
                     )
                 } else {
                     if (ticketValid) {
-                        Column {
-                            Icon(
-                                imageVector = Icons.Default.Done,
-                                contentDescription = "Localized description",
-                                tint = Color.Green,
-                                modifier = Modifier.size(64.dp)
-
-                            )
-                            Text(
-                                text = "$passengerCount Personen",
-                                fontSize = 24.sp,
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(20.dp))
-                            Text(
-                                text = "${String.format("%.2f", fareToPay)} €",
-                                fontSize = 24.sp,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-
-                        LaunchedEffect(Unit) {
-                            delay(500)
-                            navController.popBackStack()
-                        }
+                        val personsTxt = if (passengerCount > 1) "Personen" else  "Person";
+                        Log.d("test", ticketPrice.toString())
+                        AlertDialog(
+                            onDismissRequest = { showDialog = false },
+                            title = { Text("Ticket OK") },
+                            text = {
+                                Column {
+                                    Text(
+                                        text = "$passengerCount $personsTxt  x  ${String.format("%.2f", ticketPrice)} €",
+                                        fontSize = 24.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Text(
+                                        text = "= ${String.format("%.2f", fareToPay)} €",
+                                        fontSize = 24.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Done,
+                                    contentDescription = "Localized description",
+                                    tint = Color.Green,
+                                    modifier = Modifier.size(64.dp)
+                                )
+                            },
+                            confirmButton = {
+                                Button(onClick = {
+                                    navController.popBackStack()
+                                }) {
+                                    Text("Ok")
+                                }
+                            },
+                            /*dismissButton =  {
+                                Button(onClick = {
+                                    navController.popBackStack()
+                                }) {
+                                    Text("X")
+                                }
+                            }*/
+                        )
                     } else {
-                        /*Icon(
-                            imageVector = Icons.Default.Clear,
-                            contentDescription = "Localized description",
-                            tint = Color.Red,
-                            modifier = Modifier.size(64.dp)
-
-                        )*/
                         showDialog = true
                     }
                 }
@@ -183,12 +195,7 @@ fun TicketScan(
                         }) {
                             Text("Ok")
                         }
-                    },
-                    /*dismissButton = {
-                        Button(onClick = { showDialog = false }) {
-                            Text("Nein")
-                        }
-                    }*/
+                    }
                 )
             }
 
