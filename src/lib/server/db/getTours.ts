@@ -37,21 +37,22 @@ export const getTours = async (
 					.innerJoin('request', 'request.id', 'event.request')
 					.whereRef('tour.id', '=', 'request.tour')
 					.innerJoin('user', 'user.id', 'request.customer')
-					.select([
+					.select((eb) => [
+						eb.case()
+							.when('event.isPickup', '=', true)
+							.then(eb.ref('scheduledTimeStart'))
+							.else(eb.ref('scheduledTimeEnd'))
+							.end()
+							.as('scheduledTime'),
 						'tour.id as tour',
 						'user.name as customerName',
 						'user.phone as customerPhone',
 						'event.id',
-						'event.communicatedTime',
 						'event.address',
 						'event.eventGroup',
 						'event.isPickup',
 						'event.lat',
 						'event.lng',
-						'event.nextLegDuration',
-						'event.prevLegDuration',
-						'event.scheduledTimeStart',
-						'event.scheduledTimeEnd',
 						'event.cancelled',
 						'request.bikes',
 						'request.customer',
