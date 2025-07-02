@@ -4,12 +4,15 @@
 	import Meta from '$lib/ui/Meta.svelte';
 	import * as Alert from '$lib/shadcn/alert';
 	import Form from '../Form.svelte';
+	import logo from '$lib/assets/logo-alpha.png'
 	const { form, data } = $props();
 </script>
 
 <Meta title="Login | {PUBLIC_PROVIDER}" />
 
 <div class="md:max-w-80">
+	<div class="contents">
+		<img src={logo} alt="{t.logo}"/>
 	<h1 class="my-6 text-center text-2xl font-semibold leading-8 tracking-tight">
 		{t.account.login}
 	</h1>
@@ -27,4 +30,5 @@
 	{/if}
 
 	<Form msg={form?.msg} type="login" />
+	</div>
 </div>

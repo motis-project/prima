@@ -215,6 +215,8 @@ const translations: Translations = {
 	fare: 'Fare',
 	bookingDeadline: 'Booking deadline',
 	bookingDeadlineContent: 'at least 1 hour in advance, weekend bookings until Friday 6 p.m.',
+	logo: 'The PriMa+ÖV logo. Iconographic representation of a car, bus, train and cab.',
+	toConnectionSearch: 'Go to connection search',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
@@ -255,6 +257,7 @@ const translations: Translations = {
 	},
 
 	explainer: {
+		title: 'Explainer',
 		p1: 'Unfortunately, public transport does not cover everything.',
 		p2: 'We use cabs to extend the range of public transport services.',
 		p3: 'We call the intersection of public transport and cab the public transport cab.',

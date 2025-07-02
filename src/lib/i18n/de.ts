@@ -222,6 +222,8 @@ const translations: Translations = {
 	bookingDeadline: 'Buchungsschluss',
 	bookingDeadlineContent:
 		'min. 1 Stunde im Voraus, bei Buchungen für das Wochenende bis Freitag 18 Uhr',
+		logo: 'Das PriMa+ÖV Logo. Ikonographische Darstellung eines Autos, Busses, Zuges und Taxis.',
+		toConnectionSearch: 'Zur Verbindungssuche',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
@@ -262,6 +264,7 @@ const translations: Translations = {
 	},
 
 	explainer: {
+		title: 'Explainer',
 		p1: 'Leider deckt der ÖPNV nicht alles ab.',
 		p2: 'Wir verwenden Taxis, um das Angebot es ÖPNV zu erweitern.',
 		p3: 'Die Schnittmenge aus ÖPNV und Taxi nennen wir das ÖPNV-Taxi.',

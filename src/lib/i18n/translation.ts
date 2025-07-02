@@ -194,6 +194,8 @@ export type Translations = {
 	fare: string;
 	bookingDeadline: string;
 	bookingDeadlineContent: string;
+	logo: string;
+	toConnectionSearch: string;
 
 	booking: {
 		bookHere: string;
@@ -224,6 +226,7 @@ export type Translations = {
 	};
 
 	explainer: {
+		title: string;
 		p1: string;
 		p2: string;
 		p3: string;
