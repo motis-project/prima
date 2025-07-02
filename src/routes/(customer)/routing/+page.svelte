@@ -42,7 +42,11 @@
 	import { updateStartDest } from '$lib/util/updateStartDest';
 	import { odmPrice } from '$lib/util/odmPrice';
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
-	import { CarTaxiFrontIcon, FileQuestionIcon, HelpCircleIcon, HelpingHandIcon, LocateFixed, MapIcon, MessageCircleQuestionIcon } from 'lucide-svelte';
+	import {
+		HelpCircleIcon,
+		LocateFixed,
+		MapIcon,
+	} from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
 	import { MAX_MATCHING_DISTANCE } from '$lib/constants';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
@@ -365,22 +369,17 @@
 	>
 		<div class="flex h-full flex-col gap-4">
 			<div dir="rtl">
-			<Button
-				size="icon"
-				variant="outline"
-				onclick={() => pushState('', { showMap: true })}
-				class="ml-auto"
-			>
-				<MapIcon class="h-[1.2rem] w-[1.2rem]" />
-			</Button>
-			<Button
-				size="icon"
-				variant="outline"
-				onclick={() => pushState('', { showMap: true })}
-				class="ml-auto"
-			>
-				<HelpCircleIcon class="h-[1.2rem] w-[1.2rem]" />
-			</Button>
+				<Button
+					size="icon"
+					variant="outline"
+					onclick={() => pushState('', { showMap: true })}
+					class="ml-auto"
+				>
+					<MapIcon class="h-[1.2rem] w-[1.2rem]" />
+				</Button>
+				<a href="/explainer"><Button size="icon" variant="outline" class="ml-auto">
+					<HelpCircleIcon class="h-[1.2rem] w-[1.2rem]" />
+				</Button></a>
 			</div>
 			<div class="relative flex flex-col gap-4">
 				<Input
