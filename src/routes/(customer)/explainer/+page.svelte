@@ -16,7 +16,7 @@
 	<div class="contents">
 		<div class="flex h-full flex-col items-center gap-4 text-center">
 			<strong>PriMa+ÖV</strong>
-			<img class="w-1/2" src={logo} alt="{t.logo}"/>
+			<img class="w-1/2" src={logo} alt={t.logo} />
 			<p>{t.explainer.p1}</p>
 			<img class="w-1/2" src={venn1} alt={t.explainer.alt1} />
 			<p>{t.explainer.p2}</p>
@@ -25,7 +25,6 @@
 			<img class="w-1/2" src={venn3} alt={t.explainer.alt3} />
 			<p>{t.explainer.p4}</p>
 
-						
 			<Button variant="outline" size="lg" onclick={() => window.history.back()}>
 				{t.toConnectionSearch}
 			</Button>

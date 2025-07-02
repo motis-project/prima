@@ -234,7 +234,7 @@ export type Translations = {
 		alt1: string;
 		alt2: string;
 		alt3: string;
-	}
+	};
 };
 
 const translations: Map<string, Translations> = new Map(Object.entries({ en, de }));

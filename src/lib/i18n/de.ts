@@ -222,8 +222,8 @@ const translations: Translations = {
 	bookingDeadline: 'Buchungsschluss',
 	bookingDeadlineContent:
 		'min. 1 Stunde im Voraus, bei Buchungen für das Wochenende bis Freitag 18 Uhr',
-		logo: 'Das PriMa+ÖV Logo. Ikonographische Darstellung eines Autos, Busses, Zuges und Taxis.',
-		toConnectionSearch: 'Zur Verbindungssuche',
+	logo: 'Das PriMa+ÖV Logo. Ikonographische Darstellung eines Autos, Busses, Zuges und Taxis.',
+	toConnectionSearch: 'Zur Verbindungssuche',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',

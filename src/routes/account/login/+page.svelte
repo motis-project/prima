@@ -4,7 +4,7 @@
 	import Meta from '$lib/ui/Meta.svelte';
 	import * as Alert from '$lib/shadcn/alert';
 	import Form from '../Form.svelte';
-	import logo from '$lib/assets/logo-alpha.png'
+	import logo from '$lib/assets/logo-alpha.png';
 	const { form, data } = $props();
 </script>
 
@@ -12,23 +12,23 @@
 
 <div class="md:max-w-80">
 	<div class="contents">
-		<img src={logo} alt="{t.logo}"/>
-	<h1 class="my-6 text-center text-2xl font-semibold leading-8 tracking-tight">
-		{t.account.login}
-	</h1>
+		<img src={logo} alt={t.logo} />
+		<h1 class="my-6 text-center text-2xl font-semibold leading-8 tracking-tight">
+			{t.account.login}
+		</h1>
 
-	<Alert.Root variant="default" class="my-6">
-		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-		{@html t.msg['new']}
-	</Alert.Root>
-
-	{#if data.passwordResetSuccess}
 		<Alert.Root variant="default" class="my-6">
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-			{@html t.msg['passwordResetSuccess']}
+			{@html t.msg['new']}
 		</Alert.Root>
-	{/if}
 
-	<Form msg={form?.msg} type="login" />
+		{#if data.passwordResetSuccess}
+			<Alert.Root variant="default" class="my-6">
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+				{@html t.msg['passwordResetSuccess']}
+			</Alert.Root>
+		{/if}
+
+		<Form msg={form?.msg} type="login" />
 	</div>
 </div>
