@@ -12,7 +12,9 @@
 
 <div class="md:max-w-80">
 	<div class="contents">
-		<img src={logo} alt={t.logo} />
+		<div class="flex flex-col items-center">
+		<img class="w-1/4" src={logo} alt={t.logo} />
+		</div>
 		<h1 class="my-6 text-center text-2xl font-semibold leading-8 tracking-tight">
 			{t.account.create}
 		</h1>
