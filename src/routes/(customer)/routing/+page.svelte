@@ -367,12 +367,12 @@
 	>
 		<div class="flex h-full flex-col gap-4">
 			<div class="grid grid-cols-2 gap-4">
-				<div class="flex relative">
+				<div class="relative flex">
 					<img class="w-1/2" src={logo} alt={t.logo} />
 					<p class="absolute bottom-0 right-0 font-bold">PriMa+ÖV</p>
 				</div>
 				<div class="relative" dir="rtl">
-					<div class="absolute bottom-0">						
+					<div class="absolute bottom-0">
 						<Button
 							size="icon"
 							variant="outline"

@@ -16,9 +16,9 @@
 <div class="md:min-h-[70dvh] md:w-96">
 	<div class="contents">
 		<div class="flex flex-col gap-4 text-center">
-			<div class="flex flex-col items-center">				
-					<img class="w-1/2" src={logo} alt={t.logo} />
-					<span class="font-bold">PriMa+ÖV</span>				
+			<div class="flex flex-col items-center">
+				<img class="w-1/2" src={logo} alt={t.logo} />
+				<span class="font-bold">PriMa+ÖV</span>
 			</div>
 			<Card>
 				<CardContent class="flex flex-col items-center gap-4">
