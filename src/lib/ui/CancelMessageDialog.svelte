@@ -9,7 +9,6 @@
 	} from '$lib/shadcn/dialog';
 	import { Button } from '$lib/shadcn/button';
 	import { Input } from '$lib/shadcn/input';
-	import { cancelTour } from '$lib/cancelTour';
 	import { invalidateAll } from '$app/navigation';
 
 	let { tour = $bindable() } = $props();
@@ -28,7 +27,16 @@
 			return;
 		}
 		if (tour != undefined) {
-			await cancelTour(tour.tourId, reason);
+			await fetch('/api/cancelTour', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					tourId: tour.tourId,
+					message: reason
+				})
+			});
 			tour = undefined;
 			await invalidateAll();
 		}

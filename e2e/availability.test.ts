@@ -31,7 +31,7 @@ export async function requestRide(page: Page) {
 
 	await page.getByRole('textbox').fill(`${dayString}T08:30:00Z`);
 	await page.getByRole('button', { name: 'Suchen' }).click();
-	await expect(page.getByText('Vehicle: ')).toBeVisible();
+	await expect(page.getByText('Request: ')).toBeVisible();
 }
 
 test('Set company data', async ({ page }) => {
@@ -75,15 +75,15 @@ test('Request ride', async ({ page }) => {
 	await requestRide(page);
 	await page.goto(`/taxi/availability?offset=${offset}&date=${dayString}`);
 	await page.waitForTimeout(500);
+	await expect(page.getByTestId(`GR-TU-11-${dayString}T07:45:00.000Z`).locator('div')).toHaveCSS(
+		'background-color',
+		'rgb(251, 146, 60)'
+	);
 	await expect(page.getByTestId(`GR-TU-11-${dayString}T08:00:00.000Z`).locator('div')).toHaveCSS(
 		'background-color',
 		'rgb(251, 146, 60)'
 	);
 	await expect(page.getByTestId(`GR-TU-11-${dayString}T08:15:00.000Z`).locator('div')).toHaveCSS(
-		'background-color',
-		'rgb(251, 146, 60)'
-	);
-	await expect(page.getByTestId(`GR-TU-11-${dayString}T08:30:00.000Z`).locator('div')).toHaveCSS(
 		'background-color',
 		'rgb(251, 146, 60)'
 	);

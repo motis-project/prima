@@ -47,16 +47,18 @@
 	let tourIndex = $state(0);
 	let tour = $derived(tours && tours[tourIndex]);
 	let events = $derived(
-		tour?.requests.flatMap((r) =>
-			r.events.map((e) => {
-				return {
-					...e,
-					kidsZeroToTwo: r.kidsZeroToTwo,
-					kidsThreeToFour: r.kidsThreeToFour,
-					kidsFiveToSix: r.kidsFiveToSix
-				};
-			})
-		)
+		tour?.requests
+			.flatMap((r) =>
+				r.events.map((e) => {
+					return {
+						...e,
+						kidsZeroToTwo: r.kidsZeroToTwo,
+						kidsThreeToFour: r.kidsThreeToFour,
+						kidsFiveToSix: r.kidsFiveToSix
+					};
+				})
+			)
+			.sort((e1, e2) => getScheduledEventTime(e1) - getScheduledEventTime(e2))
 	);
 	let company = $derived(tour && { lat: tour.companyLat!, lng: tour.companyLng! });
 
