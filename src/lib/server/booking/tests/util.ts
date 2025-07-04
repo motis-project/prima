@@ -12,11 +12,17 @@ export async function prepareTest() {
 }
 
 export function getNextWednesday(dateWithCorrectDayTime: Date, dateRelativeToNextWednesday: Date) {
-	const ret = new Date(dateWithCorrectDayTime);
 	const dayOfWeek = dateRelativeToNextWednesday.getDay();
 	const daysUntilNextWednesday = (10 - dayOfWeek) % 7 || 7;
-	ret.setDate(dateRelativeToNextWednesday.getDate() + daysUntilNextWednesday);
-	return ret.getTime();
+	const nextWednesday = new Date(dateRelativeToNextWednesday);
+	nextWednesday.setDate(nextWednesday.getDate() + daysUntilNextWednesday);
+	nextWednesday.setHours(
+		dateWithCorrectDayTime.getHours(),
+		dateWithCorrectDayTime.getMinutes(),
+		dateWithCorrectDayTime.getSeconds(),
+		dateWithCorrectDayTime.getMilliseconds()
+	);
+	return nextWednesday.getTime();
 }
 
 const now = new Date();

@@ -18,6 +18,9 @@ import { healthCheck } from '../../src/lib/server/util/healthCheck';
 import { logHelp } from './logHelp';
 import { exec } from 'child_process';
 import path from 'path';
+import { white } from '../../src/lib/server/booking/tests/util';
+import type { ToursWithRequests } from '../../src/lib/util/getToursTypes';
+import { getCost } from '../../src/lib/testHelpers';
 
 const BACKUP_DIR = './scripts/simulation/backups/';
 
@@ -114,12 +117,43 @@ const getAction = (r: number) => {
 	return undefined;
 };
 
-async function booking(coordinates: Coordinates[], restricted: Coordinates[] | undefined) {
+async function booking(
+	coordinates: Coordinates[],
+	restricted: Coordinates[] | undefined,
+	doWhitelist?: boolean,
+	compareCosts?: boolean
+) {
 	const parameters = await generateBookingParameters(coordinates, restricted);
 	const potentialKids = parameters.capacities.passengers - 1;
 	const kidsZeroToTwo = randomInt(0, potentialKids);
 	const kidsThreeToFour = randomInt(0, potentialKids - kidsZeroToTwo);
 	const kidsFiveToSix = randomInt(0, potentialKids - kidsThreeToFour);
+	const body = JSON.stringify({
+		start: parameters.connection1.start,
+		target: parameters.connection1.target,
+		startBusStops: [],
+		targetBusStops: [],
+		directTimes: [
+			parameters.connection1.startFixed
+				? parameters.connection1.startTime
+				: parameters.connection1.targetTime
+		],
+		startFixed: parameters.connection1.startFixed,
+		capacities: parameters.capacities
+	});
+	const whiteResponse = await white(body).then((r) => r.json());
+	if (doWhitelist) {
+		if (whiteResponse.direct[0] === null) {
+			console.log('whitelist was not succesful.');
+			return false;
+		}
+		parameters.connection1.startTime = whiteResponse.direct[0]!.pickupTime;
+		parameters.connection1.targetTime = whiteResponse.direct[0]!.dropoffTime;
+	}
+	let toursBefore: ToursWithRequests = [];
+	if (compareCosts) {
+		toursBefore = await getToursWithRequests(false);
+	}
 	const response = await bookingApi(
 		parameters,
 		1,
@@ -127,9 +161,58 @@ async function booking(coordinates: Coordinates[], restricted: Coordinates[] | u
 		kidsThreeToFour,
 		kidsThreeToFour,
 		kidsFiveToSix,
-		true
+		!(doWhitelist ?? false)
 	);
+	if (compareCosts) {
+		const toursAfter = await getToursWithRequests(false);
+		const requestId = response.request1Id ?? response.request2Id;
+		const t = toursAfter.filter((t) => t.requests.some((r) => r.requestId === requestId));
+		if (t.length !== 1) {
+			console.log(`Found ${t.length} tours containing the new request.`);
+			return true;
+		}
+		const newTour = t[0];
+		const oldTours: ToursWithRequests = toursBefore.filter((t) =>
+			t.requests.some((r1) => newTour.requests.some((r2) => r2.requestId === r1.requestId))
+		);
+		const newCost = getCost(newTour);
+		const oldCost = oldTours.reduce(
+			(acc, curr) => {
+				const cost = getCost(curr);
+				acc.drivingTime += cost.drivingTime;
+				acc.waitingTime += cost.waitingTime;
+				acc.weightedPassengerDuration += cost.weightedPassengerDuration;
+			},
+			{ drivingTime: 0, waitingTime: 0, weightedPassengerDuration: 0 }
+		);
+		if (newCost.drivingTime !== oldCost.drivingTime + (response.taxiTime ?? 0)) {
+			console.log(
+				`Driving times do not match old: ${oldCost.drivingTime}, relative: ${response.taxiTime} and new: ${newCost.drivingTime}`
+			);
+			console.log(JSON.stringify(response, null, 2));
+			return true;
+		}
+		if (newCost.waitingTime !== oldCost.waitingTime + (response.waitingTime ?? 0)) {
+			console.log(
+				`Driving times do not match old: ${oldCost.waitingTime}, relative: ${response.waitingTime} and new: ${newCost.waitingTime}`
+			);
+			return true;
+		}
+		if (
+			newCost.weightedPassengerDuration !==
+			oldCost.weightedPassengerDuration + (response.passengerDuration ?? 0)
+		) {
+			console.log(
+				`Driving times do not match old: ${oldCost.weightedPassengerDuration}, relative: ${response.passengerDuration} and new: ${newCost.weightedPassengerDuration}`
+			);
+			return true;
+		}
+		console.log('costs do match :)');
+	}
 	console.log(response.status === 200 ? 'succesful booking' : 'failed to book');
+	if (doWhitelist && response.status !== 200) {
+		return true;
+	}
 }
 
 async function cancelRequestLocal() {
@@ -171,6 +254,8 @@ export async function simulation(params: {
 	ongoing?: boolean;
 	runs?: number;
 	finishTime?: number;
+	whitelist?: boolean;
+	cost?: boolean;
 }): Promise<boolean> {
 	async function mainLoop(i: number) {
 		const r = Math.random();
@@ -187,7 +272,9 @@ export async function simulation(params: {
 		try {
 			switch (action.action) {
 				case Action.BOOKING:
-					await booking(coordinates, restrictedCoordinates);
+					if (await booking(coordinates, restrictedCoordinates, params.whitelist, params.cost)) {
+						return true;
+					}
 					break;
 				case Action.CANCEL_REQUEST:
 					await cancelRequestLocal();
@@ -296,10 +383,18 @@ async function main() {
 	let help = false;
 	let restrict = false;
 	let backups = false;
+	let whitelist = false;
+	let cost = false;
 
 	for (const arg of process.argv) {
 		if (arg === '--health') {
 			healthChecks = true;
+		}
+		if (arg === '--wl') {
+			whitelist = true;
+		}
+		if (arg === '--cost') {
+			cost = true;
 		}
 		if (arg === '--bu') {
 			backups = true;
@@ -332,7 +427,7 @@ async function main() {
 		logHelp();
 		process.exit(0);
 	}
-	simulation({ backups, healthChecks, restrict, ongoing, runs, finishTime });
+	simulation({ backups, healthChecks, restrict, ongoing, runs, finishTime, whitelist, cost });
 }
 main().catch((err) => {
 	console.error(err);

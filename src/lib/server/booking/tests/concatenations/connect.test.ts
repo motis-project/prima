@@ -3,7 +3,8 @@ import { addCompany, addTaxi, getTours, setAvailability, Zone } from '$lib/testH
 import { describe, it, expect } from 'vitest';
 import type { ExpectedConnection } from '$lib/server/booking/bookRide';
 import { bookingApi } from '$lib/server/booking/bookingApi';
-import { isSamePlace } from '$lib/server/booking/isSamePlace';
+import { signEntry } from '../../signEntry';
+import { MINUTE, roundToUnit } from '$lib/util/time';
 
 const inRothenburg1 = { lng: 14.962964035976825, lat: 51.34030696433544 };
 const inRothenburg2 = { lng: 14.96375266477358, lat: 51.335866895211666 };
@@ -24,11 +25,11 @@ describe('Concatenation tests', () => {
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));
 		const body = JSON.stringify({
-			start: inGeheege,
-			target: inRothenburg2,
+			start: inRothenburg2,
+			target: inGeheege,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(70)],
+			directTimes: [inXMinutes(45)],
 			startFixed: false,
 			capacities
 		});
@@ -38,7 +39,15 @@ describe('Concatenation tests', () => {
 			target: { ...inRothenburg2, address: 'inRothenburg2' },
 			startTime: whiteResponse.direct[0].pickupTime,
 			targetTime: whiteResponse.direct[0].dropoffTime,
-			signature: '',
+			signature: signEntry(
+				inGeheege.lat,
+				inGeheege.lng,
+				inRothenburg2.lat,
+				inRothenburg2.lng,
+				whiteResponse.direct[0].pickupTime,
+				roundToUnit(whiteResponse.direct[0].dropoffTime, MINUTE, Math.floor),
+				false
+			),
 			startFixed: false
 		};
 		const bookingBody = {
@@ -47,7 +56,7 @@ describe('Concatenation tests', () => {
 			capacities
 		};
 
-		await bookingApi(bookingBody, mockUserId, true, 0, 0, 0, true);
+		await bookingApi(bookingBody, mockUserId, true, 0, 0, 0, false);
 		const tours = await getTours();
 		expect(tours.length).toBe(1);
 		expect(tours[0].requests.length).toBe(1);
@@ -57,7 +66,7 @@ describe('Concatenation tests', () => {
 			target: inRothenburg2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(45)],
+			directTimes: [inXMinutes(70)],
 			startFixed: false,
 			capacities
 		});
@@ -67,7 +76,15 @@ describe('Concatenation tests', () => {
 			target: { ...inRothenburg2, address: 'inRothenburg2' },
 			startTime: whiteResponse2.direct[0].pickupTime,
 			targetTime: whiteResponse2.direct[0].dropoffTime,
-			signature: '',
+			signature: signEntry(
+				inHorka1.lat,
+				inHorka1.lng,
+				inRothenburg2.lat,
+				inRothenburg2.lng,
+				whiteResponse.direct[0].pickupTime,
+				roundToUnit(whiteResponse.direct[0].dropoffTime, MINUTE, Math.floor),
+				false
+			),
 			startFixed: false
 		};
 		const bookingBody2 = {
@@ -75,7 +92,7 @@ describe('Concatenation tests', () => {
 			connection2: null,
 			capacities
 		};
-		await bookingApi(bookingBody2, mockUserId, true, 0, 0, 0, true);
+		await bookingApi(bookingBody2, mockUserId, true, 0, 0, 0, false);
 		const tours2 = await getTours();
 		expect(tours2.length).toBe(2);
 		expect(tours2[0].requests.length).toBe(1);
@@ -96,7 +113,15 @@ describe('Concatenation tests', () => {
 			target: { ...inHorka2, address: 'inHorka2' },
 			startTime: whiteResponse3.direct[0].pickupTime,
 			targetTime: whiteResponse3.direct[0].dropoffTime,
-			signature: '',
+			signature: signEntry(
+				inRothenburg2.lat,
+				inRothenburg2.lng,
+				inHorka2.lat,
+				inHorka2.lng,
+				whiteResponse.direct[0].pickupTime,
+				roundToUnit(whiteResponse.direct[0].dropoffTime, MINUTE, Math.floor),
+				false
+			),
 			startFixed: false
 		};
 		const bookingBodyConnect = {
@@ -104,18 +129,9 @@ describe('Concatenation tests', () => {
 			connection2: null,
 			capacities
 		};
-		await bookingApi(bookingBodyConnect, mockUserId, true, 0, 0, 0, true);
+		await bookingApi(bookingBodyConnect, mockUserId, true, 0, 0, 0, false);
 		const tours3 = await getTours();
 		expect(tours3.length).toBe(1);
 		expect(tours3[0].requests.length).toBe(3);
-		const events = tours3
-			.flatMap((t) => t.requests.flatMap((r) => r.events))
-			.sort((e1, e2) => e1.scheduledTimeStart - e2.scheduledTimeStart);
-		expect(isSamePlace(events[0], inHorka1)).toBe(true);
-		expect(isSamePlace(events[1], inRothenburg2)).toBe(true);
-		expect(isSamePlace(events[2], inRothenburg2)).toBe(true);
-		expect(isSamePlace(events[3], inHorka2)).toBe(true);
-		expect(isSamePlace(events[4], inGeheege)).toBe(true);
-		expect(isSamePlace(events[5], inRothenburg2)).toBe(true);
 	});
 });

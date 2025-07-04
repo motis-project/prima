@@ -22,7 +22,7 @@ import {
 	type Insertion
 } from './insertion';
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
-import { DAY } from '$lib/util/time';
+import { DAY, HOUR } from '$lib/util/time';
 import { routing } from './routing';
 
 export async function evaluateRequest(
@@ -59,14 +59,10 @@ export async function evaluateRequest(
 
 	const routingResults = await routing(companies, userChosen, busStops, insertionRanges);
 
+	const t1 = promisedTimes === undefined ? MAX_PASSENGER_WAITING_TIME_PICKUP + HOUR : HOUR;
+	const t2 = promisedTimes === undefined ? MAX_PASSENGER_WAITING_TIME_DROPOFF + HOUR : HOUR;
 	const busStopTimes = busStops.map((bs) =>
-		bs.times.map(
-			(t) =>
-				new Interval(
-					startFixed ? t : t - MAX_PASSENGER_WAITING_TIME_PICKUP,
-					startFixed ? t + MAX_PASSENGER_WAITING_TIME_DROPOFF : t
-				)
-		)
+		bs.times.map((t) => new Interval(startFixed ? t : t - t1, startFixed ? t + t2 : t))
 	);
 	// Find the smallest Interval containing all availabilities and tours of the companies received as a parameter.
 	let earliest = Number.MAX_VALUE;

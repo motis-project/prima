@@ -5,6 +5,7 @@ import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
 import type { BusStop } from './server/booking/BusStop';
+import type { TourWithRequests } from './util/getToursTypes';
 
 export enum Zone {
 	NIESKY = 1,
@@ -262,4 +263,32 @@ export type BookingLogs = {
 	dropoffTime?: number;
 	pickupNextId?: number;
 	dropoffPrevId?: number;
+	whitelist?: boolean;
 };
+
+export function getCost(tour: TourWithRequests) {
+	const events = tour.requests.flatMap((r) => r.events);
+	if (events.length === 0) {
+		return {
+			weightedPassengerDuration: 0,
+			drivingTime: 0,
+			waitingTime: 0
+		};
+	}
+	const drivingTime = events.reduce(
+		(acc, curr) => (acc += curr.nextLegDuration),
+		events[0].prevLegDuration
+	);
+	const waitingTime = tour.endTime - tour.startTime - drivingTime;
+	let weightedPassengerDuration = 0;
+	let passengers = 0;
+	for (const event of events) {
+		passengers += event.isPickup ? event.passengers : -event.passengers;
+		weightedPassengerDuration += event.nextLegDuration * passengers;
+	}
+	return {
+		weightedPassengerDuration,
+		drivingTime,
+		waitingTime
+	};
+}

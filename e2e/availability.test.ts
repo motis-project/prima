@@ -75,15 +75,15 @@ test('Request ride', async ({ page }) => {
 	await requestRide(page);
 	await page.goto(`/taxi/availability?offset=${offset}&date=${dayString}`);
 	await page.waitForTimeout(500);
+	await expect(page.getByTestId(`GR-TU-11-${dayString}T07:45:00.000Z`).locator('div')).toHaveCSS(
+		'background-color',
+		'rgb(251, 146, 60)'
+	);
 	await expect(page.getByTestId(`GR-TU-11-${dayString}T08:00:00.000Z`).locator('div')).toHaveCSS(
 		'background-color',
 		'rgb(251, 146, 60)'
 	);
 	await expect(page.getByTestId(`GR-TU-11-${dayString}T08:15:00.000Z`).locator('div')).toHaveCSS(
-		'background-color',
-		'rgb(251, 146, 60)'
-	);
-	await expect(page.getByTestId(`GR-TU-11-${dayString}T08:30:00.000Z`).locator('div')).toHaveCSS(
 		'background-color',
 		'rgb(251, 146, 60)'
 	);

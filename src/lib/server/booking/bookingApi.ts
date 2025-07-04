@@ -57,6 +57,10 @@ export async function bookingApi(
 	communicatedDropoff1?: number;
 	communicatedPickup2?: number;
 	communicatedDropoff2?: number;
+	cost?: number;
+	passengerDuration?: number;
+	taxiTime?: number;
+	waitingTime?: number;
 }> {
 	console.log(
 		'BOOKING API PARAMS: ',
@@ -85,6 +89,10 @@ export async function bookingApi(
 	let communicatedDropoff2: number | undefined = undefined;
 	let message: string | undefined = undefined;
 	let success = false;
+	let cost = -1;
+	let passengerDuration = -1;
+	let waitingTime = -1;
+	let taxiTime = -1;
 	await retry(() =>
 		db
 			.transaction()
@@ -98,6 +106,10 @@ export async function bookingApi(
 						message = 'Die Anfrage für die erste Meile kann nicht erfüllt werden.';
 						return;
 					}
+					cost = firstConnection.best.cost;
+					passengerDuration = firstConnection.best.passengerDuration;
+					taxiTime = firstConnection.best.taxiDuration;
+					waitingTime = firstConnection.best.taxiWaitingTime;
 				}
 				if (p.connection2 != null) {
 					let blockedVehicleId: number | undefined = undefined;
@@ -115,6 +127,10 @@ export async function bookingApi(
 						message = 'Die Anfrage für die zweite Meile kann nicht erfüllt werden.';
 						return;
 					}
+					cost = secondConnection.best.cost;
+					passengerDuration = secondConnection.best.passengerDuration;
+					taxiTime = secondConnection.best.taxiDuration;
+					waitingTime = secondConnection.best.taxiWaitingTime;
 				}
 				if (
 					p.connection1 != null &&
@@ -189,6 +205,10 @@ export async function bookingApi(
 		communicatedDropoff1,
 		communicatedPickup2,
 		communicatedDropoff2,
-		status: success ? 200 : 400
+		status: success ? 200 : 400,
+		cost,
+		passengerDuration,
+		waitingTime,
+		taxiTime
 	};
 }

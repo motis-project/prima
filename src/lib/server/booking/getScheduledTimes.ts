@@ -1,4 +1,4 @@
-import { PASSENGER_CHANGE_DURATION, SCHEDULED_TIME_BUFFER } from '$lib/constants';
+import { PASSENGER_CHANGE_DURATION } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
 import type { Event } from '$lib/server/booking/getBookingAvailability';
 
@@ -8,13 +8,13 @@ export type ScheduledTimes = {
 		time: number;
 		start: boolean;
 	}[];
-	newPickupStartTime: number;
-	newDropoffEndTime: number;
 };
 
 export function getScheduledTimes(
-	pickupTime: number,
-	dropoffTime: number,
+	pickupTimeStart: number,
+	pickupTimeEnd: number,
+	dropoffTimeStart: number,
+	dropoffTimeEnd: number,
 	prevPickupEvent: undefined | (Event & { time: Interval }),
 	nextPickupEvent: undefined | (Event & { time: Interval }),
 	nextDropoffEvent: undefined | (Event & { time: Interval }),
@@ -26,16 +26,12 @@ export function getScheduledTimes(
 	firstEvents: Event[],
 	lastEvents: Event[]
 ) {
-	const communicatedPickup = pickupTime - SCHEDULED_TIME_BUFFER;
-	const communicatedDropoff = dropoffTime + SCHEDULED_TIME_BUFFER;
 	const scheduledTimes: ScheduledTimes = {
-		newPickupStartTime: communicatedPickup,
-		newDropoffEndTime: communicatedDropoff,
 		updates: []
 	};
 	if (prevPickupEvent) {
 		const prevPickupLeeway =
-			pickupTime - prevPickupEvent.scheduledTimeStart - pickupPrevLegDuration;
+			pickupTimeStart - prevPickupEvent.scheduledTimeStart - pickupPrevLegDuration;
 		if (prevPickupLeeway < 0) {
 			console.log('Error in getScheduledTimes 1');
 			throw new Error();
@@ -46,16 +42,11 @@ export function getScheduledTimes(
 				start: false,
 				time: prevPickupEvent.scheduledTimeStart + prevPickupLeeway
 			});
-			scheduledTimes.newPickupStartTime = pickupTime;
-		} else {
-			scheduledTimes.newPickupStartTime = Math.max(
-				communicatedPickup,
-				pickupTime - prevPickupLeeway + prevPickupEvent.time.size()
-			);
 		}
 	}
 	if (nextPickupEvent) {
-		const nextPickupLeeway = nextPickupEvent.scheduledTimeEnd - pickupTime - pickupNextLegDuration;
+		const nextPickupLeeway =
+			nextPickupEvent.scheduledTimeEnd - pickupTimeEnd - pickupNextLegDuration;
 		if (nextPickupLeeway < 0) {
 			console.log('Error in getScheduledTimes 2');
 			throw new Error();
@@ -70,7 +61,7 @@ export function getScheduledTimes(
 	}
 	if (nextDropoffEvent) {
 		const nextDropoffLeeway =
-			nextDropoffEvent.scheduledTimeEnd - dropoffTime - dropoffNextLegDuration;
+			nextDropoffEvent.scheduledTimeEnd - dropoffTimeEnd - dropoffNextLegDuration;
 		if (nextDropoffLeeway < 0) {
 			console.log('Error in getScheduledTimes 3');
 			throw new Error();
@@ -81,17 +72,11 @@ export function getScheduledTimes(
 				start: true,
 				time: nextDropoffEvent.scheduledTimeEnd - nextDropoffLeeway
 			});
-			scheduledTimes.newDropoffEndTime = dropoffTime;
-		} else {
-			scheduledTimes.newDropoffEndTime = Math.min(
-				communicatedDropoff,
-				dropoffTime + nextDropoffLeeway - nextDropoffEvent.time.size()
-			);
 		}
 	}
 	if (prevDropoffEvent) {
 		const prevDropoffLeeway =
-			dropoffTime - prevDropoffEvent.scheduledTimeStart - dropoffPrevLegDuration;
+			dropoffTimeStart - prevDropoffEvent.scheduledTimeStart - dropoffPrevLegDuration;
 		if (prevDropoffLeeway < 0) {
 			console.log('Error in getScheduledTimes 4');
 			throw new Error();
