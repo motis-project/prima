@@ -310,6 +310,22 @@ async function updateLegDurations(
 				.where('tour.id', '=', firstUncancelledEvent.tourid)
 				.execute();
 		}
+		const prevLegDuration = (
+			await trx
+				.selectFrom('event')
+				.where('event.id', '=', firstUncancelledEvent.eventid)
+				.select(['prevLegDuration'])
+				.executeTakeFirst()
+		)?.prevLegDuration;
+		if (prevLegDuration === undefined) {
+			console.log('prevLegduration was undefined unexpectedly in cancelRequest.');
+			throw new Error();
+		}
+		await trx
+			.updateTable('tour')
+			.set({ departure: firstUncancelledEvent.scheduledTimeEnd - prevLegDuration })
+			.where('tour.id', '=', firstUncancelledEvent.tourid)
+			.execute();
 	}
 	if (cancelledIdx2 === uncancelledEvents.length - 1 && uncancelledEvents.length > 2) {
 		const firstEventNextTour = await trx
@@ -339,5 +355,21 @@ async function updateLegDurations(
 				.where('tour.id', '=', firstEventNextTour.tourId)
 				.execute();
 		}
+		const nextLegDuration = (
+			await trx
+				.selectFrom('event')
+				.where('event.id', '=', lastUncancelledEvent.eventid)
+				.select(['nextLegDuration'])
+				.executeTakeFirst()
+		)?.nextLegDuration;
+		if (nextLegDuration === undefined) {
+			console.log('nextLegDuration was undefined unexpectedly in cancelRequest.');
+			throw new Error();
+		}
+		await trx
+			.updateTable('tour')
+			.set({ arrival: lastUncancelledEvent.scheduledTimeStart + nextLegDuration })
+			.where('tour.id', '=', lastUncancelledEvent.tourid)
+			.execute();
 	}
 }

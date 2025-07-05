@@ -230,7 +230,7 @@ export function evaluateSingleInsertion(
 	const taxiDuration =
 		prevLegDuration + nextLegDuration - getOldDrivingTime(insertionCase, prev, next);
 	console.assert(insertionCase.what != InsertWhat.BOTH);
-	const time =
+	const communicatedTime =
 		promisedTimes === undefined
 			? arrivalWindow.startTime
 			: isPickup(insertionCase)
@@ -240,13 +240,18 @@ export function evaluateSingleInsertion(
 				: arrivalWindow.covers(promisedTimes.dropoff)
 					? promisedTimes.dropoff
 					: arrivalWindow.endTime;
+	const scheduledShift = Math.min(arrivalWindow.size(), SCHEDULED_TIME_BUFFER);
+	const scheduledTimeCandidate =
+		communicatedTime + (isPickup(insertionCase) ? scheduledShift : -scheduledShift);
 	const taxiWaitingTime = getTaxiWaitingDelta(
 		prevLegDuration + nextLegDuration,
 		insertionCase,
-		new Date(time - prevLegDuration).getTime(),
-		new Date(time + nextLegDuration).getTime(),
+		new Date(scheduledTimeCandidate - prevLegDuration).getTime(),
+		new Date(scheduledTimeCandidate + nextLegDuration).getTime(),
 		prev,
-		next
+		next,
+		undefined,
+		undefined
 	);
 	const sie: SingleInsertionEvaluation = {
 		window: arrivalWindow,
@@ -369,34 +374,49 @@ export function evaluateBothInsertion(
 		pickupTime = dropoffTime - passengerDuration;
 		communicatedPickupTime = pickupTime - leeway;
 	}
-	const passengerCountAfterPrev = prev
-		? passengerCountBeforePrev + (prev.isPickup ? prev.passengers : -prev.passengers)
-		: 0;
-	let weightedPassengerDuration =
-		(passengerCountAfterPrev + passengerCountNewRequest) * (dropoffTime - pickupTime);
-	if (next && prev) {
-		const passengerCountAfterNext =
-			passengerCountAfterPrev + (next.isPickup ? prev.passengers : -prev.passengers);
-		const existingPassengerTimeOld = getScheduledEventTime(next) - getScheduledEventTime(prev);
-		const newPrevTime = prev.isPickup ? pickupTime - prevLegDuration : getScheduledEventTime(prev);
-		const newNextTime = next.isPickup ? getScheduledEventTime(next) : dropoffTime + nextLegDuration;
-		const existingPassengerTimeNew = newNextTime - newPrevTime;
-		const additionalWeightedTimeExistingPasengers =
-			passengerCountAfterPrev * (existingPassengerTimeNew - existingPassengerTimeOld) -
-			passengerCountBeforePrev * (getScheduledEventTime(prev) - newPrevTime) -
-			passengerCountAfterNext * (newNextTime - getScheduledEventTime(next));
-		weightedPassengerDuration += additionalWeightedTimeExistingPasengers;
+
+	let newEndTimePrev = undefined;
+	if (
+		!comesFromCompany(insertionCase) &&
+		prev!.isPickup &&
+		communicatedPickupTime - prev!.scheduledTimeEnd - prevLegDuration < 0
+	) {
+		newEndTimePrev = communicatedPickupTime - prevLegDuration;
+	}
+	let newStartTimeNext = undefined;
+	if (
+		!returnsToCompany(insertionCase) &&
+		!next!.isPickup &&
+		communicatedDropoffTime - next!.scheduledTimeEnd - nextLegDuration < 0
+	) {
+		newStartTimeNext = communicatedDropoffTime + nextLegDuration;
 	}
 
+	const passengerCountAfterPrev = !comesFromCompany(insertionCase)
+		? passengerCountBeforePrev + (prev!.isPickup ? prev!.passengers : -prev!.passengers)
+		: 0;
+	const passengerCountAfterNext = returnsToCompany(insertionCase)
+		? passengerCountAfterPrev
+		: passengerCountAfterPrev + (next!.isPickup ? next!.passengers : -next!.passengers);
+	let weightedPassengerDuration = passengerCountNewRequest * (dropoffTime - pickupTime);
+	const prevShift =
+		newEndTimePrev !== undefined ? newEndTimePrev - getScheduledEventTime(prev!) : 0;
+	const nextShift =
+		newStartTimeNext !== undefined ? getScheduledEventTime(next!) - newStartTimeNext : 0;
+	weightedPassengerDuration +=
+		(prevShift + nextShift) * (passengerCountAfterNext - passengerCountAfterPrev);
 	const departure = comesFromCompany(insertionCase) ? pickupTime - prevLegDuration : undefined;
 	const arrival = returnsToCompany(insertionCase) ? dropoffTime + nextLegDuration : undefined;
+
 	const taxiWaitingTime = getTaxiWaitingDelta(
 		prevLegDuration + nextLegDuration + passengerDuration,
 		insertionCase,
 		departure,
 		arrival,
 		prev,
-		next
+		next,
+		newEndTimePrev,
+		newStartTimeNext
 	);
 	let eventOverlap = 0;
 	const window = new Interval(pickupTime, dropoffTime);
@@ -576,23 +596,34 @@ export function evaluateSingleInsertions(
 	const prepTime = Date.now() + MIN_PREP;
 	const direction = startFixed ? InsertDirection.BUS_STOP_PICKUP : InsertDirection.BUS_STOP_DROPOFF;
 
-	let passengers = 0;
 	iterateAllInsertions(companies, insertionRanges, (insertionInfo: InsertionInfo) => {
+		const events = insertionInfo.vehicle.events;
 		const prev: Event | undefined =
 			insertionInfo.idxInVehicleEvents == 0
 				? insertionInfo.vehicle.lastEventBefore
-				: insertionInfo.vehicle.events[insertionInfo.idxInVehicleEvents - 1];
+				: events[insertionInfo.idxInVehicleEvents - 1];
 		const next: Event | undefined =
-			insertionInfo.idxInVehicleEvents == insertionInfo.vehicle.events.length
+			insertionInfo.idxInVehicleEvents == events.length
 				? insertionInfo.vehicle.firstEventAfter
-				: insertionInfo.vehicle.events[insertionInfo.idxInVehicleEvents];
+				: events[insertionInfo.idxInVehicleEvents];
+		const sameTourEvents =
+			prev === undefined
+				? []
+				: events.slice(
+						events.findIndex((e) => e.tourId === prev?.tourId),
+						events.findIndex((e) => e.id === prev.id)
+					);
+		const passengers = sameTourEvents.reduce(
+			(acc, curr) => (acc += curr.isPickup ? curr.passengers : -curr.passengers),
+			0
+		);
 		INSERT_HOW_OPTIONS.forEach((insertHow) => {
 			const insertionCase = {
 				how: insertHow,
 				where:
 					insertionInfo.idxInVehicleEvents == 0
 						? InsertWhere.BEFORE_FIRST_EVENT
-						: insertionInfo.idxInVehicleEvents == insertionInfo.vehicle.events.length
+						: insertionInfo.idxInVehicleEvents == events.length
 							? InsertWhere.AFTER_LAST_EVENT
 							: prev!.tourId != next!.tourId
 								? InsertWhere.BETWEEN_TOURS
@@ -615,16 +646,14 @@ export function evaluateSingleInsertions(
 			// Ensure shifting the previous or next events' scheduledTime does not cause the whole tour to be prolonged too much
 			if (insertHow === InsertHow.INSERT && prev && next && windows.length != 0) {
 				const twoBefore =
-					insertionInfo.vehicle.events[insertionInfo.idxInVehicleEvents - 2] ??
-					insertionInfo.vehicle.lastEventBefore;
+					events[insertionInfo.idxInVehicleEvents - 2] ?? insertionInfo.vehicle.lastEventBefore;
 				if (twoBefore && twoBefore?.tourId != prev.tourId) {
 					const tourDifference = prev.departure - twoBefore.arrival;
 					const scheduledTimeLength = prev.scheduledTimeEnd - prev.scheduledTimeStart;
 					windows[0].startTime += Math.max(0, scheduledTimeLength - tourDifference);
 				}
 				const twoAfter =
-					insertionInfo.vehicle.events[insertionInfo.idxInVehicleEvents + 1] ??
-					insertionInfo.vehicle.firstEventAfter;
+					events[insertionInfo.idxInVehicleEvents + 1] ?? insertionInfo.vehicle.firstEventAfter;
 				if (twoAfter && twoAfter?.tourId != next.tourId && windows.length != 0) {
 					const tourDifference = twoAfter.departure - next.arrival;
 					const scheduledTimeLength = next.scheduledTimeEnd - next.scheduledTimeStart;
@@ -721,7 +750,6 @@ export function evaluateSingleInsertions(
 				userChosenEvaluations[insertionInfo.insertionIdx] = resultUserChosen;
 			}
 		});
-		passengers += prev ? (prev.isPickup ? prev.passengers : -prev.passengers) : 0;
 	});
 	return { busStopEvaluations, userChosenEvaluations, bothEvaluations };
 }
@@ -875,8 +903,8 @@ export function evaluatePairInsertions(
 						dropoffWaitingTime: dropoff.taxiWaitingTime,
 						pickupTaxiDuration: pickup.taxiDuration,
 						dropoffTaxiDuration: dropoff.taxiDuration,
-						waitingTime: pickup.taxiWaitingTime + dropoff.taxiWaitingTime,
-						taxiDuration: taxiDuration,
+						waitingTime: taxiWaitingTime,
+						taxiDuration,
 						cumulatedTaxiDrivingDelta,
 						passengerDuration,
 						pickupTime: communicatedPickupTime,
@@ -907,7 +935,7 @@ export function evaluatePairInsertions(
 							vehicle: insertionInfo.vehicle.id,
 							tour,
 							departure: comesFromCompany(pickup.case)
-								? new Date(communicatedPickupTime - pickup.approachDuration).getTime()
+								? new Date(scheduledPickupTime - pickup.approachDuration).getTime()
 								: undefined,
 							arrival: returnsToCompany(dropoff.case)
 								? new Date(scheduledDropoffTime + dropoff.returnDuration).getTime()
@@ -965,7 +993,9 @@ function getTaxiWaitingDelta(
 	departure: number | undefined,
 	arrival: number | undefined,
 	prev: Event | undefined,
-	next: Event | undefined
+	next: Event | undefined,
+	newPickupTime?: number,
+	newDropoffTime?: number
 ): number {
 	if (insertionCase.how == InsertHow.NEW_TOUR) {
 		return 0;
@@ -975,9 +1005,13 @@ function getTaxiWaitingDelta(
 			? getScheduledEventTime(next!) - getScheduledEventTime(prev!) - prev!.nextLegDuration
 			: 0;
 	const prevTaskTime =
-		insertionCase.how == InsertHow.PREPEND ? departure! : getScheduledEventTime(prev!);
+		insertionCase.how == InsertHow.PREPEND
+			? departure!
+			: Math.min(newPickupTime ?? Number.MAX_SAFE_INTEGER, getScheduledEventTime(prev!));
 	const nextTaskTime =
-		insertionCase.how == InsertHow.APPEND ? arrival! : getScheduledEventTime(next!);
+		insertionCase.how == InsertHow.APPEND
+			? arrival!
+			: Math.max(newDropoffTime ?? -1, getScheduledEventTime(next!));
 	const newWaitingTime = Math.max(nextTaskTime - prevTaskTime - drivingDuration, 0);
 	return newWaitingTime - oldWaitingTime;
 }
@@ -990,18 +1024,18 @@ const getOldDrivingTime = (
 	if (insertionCase.how == InsertHow.NEW_TOUR) {
 		return 0;
 	}
-	if (insertionCase.how == InsertHow.CONNECT || insertionCase.how === InsertHow.INSERT) {
+	if (insertionCase.how == InsertHow.CONNECT) {
 		return next!.prevLegDuration + prev!.nextLegDuration;
 	}
 	console.assert(prev != undefined || next != undefined, 'getOldDrivingTime: no event found');
-	if (prev == undefined) {
+	if (comesFromCompany(insertionCase)) {
 		console.assert(
 			insertionCase.how == InsertHow.PREPEND,
 			'getOldDrivingTime: no previous but also no prepend'
 		);
 		return next!.prevLegDuration;
 	}
-	return prev.nextLegDuration;
+	return prev!.nextLegDuration;
 };
 
 const keepsPromises = (

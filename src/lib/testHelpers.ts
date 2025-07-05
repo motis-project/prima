@@ -5,7 +5,8 @@ import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
 import type { BusStop } from './server/booking/BusStop';
-import type { TourWithRequests } from './util/getToursTypes';
+import type { TourWithRequests, TourWithRequestsEvents } from './util/getToursTypes';
+import { getScheduledEventTime } from './util/getScheduledEventTime';
 
 export enum Zone {
 	NIESKY = 1,
@@ -267,7 +268,9 @@ export type BookingLogs = {
 };
 
 export function getCost(tour: TourWithRequests) {
-	const events = tour.requests.flatMap((r) => r.events);
+	const events = sortEventsByTime(
+		tour.requests.flatMap((r) => r.events).filter((e) => !e.cancelled)
+	);
 	if (events.length === 0) {
 		return {
 			weightedPassengerDuration: 0,
@@ -282,13 +285,26 @@ export function getCost(tour: TourWithRequests) {
 	const waitingTime = tour.endTime - tour.startTime - drivingTime;
 	let weightedPassengerDuration = 0;
 	let passengers = 0;
-	for (const event of events) {
+	for (let i = 0; i != events.length - 1; ++i) {
+		const event = events[i];
+		const nextEvent = events[i + 1];
 		passengers += event.isPickup ? event.passengers : -event.passengers;
-		weightedPassengerDuration += event.nextLegDuration * passengers;
+		weightedPassengerDuration +=
+			(getScheduledEventTime(nextEvent) - getScheduledEventTime(event)) * passengers;
 	}
 	return {
 		weightedPassengerDuration,
 		drivingTime,
 		waitingTime
 	};
+}
+
+export function sortEventsByTime(events: TourWithRequestsEvents): TourWithRequestsEvents {
+	return events.sort((a, b) => {
+		const startDiff = a.scheduledTimeStart - b.scheduledTimeStart;
+		if (startDiff !== 0) {
+			return startDiff;
+		}
+		return a.scheduledTimeEnd - b.scheduledTimeEnd;
+	});
 }

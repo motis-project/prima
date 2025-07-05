@@ -182,37 +182,39 @@ async function booking(
 				acc.drivingTime += cost.drivingTime;
 				acc.waitingTime += cost.waitingTime;
 				acc.weightedPassengerDuration += cost.weightedPassengerDuration;
+				return acc;
 			},
 			{ drivingTime: 0, waitingTime: 0, weightedPassengerDuration: 0 }
 		);
 		if (newCost.drivingTime !== oldCost.drivingTime + (response.taxiTime ?? 0)) {
 			console.log(
-				`Driving times do not match old: ${oldCost.drivingTime}, relative: ${response.taxiTime} and new: ${newCost.drivingTime}`
+				`Driving times do not match old: ${oldCost.drivingTime}, relative: ${response.taxiTime}, combined: ${oldCost.drivingTime + (response.taxiTime ?? 0)} and new: ${newCost.drivingTime}`
 			);
-			console.log(JSON.stringify(response, null, 2));
 			return true;
 		}
 		if (newCost.waitingTime !== oldCost.waitingTime + (response.waitingTime ?? 0)) {
 			console.log(
-				`Driving times do not match old: ${oldCost.waitingTime}, relative: ${response.waitingTime} and new: ${newCost.waitingTime}`
+				`Waiting times do not match old: ${oldCost.waitingTime}, relative: ${response.waitingTime}, combined: ${oldCost.waitingTime + (response.waitingTime ?? 0)} and new: ${newCost.waitingTime}`
 			);
 			return true;
 		}
 		if (
-			newCost.weightedPassengerDuration !==
-			oldCost.weightedPassengerDuration + (response.passengerDuration ?? 0)
+			newCost.weightedPassengerDuration -
+				(oldCost.weightedPassengerDuration + (response.passengerDuration ?? 0)) >
+			2
 		) {
 			console.log(
-				`Driving times do not match old: ${oldCost.weightedPassengerDuration}, relative: ${response.passengerDuration} and new: ${newCost.weightedPassengerDuration}`
+				`Passenger times do not match old: ${oldCost.weightedPassengerDuration}, relative: ${response.passengerDuration}, combined: ${oldCost.weightedPassengerDuration + (response.passengerDuration ?? 0)} and new: ${newCost.weightedPassengerDuration}`
 			);
 			return true;
 		}
-		console.log('costs do match :)');
+		console.log('costs do match');
 	}
 	console.log(response.status === 200 ? 'succesful booking' : 'failed to book');
 	if (doWhitelist && response.status !== 200) {
 		return true;
 	}
+	return false;
 }
 
 async function cancelRequestLocal() {

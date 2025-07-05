@@ -1,24 +1,11 @@
 import { getToursWithRequests } from '../db/getTours';
-import type {
-	ToursWithRequests,
-	TourWithRequestsEvent,
-	TourWithRequestsEvents
-} from '$lib/util/getToursTypes';
+import type { ToursWithRequests, TourWithRequestsEvent } from '$lib/util/getToursTypes';
 import { groupBy } from '../../util/groupBy';
 import { Interval } from '../../util/interval';
 import { HOUR } from '../../util/time';
 import { isSamePlace } from '../booking/isSamePlace';
 import { PASSENGER_CHANGE_DURATION, SCHEDULED_TIME_BUFFER } from '$lib/constants';
-
-function sortEventsByTime(events: TourWithRequestsEvents): TourWithRequestsEvents {
-	return events.sort((a, b) => {
-		const startDiff = a.scheduledTimeStart - b.scheduledTimeStart;
-		if (startDiff !== 0) {
-			return startDiff;
-		}
-		return a.scheduledTimeEnd - b.scheduledTimeEnd;
-	});
-}
+import { sortEventsByTime } from '$lib/testHelpers';
 
 function validateRequestHas2Events(tours: ToursWithRequests): boolean {
 	let fail = false;
@@ -457,6 +444,19 @@ async function validateCompanyDurations(tours: ToursWithRequests): Promise<boole
 			console.log(
 				`Duration from company to first event does not match in tour with id: ${tour.tourId} with first event: ${events[0].id}, duration in db: ${events[0].prevLegDuration / 1000} duration: ${fromCompanyFwd} or ${fromCompanyBwd}`
 			);
+			fail = true;
+		}
+		if (events[0].scheduledTimeEnd - events[0].prevLegDuration - tour.startTime !== 0) {
+			console.log(`Unnecessary wait time after departure in tour with id: ${tour.tourId}`);
+			fail = true;
+		}
+		if (
+			tour.endTime -
+				events[events.length - 1].scheduledTimeStart -
+				events[events.length - 1].nextLegDuration !==
+			0
+		) {
+			console.log(`Unnecessary wait time after arrival in tour with id: ${tour.tourId}`);
 			fail = true;
 		}
 

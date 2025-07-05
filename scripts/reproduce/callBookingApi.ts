@@ -6,23 +6,23 @@ import { bookingApi } from '../../src/lib/server/booking/bookingApi';
 const parameters = {
 	connection1: {
 		start: {
-			lng: 14.7548758,
-			lat: 51.5010823,
-			address: 'Brandstraße 9'
+			lng: 14.5235396,
+			lat: 51.4047924,
+			address: 'Körnerplatz'
 		},
 		target: {
-			lng: 14.5289849,
-			lat: 51.5353088,
-			address: 'Siedlung - Sydlišćo'
+			lng: 14.5297765,
+			lat: 51.5435594,
+			address: 'Alter Postweg 11'
 		},
-		startTime: 1751216212673,
-		targetTime: 1751219410160,
+		startTime: 1752152334312,
+		targetTime: 1752154107310,
 		signature: '',
-		startFixed: true
+		startFixed: false
 	},
 	connection2: null,
 	capacities: {
-		passengers: 1,
+		passengers: 2,
 		bikes: 0,
 		luggage: 0,
 		wheelchairs: 0
@@ -32,7 +32,7 @@ const parameters = {
 const kidsThreeToFour = 0;
 const kidsZeroToTwo = 0;
 const kidsFiveToSix = 0;
-const finalFlag = true;
+const finalFlag = false;
 async function main() {
 	const response = await bookingApi(
 		parameters,
