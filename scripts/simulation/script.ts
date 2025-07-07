@@ -164,12 +164,13 @@ async function booking(
 		!(doWhitelist ?? false)
 	);
 	if (compareCosts) {
+		let fail = false;
 		const toursAfter = await getToursWithRequests(false);
 		const requestId = response.request1Id ?? response.request2Id;
 		const t = toursAfter.filter((t) => t.requests.some((r) => r.requestId === requestId));
 		if (t.length !== 1) {
 			console.log(`Found ${t.length} tours containing the new request.`);
-			return true;
+			fail = true;
 		}
 		const newTour = t[0];
 		const oldTours: ToursWithRequests = toursBefore.filter((t) =>
@@ -190,13 +191,19 @@ async function booking(
 			console.log(
 				`Driving times do not match old: ${oldCost.drivingTime}, relative: ${response.taxiTime}, combined: ${oldCost.drivingTime + (response.taxiTime ?? 0)} and new: ${newCost.drivingTime}`
 			);
-			return true;
+			console.log(
+				`For new tour: ${newTour.tourId} and old tours: ${oldTours.map((t) => t.tourId)}`
+			);
+			fail = true;
 		}
 		if (newCost.waitingTime !== oldCost.waitingTime + (response.waitingTime ?? 0)) {
 			console.log(
 				`Waiting times do not match old: ${oldCost.waitingTime}, relative: ${response.waitingTime}, combined: ${oldCost.waitingTime + (response.waitingTime ?? 0)} and new: ${newCost.waitingTime}`
 			);
-			return true;
+			console.log(
+				`For new tour: ${newTour.tourId} and old tours: ${oldTours.map((t) => t.tourId)}`
+			);
+			fail = true;
 		}
 		if (
 			newCost.weightedPassengerDuration -
@@ -206,6 +213,12 @@ async function booking(
 			console.log(
 				`Passenger times do not match old: ${oldCost.weightedPassengerDuration}, relative: ${response.passengerDuration}, combined: ${oldCost.weightedPassengerDuration + (response.passengerDuration ?? 0)} and new: ${newCost.weightedPassengerDuration}`
 			);
+			console.log(
+				`For new tour: ${newTour.tourId} and old tours: ${oldTours.map((t) => t.tourId)}`
+			);
+			fail = true;
+		}
+		if (fail) {
 			return true;
 		}
 		console.log('costs do match');

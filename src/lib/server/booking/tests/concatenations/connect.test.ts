@@ -66,7 +66,7 @@ describe('Concatenation tests', () => {
 			target: inRothenburg2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(70)],
+			directTimes: [inXMinutes(100)],
 			startFixed: false,
 			capacities
 		});

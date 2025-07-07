@@ -100,7 +100,7 @@ export const getToursWithRequests = async (
 				eb
 					.selectFrom('request')
 					.whereRef('tour.id', '=', 'request.tour')
-					.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
+					.$if(!selectCancelled, (qb) => qb.where('request.cancelled', '=', false))
 					.select((eb) => [
 						'request.luggage',
 						'request.passengers',
@@ -118,7 +118,7 @@ export const getToursWithRequests = async (
 								.selectFrom('event')
 								.whereRef('event.request', '=', 'request.id')
 								.innerJoin('user', 'user.id', 'request.customer')
-								.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
+								.$if(!selectCancelled, (qb) => qb.where('event.cancelled', '=', false))
 								.select([
 									'tour.id as tour',
 									'user.name as customerName',

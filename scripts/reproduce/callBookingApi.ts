@@ -6,19 +6,19 @@ import { bookingApi } from '../../src/lib/server/booking/bookingApi';
 const parameters = {
 	connection1: {
 		start: {
-			lng: 14.5235396,
-			lat: 51.4047924,
+			lng: 14.6265431,
+			lat: 51.336027,
 			address: 'Körnerplatz'
 		},
 		target: {
-			lng: 14.5297765,
-			lat: 51.5435594,
-			address: 'Alter Postweg 11'
+			lng: 14.537528,
+			lat: 51.5418744,
+			address: 'Friedensstraße 77a'
 		},
-		startTime: 1752152334312,
-		targetTime: 1752154107310,
+		startTime: 1752390941953,
+		targetTime: 1752397720765,
 		signature: '',
-		startFixed: false
+		startFixed: true
 	},
 	connection2: null,
 	capacities: {

@@ -481,18 +481,7 @@ async function validateCompanyDurations(tours: ToursWithRequests): Promise<boole
 
 export async function healthCheck() {
 	const allTours = await getToursWithRequests(true);
-	const uncancelledTours = allTours
-		.filter((t) => !t.cancelled)
-		.map((t) => {
-			return {
-				...t,
-				requests: t.requests
-					.filter((r) => !r.cancelled)
-					.map((r) => {
-						return { ...r, events: r.events.filter((e) => !e.cancelled) };
-					})
-			};
-		});
+	const uncancelledTours = await getToursWithRequests(false);
 	let fail = false;
 	if (allTours) {
 		console.log('Validating tours...');
