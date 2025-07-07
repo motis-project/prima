@@ -1,4 +1,4 @@
-import { PUBLIC_MOTIS_URL } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import { SCHEDULED_TIME_BUFFER } from '$lib/constants';
 import type { PlanData } from '$lib/openapi';
 import { plan } from '$lib/openapi/services.gen';
@@ -10,7 +10,7 @@ export const POST = async (event: RequestEvent) => {
 	const q: PlanData = await event.request.json();
 	const response = (
 		await plan({
-			baseUrl: PUBLIC_MOTIS_URL,
+			baseUrl: env.PUBLIC_MOTIS_URL,
 			querySerializer: { array: { explode: false } } as QuerySerializerOptions,
 			query: q.query
 		})
