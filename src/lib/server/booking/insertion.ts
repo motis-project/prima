@@ -265,32 +265,6 @@ export function evaluateSingleInsertion(
 		newEndTimePrev !== undefined ? getScheduledEventTime(prev!) - newEndTimePrev : 0;
 	const nextShift =
 		newStartTimeNext !== undefined ? newStartTimeNext - getScheduledEventTime(next!) : 0;
-	const tourDurationDelta = (() => {
-		switch (insertionCase.how) {
-			case InsertHow.APPEND:
-				return scheduledTimeCandidate + nextLegDuration - prev!.arrival;
-			case InsertHow.PREPEND:
-				return next!.departure - scheduledTimeCandidate + prevLegDuration;
-			case InsertHow.INSERT: {
-				let delta = 0;
-				const twoBefore =
-					prev === undefined ? undefined : events[events.findIndex((e) => e.id === prev.id) - 1];
-				const twoAfter =
-					next === undefined ? undefined : events[events.findIndex((e) => e.id === next.id) + 1];
-				if (prev && prevShift && twoBefore?.tourId !== prev.tourId) {
-					delta += prevShift;
-				}
-				if (next && nextShift && twoAfter?.tourId !== next.tourId) {
-					delta += nextShift;
-				}
-				return 0;
-			}
-			case InsertHow.NEW_TOUR:
-				return 0;
-			case InsertHow.CONNECT:
-				return next!.departure - prev!.arrival;
-		}
-	})();
 	const taxiWaitingTime = getWaitingTimeDelta(
 		insertionCase,
 		scheduledTimeCandidate,
@@ -419,9 +393,10 @@ export function evaluateBothInsertion(
 				return 0;
 			case InsertHow.PREPEND:
 				return leeway;
-			case InsertHow.INSERT: return 0;
+			case InsertHow.INSERT:
+				return 0;
 			case InsertHow.NEW_TOUR:
-				return Math.floor(leeway/2);
+				return Math.floor(leeway / 2);
 			case InsertHow.CONNECT:
 				return 0;
 		}
@@ -432,9 +407,10 @@ export function evaluateBothInsertion(
 				return leeway;
 			case InsertHow.PREPEND:
 				return 0;
-			case InsertHow.INSERT: return 0;
+			case InsertHow.INSERT:
+				return 0;
 			case InsertHow.NEW_TOUR:
-				return Math.floor(leeway/2);
+				return Math.floor(leeway / 2);
 			case InsertHow.CONNECT:
 				return 0;
 		}
@@ -499,32 +475,6 @@ export function evaluateBothInsertion(
 		? dropoffScheduledStartTime + nextLegDuration
 		: undefined;
 
-	const tourDurationDelta = (() => {
-		switch (insertionCase.how) {
-			case InsertHow.APPEND:
-				return dropoffScheduledStartTime + nextLegDuration - prev!.arrival;
-			case InsertHow.PREPEND:
-				return next!.departure - pickupScheduledEndTime + prevLegDuration;
-			case InsertHow.INSERT: {
-				let delta = 0;
-				const twoBefore =
-					prev === undefined ? undefined : events[events.findIndex((e) => e.id === prev.id) - 1];
-				const twoAfter =
-					next === undefined ? undefined : events[events.findIndex((e) => e.id === next.id) + 1];
-				if (prev && prevShift && twoBefore?.tourId !== prev.tourId) {
-					delta += prevShift;
-				}
-				if (next && nextShift && twoAfter?.tourId !== next.tourId) {
-					delta += nextShift;
-				}
-				return delta;
-			}
-			case InsertHow.NEW_TOUR:
-				return arrival! - departure!;
-			case InsertHow.CONNECT:
-				return next!.departure - prev!.arrival;
-		}
-	})();
 	const taxiWaitingTime = getWaitingTimeDelta(
 		insertionCase,
 		pickupScheduledEndTime,
@@ -883,19 +833,12 @@ export function evaluatePairInsertions(
 	for (let i = 0; i != busStopTimes.length; ++i) {
 		bestEvaluations[i] = new Array<Insertion | undefined>(busStopTimes[i].length);
 	}
-	let passengersBeforePickup = 0;
 	iterateAllInsertions(companies, insertionRanges, (insertionInfo: InsertionInfo) => {
 		const events = insertionInfo.vehicle.events;
 		const pickupIdx = insertionInfo.idxInVehicleEvents;
 		const prevPickup = events[pickupIdx - 1];
 		const nextPickup = events[pickupIdx];
 		const twoAfterPickup = events[pickupIdx + 1];
-		passengersBeforePickup +=
-			prevPickup !== undefined
-				? prevPickup.isPickup
-					? prevPickup.passengers
-					: -prevPickup.passengers
-				: 0;
 		if (
 			pickupIdx < events.length - 1 &&
 			nextPickup?.tourId !== twoAfterPickup?.tourId &&
@@ -944,8 +887,14 @@ export function evaluatePairInsertions(
 					const prevDropoff = events[dropoffIdx - 1];
 					const nextDropoff = events[dropoffIdx];
 					const twoAfterDropoff = events[dropoffIdx + 1];
-					const communicatedPickupTime = Math.max(pickup.window.endTime - SCHEDULED_TIME_BUFFER, pickup.window.startTime);
-					const communicatedDropoffTime = Math.min(dropoff.window.startTime + SCHEDULED_TIME_BUFFER, dropoff.window.endTime);
+					const communicatedPickupTime = Math.max(
+						pickup.window.endTime - SCHEDULED_TIME_BUFFER,
+						pickup.window.startTime
+					);
+					const communicatedDropoffTime = Math.min(
+						dropoff.window.startTime + SCHEDULED_TIME_BUFFER,
+						dropoff.window.endTime
+					);
 					if (dropoffIdx < pickupIdx + 3) {
 						let availableDistance =
 							communicatedDropoffTime -
