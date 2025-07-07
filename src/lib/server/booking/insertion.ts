@@ -443,7 +443,7 @@ export function evaluateBothInsertion(
 		prev!.isPickup &&
 		communicatedPickupTime - prev!.scheduledTimeEnd - prevLegDuration < 0
 	) {
-		newEndTimePrev = communicatedPickupTime - prevLegDuration;
+		newEndTimePrev = Math.min(communicatedPickupTime - prevLegDuration, prev!.scheduledTimeStart);
 	}
 	let newStartTimeNext = undefined;
 	if (
@@ -451,7 +451,10 @@ export function evaluateBothInsertion(
 		!next!.isPickup &&
 		communicatedDropoffTime - next!.scheduledTimeEnd - nextLegDuration < 0
 	) {
-		newStartTimeNext = communicatedDropoffTime + nextLegDuration;
+		newStartTimeNext = Math.max(
+			communicatedDropoffTime + nextLegDuration,
+			next!.scheduledTimeStart
+		);
 	}
 
 	const prevShift =
