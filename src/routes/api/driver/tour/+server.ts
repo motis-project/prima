@@ -39,7 +39,7 @@ function updateEventGroups(tours: Tours) {
 		}
 		toursWithEventGroups[tIdx] = {
 			...tour,
-			events
+			events: eventsWithEventGroups
 		};
 	}
 	return toursWithEventGroups;
