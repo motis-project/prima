@@ -6,23 +6,23 @@ import { bookingApi } from '../../src/lib/server/booking/bookingApi';
 const parameters = {
 	connection1: {
 		start: {
-			lng: 14.6265431,
-			lat: 51.336027,
-			address: 'Körnerplatz'
+			lng: 14.6428691,
+			lat: 51.5145164,
+			address: 'Schulze-Delitzsch-Straße 19'
 		},
 		target: {
-			lng: 14.537528,
-			lat: 51.5418744,
-			address: 'Friedensstraße 77a'
+			lng: 14.524831,
+			lat: 51.5417871,
+			address: 'Hoyerswerdaer Straße 50'
 		},
-		startTime: 1752390941953,
-		targetTime: 1752397720765,
+		startTime: 1752373376001,
+		targetTime: 1752380722712,
 		signature: '',
 		startFixed: true
 	},
 	connection2: null,
 	capacities: {
-		passengers: 2,
+		passengers: 1,
 		bikes: 0,
 		luggage: 0,
 		wheelchairs: 0

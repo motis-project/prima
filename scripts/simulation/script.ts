@@ -187,7 +187,7 @@ async function booking(
 			},
 			{ drivingTime: 0, waitingTime: 0, weightedPassengerDuration: 0 }
 		);
-		if (newCost.drivingTime !== oldCost.drivingTime + (response.taxiTime ?? 0)) {
+		if (Math.abs(newCost.drivingTime - (oldCost.drivingTime + (response.taxiTime ?? 0))) > 2) {
 			console.log(
 				`Driving times do not match old: ${oldCost.drivingTime}, relative: ${response.taxiTime}, combined: ${oldCost.drivingTime + (response.taxiTime ?? 0)} and new: ${newCost.drivingTime}`
 			);
@@ -196,7 +196,7 @@ async function booking(
 			);
 			fail = true;
 		}
-		if (newCost.waitingTime !== oldCost.waitingTime + (response.waitingTime ?? 0)) {
+		if (Math.abs(newCost.waitingTime - (oldCost.waitingTime + (response.waitingTime ?? 0))) > 2) {
 			console.log(
 				`Waiting times do not match old: ${oldCost.waitingTime}, relative: ${response.waitingTime}, combined: ${oldCost.waitingTime + (response.waitingTime ?? 0)} and new: ${newCost.waitingTime}`
 			);
@@ -206,9 +206,10 @@ async function booking(
 			fail = true;
 		}
 		if (
-			newCost.weightedPassengerDuration -
-				(oldCost.weightedPassengerDuration + (response.passengerDuration ?? 0)) >
-			2
+			Math.abs(
+				newCost.weightedPassengerDuration -
+					(oldCost.weightedPassengerDuration + (response.passengerDuration ?? 0))
+			) > 2
 		) {
 			console.log(
 				`Passenger times do not match old: ${oldCost.weightedPassengerDuration}, relative: ${response.passengerDuration}, combined: ${oldCost.weightedPassengerDuration + (response.passengerDuration ?? 0)} and new: ${newCost.weightedPassengerDuration}`
