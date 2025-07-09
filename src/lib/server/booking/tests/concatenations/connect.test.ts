@@ -66,8 +66,8 @@ describe('Concatenation tests', () => {
 			target: inRothenburg2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(100)],
-			startFixed: false,
+			directTimes: [inXMinutes(65)],
+			startFixed: true,
 			capacities
 		});
 		const whiteResponse2 = await white(body2).then((r) => r.json());
@@ -83,9 +83,9 @@ describe('Concatenation tests', () => {
 				inRothenburg2.lng,
 				whiteResponse.direct[0].pickupTime,
 				roundToUnit(whiteResponse.direct[0].dropoffTime, MINUTE, Math.floor),
-				false
+				true
 			),
-			startFixed: false
+			startFixed: true
 		};
 		const bookingBody2 = {
 			connection1: connection2,

@@ -85,7 +85,7 @@ export const tests: TestParams[] = [
 					lng: 14.94294827018291
 				}
 			],
-			times: [1750753658858, 1750754858858],
+			times: [1750753658858, 1750756458858],
 			isDepartures: [true, true],
 			companies: [
 				{
