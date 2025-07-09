@@ -839,7 +839,7 @@ export function evaluatePairInsertions(
 		const events = insertionInfo.vehicle.events;
 		const pickupIdx = insertionInfo.idxInVehicleEvents;
 		const prevPickup = events[pickupIdx - 1];
-		const twoBeforePickup = events[pickupIdx-2];
+		const twoBeforePickup = events[pickupIdx - 2];
 		const nextPickup = events[pickupIdx];
 		const twoAfterPickup = events[pickupIdx + 1];
 		if (
@@ -1048,14 +1048,31 @@ export function evaluatePairInsertions(
 					) {
 						taxiWaitingTime -= prevShiftDropoff;
 					}
-					const newDeparture = comesFromCompany(pickup.case) ? scheduledPickupTime - pickup.prevLegDuration : (prevPickup.tourId !== twoBeforePickup?.tourId ? Math.min(communicatedPickupTime - pickup.prevLegDuration, getScheduledEventTime(prevPickup)) - prevPickup.prevLegDuration : prevPickup.departure);
-					const newArrival = returnsToCompany(dropoff.case) ? scheduledDropoffTime + dropoff.nextLegDuration : (nextDropoff.tourId !== twoAfterDropoff?.tourId ? Math.max(communicatedDropoffTime + dropoff.nextLegDuration, getScheduledEventTime(nextDropoff)) + nextDropoff.nextLegDuration : nextDropoff.arrival);
-					const relevantEvents = events.slice(pickup.case.how === InsertHow.CONNECT ? pickupIdx - 1: pickupIdx, dropoff.case.how===InsertHow.CONNECT ? dropoffIdx + 1 : dropoffIdx);
+					const newDeparture = comesFromCompany(pickup.case)
+						? scheduledPickupTime - pickup.prevLegDuration
+						: prevPickup.tourId !== twoBeforePickup?.tourId
+							? Math.min(
+									communicatedPickupTime - pickup.prevLegDuration,
+									getScheduledEventTime(prevPickup)
+								) - prevPickup.prevLegDuration
+							: prevPickup.departure;
+					const newArrival = returnsToCompany(dropoff.case)
+						? scheduledDropoffTime + dropoff.nextLegDuration
+						: nextDropoff.tourId !== twoAfterDropoff?.tourId
+							? Math.max(
+									communicatedDropoffTime + dropoff.nextLegDuration,
+									getScheduledEventTime(nextDropoff)
+								) + nextDropoff.nextLegDuration
+							: nextDropoff.arrival;
+					const relevantEvents = events.slice(
+						pickup.case.how === InsertHow.CONNECT ? pickupIdx - 1 : pickupIdx,
+						dropoff.case.how === InsertHow.CONNECT ? dropoffIdx + 1 : dropoffIdx
+					);
 					const tours = new Set<number>();
 					let oldTourDurationSum = 0;
 					relevantEvents.forEach((e) => {
-						if(!tours.has(e.tourId)){
-							oldTourDurationSum += e.arrival-e.departure;
+						if (!tours.has(e.tourId)) {
+							oldTourDurationSum += e.arrival - e.departure;
 							tours.add(e.tourId);
 						}
 					});
