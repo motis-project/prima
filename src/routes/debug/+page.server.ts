@@ -5,18 +5,12 @@ import { sql } from 'kysely';
 import { whitelist } from '../api/whitelist/whitelist';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import type { Translations } from '$lib/i18n/translation';
-import { getIp } from '$lib/server/getIp';
-import { error } from '@sveltejs/kit';
 import { bookingApi } from '$lib/server/booking/bookingApi';
 
 export type BookingError = { msg: keyof Translations['msg'] };
 
 export const actions = {
 	default: async (event): Promise<BookingError | { request: number }> => {
-		const clientIP = getIp(event);
-		if (clientIP !== '127.0.0.1' && clientIP !== '::1' && clientIP !== '::ffff:127.0.0.1') {
-			return error(403);
-		}
 		const customer = event.locals.session?.userId;
 		if (!customer) {
 			throw 'not logged in';
