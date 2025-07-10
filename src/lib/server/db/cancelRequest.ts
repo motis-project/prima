@@ -10,6 +10,7 @@ import { db, type Database } from '$lib/server/db';
 import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
 import { retry } from './retryQuery';
 import { PASSENGER_CHANGE_DURATION } from '$lib/constants';
+import { sortEventsByTime } from '$lib/testHelpers';
 
 export const cancelRequest = async (requestId: number, userId: number) => {
 	console.log(
@@ -265,9 +266,9 @@ async function updateLegDurations(
 			.executeTakeFirst();
 	};
 
-	const uncancelledEvents = events
-		.filter((e) => e.requestid === requestId || e.cancelled === false)
-		.sort((e1, e2) => e1.scheduledTimeStart - e2.scheduledTimeStart);
+	const uncancelledEvents = sortEventsByTime(
+		events.filter((e) => e.requestid === requestId || e.cancelled === false)
+	);
 	const cancelledIdx1 = uncancelledEvents.findIndex((e) => e.requestid === requestId);
 	const cancelledIdx2 = uncancelledEvents.findLastIndex((e) => e.requestid === requestId);
 	const cancelledEvent1 = uncancelledEvents[cancelledIdx1];

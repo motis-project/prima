@@ -5,7 +5,7 @@ import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
 import type { BusStop } from './server/booking/BusStop';
-import type { TourWithRequests, TourWithRequestsEvents } from './util/getToursTypes';
+import type { TourWithRequests } from './util/getToursTypes';
 import { getScheduledEventTime } from './util/getScheduledEventTime';
 
 export enum Zone {
@@ -299,7 +299,9 @@ export function getCost(tour: TourWithRequests) {
 	};
 }
 
-export function sortEventsByTime(events: TourWithRequestsEvents): TourWithRequestsEvents {
+export function sortEventsByTime<
+	T extends { scheduledTimeStart: number; scheduledTimeEnd: number }[]
+>(events: T): T {
 	return events.sort((a, b) => {
 		const startDiff = a.scheduledTimeStart - b.scheduledTimeStart;
 		if (startDiff !== 0) {
