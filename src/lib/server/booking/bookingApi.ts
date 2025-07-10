@@ -8,7 +8,6 @@ import type { Capacities } from '$lib/util/booking/Capacities';
 import { signEntry } from '$lib/server/booking/signEntry';
 import { insertRequest } from './insertRequest';
 import { retry } from '../db/retryQuery';
-import { PASSENGER_CHANGE_DURATION } from '$lib/constants';
 
 export type BookingParameters = {
 	connection1: ExpectedConnection | null;
@@ -53,10 +52,6 @@ export async function bookingApi(
 	status: number;
 	request1Id?: number;
 	request2Id?: number;
-	communicatedPickup1?: number;
-	communicatedDropoff1?: number;
-	communicatedPickup2?: number;
-	communicatedDropoff2?: number;
 	cost?: number;
 	passengerDuration?: number;
 	taxiTime?: number;
@@ -83,10 +78,6 @@ export async function bookingApi(
 	}
 	let request1Id: number | undefined = undefined;
 	let request2Id: number | undefined = undefined;
-	let communicatedPickup1: number | undefined = undefined;
-	let communicatedDropoff1: number | undefined = undefined;
-	let communicatedPickup2: number | undefined = undefined;
-	let communicatedDropoff2: number | undefined = undefined;
 	let message: string | undefined = undefined;
 	let success = false;
 	let cost = -1;
@@ -165,8 +156,6 @@ export async function bookingApi(
 							firstConnection.scheduledTimes,
 							trx
 						)) ?? null;
-					communicatedPickup1 = firstConnection.best.pickupTime - PASSENGER_CHANGE_DURATION;
-					communicatedDropoff1 = firstConnection.best.dropoffTime + PASSENGER_CHANGE_DURATION;
 				}
 				if (secondConnection != null) {
 					request2Id =
@@ -186,8 +175,6 @@ export async function bookingApi(
 							secondConnection.scheduledTimes,
 							trx
 						)) ?? null;
-					communicatedPickup2 = secondConnection.best.pickupTime;
-					communicatedDropoff2 = secondConnection.best.dropoffTime;
 				}
 				message = 'Die Anfrage wurde erfolgreich bearbeitet.';
 				success = true;
@@ -201,10 +188,6 @@ export async function bookingApi(
 		message,
 		request1Id,
 		request2Id,
-		communicatedPickup1,
-		communicatedDropoff1,
-		communicatedPickup2,
-		communicatedDropoff2,
 		status: success ? 200 : 400,
 		cost,
 		passengerDuration,

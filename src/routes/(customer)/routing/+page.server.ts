@@ -196,12 +196,6 @@ export const actions = {
 		}
 		const request1: number | null = bookingResult.request1Id ?? null;
 		const request2: number | null = bookingResult.request2Id ?? null;
-		const communicatedPickup1: number | undefined = bookingResult.communicatedPickup1;
-		const communicatedDropoff1: number | undefined = bookingResult.communicatedDropoff1;
-		parsedJson.legs[firstOdmIndex].scheduledStartTime = new Date(
-			communicatedPickup1!
-		).toISOString();
-		parsedJson.legs[firstOdmIndex].scheduledEndTime = new Date(communicatedDropoff1!).toISOString();
 		console.log('INSERTION DONE - REQUESTS:', { request1, request2 });
 
 		console.log('SAVING JOURNEY');

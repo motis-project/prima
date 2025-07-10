@@ -380,12 +380,9 @@ export function evaluateBothInsertion(
 		nextLegDuration +
 		passengerDuration -
 		getOldDrivingTime(insertionCase, prev, next);
-	const leeway = Math.min(arrivalWindow.size(), SCHEDULED_TIME_BUFFER);
 
-	let communicatedPickupTime = -1;
-	let communicatedDropoffTime = -1;
-	let pickupScheduledEndTime = -1;
-	let dropoffScheduledStartTime = -1;
+	const leeway = Math.min(arrivalWindow.size(), SCHEDULED_TIME_BUFFER);
+	const leewayNewTour = Math.min(Math.floor(arrivalWindow.size() / 2), SCHEDULED_TIME_BUFFER);
 	const pickupLeeway = (() => {
 		switch (insertionCase.how) {
 			case InsertHow.APPEND:
@@ -395,7 +392,7 @@ export function evaluateBothInsertion(
 			case InsertHow.INSERT:
 				return 0;
 			case InsertHow.NEW_TOUR:
-				return Math.floor(leeway / 2);
+				return leewayNewTour;
 			case InsertHow.CONNECT:
 				return 0;
 		}
@@ -409,11 +406,15 @@ export function evaluateBothInsertion(
 			case InsertHow.INSERT:
 				return 0;
 			case InsertHow.NEW_TOUR:
-				return Math.floor(leeway / 2);
+				return leewayNewTour;
 			case InsertHow.CONNECT:
 				return 0;
 		}
 	})();
+	let communicatedPickupTime = -1;
+	let communicatedDropoffTime = -1;
+	let pickupScheduledEndTime = -1;
+	let dropoffScheduledStartTime = -1;
 	if (insertionCase.direction == InsertDirection.BUS_STOP_PICKUP) {
 		communicatedPickupTime =
 			promisedTimes === undefined
@@ -436,30 +437,20 @@ export function evaluateBothInsertion(
 		communicatedPickupTime = pickupScheduledEndTime - pickupLeeway;
 	}
 
-	let newEndTimePrev = undefined;
-	if (
-		!comesFromCompany(insertionCase) &&
-		prev!.isPickup &&
-		communicatedPickupTime - prev!.scheduledTimeEnd - prevLegDuration < 0
-	) {
-		newEndTimePrev = Math.min(communicatedPickupTime - prevLegDuration, prev!.scheduledTimeStart);
-	}
-	let newStartTimeNext = undefined;
-	if (
-		!returnsToCompany(insertionCase) &&
-		!next!.isPickup &&
-		communicatedDropoffTime - next!.scheduledTimeEnd - nextLegDuration < 0
-	) {
-		newStartTimeNext = Math.max(
-			communicatedDropoffTime + nextLegDuration,
-			next!.scheduledTimeStart
+	let prevShift = 0;
+	if (!comesFromCompany(insertionCase) && prev!.isPickup) {
+		prevShift = Math.max(
+			getScheduledEventTime(prev!) - communicatedPickupTime + prevLegDuration,
+			0
 		);
 	}
-
-	const prevShift =
-		newEndTimePrev !== undefined ? getScheduledEventTime(prev!) - newEndTimePrev : 0;
-	const nextShift =
-		newStartTimeNext !== undefined ? newStartTimeNext - getScheduledEventTime(next!) : 0;
+	let nextShift = 0;
+	if (!returnsToCompany(insertionCase) && !next!.isPickup) {
+		nextShift = Math.max(
+			communicatedDropoffTime + nextLegDuration - getScheduledEventTime(next!),
+			0
+		);
+	}
 
 	let weightedPassengerDuration =
 		passengerCountNewRequest * (dropoffScheduledStartTime - pickupScheduledEndTime);
@@ -493,19 +484,7 @@ export function evaluateBothInsertion(
 		taxiDurationDelta
 	);
 
-	let eventOverlap = 0;
-	const window = new Interval(pickupScheduledEndTime, dropoffScheduledStartTime);
-	if (prev && insertionCase.how !== InsertHow.APPEND) {
-		eventOverlap += window.intersect(prev.time)?.size() ?? 0;
-	}
-	if (next && insertionCase.how !== InsertHow.PREPEND) {
-		eventOverlap += window.intersect(next.time)?.size() ?? 0;
-	}
-	const cost = computeCost(
-		weightedPassengerDuration + eventOverlap,
-		taxiDurationDelta,
-		taxiWaitingTime
-	);
+	const cost = computeCost(weightedPassengerDuration, taxiDurationDelta, taxiWaitingTime);
 	bookingLogs.push({
 		type: printInsertionType(insertionCase),
 		prevEvent: prev?.id,
@@ -517,9 +496,8 @@ export function evaluateBothInsertion(
 		waitingTime: taxiWaitingTime,
 		taxiDuration: taxiDurationDelta,
 		oldDrivingTime: getOldDrivingTime(insertionCase, prev, next),
-		passengerDuration: passengerDuration + eventOverlap,
+		passengerDuration: passengerDuration,
 		weightedPassengerDuration,
-		eventOverlap,
 		whitelist: promisedTimes === undefined
 	});
 	console.log(
@@ -528,6 +506,17 @@ export function evaluateBothInsertion(
 		printInsertionType(insertionCase),
 		{ pickupTime: pickupScheduledEndTime.toString() },
 		{ dropoffTime: dropoffScheduledStartTime.toString() }
+	);
+	console.log(
+		promisedTimes === undefined ? 'WHITELIST' : 'BOOKING API',
+		'valid insertion found,',
+		printInsertionType(insertionCase),
+		{ prevId: prev?.id },
+		{ nextId: next?.id },
+		{ cost },
+		{ weightedPassengerDuration },
+		{ taxiDurationDelta },
+		{ taxiWaitingTime }
 	);
 	return {
 		pickupTime: communicatedPickupTime,
@@ -827,7 +816,8 @@ export function evaluatePairInsertions(
 	busStopTimes: Interval[][],
 	busStopEvaluations: (SingleInsertionEvaluation | undefined)[][][],
 	userChosenEvaluations: (SingleInsertionEvaluation | undefined)[],
-	required: Capacities
+	required: Capacities,
+	whitelist?: boolean
 ): (Insertion | undefined)[][] {
 	const bestEvaluations: (Insertion | undefined)[][] = new Array<(Insertion | undefined)[]>(
 		busStopTimes.length
@@ -1060,6 +1050,22 @@ export function evaluatePairInsertions(
 						taxiWaitingTime
 					);
 
+					console.log(
+						whitelist ? 'WHITELIST' : 'BOOKING API',
+						'valid insertion found,',
+						'pickup: ',
+						printInsertionType(pickup.case),
+						'dropoff: ',
+						printInsertionType(dropoff.case),
+						{ prevPickupId: prevPickup?.id },
+						{ nextPickupId: nextPickup?.id },
+						{ prevDropoffId: prevDropoff?.id },
+						{ nextDropoffId: nextDropoff?.id },
+						{ cost },
+						{ weightedPassengerDuration },
+						{ taxiWaitingTime },
+						{ drivingDurationDelta }
+					);
 					bookingLogs.push({
 						pickupType: printInsertionType(pickup.case),
 						dropoffType: printInsertionType(dropoff.case),

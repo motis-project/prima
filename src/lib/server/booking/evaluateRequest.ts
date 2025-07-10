@@ -127,7 +127,8 @@ export async function evaluateRequest(
 		busStopTimes,
 		busStopEvaluations,
 		userChosenEvaluations,
-		required
+		required,
+		promisedTimes === undefined
 	);
 	const best = takeBest(takeBest(bothEvaluations, newTourEvaluations), pairEvaluations);
 	return best;
