@@ -1,5 +1,5 @@
 import type { Event } from '$lib/server/booking/getBookingAvailability';
-import { InsertHow } from './insertionTypes';
+import { InsertHow } from '$lib/util/booking/insertionTypes';
 
 export const getMergeTourList = (
 	events: Event[],
@@ -7,9 +7,9 @@ export const getMergeTourList = (
 	dropoffHow: InsertHow,
 	pickupIdx: number | undefined,
 	dropoffIdx: number | undefined
-): Set<number> => {
-	if (events.length == 0) {
-		return new Set<number>();
+): Event[] => {
+	if (events.length == 0 || pickupHow === InsertHow.NEW_TOUR) {
+		return [];
 	}
 	const tours = new Set<number>();
 	if (pickupHow == InsertHow.CONNECT) {
@@ -21,8 +21,5 @@ export const getMergeTourList = (
 	events.slice(pickupIdx ?? 0, dropoffIdx ?? events.length - 1).forEach((ev) => {
 		tours.add(ev.tourId);
 	});
-	if (tours.size == 1) {
-		return new Set<number>();
-	}
-	return tours;
+	return [...tours].map((t) => events.find((e) => t === e.tourId)).filter((e) => e !== undefined);
 };

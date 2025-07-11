@@ -9,11 +9,21 @@ import Prom from 'prom-client';
 import { env } from '$env/dynamic/private';
 
 import consoleStamp from 'console-stamp';
+import { getIp } from '$lib/server/getIp';
 consoleStamp(console);
 
 const authHandle: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get('session');
 	const session = await validateSessionToken(token);
+	const clientIP = getIp(event);
+	const isLocalhost =
+		clientIP === '127.0.0.1' || clientIP === '::1' || clientIP === '::ffff:127.0.0.1';
+	if (
+		!isLocalhost &&
+		(event.url.pathname.startsWith('/debug') || event.url.pathname.startsWith('/tests'))
+	) {
+		error(403);
+	}
 	if (
 		!session &&
 		(event.url.pathname.startsWith('/admin') || event.url.pathname.startsWith('/taxi'))

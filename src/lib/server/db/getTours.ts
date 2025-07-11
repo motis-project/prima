@@ -95,26 +95,30 @@ export const getToursWithRequests = async (
 			'company.lng as companyLng',
 			'vehicle.id as vehicleId',
 			'vehicle.licensePlate',
+			'tour.directDuration',
 			jsonArrayFrom(
 				eb
 					.selectFrom('request')
 					.whereRef('tour.id', '=', 'request.tour')
-					.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
-					.select([
+					.$if(!selectCancelled, (qb) => qb.where('request.cancelled', '=', false))
+					.select((eb) => [
 						'request.luggage',
 						'request.passengers',
+						'request.wheelchairs',
+						'request.bikes',
 						'request.kidsZeroToTwo',
 						'request.kidsThreeToFour',
 						'request.kidsFiveToSix',
 						'request.ticketChecked',
 						'request.ticketPrice',
+						'request.id as requestId',
+						'request.cancelled',
 						jsonArrayFrom(
 							eb
 								.selectFrom('event')
-								.innerJoin('request', 'request.id', 'event.request')
-								.whereRef('tour.id', '=', 'request.tour')
+								.whereRef('event.request', '=', 'request.id')
 								.innerJoin('user', 'user.id', 'request.customer')
-								.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
+								.$if(!selectCancelled, (qb) => qb.where('event.cancelled', '=', false))
 								.select([
 									'tour.id as tour',
 									'user.name as customerName',
@@ -131,6 +135,8 @@ export const getToursWithRequests = async (
 									'event.scheduledTimeStart',
 									'event.scheduledTimeEnd',
 									'event.cancelled',
+									'request.cancelled as requestCancelled',
+									'tour.cancelled as tourCancelled',
 									'request.bikes',
 									'request.customer',
 									'request.luggage',
