@@ -16,11 +16,12 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get('session');
 	const session = await validateSessionToken(token);
 	const clientIP = getIp(event);
-	const isLocalhost = clientIP === '127.0.0.1' || clientIP === '::1' || clientIP === '::ffff:127.0.0.1';
-	if(!isLocalhost && (
-		event.url.pathname.startsWith('/debug') ||
-		event.url.pathname.startsWith('/tests')
-	)) {
+	const isLocalhost =
+		clientIP === '127.0.0.1' || clientIP === '::1' || clientIP === '::ffff:127.0.0.1';
+	if (
+		!isLocalhost &&
+		(event.url.pathname.startsWith('/debug') || event.url.pathname.startsWith('/tests'))
+	) {
 		error(403);
 	}
 	if (
