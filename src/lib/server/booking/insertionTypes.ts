@@ -1,25 +1,12 @@
 import type { VehicleWithInterval } from './getBookingAvailability';
 import type { Range } from '$lib/util/booking/getPossibleInsertions';
+import { InsertHow, InsertWhat } from '$lib/util/booking/insertionTypes';
 
 export enum InsertWhere {
 	BEFORE_FIRST_EVENT,
 	AFTER_LAST_EVENT,
 	BETWEEN_EVENTS,
 	BETWEEN_TOURS
-}
-
-export enum InsertHow {
-	CONNECT,
-	APPEND,
-	PREPEND,
-	INSERT,
-	NEW_TOUR
-}
-
-export enum InsertWhat {
-	USER_CHOSEN,
-	BUS_STOP,
-	BOTH
 }
 
 export enum InsertDirection {
@@ -135,16 +122,15 @@ export const isCaseValid = (insertionCase: InsertionType): boolean => {
 
 export const isEarlierBetter = (insertionCase: InsertionType) => {
 	return (
-		(insertionCase.direction == InsertDirection.BUS_STOP_PICKUP) ==
-		(insertionCase.what == InsertWhat.BUS_STOP)
+		(insertionCase.direction === InsertDirection.BUS_STOP_PICKUP) !==
+		(insertionCase.what === InsertWhat.BUS_STOP)
 	);
 };
 
 export type InsertionInfo = {
 	companyIdx: number;
-	prevEventIdxInRoutingResults: number;
-	nextEventIdxInRoutingResults: number;
 	vehicle: VehicleWithInterval;
-	idxInEvents: number;
+	idxInVehicleEvents: number;
+	insertionIdx: number;
 	currentRange: Range;
 };

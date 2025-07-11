@@ -6,6 +6,7 @@ import type { Capacities } from '$lib/util/booking/Capacities';
 import { db, type Database } from '$lib/server/db';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { covers } from '$lib/server/db/covers';
+import { DAY } from '$lib/util/time';
 
 const selectEvents = (eb: ExpressionBuilder<Database, 'tour'>) => {
 	return jsonArrayFrom(
@@ -18,6 +19,7 @@ const selectEvents = (eb: ExpressionBuilder<Database, 'tour'>) => {
 				'tour.id as tourId',
 				'tour.arrival',
 				'tour.departure',
+				'tour.directDuration',
 				'event.id',
 				'event.communicatedTime',
 				'event.scheduledTimeStart',
@@ -30,8 +32,7 @@ const selectEvents = (eb: ExpressionBuilder<Database, 'tour'>) => {
 				'request.wheelchairs',
 				'event.isPickup',
 				'event.prevLegDuration',
-				'event.nextLegDuration',
-				'event.eventGroup'
+				'event.nextLegDuration'
 			])
 	).as('events');
 };
@@ -234,8 +235,7 @@ export const getBookingAvailability = async (
 	trx?: Transaction<Database>
 ) => {
 	const expandedSearchInterval = searchInterval.expand(MAX_TRAVEL * 3, MAX_TRAVEL * 3);
-	const twiceExpandedSearchInterval = searchInterval.expand(MAX_TRAVEL * 6, MAX_TRAVEL * 6);
-
+	const twiceExpandedSearchInterval = searchInterval.expand(DAY, DAY);
 	console.log(
 		'getBookingAvailability params: ',
 		JSON.stringify(
@@ -284,7 +284,13 @@ export const getBookingAvailability = async (
 	companies.forEach((c) =>
 		c.vehicles.forEach((v) => {
 			v.tours.sort((t1, t2) => t1.departure - t2.departure);
-			v.events.sort((e1, e2) => e1.time.startTime - e2.time.startTime);
+			v.events.sort((a, b) => {
+				const startDiff = a.scheduledTimeStart - b.scheduledTimeStart;
+				if (startDiff !== 0) {
+					return startDiff;
+				}
+				return a.scheduledTimeEnd - b.scheduledTimeEnd;
+			});
 		})
 	);
 	const filteredBusStops = new Array<number | undefined>(busStops.length);

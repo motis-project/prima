@@ -32,6 +32,7 @@ osm.pbf
 
 # Backups
 db_backups
+/scripts/simulation/backups
 
 /package-lock.json
 

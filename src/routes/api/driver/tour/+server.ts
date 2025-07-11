@@ -13,9 +13,7 @@ export const GET = async ({ locals, url }) => {
 	if (isNaN(fromTime) || isNaN(toTime)) {
 		error(400, { message: 'Invalid time range' });
 	}
-
-	const tours = await getTours(true, companyId, [fromTime, toTime]);
-	return json(updateEventGroups(tours));
+	return json(updateEventGroups(await getTours(true, companyId, [fromTime, toTime])));
 };
 
 function updateEventGroups(tours: Tours) {
@@ -26,17 +24,17 @@ function updateEventGroups(tours: Tours) {
 		let uuid = uuidv4();
 		if (events.length != 0) {
 			eventsWithEventGroups[0] = {
-					...events[0],
-					eventGroup: uuid
+				...events[0],
+				eventGroup: uuid
 			};
 		}
 		for (let eIdx = 1; eIdx != events.length; ++eIdx) {
 			if (!isSamePlace(events[eIdx - 1], events[eIdx])) {
-					uuid = uuidv4();
+				uuid = uuidv4();
 			}
 			eventsWithEventGroups[eIdx] = {
-					...events[eIdx],
-					eventGroup: uuid
+				...events[eIdx],
+				eventGroup: uuid
 			};
 		}
 		toursWithEventGroups[tIdx] = {

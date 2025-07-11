@@ -14,12 +14,11 @@
 		rows: T[];
 		cols: {
 			text: string[];
-			sort: undefined | ((r1: T, r2: T) => number);
+			sort?: (r1: T, r2: T) => number;
 			toTableEntry: (r: T) => string | number;
 			toColumnStyle?: (r: T) => string;
 			hidden?: boolean;
 		}[];
-		isAdmin: boolean;
 		getRowStyle?: (row: T) => string;
 		selectedRow?: undefined | T[];
 		bindSelectedRow?: boolean;

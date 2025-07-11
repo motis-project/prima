@@ -5,6 +5,8 @@ import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
 import type { BusStop } from './server/booking/BusStop';
+import type { TourWithRequests } from './util/getToursTypes';
+import { getScheduledEventTime } from './util/getScheduledEventTime';
 
 export enum Zone {
 	NIESKY = 1,
@@ -132,9 +134,9 @@ export const addTestUser = async (company?: number) => {
 	return await db
 		.insertInto('user')
 		.values({
-			email: 'test@user.de',
+			email: company === undefined ? 'test@user.de' : 'company@owner.de',
 			name: '',
-			isTaxiOwner: false,
+			isTaxiOwner: company !== undefined,
 			isAdmin: false,
 			isEmailVerified: true,
 			passwordHash:
@@ -146,10 +148,10 @@ export const addTestUser = async (company?: number) => {
 };
 
 export const clearDatabase = async () => {
-	await db.deleteFrom('journey').execute();
 	await db.deleteFrom('availability').execute();
 	await db.deleteFrom('event').execute();
 	await db.deleteFrom('request').execute();
+	await db.deleteFrom('journey').execute();
 	await db.deleteFrom('tour').execute();
 	await db.deleteFrom('vehicle').execute();
 	await db.deleteFrom('session').execute();
@@ -184,6 +186,7 @@ export const getTours = async () => {
 };
 
 export const selectEvents = async () => {
+	console.log('did selectEvents');
 	return await db
 		.selectFrom('tour')
 		.innerJoin('request', 'tour.id', 'request.tour')
@@ -192,9 +195,11 @@ export const selectEvents = async () => {
 			'event.id as eventid',
 			'request.id as requestid',
 			'tour.id as tourid',
-			'event.cancelled as ec',
-			'request.cancelled as rc',
-			'tour.cancelled as tc',
+			'event.cancelled as eventCancelled',
+			'event.nextLegDuration',
+			'event.prevLegDuration',
+			'request.cancelled as requestCancelled',
+			'tour.cancelled as tourCancelled',
 			'tour.message'
 		])
 		.execute();
@@ -221,4 +226,87 @@ export function assertArraySizes<T>(
 			}
 		}
 	}
+}
+
+export const bookingLogs: BookingLogs[] = [];
+export let iteration = 0;
+
+export function increment() {
+	++iteration;
+}
+
+export type BookingLogs = {
+	type?: string;
+	pickupType?: string;
+	dropoffType?: string;
+	cost?: number;
+	prevEvent?: number;
+	nextEvent?: number;
+	pickupPrevLegDuration?: number;
+	pickupNextLegDuration?: number;
+	dropoffPrevLegDuration?: number;
+	dropoffNextLegDuration?: number;
+	prevLegDuration?: number;
+	nextLegDuration?: number;
+	iter: number;
+	waitingTime?: number;
+	taxiDuration?: number;
+	pickupWaitingTime?: number;
+	dropoffWaitingTime?: number;
+	pickupTaxiDuration?: number;
+	dropoffTaxiDuration?: number;
+	cumulatedTaxiDrivingDelta?: number;
+	oldDrivingTime?: number;
+	passengerDuration?: number;
+	weightedPassengerDuration?: number;
+	eventOverlap?: number;
+	pickupTime?: number;
+	dropoffTime?: number;
+	pickupNextId?: number;
+	dropoffPrevId?: number;
+	whitelist?: boolean;
+};
+
+export function getCost(tour: TourWithRequests) {
+	const events = sortEventsByTime(
+		tour.requests.flatMap((r) => r.events).filter((e) => !e.cancelled)
+	);
+	if (events.length === 0) {
+		return {
+			weightedPassengerDuration: 0,
+			drivingTime: 0,
+			waitingTime: 0
+		};
+	}
+	const drivingTime = events.reduce(
+		(acc, curr) => (acc += curr.nextLegDuration),
+		events[0].prevLegDuration
+	);
+	const waitingTime = tour.endTime - tour.startTime - drivingTime;
+	let weightedPassengerDuration = 0;
+	let passengers = 0;
+	for (let i = 0; i != events.length - 1; ++i) {
+		const event = events[i];
+		const nextEvent = events[i + 1];
+		passengers += event.isPickup ? event.passengers : -event.passengers;
+		weightedPassengerDuration +=
+			(getScheduledEventTime(nextEvent) - getScheduledEventTime(event)) * passengers;
+	}
+	return {
+		weightedPassengerDuration,
+		drivingTime,
+		waitingTime
+	};
+}
+
+export function sortEventsByTime<
+	T extends { scheduledTimeStart: number; scheduledTimeEnd: number }[]
+>(events: T): T {
+	return events.sort((a, b) => {
+		const startDiff = a.scheduledTimeStart - b.scheduledTimeStart;
+		if (startDiff !== 0) {
+			return startDiff;
+		}
+		return a.scheduledTimeEnd - b.scheduledTimeEnd;
+	});
 }
