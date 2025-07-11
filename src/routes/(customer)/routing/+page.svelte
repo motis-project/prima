@@ -42,11 +42,13 @@
 	import { updateStartDest } from '$lib/util/updateStartDest';
 	import { odmPrice } from '$lib/util/odmPrice';
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
-	import { LocateFixed, MapIcon } from 'lucide-svelte';
+	import { HelpCircleIcon, LocateFixed, MapIcon } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
 	import { MAX_MATCHING_DISTANCE } from '$lib/constants';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { planAndSign, type SignedPlanResponse } from '$lib/planAndSign';
+
+	import logo from '$lib/assets/logo-alpha.png';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -310,14 +312,32 @@
 			page.state.selectTo}
 	>
 		<div class="flex h-full flex-col gap-4">
-			<Button
-				size="icon"
-				variant="outline"
-				onclick={() => pushState('', { showMap: true })}
-				class="ml-auto"
-			>
-				<MapIcon class="h-[1.2rem] w-[1.2rem]" />
-			</Button>
+			<div class="grid grid-cols-2 gap-4">
+				<div class="relative flex">
+					<img class="w-1/2" src={logo} alt={t.logo} />
+					<p class="absolute bottom-0 right-0 font-bold">PriMa+ÖV</p>
+				</div>
+				<div class="relative" dir="rtl">
+					<div class="absolute bottom-0">
+						<Button
+							size="icon"
+							variant="outline"
+							onclick={() => pushState('', { showMap: true })}
+							class="ml-auto"
+						>
+							<MapIcon class="h-[1.2rem] w-[1.2rem]" />
+						</Button>
+						<Button
+							size="icon"
+							variant="outline"
+							class="ml-auto"
+							onclick={() => goto('/explainer')}
+						>
+							<HelpCircleIcon class="h-[1.2rem] w-[1.2rem]" />
+						</Button>
+					</div>
+				</div>
+			</div>
 			<div class="relative flex flex-col gap-4">
 				<Input
 					placeholder={t.from}
