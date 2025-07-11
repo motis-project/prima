@@ -381,6 +381,7 @@ export function evaluateBothInsertion(
 		passengerDuration -
 		getOldDrivingTime(insertionCase, prev, next);
 
+	// Determine new scheduled and communicated times
 	const leeway = Math.min(arrivalWindow.size(), SCHEDULED_TIME_BUFFER);
 	const leewayNewTour = Math.min(Math.floor(arrivalWindow.size() / 2), SCHEDULED_TIME_BUFFER);
 	const pickupLeeway = (() => {
@@ -437,6 +438,7 @@ export function evaluateBothInsertion(
 		communicatedPickupTime = pickupScheduledEndTime - pickupLeeway;
 	}
 
+	// Compute shifts of scheduled time intervals of previous and next event
 	let prevShift = 0;
 	if (!comesFromCompany(insertionCase) && prev!.isPickup) {
 		prevShift = Math.max(
@@ -452,15 +454,9 @@ export function evaluateBothInsertion(
 		);
 	}
 
-	let weightedPassengerDuration =
-		passengerCountNewRequest * (dropoffScheduledStartTime - pickupScheduledEndTime);
-	weightedPassengerDuration += getWeightedPassengerDurationDelta(
-		insertionCase,
-		prev,
-		next,
-		prevShift,
-		nextShift
-	);
+	const weightedPassengerDuration =
+		passengerCountNewRequest * (dropoffScheduledStartTime - pickupScheduledEndTime) +
+		getWeightedPassengerDurationDelta(insertionCase, prev, next, prevShift, nextShift);
 	const departure = comesFromCompany(insertionCase)
 		? pickupScheduledEndTime - prevLegDuration
 		: undefined;
