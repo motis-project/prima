@@ -7,13 +7,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -23,7 +27,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +46,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.data.DataRepository
 import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.data.TourObject
+import de.motis.prima.data.TourSpecialInfo
 import java.util.Date
 import javax.inject.Inject
 
@@ -57,6 +64,7 @@ class TourViewModel @Inject constructor(
         if (_tour != null) {
             val now = Date()
             val endTime = Date(_tour!!.endTime)
+            Log.d("test", "$endTime, $now")
             return endTime < now
         }
         return false
@@ -95,6 +103,10 @@ class TourViewModel @Inject constructor(
     fun updateEventGroups(tourId: Int) {
         repository.updateEventGroups(tourId)
     }
+
+    fun getTourSpecialInfo(tourId: Int): TourSpecialInfo {
+        return repository.getTourSpecialInfo(tourId);
+    }
 }
 
 @Composable
@@ -126,66 +138,29 @@ fun TourPreview(
                     .fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                if (!isCancelled && !viewModel.isInPAst(tourId)) {
-                    Box(
-                        modifier = Modifier
-                            .height(parentHeight * 0.075f)
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = viewModel.getDateString(),
-                            fontSize = 24.sp,
-                            textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
                 Box(
                     modifier = Modifier
-                        .height(parentHeight * 0.5f)
+                        .height(parentHeight * 1f)
                         .fillMaxWidth()
-                ) {
-                    if (viewModel.isInPAst(tourId)) {
-                        RetroView(viewModel, navController, tourId)
-                    } else {
-                        WayPointsView(viewModel)
-                    }
-                }
-                //TODO: show wheelchair / child seat (with age) requirements
-                Box(
-                    modifier = Modifier
-                        .height(parentHeight * 0.1f)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
                 ) {
                     if (isCancelled) {
-                        Text(
-                            text = "Fahrt storniert",
-                            fontSize = 24.sp,
-                            textAlign = TextAlign.Center,
-                            color = Color.Red
-                        )
-                    }
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    if (!isCancelled && !viewModel.isInPAst(tourId)) {
-                        Button(
-                            onClick = {
-                                navController.navigate("leg/$tourId/0")
-                            }
+                        Box(
+                            modifier = Modifier
+                                .height(parentHeight * 0.1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Fahrt starten",
+                                text = "Fahrt storniert",
                                 fontSize = 24.sp,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
+                                color = Color.Red
                             )
                         }
+                    } else if (viewModel.isInPAst(tourId)) {
+                        RetroView(viewModel, tourId, navController)
+                    } else {
+                        WayPointsView(viewModel, tourId, navController)
                     }
                 }
             }
@@ -194,35 +169,138 @@ fun TourPreview(
 }
 
 @Composable
-fun WayPointsView(viewModel: TourViewModel) {
-    Column {
+fun TourInfoView(viewModel: TourViewModel, tourId: Int, tourInfo: TourSpecialInfo) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .padding(10.dp),
+        colors = CardColors(Color.White, Color.Black, Color.White, Color.White)
+    ) {
         Row(
-            modifier = Modifier.fillMaxWidth().weight(1f),
+            modifier = Modifier
+                .fillMaxSize(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment =  Alignment.CenterVertically
         ) {
-            Card(
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .padding(10.dp)
+            if (tourInfo.wheelChairs != 0) {
+                Text(
+                    text = "${tourInfo.wheelChairs}",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(text = " x ")
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_wheelchair),
+                    contentDescription = "Localized description",
+                    Modifier.fillMaxHeight()
+                )
+            }
+            if (tourInfo.kidsZeroToTwo != 0) {
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    text = "${tourInfo.kidsZeroToTwo}",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(text = " x ")
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_child_seat),
+                    contentDescription = "Localized description",
+                    Modifier.fillMaxHeight()
+                )
+                Text(text = "0-2J")
+            }
+            if (tourInfo.kidsThreeToFour != 0) {
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    text = "${tourInfo.kidsThreeToFour}",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(text = " x ")
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_child_seat),
+                    contentDescription = "Localized description",
+                    Modifier.fillMaxHeight()
+                )
+                Text(text = "3-4J")
+            }
+            if (tourInfo.kidsFiveToSix != 0) {
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    text = "${tourInfo.kidsFiveToSix}",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(text = " x ")
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_child_seat),
+                    contentDescription = "Localized description",
+                    Modifier.fillMaxHeight()
+                )
+                Text(text = "5-6J")
+            }
+        }
+    }
+}
+
+@Composable
+fun WayPointsView(viewModel: TourViewModel, tourId: Int, navController: NavController) {
+    BoxWithConstraints(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        val parentHeight = maxHeight
+
+        Column {
+            Box(
+                modifier = Modifier.fillMaxWidth().height(parentHeight * 0.1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = viewModel.getDateString(),
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Box(
+                modifier = Modifier.fillMaxWidth().height(parentHeight * 0.6f)
             ) {
                 val eventGroups = viewModel.eventObjectGroups.collectAsState()
-                LazyColumn(
+                val listState = rememberLazyListState()
+                val isAtEnd by remember {
+                    derivedStateOf {
+                        val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
+                        val totalItems = listState.layoutInfo.totalItemsCount
+                        lastVisibleItem != null && lastVisibleItem.index == totalItems - 1
+                    }
+                }
+                Card(
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
-                        .background(Color.White)
-                        .fillMaxSize(),
+                        .padding(10.dp)
                 ) {
-                    var index = 0
-                    val maxIndex = eventGroups.value.size - 1
-                    items(items = eventGroups.value, itemContent = { eventGroup ->
-                        WayPointPreview(eventGroup)
+                    Column {
+                        LazyColumn(state = listState,
+                            modifier = Modifier
+                                .background(Color.White).weight(0.9f)
+                        ) {
+                            items(items = eventGroups.value, itemContent = { eventGroup ->
+                                WayPointPreview(eventGroup)
+                            })
 
-                        if (index < maxIndex) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
+                        }
+                        Box(
+                            modifier = Modifier
+                                .background(Color.White)
+                                .fillMaxWidth()
+                                .weight(0.1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isAtEnd.not()) {
                                 Box(
-                                    modifier = Modifier.size(48.dp)
+                                    modifier = Modifier.size(36.dp)
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_dropdown),
@@ -231,9 +309,33 @@ fun WayPointsView(viewModel: TourViewModel) {
                                 }
                             }
                         }
+                    }
+                }
+            }
 
-                        index++
-                    })
+            Box(
+                modifier = Modifier.fillMaxWidth().height(parentHeight * 0.1f)
+            ) {
+                val tourInfo = viewModel.getTourSpecialInfo(tourId)
+                if (tourInfo.hasInfo) {
+                    TourInfoView(viewModel, tourId, tourInfo)
+                }
+            }
+
+            Box(
+                modifier = Modifier.fillMaxWidth().height(parentHeight * 0.2f),
+                contentAlignment = Alignment.Center
+            ) {
+                Button(
+                    onClick = {
+                        navController.navigate("leg/$tourId/0")
+                    }
+                ) {
+                    Text(
+                        text = "Fahrt starten",
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }
@@ -241,7 +343,7 @@ fun WayPointsView(viewModel: TourViewModel) {
 }
 
 @Composable
-fun RetroView(viewModel: TourViewModel, navController: NavController, tourId: Int) {
+fun RetroView(viewModel: TourViewModel, tourId: Int, navController: NavController) {
     val pendingValidationTickets by viewModel.pendingValidationTickets.collectAsState()
 
     Column(
@@ -272,7 +374,7 @@ fun RetroView(viewModel: TourViewModel, navController: NavController, tourId: In
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Die Fahrt enthält kein validiertes Ticket.",
+                    text = "Die Fahrt enthält mindestens ein unvalidiertes Ticket.",
                     fontSize = 24.sp,
                     color = Color.Red
                 )
@@ -318,7 +420,7 @@ fun WayPointPreview(
 ) {
     val scheduledTime: String
 
-    try { //TODO
+    try {
         scheduledTime = Date(eventGroup.arrivalTime).formatTo("HH:mm")
     } catch (e: Exception) {
         Log.d("error", "Failed to read event details")
@@ -334,7 +436,7 @@ fun WayPointPreview(
             verticalArrangement = Arrangement.Center
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
@@ -347,7 +449,7 @@ fun WayPointPreview(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp, bottom = 12.dp),
+                    .padding(top = 12.dp, bottom = 6.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(

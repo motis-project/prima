@@ -1,6 +1,7 @@
 package de.motis.prima
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -50,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -61,11 +63,13 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
+import de.motis.prima.data.EventObject
 import de.motis.prima.viewmodel.ScanViewModel
 import kotlinx.coroutines.delay
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun TicketScan(
     navController: NavController,
@@ -85,10 +89,7 @@ fun TicketScan(
         var isScanning by remember { mutableStateOf(true) }
         var ticketValid by remember { mutableStateOf(false) }
         var showDialog by remember { mutableStateOf(false) }
-
-        var fareToPay by remember { mutableDoubleStateOf(0.0) }
-        var passengerCount by remember { mutableIntStateOf(0) }
-        var ticketPrice by remember { mutableDoubleStateOf(0.0) }
+        var event: EventObject by remember { mutableStateOf(EventObject()) }
 
         Column(
             modifier = Modifier
@@ -110,16 +111,14 @@ fun TicketScan(
                             val eventGroup = viewModel.getEventGroup(eventGroupId)
                             val activeHash = viewModel.getActiveHash(result)
 
-                            // does eventGroup contain the ticketHash?
+                            // eventGroup contains the ticketHash?
                             if (eventGroup != null) {
-                                val event =
+                                val tmpEevent =
                                     eventGroup.events.find { e -> e.ticketHash == activeHash }
-                                if (event != null) {
+                                if (tmpEevent != null) {
+                                    event = tmpEevent
                                     ticketValid = true
-                                    passengerCount = event.passengers - event.kidsFiveToSix - event.kidsThreeToFour - event.kidsZeroToTwo;
-                                    fareToPay = passengerCount.toDouble() * event.ticketPrice / 100;
-                                    ticketPrice = (event.ticketPrice / 100).toDouble();
-                                    //viewModel.reportTicketScan(event.requestId, event.ticketHash, result)//TODO
+                                    viewModel.reportTicketScan(event.requestId, event.ticketHash, result)
                                 }
                             }
                             isScanning = false
@@ -128,23 +127,41 @@ fun TicketScan(
                     )
                 } else {
                     if (ticketValid) {
-                        val personsTxt = if (passengerCount > 1) "Personen" else  "Person";
-                        Log.d("test", ticketPrice.toString())
+                        val personsTxt = if (event.passengers > 1) "Personen" else  "Person";
+                        val fareToPay = (event.ticketPrice / 100).toDouble();
+                        val children = event.kidsZeroToTwo + event.kidsThreeToFour + event.kidsFiveToSix
+
                         AlertDialog(
                             onDismissRequest = { showDialog = false },
-                            title = { Text("Ticket OK") },
+                            title = { Text("ÖPNV Fahrpreis") },
                             text = {
-                                Column {
-                                    Text(
-                                        text = "$passengerCount $personsTxt  x  ${String.format("%.2f", ticketPrice)} €",
-                                        fontSize = 24.sp,
-                                        textAlign = TextAlign.Center
-                                    )
-                                    Text(
-                                        text = "= ${String.format("%.2f", fareToPay)} €",
-                                        fontSize = 24.sp,
-                                        textAlign = TextAlign.Center
-                                    )
+                                Box (
+                                    modifier = Modifier
+                                        .fillMaxWidth(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.End
+                                    ) {
+                                        Text(
+                                            text = "${event.passengers} $personsTxt",
+                                            fontSize = 24.sp,
+                                            textAlign = TextAlign.End
+                                        )
+                                        if (children > 0) {
+                                            Text(
+                                                text = "Kinder: $children",
+                                                fontSize = 24.sp,
+                                                textAlign = TextAlign.End
+                                            )
+                                        }
+                                        Text(
+                                            text = "${String.format("%.2f", fareToPay)} €",
+                                            fontSize = 24.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            textAlign = TextAlign.End
+                                        )
+                                    }
                                 }
                             },
                             icon = {
@@ -159,16 +176,13 @@ fun TicketScan(
                                 Button(onClick = {
                                     navController.popBackStack()
                                 }) {
-                                    Text("Ok")
+                                    Text(
+                                        text = "Ok",
+                                        fontSize = 24.sp,
+                                        textAlign = TextAlign.Center
+                                    )
                                 }
-                            },
-                            /*dismissButton =  {
-                                Button(onClick = {
-                                    navController.popBackStack()
-                                }) {
-                                    Text("X")
-                                }
-                            }*/
+                            }
                         )
                     } else {
                         showDialog = true
@@ -204,16 +218,18 @@ fun TicketScan(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(
-                    onClick = {
-                        navController.popBackStack()
+                if (ticketValid.not()) {
+                    Button(
+                        onClick = {
+                            navController.popBackStack()
+                        }
+                    ) {
+                        Text(
+                            text = "Abbrechen",
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center
+                        )
                     }
-                ) {
-                    Text(
-                        text = "Zurück",
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
                 }
             }
         }

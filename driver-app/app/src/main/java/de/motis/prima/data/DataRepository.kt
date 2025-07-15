@@ -24,6 +24,14 @@ import java.time.ZoneId
 import java.util.Date
 import javax.inject.Inject
 
+data class TourSpecialInfo(
+    var wheelChairs: Int = 0,
+    var kidsZeroToTwo: Int = 0,
+    var kidsThreeToFour: Int = 0,
+    var kidsFiveToSix: Int = 0,
+    var hasInfo: Boolean = false
+)
+
 class DataRepository @Inject constructor(
     private val dataStoreManager: DataStoreManager,
     private val ticketStore: TicketStore,
@@ -55,6 +63,9 @@ class DataRepository @Inject constructor(
 
     private val _markedTour = MutableStateFlow<Int>(-1)
     val markedTour: StateFlow<Int> = _markedTour.asStateFlow()
+
+    private val _eventObjectGroups = MutableStateFlow<List<EventObjectGroup>>(emptyList())
+    val eventObjectGroups: StateFlow<List<EventObjectGroup>> = _eventObjectGroups.asStateFlow()
 
     private var fetchTours = false
 
@@ -121,12 +132,17 @@ class DataRepository @Inject constructor(
         val end = tomorrow.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
         CoroutineScope(Dispatchers.IO).launch {
+            var fetchedTours = emptyList<Tour>()
             try {
-                val response = apiService.getTours(start, end)
-                val fetchedTours = response.body() ?: emptyList()
-                setTours(fetchedTours)
+                fetchedTours = apiService.getTours(start, end).body() ?: emptyList()
             } catch (e: Exception) {
                 _networkError.value = true
+                Log.e("error" , e.message.toString())
+            }
+            try {
+                setTours(fetchedTours)
+            } catch (e: Exception) {
+                Log.e("error" , e.message.toString())
             }
         }
     }
@@ -141,12 +157,10 @@ class DataRepository @Inject constructor(
                 val end = tomorrow.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
                 try {
-                    val response = apiService.getTours(start, end)
-                    emit(response)
+                    emit(apiService.getTours(start, end))
                 } catch (e: Exception) {
                     _networkError.value = true
-                    val toursDate = getToursForDate(_displayDate.value, selectedVehicle.first().id)
-                    _toursForDate.value = toursDate
+                    _toursForDate.value = getToursForDate(_displayDate.value, selectedVehicle.first().id)
                 }
                 delay(10000) // 10 sec
             }
@@ -236,6 +250,19 @@ class DataRepository @Inject constructor(
         return ticketStore.getTicketStatus(ticketCode)
     }
 
+    fun getTicketsForEventGroup(eventGroupId: String): List<TicketObject> {
+        val tickets = mutableListOf<TicketObject>()
+        val events = eventObjectGroups.value.find { e -> e.id == eventGroupId }?.events
+        if (events == null) return emptyList()
+        for (e in events) {
+            val ticket = ticketStore.getTicketByRequestId(e.requestId)
+            if (ticket != null) {
+                tickets.add(ticket)
+            }
+        }
+        return tickets
+    }
+
     fun md5(input: String): String {
         val bytes = MessageDigest.getInstance("MD5").digest(input.toByteArray())
         return bytes.joinToString("") { "%02x".format(it) }
@@ -265,12 +292,10 @@ class DataRepository @Inject constructor(
         for (tour in tours) {
             val ticketValidated = tour.events.find { e -> e.ticketChecked } == null
             val fareReported = tour.fare != 0
-            tourStore.update(tour, ticketValidated, fareReported)
+            Log.d("test", "set Tour: ${tour.endTime}")
+            tourStore.updateReport(tour, ticketValidated, fareReported)
         }
     }
-
-    private val _eventObjectGroups = MutableStateFlow<List<EventObjectGroup>>(emptyList())
-    val eventObjectGroups: StateFlow<List<EventObjectGroup>> = _eventObjectGroups.asStateFlow()
 
     fun updateEventGroups(tourId: Int) {
         _eventObjectGroups.value = tourStore.getEventGroupsForTour(tourId)
@@ -286,7 +311,7 @@ class DataRepository @Inject constructor(
             .getTicketsByValidationStatus(ValidationStatus.CHECKED_IN)
     }
 
-    suspend fun updateTourStore(tourId: Int, fareCent: Int, fareReported: Boolean) {
+    fun updateTourStore(tourId: Int, fareCent: Int, fareReported: Boolean) {
         tourStore.updateFare(tourId, fareCent, fareReported)
     }
 
@@ -325,12 +350,22 @@ class DataRepository @Inject constructor(
         return false
     }
 
-    fun isTourStarted(tourId: Int): Boolean {
-        val tour = tourStore.getTour(tourId)
-        if (tour != null) {
-            return Date(tour.startTime) < Date()
+    fun getTourSpecialInfo(tourId: Int): TourSpecialInfo {
+        val tourInfo = TourSpecialInfo()
+
+        val events = tourStore.getEventsForTour(tourId)
+        for (e in events) {
+            if (e.isPickup.not()) continue
+            tourInfo.wheelChairs += e.wheelchairs
+            tourInfo.kidsZeroToTwo += e.kidsZeroToTwo
+            tourInfo.kidsThreeToFour += e.kidsThreeToFour
+            tourInfo.kidsFiveToSix += e.kidsFiveToSix
         }
-        return false
+
+        val info = tourInfo.wheelChairs + tourInfo.kidsFiveToSix + tourInfo.kidsThreeToFour + tourInfo.kidsZeroToTwo
+        tourInfo.hasInfo = info != 0
+
+        return tourInfo
     }
 
     fun isTourCancelled(tourId: Int): Boolean {

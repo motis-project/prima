@@ -48,7 +48,7 @@ class ToursViewModel @Inject constructor(
         startReporting()
     }
 
-    private fun retryFailedReport(ticket: Ticket) {
+    private fun retryScanReport(ticket: Ticket) {
         viewModelScope.launch {
             try {
                 val response = apiService.validateTicket(ticket.requestId, ticket.ticketCode)
@@ -70,10 +70,7 @@ class ToursViewModel @Inject constructor(
             try {
                 val response = apiService.reportFare(tour.tourId, tour.fare)
                 if (response.isSuccessful) {
-                    Log.d("report", "Fare reported")
                     repository.updateTourStore(tour.tourId, tour.fare, true)
-                } else {
-                    Log.d("report", "Fare report failed")
                 }
             } catch (e: Exception) {
                 Log.d("error", "Network Error: ${e.message!!}")
@@ -84,10 +81,10 @@ class ToursViewModel @Inject constructor(
     private fun startReporting() {
         viewModelScope.launch {
             while (true) {
-                val failedReports = repository.getTicketsByValidationStatus(ValidationStatus.CHECKED_IN)
-                Log.d("report", "Failed scan reports: $failedReports")
-                for (report in failedReports) {
-                    retryFailedReport(
+                val failedScanReports = repository.getTicketsByValidationStatus(ValidationStatus.CHECKED_IN)
+                Log.d("report", "Failed scan reports: $failedScanReports")
+                for (report in failedScanReports) {
+                    retryScanReport(
                         Ticket(
                             report.requestId,
                             report.ticketHash,
@@ -103,7 +100,8 @@ class ToursViewModel @Inject constructor(
                     retryFareReport(report)
                 }
 
-                delay(120000) // 2 min
+                //delay(120000) // 2 min
+                delay(10000)
             }
         }
     }
