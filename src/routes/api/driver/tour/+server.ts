@@ -1,6 +1,8 @@
+import { v4 as uuidv4 } from 'uuid';
+import { isSamePlace } from '$lib/server/booking/isSamePlace';
 import { getTours } from '$lib/server/db/getTours';
 import { readInt } from '$lib/server/util/readForm.js';
-import { getScheduledEventTime } from '$lib/util/getScheduledEventTime.js';
+import type { TourEvent, Tour, Tours } from '$lib/util/getToursTypes';
 import { error, json } from '@sveltejs/kit';
 
 export const GET = async ({ locals, url }) => {
@@ -13,6 +15,34 @@ export const GET = async ({ locals, url }) => {
 	}
 
 	const tours = await getTours(true, companyId, [fromTime, toTime]);
-
-	return json(tours);
+	return json(updateEventGroups(tours));
 };
+
+function updateEventGroups(tours: Tours) {
+	const toursWithEventGroups = new Array<Tour>(tours.length);
+	for (const [tIdx, tour] of tours.entries()) {
+		const events = tour.events;
+		const eventsWithEventGroups = new Array<TourEvent>(events.length);
+		let uuid = uuidv4();
+		if (events.length != 0) {
+			eventsWithEventGroups[0] = {
+					...events[0],
+					eventGroup: uuid
+			};
+		}
+		for (let eIdx = 1; eIdx != events.length; ++eIdx) {
+			if (!isSamePlace(events[eIdx - 1], events[eIdx])) {
+					uuid = uuidv4();
+			}
+			eventsWithEventGroups[eIdx] = {
+					...events[eIdx],
+					eventGroup: uuid
+			};
+		}
+		toursWithEventGroups[tIdx] = {
+			...tour,
+			events: eventsWithEventGroups
+		};
+	}
+	return toursWithEventGroups;
+}
