@@ -292,7 +292,6 @@ class DataRepository @Inject constructor(
         for (tour in tours) {
             val ticketValidated = tour.events.find { e -> e.ticketChecked } == null
             val fareReported = tour.fare != 0
-            Log.d("test", "set Tour: ${tour.endTime}")
             tourStore.updateReport(tour, ticketValidated, fareReported)
         }
     }

@@ -149,13 +149,15 @@ fun Tours(
                 displayTours = toursDate
             }
 
-            if (displayDay == today && !showAll) {
-                displayTours = toursToday.filter { t ->
-                    !viewModel.isCancelled(t.tourId) && Date(t.endTime) > Date() }
-            }
+            if (networkError.not()) {
+                if (displayDay == today && !showAll) {
+                    displayTours = toursToday.filter { t ->
+                        !viewModel.isCancelled(t.tourId) && Date(t.endTime) > Date() }
+                }
 
-            if (displayDay != today) {
-                displayTours = toursToday.filter { t -> !viewModel.isCancelled(t.tourId) }
+                if (displayDay != today) {
+                    displayTours = toursToday.filter { t -> !viewModel.isCancelled(t.tourId) }
+                }
             }
 
             displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTime }

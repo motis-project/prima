@@ -82,26 +82,25 @@ class ToursViewModel @Inject constructor(
         viewModelScope.launch {
             while (true) {
                 val failedScanReports = repository.getTicketsByValidationStatus(ValidationStatus.CHECKED_IN)
-                Log.d("report", "Failed scan reports: $failedScanReports")
-                for (report in failedScanReports) {
+                for (ticket in failedScanReports) {
                     retryScanReport(
                         Ticket(
-                            report.requestId,
-                            report.ticketHash,
-                            report.ticketCode,
-                            ValidationStatus.valueOf(report.validationStatus)
+                            ticket.requestId,
+                            ticket.ticketHash,
+                            ticket.ticketCode,
+                            ValidationStatus.valueOf(ticket.validationStatus)
                         )
                     )
                 }
 
                 val failedFareReports = repository.getToursUnreportedFare()
-                Log.d("report", "Failed fare reports: $failedFareReports")
-                for (report in failedFareReports) {
-                    retryFareReport(report)
+                for (tour in failedFareReports) {
+                    if (tour.fare > 0) {
+                        retryFareReport(tour)
+                    }
                 }
 
-                //delay(120000) // 2 min
-                delay(10000)
+                delay(120000) // 2 min
             }
         }
     }

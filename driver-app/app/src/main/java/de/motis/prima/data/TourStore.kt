@@ -195,11 +195,8 @@ class TourStore @Inject constructor(private var realm: Realm) {
     }
 
     fun getToursForInterval(start: Long, end: Long): List<Tour> {
-        Log.d("get", "interval: ${Date(start)}, ${Date(end)}")
         val tours = mutableListOf<Tour>()
         val tourObjects = realm.query<TourObject>("startTime > $0 AND endTime < $1", start, end).find()
-
-        for (t in getAll()) { Log.d("tours", "${t.tourId}, ${t.startTime}, ${t.endTime}") }
 
         for (tour in tourObjects) {
             val events = mutableListOf<Event>()
@@ -232,7 +229,6 @@ class TourStore @Inject constructor(private var realm: Realm) {
                 ))
             }
 
-            Log.d("get", "${Date(tour.endTime)}")
             tours.add(Tour(
                 tourId = tour.tourId,
                 fare = tour.fare,
@@ -299,7 +295,6 @@ class TourStore @Inject constructor(private var realm: Realm) {
     }
 
     fun getTour(id: Int): TourObject? {
-        Log.d("get", "get $id")
         return realm.query<TourObject>("tourId == $0", id).first().find()
     }
 

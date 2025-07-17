@@ -64,7 +64,6 @@ class TourViewModel @Inject constructor(
         if (_tour != null) {
             val now = Date()
             val endTime = Date(_tour!!.endTime)
-            Log.d("test", "$endTime, $now")
             return endTime < now
         }
         return false
