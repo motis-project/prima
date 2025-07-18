@@ -1,5 +1,6 @@
 package de.motis.prima
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -58,7 +59,6 @@ fun Fare(
     viewModel: FareViewModel = hiltViewModel(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val networkErrorMessage = "Keine Internetverbindung. Der Preis wird später automatisch erneut übermittelt."
 
     val inputErrorMessage = stringResource(id = R.string.fare_input_error)
     var reportSuccessful by remember { mutableStateOf(false) }
@@ -89,8 +89,7 @@ fun Fare(
 
         launch {
             viewModel.networkErrorEvent.collect {
-                snackbarHostState.showSnackbar(message = networkErrorMessage)
-                delay(2500)
+                Log.e("error", "Network error during fare report")
                 navController.navigate("tours")
             }
         }
@@ -253,34 +252,6 @@ fun Fare(
                         )
                     }
                 }
-
-                /*val scannedTickets by viewModel.scannedTickets.collectAsState()
-                val failedReports = scannedTickets
-                    .filter { e -> e.validationStatus == ValidationStatus.CHECKED_IN.name }
-
-                if (failedReports.isNotEmpty()) { //TODO
-                    Text(
-                        "Fehlgeschlagene Ticket-Validierungen",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(Modifier.height(20.dp))
-                    Box {
-                        LazyColumn {
-                            items(items = failedReports, itemContent = { ticket ->
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        ticket.requestId.toString(),
-                                        fontSize = 16.sp
-                                    )
-                                }
-                            })
-                        }
-                    }
-                }*/
             }
         }
     }

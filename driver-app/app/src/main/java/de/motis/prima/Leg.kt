@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Scaffold
@@ -15,11 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.data.DataRepository
@@ -30,10 +27,6 @@ class LegViewModel @Inject constructor(
     private val repository: DataRepository
 ) : ViewModel() {
     val eventGroups = repository.eventObjectGroups
-
-    fun isTourStarted(tourId: Int): Boolean {
-        return repository.isTourStarted(tourId)
-    }
 }
 
 @Composable
@@ -67,35 +60,27 @@ fun Leg(
                 horizontalArrangement = Arrangement.Center
             ) {
                 if (eventGroups.isNotEmpty()) {
-                    var nav = "leg/$tourId/${eventGroupIndex + 1}"
-                    if (eventGroupIndex + 1 == eventGroups.size) {
-                        /*if (legViewModel.isTourStarted(tourId)) {
-                            nav = "fare/$tourId"
-                        } else {
-                            nav = "tours"
-                        }*/
-                        nav = "fare/$tourId"
+                    val nav = if (eventGroupIndex < eventGroups.size - 1) {
+                        "leg/$tourId/${eventGroupIndex + 1}"
+                    } else {
+                        "fare/$tourId"
                     }
 
                     BoxWithConstraints {
                         val screenWidth = maxWidth
-                        val screenHeight = maxHeight
 
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
-                            val height = screenHeight * 0.95f
                             Box(
                                 modifier = Modifier
-                                    //.height(height)
-                                    //.width(screenWidth * 0.98f)
+                                    .width(screenWidth * 0.98f)
                             ) {
                                 EventGroup(
                                     navController,
                                     eventGroups[eventGroupIndex],
-                                    nav,
-                                    tourId
+                                    nav
                                 )
                             }
                         }
