@@ -38,7 +38,8 @@ export const getTours = async (
 					.whereRef('tour.id', '=', 'request.tour')
 					.innerJoin('user', 'user.id', 'request.customer')
 					.select((eb) => [
-						eb.case()
+						eb
+							.case()
 							.when('event.isPickup', '=', true)
 							.then(eb.ref('scheduledTimeStart'))
 							.else(eb.ref('scheduledTimeEnd'))
@@ -68,7 +69,7 @@ export const getTours = async (
 						'request.ticketPrice',
 						'request.kidsZeroToTwo',
 						'request.kidsThreeToFour',
-						'request.kidsFiveToSix',
+						'request.kidsFiveToSix'
 					])
 					.select(sql<string>`md5(request.ticket_code)`.as('ticketHash'))
 					.orderBy('event.scheduledTimeStart')
