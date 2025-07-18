@@ -21,7 +21,6 @@ import retrofit2.Response
 import java.security.MessageDigest
 import java.time.LocalDate
 import java.time.ZoneId
-import java.util.Date
 import javax.inject.Inject
 
 data class TourSpecialInfo(
@@ -177,8 +176,9 @@ class DataRepository @Inject constructor(
                     _networkError.value = false
                     val fetchedTours = response.body() ?: emptyList()
 
-                    var tours = fetchedTours.filter { t -> t.vehicleId == selectedVehicle.first().id }
-                    tours = tours.sortedBy { t -> t.events[0].scheduledTime }
+                    val tours = fetchedTours
+                        .filter { t -> t.vehicleId == selectedVehicle.first().id }
+                        .sortedBy { t -> t.events[0].scheduledTime }
 
                     setTours(fetchedTours)
                     _toursCache.value = tours
@@ -202,8 +202,9 @@ class DataRepository @Inject constructor(
                     _networkError.value = false
                     val fetchedTours = response.body() ?: emptyList()
 
-                    var tours = fetchedTours.filter { t -> t.vehicleId == _vehicleId }
-                    tours = tours.sortedBy { t -> t.events[0].scheduledTime }
+                    val tours = fetchedTours
+                        .filter { t -> t.vehicleId == _vehicleId }
+                        .sortedBy { t -> t.events[0].scheduledTime }
 
                     setTours(fetchedTours)
 
@@ -241,8 +242,9 @@ class DataRepository @Inject constructor(
         val start = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val end = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val tours = tourStore.getToursForInterval(start, end)
-        var res = tours.filter { t -> t.vehicleId == vehicleId }
-        res = res.sortedBy { t -> t.events[0].scheduledTime }
+        val res = tours
+            .filter { t -> t.vehicleId == vehicleId }
+            .sortedBy { t -> t.events[0].scheduledTime }
         return res
     }
 
@@ -285,7 +287,6 @@ class DataRepository @Inject constructor(
     }
 
     private val _tours = MutableStateFlow<List<Tour>>(emptyList())
-    val tours: StateFlow<List<Tour>> = _tours.asStateFlow()
 
     private fun setTours(tours: List<Tour>) {
         _tours.value = tours
