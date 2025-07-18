@@ -1,6 +1,7 @@
 package de.motis.prima
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -39,6 +41,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -47,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,11 +63,13 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
+import de.motis.prima.data.EventObject
 import de.motis.prima.viewmodel.ScanViewModel
 import kotlinx.coroutines.delay
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun TicketScan(
     navController: NavController,
@@ -82,6 +89,7 @@ fun TicketScan(
         var isScanning by remember { mutableStateOf(true) }
         var ticketValid by remember { mutableStateOf(false) }
         var showDialog by remember { mutableStateOf(false) }
+        var event: EventObject by remember { mutableStateOf(EventObject()) }
 
         Column(
             modifier = Modifier
@@ -103,41 +111,79 @@ fun TicketScan(
                             val eventGroup = viewModel.getEventGroup(eventGroupId)
                             val activeHash = viewModel.getActiveHash(result)
 
-                            // does eventGroup contain the ticketHash?
+                            // eventGroup contains the ticketHash?
                             if (eventGroup != null) {
-                                val event =
+                                val tmpEevent =
                                     eventGroup.events.find { e -> e.ticketHash == activeHash }
-                                if (event != null) {
+                                if (tmpEevent != null) {
+                                    event = tmpEevent
                                     ticketValid = true
                                     viewModel.reportTicketScan(event.requestId, event.ticketHash, result)
                                 }
                             }
                             isScanning = false
-                        },
-                        navController
+                        }
                     )
                 } else {
-
                     if (ticketValid) {
-                        Icon(
-                            imageVector = Icons.Default.Done,
-                            contentDescription = "Localized description",
-                            tint = Color.Green,
-                            modifier = Modifier.size(64.dp)
+                        val personsTxt = if (event.passengers > 1) "Personen" else  "Person";
+                        val fareToPay = (event.ticketPrice / 100).toDouble();
+                        val children = event.kidsZeroToTwo + event.kidsThreeToFour + event.kidsFiveToSix
 
+                        AlertDialog(
+                            onDismissRequest = { showDialog = false },
+                            title = { Text("ÖPNV Fahrpreis") },
+                            text = {
+                                Box (
+                                    modifier = Modifier
+                                        .fillMaxWidth(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.End
+                                    ) {
+                                        Text(
+                                            text = "${event.passengers} $personsTxt",
+                                            fontSize = 24.sp,
+                                            textAlign = TextAlign.End
+                                        )
+                                        if (children > 0) {
+                                            Text(
+                                                text = "Kinder: $children",
+                                                fontSize = 24.sp,
+                                                textAlign = TextAlign.End
+                                            )
+                                        }
+                                        Text(
+                                            text = "${String.format("%.2f", fareToPay)} €",
+                                            fontSize = 24.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            textAlign = TextAlign.End
+                                        )
+                                    }
+                                }
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Done,
+                                    contentDescription = "Localized description",
+                                    tint = Color.Green,
+                                    modifier = Modifier.size(64.dp)
+                                )
+                            },
+                            confirmButton = {
+                                Button(onClick = {
+                                    navController.popBackStack()
+                                }) {
+                                    Text(
+                                        text = "Ok",
+                                        fontSize = 24.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
                         )
-                        LaunchedEffect(Unit) {
-                            delay(500)
-                            navController.popBackStack()
-                        }
                     } else {
-                        /*Icon(
-                            imageVector = Icons.Default.Clear,
-                            contentDescription = "Localized description",
-                            tint = Color.Red,
-                            modifier = Modifier.size(64.dp)
-
-                        )*/
                         showDialog = true
                     }
                 }
@@ -147,7 +193,7 @@ fun TicketScan(
                 AlertDialog(
                     onDismissRequest = { showDialog = false },
                     title = { Text("Ticket ungültig") },
-                    //text = { Text("Beförderung zum normalen Taxi-Tarif") },
+                    text = { Text("Beförderung zum normalen Taxi-Tarif") },
                     icon = {Icon(
                         imageVector = Icons.Default.Clear,
                         contentDescription = "Localized description",
@@ -162,12 +208,7 @@ fun TicketScan(
                         }) {
                             Text("Ok")
                         }
-                    },
-                    /*dismissButton = {
-                        Button(onClick = { showDialog = false }) {
-                            Text("Nein")
-                        }
-                    }*/
+                    }
                 )
             }
 
@@ -176,16 +217,18 @@ fun TicketScan(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(
-                    onClick = {
-                        navController.popBackStack()
+                if (ticketValid.not()) {
+                    Button(
+                        onClick = {
+                            navController.popBackStack()
+                        }
+                    ) {
+                        Text(
+                            text = "Abbrechen",
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center
+                        )
                     }
-                ) {
-                    Text(
-                        text = "Zurück",
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
                 }
             }
         }
@@ -194,8 +237,7 @@ fun TicketScan(
 
 @Composable
 fun QRCodeScanner(
-    onQRCodeScanned: (String) -> Unit,
-    navController: NavController,
+    onQRCodeScanned: (String) -> Unit
 ) {
     val context = LocalContext.current
     var cameraProvider: ProcessCameraProvider? by remember { mutableStateOf(null) }
