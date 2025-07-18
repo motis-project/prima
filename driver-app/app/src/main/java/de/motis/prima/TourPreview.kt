@@ -1,5 +1,6 @@
 package de.motis.prima
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -69,6 +70,7 @@ class TourViewModel @Inject constructor(
         return false
     }
 
+    @SuppressLint("DefaultLocale")
     fun getFareString(): String {
         var res = ""
         if (_tour != null) {
@@ -104,7 +106,7 @@ class TourViewModel @Inject constructor(
     }
 
     fun getTourSpecialInfo(tourId: Int): TourSpecialInfo {
-        return repository.getTourSpecialInfo(tourId);
+        return repository.getTourSpecialInfo(tourId)
     }
 }
 
@@ -115,7 +117,7 @@ fun TourPreview(
     viewModel: TourViewModel = hiltViewModel()
 ) {
     val isCancelled = viewModel.isCancelled(tourId)
-    viewModel.updateEventGroups(tourId);
+    viewModel.updateEventGroups(tourId)
 
     Scaffold(
         topBar = {

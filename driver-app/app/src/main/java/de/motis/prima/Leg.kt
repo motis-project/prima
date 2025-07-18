@@ -24,7 +24,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LegViewModel @Inject constructor(
-    private val repository: DataRepository
+    repository: DataRepository
 ) : ViewModel() {
     val eventGroups = repository.eventObjectGroups
 }

@@ -1,6 +1,5 @@
 package de.motis.prima.data
 
-import android.util.Log
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
 import io.realm.kotlin.query.RealmResults
@@ -65,18 +64,5 @@ class TicketStore @Inject constructor(private val realm: Realm) {
 
     fun getTicketsByValidationStatus(status: ValidationStatus): RealmResults<TicketObject> {
         return realm.query<TicketObject>("validationStatus == $0", status.name).find()
-    }
-
-    suspend fun deleteTicket(requestId: String) {
-        realm.write {
-            val ticket = query<TicketObject>("id == $0", requestId).first().find()
-            ticket?.let { delete(it) }
-        }
-    }
-
-    fun clear() {
-        realm.writeBlocking {
-            deleteAll()
-        }
     }
 }
