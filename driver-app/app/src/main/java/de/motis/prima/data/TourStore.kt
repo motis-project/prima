@@ -298,7 +298,7 @@ class TourStore @Inject constructor(private var realm: Realm) {
     }
 
     fun getPickupRequestIDs(tourId: Int): Set<Int> {
-        var res: MutableSet<Int> = mutableSetOf()
+        val res: MutableSet<Int> = mutableSetOf()
         val pickupEvents = getEventsForTour(tourId).filter { e -> e.isPickup }
 
         for (e in pickupEvents) {
