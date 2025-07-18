@@ -50,6 +50,10 @@ class TicketStore @Inject constructor(private val realm: Realm) {
         return realm.query<TicketObject>().find()
     }
 
+    fun getTicketByRequestId(requestId: Int): TicketObject? {
+        return realm.query<TicketObject>("requestId == $0", requestId).first().find()
+    }
+
     fun getTicketStatus(ticketCode: String): ValidationStatus? {
         val ticket = realm.query<TicketObject>("ticketCode == $0", ticketCode).first().find()
         return if (ticket != null) {

@@ -1,5 +1,6 @@
 package de.motis.prima
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -35,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -51,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -60,7 +63,6 @@ import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.data.ValidationStatus
 import java.util.Date
 import javax.inject.Inject
-import kotlin.math.ln
 
 @HiltViewModel
 class EventGroupViewModel @Inject constructor(
@@ -68,12 +70,14 @@ class EventGroupViewModel @Inject constructor(
 ) : ViewModel() {
     val storedTickets = repository.storedTickets
 
-    fun hasInvalidatedTickets(tourId: Int): Boolean {
-        return repository.hasInvalidatedTickets(tourId)
-    }
-
     fun hasValidTicket(tourId: Int, eventId: Int): Boolean {
         return repository.hasValidTicket(tourId, eventId)
+    }
+
+    fun getValidCount(eventGroupId: String): Int {
+        val tickets = repository.getTicketsForEventGroup(eventGroupId)
+        return tickets.filter { t -> t.validationStatus == ValidationStatus.DONE.name
+                || t.validationStatus == ValidationStatus.CHECKED_IN.name }.size
     }
 }
 
@@ -110,7 +114,7 @@ fun openGoogleMapsNavigation(to: Location, context: Context) {
     }
 }
 
-fun phoneCall(number: String, context: Context) {
+fun phoneCall(number: String?, context: Context) {
     val intent = Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null))
     context.startActivity(intent)
 }
@@ -120,9 +124,12 @@ fun EventGroup(
     navController: NavController,
     eventGroup: EventObjectGroup,
     nav: String,
-    tourId: Int,//TODO
     viewModel: EventGroupViewModel = hiltViewModel()
 ) {
+    val validCount = viewModel.getValidCount(eventGroup.id)
+    val nPickUp = eventGroup.events.filter { e -> e.isPickup }.size
+    val hasUncheckedTicket = validCount < nPickUp
+
     Column(
         modifier = Modifier
             .padding(10.dp),
@@ -175,8 +182,6 @@ fun EventGroup(
             }
         }
 
-        // event list
-        var validCount by remember { mutableStateOf(0) }
         Card(
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier
@@ -188,7 +193,7 @@ fun EventGroup(
                     .background(Color.White)
             ) {
                 items(items = eventGroup.events, itemContent = { event ->
-                    validCount = ShowCustomerDetails(event)
+                    ShowCustomerDetails(event, viewModel)
                 })
             }
         }
@@ -216,7 +221,7 @@ fun EventGroup(
                 )
             }
 
-            if (eventGroup.hasPickup && validCount < eventGroup.events.size) {
+            if (hasUncheckedTicket) {
                 val navOptions = NavOptions.Builder()
                     .setEnterAnim(0)
                     .setExitAnim(0)
@@ -264,7 +269,7 @@ fun EventGroup(
 
             Button(
                 onClick = {
-                    if (eventGroup.hasPickup && validCount < eventGroup.events.size) {
+                    if (hasUncheckedTicket) {
                         showDialog = true
                     } else {
                         navController.navigate(nav)
@@ -281,14 +286,15 @@ fun EventGroup(
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun ShowCustomerDetails(
     event: EventObject,
-    viewModel: EventGroupViewModel = hiltViewModel()
-): Int {
+    viewModel: EventGroupViewModel// = hiltViewModel()
+) {
     val context = LocalContext.current
     val storedTickets = viewModel.storedTickets.collectAsState()
-    var validCount = 0
+    val fareToPay: Double = (event.ticketPrice / 100).toDouble()
 
     Card(
         modifier = Modifier
@@ -320,7 +326,8 @@ fun ShowCustomerDetails(
                     if (event.wheelchairs > 0) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_wheelchair),
-                            contentDescription = "Localized description"
+                            contentDescription = "Localized description",
+                            Modifier.background(color = Color.Yellow)
                         )
                     }
 
@@ -390,12 +397,29 @@ fun ShowCustomerDetails(
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
                     .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = event.customerName,
                     fontSize = 24.sp,
                     textAlign = TextAlign.Center
                 )
+            }
+
+            if (!event.isPickup) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "${String.format("%.2f", fareToPay)} €",
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
 
             if (event.isPickup) {
@@ -408,8 +432,7 @@ fun ShowCustomerDetails(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Log.d("phone", event.customerPhone)
-                    if (event.customerPhone != "") {
+                    if (event.customerPhone != null && event.customerPhone != "") {
                         Button(
                             onClick = {
                                 phoneCall(event.customerPhone, context)
@@ -423,10 +446,11 @@ fun ShowCustomerDetails(
                             )
                         }
                     } else {
-                        Text(
-                            text = "Keine Tel-Nr.",
-                            fontSize = 24.sp,
-                            textAlign = TextAlign.Center
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_no_phone),
+                            contentDescription = "Localized description",
+                            modifier = Modifier
+                                .size(width = 24.dp, height = 24.dp)
                         )
                     }
 
@@ -444,6 +468,12 @@ fun ShowCustomerDetails(
                     if (hasValidTicket) {
                         ticketStatus = ValidationStatus.DONE
                     }
+
+                    Text(
+                        text = "${String.format("%.2f", fareToPay)} €",
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
 
                     Box(
                         modifier = Modifier
@@ -471,7 +501,6 @@ fun ShowCustomerDetails(
                                         .size(width = 30.dp, height = 30.dp)
                                 )
                             } else if (ticketStatus == ValidationStatus.DONE) {
-                                validCount++
                                 Icon(
                                     imageVector = Icons.Default.Done,
                                     contentDescription = "Localized description",
@@ -502,5 +531,4 @@ fun ShowCustomerDetails(
             }
         }
     }
-    return validCount
 }

@@ -149,16 +149,18 @@ fun Tours(
                 displayTours = toursDate
             }
 
-            if (displayDay == today && !showAll) {
-                displayTours = toursToday.filter { t ->
-                    !viewModel.isCancelled(t.tourId) && Date(t.endTime) > Date() }
+            if (networkError.not()) {
+                if (displayDay == today && !showAll) {
+                    displayTours = toursToday.filter { t ->
+                        !viewModel.isCancelled(t.tourId) && Date(t.endTime) > Date() }
+                }
+
+                if (displayDay != today) {
+                    displayTours = toursToday.filter { t -> !viewModel.isCancelled(t.tourId) }
+                }
             }
 
-            if (displayDay != today) {
-                displayTours = toursToday.filter { t -> !viewModel.isCancelled(t.tourId) }
-            }
-
-            displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTimeStart }
+            displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTime }
 
             ShowTours(navController, displayTours)
         }
@@ -335,7 +337,7 @@ fun ShowTours(
                             address
                         }
 
-                        val start = startEvent?.scheduledTimeStart ?: 0
+                        val start = startEvent?.scheduledTime ?: 0
                         displayTime = if (start.toInt() != 0) {
                             Date(start)
                                 .formatTo("HH:mm")

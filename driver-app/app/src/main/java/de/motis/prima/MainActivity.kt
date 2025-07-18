@@ -71,11 +71,11 @@ class MainActivity : AppCompatActivity() {
             permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
         }
 
-        //permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-        //permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        /*permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
         val cameraGranted = permissions[Manifest.permission.CAMERA] ?: false
 
-        /*if (cameraGranted) {
+        if (cameraGranted) {
             //setContent { MyAppTheme { Nav() } }
             setContent { Nav(intent)  }
         } else {
