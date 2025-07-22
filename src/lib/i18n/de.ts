@@ -222,6 +222,8 @@ const translations: Translations = {
 	bookingDeadline: 'Buchungsschluss',
 	bookingDeadlineContent:
 		'min. 1 Stunde im Voraus, bei Buchungen für das Wochenende bis Freitag 18 Uhr',
+	logo: 'Das PriMa+ÖV Logo. Ikonographische Darstellung eines Autos, Busses, Zuges und Taxis.',
+	toConnectionSearch: 'Zur Verbindungssuche',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
@@ -259,6 +261,16 @@ const translations: Translations = {
 		noCancel: 'Nein, Fahrt nicht stornieren.',
 		cancelDescription:
 			'Die Stornierung der Fahrt kann nicht rückgängig gemacht werden. Eine Stornierung weniger als 24 Stunden vor der Fahrt ist mit Kosten verbunden.'
+	},
+
+	explainer: {
+		title: 'Explainer',
+		p1: 'Leider deckt der ÖPNV nicht alles ab.',
+		p2: 'Wir verwenden Taxis, um das Angebot des ÖPNV zu erweitern. Die Schnittmenge aus ÖPNV und Taxi nennen wir das ÖPNV-Taxi.',
+		p3: 'Die Verbindungssuche findet ÖPNV-Verbindungen und zusätzlich ÖPNV-Taxi-Verbindungen, wenn der ÖPNV alleine nicht ausreichend ist.',
+		alt1: 'Ein blauer Kreis, der rechts nicht ganz gefüllt ist. Der nicht gefüllte Teil ist schraffiert.',
+		alt2: 'Ein blauer und ein gelber Kreis, die sich überlappen. Die Überlappung ist blau und gelb schraffiert.',
+		alt3: 'Ein blauer Kreis dessen rechter Teil gelb schraffiert ist.'
 	}
 };
 

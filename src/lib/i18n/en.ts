@@ -215,6 +215,8 @@ const translations: Translations = {
 	fare: 'Fare',
 	bookingDeadline: 'Booking deadline',
 	bookingDeadlineContent: 'at least 1 hour in advance, weekend bookings until Friday 6 p.m.',
+	logo: 'The PriMa+ÖV logo. Iconographic representation of a car, bus, train and cab.',
+	toConnectionSearch: 'Go to connection search',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
@@ -252,6 +254,16 @@ const translations: Translations = {
 			'Cancellation cannot be undone. Cancellation less than 24 hours before the trip will incur costs.',
 		cancelTrip: 'Cancel Trip',
 		noCancel: 'No, I do not want to cancel.'
+	},
+
+	explainer: {
+		title: 'Explainer',
+		p1: 'Unfortunately, public transport does not cover everything.',
+		p2: 'We use cabs to extend the range of public transport services. We call the intersection of public transport and cab the public transport cab.',
+		p3: 'The connection search finds public transport connections and also public transport cab connections if public transport alone is not sufficient.',
+		alt1: 'A blue circle that is not completely filled on the right. The unfilled part is hatched.',
+		alt2: 'A blue and a yellow circle that overlap. The overlap is hatched blue and yellow.',
+		alt3: 'A blue circle whose right-hand part is hatched yellow.'
 	}
 };
 
