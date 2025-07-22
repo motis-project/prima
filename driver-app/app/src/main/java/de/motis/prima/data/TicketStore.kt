@@ -1,5 +1,6 @@
 package de.motis.prima.data
 
+import android.util.Log
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
 import io.realm.kotlin.query.RealmResults
@@ -10,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 enum class ValidationStatus {
-    CHECKED_IN, DONE, REJECTED
+    CHECKED_IN, DONE, REJECTED, OPEN
 }
 
 data class Ticket(
@@ -25,7 +26,7 @@ class TicketObject : RealmObject {
     var requestId: Int = 0
     var ticketHash: String = ""
     var ticketCode: String = ""
-    var validationStatus: String = ""
+    var validationStatus: String = ValidationStatus.OPEN.name
 }
 
 class TicketStore @Inject constructor(private val realm: Realm) {
@@ -33,16 +34,31 @@ class TicketStore @Inject constructor(private val realm: Realm) {
     private val _storedTickets = MutableStateFlow(getAll())
     val storedTickets = _storedTickets.asStateFlow()
 
-    suspend fun update(ticket: Ticket) {
-        realm.write {
-            copyToRealm(TicketObject().apply {
-                this.requestId = ticket.requestId
-                this.ticketHash = ticket.ticketHash
-                this.ticketCode = ticket.ticketCode
-                this.validationStatus = ticket.validationStatus.name
-            }, updatePolicy = io.realm.kotlin.UpdatePolicy.ALL)
+    fun update(ticket: Ticket) {
+        try {
+            val existingTicket = realm.query<TicketObject>("requestId == $0", ticket.requestId).find().first()
+            if (ticket.validationStatus == ValidationStatus.CHECKED_IN || ticket.validationStatus == ValidationStatus.DONE ) {
+                realm.writeBlocking {
+                    existingTicket.let {
+                        findLatest(it)?.apply {
+                            this.ticketCode = ticket.ticketCode
+                            this.validationStatus = ticket.validationStatus.name
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // assuming no ticket was found for requestId, store a new one
+            realm.writeBlocking {
+                copyToRealm(TicketObject().apply {
+                    this.requestId = ticket.requestId
+                    this.ticketHash = ticket.ticketHash
+                }, updatePolicy = io.realm.kotlin.UpdatePolicy.ALL)
+            }
         }
         _storedTickets.value = getAll()
+        Log.d("tickets", "update")
+        log()
     }
 
     private fun getAll(): List<TicketObject> {
@@ -64,5 +80,11 @@ class TicketStore @Inject constructor(private val realm: Realm) {
 
     fun getTicketsByValidationStatus(status: ValidationStatus): RealmResults<TicketObject> {
         return realm.query<TicketObject>("validationStatus == $0", status.name).find()
+    }
+
+    fun log() {
+        for (ticket in getAll()) {
+            Log.d("tickets", "request=${ticket.requestId} hash=${ticket.ticketHash}, code=${ticket.ticketCode}, status=${ticket.validationStatus}")
+        }
     }
 }

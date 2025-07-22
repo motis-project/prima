@@ -15,7 +15,7 @@ import javax.inject.Inject
 class TourObject : RealmObject {
     @PrimaryKey
     var tourId: Int = 0
-    var ticketValidated: Boolean = false
+    var ticketValidated: Boolean = false // TODO
     var fare: Int = 0
     var fareReported: Boolean = false
     var startTime: Long = 0
@@ -61,13 +61,15 @@ data class EventObjectGroup(
     var cancelled: Boolean,
 )
 
-class TourStore @Inject constructor(private var realm: Realm) {
+class TourStore @Inject constructor(
+    private var realm: Realm,
+    private var ticketStore: TicketStore
+) {
 
     private val _storedTours = MutableStateFlow(getAll())
     val storedTours = _storedTours.asStateFlow()
 
     fun update(tour: Tour) {
-        Log.d("db", "update: ${tour.tourId}")
         // update EventObjects
         try {
             realm.writeBlocking {
@@ -100,77 +102,48 @@ class TourStore @Inject constructor(private var realm: Realm) {
                 }
             }
 
-            // update TourObjects
-            realm.writeBlocking {
-                copyToRealm(TourObject().apply {
-                    this.tourId = tour.tourId
-                    //this.ticketValidated = tour.ticketValidated
-                    this.fare = tour.fare
-                    //this.fareReported = fareReported
-                    this.startTime = tour.startTime
-                    this.endTime = tour.endTime
-                    this.vehicleId = tour.vehicleId
-                }, updatePolicy = io.realm.kotlin.UpdatePolicy.ALL)
+            // store a ticket for each pickup event, if not exists
+            for (event in tour.events) {
+                if (event.isPickup.not()) continue
+                ticketStore.update( //TODO: revise
+                    Ticket(event.requestId, event.ticketHash, "",  ValidationStatus.OPEN)
+                )
             }
-        } catch (e: Exception) {
-            Log.d("db", e.message!!)
-        }
 
-        // update StateFlow
-        _storedTours.value = getAll()
-    }
-
-    fun updateReport(tour: Tour, ticketValidated: Boolean, fareReported: Boolean) {
-        // update EventObjects
-        try {
-            realm.writeBlocking {
-                for (event in tour.events) {
-                    copyToRealm(EventObject().apply {
-                        this.id = event.id
-                        this.tour = event.tour
-                        this.customerName = event.customerName
-                        this.customerPhone = event.customerPhone
-                        this.address = event.address
-                        this.eventGroup = event.eventGroup
-                        this.isPickup = event.isPickup
-                        this.lat = event.lat
-                        this.lng = event.lng
-                        this.scheduledTime = event.scheduledTime
-                        this.bikes = event.bikes
-                        this.customer = event.customer
-                        this.luggage = event.luggage
-                        this.passengers = event.passengers
-                        this.wheelchairs = event.wheelchairs
-                        this.requestId = event.requestId
-                        this.ticketHash = event.ticketHash
-                        this.ticketChecked = event.ticketChecked
-                        this.cancelled = event.cancelled
-                        this.ticketPrice = event.ticketPrice
-                        this.kidsZeroToTwo = event.kidsZeroToTwo
-                        this.kidsThreeToFour = event.kidsThreeToFour
-                        this.kidsFiveToSix = event.kidsFiveToSix
+            // update TourObjects
+            try {
+                val existingTour = realm.query<TourObject>("tourId == $0", tour.tourId).find().first()
+                realm.writeBlocking {
+                    existingTour.let {
+                        findLatest(it)?.apply {
+                            this.startTime = tour.startTime
+                            this.endTime = tour.endTime
+                            this.vehicleId = tour.vehicleId
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // assuming no tour was found for tourId, store a new one
+                realm.writeBlocking {
+                    copyToRealm(TourObject().apply {
+                        this.tourId = tour.tourId
+                        /*this.ticketValidated = ticketValidated
+                        this.fare = tour.fare
+                        this.fareReported = fareReported*/
+                        this.startTime = tour.startTime
+                        this.endTime = tour.endTime
+                        this.vehicleId = tour.vehicleId
                     }, updatePolicy = io.realm.kotlin.UpdatePolicy.ALL)
                 }
             }
-
-            // update TourObjects
-            realm.writeBlocking {
-                copyToRealm(TourObject().apply {
-                    this.tourId = tour.tourId
-                    this.ticketValidated = ticketValidated
-                    this.fare = tour.fare
-                    this.fareReported = fareReported
-                    this.startTime = tour.startTime
-                    this.endTime = tour.endTime
-                    this.vehicleId = tour.vehicleId
-                }, updatePolicy = io.realm.kotlin.UpdatePolicy.ALL)
-            }
         } catch (e: Exception) {
             Log.d("db", e.message!!)
         }
 
         // update StateFlow
         _storedTours.value = getAll()
+        Log.d("tours", "update")
+        log()
     }
 
     fun updateFare(tourId: Int, fareCent: Int, fareReported: Boolean) {
@@ -183,6 +156,8 @@ class TourStore @Inject constructor(private var realm: Realm) {
             }
         }
         _storedTours.value = getAll()
+        Log.d("tours", "updateFare")
+        log()
     }
 
     private fun getAll(): List<TourObject> {
@@ -247,6 +222,10 @@ class TourStore @Inject constructor(private var realm: Realm) {
         return realm.query<EventObject>("tour == $0", tourId).find()
     }
 
+    fun getEventsForRequest(requestId: Int): List<EventObject> {
+        return realm.query<EventObject>("requestId == $0", requestId).find()
+    }
+
     fun getEventGroupsForTour(tourId: Int): List<EventObjectGroup> {
         val events = realm.query<EventObject>("tour == $0", tourId).find()
         val eventGroups = mutableListOf<EventObjectGroup>()
@@ -306,5 +285,11 @@ class TourStore @Inject constructor(private var realm: Realm) {
         }
 
         return res
+    }
+
+    fun log() {
+        for (t in getAll()) {
+            Log.d("tours", "id=${t.tourId} fare=${t.fare}, reported=${t.fareReported}")
+        }
     }
 }
