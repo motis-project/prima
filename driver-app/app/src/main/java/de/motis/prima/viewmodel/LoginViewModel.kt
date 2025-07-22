@@ -60,28 +60,37 @@ class LoginViewModel @Inject constructor(
         }
     }
 
+    private suspend fun fcmToken() {
+        try {
+            val resFCM = apiService
+                .sendDeviceInfo(_deviceInfo.value.deviceId, _deviceInfo.value.fcmToken)
+            Log.d("fcm", "$resFCM")
+            if (resFCM.isSuccessful) {
+                repository.startRefreshingTours()
+                repository.resetTokenPending()
+                _navigationEvent.emit(true)
+                Log.d("login", "User has companyID, fcmToken updated")
+            } else if (resFCM.code() == 403) {
+                _accountErrorEvent.emit(true)
+                logout()
+                Log.d("login", "No companyID: login rejected")
+            } else if (resFCM.code() == 400) {
+                repository.fetchFirebaseToken()
+                _navigationEvent.emit(true)
+                Log.d("login", "Stored  fcmToken was invalid: tried to refresh")
+            }
+        } catch (e: Exception) {
+            Log.e("error", "${e.message}")
+        }
+    }
+
     fun login(email: String, password: String) {
         viewModelScope.launch {
             try {
                 val resLogin = apiService.login(email, password)
                 if (resLogin.isSuccessful) {
                     Log.d("login", "Authentication succeeded")
-                    val resFCM = apiService
-                        .sendDeviceInfo(_deviceInfo.value.deviceId, _deviceInfo.value.fcmToken)
-                    if (resFCM.isSuccessful) {
-                        repository.startRefreshingTours()
-                        repository.resetTokenPending()
-                        _navigationEvent.emit(true)
-                        Log.d("login", "User has companyID, fcmToken updated")
-                    } else if (resFCM.code() == 403) {
-                        _accountErrorEvent.emit(true)
-                        logout()
-                        Log.d("login", "No companyID: login rejected")
-                    } else if (resFCM.code() == 400) {
-                        repository.fetchFirebaseToken()
-                        _navigationEvent.emit(true)
-                        Log.d("login", "Stored  fcmToken was invalid: tried to refresh")
-                    }
+                    fcmToken()
                 } else {
                     _loginErrorEvent.emit(true)
                     Log.e("login", "Login request rejected by backend")

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -72,9 +73,15 @@ class EventGroupViewModel @Inject constructor(
     }
 
     fun getValidCount(eventGroupId: String): Int {
-        val tickets = repository.getTicketsForEventGroup(eventGroupId)
-        return tickets.filter { t -> t.validationStatus == ValidationStatus.DONE.name
-                || t.validationStatus == ValidationStatus.CHECKED_IN.name }.size
+        var tickets = repository.getTicketsForEventGroup(eventGroupId)
+        tickets = tickets.filter { t ->
+            /*repository.getEventsForRequest(t.requestId).none { e -> e.cancelled } &&
+                    (t.validationStatus == ValidationStatus.DONE.name ||
+                            t.validationStatus == ValidationStatus.CHECKED_IN.name)*/
+            t.validationStatus == ValidationStatus.DONE.name ||
+                    t.validationStatus == ValidationStatus.CHECKED_IN.name
+        }
+        return tickets.size
     }
 }
 
@@ -124,7 +131,7 @@ fun EventGroup(
     viewModel: EventGroupViewModel = hiltViewModel()
 ) {
     val validCount = viewModel.getValidCount(eventGroup.id)
-    val nPickUp = eventGroup.events.filter { e -> e.isPickup }.size
+    val nPickUp = eventGroup.events.filter { e -> e.isPickup && e.cancelled.not() }.size
     val hasUncheckedTicket = validCount < nPickUp
 
     Column(
@@ -189,7 +196,8 @@ fun EventGroup(
                     .weight(1f)
                     .background(Color.White)
             ) {
-                items(items = eventGroup.events, itemContent = { event ->
+                val validEvents = eventGroup.events.filter { e -> e.cancelled.not() }
+                items(items = validEvents, itemContent = { event ->
                     ShowCustomerDetails(event, viewModel)
                 })
             }
@@ -327,16 +335,6 @@ fun ShowCustomerDetails(
                             Modifier.background(color = Color.Yellow)
                         )
                     }
-
-                    if (event.cancelled) {
-                        Icon(
-                            imageVector = Icons.Default.Done,
-                            contentDescription = "Localized description",
-                            tint = Color.Red,
-                            modifier = Modifier.size(24.dp)
-
-                        )
-                    }
                 }
 
                 Row {
@@ -451,19 +449,18 @@ fun ShowCustomerDetails(
                         )
                     }
 
-                    val hasValidTicket = viewModel.hasValidTicket(event.tour, event.id)
+                    /*val hasValidTicket = viewModel.hasValidTicket(event.tour, event.id)
+                    if (hasValidTicket) {
+                        ticketStatus = ValidationStatus.DONE
+                    }*/
 
-                    var ticketStatus: ValidationStatus? = null
+                    var ticketStatus: ValidationStatus = ValidationStatus.OPEN
                     val ticketObject = storedTickets.value
                         .find { t -> t.ticketHash == event.ticketHash }
 
 
                     if (ticketObject != null) {
                         ticketStatus = ValidationStatus.valueOf(ticketObject.validationStatus)
-                    }
-
-                    if (hasValidTicket) {
-                        ticketStatus = ValidationStatus.DONE
                     }
 
                     Text(
@@ -489,7 +486,7 @@ fun ShowCustomerDetails(
                                     .size(width = 30.dp, height = 30.dp)
                             )
 
-                            if (ticketStatus == null) {
+                            if (ticketStatus == ValidationStatus.OPEN) {
                                 Icon(
                                     imageVector = Icons.Default.Clear,
                                     contentDescription = "Localized description",

@@ -40,8 +40,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideTourStore(realm: Realm): TourStore {
-        return TourStore(realm)
+    fun provideTourStore(realm: Realm, ticketStore: TicketStore): TourStore {
+        return TourStore(realm, ticketStore)
     }
 
     @Provides
