@@ -266,9 +266,8 @@ const translations: Translations = {
 	explainer: {
 		title: 'Explainer',
 		p1: 'Leider deckt der ÖPNV nicht alles ab.',
-		p2: 'Wir verwenden Taxis, um das Angebot es ÖPNV zu erweitern.',
-		p3: 'Die Schnittmenge aus ÖPNV und Taxi nennen wir das ÖPNV-Taxi.',
-		p4: 'Die Verbindungssuche findet ÖPNV-Verbindungen und zusätzlich ÖPNV-Taxi-Verbindungen, wenn der ÖPNV alleine nicht ausreichend ist.',
+		p2: 'Wir verwenden Taxis, um das Angebot des ÖPNV zu erweitern. Die Schnittmenge aus ÖPNV und Taxi nennen wir das ÖPNV-Taxi.',
+		p3: 'Die Verbindungssuche findet ÖPNV-Verbindungen und zusätzlich ÖPNV-Taxi-Verbindungen, wenn der ÖPNV alleine nicht ausreichend ist.',
 		alt1: 'Ein blauer Kreis, der rechts nicht ganz gefüllt ist. Der nicht gefüllte Teil ist schraffiert.',
 		alt2: 'Ein blauer und ein gelber Kreis, die sich überlappen. Die Überlappung ist blau und gelb schraffiert.',
 		alt3: 'Ein blauer Kreis dessen rechter Teil gelb schraffiert ist.'
