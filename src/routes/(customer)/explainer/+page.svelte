@@ -27,7 +27,7 @@
 				</CardContent>
 			</Card>
 			<Card>
-				<CardContent class="flex flex-col items-center gap-4">					
+				<CardContent class="flex flex-col items-center gap-4">
 					<img class="w-3/4" src={venn2} alt={t.explainer.alt2} />
 					<p>{t.explainer.p2}</p>
 				</CardContent>
