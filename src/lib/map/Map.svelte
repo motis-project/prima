@@ -1,6 +1,6 @@
 <script lang="ts">
 	import maplibregl from 'maplibre-gl';
-	import { setContext, type Snippet } from 'svelte';
+	import { setContext, untrack, type Snippet } from 'svelte';
 	import 'maplibre-gl/dist/maplibre-gl.css';
 	import { createShield } from './shield';
 
@@ -99,15 +99,15 @@
 
 	$effect(() => {
 		if (map && $state.snapshot(zoom) !== currentZoom) {
-			map.setZoom(zoom);
 			currentZoom = zoom;
+			map.setZoom(zoom);
 		}
 	});
 
 	$effect(() => {
 		if (map && center != currentCenter) {
-			map.setCenter(center);
 			currentCenter = center;
+			map.setCenter(center);
 		}
 	});
 </script>
