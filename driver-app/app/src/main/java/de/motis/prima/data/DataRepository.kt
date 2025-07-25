@@ -170,7 +170,7 @@ class DataRepository @Inject constructor(
         fetchTours = false
     }
 
-    private fun fetchTours() {
+    fun fetchTours() {
         val displayDay = _displayDate.value
         val nextDay = displayDay.plusDays(1)
         val start = displayDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -184,17 +184,18 @@ class DataRepository @Inject constructor(
                     _networkError.value = false
                     val fetchedTours = response.body() ?: emptyList()
 
+                    setTours(fetchedTours)
+
                     _toursCache.value = fetchedTours
                         .filter { t -> t.vehicleId == _vehicleId }
                         .sortedBy { t -> t.events[0].scheduledTime }
-
-                    setTours(fetchedTours)
                 }
             } catch (e: Exception) {
                 _networkError.value = true
                 Log.e("error", "fetchTours: ${e.message}")
             }
         }
+        Log.d("test", "tours fetched")
     }
 
     private fun retryScanReport(ticket: Ticket) {
