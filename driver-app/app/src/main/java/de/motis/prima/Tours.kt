@@ -51,6 +51,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import de.motis.prima.services.Event
 import de.motis.prima.services.Tour
+import de.motis.prima.theme.LocalExtendedColors
 import de.motis.prima.viewmodel.ToursViewModel
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -254,7 +255,7 @@ fun DateSelect(
                 modifier = Modifier
                     .size(width = 100.dp, height = 36.dp),
                 colors = ButtonColors(
-                    containerColor = Color(215, 207, 222),
+                    containerColor = LocalExtendedColors.current.containerColor,
                     contentColor = Color.Black,
                     disabledContainerColor = Color.White,
                     disabledContentColor = Color.White
@@ -345,9 +346,9 @@ fun ShowTours(
                             ""
                         }
 
-                        var cardColor = Color(234, 232, 235)
+                        var cardColor = LocalExtendedColors.current.cardColor
                         if (markedTour == tour.tourId) {
-                            cardColor = Color(200, 255, 200)
+                            cardColor = LocalExtendedColors.current.markedCardColor
                         }
 
                         Card(

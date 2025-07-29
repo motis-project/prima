@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.internal.composableLambdaInstance
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +49,7 @@ import de.motis.prima.data.DataRepository
 import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.data.TourObject
 import de.motis.prima.data.TourSpecialInfo
+import de.motis.prima.theme.LocalExtendedColors
 import java.util.Date
 import javax.inject.Inject
 
@@ -280,7 +282,8 @@ fun WayPointsView(viewModel: TourViewModel, tourId: Int, navController: NavContr
                 Card(
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
-                        .padding(10.dp)
+                        .padding(10.dp),
+                    colors = CardColors(LocalExtendedColors.current.containerColor, Color.White, Color.White, Color.White)
                 ) {
                     Column {
                         LazyColumn(state = listState,

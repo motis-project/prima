@@ -59,6 +59,7 @@ import de.motis.prima.data.DataRepository
 import de.motis.prima.data.EventObject
 import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.data.ValidationStatus
+import de.motis.prima.theme.LocalExtendedColors
 import java.util.Date
 import javax.inject.Inject
 
@@ -182,7 +183,8 @@ fun EventGroup(
         Card(
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier
-                .weight(1f)
+                .weight(1f),
+            colors = CardColors(LocalExtendedColors.current.containerColor, Color.White, Color.White, Color.White)
         ) {
             LazyColumn(
                 modifier = Modifier
@@ -298,7 +300,7 @@ fun ShowCustomerDetails(
         modifier = Modifier
             .padding(top = 10.dp)
             .padding(horizontal = 10.dp),
-        colors = CardColors(Color(234, 232, 235), Color.Black, Color.White, Color.White)
+        colors = CardColors(LocalExtendedColors.current.cardColor, Color.Black, Color.White, Color.White)
     ) {
         Column {
             Row(
