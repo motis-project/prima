@@ -57,8 +57,6 @@ class TicketStore @Inject constructor(private val realm: Realm) {
             }
         }
         _storedTickets.value = getAll()
-        Log.d("tickets", "update")
-        log()
     }
 
     private fun getAll(): List<TicketObject> {
@@ -80,11 +78,5 @@ class TicketStore @Inject constructor(private val realm: Realm) {
 
     fun getTicketsByValidationStatus(status: ValidationStatus): RealmResults<TicketObject> {
         return realm.query<TicketObject>("validationStatus == $0", status.name).find()
-    }
-
-    fun log() {
-        for (ticket in getAll()) {
-            Log.d("tickets", "request=${ticket.requestId} hash=${ticket.ticketHash}, code=${ticket.ticketCode}, status=${ticket.validationStatus}")
-        }
     }
 }

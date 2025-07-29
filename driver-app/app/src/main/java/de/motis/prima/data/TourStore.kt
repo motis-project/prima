@@ -127,9 +127,6 @@ class TourStore @Inject constructor(
                 realm.writeBlocking {
                     copyToRealm(TourObject().apply {
                         this.tourId = tour.tourId
-                        /*this.ticketValidated = ticketValidated
-                        this.fare = tour.fare
-                        this.fareReported = fareReported*/
                         this.startTime = tour.startTime
                         this.endTime = tour.endTime
                         this.vehicleId = tour.vehicleId
@@ -142,8 +139,6 @@ class TourStore @Inject constructor(
 
         // update StateFlow
         _storedTours.value = getAll()
-        Log.d("tours", "update")
-        log()
     }
 
     fun updateFare(tourId: Int, fareCent: Int, fareReported: Boolean) {
@@ -156,8 +151,6 @@ class TourStore @Inject constructor(
             }
         }
         _storedTours.value = getAll()
-        Log.d("tours", "updateFare")
-        log()
     }
 
     private fun getAll(): List<TourObject> {
@@ -285,11 +278,5 @@ class TourStore @Inject constructor(
         }
 
         return res
-    }
-
-    fun log() {
-        for (t in getAll()) {
-            Log.d("tours", "id=${t.tourId} fare=${t.fare}, reported=${t.fareReported}")
-        }
     }
 }

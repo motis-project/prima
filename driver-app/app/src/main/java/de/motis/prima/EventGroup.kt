@@ -68,16 +68,9 @@ class EventGroupViewModel @Inject constructor(
 ) : ViewModel() {
     val storedTickets = repository.storedTickets
 
-    fun hasValidTicket(tourId: Int, eventId: Int): Boolean {
-        return repository.hasValidTicket(tourId, eventId)
-    }
-
     fun getValidCount(eventGroupId: String): Int {
         var tickets = repository.getTicketsForEventGroup(eventGroupId)
         tickets = tickets.filter { t ->
-            /*repository.getEventsForRequest(t.requestId).none { e -> e.cancelled } &&
-                    (t.validationStatus == ValidationStatus.DONE.name ||
-                            t.validationStatus == ValidationStatus.CHECKED_IN.name)*/
             t.validationStatus == ValidationStatus.DONE.name ||
                     t.validationStatus == ValidationStatus.CHECKED_IN.name
         }
@@ -448,11 +441,6 @@ fun ShowCustomerDetails(
                                 .size(width = 24.dp, height = 24.dp)
                         )
                     }
-
-                    /*val hasValidTicket = viewModel.hasValidTicket(event.tour, event.id)
-                    if (hasValidTicket) {
-                        ticketStatus = ValidationStatus.DONE
-                    }*/
 
                     var ticketStatus: ValidationStatus = ValidationStatus.OPEN
                     val ticketObject = storedTickets.value
