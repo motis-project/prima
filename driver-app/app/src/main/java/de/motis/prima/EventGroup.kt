@@ -189,7 +189,6 @@ fun EventGroup(
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
-                    .background(Color.White)
             ) {
                 val validEvents = eventGroup.events.filter { e -> e.cancelled.not() }
                 items(items = validEvents, itemContent = { event ->
@@ -327,7 +326,8 @@ fun ShowCustomerDetails(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_wheelchair),
                             contentDescription = "Localized description",
-                            Modifier.background(color = Color.Yellow)
+                            Modifier.background(color = Color.Yellow),
+                            tint = LocalExtendedColors.current.textColor
                         )
                     }
                 }
@@ -338,13 +338,15 @@ fun ShowCustomerDetails(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Person,
-                            contentDescription = "Localized description"
+                            contentDescription = "Localized description",
+                            tint = LocalExtendedColors.current.textColor
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "${event.passengers}",
                             fontSize = 24.sp,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            color = LocalExtendedColors.current.textColor
                         )
                     }
                     Spacer(modifier = Modifier.width(30.dp))
@@ -354,13 +356,15 @@ fun ShowCustomerDetails(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_luggage),
-                            contentDescription = "Localized description"
+                            contentDescription = "Localized description",
+                            tint = LocalExtendedColors.current.textColor
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "${event.luggage}",
                             fontSize = 24.sp,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            color = LocalExtendedColors.current.textColor
                         )
                     }
                     Spacer(modifier = Modifier.width(30.dp))
@@ -370,13 +374,15 @@ fun ShowCustomerDetails(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_bike),
-                            contentDescription = "Localized description"
+                            contentDescription = "Localized description",
+                            tint = LocalExtendedColors.current.textColor
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "${event.bikes}",
                             fontSize = 24.sp,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            color = LocalExtendedColors.current.textColor
                         )
                     }
                 }
@@ -392,7 +398,8 @@ fun ShowCustomerDetails(
                 Text(
                     text = event.customerName,
                     fontSize = 24.sp,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = LocalExtendedColors.current.textColor
                 )
             }
 
@@ -407,7 +414,8 @@ fun ShowCustomerDetails(
                     Text(
                         text = "${String.format("%.2f", fareToPay)} €",
                         fontSize = 24.sp,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        color = LocalExtendedColors.current.textColor
                     )
                 }
             }
@@ -427,12 +435,11 @@ fun ShowCustomerDetails(
                             onClick = {
                                 phoneCall(event.customerPhone, context)
                             },
-                            colors = ButtonColors(Color.White, Color.Black, Color.White, Color.White)
+                            colors = ButtonColors(LocalExtendedColors.current.secondaryButton, LocalExtendedColors.current.textColor, Color.White, Color.White)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Call,
                                 contentDescription = "Localized description"
-
                             )
                         }
                     } else {
@@ -456,24 +463,27 @@ fun ShowCustomerDetails(
                     Text(
                         text = "${String.format("%.2f", fareToPay)} €",
                         fontSize = 24.sp,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        color = LocalExtendedColors.current.textColor
                     )
 
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color.White)
+                            .background(LocalExtendedColors.current.containerColor)
                             .size(height = 40.dp, width = 70.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.background(LocalExtendedColors.current.containerColor)
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_qr),
                                 contentDescription = "Localized description",
                                 modifier = Modifier
-                                    .size(width = 30.dp, height = 30.dp)
+                                    .size(width = 30.dp, height = 30.dp),
+                                tint = LocalExtendedColors.current.textColor
                             )
 
                             if (ticketStatus == ValidationStatus.OPEN) {

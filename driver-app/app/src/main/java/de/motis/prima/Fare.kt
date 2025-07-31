@@ -45,6 +45,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.text.isDigitsOnly
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import de.motis.prima.theme.LocalExtendedColors
 import de.motis.prima.viewmodel.FareViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -142,7 +143,7 @@ fun Fare(
                             Text(
                                 text = "Gespeichert:",
                                 fontSize = 18.sp,
-                                color = Color.DarkGray
+                                color = LocalExtendedColors.current.textColor
                             )
                         }
                         Row(
@@ -152,7 +153,7 @@ fun Fare(
                             Text(
                                 text = viewModel.getFareString(tourId),
                                 fontSize = 18.sp,
-                                color = Color.DarkGray
+                                color = LocalExtendedColors.current.textColor
                             )
                         }
                     }

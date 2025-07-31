@@ -20,8 +20,7 @@ class MainActivity : AppCompatActivity() {
         FirebaseApp.initializeApp(this)
         requestPermissions()
         setContent {
-            MyAppTheme(darkTheme = false, content = { Nav(intent) })
-            //Nav(intent)
+            MyAppTheme(content = { Nav(intent) })
         }
     }
 

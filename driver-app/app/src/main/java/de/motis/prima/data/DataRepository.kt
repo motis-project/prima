@@ -1,7 +1,8 @@
 package de.motis.prima.data
 
+import android.content.Context
+import android.content.res.Configuration
 import android.util.Log
-import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessaging
 import de.motis.prima.services.ApiService
 import de.motis.prima.services.Tour
@@ -36,7 +37,8 @@ class DataRepository @Inject constructor(
     private val dataStoreManager: DataStoreManager,
     private val ticketStore: TicketStore,
     private val tourStore: TourStore,
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val context: Context
 ) {
     val storedTickets = ticketStore.storedTickets
     val storedTours = tourStore.storedTours
@@ -61,13 +63,26 @@ class DataRepository @Inject constructor(
 
     val deviceInfo: Flow<DeviceInfo> = dataStoreManager.deviceInfoFlow
 
-    private val _markedTour = MutableStateFlow<Int>(-1)
+    private val _markedTour = MutableStateFlow(-1)
     val markedTour: StateFlow<Int> = _markedTour.asStateFlow()
 
     private val _eventObjectGroups = MutableStateFlow<List<EventObjectGroup>>(emptyList())
     val eventObjectGroups: StateFlow<List<EventObjectGroup>> = _eventObjectGroups.asStateFlow()
 
     private var fetchTours = false
+
+    private val _darkTheme = MutableStateFlow(isSystemDarkMode(context))
+    val darkTheme: StateFlow<Boolean> = _darkTheme.asStateFlow()
+
+    fun toggleTheme() {
+        _darkTheme.value = !_darkTheme.value
+    }
+
+    fun isSystemDarkMode(context: Context): Boolean {
+        return (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+                Configuration.UI_MODE_NIGHT_YES
+    }
+
 
     init {
         fetchFirebaseToken()

@@ -183,7 +183,6 @@ fun DateSelect(
         Box(
             modifier = Modifier
                 .padding(all = 6.dp),
-
             ) {
             IconButton(
                 onClick = { viewModel.decrementDate() },
@@ -195,11 +194,12 @@ fun DateSelect(
                     contentDescription = "Localized description",
                     modifier = Modifier
                         .size(width = 48.dp, height = 24.dp)
-                        .background(Color(215, 207, 222))
+                        .background(LocalExtendedColors.current.secondaryButton)
                         .border(
-                            border = BorderStroke(2.dp, Color.LightGray),
+                            border = BorderStroke(2.dp, LocalExtendedColors.current.secondaryButton),
                             shape = RoundedCornerShape(6.dp)
-                        )
+                        ),
+                    tint = LocalExtendedColors.current.textColor
                 )
             }
         }
@@ -230,11 +230,12 @@ fun DateSelect(
                     contentDescription = "Localized description",
                     modifier = Modifier
                         .size(width = 48.dp, height = 24.dp)
-                        .background(Color(215, 207, 222))
+                        .background(LocalExtendedColors.current.secondaryButton)
                         .border(
-                            border = BorderStroke(2.dp, Color.LightGray),
+                            border = BorderStroke(2.dp, LocalExtendedColors.current.secondaryButton),
                             shape = RoundedCornerShape(6.dp)
-                        )
+                        ),
+                    tint = LocalExtendedColors.current.textColor
                 )
             }
         }
@@ -255,8 +256,8 @@ fun DateSelect(
                 modifier = Modifier
                     .size(width = 100.dp, height = 36.dp),
                 colors = ButtonColors(
-                    containerColor = LocalExtendedColors.current.containerColor,
-                    contentColor = Color.Black,
+                    containerColor = LocalExtendedColors.current.secondaryButton,
+                    contentColor = LocalExtendedColors.current.textColor,
                     disabledContainerColor = Color.White,
                     disabledContentColor = Color.White
                 )
@@ -288,7 +289,7 @@ fun ShowTours(
     Card(
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier.padding(10.dp).fillMaxSize(),
-        colors = CardColors(Color.White, Color.Black, Color.White, Color.White)
+        colors = CardColors(LocalExtendedColors.current.containerColor, Color.Black, Color.White, Color.White)
     ) {
         if (tours.isEmpty()) {
             Box(
@@ -300,7 +301,8 @@ fun ShowTours(
                 Text(
                     text = stringResource(id = R.string.no_tours),
                     fontSize = 24.sp,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = LocalExtendedColors.current.textColor
                 )
             }
         } else {
@@ -310,7 +312,7 @@ fun ShowTours(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.White)
+                    .background(LocalExtendedColors.current.containerColor)
             ) {
                 items(items = tours, itemContent = { tour ->
                     ConstraintLayout(modifier = Modifier.clickable {
@@ -370,7 +372,8 @@ fun ShowTours(
                                         text = displayTime,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 24.sp,
-                                        textAlign = TextAlign.Center
+                                        textAlign = TextAlign.Center,
+                                        color = LocalExtendedColors.current.textColor
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(10.dp))
@@ -383,7 +386,8 @@ fun ShowTours(
                                     Text(
                                         text = city,
                                         fontSize = 24.sp,
-                                        textAlign = TextAlign.Center
+                                        textAlign = TextAlign.Center,
+                                        color = LocalExtendedColors.current.textColor
                                     )
                                 }
 
@@ -419,9 +423,10 @@ fun ShowTours(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            text = "Tickets validiert:",
+                                            text = stringResource(id = R.string.tickets_validated),
                                             fontSize = 20.sp,
-                                            textAlign = TextAlign.Center
+                                            textAlign = TextAlign.Center,
+                                            color = LocalExtendedColors.current.textColor
                                         )
 
                                         if (ticketChecked) {
@@ -431,7 +436,7 @@ fun ShowTours(
                                                 tint = Color.Green,
                                                 modifier = Modifier
                                                     .size(width = 32.dp, height = 32.dp)
-                                                    .background(Color.White)
+                                                    .background(LocalExtendedColors.current.containerColor)
                                             )
                                         } else {
                                             Icon(
@@ -440,7 +445,7 @@ fun ShowTours(
                                                 tint = Color.Red,
                                                 modifier = Modifier
                                                     .size(width = 32.dp, height = 32.dp)
-                                                    .background(Color.White)
+                                                    .background(LocalExtendedColors.current.containerColor)
                                             )
                                         }
                                     }
@@ -453,28 +458,21 @@ fun ShowTours(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            text = "Fahrpreis: ",
+                                            text = stringResource(id = R.string.fare_label),
                                             fontSize = 20.sp,
-                                            textAlign = TextAlign.Center
+                                            textAlign = TextAlign.Center,
+                                            color = LocalExtendedColors.current.textColor
                                         )
 
                                         if (tour.fare != 0) {
-                                            Row {
-                                                Text(
-                                                    text = viewModel.getFareString(tour.tourId),
-                                                    fontSize = 20.sp,
-                                                    textAlign = TextAlign.Center
-                                                )
-                                                Spacer(modifier = Modifier.width(10.dp))
-                                                Icon(
-                                                    imageVector = Icons.Default.Done,
-                                                    contentDescription = "Localized description",
-                                                    tint = if (ticketChecked) Color.Green else Color.Gray,
-                                                    modifier = Modifier
-                                                        .size(width = 32.dp, height = 32.dp)
-                                                        .background(Color.White)
-                                                )
-                                            }
+                                            Icon(
+                                                imageVector = Icons.Default.Done,
+                                                contentDescription = "Localized description",
+                                                tint = if (ticketChecked) Color.Green else Color.Gray,
+                                                modifier = Modifier
+                                                    .size(width = 32.dp, height = 32.dp)
+                                                    .background(LocalExtendedColors.current.containerColor)
+                                            )
                                         } else {
                                             Icon(
                                                 imageVector = Icons.Default.Clear,
@@ -482,7 +480,7 @@ fun ShowTours(
                                                 tint = Color.Red,
                                                 modifier = Modifier
                                                     .size(width = 32.dp, height = 32.dp)
-                                                    .background(Color.White)
+                                                    .background(LocalExtendedColors.current.containerColor)
                                             )
                                         }
                                     }
