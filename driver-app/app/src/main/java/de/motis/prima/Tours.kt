@@ -206,7 +206,6 @@ fun DateSelect(
         Box(
             modifier = Modifier
                 .padding(all = 6.dp),
-
             ) {
             Text(
                 text = date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
