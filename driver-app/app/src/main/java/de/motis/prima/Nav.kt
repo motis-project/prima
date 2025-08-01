@@ -1,6 +1,7 @@
 package de.motis.prima
 
 import android.content.Intent
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -10,25 +11,42 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import dagger.hilt.android.lifecycle.HiltViewModel
+import de.motis.prima.data.DataRepository
 import de.motis.prima.data.DeviceInfo
 import de.motis.prima.viewmodel.LoginViewModel
-import de.motis.prima.viewmodel.SettingsViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
+import javax.inject.Inject
+
+@HiltViewModel
+class NavViewModel @Inject constructor(
+    private val repository: DataRepository
+) : ViewModel() {
+    val selectedVehicle = repository.selectedVehicle
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    fun fetchTours() {
+        repository.fetchTours()
+    }
+}
 
 @Composable
-fun Nav(intent: Intent?) {
+fun Nav(intent: Intent?, viewModel: NavViewModel = hiltViewModel()) {
     val navController = rememberNavController()
     val loginViewModel: LoginViewModel = hiltViewModel()
-    val settingsViewModel: SettingsViewModel = hiltViewModel()
-
-    val selectedVehicle = settingsViewModel.selectedVehicle.collectAsState().value
+    val selectedVehicle = viewModel.selectedVehicle.collectAsState().value
     val loggedIn = loginViewModel.isLoggedIn()
 
     var notifiedTourId = -1
     intent?.let { safeIntent ->
         runCatching {
+            viewModel.fetchTours()
             val tourIdStr = safeIntent.getStringExtra("tourId")
             tourIdStr?.let { safeTourIdStr ->
                 notifiedTourId = safeTourIdStr.toInt()
