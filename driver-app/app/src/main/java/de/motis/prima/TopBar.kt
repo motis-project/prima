@@ -113,7 +113,7 @@ fun TopBar(
                             dropdownExpanded = false
 
                         },
-                        text = { Text(text = "Dark Theme") }
+                        text = { Text(text = "Toggle Theme") }
                     )
                     DropdownMenuItem(
                         onClick = {
