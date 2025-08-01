@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import de.motis.prima.theme.LocalExtendedColors
 import de.motis.prima.viewmodel.TopBarViewModel
 import kotlinx.coroutines.launch
 
@@ -62,7 +63,8 @@ fun TopBar(
             Text(
                 text = title,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                color = LocalExtendedColors.current.textColor
             )
         },
         navigationIcon = {
@@ -105,6 +107,14 @@ fun TopBar(
                             text = { Text(text = item.text) }
                         )
                     }
+                    DropdownMenuItem(
+                        onClick = {
+                            viewModel.toggleTheme()
+                            dropdownExpanded = false
+
+                        },
+                        text = { Text(text = "Toggle Theme") }
+                    )
                     DropdownMenuItem(
                         onClick = {
                             viewModel.logout()

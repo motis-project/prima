@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.FirebaseApp
 import dagger.hilt.android.AndroidEntryPoint
+import de.motis.prima.theme.MyAppTheme
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -18,7 +19,9 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         FirebaseApp.initializeApp(this)
         requestPermissions()
-        setContent { Nav(intent)  }
+        setContent {
+            MyAppTheme(content = { Nav(intent) })
+        }
     }
 
     override fun onNewIntent(intent: Intent?) {
