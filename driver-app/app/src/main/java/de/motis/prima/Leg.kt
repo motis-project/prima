@@ -24,9 +24,18 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LegViewModel @Inject constructor(
-    repository: DataRepository
+    private val repository: DataRepository
 ) : ViewModel() {
     val eventGroups = repository.eventObjectGroups
+
+    init {
+        repository.fetchTours()
+    }
+
+    fun update(tourId: Int) {
+        repository.fetchTours()
+        repository.updateEventGroups(tourId)
+    }
 }
 
 @Composable
@@ -34,9 +43,9 @@ fun Leg(
     navController: NavController,
     tourId: Int,
     eventGroupIndex: Int,
-    legViewModel: LegViewModel = hiltViewModel()
+    viewModel: LegViewModel = hiltViewModel()
 ) {
-    val eventGroups = legViewModel.eventGroups.collectAsState().value
+    val eventGroups = viewModel.eventGroups.collectAsState().value
 
     Scaffold(
         topBar = {
@@ -60,6 +69,7 @@ fun Leg(
                 horizontalArrangement = Arrangement.Center
             ) {
                 if (eventGroups.isNotEmpty()) {
+                    viewModel.update(tourId)
                     val nav = if (eventGroupIndex < eventGroups.size - 1) {
                         "leg/$tourId/${eventGroupIndex + 1}"
                     } else {

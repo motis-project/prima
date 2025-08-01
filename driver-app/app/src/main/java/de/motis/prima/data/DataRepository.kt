@@ -195,7 +195,6 @@ class DataRepository @Inject constructor(
                 Log.e("error", "fetchTours: ${e.message}")
             }
         }
-        Log.d("test", "tours fetched")
     }
 
     private fun retryScanReport(ticket: Ticket) {
@@ -351,11 +350,11 @@ class DataRepository @Inject constructor(
         tourStore.updateFare(tourId, fareCent, fareReported)
     }
 
-    fun getTicketsByValidationStatus(status: ValidationStatus): RealmResults<TicketObject> {
+    private fun getTicketsByValidationStatus(status: ValidationStatus): RealmResults<TicketObject> {
         return ticketStore.getTicketsByValidationStatus(status)
     }
 
-    fun getToursUnreportedFare(): List<TourObject> {
+    private fun getToursUnreportedFare(): List<TourObject> {
         return tourStore.getToursUnreportedFare()
     }
 
@@ -376,14 +375,6 @@ class DataRepository @Inject constructor(
         val pickupEvents = tourStore.getEventsForTour(tourId).filter { e -> e.isPickup }
         val invalidated = pickupEvents.filter { e -> e.ticketChecked.not() }
         return invalidated.isNotEmpty()
-    }
-
-    fun hasValidTicket(tourId: Int, eventId: Int): Boolean {
-        val event = tourStore.getEventsForTour(tourId).find { e -> e.id == eventId }
-        if (event != null) {
-            return event.ticketChecked
-        }
-        return false
     }
 
     fun getTourSpecialInfo(tourId: Int): TourSpecialInfo {
@@ -414,9 +405,5 @@ class DataRepository @Inject constructor(
 
     fun removeMarker() {
         _markedTour.value = -1
-    }
-
-    fun getEventsForRequest(requestId: Int): List<EventObject> {
-        return tourStore.getEventsForRequest(requestId)
     }
 }
