@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -48,6 +49,7 @@ import de.motis.prima.data.DataRepository
 import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.data.TourObject
 import de.motis.prima.data.TourSpecialInfo
+import de.motis.prima.theme.LocalExtendedColors
 import java.util.Date
 import javax.inject.Inject
 
@@ -175,7 +177,7 @@ fun TourInfoView(tourInfo: TourSpecialInfo) {
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
             .padding(10.dp),
-        colors = CardColors(Color.White, Color.Black, Color.White, Color.White)
+        colors = CardColors(LocalExtendedColors.current.containerColor, Color.Black, Color.White, Color.White)
     ) {
         Row(
             modifier = Modifier
@@ -285,7 +287,8 @@ fun WayPointsView(viewModel: TourViewModel, tourId: Int, navController: NavContr
                     Column {
                         LazyColumn(state = listState,
                             modifier = Modifier
-                                .background(Color.White).weight(0.9f)
+                                .background(LocalExtendedColors.current.containerColor)
+                                .weight(0.9f)
                         ) {
                             items(items = eventGroups.value, itemContent = { eventGroup ->
                                 WayPointPreview(eventGroup)
@@ -294,7 +297,7 @@ fun WayPointsView(viewModel: TourViewModel, tourId: Int, navController: NavContr
                         }
                         Box(
                             modifier = Modifier
-                                .background(Color.White)
+                                .background(LocalExtendedColors.current.containerColor)
                                 .fillMaxWidth()
                                 .weight(0.1f),
                             contentAlignment = Alignment.Center
@@ -431,7 +434,7 @@ fun WayPointPreview(
     Card(
         modifier = Modifier
             .padding(10.dp),
-        colors = CardColors(Color.White, Color.Black, Color.White, Color.White)
+        colors = CardDefaults.cardColors(containerColor = LocalExtendedColors.current.containerColor)
     ) {
         Column(
             verticalArrangement = Arrangement.Center
