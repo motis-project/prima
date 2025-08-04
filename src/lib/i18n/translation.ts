@@ -90,6 +90,8 @@ export type Translations = {
 
 		// Journey
 		cancelled: string;
+		stillNegotiating: string;
+		openRequest: string;
 
 		// Feedback
 		feedbackThank: string;
@@ -147,6 +149,7 @@ export type Translations = {
 
 	atDateTime: (timeType: TimeType, time: Date, isToday: boolean) => string;
 
+	bookingsHeader: string;
 	cancelledJourneys: string;
 	noBookings: string;
 	journeyDetails: string;
@@ -161,6 +164,8 @@ export type Translations = {
 	taxi: string;
 	moped: string;
 	odm: string;
+	rideSharing: string;
+	rideSharingBookingRequired: string;
 	from: string;
 	to: string;
 	arrival: string;
@@ -233,6 +238,31 @@ export type Translations = {
 		alt1: string;
 		alt2: string;
 		alt3: string;
+	};
+	ride: {
+		myRideOffers: string;
+		create: string;
+		intro: string;
+		vehicle: string;
+		addVehicle: string;
+		outro: string;
+		publish: string;
+		cancelTrip: string;
+		cancelHeadline: string;
+		noCancel: string;
+		cancelDescription: string;
+		negotiateHere: string;
+		negotiateHeader: string;
+		negotiatePrivacy: string;
+		negotiateExplanation: string;
+		profile: string;
+		email: string;
+		phone: string;
+		noPhone: string;
+		negotiateMessage: string;
+		sendNegotiationRequest: string;
+		requestBy: string;
+		acceptRequest: string;
 	};
 };
 

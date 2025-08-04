@@ -10,19 +10,20 @@
 	}: {
 		passengers: number;
 		wheelchair: boolean;
-		price: number;
+		price: number | undefined;
 		luggage: number;
 	} = $props();
 </script>
 
 <div class="mb-2">{t.booking.summary}:</div>
 <ul class="flex list-inside list-disc flex-col gap-2">
-	<li>{t.booking.cashOnly}</li>
-
-	<li>
-		{t.booking.totalPrice}:
-		<span class="font-bold">{getEuroString(price)}</span>
-	</li>
+	{#if price != undefined}
+		<li>{t.booking.cashOnly}</li>
+		<li>
+			{t.booking.totalPrice}:
+			<span class="font-bold">{getEuroString(price)}</span>
+		</li>
+	{/if}
 
 	<li>{t.booking.bookingFor(passengers)}</li>
 

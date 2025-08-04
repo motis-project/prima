@@ -1,5 +1,6 @@
 import type { Leg } from '$lib/openapi';
 import { t } from '$lib/i18n/translation';
+import { isRideShareLeg } from './utils';
 
 export const getModeName = (l: Leg) => {
 	switch (l.mode) {
@@ -29,7 +30,7 @@ export const getModeName = (l: Leg) => {
 		case 'CAR_PARKING':
 			return t.car;
 		case 'ODM':
-			return t.odm;
+			return isRideShareLeg(l) ? t.rideSharingBookingRequired : t.odm;
 		default:
 			return `${l.mode}`;
 	}

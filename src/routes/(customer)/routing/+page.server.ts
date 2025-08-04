@@ -13,7 +13,7 @@ import { bookingApi } from '$lib/server/booking/bookingApi';
 import type { Leg } from '$lib/openapi';
 import type { SignedItinerary } from '$lib/planAndSign';
 import { sql } from 'kysely';
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad, PageServerLoadEvent } from './$types';
 import Prom from 'prom-client';
 
 let booking_errors: Prom.Counter | undefined;
@@ -296,7 +296,7 @@ export const actions = {
 	}
 };
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 	const areasGeoJSON = async () => {
 		return await sql`
 		SELECT 'FeatureCollection' AS TYPE,
@@ -311,6 +311,11 @@ export const load: PageServerLoad = async () => {
 	};
 
 	return {
-		areas: (await areasGeoJSON()).rows[0]
+		areas: (await areasGeoJSON()).rows[0],
+		user: {
+			name: event.locals.session?.name,
+			email: event.locals.session?.email,
+			phone: event.locals.session?.phone
+		}
 	};
 };

@@ -1,0 +1,56 @@
+<script lang="ts">
+	import { env } from '$env/dynamic/private';
+	import { formatTime } from '$lib/util/formatTime';
+	import EmailFooter from './EmailFooter.svelte';
+	const {
+		journeyTime,
+		journeyFirst,
+		journeyLast,
+		firstAddress,
+		lastAddress,
+		firstTime,
+		lastTime,
+		name,
+		tourId,
+		passengerName,
+		email,
+		phone,
+		message
+	} = $props();
+	const tourLink = $derived(`${env.ORIGIN}/ride-offers/${tourId}`);
+</script>
+
+<div>
+	Guten Tag {name},
+
+	<p>
+		Es gibt eine neue Anfrage zur Ihrem Mitfahrangebot am {formatTime(journeyTime)} von {journeyFirst}
+		nach {journeyLast}:
+	</p>
+	<ul>
+		<li>Von: {firstAddress}</li>
+		<li>Nach: {lastAddress}</li>
+		<li>
+			Geplanter Start: {formatTime(firstTime)}
+		</li>
+		<li>
+			Geplante Ankunft: {formatTime(lastTime)}
+		</li>
+	</ul>
+
+	<ul>
+		<li>Name: {passengerName}</li>
+		<li>E-Mail: <a href="mailto:{email}">{email}</a></li>
+		{#if phone}
+			<li>Telefonnummer: {phone}</li>
+		{/if}
+		<li>Nachricht: {message}</li>
+	</ul>
+	<p>
+		Bitte nehmen Sie Kontakt mit der interessierten Person auf. Wenn Sie sich auf eine Mitnahme
+		einigen, bestätigen Sie bitte die am Mitfahrangebot vermerkte Anfrage:
+		<a href={tourLink}>{tourLink}</a>
+	</p>
+
+	<EmailFooter />
+</div>

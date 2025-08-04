@@ -47,13 +47,15 @@
 		selected = $bindable(),
 		onValueChange,
 		placeholder,
-		name
+		name,
+		focus = true
 	}: {
 		items?: Array<Location>;
 		selected?: Location;
 		onValueChange?: (m: Location) => void;
 		placeholder?: string;
 		name?: string;
+		focus?: boolean;
 	} = $props();
 
 	let inputValue = $state('');
@@ -154,7 +156,11 @@
 		}
 	});
 
-	onMount(() => ref?.focus());
+	onMount(() => {
+		if (focus) {
+			ref?.focus();
+		}
+	});
 </script>
 
 <Combobox.Root
