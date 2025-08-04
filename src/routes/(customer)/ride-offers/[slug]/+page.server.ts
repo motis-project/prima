@@ -12,7 +12,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.leftJoin('event', 'event.request', 'request.id')
 		.leftJoin('tour', 'tour.id', 'request.tour')
 		.leftJoin('vehicle', 'vehicle.id', 'tour.vehicle')
-		.leftJoin('company', 'company.id', 'vehicle.company')
 		.orderBy('event.communicatedTime', 'asc')
 		.select([
 			'json',
@@ -30,9 +29,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			'request.kidsFiveToSix',
 			'event.communicatedTime',
 			'vehicle.licensePlate',
-			'journey.id as journeyId',
-			'company.name',
-			'company.phone'
+			'journey.id as journeyId'
 		])
 		.where('journey.id', '=', parseInt(params.slug))
 		.where('user', '=', locals.session!.userId!)
@@ -46,8 +43,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	return {
 		...journey,
 		journey: journey.json,
-		isService: locals.session?.isService,
-		negotiating: true // TODO
+		negotiating: [
+			{
+				// TODO
+				name: 'Dummy',
+				email: 'email@email.com',
+				phone: '115',
+				journey: journey.json
+			}
+		]
 	};
 };
 

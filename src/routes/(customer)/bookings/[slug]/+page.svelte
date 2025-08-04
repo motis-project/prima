@@ -21,6 +21,7 @@
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
 	import { type Leg } from '$lib/openapi/types.gen';
+	import { isRideShareLeg } from '../../routing/utils';
 
 	const { data } = $props();
 
@@ -46,7 +47,7 @@
 							<Waypoints class="mr-1 size-4" />
 							{t.booking.connection}
 						</Button>
-					{:else if !data.isService}
+					{:else if !data.isService && data.journey.legs.some((l) => l.mode === 'ODM' && !isRideShareLeg(l))}
 						<Button
 							onclick={() => {
 								showTicket = !showTicket;
@@ -137,6 +138,9 @@
 				day: 'numeric'
 			})}
 		</p>
+		{#if data.negotiating}
+			<Message msg={msg('stillNegotiating')} />
+		{/if}
 		<ConnectionDetail
 			itinerary={data.journey}
 			onClickStop={(_name: string, stopId: string, time: Date) =>

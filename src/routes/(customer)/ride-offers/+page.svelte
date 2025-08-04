@@ -3,8 +3,8 @@
 	import ItinerarySummary from '../routing/ItinerarySummary.svelte';
 	import { t } from '$lib/i18n/translation';
 	import type { Itinerary } from '$lib/openapi';
-	import { Button } from '$lib/shadcn/button';
-	import { Car } from 'lucide-svelte';
+	import Button from '$lib/shadcn/button/button.svelte';
+	import { Plus } from 'lucide-svelte';
 
 	const { data } = $props();
 	const pastJourneys = data.journeys.filter(
@@ -19,9 +19,10 @@
 	<Alert class="size-4" />
 	{t.msg.cancelled}
 {/snippet}
+
 {#snippet negotiating()}
 	<Alert class="size-4" />
-	{t.msg.stillNegotiating}
+	{t.msg.openRequest}
 {/snippet}
 
 {#snippet journeyList(
@@ -35,7 +36,7 @@
 )}
 	<div class="flex flex-col gap-4">
 		{#each journeys as it}
-			<a href="/bookings/{it.id}">
+			<a href="/ride-offers/{it.id}">
 				<ItinerarySummary
 					it={it.journey}
 					info={it.cancelled ? cancelled : it.negotiating ? negotiating : undefined}
@@ -47,17 +48,16 @@
 {/snippet}
 
 <div class="flex h-full flex-col gap-4 md:min-h-[70dvh] md:w-96">
-	<div class="flex items-center justify-between gap-4">
-		<a href="/ride-offers" class="w-full">
+	<div class="flex items-center justify-between gap-4 pb-8">
+		<a href="/ride-offers/new" class="w-full">
 			<Button class="w-full">
-				<Car class="mr-1 size-4" />
-				{t.ride.myRideOffers}
+				<Plus class="mr-1 size-4" />
+				{t.ride.create}
 			</Button>
 		</a>
 	</div>
-	<h2 class="text-xl">{t.bookingsHeader}</h2>
 	{#if plannedJourneys.length === 0 && pastJourneys.length === 0}
-		<p>{t.noBookings}</p>
+		{t.noBookings}
 	{/if}
 	{@render journeyList(plannedJourneys)}
 	{#if pastJourneys.length !== 0}

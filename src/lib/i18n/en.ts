@@ -3,7 +3,7 @@ import type { Translations } from './translation';
 const translations: Translations = {
 	menu: {
 		connections: 'Connections',
-		bookings: 'Bookings',
+		bookings: 'My Journeys',
 		account: 'Account',
 		availability: 'Availability',
 		company: 'Company',
@@ -89,6 +89,8 @@ const translations: Translations = {
 
 		// Journey
 		cancelled: 'This trip has been cancelled.',
+		stillNegotiating: 'This ride is still being negotiated.',
+		openRequest: 'This ride offer has open requests.',
 
 		// Feedback
 		feedbackThank: 'Thank you very much for your feedback!',
@@ -164,6 +166,7 @@ const translations: Translations = {
 			year: isToday ? undefined : '2-digit'
 		}),
 
+	bookingsHeader: 'My booked and saved journeys',
 	cancelledJourneys: 'Past and Cancelled Journeys',
 	noBookings: 'There are no bookings or stored itineraries yet.',
 	journeyDetails: 'Journey Details',
@@ -178,6 +181,8 @@ const translations: Translations = {
 	taxi: 'Taxi',
 	moped: 'Moped',
 	odm: 'Public Transport Taxi, booking required!',
+	rideSharing: 'Ride sharing offer',
+	rideSharingBookingRequired: 'Ride sharing offer, negotiation required!',
 	from: 'From',
 	to: 'To',
 	arrival: 'Arrival',
@@ -227,7 +232,7 @@ const translations: Translations = {
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
-		summary: 'Booking summary',
+		summary: 'Summary',
 		header: 'Book ride (incurs cost)',
 		disclaimer:
 			"Cancel your ride one hour early if you don't want to take it. In case you do not cancel your ride in time or don't show up, you are liable to pay the full call-out-fee of the taxi.",
@@ -275,6 +280,36 @@ const translations: Translations = {
 		alt1: 'A blue circle that is not completely filled on the right. The unfilled part is hatched.',
 		alt2: 'A blue and a yellow circle that overlap. The overlap is hatched blue and yellow.',
 		alt3: 'A blue circle whose right-hand part is hatched yellow.'
+	},
+	ride: {
+		myRideOffers: 'My ride offers',
+		create: 'Create new ride offer',
+		intro: 'Enter your journey to offer other users to ride with you.',
+		vehicle: 'Vehicle',
+		addVehicle: 'Add vehicle',
+		outro:
+			'Your offer will be visible to everybody using the journey planner. You will be notified about requests via e-mail.',
+		publish: 'Publish ride offer',
+		cancelTrip: 'Cancel ride offer',
+		cancelHeadline: 'Do you really want to cancel this ride offer?',
+		noCancel: 'No, I do not want to cancel.',
+		cancelDescription:
+			'You should inform any people riding with you yourself, even if they will receive an email about the cancellation.',
+		negotiateHere: 'Negotiate here',
+		negotiateHeader: 'Negotiate the ride',
+		negotiatePrivacy:
+			'The following data will be shared with the person offering the ride when sending the negotiation request:',
+		negotiateExplanation:
+			'You need to negotiate the price and details with the person offering this ride.',
+		profile: 'Your profile',
+		email: 'Your email',
+		phone: 'Your phone',
+		noPhone:
+			'You have not set a phone number in your account. Consider providing a direct means of contact in the message field below.',
+		negotiateMessage: 'Message to the person offering the ride',
+		sendNegotiationRequest: 'Send negotation request',
+		requestBy: 'Request from',
+		acceptRequest: 'Confirm ride'
 	}
 };
 

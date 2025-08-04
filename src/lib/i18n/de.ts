@@ -3,7 +3,7 @@ import type { Translations } from './translation';
 const translations: Translations = {
 	menu: {
 		connections: 'Verbindungen',
-		bookings: 'Buchungen',
+		bookings: 'Meine Fahrten',
 		account: 'Konto',
 		availability: 'Verfügbarkeit',
 		company: 'Unternehmen',
@@ -92,6 +92,8 @@ const translations: Translations = {
 
 		// Journey
 		cancelled: 'Diese Fahrt wurde storniert.',
+		stillNegotiating: 'Die Mitfahrgelegenheit ist noch nicht fest vereinbart.',
+		openRequest: 'Dieses Mitfahrangebot hat offene Anfragen.',
 
 		// Feedback
 		feedbackThank: 'Vielen Dank für Ihr Feedback!',
@@ -169,6 +171,7 @@ const translations: Translations = {
 			year: isToday ? undefined : '2-digit'
 		}),
 
+	bookingsHeader: 'Meine gebuchten und gespeicherten Fahrten',
 	cancelledJourneys: 'Vergangene und stornierte Fahrten',
 	noBookings: 'Sie haben bisher keine gebuchten oder gespeicherten Fahrten.',
 	journeyDetails: 'Verbindungsdetails',
@@ -183,6 +186,8 @@ const translations: Translations = {
 	taxi: 'Taxi',
 	moped: 'Moped',
 	odm: 'ÖPNV-Taxi - Buchung erforderlich!',
+	rideSharing: 'Mitfahrangebot',
+	rideSharingBookingRequired: 'Mitfahrangebot - Vereinbarung erforderlich!',
 	from: 'Von',
 	to: 'Nach',
 	arrival: 'Ankunft',
@@ -234,7 +239,7 @@ const translations: Translations = {
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
-		summary: 'Buchungszusammenfassung',
+		summary: 'Zusammenfassung',
 		header: 'Kostenpflichtig buchen',
 		disclaimer:
 			'Stornieren Sie die Fahrt mind. eine Stunde vorher, falls Sie die Fahrt nicht wahrnehmen können. Sollten Sie nicht rechtzeitig stornieren, wird Ihnen die Anfahrt des Taxis voll in Rechnung gestellt.',
@@ -282,6 +287,36 @@ const translations: Translations = {
 		alt1: 'Ein blauer Kreis, der rechts nicht ganz gefüllt ist. Der nicht gefüllte Teil ist schraffiert.',
 		alt2: 'Ein blauer und ein gelber Kreis, die sich überlappen. Die Überlappung ist blau und gelb schraffiert.',
 		alt3: 'Ein blauer Kreis dessen rechter Teil gelb schraffiert ist.'
+	},
+	ride: {
+		myRideOffers: 'Meine Mitfahrangebote',
+		create: 'Neues Mitfahrangebot anlegen',
+		intro: 'Hinterlegen Sie Ihre Fahrt, um anderen Nutzern die Mitfahrt bei Ihnen anzubieten.',
+		vehicle: 'Fahrzeug',
+		addVehicle: 'Fahrzeug hinzufügen',
+		outro:
+			'Ihr Mitfahrangebot wird öffentlich in der Verbindungsauskunft angezeigt. Über Anfragen werden Sie per E-Mail benachrichtigt.',
+		publish: 'Mitfahrangebot veröffentlichen',
+		cancelTrip: 'Mitfahrangebot stornieren',
+		cancelHeadline: 'Möchten Sie wirklich dieses Mitfahrangebot stornieren?',
+		noCancel: 'Nein, Fahrt nicht stornieren.',
+		cancelDescription:
+			'Sie sollten ggf. vorhandene Mitfahrer persönlich informieren, auch wenn diese per E-Mail über die Stornierung benachrichtigt werden.',
+		negotiateHere: 'Hier vereinbaren',
+		negotiateHeader: 'Mitfahrgelegenheit vereinbaren',
+		negotiatePrivacy:
+			'Die folgenden Daten werden beim Senden der Anfrage mit der Person, die diese Mitfahrgelegenheit anbietet, geteilt:',
+		negotiateExplanation:
+			'Sie müssen den Preis und weitere Details mit der anbietenden Person vereinbaren.',
+		profile: 'Ihr Profil',
+		email: 'Ihre E-Mail',
+		phone: 'Ihre Telefonnummer',
+		noPhone:
+			'Sie haben keine Telefonnummer in Ihrem Account hinterlegt. Sie sollten eine direkte Kontaktmöglichkeit in der Nachricht unten angeben.',
+		negotiateMessage: 'Nachricht an den Anbieter der Mitfahrgelegenheit',
+		sendNegotiationRequest: 'Anfrage senden',
+		requestBy: 'Anfrage von',
+		acceptRequest: 'Mitfahrt bestätigen'
 	}
 };
 
