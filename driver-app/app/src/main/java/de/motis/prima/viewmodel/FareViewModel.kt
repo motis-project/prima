@@ -30,7 +30,6 @@ class FareViewModel @Inject constructor(
 
     init {
         repository.fetchTours()
-        Log.d("fare", "fetch")
     }
 
     fun reportFare(tourId: Int, fare: String) {
@@ -70,7 +69,6 @@ class FareViewModel @Inject constructor(
             val rounded = String.format("%.2f", fare).replace('.', ',')
             res = "$rounded Euro"
         }
-        Log.d("fare", "fare: $res")
         return res
     }
 }
