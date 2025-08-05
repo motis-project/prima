@@ -29,7 +29,7 @@ services:
     command: /bin/sh -c "./motis import"
 
   motis-server:
-    image: ghcr.io/motis-project/motis:2
+    image: ghcr.io/motis-project/motis:latest
     depends_on:
       - motis-import
     volumes:
