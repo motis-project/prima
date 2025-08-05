@@ -308,6 +308,17 @@ fun ShowCustomerDetails(
                     .padding(top = 8.dp, start = 12.dp, end = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                Text(
+                    text= Date(event.scheduledTime).formatTo("HH:mm"),
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, start = 12.dp, end = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
