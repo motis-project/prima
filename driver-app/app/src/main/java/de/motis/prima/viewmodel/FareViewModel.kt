@@ -1,6 +1,7 @@
 package de.motis.prima.viewmodel
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,6 +27,11 @@ class FareViewModel @Inject constructor(
     val reportSuccessEvent = _reportSuccessEvent.asSharedFlow()
 
     val storedTours = repository.storedTours
+
+    init {
+        repository.fetchTours()
+        Log.d("fare", "fetch")
+    }
 
     fun reportFare(tourId: Int, fare: String) {
         viewModelScope.launch {
@@ -64,6 +70,7 @@ class FareViewModel @Inject constructor(
             val rounded = String.format("%.2f", fare).replace('.', ',')
             res = "$rounded Euro"
         }
+        Log.d("fare", "fare: $res")
         return res
     }
 }

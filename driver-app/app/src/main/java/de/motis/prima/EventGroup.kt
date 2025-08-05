@@ -310,7 +310,8 @@ fun ShowCustomerDetails(
             ) {
                 Text(
                     text= Date(event.scheduledTime).formatTo("HH:mm"),
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = LocalExtendedColors.current.textColor
                 )
             }
             Row(
