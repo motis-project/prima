@@ -41,7 +41,8 @@ class FirebaseService: FirebaseMessagingService() {
             val title = remoteMessage.notification?.title ?: "Default Title"
             val body = remoteMessage.notification?.body ?: "Default Body"
 
-            repository.fetchTours()
+            val pickupTime = data["pickupTime"]
+            repository.fetchTours(pickupTime?.toLong())
 
             /*CoroutineScope(Dispatchers.IO).launch {
                 try {
