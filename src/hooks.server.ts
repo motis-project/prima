@@ -97,3 +97,28 @@ try {
 	console.log(e);
 	firebase_established?.set(0);
 }
+
+import process from 'process';
+import opentelemetry from '@opentelemetry/sdk-node';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+// import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-base';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
+
+// const traceExporter = new ConsoleSpanExporter();
+const sdk = new opentelemetry.NodeSDK({
+	resource: resourceFromAttributes({
+		[ATTR_SERVICE_NAME]: 'prima'
+	}),
+	traceExporter: new OTLPTraceExporter(),
+	instrumentations: [getNodeAutoInstrumentations()]
+});
+sdk.start();
+process.on('SIGTERM', () => {
+	sdk
+		.shutdown()
+		.then(() => console.log('Tracing terminated'))
+		.catch((error) => console.log('Error terminating tracing', error))
+		.finally(() => process.exit(0));
+});
