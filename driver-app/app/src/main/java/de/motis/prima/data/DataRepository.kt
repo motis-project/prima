@@ -3,7 +3,6 @@ package de.motis.prima.data
 import android.content.Context
 import android.content.res.Configuration
 import android.util.Log
-import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessaging
 import de.motis.prima.services.ApiService
 import de.motis.prima.services.Tour
@@ -22,6 +21,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import retrofit2.Response
 import java.security.MessageDigest
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
@@ -186,8 +186,19 @@ class DataRepository @Inject constructor(
         fetchTours = false
     }
 
-    fun fetchTours() {
-        val displayDay = _displayDate.value
+    private fun localDateFromEpochMillis(epochMillis: Long): LocalDate {
+        return Instant.ofEpochMilli(epochMillis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+    }
+
+    fun fetchTours(time: Long? = null) {
+        var displayDay = _displayDate.value
+
+        if (time != null) {
+            displayDay = localDateFromEpochMillis(time)
+        }
+
         val nextDay = displayDay.plusDays(1)
         val start = displayDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val end = nextDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -199,9 +210,7 @@ class DataRepository @Inject constructor(
                 if (response.isSuccessful) {
                     _networkError.value = false
                     val fetchedTours = response.body() ?: emptyList()
-
                     setTours(fetchedTours)
-
                     _toursCache.value = fetchedTours
                         .filter { t -> t.vehicleId == _vehicleId }
                         .sortedBy { t -> t.events[0].scheduledTime }

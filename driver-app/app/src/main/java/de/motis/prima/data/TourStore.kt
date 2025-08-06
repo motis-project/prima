@@ -119,6 +119,7 @@ class TourStore @Inject constructor(
                             this.startTime = tour.startTime
                             this.endTime = tour.endTime
                             this.vehicleId = tour.vehicleId
+                            this.fare = tour.fare
                         }
                     }
                 }
@@ -130,6 +131,7 @@ class TourStore @Inject constructor(
                         this.startTime = tour.startTime
                         this.endTime = tour.endTime
                         this.vehicleId = tour.vehicleId
+                        this.fare = tour.fare
                     }, updatePolicy = io.realm.kotlin.UpdatePolicy.ALL)
                 }
             }

@@ -27,6 +27,10 @@ class FareViewModel @Inject constructor(
 
     val storedTours = repository.storedTours
 
+    init {
+        repository.fetchTours()
+    }
+
     fun reportFare(tourId: Int, fare: String) {
         viewModelScope.launch {
             var fareCent = 0
