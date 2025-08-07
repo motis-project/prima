@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { ORIGIN } from '$env/static/private';
+	import { env } from '$env/dynamic/private';
 	import { formatTime } from '$lib/util/formatTime';
 	import EmailFooter from './EmailFooter.svelte';
 	const { firstAddress, lastAddress, firstTime, lastTime, name, tourId } = $props();
-	const tourLink = $derived(`${ORIGIN}/taxi/accounting/?tourId=${tourId}`);
+	const tourLink = $derived(`${env.ORIGIN}/taxi/accounting/?tourId=${tourId}`);
 </script>
 
 <div>
