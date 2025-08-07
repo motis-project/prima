@@ -122,16 +122,18 @@
 				<div>
 					{#if tours && tours.length > 1}
 						{#each tours as tour, i}
-							{@const tourInfo = getTourInfoShort(tour)}
-							<Button
-								onclick={() => {
-									tourIndex = i;
-								}}
-								variant={tourIndex === i ? 'default' : 'outline'}
-								class="mx-2"
-							>
-								{tourInfo.from} - {tourInfo.to}
-							</Button>
+							{#if tour != undefined}
+								{@const tourInfo = getTourInfoShort(tour)}
+								<Button
+									onclick={() => {
+										tourIndex = i;
+									}}
+									variant={tourIndex === i ? 'default' : 'outline'}
+									class="mx-2"
+								>
+									{tourInfo.from} - {tourInfo.to}
+								</Button>
+							{/if}
 						{/each}
 					{/if}
 				</div>
