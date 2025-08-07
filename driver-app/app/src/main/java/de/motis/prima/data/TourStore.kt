@@ -1,7 +1,7 @@
 package de.motis.prima.data
 
 import android.util.Log
-import de.motis.prima.Location
+import de.motis.prima.ui.Location
 import de.motis.prima.services.Event
 import de.motis.prima.services.Tour
 import io.realm.kotlin.Realm

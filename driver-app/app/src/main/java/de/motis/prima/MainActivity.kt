@@ -10,7 +10,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.FirebaseApp
 import dagger.hilt.android.AndroidEntryPoint
-import de.motis.prima.theme.MyAppTheme
+import de.motis.prima.ui.theme.MyAppTheme
+import de.motis.prima.ui.Nav
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
