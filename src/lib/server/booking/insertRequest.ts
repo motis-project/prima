@@ -6,8 +6,8 @@ import { type Database } from '$lib/server/db';
 import { sql, Transaction } from 'kysely';
 import { sendNotifications } from '$lib/server/firebase/notifications';
 import { TourChange } from '$lib/server/firebase/firebase';
-import { env } from '$env/dynamic/public';
 import type { ScheduledTimes } from './getScheduledTimes';
+import { legOdmPrice } from '$lib/util/odmPrice';
 
 export async function insertRequest(
 	connection: Insertion,
@@ -22,6 +22,7 @@ export async function insertRequest(
 	kidsZeroToTwo: number,
 	kidsThreeToFour: number,
 	kidsFiveToSix: number,
+	kidsSevenToFourteen: number,
 	scheduledTimes: ScheduledTimes,
 	trx: Transaction<Database>
 ): Promise<number> {
@@ -52,9 +53,11 @@ export async function insertRequest(
 		});
 	}
 
-	const ticketPrice =
-		(capacities.passengers - kidsZeroToTwo - kidsThreeToFour - kidsFiveToSix) *
-		parseInt(env.PUBLIC_FIXED_PRICE);
+	const ticketPrice = legOdmPrice(
+		capacities.passengers,
+		kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix,
+		kidsSevenToFourteen
+	);
 	const requestId = (
 		await sql<{ request: number }>`
         SELECT create_and_merge_tours(

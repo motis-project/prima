@@ -65,6 +65,7 @@ export const actions = {
 		const kidsZeroToTwoString = formData.get('kidsZeroToTwo');
 		const kidsThreeToFourString = formData.get('kidsThreeToFour');
 		const kidsFiveToSixString = formData.get('kidsFiveToSix');
+		const kidsSevenToFourteenString = formData.get('kidsSevenToFourteen');
 		const startFixedString = formData.get('startFixed');
 		const json = formData.get('json');
 
@@ -76,6 +77,7 @@ export const actions = {
 			typeof kidsZeroToTwoString !== 'string' ||
 			typeof kidsThreeToFourString !== 'string' ||
 			typeof kidsFiveToSixString !== 'string' ||
+			typeof kidsSevenToFourteenString !== 'string' ||
 			typeof startFixedString !== 'string'
 		) {
 			booking_errors?.inc();
@@ -87,6 +89,7 @@ export const actions = {
 		const kidsZeroToTwo = readInt(kidsZeroToTwoString);
 		const kidsThreeToFour = readInt(kidsThreeToFourString);
 		const kidsFiveToSix = readInt(kidsFiveToSixString);
+		const kidsSevenToFourteen = readInt(kidsSevenToFourteenString);
 		const startFixed = startFixedString === '1';
 
 		if (
@@ -96,6 +99,7 @@ export const actions = {
 			isNaN(kidsZeroToTwo) ||
 			isNaN(kidsThreeToFour) ||
 			isNaN(kidsFiveToSix) ||
+			isNaN(kidsSevenToFourteen) ||
 			(startFixedString !== '1' && startFixedString !== '0')
 		) {
 			throw 'invalid booking params';
@@ -119,7 +123,8 @@ export const actions = {
 				{ capacities },
 				{ kidsZeroToTwo },
 				{ kidsThreeToFour },
-				{ kidsFiveToSix }
+				{ kidsFiveToSix },
+				{ kidsSevenToFourteen }
 			);
 			booking_errors?.inc();
 			return { msg: msg('unknownError') };
@@ -135,7 +140,8 @@ export const actions = {
 				{ capacities },
 				{ kidsZeroToTwo },
 				{ kidsThreeToFour },
-				{ kidsFiveToSix }
+				{ kidsFiveToSix },
+				{ kidsSevenToFourteen }
 			);
 			booking_errors?.inc();
 			return { msg: msg('unknownError') };
@@ -151,7 +157,8 @@ export const actions = {
 				{ capacities },
 				{ kidsZeroToTwo },
 				{ kidsThreeToFour },
-				{ kidsFiveToSix }
+				{ kidsFiveToSix },
+				{ kidsSevenToFourteen }
 			);
 			return { msg: msg('unknownError') };
 		}
@@ -182,7 +189,8 @@ export const actions = {
 			false,
 			kidsZeroToTwo,
 			kidsThreeToFour,
-			kidsFiveToSix
+			kidsFiveToSix,
+			kidsSevenToFourteen
 		);
 		if (bookingResult.status !== 200) {
 			console.log(

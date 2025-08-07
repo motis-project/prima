@@ -15,7 +15,8 @@
 		selectItinerary,
 		updateStartDest,
 		passengers,
-		kids
+		freePassengers,
+		reducedPassengers
 	}: {
 		routingResponses: Array<Promise<SignedPlanResponse | undefined>>;
 		baseResponse: Promise<SignedPlanResponse | undefined> | undefined;
@@ -23,7 +24,8 @@
 		selectItinerary: (it: SignedItinerary) => void;
 		updateStartDest: (r: SignedPlanResponse | undefined) => SignedPlanResponse | undefined;
 		passengers: number;
-		kids: number;
+		freePassengers: number;
+		reducedPassengers: number;
 	} = $props();
 
 	const localDate = (timestamp: string) => {
@@ -33,7 +35,9 @@
 </script>
 
 {#snippet odmInfo(it: SignedItinerary)}
-	<Info class="size-4" /> {t.booking.bookHere} {getEuroString(odmPrice(it, passengers, kids))}
+	<Info class="size-4" />
+	{t.booking.bookHere}
+	{getEuroString(odmPrice(it, passengers, freePassengers, reducedPassengers))}
 {/snippet}
 
 {#if baseResponse}
