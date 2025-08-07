@@ -1,4 +1,4 @@
-package de.motis.prima
+package de.motis.prima.ui
 
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
@@ -45,7 +45,8 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.text.isDigitsOnly
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import de.motis.prima.theme.LocalExtendedColors
+import de.motis.prima.R
+import de.motis.prima.ui.theme.LocalExtendedColors
 import de.motis.prima.viewmodel.FareViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

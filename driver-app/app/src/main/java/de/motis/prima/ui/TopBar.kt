@@ -1,4 +1,4 @@
-package de.motis.prima
+package de.motis.prima.ui
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -22,7 +22,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import de.motis.prima.theme.LocalExtendedColors
+import de.motis.prima.R
+import de.motis.prima.ui.theme.LocalExtendedColors
 import de.motis.prima.viewmodel.TopBarViewModel
 import kotlinx.coroutines.launch
 

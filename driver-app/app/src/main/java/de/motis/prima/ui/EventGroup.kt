@@ -1,4 +1,4 @@
-package de.motis.prima
+package de.motis.prima.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -55,11 +55,12 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.motis.prima.R
 import de.motis.prima.data.DataRepository
 import de.motis.prima.data.EventObject
 import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.data.ValidationStatus
-import de.motis.prima.theme.LocalExtendedColors
+import de.motis.prima.ui.theme.LocalExtendedColors
 import java.util.Date
 import javax.inject.Inject
 

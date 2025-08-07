@@ -1,4 +1,4 @@
-package de.motis.prima
+package de.motis.prima.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

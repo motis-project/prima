@@ -1,4 +1,4 @@
-package de.motis.prima
+package de.motis.prima.ui
 
 import android.content.Intent
 import android.util.Log
@@ -49,9 +49,10 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import de.motis.prima.R
 import de.motis.prima.services.Event
 import de.motis.prima.services.Tour
-import de.motis.prima.theme.LocalExtendedColors
+import de.motis.prima.ui.theme.LocalExtendedColors
 import de.motis.prima.viewmodel.ToursViewModel
 import java.text.SimpleDateFormat
 import java.time.LocalDate

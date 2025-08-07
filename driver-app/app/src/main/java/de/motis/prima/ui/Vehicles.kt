@@ -1,4 +1,4 @@
-package de.motis.prima
+package de.motis.prima.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import de.motis.prima.R
 import de.motis.prima.viewmodel.VehiclesViewModel
 
 @Composable
