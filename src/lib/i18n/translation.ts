@@ -212,6 +212,7 @@ export type Translations = {
 		kidsSevenToFourteen: string;
 		totalPrice: string;
 		cashOnly: string;
+		ptTicketNeeded: string;
 		foldableWheelchair: string;
 		withFoldableWheelchair: string;
 		passengerNumber: string;

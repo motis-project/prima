@@ -253,6 +253,7 @@ const translations: Translations = {
 		},
 		totalPrice: 'Gesamtpreis',
 		cashOnly: 'Nur Barzahlung im Taxi',
+		ptTicketNeeded: 'Zusätzlich ist ein entsprechendes ÖPNV-Ticket erforderlich.',
 		cancel: 'Stornieren',
 		loginToBook: 'Einloggen zum Buchen',
 		connection: 'Verbindung',

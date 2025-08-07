@@ -246,6 +246,7 @@ const translations: Translations = {
 		},
 		totalPrice: 'Total price',
 		cashOnly: 'Cash payment only',
+		ptTicketNeeded: 'In addition, a valid public transport ticket is required.',
 		cancel: 'Cancel',
 		loginToBook: 'Login to book',
 		connection: 'Connection',
