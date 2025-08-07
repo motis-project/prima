@@ -46,7 +46,7 @@ describe('Concatenation tests', () => {
 			capacities
 		};
 
-		await bookingApi(bookingBody, mockUserId, true, 0, 0, 0, true);
+		await bookingApi(bookingBody, mockUserId, true, 0, 0, 0, 0, true);
 		const tours = await getTours();
 		expect(tours.length).toBe(1);
 		expect(tours[0].requests.length).toBe(1);
@@ -74,7 +74,7 @@ describe('Concatenation tests', () => {
 			connection2: null,
 			capacities
 		};
-		await bookingApi(bookingBodyAppend, mockUserId, true, 0, 0, 0, true);
+		await bookingApi(bookingBodyAppend, mockUserId, true, 0, 0, 0, 0, true);
 		const tours2 = await getTours();
 		expect(tours2.length).toBe(1);
 		expect(tours2[0].requests.length).toBe(2);

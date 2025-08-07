@@ -82,7 +82,7 @@ describe('Concatenation tests', () => {
 					connection2: null,
 					capacities: { passengers: 1, luggage: 0, wheelchairs: 0, bikes: 0 }
 				};
-				await bookingApi(bookingBody, mockUserId, true, 0, 0, 0, true);
+				await bookingApi(bookingBody, mockUserId, true, 0, 0, 0, 0, true);
 				const tours = await getTours();
 				for (const condition of test.conditions.filter((c) => c.evalAfterStep === requestIdx)) {
 					try {
