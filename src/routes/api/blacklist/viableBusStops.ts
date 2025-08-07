@@ -7,7 +7,7 @@ import {
 } from '$lib/constants';
 import { db, type Database } from '$lib/server/db';
 import { covers } from '$lib/server/db/covers';
-import type { ExpressionBuilder } from 'kysely';
+import type { QueryCreator } from 'kysely';
 import { sql, type RawBuilder } from 'kysely';
 import type { Coordinates } from '$lib/util/Coordinates';
 import type { Capacities } from '$lib/util/booking/Capacities';
@@ -28,7 +28,7 @@ type TimesTable = {
 	endTime: number;
 };
 
-type TmpDatabase = Database & { busstopzone: CoordinatesTable } & { times: TimesTable };
+type TmpDatabase = Database & { busstops: CoordinatesTable } & { times: TimesTable };
 
 const withBusStops = (busStops: BusStop[], busStopIntervals: Interval[][]) => {
 	return db
@@ -68,62 +68,19 @@ const withBusStops = (busStops: BusStop[], busStopIntervals: Interval[][]) => {
 		});
 };
 
-const doesAvailabilityExist = (eb: ExpressionBuilder<TmpDatabase, 'vehicle' | 'times'>) => {
-	return eb.exists(
-		eb
-			.selectFrom('availability')
-			.whereRef('availability.vehicle', '=', 'vehicle.id')
-			.whereRef('availability.startTime', '<=', 'times.endTime')
-			.whereRef('availability.endTime', '>=', 'times.startTime')
-	);
-};
-
-const doesTourExist = (eb: ExpressionBuilder<TmpDatabase, 'vehicle' | 'times'>) => {
-	return eb.exists(
-		eb
-			.selectFrom('tour')
-			.whereRef('tour.vehicle', '=', 'vehicle.id')
-			.where((eb) =>
-				eb.and([
-					eb('tour.cancelled', '=', false),
-					sql<boolean>`tour.departure <= times.end_time`,
-					sql<boolean>`tour.arrival >= times.start_time`
-				])
-			)
-	);
-};
-
-const doesVehicleExist = (
-	eb: ExpressionBuilder<TmpDatabase, 'company' | 'zone' | 'busstopzone' | 'times'>,
-	capacities: Capacities
-) => {
-	return eb.exists((eb) =>
-		eb
-			.selectFrom('vehicle')
-			.whereRef('vehicle.company', '=', 'company.id')
-			.where((eb) =>
-				eb.and([
-					eb('vehicle.passengers', '>=', capacities.passengers),
-					eb('vehicle.bikes', '>=', capacities.bikes),
-					eb('vehicle.wheelchairs', '>=', capacities.wheelchairs),
-					sql<boolean>`"vehicle"."luggage" >= cast(${capacities.luggage} as integer) + cast(${capacities.passengers} as integer) - cast(${eb.ref('vehicle.passengers')} as integer)`,
-					eb.or([doesAvailabilityExist(eb), doesTourExist(eb)])
-				])
-			)
-	);
-};
-
-const doesCompanyExist = (
-	eb: ExpressionBuilder<TmpDatabase, 'zone' | 'busstopzone' | 'times'>,
-	capacities: Capacities
-) => {
-	return eb.exists(
-		eb
-			.selectFrom('company')
-			.where((eb) =>
-				eb.and([eb('company.zone', '=', eb.ref('zone.id')), doesVehicleExist(eb, capacities)])
-			)
-	);
+const filteredVehicles = (db: QueryCreator<TmpDatabase>, capacities: Capacities) => {
+	return db
+		.selectFrom('zone')
+		.innerJoin('company', 'company.zone', 'zone.id')
+		.innerJoin('vehicle', 'vehicle.company', 'company.id')
+		.where((eb) =>
+			eb.and([
+				eb('vehicle.passengers', '>=', capacities.passengers),
+				eb('vehicle.bikes', '>=', capacities.bikes),
+				eb('vehicle.wheelchairs', '>=', capacities.wheelchairs),
+				sql<boolean>`"vehicle"."luggage" >= cast(${capacities.luggage} as integer) + cast(${capacities.passengers} as integer) - cast(${eb.ref('vehicle.passengers')} as integer)`
+			])
+		);
 };
 
 export const getViableBusStops = async (
@@ -146,22 +103,42 @@ export const getViableBusStops = async (
 			return Promise.resolve(new Array<BlacklistingResult>());
 		}
 		return withBusStops(busStops, busStopIntervals)
-			.selectFrom('zone')
-			.where(covers(userChosen))
-			.innerJoinLateral(
-				(eb) =>
-					eb
-						.selectFrom('busstops')
-						.where(
-							sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(busstops.lng, busstops.lat), ${WGS84}))`
+			.with(
+				(cte) => cte('filteredBusStops').materialized(),
+				(db) => {
+					return filteredVehicles(db, capacities)
+						.innerJoin('busstops', (join) =>
+							join.on(
+								sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(busstops.lng, busstops.lat), ${WGS84}))`
+							)
 						)
-						.selectAll()
-						.as('busstopzone'),
-				(join) => join.onTrue()
+						.where(covers(userChosen))
+						.select(['vehicle.id as vehicleId', 'busstops.busStopIndex as busStopIndex']);
+				}
 			)
-			.innerJoin('times', 'times.busStopIndex', 'busstopzone.busStopIndex')
-			.where((eb) => doesCompanyExist(eb, capacities))
+			.selectFrom('filteredBusStops')
+			.innerJoin('times', 'times.busStopIndex', 'filteredBusStops.busStopIndex')
+			.leftJoin('availability', (join) =>
+				join
+					.onRef('availability.vehicle', '=', 'filteredBusStops.vehicleId')
+					.onRef('availability.startTime', '<=', 'times.endTime')
+					.onRef('availability.endTime', '>=', 'times.startTime')
+			)
+			.leftJoin('tour', (join) =>
+				join
+					.onRef('tour.vehicle', '=', 'filteredBusStops.vehicleId')
+					.on(sql<boolean>`tour.cancelled IS FALSE`)
+					.onRef('tour.departure', '<=', 'times.endTime')
+					.onRef('tour.arrival', '>=', 'times.startTime')
+			)
+			.where((eb) =>
+				eb.or([
+					sql<boolean>`availability.vehicle IS NOT NULL`,
+					sql<boolean>`tour.vehicle IS NOT NULL`
+				])
+			)
 			.select(['times.timeIndex as timeIndex', 'times.busStopIndex as busStopIndex'])
+			.distinct()
 			.execute();
 	};
 
