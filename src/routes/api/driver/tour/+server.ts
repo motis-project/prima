@@ -20,7 +20,7 @@ function updateEventGroups(tours: Tours) {
 	const toursWithEventGroups = new Array<Tour>(tours.length);
 	for (const [tIdx, tour] of tours.entries()) {
 		const events = tour.events;
-		const eventsWithEventGroups = new Array<TourEvent>(events.length);
+		const eventsWithEventGroups = new Array<TourEvent & { eventGroup: string }>(events.length);
 		let uuid = uuidv4();
 		if (events.length != 0) {
 			eventsWithEventGroups[0] = {

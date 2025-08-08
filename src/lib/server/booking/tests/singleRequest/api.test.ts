@@ -235,12 +235,10 @@ describe('Whitelist and Booking API Tests', () => {
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));
 		const busStops = [];
-		for (let i = 0; i != 1; i++) {
-			busStops.push({
-				...inNiesky3,
-				times: [inXMinutes(100)]
-			});
-		}
+		busStops.push({
+			...inNiesky3,
+			times: [inXMinutes(100)]
+		});
 		const body = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,
@@ -282,7 +280,8 @@ describe('Whitelist and Booking API Tests', () => {
 				whiteResponse.direct[0].dropoffTime,
 				false
 			),
-			startFixed: true
+			startFixed: true,
+			requestedTime: inXMinutes(70)
 		};
 		const bookingBody = {
 			connection1,
@@ -306,7 +305,7 @@ describe('Whitelist and Booking API Tests', () => {
 		expect(
 			Math.abs(inNiesky1.lat - pickup.lat) + Math.abs(inNiesky1.lng - pickup.lng)
 		).toBeLessThan(COORDINATE_ROUNDING_ERROR_THRESHOLD);
-		expect(new Date(pickup.communicatedTime).toISOString()).toBe(dateInXMinutes(70).toISOString());
+		expect(new Date(pickup.communicatedTime).toISOString()).toBe(dateInXMinutes(65).toISOString());
 		expect(dropoff.address).toBe('target address');
 		expect(
 			Math.abs(inNiesky2.lat - dropoff.lat) + Math.abs(inNiesky2.lng - dropoff.lng)
@@ -319,12 +318,10 @@ describe('Whitelist and Booking API Tests', () => {
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));
 		const busStops = [];
-		for (let i = 0; i != 1; i++) {
-			busStops.push({
-				...inNiesky3,
-				times: [inXMinutes(100)]
-			});
-		}
+		busStops.push({
+			...inNiesky3,
+			times: [inXMinutes(100)]
+		});
 		const body = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,
@@ -352,7 +349,8 @@ describe('Whitelist and Booking API Tests', () => {
 				roundToUnit(whiteResponse.direct[0].dropoffTime, MINUTE, Math.floor),
 				false
 			),
-			startFixed: true
+			startFixed: true,
+			requestedTime: inXMinutes(70)
 		};
 		const bookingBody = {
 			connection1,
@@ -370,12 +368,10 @@ describe('Whitelist and Booking API Tests', () => {
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));
 		const busStops = [];
-		for (let i = 0; i != 1; i++) {
-			busStops.push({
-				...inNiesky3,
-				times: [inXMinutes(100)]
-			});
-		}
+		busStops.push({
+			...inNiesky3,
+			times: [inXMinutes(100)]
+		});
 		const body = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,
@@ -392,6 +388,7 @@ describe('Whitelist and Booking API Tests', () => {
 			target: { ...inNiesky2, address: 'target address' },
 			startTime: whiteResponse.direct[0].pickupTime,
 			targetTime: whiteResponse.direct[0].dropoffTime,
+			requestedTime: inXMinutes(70),
 			signature: signEntry(
 				inNiesky1.lat + 1,
 				inNiesky1.lng,

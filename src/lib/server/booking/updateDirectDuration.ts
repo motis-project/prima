@@ -25,30 +25,42 @@ export async function updateDirectDurations(
 					.selectFrom('tour')
 					.innerJoin('request', 'request.tour', 'tour.id')
 					.innerJoin('event', 'event.request', 'request.id')
+					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 					.whereRef('tour.vehicle', '=', 'vehicle.id')
 					.where('tour.cancelled', '=', false)
 					.where('tour.departure', '<=', departure)
 					.where('request.cancelled', '=', false)
 					.orderBy('tour.departure', 'desc')
-					.orderBy('event.scheduledTimeEnd', 'desc')
-					.orderBy('event.scheduledTimeStart', 'desc')
+					.orderBy('eventGroup.scheduledTimeEnd', 'desc')
+					.orderBy('eventGroup.scheduledTimeStart', 'desc')
 					.limit(1)
-					.select(['event.lat', 'event.lng', 'request.tour', 'event.scheduledTimeStart'])
+					.select([
+						'eventGroup.lat',
+						'eventGroup.lng',
+						'request.tour',
+						'eventGroup.scheduledTimeStart'
+					])
 			).as('prevtour'),
 			jsonObjectFrom(
 				eb
 					.selectFrom('tour')
 					.innerJoin('request', 'request.tour', 'tour.id')
 					.innerJoin('event', 'event.request', 'request.id')
+					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 					.whereRef('tour.vehicle', '=', 'vehicle.id')
 					.where('tour.cancelled', '=', false)
 					.where('tour.departure', '>', departure)
 					.where('request.cancelled', '=', false)
 					.orderBy('tour.departure', 'asc')
-					.orderBy('event.scheduledTimeEnd', 'asc')
-					.orderBy('event.scheduledTimeStart', 'asc')
+					.orderBy('eventGroup.scheduledTimeEnd', 'asc')
+					.orderBy('eventGroup.scheduledTimeStart', 'asc')
 					.limit(1)
-					.select(['event.lat', 'event.lng', 'request.tour', 'event.scheduledTimeStart'])
+					.select([
+						'eventGroup.lat',
+						'eventGroup.lng',
+						'request.tour',
+						'eventGroup.scheduledTimeStart'
+					])
 			).as('nexttour'),
 			jsonArrayFrom(
 				eb
@@ -59,11 +71,12 @@ export async function updateDirectDurations(
 							eb
 								.selectFrom('request')
 								.innerJoin('event', 'event.request', 'request.id')
+								.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 								.where('request.cancelled', '=', false)
 								.whereRef('request.tour', '=', 'tour.id')
-								.orderBy('event.scheduledTimeEnd', 'asc')
-								.orderBy('event.scheduledTimeStart', 'asc')
-								.select(['event.lat', 'event.lng', 'event.scheduledTimeStart'])
+								.orderBy('eventGroup.scheduledTimeEnd', 'asc')
+								.orderBy('eventGroup.scheduledTimeStart', 'asc')
+								.select(['eventGroup.lat', 'eventGroup.lng', 'eventGroup.scheduledTimeStart'])
 						).as('events')
 					])
 			).as('moved')

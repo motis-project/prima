@@ -66,17 +66,20 @@ export interface Database {
 	event: {
 		id: Generated<number>;
 		isPickup: boolean;
+		eventGroupId: number;
+		request: number;
+		cancelled: boolean;
+		communicatedTime: number;
+	};
+	eventGroup: {
+		id: Generated<number>;
 		lat: number;
 		lng: number;
 		scheduledTimeStart: number;
 		scheduledTimeEnd: number;
-		communicatedTime: number;
 		prevLegDuration: number;
 		nextLegDuration: number;
-		eventGroup: string;
 		address: string;
-		request: number;
-		cancelled: boolean;
 	};
 	request: {
 		id: Generated<number>;

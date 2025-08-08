@@ -1,7 +1,4 @@
-import {
-	toExpectedConnectionWithISOStrings,
-	type ExpectedConnection
-} from '$lib/server/booking/bookRide';
+import { toExpectedConnectionWithISOStrings } from '$lib/server/booking/bookRide';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
 import { readInt } from '$lib/server/util/readForm';
@@ -15,6 +12,8 @@ import type { SignedItinerary } from '$lib/planAndSign';
 import { sql } from 'kysely';
 import type { PageServerLoad } from './$types';
 import Prom from 'prom-client';
+import { expectedConnectionFromLeg } from '$lib/expectedConnectionFromLeg';
+import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhitelistRequestTimes';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;
@@ -30,23 +29,6 @@ try {
 	});
 } catch {
 	/* ignored */
-}
-
-function expectedConnectionFromLeg(
-	leg: Leg,
-	signature: string | undefined,
-	startFixed: boolean
-): ExpectedConnection | null {
-	return signature
-		? {
-				start: { lat: leg.from.lat, lng: leg.from.lon, address: leg.from.name },
-				target: { lat: leg.to.lat, lng: leg.to.lon, address: leg.to.name },
-				startTime: new Date(leg.startTime).getTime(),
-				targetTime: new Date(leg.endTime).getTime(),
-				signature,
-				startFixed
-			}
-		: null;
 }
 
 export const actions = {
@@ -156,16 +138,26 @@ export const actions = {
 			return { msg: msg('unknownError') };
 		}
 		const isDirect = legs.length === 1;
+
+		const { requestedTime1, requestedTime2 } = rediscoverWhitelistRequestTimes(
+			startFixed,
+			isDirect,
+			firstOdmIndex,
+			lastOdmIndex,
+			legs
+		);
+
 		console.log({ isDirect }, { startFixed });
 		const connection1 = expectedConnectionFromLeg(
 			firstOdm,
 			parsedJson.signature1,
-			isDirect ? startFixed : firstOdmIndex !== 0
+			isDirect ? startFixed : firstOdmIndex !== 0,
+			requestedTime1
 		);
 		const connection2 =
 			firstOdmIndex === lastOdmIndex
 				? null
-				: expectedConnectionFromLeg(lastOdm, parsedJson.signature2, true);
+				: expectedConnectionFromLeg(lastOdm, parsedJson.signature2, true, requestedTime2);
 
 		console.log(
 			'BOOKING: C1=',
@@ -225,31 +217,35 @@ export const actions = {
 					'tour.id as tourId',
 					eb
 						.selectFrom('event')
+						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 						.where('event.request', '=', request1)
-						.orderBy('event.scheduledTimeStart', 'asc')
+						.orderBy('eventGroup.scheduledTimeStart', 'asc')
 						.limit(1)
 						.select('address')
 						.as('firstAddress'),
 					eb
 						.selectFrom('event')
+						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 						.where('event.request', '=', request1)
-						.orderBy('event.scheduledTimeStart', 'asc')
+						.orderBy('eventGroup.scheduledTimeStart', 'asc')
 						.limit(1)
-						.select('event.scheduledTimeStart')
+						.select('eventGroup.scheduledTimeStart')
 						.as('firstTime'),
 					eb
 						.selectFrom('event')
+						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 						.where('event.request', '=', request1)
-						.orderBy('event.scheduledTimeStart', 'desc')
+						.orderBy('eventGroup.scheduledTimeStart', 'desc')
 						.limit(1)
 						.select('address')
 						.as('lastAddress'),
 					eb
 						.selectFrom('event')
+						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 						.where('event.request', '=', request1)
-						.orderBy('event.scheduledTimeStart', 'desc')
+						.orderBy('eventGroup.scheduledTimeStart', 'desc')
 						.limit(1)
-						.select('event.scheduledTimeStart')
+						.select('eventGroup.scheduledTimeStart')
 						.as('lastTime')
 				])
 				.where('request.id', '=', request1)

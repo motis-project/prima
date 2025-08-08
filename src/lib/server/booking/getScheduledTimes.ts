@@ -1,6 +1,9 @@
 import { PASSENGER_CHANGE_DURATION } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
 import type { Event } from '$lib/server/booking/getBookingAvailability';
+import type { DirectDrivingDurations } from './getDirectDrivingDurations';
+import type { Insertion } from './insertion';
+import { InsertWhat } from '$lib/util/booking/insertionTypes';
 
 export type ScheduledTimes = {
 	updates: {
@@ -11,112 +14,156 @@ export type ScheduledTimes = {
 };
 
 export function getScheduledTimes(
-	pickupTimeStart: number,
-	pickupTimeEnd: number,
-	dropoffTimeStart: number,
-	dropoffTimeEnd: number,
+	insertion: Insertion,
 	prevPickupEvent: undefined | (Event & { time: Interval }),
 	nextPickupEvent: undefined | (Event & { time: Interval }),
 	nextDropoffEvent: undefined | (Event & { time: Interval }),
 	prevDropoffEvent: undefined | (Event & { time: Interval }),
-	pickupPrevLegDuration: number,
-	pickupNextLegDuration: number,
-	dropoffPrevLegDuration: number,
-	dropoffNextLegDuration: number,
 	firstEvents: Event[],
-	lastEvents: Event[]
+	lastEvents: Event[],
+	pickupEventGroup: number | undefined,
+	dropoffEventGroup: number | undefined,
+	directDurations: DirectDrivingDurations
 ) {
+	function addUpdates(
+		event: Event | undefined,
+		duration: number,
+		newStartTime: number,
+		newEndTime: number,
+		eventGroup: number | undefined,
+		isPickup: boolean
+	) {
+		if (event === undefined) {
+			return;
+		}
+		if (event.eventGroupId === eventGroup) {
+			scheduledTimes.updates.push({
+				event_id: event.id,
+				start: true,
+				time: Math.max(newStartTime, event.scheduledTimeStart)
+			});
+			scheduledTimes.updates.push({
+				event_id: event.id,
+				start: false,
+				time: Math.min(newEndTime, event.scheduledTimeEnd)
+			});
+			return;
+		}
+		const newTime = isPickup ? newStartTime : newEndTime;
+		if (!event.time.shift(!isPickup ? -duration : duration).covers(newTime)) {
+			return;
+		}
+		const oldTime = isPickup ? event.scheduledTimeEnd : event.scheduledTimeStart;
+		const leeway = (isPickup ? newTime - oldTime : oldTime - newTime) - duration;
+		const newShiftedTime = newTime + (isPickup ? -duration : duration);
+		console.log({ oldTime }, { leeway }, { duration }, { isPickup });
+		console.assert(
+			leeway >= 0,
+			'leeway was less than zero in getScheduledTimes',
+			{ event },
+			{ duration },
+			{ newTime: newStartTime },
+			{ eventGroup },
+			{ isPickup }
+		);
+		if (leeway < event.time.size()) {
+			scheduledTimes.updates.push({
+				event_id: event.id,
+				start: !isPickup,
+				time: newShiftedTime
+			});
+		}
+	}
+
 	const scheduledTimes: ScheduledTimes = {
 		updates: []
 	};
-	if (prevPickupEvent) {
-		const prevPickupLeeway =
-			pickupTimeStart - prevPickupEvent.scheduledTimeStart - pickupPrevLegDuration;
-		if (prevPickupLeeway < 0) {
-			throw new Error();
-		}
-		if (prevPickupLeeway < prevPickupEvent.time.size()) {
-			scheduledTimes.updates.push({
-				event_id: prevPickupEvent.id,
-				start: false,
-				time: prevPickupEvent.scheduledTimeStart + prevPickupLeeway
-			});
-		}
+	const pickupPrevLegDuration =
+		firstEvents.some((e) => e.id === nextPickupEvent?.id) &&
+		insertion.pickupIdx &&
+		lastEvents.some((e) => e.id === prevPickupEvent?.id)
+			? Math.max(
+					insertion.pickupPrevLegDuration,
+					directDurations.thisTour?.directDrivingDuration ?? 0
+				)
+			: insertion.pickupPrevLegDuration;
+	const dropoffNextLegDuration =
+		firstEvents.some((e) => e.id === nextDropoffEvent?.id) &&
+		insertion.dropoffIdx &&
+		lastEvents.some((e) => e.id === prevDropoffEvent?.id)
+			? Math.max(
+					insertion.dropoffNextLegDuration,
+					directDurations.nextTour?.directDrivingDuration ?? 0
+				)
+			: insertion.dropoffNextLegDuration;
+	addUpdates(
+		prevPickupEvent,
+		pickupPrevLegDuration,
+		insertion.scheduledPickupTimeStart,
+		insertion.scheduledPickupTimeEnd,
+		pickupEventGroup,
+		true
+	);
+	if (insertion.pickupCase.what !== InsertWhat.BOTH) {
+		addUpdates(
+			nextPickupEvent,
+			insertion.pickupNextLegDuration,
+			insertion.scheduledPickupTimeStart,
+			insertion.scheduledPickupTimeEnd,
+			pickupEventGroup,
+			false
+		);
+		addUpdates(
+			prevDropoffEvent,
+			insertion.dropoffPrevLegDuration,
+			insertion.scheduledDropoffTimeStart,
+			insertion.scheduledDropoffTimeEnd,
+			dropoffEventGroup,
+			true
+		);
 	}
-	if (nextPickupEvent) {
-		const nextPickupLeeway =
-			nextPickupEvent.scheduledTimeEnd - pickupTimeEnd - pickupNextLegDuration;
-		if (nextPickupLeeway < 0) {
-			throw new Error();
-		}
-		if (nextPickupLeeway < nextPickupEvent.time.size()) {
-			scheduledTimes.updates.push({
-				event_id: nextPickupEvent.id,
-				start: true,
-				time: nextPickupEvent.scheduledTimeEnd - nextPickupLeeway
-			});
-		}
-	}
-	if (nextDropoffEvent) {
-		const nextDropoffLeeway =
-			nextDropoffEvent.scheduledTimeEnd - dropoffTimeEnd - dropoffNextLegDuration;
-		if (nextDropoffLeeway < 0) {
-			throw new Error();
-		}
-		if (nextDropoffLeeway < nextDropoffEvent.time.size()) {
-			scheduledTimes.updates.push({
-				event_id: nextDropoffEvent.id,
-				start: true,
-				time: nextDropoffEvent.scheduledTimeEnd - nextDropoffLeeway
-			});
-		}
-	}
-	if (prevDropoffEvent) {
-		const prevDropoffLeeway =
-			dropoffTimeStart - prevDropoffEvent.scheduledTimeStart - dropoffPrevLegDuration;
-		if (prevDropoffLeeway < 0) {
-			throw new Error();
-		}
-		if (prevDropoffLeeway < prevDropoffEvent.time.size()) {
-			scheduledTimes.updates.push({
-				event_id: prevDropoffEvent.id,
-				start: false,
-				time: prevDropoffEvent.scheduledTimeStart + prevDropoffLeeway
-			});
-		}
-	}
+	addUpdates(
+		nextDropoffEvent,
+		dropoffNextLegDuration,
+		insertion.scheduledDropoffTimeStart,
+		insertion.scheduledDropoffTimeEnd,
+		dropoffEventGroup,
+		false
+	);
 	for (let i = 0; i != firstEvents.length; ++i) {
 		const earlierEvent = lastEvents[i];
 		const laterEvent = firstEvents[i];
-		const distance =
+		const actualDistance =
 			laterEvent.tourId === earlierEvent.tourId
 				? laterEvent.prevLegDuration
 				: laterEvent.directDuration;
-		const start1 =
-			scheduledTimes.updates.find((upd) => upd.event_id === earlierEvent.id)?.time ??
-			earlierEvent.scheduledTimeStart;
-		const end1 = earlierEvent.scheduledTimeEnd;
-		const start2 = laterEvent.scheduledTimeStart;
-		if (distance === null || distance + PASSENGER_CHANGE_DURATION < start2 - end1) {
+		const startEarlierEvent =
+			scheduledTimes.updates.find((upd) => upd.event_id === earlierEvent.id && upd.start === true)
+				?.time ?? earlierEvent.scheduledTimeStart;
+		const endEarlierEvent = earlierEvent.scheduledTimeEnd;
+		const startLaterEvent = laterEvent.scheduledTimeStart;
+		const leewayEarlierEvent = endEarlierEvent - startEarlierEvent;
+		const scheduledDistance = startLaterEvent - endEarlierEvent;
+		if (actualDistance === null || actualDistance + PASSENGER_CHANGE_DURATION < scheduledDistance) {
 			return scheduledTimes;
 		}
-		const gap = distance - start2 + end1;
-		if (end1 - start1 < gap) {
+		const gap = actualDistance - scheduledDistance;
+		if (leewayEarlierEvent < gap) {
 			scheduledTimes.updates.push({
 				event_id: earlierEvent.id,
 				start: false,
-				time: start1
+				time: startEarlierEvent
 			});
 			scheduledTimes.updates.push({
 				event_id: laterEvent.id,
 				start: true,
-				time: start2 + gap - end1 + start1
+				time: startLaterEvent + gap - leewayEarlierEvent
 			});
 		} else {
 			scheduledTimes.updates.push({
 				event_id: earlierEvent.id,
 				start: false,
-				time: end1 - gap
+				time: endEarlierEvent - gap
 			});
 		}
 	}

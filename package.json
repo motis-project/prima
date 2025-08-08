@@ -23,10 +23,12 @@
 		"sim:nohealth": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/simulation/script.ts -- --ongoing --restrict --bu",
 		"sim:cost": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/simulation/script.ts -- --ongoing --cost --wl --restrict --bu",
 		"sim:all": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/simulation/script.ts -- --ongoing --cost --wl --restrict --bu --health",
+		"sim:full": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/simulation/script.ts -- --ongoing --cost --restrict --bu --full --health",
 		"health": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/healthScript.ts",
 		"restore": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/reproduce/restore.ts",
 		"reset": "scripts/reproduce/reset-db.sh",
 		"book": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/reproduce/callBookingApi.ts",
+		"white": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/reproduce/callWhitelist.ts",
 		"move": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/reproduce/callMoveTour.ts",
 		"cancelr": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/reproduce/callCancelRequest.ts",
 		"cancelt": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/reproduce/callCancelTour.ts",
@@ -37,7 +39,8 @@
 		"repeatbh": "npm run reset && npm run restore && npm run book && npm run health",
 		"repeatrh": "npm run reset && npm run restore && npm run cancelr && npm run health",
 		"repeatth": "npm run reset && npm run restore && npm run cancelt && npm run health",
-		"repeatmh": "npm run reset && npm run restore && npm run move && npm run health"
+		"repeatmh": "npm run reset && npm run restore && npm run move && npm run health",
+		"flc": "npm run format && npm run lint && npm run check"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",

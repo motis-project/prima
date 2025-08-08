@@ -286,16 +286,6 @@ export const tests: TestParams[] = [
 				company: null
 			},
 			{
-				evalAfterStep: 1,
-				entity: 'tourCount',
-				tourCount: 1,
-				requestCount: -1,
-				expectedPosition: null,
-				start: null,
-				destination: null,
-				company: null
-			},
-			{
 				evalAfterStep: 2,
 				entity: 'requestCount',
 				tourCount: -1,
@@ -366,16 +356,6 @@ export const tests: TestParams[] = [
 				entity: 'requestCount',
 				tourCount: -1,
 				requestCount: 2,
-				expectedPosition: null,
-				start: null,
-				destination: null,
-				company: null
-			},
-			{
-				evalAfterStep: 1,
-				entity: 'tourCount',
-				tourCount: 1,
-				requestCount: -1,
 				expectedPosition: null,
 				start: null,
 				destination: null,

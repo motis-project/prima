@@ -1,14 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getNextWednesday, prepareTest, white } from '../util';
-import {
-	addCompany,
-	addTaxi,
-	bookingLogs,
-	getTours,
-	setAvailability,
-	Zone,
-	type BookingLogs
-} from '$lib/testHelpers';
+import { addCompany, addTaxi, getTours, setAvailability, Zone } from '$lib/testHelpers';
 import type { ExpectedConnection } from '$lib/server/booking/bookRide';
 import { bookingApi } from '$lib/server/booking/bookingApi';
 import { db } from '$lib/server/db';
@@ -75,7 +67,8 @@ describe('Concatenation tests', () => {
 					startTime: whiteResponse.direct[0].pickupTime,
 					targetTime: whiteResponse.direct[0].dropoffTime,
 					signature: '',
-					startFixed: false
+					startFixed: false,
+					requestedTime: times[requestIdx]
 				};
 				const bookingBody = {
 					connection1,
@@ -140,15 +133,6 @@ describe('Concatenation tests', () => {
 							{ link: `http://localhost:5173/tests?test=${test.uuid}` }
 						);
 						throw err;
-					} finally {
-						const logsPerTest = split(bookingLogs, -1);
-						for (const logs of logsPerTest) {
-							logs.sort(
-								(log1, log2) =>
-									(log1.cost ?? Number.MAX_SAFE_INTEGER) - (log2.cost ?? Number.MAX_SAFE_INTEGER)
-							);
-							console.log('Booking Logs: ', JSON.stringify(logs, null, '\t'));
-						}
 					}
 				}
 			}
@@ -156,25 +140,3 @@ describe('Concatenation tests', () => {
 		console.log(`Successfully ran ${tests.length - skipped} tests. Skipped ${skipped} tests.`);
 	}, 50000);
 });
-
-function split(arr: BookingLogs[], splitVal: number) {
-	const result: BookingLogs[][] = [];
-	let temp: BookingLogs[] = [];
-
-	for (const item of arr) {
-		if (item.iter === splitVal) {
-			if (temp.length > 0) {
-				result.push(temp);
-				temp = [];
-			}
-		} else {
-			temp.push(item);
-		}
-	}
-
-	if (temp.length > 0) {
-		result.push(temp);
-	}
-
-	return result;
-}

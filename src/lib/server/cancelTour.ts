@@ -37,13 +37,14 @@ export async function cancelTour(
 								jsonArrayFrom(
 									eb
 										.selectFrom('event')
+										.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 										.whereRef('event.request', '=', 'request.id')
 										.orderBy('isPickup', 'desc')
 										.select([
-											'event.address',
+											'eventGroup.address',
 											'event.communicatedTime',
-											'event.scheduledTimeStart',
-											'event.scheduledTimeEnd',
+											'eventGroup.scheduledTimeStart',
+											'eventGroup.scheduledTimeEnd',
 											'isPickup'
 										])
 								).as('events')
