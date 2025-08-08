@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ORIGIN } from '$env/static/private';
+	import { env } from '$env/dynamic/private';
 	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import EmailFooter from './EmailFooter.svelte';
 	const { code } = $props();
@@ -9,8 +9,8 @@
 	Willkommen zu {PUBLIC_PROVIDER},
 	<p>
 		Bitte aktivieren Sie Ihren Account, indem Sie auf diesen Link klicken:<br />
-		<a href="{ORIGIN}/account/verify-email/?code={code}" target="_blank">
-			{ORIGIN}/verify-email/?code={code}
+		<a href="{env.ORIGIN}/account/verify-email/?code={code}" target="_blank">
+			{env.ORIGIN}/verify-email/?code={code}
 		</a>
 	</p>
 

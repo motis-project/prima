@@ -6,9 +6,9 @@ defaults:
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "deploy" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "deploy" ]
 
 jobs:
   build:
@@ -20,6 +20,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Cleanup docker cache
+        run: |
+          docker image prune -f
+          docker builder prune -f
 
       - name: Install Dependencies
         run: pnpm install
@@ -92,7 +97,7 @@ jobs:
             type=edge
 
       - name: Docker build and push
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/deploy'
         uses: docker/build-push-action@v5
         with:
           push: true

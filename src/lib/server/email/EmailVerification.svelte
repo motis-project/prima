@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ORIGIN } from '$env/static/private';
+	import { env } from '$env/dynamic/private';
 	import DisplayCode from './DisplayCode.svelte';
 	import EmailFooter from './EmailFooter.svelte';
 	const { code, name } = $props();
@@ -9,8 +9,8 @@
 	Guten Tag {name},
 	<p>
 		Bitte verifizieren Sie Ihre E-Mail Addresse:<br />
-		<a href="{ORIGIN}/account/verify-email/?code={code}" target="_blank">
-			{ORIGIN}/verify-email/?code={code}
+		<a href="{env.ORIGIN}/account/verify-email/?code={code}" target="_blank">
+			{env.ORIGIN}/verify-email/?code={code}
 		</a>
 		<br />oder verwenden sie den Code:<br />
 	</p>
