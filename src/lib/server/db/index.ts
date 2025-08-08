@@ -100,7 +100,9 @@ export interface Database {
 		user: number;
 		request1: number | null;
 		request2: number | null;
+		reason: string | null;
 		rating: number | null;
+		ratingBooking: number | null;
 		comment: string | null;
 	};
 	fcmToken: {

@@ -30,22 +30,34 @@ export const actions = {
 		const formData = await request.formData();
 
 		const journeyId = readInt(formData.get('id'));
-		const ratingStr = formData.get('rating');
+		const reason = formData.get('reason');
+		const ratingBookingStr = formData.get('ratingBooking');
+		const ratingJourneyStr = formData.get('ratingJourney');
 		const comment = formData.get('comment');
+
+		const invalidRating = (ratingStr: FormDataEntryValue | null) =>
+			typeof ratingStr !== 'string' || (ratingStr != 'good' && ratingStr != 'bad');
+
+		const ratingToBool = (ratingStr: FormDataEntryValue | null) => (ratingStr === 'good' ? 1 : 0);
 
 		if (
 			isNaN(journeyId) ||
-			typeof ratingStr !== 'string' ||
-			(ratingStr != 'good' && ratingStr != 'bad') ||
+			typeof reason !== 'string' ||
+			invalidRating(ratingBookingStr) ||
+			invalidRating(ratingJourneyStr) ||
 			typeof comment !== 'string'
 		) {
 			return fail(400, { msg: msg('feedbackMissing') });
 		}
 
-		const rating = ratingStr === 'good' ? 1 : 0;
 		await db
 			.updateTable('journey')
-			.set({ comment, rating })
+			.set({
+				reason,
+				ratingBooking: ratingToBool(ratingBookingStr),
+				rating: ratingToBool(ratingJourneyStr),
+				comment
+			})
 			.where('id', '=', journeyId)
 			.where('user', '=', user)
 			.execute();

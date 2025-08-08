@@ -138,6 +138,13 @@ export type Translations = {
 		thanksForUsing: string;
 		howHasItBeen: string;
 		giveFeedback: string;
+		reason: string;
+		tourism: string;
+		commute: string;
+		education: string;
+		errands: string;
+		leisure: string;
+		howHasBookingBeen: string;
 		howHasJourneyBeen: string;
 		yourFeedback: string;
 		good: string;
