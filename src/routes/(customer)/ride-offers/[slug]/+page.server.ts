@@ -43,7 +43,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	return {
 		...journey,
 		journey: journey.json,
-		negotiating: true // TODO
+		negotiating: [
+			{
+				// TODO
+				name: 'Dummy',
+				email: 'email@email.com',
+				phone: '115',
+				journey: journey.json
+			}
+		]
 	};
 };
 

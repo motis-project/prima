@@ -7,6 +7,7 @@
 	import ItinerarySummary from './ItinerarySummary.svelte';
 	import { odmPrice, getEuroString } from '$lib/util/odmPrice';
 	import { planAndSign, type SignedItinerary, type SignedPlanResponse } from '$lib/planAndSign';
+	import { isRideShareLeg } from './utils';
 
 	let {
 		routingResponses,
@@ -33,7 +34,11 @@
 </script>
 
 {#snippet odmInfo(it: SignedItinerary)}
-	<Info class="size-4" /> {t.booking.bookHere} {getEuroString(odmPrice(it, passengers, kids))}
+	{#if it.legs.some((l) => l.mode === 'ODM' && isRideShareLeg(l))}
+		<Info class="size-4" /> {t.ride.negotiateHere}
+	{:else if it.legs.some((l) => l.mode === 'ODM' && !isRideShareLeg(l))}
+		<Info class="size-4" /> {t.booking.bookHere} {getEuroString(odmPrice(it, passengers, kids))}
+	{/if}
 {/snippet}
 
 {#if baseResponse}
