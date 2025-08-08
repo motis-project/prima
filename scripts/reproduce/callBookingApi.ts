@@ -4,29 +4,30 @@ import 'dotenv/config';
 import { bookingApi } from '../../src/lib/server/booking/bookingApi';
 
 const parameters = {
-	connection1: {
-		start: {
-			lng: 14.587021,
-			lat: 51.3572526,
-			address: 'Körnerplatz'
-		},
-		target: {
-			lng: 14.5141138,
-			lat: 51.5332486,
-			address: 'Mühlweg 5b'
-		},
-		startTime: 1752393161218,
-		targetTime: 1752396617220,
-		signature: '',
-		startFixed: true
-	},
-	connection2: null,
 	capacities: {
 		passengers: 1,
 		bikes: 0,
 		luggage: 0,
 		wheelchairs: 0
-	}
+	},
+	connection1: {
+		start: {
+			lat: 51.505444,
+			lng: 14.638026999999997,
+			address: 'Weißwasser Bahnhof'
+		},
+		target: {
+			lat: 51.4417032,
+			lng: 14.6895141,
+			address: 'Körnerplatz'
+		},
+		startTime: 1754619540000,
+		targetTime: 1754621400000,
+		signature: 'cf9dcc63e0c95aacc17524783c750f35f3af63e9b607cdd3e25121d3db430632',
+		startFixed: true,
+		requestedTime: 1754609100000
+	},
+	connection2: null
 };
 
 const kidsThreeToFour = 0;

@@ -35,6 +35,7 @@ export const getTours = async (
 					.selectFrom('event')
 					.$if(!selectCancelled, (qb) => qb.where('event.cancelled', '=', false))
 					.innerJoin('request', 'request.id', 'event.request')
+					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 					.whereRef('tour.id', '=', 'request.tour')
 					.innerJoin('user', 'user.id', 'request.customer')
 					.select((eb) => [
@@ -49,15 +50,14 @@ export const getTours = async (
 						'user.name as customerName',
 						'user.phone as customerPhone',
 						'event.id',
-						'event.address',
-						'event.eventGroup',
+						'eventGroup.address',
 						'event.isPickup',
-						'event.lat',
-						'event.lng',
-						'event.nextLegDuration',
-						'event.prevLegDuration',
-						'event.scheduledTimeStart',
-						'event.scheduledTimeEnd',
+						'eventGroup.lat',
+						'eventGroup.lng',
+						'eventGroup.nextLegDuration',
+						'eventGroup.prevLegDuration',
+						'eventGroup.scheduledTimeStart',
+						'eventGroup.scheduledTimeEnd',
 						'event.cancelled',
 						'request.bikes',
 						'request.customer',
@@ -72,7 +72,7 @@ export const getTours = async (
 						'request.kidsFiveToSix'
 					])
 					.select(sql<string>`md5(request.ticket_code)`.as('ticketHash'))
-					.orderBy('event.scheduledTimeStart')
+					.orderBy('eventGroup.scheduledTimeStart')
 			).as('events')
 		])
 		.execute();
@@ -128,6 +128,7 @@ export const getToursWithRequests = async (
 								.selectFrom('event')
 								.whereRef('event.request', '=', 'request.id')
 								.innerJoin('user', 'user.id', 'request.customer')
+								.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 								.$if(!selectCancelled, (qb) => qb.where('event.cancelled', '=', false))
 								.select([
 									'tour.id as tour',
@@ -135,15 +136,15 @@ export const getToursWithRequests = async (
 									'user.phone as customerPhone',
 									'event.id',
 									'event.communicatedTime',
-									'event.address',
-									'event.eventGroup',
+									'eventGroup.address',
 									'event.isPickup',
-									'event.lat',
-									'event.lng',
-									'event.nextLegDuration',
-									'event.prevLegDuration',
-									'event.scheduledTimeStart',
-									'event.scheduledTimeEnd',
+									'eventGroup.lat',
+									'eventGroup.lng',
+									'eventGroup.nextLegDuration',
+									'eventGroup.prevLegDuration',
+									'eventGroup.scheduledTimeStart',
+									'eventGroup.scheduledTimeEnd',
+									'event.eventGroupId',
 									'event.cancelled',
 									'request.cancelled as requestCancelled',
 									'tour.cancelled as tourCancelled',
@@ -157,7 +158,7 @@ export const getToursWithRequests = async (
 									'request.id as requestId'
 								])
 								.select(sql<string>`md5(request.ticket_code)`.as('ticketHash'))
-								.orderBy('event.scheduledTimeStart')
+								.orderBy('eventGroup.scheduledTimeStart')
 						).as('events')
 					])
 			).as('requests')

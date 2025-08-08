@@ -108,22 +108,30 @@ export const setEvent = async (
 	lat: number,
 	lng: number
 ) => {
+	const eventGroupId = (
+		await db
+			.insertInto('eventGroup')
+			.values({
+				scheduledTimeStart: t,
+				scheduledTimeEnd: t,
+				prevLegDuration: 0,
+				nextLegDuration: 0,
+				lat,
+				lng,
+				address: ''
+			})
+			.returning('eventGroup.id')
+			.executeTakeFirstOrThrow()
+	).id;
 	return (
 		await db
 			.insertInto('event')
 			.values({
 				request: requestId,
-				communicatedTime: t,
-				scheduledTimeStart: t,
-				scheduledTimeEnd: t,
-				prevLegDuration: 0,
-				nextLegDuration: 0,
-				eventGroup: '',
-				lat,
-				lng,
+				eventGroupId,
 				isPickup,
-				address: '',
-				cancelled: false
+				cancelled: false,
+				communicatedTime: t
 			})
 			.returning('event.id')
 			.executeTakeFirstOrThrow()
@@ -151,6 +159,7 @@ export const clearDatabase = async () => {
 	await db.deleteFrom('availability').execute();
 	await db.deleteFrom('event').execute();
 	await db.deleteFrom('request').execute();
+	await db.deleteFrom('eventGroup').execute();
 	await db.deleteFrom('journey').execute();
 	await db.deleteFrom('tour').execute();
 	await db.deleteFrom('vehicle').execute();
@@ -177,7 +186,11 @@ export const getTours = async () => {
 					.selectAll()
 					.select((eb) => [
 						jsonArrayFrom(
-							eb.selectFrom('event').whereRef('event.request', '=', 'request.id').selectAll()
+							eb
+								.selectFrom('event')
+								.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+								.whereRef('event.request', '=', 'request.id')
+								.selectAll()
 						).as('events')
 					])
 			).as('requests')
@@ -191,13 +204,14 @@ export const selectEvents = async () => {
 		.selectFrom('tour')
 		.innerJoin('request', 'tour.id', 'request.tour')
 		.innerJoin('event', 'event.request', 'request.id')
+		.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 		.select([
 			'event.id as eventid',
 			'request.id as requestid',
 			'tour.id as tourid',
 			'event.cancelled as eventCancelled',
-			'event.nextLegDuration',
-			'event.prevLegDuration',
+			'eventGroup.nextLegDuration',
+			'eventGroup.prevLegDuration',
 			'request.cancelled as requestCancelled',
 			'tour.cancelled as tourCancelled',
 			'tour.message'
@@ -228,45 +242,6 @@ export function assertArraySizes<T>(
 	}
 }
 
-export const bookingLogs: BookingLogs[] = [];
-export let iteration = 0;
-
-export function increment() {
-	++iteration;
-}
-
-export type BookingLogs = {
-	type?: string;
-	pickupType?: string;
-	dropoffType?: string;
-	cost?: number;
-	prevEvent?: number;
-	nextEvent?: number;
-	pickupPrevLegDuration?: number;
-	pickupNextLegDuration?: number;
-	dropoffPrevLegDuration?: number;
-	dropoffNextLegDuration?: number;
-	prevLegDuration?: number;
-	nextLegDuration?: number;
-	iter: number;
-	waitingTime?: number;
-	taxiDuration?: number;
-	pickupWaitingTime?: number;
-	dropoffWaitingTime?: number;
-	pickupTaxiDuration?: number;
-	dropoffTaxiDuration?: number;
-	cumulatedTaxiDrivingDelta?: number;
-	oldDrivingTime?: number;
-	passengerDuration?: number;
-	weightedPassengerDuration?: number;
-	eventOverlap?: number;
-	pickupTime?: number;
-	dropoffTime?: number;
-	pickupNextId?: number;
-	dropoffPrevId?: number;
-	whitelist?: boolean;
-};
-
 export function getCost(tour: TourWithRequests) {
 	const events = sortEventsByTime(
 		tour.requests.flatMap((r) => r.events).filter((e) => !e.cancelled)
@@ -274,15 +249,14 @@ export function getCost(tour: TourWithRequests) {
 	if (events.length === 0) {
 		return {
 			weightedPassengerDuration: 0,
-			drivingTime: 0,
+			fullyPayedDuration: 0,
+			approachPlusReturnDuration: 0,
 			waitingTime: 0
 		};
 	}
-	const drivingTime = events.reduce(
-		(acc, curr) => (acc += curr.nextLegDuration),
-		events[0].prevLegDuration
-	);
-	const waitingTime = tour.endTime - tour.startTime - drivingTime;
+	const approachPlusReturnDuration =
+		(events[0].prevLegDuration ?? 0) + (events[events.length - 1].nextLegDuration ?? 0);
+	let fullyPayedDuration = events[0].prevLegDuration ?? 0;
 	let weightedPassengerDuration = 0;
 	let passengers = 0;
 	for (let i = 0; i != events.length - 1; ++i) {
@@ -291,22 +265,45 @@ export function getCost(tour: TourWithRequests) {
 		passengers += event.isPickup ? event.passengers : -event.passengers;
 		weightedPassengerDuration +=
 			(getScheduledEventTime(nextEvent) - getScheduledEventTime(event)) * passengers;
+		if (nextEvent.eventGroupId === event.eventGroupId) {
+			continue;
+		}
+		fullyPayedDuration += event.nextLegDuration;
 	}
+	fullyPayedDuration += events[events.length - 1].nextLegDuration;
+	fullyPayedDuration -= approachPlusReturnDuration;
+	const waitingTime =
+		tour.endTime - tour.startTime - fullyPayedDuration - approachPlusReturnDuration;
 	return {
 		weightedPassengerDuration,
-		drivingTime,
+		fullyPayedDuration,
+		approachPlusReturnDuration,
 		waitingTime
 	};
 }
 
 export function sortEventsByTime<
-	T extends { scheduledTimeStart: number; scheduledTimeEnd: number }[]
+	T extends {
+		scheduledTimeStart: number;
+		scheduledTimeEnd: number;
+		prevLegDuration: number;
+		nextLegDuration: number;
+		eventGroupId: number;
+	}[]
 >(events: T): T {
 	return events.sort((a, b) => {
 		const startDiff = a.scheduledTimeStart - b.scheduledTimeStart;
 		if (startDiff !== 0) {
 			return startDiff;
 		}
-		return a.scheduledTimeEnd - b.scheduledTimeEnd;
+		const endDiff = a.scheduledTimeEnd - b.scheduledTimeEnd;
+		if (endDiff !== 0) {
+			return endDiff;
+		}
+		const nextLegDiff = b.nextLegDuration - a.nextLegDuration;
+		if (nextLegDiff !== 0) {
+			return nextLegDiff;
+		}
+		return b.prevLegDuration - a.prevLegDuration;
 	});
 }

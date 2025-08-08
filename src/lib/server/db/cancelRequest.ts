@@ -38,10 +38,11 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 								jsonArrayFrom(
 									eb
 										.selectFrom('event')
+										.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 										.whereRef('event.request', '=', 'relevant_request.id')
 										.select([
-											'event.scheduledTimeStart',
-											'event.scheduledTimeEnd',
+											'eventGroup.scheduledTimeStart',
+											'eventGroup.scheduledTimeEnd',
 											'event.isPickup',
 											'event.request as requestId'
 										])
@@ -86,17 +87,21 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 							.innerJoin('tour as cancelled_tour', 'cancelled_tour.id', 'cancelled_request.tour')
 							.innerJoin('request', 'request.tour', 'cancelled_tour.id')
 							.innerJoin('event', 'event.request', 'request.id')
+							.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 							.where('cancelled_request.id', '=', requestId)
 							.select([
-								'event.address',
-								'event.scheduledTimeStart',
-								'event.scheduledTimeEnd',
+								'eventGroup.address',
+								'eventGroup.scheduledTimeStart',
+								'eventGroup.scheduledTimeEnd',
 								'event.cancelled',
-								'event.lat',
-								'event.lng',
+								'eventGroup.prevLegDuration',
+								'eventGroup.nextLegDuration',
+								'eventGroup.lat',
+								'eventGroup.lng',
 								'request.id as requestid',
 								'cancelled_tour.id as tourid',
-								'event.id as eventid'
+								'event.id as eventid',
+								'event.eventGroupId'
 							])
 					).as('events'),
 					jsonArrayFrom(
@@ -183,11 +188,14 @@ async function updateLegDurations(
 		cancelled: boolean;
 		scheduledTimeStart: number;
 		scheduledTimeEnd: number;
+		prevLegDuration: number;
+		nextLegDuration: number;
 		lat: number;
 		lng: number;
 		requestid: number;
 		tourid: number;
 		eventid: number;
+		eventGroupId: number;
 	}[],
 	company: maplibregl.LngLatLike,
 	requestId: number,
@@ -206,6 +214,7 @@ async function updateLegDurations(
 			requestid: number;
 			tourid: number;
 			eventid: number;
+			eventGroupId: number;
 		}[],
 		company: maplibregl.LngLatLike,
 		trx: Transaction<Database>
@@ -221,9 +230,9 @@ async function updateLegDurations(
 				throw new Error();
 			}
 			await trx
-				.updateTable('event')
+				.updateTable('eventGroup')
 				.set({ prevLegDuration: routingResultFirstEvent })
-				.where('event.id', '=', events[nextIdx].eventid)
+				.where('eventGroup.id', '=', events[nextIdx].eventGroupId)
 				.executeTakeFirst();
 			return;
 		}
@@ -238,9 +247,9 @@ async function updateLegDurations(
 				throw new Error();
 			}
 			await trx
-				.updateTable('event')
+				.updateTable('eventGroup')
 				.set({ nextLegDuration: routingResultLastEvent + PASSENGER_CHANGE_DURATION })
-				.where('event.id', '=', events[prevIdx].eventid)
+				.where('eventGroup.id', '=', events[prevIdx].eventGroupId)
 				.executeTakeFirst();
 			return;
 		}
@@ -255,14 +264,14 @@ async function updateLegDurations(
 		}
 		const r = routingResult + PASSENGER_CHANGE_DURATION;
 		await trx
-			.updateTable('event')
+			.updateTable('eventGroup')
 			.set({ nextLegDuration: r })
-			.where('event.id', '=', events[prevIdx].eventid)
+			.where('eventGroup.id', '=', events[prevIdx].eventGroupId)
 			.executeTakeFirst();
 		await trx
-			.updateTable('event')
+			.updateTable('eventGroup')
 			.set({ prevLegDuration: r })
-			.where('event.id', '=', events[nextIdx].eventid)
+			.where('eventGroup.id', '=', events[nextIdx].eventGroupId)
 			.executeTakeFirst();
 	};
 
@@ -291,12 +300,13 @@ async function updateLegDurations(
 			.selectFrom('tour')
 			.innerJoin('request', 'request.tour', 'tour.id')
 			.innerJoin('event', 'event.request', 'request.id')
+			.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 			.where('event.cancelled', '=', false)
-			.where('event.scheduledTimeStart', '<', cancelledEvent1.scheduledTimeStart)
+			.where('eventGroup.scheduledTimeStart', '<', cancelledEvent1.scheduledTimeStart)
 			.where('tour.vehicle', '=', vehicleId)
-			.orderBy('event.scheduledTimeEnd', 'desc')
+			.orderBy('eventGroup.scheduledTimeEnd', 'desc')
 			.limit(1)
-			.select(['event.lat', 'event.lng', 'event.id'])
+			.select(['eventGroup.lat', 'eventGroup.lng', 'event.id'])
 			.executeTakeFirst();
 		const firstUncancelledEvent = uncancelledEvents[cancelledIdx2 === 1 ? 2 : 1];
 		if (lastEventPrevTour) {
@@ -313,8 +323,8 @@ async function updateLegDurations(
 		}
 		const prevLegDuration = (
 			await trx
-				.selectFrom('event')
-				.where('event.id', '=', firstUncancelledEvent.eventid)
+				.selectFrom('eventGroup')
+				.where('eventGroup.id', '=', firstUncancelledEvent.eventGroupId)
 				.select(['prevLegDuration'])
 				.executeTakeFirst()
 		)?.prevLegDuration;
@@ -333,12 +343,13 @@ async function updateLegDurations(
 			.selectFrom('tour')
 			.innerJoin('request', 'request.tour', 'tour.id')
 			.innerJoin('event', 'event.request', 'request.id')
+			.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 			.where('event.cancelled', '=', false)
-			.where('event.scheduledTimeEnd', '>', cancelledEvent2.scheduledTimeEnd)
+			.where('eventGroup.scheduledTimeEnd', '>', cancelledEvent2.scheduledTimeEnd)
 			.where('tour.vehicle', '=', vehicleId)
-			.orderBy('event.scheduledTimeEnd', 'asc')
+			.orderBy('eventGroup.scheduledTimeEnd', 'asc')
 			.limit(1)
-			.select(['event.lat', 'event.lng', 'event.id', 'tour.id as tourId'])
+			.select(['eventGroup.lat', 'eventGroup.lng', 'event.id', 'tour.id as tourId'])
 			.executeTakeFirst();
 		const lastUncancelledEvent =
 			uncancelledEvents[
@@ -359,6 +370,7 @@ async function updateLegDurations(
 		const nextLegDuration = (
 			await trx
 				.selectFrom('event')
+				.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 				.where('event.id', '=', lastUncancelledEvent.eventid)
 				.select(['nextLegDuration'])
 				.executeTakeFirst()
