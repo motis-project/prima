@@ -61,6 +61,7 @@ data class Event(
     val lat: Double,
     val lng: Double,
     val scheduledTime: Long,
+    val scheduledTimeStart: Long,
     val bikes: Int,
     val customer: Int,
     val luggage: Int,

@@ -310,7 +310,7 @@ fun ShowCustomerDetails(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text= Date(event.scheduledTime).formatTo("HH:mm"),
+                    text= Date(event.scheduledTimeStart).formatTo("HH:mm"), // TODO: scheduledTime
                     fontWeight = FontWeight.Bold,
                     color = LocalExtendedColors.current.textColor
                 )
