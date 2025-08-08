@@ -162,7 +162,7 @@ fun Tours(
                 }
             }
 
-            displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTime }
+            displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTimeStart } // TODO: scheduledTime
 
             ShowTours(navController, displayTours)
         }
@@ -340,7 +340,7 @@ fun ShowTours(
                             address
                         }
 
-                        val start = startEvent?.scheduledTime ?: 0
+                        val start = startEvent?.scheduledTimeStart ?: 0 // TODO: scheduledTime
                         displayTime = if (start.toInt() != 0) {
                             Date(start)
                                 .formatTo("HH:mm")
