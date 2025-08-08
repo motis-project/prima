@@ -6,7 +6,8 @@ import {
 	SCHEDULED_TIME_BUFFER,
 	APPROACH_AND_RETURN_TIME_COST_FACTOR,
 	TAXI_WAITING_TIME_COST_FACTOR,
-	FULLY_PAYED_COST_FACTOR
+	FULLY_PAYED_COST_FACTOR,
+	MAX_WAITING_TIME
 } from '$lib/constants';
 import {
 	INSERT_HOW_OPTIONS,
@@ -708,7 +709,8 @@ export function evaluateSingleInsertions(
 					if (
 						resultBoth != undefined &&
 						(bothEvaluations[busStopIdx][busTimeIdx] == undefined ||
-							resultBoth.cost < bothEvaluations[busStopIdx][busTimeIdx]!.cost)
+							resultBoth.cost < bothEvaluations[busStopIdx][busTimeIdx]!.cost) &&
+						!waitsToLong(resultBoth.taxiWaitingTime)
 					) {
 						bothEvaluations[busStopIdx][busTimeIdx] = {
 							...resultBoth,
@@ -747,7 +749,8 @@ export function evaluateSingleInsertions(
 						(busStopEvaluations[busStopIdx][busTimeIdx] == undefined ||
 							busStopEvaluations[busStopIdx][busTimeIdx][insertionInfo.insertionIdx] == undefined ||
 							resultBus.cost <
-								busStopEvaluations[busStopIdx][busTimeIdx][insertionInfo.insertionIdx]!.cost)
+								busStopEvaluations[busStopIdx][busTimeIdx][insertionInfo.insertionIdx]!.cost) &&
+						!waitsToLong(resultBus.taxiWaitingTime)
 					) {
 						busStopEvaluations[busStopIdx][busTimeIdx][insertionInfo.insertionIdx] = resultBus;
 					}
@@ -772,7 +775,8 @@ export function evaluateSingleInsertions(
 			if (
 				resultUserChosen != undefined &&
 				(userChosenEvaluations[insertionInfo.insertionIdx] == undefined ||
-					resultUserChosen.cost < userChosenEvaluations[insertionInfo.insertionIdx]!.cost)
+					resultUserChosen.cost < userChosenEvaluations[insertionInfo.insertionIdx]!.cost) &&
+				!waitsToLong(resultUserChosen.taxiWaitingTime)
 			) {
 				userChosenEvaluations[insertionInfo.insertionIdx] = resultUserChosen;
 			}
@@ -955,6 +959,9 @@ export function evaluatePairInsertions(
 					const tourDurationDelta = newArrival - newDeparture - oldTourDurationSum;
 					const taxiWaitingTime =
 						tourDurationDelta - approachPlusReturnDurationDelta - fullyPayedDurationDelta;
+					if (waitsToLong(taxiWaitingTime)) {
+						continue;
+					}
 
 					// Compute the delta of the duration spend by passengers in the taxi
 					let prevShiftPickup = 0;
@@ -1458,4 +1465,8 @@ function getTimestamps(
 		scheduledDropoffTimeStart,
 		scheduledDropoffTimeEnd
 	};
+}
+
+function waitsToLong(waitingTime: number) {
+	return waitingTime > MAX_WAITING_TIME;
 }

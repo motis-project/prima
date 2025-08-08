@@ -37,3 +37,4 @@ export const SCHEDULED_TIME_BUFFER = 10 * MINUTE;
 export const DIRECT_FREQUENCY = 5 * MINUTE;
 export const MOTIS_SHIFT = 5 * MINUTE;
 export const DIRECT_RIDE_TIME_DIFFERENCE = HOUR;
+export const MAX_WAITING_TIME = 47 * MINUTE;
