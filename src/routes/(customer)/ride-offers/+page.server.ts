@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				id: journey.journeyId,
 				ticketCode: journey.ticketCode,
 				cancelled: journey.cancelled,
-				negotiating: true // TODO
+				negotiating: true
 			};
 		})
 	};

@@ -1,4 +1,5 @@
 import type { Mode, Rental } from '$lib/openapi';
+import { isRideShareLeg } from '../../routes/(customer)/routing/utils';
 
 export type Colorable = {
 	routeColor?: string;
@@ -13,6 +14,7 @@ export type TripInfo = {
 
 export type RentalInfo = {
 	rental?: Rental;
+	agencyId?: string;
 };
 
 export type LegLike = Colorable & TripInfo & RentalInfo;
@@ -48,7 +50,11 @@ export const getModeStyle = (l: LegLike): [string, string, string] => {
 			return ['car', '#333333', 'white'];
 
 		case 'ODM':
-			return ['taxi', '#fdb813', 'white'];
+			if (isRideShareLeg(l)) {
+				return ['car', '#fdb813', 'white'];
+			} else {
+				return ['taxi', '#fdb813', 'white'];
+			}
 
 		case 'TRANSIT':
 		case 'BUS':
