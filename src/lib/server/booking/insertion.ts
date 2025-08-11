@@ -488,8 +488,8 @@ export function evaluateBothInsertion(
 		{ taxiWaitingTime }
 	);
 	return {
-		pickupTime: scheduledPickupTimeEnd - MAX_PASSENGER_WAITING_TIME_PICKUP,
-		dropoffTime: scheduledDropoffTimeStart + MAX_PASSENGER_WAITING_TIME_DROPOFF,
+		pickupTime: communicatedPickupTime,
+		dropoffTime: communicatedDropoffTime,
 		scheduledPickupTimeStart,
 		scheduledPickupTimeEnd,
 		scheduledDropoffTimeStart,
@@ -1041,8 +1041,8 @@ export function evaluatePairInsertions(
 					) {
 						const tour = events[pickupIdx].tourId;
 						bestEvaluations[busStopIdx][timeIdx] = {
-							pickupTime: scheduledPickupTime - MAX_PASSENGER_WAITING_TIME_PICKUP,
-							dropoffTime: scheduledDropoffTime + MAX_PASSENGER_WAITING_TIME_DROPOFF,
+							pickupTime: communicatedPickupTime,
+							dropoffTime: communicatedDropoffTime,
 							scheduledPickupTimeEnd: scheduledPickupTime,
 							scheduledPickupTimeStart: communicatedPickupTime,
 							scheduledDropoffTimeStart: scheduledDropoffTime,
@@ -1442,10 +1442,10 @@ function getTimestamps(
 		const scheduledDropoffTimeStart = scheduledPickupTimeEnd + passengerDuration;
 		const scheduledDropoffTimeEnd = scheduledDropoffTimeStart + dropoffLeeway;
 		return {
-			communicatedPickupTime: scheduledPickupTimeStart - SCHEDULED_TIME_BUFFER,
+			communicatedPickupTime: scheduledPickupTimeStart,
 			scheduledPickupTimeStart,
 			scheduledPickupTimeEnd,
-			communicatedDropoffTime: scheduledPickupTimeEnd + SCHEDULED_TIME_BUFFER,
+			communicatedDropoffTime: scheduledDropoffTimeStart + SCHEDULED_TIME_BUFFER,
 			scheduledDropoffTimeStart,
 			scheduledDropoffTimeEnd
 		};
@@ -1461,7 +1461,7 @@ function getTimestamps(
 		communicatedPickupTime: scheduledPickupTimeEnd - SCHEDULED_TIME_BUFFER,
 		scheduledPickupTimeStart,
 		scheduledPickupTimeEnd,
-		communicatedDropoffTime: scheduledPickupTimeStart + SCHEDULED_TIME_BUFFER,
+		communicatedDropoffTime: scheduledDropoffTimeEnd,
 		scheduledDropoffTimeStart,
 		scheduledDropoffTimeEnd
 	};

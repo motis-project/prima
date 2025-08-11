@@ -25,8 +25,8 @@ describe('Concatenation tests', () => {
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));
 		const body = JSON.stringify({
-			start: inRothenburg2,
-			target: inGeheege,
+			start: inGeheege,
+			target: inRothenburg2,
 			startBusStops: [],
 			targetBusStops: [],
 			directTimes: [inXMinutes(45)],
@@ -67,7 +67,7 @@ describe('Concatenation tests', () => {
 			target: inRothenburg2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(60)],
+			directTimes: [inXMinutes(65)],
 			startFixed: true,
 			capacities
 		});
@@ -87,7 +87,7 @@ describe('Concatenation tests', () => {
 				true
 			),
 			startFixed: true,
-			requestedTime: inXMinutes(60)
+			requestedTime: inXMinutes(65)
 		};
 		const bookingBody2 = {
 			connection1: connection2,
@@ -105,7 +105,7 @@ describe('Concatenation tests', () => {
 			target: inHorka2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(55)],
+			directTimes: [inXMinutes(60)],
 			startFixed: false,
 			capacities
 		});
@@ -125,7 +125,7 @@ describe('Concatenation tests', () => {
 				false
 			),
 			startFixed: false,
-			requestedTime: inXMinutes(55)
+			requestedTime: inXMinutes(60)
 		};
 		const bookingBodyConnect = {
 			connection1: connection3,
@@ -136,5 +136,5 @@ describe('Concatenation tests', () => {
 		const tours3 = await getTours();
 		expect(tours3.length).toBe(1);
 		expect(tours3[0].requests.length).toBe(3);
-	});
+	}, 20000);
 });

@@ -305,7 +305,7 @@ describe('Whitelist and Booking API Tests', () => {
 		expect(
 			Math.abs(inNiesky1.lat - pickup.lat) + Math.abs(inNiesky1.lng - pickup.lng)
 		).toBeLessThan(COORDINATE_ROUNDING_ERROR_THRESHOLD);
-		expect(new Date(pickup.communicatedTime).toISOString()).toBe(dateInXMinutes(65).toISOString());
+		expect(new Date(pickup.communicatedTime).toISOString()).toBe(dateInXMinutes(70).toISOString());
 		expect(dropoff.address).toBe('target address');
 		expect(
 			Math.abs(inNiesky2.lat - dropoff.lat) + Math.abs(inNiesky2.lng - dropoff.lng)
