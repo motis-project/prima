@@ -53,19 +53,21 @@ export function getScheduledTimes(
 		if (!event.time.shift(!isPickup ? -duration : duration).covers(newTime)) {
 			return;
 		}
-		const oldTime = isPickup ? event.scheduledTimeEnd : event.scheduledTimeStart;
+		const oldTime = isPickup ? event.scheduledTimeStart : event.scheduledTimeEnd;
 		const leeway = (isPickup ? newTime - oldTime : oldTime - newTime) - duration;
 		const newShiftedTime = newTime + (isPickup ? -duration : duration);
 		console.log({ oldTime }, { leeway }, { duration }, { isPickup });
-		console.assert(
-			leeway >= 0,
-			'leeway was less than zero in getScheduledTimes',
-			{ event },
-			{ duration },
-			{ newTime: newStartTime },
-			{ eventGroup },
-			{ isPickup }
-		);
+		if (leeway < 0) {
+			console.log(
+				'leeway was less than zero in getScheduledTimes',
+				{ event },
+				{ duration },
+				{ newTime: newTime },
+				{ eventGroup },
+				{ isPickup }
+			);
+			throw new Error('leeway was less than zero in getScheduledTimes');
+		}
 		if (leeway < event.time.size()) {
 			scheduledTimes.updates.push({
 				event_id: event.id,
