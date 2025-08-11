@@ -1,4 +1,4 @@
-import { DIRECT_FREQUENCY, MOTIS_SHIFT, SCHEDULED_TIME_BUFFER } from '$lib/constants';
+import { DIRECT_FREQUENCY, MOTIS_SHIFT } from '$lib/constants';
 import type { Leg } from '$lib/openapi';
 
 export function rediscoverWhitelistRequestTimes(
@@ -18,17 +18,13 @@ export function rediscoverWhitelistRequestTimes(
 			requestedTime1 =
 				midnight +
 				Math.floor(
-					(new Date(firstOdm.scheduledStartTime).getTime() - SCHEDULED_TIME_BUFFER - midnight) /
-						DIRECT_FREQUENCY
+					(new Date(firstOdm.scheduledStartTime).getTime() - midnight) / DIRECT_FREQUENCY
 				) *
 					DIRECT_FREQUENCY;
 		} else {
 			requestedTime1 =
 				midnight +
-				Math.floor(
-					(new Date(firstOdm.scheduledEndTime).getTime() + SCHEDULED_TIME_BUFFER - midnight) /
-						DIRECT_FREQUENCY
-				) *
+				Math.floor((new Date(firstOdm.scheduledEndTime).getTime() - midnight) / DIRECT_FREQUENCY) *
 					(DIRECT_FREQUENCY + 1);
 		}
 	} else {
