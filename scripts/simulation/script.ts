@@ -170,6 +170,22 @@ async function bookingFull(
 		console.log('There were no ODM-itineraries.');
 		return false;
 	}
+	for (const itinerary of odmItineraries) {
+		let monotonicTime = 0;
+		for (const leg of itinerary.legs) {
+			if (leg.mode == 'WALK') {
+				continue;
+			}
+			if (new Date(leg.startTime).getTime() < monotonicTime + 1000 * 60 * 1) {
+				const e = new Error(
+					'Non-monotonic times in itinerary. Wrong communicated times? ' + JSON.stringify(itinerary)
+				);
+				console.log(e);
+				throw e;
+			}
+			monotonicTime = new Date(leg.endTime).getTime();
+		}
+	}
 	const choice = randomInt(0, odmItineraries.length);
 	const chosenItinerary = odmItineraries[choice];
 	if (chosenItinerary.legs[0].from.name === 'START') {
