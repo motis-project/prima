@@ -140,7 +140,9 @@
 		data.tours.some((t) => vehicleId == t.vehicleId && overlaps(t, cell));
 
 	const getTours = (vehicleId: number, cell: Range) =>
-		data.tours.filter((t) => vehicleId == t.vehicleId && overlaps(t, cell));
+		data.tours
+			.filter((t) => vehicleId == t.vehicleId && overlaps(t, cell))
+			.sort((a, b) => a.startTime - b.startTime);
 
 	const isAvailable = (v: Vehicle, cell: Range) => v.availability.some((a) => overlaps(a, cell));
 
