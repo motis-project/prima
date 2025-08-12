@@ -45,6 +45,11 @@
 	};
 
 	let tourIndex = $state(0);
+	$effect(() => {
+		if (tours && tourIndex >= tours.length) {
+			tourIndex = 0;
+		}
+	});
 	let tour = $derived(tours && tours[tourIndex]);
 	let events = $derived(
 		tour?.requests
