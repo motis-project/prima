@@ -7,3 +7,11 @@ export function getScheduledEventTime(ev: {
 }): UnixtimeMs {
 	return ev.isPickup ? ev.scheduledTimeEnd : ev.scheduledTimeStart;
 }
+
+export function getOuterScheduledEventTime(ev: {
+	isPickup: boolean;
+	scheduledTimeEnd: UnixtimeMs;
+	scheduledTimeStart: UnixtimeMs;
+}): UnixtimeMs {
+	return ev.isPickup ? ev.scheduledTimeStart : ev.scheduledTimeEnd;
+}
