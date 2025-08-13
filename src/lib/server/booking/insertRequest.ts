@@ -53,7 +53,7 @@ export async function insertRequest(
 
 	await sendNotifications(notificationParams!.companyId, {
 		tourId: notificationParams!.tourId,
-		pickupTime: r.best.pickupTime,
+		pickupTime: r.best.pickupTime, // TODO scheduled vs pickup time
 		wheelchairs: capacities.wheelchairs,
 		vehicleId: r.best.vehicle,
 		change: TourChange.BOOKED

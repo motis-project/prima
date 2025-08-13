@@ -4,7 +4,7 @@ import CancelNotificationCustomer from '$lib/server/email/CancelNotificationCust
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { sendNotifications } from '$lib/server/firebase/notifications';
 import { TourChange } from '$lib/server/firebase/firebase';
-import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
+import { getOuterScheduledEventTime } from '$lib/util/getScheduledEventTime';
 import { updateDirectDurations } from '$lib/server/booking/updateDirectDuration';
 import { db } from '$lib/server/db';
 import { retry } from './db/retryQuery';
@@ -100,7 +100,7 @@ export async function cancelTour(
 			const wheelchairs = tour.requests.reduce((prev, curr) => prev + curr.wheelchairs, 0);
 			await sendNotifications(company, {
 				tourId: tourId,
-				pickupTime: getScheduledEventTime(firstEvent),
+				pickupTime: getOuterScheduledEventTime(firstEvent),
 				vehicleId: tour.vehicle,
 				wheelchairs,
 				change: TourChange.CANCELLED

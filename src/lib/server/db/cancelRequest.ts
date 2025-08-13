@@ -2,7 +2,7 @@ import { sql, Transaction } from 'kysely';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { sendMail } from '$lib/server/sendMail';
 import CancelNotificationCompany from '$lib/server/email/CancelNotificationCompany.svelte';
-import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
+import { getOuterScheduledEventTime } from '$lib/util/getScheduledEventTime';
 import { sendNotifications } from '../firebase/notifications';
 import { TourChange } from '$lib/server/firebase/firebase';
 import { updateDirectDurations } from '$lib/server/booking/updateDirectDuration';
@@ -171,7 +171,7 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 			if (firstEvent.requestId === requestId && tourInfo.companyOwners.length !== 0) {
 				await sendNotifications(tourInfo.companyOwners[0].companyId, {
 					tourId: tour.tourId,
-					pickupTime: getScheduledEventTime(firstEvent),
+					pickupTime: getOuterScheduledEventTime(firstEvent),
 					vehicleId: tourInfo.vehicle,
 					wheelchairs,
 					change: TourChange.CANCELLED
