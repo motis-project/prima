@@ -246,7 +246,7 @@ class TourStore @Inject constructor(
                 eventGroups.add(
                     EventObjectGroup(
                         group[0].eventGroup,
-                        group[0].scheduledTimeStart, // TODO: scheduledTime
+                        group[0].scheduledTimeStart,
                         Location(group[0].lat, group[0].lng),
                         group[0].address,
                         group,

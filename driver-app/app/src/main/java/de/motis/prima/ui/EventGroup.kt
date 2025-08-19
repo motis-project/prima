@@ -309,8 +309,18 @@ fun ShowCustomerDetails(
                     .padding(top = 8.dp, start = 12.dp, end = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                val displayTime = if (event.scheduledTime.toInt() != 0) {
+                    Date(event.scheduledTime)
+                        .formatTo("HH:mm")
+                } else if (event.scheduledTimeStart.toInt() != 0) {
+                    Date(event.scheduledTimeStart)
+                        .formatTo("HH:mm")
+                } else {
+                    ""
+                }
+
                 Text(
-                    text= Date(event.scheduledTimeStart).formatTo("HH:mm"), // TODO: scheduledTime
+                    text= displayTime,
                     fontWeight = FontWeight.Bold,
                     color = LocalExtendedColors.current.textColor
                 )

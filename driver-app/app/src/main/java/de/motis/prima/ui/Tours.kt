@@ -162,7 +162,7 @@ fun Tours(
                 }
             }
 
-            displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTimeStart } // TODO: scheduledTime
+            displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTimeStart }
 
             ShowTours(navController, displayTours)
         }
@@ -322,10 +322,6 @@ fun ShowTours(
                             viewModel.removeMarker()
                         }
                     }) {
-                        val city: String
-                        val displayTime: String
-                        val address: String
-
                         var startEvent: Event? = null
                         try {
                             startEvent = tour.events[0]
@@ -333,16 +329,28 @@ fun ShowTours(
                             Log.d("error", "Error: Tour has no events")
                         }
 
-                        address = startEvent?.address ?: ""
-                        city = try {
-                            address.split(',')[1]
+                        val address = startEvent?.address ?: ""
+
+                        var  city = ""
+                        try {
+                            val split = address.split(',')
+                            city = if (split[1] == " Deutschland") {
+                                split[0]
+                            } else {
+                                split[1]
+                            }
                         } catch (e: Exception) {
-                            address
+                            city = address
                         }
 
-                        val start = startEvent?.scheduledTimeStart ?: 0 // TODO: scheduledTime
-                        displayTime = if (start.toInt() != 0) {
-                            Date(start)
+                        val scheduledTime = startEvent?.scheduledTime ?: 0
+                        val scheduledTimeStart = startEvent?.scheduledTimeStart ?: 0
+
+                        val displayTime = if (scheduledTime.toInt() != 0) {
+                            Date(scheduledTime)
+                                .formatTo("HH:mm")
+                        } else if (scheduledTimeStart.toInt() != 0) {
+                            Date(scheduledTimeStart)
                                 .formatTo("HH:mm")
                         } else {
                             ""
