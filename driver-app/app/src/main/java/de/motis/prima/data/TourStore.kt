@@ -35,6 +35,7 @@ class EventObject : RealmObject {
     var lat: Double = 0.0
     var lng: Double = 0.0
     var scheduledTime: Long = 0
+    var scheduledTimeStart: Long = 0
     var bikes: Int = 0
     var customer: Int = 0
     var luggage: Int = 0
@@ -85,6 +86,7 @@ class TourStore @Inject constructor(
                         this.lat = event.lat
                         this.lng = event.lng
                         this.scheduledTime = event.scheduledTime
+                        this.scheduledTimeStart = event.scheduledTimeStart
                         this.bikes = event.bikes
                         this.customer = event.customer
                         this.luggage = event.luggage
@@ -182,6 +184,7 @@ class TourStore @Inject constructor(
                     lat = e.lat,
                     lng = e.lng,
                     scheduledTime = e.scheduledTime,
+                    scheduledTimeStart = e.scheduledTimeStart,
                     bikes = e.bikes,
                     customer = e.customer,
                     luggage = e.luggage,
@@ -243,7 +246,7 @@ class TourStore @Inject constructor(
                 eventGroups.add(
                     EventObjectGroup(
                         group[0].eventGroup,
-                        group[0].scheduledTime,
+                        group[0].scheduledTimeStart,
                         Location(group[0].lat, group[0].lng),
                         group[0].address,
                         group,
