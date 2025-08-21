@@ -17,6 +17,7 @@ async function getTokens(companyId: number) {
 }
 
 export async function sendNotifications(companyId: number, data: NotificationData) {
+	// TODO pickup vs scheduled times?
 	const tokens = await getTokens(companyId);
 
 	let title = 'Änderung einer Fahrt';

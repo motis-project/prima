@@ -23,7 +23,10 @@
 	import { carRouting } from '$lib/util/carRouting';
 	import { polylineToGeoJSON } from '$lib/util/polylineToGeoJSON';
 	import { getTourInfoShort } from '$lib/util/getTourInfoShort';
-	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
+	import {
+		getOuterScheduledEventTime,
+		getScheduledEventTime
+	} from '$lib/util/getScheduledEventTime';
 	import { env } from '$env/dynamic/public';
 	import CancelMessageDialog from './CancelMessageDialog.svelte';
 	import TableHead from '$lib/shadcn/table/table-head.svelte';
@@ -289,7 +292,7 @@
 						{#each events as event}
 							<Table.Row>
 								<Table.Cell>
-									{new Date(getScheduledEventTime(event))
+									{new Date(getOuterScheduledEventTime(event))
 										.toLocaleString(LOCALE)
 										.slice(0, -3)
 										.replace(',', ' ')}

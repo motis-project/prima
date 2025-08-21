@@ -4,7 +4,7 @@ import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import { getLatestEventTime } from '$lib/util/getLatestEventTime';
 import { sendNotifications } from '$lib/server/firebase/notifications.js';
 import { TourChange } from '$lib/server/firebase/firebase';
-import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
+import { getOuterScheduledEventTime } from '$lib/util/getScheduledEventTime';
 import { updateDirectDurations } from '$lib/server/booking/updateDirectDuration';
 import { retry } from './db/retryQuery';
 
@@ -183,7 +183,7 @@ export async function moveTour(
 				const wheelchairs = movedTour.requests.reduce((prev, curr) => prev + curr.wheelchairs, 0);
 				await sendNotifications(companyId, {
 					tourId,
-					pickupTime: getScheduledEventTime(firstEvent),
+					pickupTime: getOuterScheduledEventTime(firstEvent),
 					vehicleId,
 					wheelchairs,
 					change: TourChange.MOVED

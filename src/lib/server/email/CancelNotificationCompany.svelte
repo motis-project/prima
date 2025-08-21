@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { formatTime } from '$lib/util/formatTime';
-	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
+	import {
+		getOuterScheduledEventTime,
+		getScheduledEventTime
+	} from '$lib/util/getScheduledEventTime';
 	import type { TourEvent } from '$lib/util/getToursTypes';
 	import EmailFooter from './EmailFooter.svelte';
 
@@ -29,15 +32,15 @@
 		<li>nach {events[events.length - 1].address}</li>
 	</ul>
 	<p>
-		die von {formatTime(getScheduledEventTime(events[0]))}
-		bis {formatTime(getScheduledEventTime(events[events.length - 1]))}
+		die von {formatTime(getOuterScheduledEventTime(events[0]))}
+		bis {formatTime(getOuterScheduledEventTime(events[events.length - 1]))}
 		stattfinden sollte.
 	</p>
 	{#if plannedEvents.length > 1}
 		<p>Die folgenden Halte sind immer noch eingeplant:</p>
 		<ul>
 			{#each plannedEvents as e}
-				<li>{formatTime(getScheduledEventTime(e))}, {e.address}</li>
+				<li>{formatTime(getOuterScheduledEventTime(e))}, {e.address}</li>
 			{/each}
 		</ul>
 	{/if}
