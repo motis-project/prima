@@ -1,6 +1,8 @@
 <script lang="ts">
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import Building2 from 'lucide-svelte/icons/building-2';
 	import Phone from 'lucide-svelte/icons/phone';
+	import CarTaxiFront from 'lucide-svelte/icons/car-taxi-front';
 	import type { Itinerary, Leg } from '$lib/openapi';
 	import { Button } from '$lib/shadcn/button';
 	import { t } from '$lib/i18n/translation';
@@ -15,12 +17,14 @@
 		onClickStop,
 		onClickTrip,
 		licensePlate,
+		companyName,
 		companyPhone
 	}: {
 		itinerary: Itinerary;
 		onClickStop: (name: string, stopId: string, time: Date) => void;
 		onClickTrip: (tripId: string) => void;
 		licensePlate?: string;
+		companyName?: string;
 		companyPhone?: string;
 	} = $props();
 
@@ -68,17 +72,20 @@
 {#snippet streetLeg(l: Leg)}
 	<div class="flex flex-col gap-y-4 py-8 pl-8 text-muted-foreground">
 		{#if l.mode === 'ODM'}
+			<div class="flex flex-col ml-6 w-fit rounded-md border-2 p-2 gap-y-2">
 			<Button
 				onclick={() =>
 					window.open(
 						`https://www.google.com/maps/dir/?api=1&destination=${l.from.lat},${l.from.lon}&travelmode=walking`
 					)}
-				class="ml-6 w-fit"
+				class="w-fit"
 			>
 				{t.meetingPointNavigation}
-			</Button>
+			</Button>			
 			{#if licensePlate != undefined}
-				<div class="ml-6 flex w-fit rounded-md border-2 border-black bg-white p-1 shadow">
+				<div class="flex items-center">
+				<CarTaxiFront class="relative  mr-1"/>
+				<div class="flex w-fit rounded-md border-2 border-black bg-white p-1 shadow">
 					<div
 						class="mr-2 flex h-8 min-w-5 items-center justify-center rounded bg-blue-700 p-1 text-white"
 					>
@@ -90,10 +97,15 @@
 						{licensePlate}
 					</div>
 				</div>
+				</div>
+			{/if}
+			{#if companyName != undefined}
+				<div class="flex items-center"><Building2 class="mr-1"/>{companyName}</div>
 			{/if}
 			{#if companyPhone != undefined}
-				<div><Phone class="h-4 w-4 stroke-muted-foreground" /> {companyPhone}</div>
+				<div class="flex items-center"><Phone class="mr-1"/>{companyPhone}</div>
 			{/if}
+			</div>
 		{/if}
 		<span class="ml-6">
 			{formatDurationSec(l.duration)}

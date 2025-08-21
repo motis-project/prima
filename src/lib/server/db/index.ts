@@ -37,6 +37,7 @@ export interface Database {
 		name: string | null;
 		address: string | null;
 		zone: number | null;
+		phone: string | null;
 	};
 	vehicle: {
 		id: Generated<number>;
