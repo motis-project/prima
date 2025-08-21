@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import Phone from 'lucide-svelte/icons/phone';
 	import type { Itinerary, Leg } from '$lib/openapi';
 	import { Button } from '$lib/shadcn/button';
 	import { t } from '$lib/i18n/translation';
@@ -13,12 +14,14 @@
 		itinerary,
 		onClickStop,
 		onClickTrip,
-		licensePlate
+		licensePlate,
+		companyPhone
 	}: {
 		itinerary: Itinerary;
 		onClickStop: (name: string, stopId: string, time: Date) => void;
 		onClickTrip: (tripId: string) => void;
 		licensePlate?: string;
+		companyPhone?: string;
 	} = $props();
 
 	const lastLeg = $derived(itinerary.legs.findLast((l) => l.duration !== 0));
@@ -87,6 +90,9 @@
 						{licensePlate}
 					</div>
 				</div>
+			{/if}
+			{#if companyPhone != undefined}
+				<div><Phone class="h-4 w-4 stroke-muted-foreground" /> {companyPhone}</div>
 			{/if}
 		{/if}
 		<span class="ml-6">
