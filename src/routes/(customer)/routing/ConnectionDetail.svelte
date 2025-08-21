@@ -103,7 +103,7 @@
 				<div class="flex items-center"><Building2 class="mr-1"/>{companyName}</div>
 			{/if}
 			{#if companyPhone != undefined}
-				<div class="flex items-center"><Phone class="mr-1"/>{companyPhone}</div>
+				<a href="tel:{companyPhone}"><div class="flex items-center"><Phone class="mr-1"/>{companyPhone}</div></a>
 			{/if}
 			</div>
 		{/if}
