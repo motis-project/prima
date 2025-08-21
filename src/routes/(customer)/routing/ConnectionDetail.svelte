@@ -72,7 +72,7 @@
 {#snippet streetLeg(l: Leg)}
 	<div class="flex flex-col gap-y-4 py-8 pl-8 text-muted-foreground">
 		{#if l.mode === 'ODM'}
-			<div class="flex flex-col ml-6 w-fit rounded-md border-2 p-2 gap-y-2">
+			<div class="flex flex-col ml-6 w-fit gap-y-2">
 			<Button
 				onclick={() =>
 					window.open(
@@ -85,14 +85,14 @@
 			{#if licensePlate != undefined}
 				<div class="flex items-center">
 				<CarTaxiFront class="relative  mr-1"/>
-				<div class="flex w-fit rounded-md border-2 border-black bg-white p-1 shadow">
+				<div class="flex w-fit rounded-md border-double border-4 border-double border-black bg-white">
 					<div
-						class="mr-2 flex h-8 min-w-5 items-center justify-center rounded bg-blue-700 p-1 text-white"
+						class="flex h-8 min-w-5 items-center justify-center bg-blue-700 p-1 text-white"
 					>
 						<div class="text-sm font-bold">D</div>
 					</div>
 					<div
-						class="flex h-8 items-center px-2 text-2xl font-bold uppercase tracking-wider text-black"
+						class="flex h-8 items-center px-1 text-2xl font-bold uppercase tracking-wider text-black"
 					>
 						{licensePlate}
 					</div>
