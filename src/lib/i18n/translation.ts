@@ -244,6 +244,7 @@ export type Translations = {
 
 	availabilityLookaheadExceededTitle: string;
 	availabilityLookaheadExceededDescription: string;
+	days: string;
 };
 
 const translations: Map<string, Translations> = new Map(Object.entries({ en, de }));
