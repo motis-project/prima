@@ -72,39 +72,41 @@
 {#snippet streetLeg(l: Leg)}
 	<div class="flex flex-col gap-y-4 py-8 pl-8 text-muted-foreground">
 		{#if l.mode === 'ODM'}
-			<div class="flex flex-col ml-6 w-fit gap-y-2">
-			<Button
-				onclick={() =>
-					window.open(
-						`https://www.google.com/maps/dir/?api=1&destination=${l.from.lat},${l.from.lon}&travelmode=walking`
-					)}
-				class="w-fit"
-			>
-				{t.meetingPointNavigation}
-			</Button>			
-			{#if licensePlate != undefined}
-				<div class="flex items-center">
-				<CarTaxiFront class="relative  mr-1"/>
-				<div class="flex w-fit rounded-md border-double border-4 border-double border-black bg-white">
-					<div
-						class="flex h-8 min-w-5 items-center justify-center bg-blue-700 p-1 text-white"
-					>
-						<div class="text-sm font-bold">D</div>
+			<div class="ml-6 flex w-fit flex-col gap-y-2">
+				<Button
+					onclick={() =>
+						window.open(
+							`https://www.google.com/maps/dir/?api=1&destination=${l.from.lat},${l.from.lon}&travelmode=walking`
+						)}
+					class="w-fit"
+				>
+					{t.meetingPointNavigation}
+				</Button>
+				{#if licensePlate != undefined}
+					<div class="flex items-center">
+						<CarTaxiFront class="relative  mr-1" />
+						<div
+							class="flex w-fit rounded-md border-4 border-double border-double border-black bg-white"
+						>
+							<div class="flex h-8 min-w-5 items-center justify-center bg-blue-700 p-1 text-white">
+								<div class="text-sm font-bold">D</div>
+							</div>
+							<div
+								class="flex h-8 items-center px-1 text-2xl font-bold uppercase tracking-wider text-black"
+							>
+								{licensePlate}
+							</div>
+						</div>
 					</div>
-					<div
-						class="flex h-8 items-center px-1 text-2xl font-bold uppercase tracking-wider text-black"
+				{/if}
+				{#if companyName != undefined}
+					<div class="flex items-center"><Building2 class="mr-1" />{companyName}</div>
+				{/if}
+				{#if companyPhone != undefined}
+					<a href="tel:{companyPhone}"
+						><div class="flex items-center"><Phone class="mr-1" />{companyPhone}</div></a
 					>
-						{licensePlate}
-					</div>
-				</div>
-				</div>
-			{/if}
-			{#if companyName != undefined}
-				<div class="flex items-center"><Building2 class="mr-1"/>{companyName}</div>
-			{/if}
-			{#if companyPhone != undefined}
-				<a href="tel:{companyPhone}"><div class="flex items-center"><Phone class="mr-1"/>{companyPhone}</div></a>
-			{/if}
+				{/if}
 			</div>
 		{/if}
 		<span class="ml-6">
