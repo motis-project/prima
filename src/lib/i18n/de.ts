@@ -259,7 +259,10 @@ const translations: Translations = {
 		noCancel: 'Nein, Fahrt nicht stornieren.',
 		cancelDescription:
 			'Die Stornierung der Fahrt kann nicht rückgängig gemacht werden. Eine Stornierung weniger als 24 Stunden vor der Fahrt ist mit Kosten verbunden.'
-	}
+	},
+
+	availabilityLookaheadExceededTitle: 'Suche zu weit in der Zukunft',
+	availabilityLookaheadExceededDescription: 'Maximale Vorausplanung der Taxiverfügbarkeit'
 };
 
 export default translations;

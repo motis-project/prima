@@ -222,6 +222,9 @@ export type Translations = {
 		cancelTrip: string;
 		noCancel: string;
 	};
+
+	availabilityLookaheadExceededTitle: string;
+	availabilityLookaheadExceededDescription: string;
 };
 
 const translations: Map<string, Translations> = new Map(Object.entries({ en, de }));

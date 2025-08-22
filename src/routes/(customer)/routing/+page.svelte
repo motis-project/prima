@@ -13,11 +13,13 @@
 	import LuggageIcon from 'lucide-svelte/icons/luggage';
 	import WheelchairIcon from 'lucide-svelte/icons/accessibility';
 	import PersonIcon from 'lucide-svelte/icons/user';
+	import AlertCircleIcon from 'lucide-svelte/icons/circle-alert';
 
 	import Separator from '$lib/shadcn/separator/separator.svelte';
 	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import { Input } from '$lib/shadcn/input';
 	import { Label } from '$lib/shadcn/label';
+	import { Alert, AlertDescription, AlertTitle } from '$lib/shadcn/alert';
 
 	import { plan, trip, type Leg, type Match, type PlanData, type PlanResponse } from '$lib/openapi';
 
@@ -507,6 +509,16 @@
 					</Dialog.Content>
 				</Dialog.Root>
 			</div>
+			{#if }
+			<div>
+				
+				<Alert variant="destructive" class="w-full gap-4">
+					<AlertCircleIcon class="" />
+					<AlertTitle class="ml-2">AlertTitle</AlertTitle>
+					<AlertDescription class="ml-2">AlertDescription</AlertDescription>
+				</Alert>
+			</div>
+			{/if}
 			<div class="flex grow flex-col gap-4">
 				<ItineraryList
 					{baseQuery}

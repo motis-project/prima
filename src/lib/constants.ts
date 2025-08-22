@@ -1,4 +1,4 @@
-import { HOUR, MINUTE } from '$lib/util/time';
+import { DAY, HOUR, MINUTE } from '$lib/util/time';
 
 export const TZ = 'Europe/Berlin';
 export const LOCALE = 'de-DE';
@@ -16,6 +16,7 @@ export const PASSENGER_TIME_COST_FACTOR = 0;
 export const BUFFER_TIME = 0;
 export const EARLIEST_SHIFT_START = 4 * HOUR;
 export const LATEST_SHIFT_END = 23 * HOUR;
+export const AVAILABILITY_LOOKAHEAD = 14 * DAY;
 export const CAP = 4000;
 export const OVER_CAP_FACTOR = 0.25;
 export const MONTHS = [
