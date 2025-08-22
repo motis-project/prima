@@ -255,7 +255,8 @@ const translations: Translations = {
 	},
 
 	availabilityLookaheadExceededTitle: 'Search too far into the future',
-	availabilityLookaheadExceededDescription: 'Maximum advance planning of taxi availability'
+	availabilityLookaheadExceededDescription: 'Maximum advance planning of taxi availability',
+	days: 'days'
 };
 
 export default translations;

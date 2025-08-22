@@ -46,8 +46,10 @@
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { LocateFixed, MapIcon } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
-	import { MAX_MATCHING_DISTANCE } from '$lib/constants';
+	import { AVAILABILITY_LOOKAHEAD, MAX_MATCHING_DISTANCE } from '$lib/constants';
+	import { DAY } from '$lib/util/time';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
+	import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -509,16 +511,18 @@
 					</Dialog.Content>
 				</Dialog.Root>
 			</div>
-			{#if }
-			<div>
-				
-				<Alert variant="destructive" class="w-full gap-4">
-					<AlertCircleIcon class="" />
-					<AlertTitle class="ml-2">AlertTitle</AlertTitle>
-					<AlertDescription class="ml-2">AlertDescription</AlertDescription>
-				</Alert>
+			<div class="flex w-full">
+				{#if time.valueOf() > getAlterableTimeframe().endTime}
+					<Alert variant="destructive">
+						<AlertCircleIcon />
+						<AlertTitle class="ml-2">{t.availabilityLookaheadExceededTitle}</AlertTitle>
+						<AlertDescription class="ml-2"
+							>{t.availabilityLookaheadExceededDescription}: {AVAILABILITY_LOOKAHEAD / DAY}
+							{t.days}</AlertDescription
+						>
+					</Alert>
+				{/if}
 			</div>
-			{/if}
 			<div class="flex grow flex-col gap-4">
 				<ItineraryList
 					{baseQuery}

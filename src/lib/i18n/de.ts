@@ -262,7 +262,8 @@ const translations: Translations = {
 	},
 
 	availabilityLookaheadExceededTitle: 'Suche zu weit in der Zukunft',
-	availabilityLookaheadExceededDescription: 'Maximale Vorausplanung der Taxiverfügbarkeit'
+	availabilityLookaheadExceededDescription: 'Maximale Vorausplanung der Taxiverfügbarkeit',
+	days: 'Tage'
 };
 
 export default translations;
