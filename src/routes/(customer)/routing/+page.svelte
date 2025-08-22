@@ -12,11 +12,16 @@
 	import LuggageIcon from 'lucide-svelte/icons/luggage';
 	import WheelchairIcon from 'lucide-svelte/icons/accessibility';
 	import PersonIcon from 'lucide-svelte/icons/user';
+	import AlertCircleIcon from 'lucide-svelte/icons/circle-alert';
+
 	import Separator from '$lib/shadcn/separator/separator.svelte';
 	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import { Input } from '$lib/shadcn/input';
 	import { Label } from '$lib/shadcn/label';
+	import { Alert, AlertDescription, AlertTitle } from '$lib/shadcn/alert';
+
 	import { trip, type Leg, type Match, type PlanData } from '$lib/openapi';
+
 	import { t } from '$lib/i18n/translation';
 	import { lngLatToStr } from '$lib/util/lngLatToStr';
 	import Meta from '$lib/ui/Meta.svelte';
@@ -38,11 +43,13 @@
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { HelpCircleIcon, LocateFixed, MapIcon } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
-	import { MAX_MATCHING_DISTANCE } from '$lib/constants';
+	import { AVAILABILITY_LOOKAHEAD, MAX_MATCHING_DISTANCE } from '$lib/constants';
+	import { DAY } from '$lib/util/time';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { planAndSign, type SignedPlanResponse } from '$lib/planAndSign';
 
 	import logo from '$lib/assets/logo-alpha.png';
+	import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -489,6 +496,18 @@
 						</RadioGroup.Root>
 					</Dialog.Content>
 				</Dialog.Root>
+			</div>
+			<div class="flex w-full">
+				{#if time.valueOf() > getAlterableTimeframe().endTime}
+					<Alert variant="destructive">
+						<AlertCircleIcon />
+						<AlertTitle class="ml-2">{t.availabilityLookaheadExceededTitle}</AlertTitle>
+						<AlertDescription class="ml-2"
+							>{t.availabilityLookaheadExceededDescription}: {AVAILABILITY_LOOKAHEAD / DAY}
+							{t.days}</AlertDescription
+						>
+					</Alert>
+				{/if}
 			</div>
 			<div class="flex grow flex-col gap-4">
 				<ItineraryList
