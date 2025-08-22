@@ -278,7 +278,10 @@ const translations: Translations = {
 		alt1: 'Ein blauer Kreis, der rechts nicht ganz gefüllt ist. Der nicht gefüllte Teil ist schraffiert.',
 		alt2: 'Ein blauer und ein gelber Kreis, die sich überlappen. Die Überlappung ist blau und gelb schraffiert.',
 		alt3: 'Ein blauer Kreis dessen rechter Teil gelb schraffiert ist.'
-	}
+	},
+
+	availabilityLookaheadExceededTitle: 'Suche zu weit in der Zukunft',
+	availabilityLookaheadExceededDescription: 'Maximale Vorausplanung der Taxiverfügbarkeit'
 };
 
 export default translations;

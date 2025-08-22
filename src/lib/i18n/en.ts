@@ -271,7 +271,10 @@ const translations: Translations = {
 		alt1: 'A blue circle that is not completely filled on the right. The unfilled part is hatched.',
 		alt2: 'A blue and a yellow circle that overlap. The overlap is hatched blue and yellow.',
 		alt3: 'A blue circle whose right-hand part is hatched yellow.'
-	}
+	},
+
+	availabilityLookaheadExceededTitle: 'Search too far into the future',
+	availabilityLookaheadExceededDescription: 'Maximum advance planning of taxi availability'
 };
 
 export default translations;
