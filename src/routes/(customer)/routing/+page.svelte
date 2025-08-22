@@ -20,7 +20,7 @@
 	import { Label } from '$lib/shadcn/label';
 	import { Alert, AlertDescription, AlertTitle } from '$lib/shadcn/alert';
 
-	import { plan, trip, type Leg, type Match, type PlanData, type PlanResponse } from '$lib/openapi';
+	import { trip, type Leg, type Match, type PlanData } from '$lib/openapi';
 
 	import { t } from '$lib/i18n/translation';
 	import { lngLatToStr } from '$lib/util/lngLatToStr';
