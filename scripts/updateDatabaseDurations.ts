@@ -14,7 +14,7 @@ async function updateDatabaseDurations() {
 			'tour.id as tourId',
 			'company.lat',
 			'company.lng',
-            'company.id as companyId',
+			'company.id as companyId',
 			'vehicle.id as vehicleId',
 			jsonArrayFrom(
 				eb
@@ -34,7 +34,7 @@ async function updateDatabaseDurations() {
 					.where('event.cancelled', '=', false)
 			).as('eventGroups')
 		])
-        .orderBy('tour.arrival asc')
+		.orderBy('tour.arrival asc')
 		.execute();
 	for (const tour of tours) {
 		for (let i = 1; i != tour.eventGroups.length; ++i) {
@@ -77,8 +77,11 @@ async function updateDatabaseDurations() {
 					.executeTakeFirst();
 			}
 		} else {
-            console.log("Company's latitude or longitude was null! For company with id: ", tour.companyId);
-        }
+			console.log(
+				"Company's latitude or longitude was null! For company with id: ",
+				tour.companyId
+			);
+		}
 	}
 	const toursByVehicle = groupBy(
 		tours,
