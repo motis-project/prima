@@ -40,7 +40,8 @@
 		"repeatrh": "npm run reset && npm run restore && npm run cancelr && npm run health",
 		"repeatth": "npm run reset && npm run restore && npm run cancelt && npm run health",
 		"repeatmh": "npm run reset && npm run restore && npm run move && npm run health",
-		"flc": "npm run format && npm run lint && npm run check"
+		"flc": "npm run format && npm run lint && npm run check",
+		"updateDurations": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/updateDatabaseDurations.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",
