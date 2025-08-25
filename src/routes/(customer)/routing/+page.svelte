@@ -151,7 +151,7 @@
 						time: time,
 						arriveBy: timeType === 'arrival'
 					},
-					{},
+					{ showMap: page.state.showMap },
 					true
 				);
 			}, 400);
@@ -216,6 +216,7 @@
 			placeholder={t.from}
 			bind:selected={from}
 			items={fromItems}
+			open={true}
 			onValueChange={() => pushState('', {})}
 		/>
 	{:else if page.state.selectTo}
@@ -223,6 +224,7 @@
 			placeholder={t.to}
 			bind:selected={to}
 			items={toItems}
+			open={true}
 			onValueChange={() => pushState('', {})}
 		/>
 	{:else if page.state.showMap}

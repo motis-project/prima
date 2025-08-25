@@ -47,13 +47,15 @@
 		selected = $bindable(),
 		onValueChange,
 		placeholder,
-		name
+		name,
+		open = $bindable(false)
 	}: {
 		items?: Array<Location>;
 		selected?: Location;
 		onValueChange?: (m: Location) => void;
 		placeholder?: string;
 		name?: string;
+		open?: boolean;
 	} = $props();
 
 	let inputValue = $state('');
@@ -83,18 +85,20 @@
 	const updateGuesses = async () => {
 		const coordinateWithLevel = inputValue.match(COORD_LVL_REGEX);
 		if (coordinateWithLevel) {
-			selected = posToLocation(
-				[Number(coordinateWithLevel[3]), Number(coordinateWithLevel[1])],
-				Number(coordinateWithLevel[5])
-			);
-			items = [];
+			items = [
+				posToLocation(
+					[Number(coordinateWithLevel[3]), Number(coordinateWithLevel[1])],
+					Number(coordinateWithLevel[5])
+				)
+			];
+			value = '';
 			return;
 		}
 
 		const coordinate = inputValue.match(COORD_REGEX);
 		if (coordinate) {
-			selected = posToLocation([Number(coordinate[3]), Number(coordinate[1])], 0);
-			items = [];
+			items = [posToLocation([Number(coordinate[3]), Number(coordinate[1])], 0)];
+			value = '';
 			return;
 		}
 
@@ -161,6 +165,7 @@
 	type="single"
 	allowDeselect={false}
 	{value}
+	{open}
 	onValueChange={(e: string) => {
 		if (e) {
 			selected = deserialize(e);
