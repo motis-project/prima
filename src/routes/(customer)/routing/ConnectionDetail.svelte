@@ -1,5 +1,8 @@
 <script lang="ts">
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import Building2 from 'lucide-svelte/icons/building-2';
+	import Phone from 'lucide-svelte/icons/phone';
+	import CarTaxiFront from 'lucide-svelte/icons/car-taxi-front';
 	import type { Itinerary, Leg } from '$lib/openapi';
 	import { Button } from '$lib/shadcn/button';
 	import { t } from '$lib/i18n/translation';
@@ -13,12 +16,16 @@
 		itinerary,
 		onClickStop,
 		onClickTrip,
-		licensePlate
+		licensePlate,
+		companyName,
+		companyPhone
 	}: {
 		itinerary: Itinerary;
 		onClickStop: (name: string, stopId: string, time: Date) => void;
 		onClickTrip: (tripId: string) => void;
 		licensePlate?: string;
+		companyName?: string;
+		companyPhone?: string;
 	} = $props();
 
 	const lastLeg = $derived(itinerary.legs.findLast((l) => l.duration !== 0));
@@ -65,29 +72,42 @@
 {#snippet streetLeg(l: Leg)}
 	<div class="flex flex-col gap-y-4 py-8 pl-8 text-muted-foreground">
 		{#if l.mode === 'ODM'}
-			<Button
-				onclick={() =>
-					window.open(
-						`https://www.google.com/maps/dir/?api=1&destination=${l.from.lat},${l.from.lon}&travelmode=walking`
-					)}
-				class="ml-6 w-fit"
-			>
-				{t.meetingPointNavigation}
-			</Button>
-			{#if licensePlate != undefined}
-				<div class="ml-6 flex w-fit rounded-md border-2 border-black bg-white p-1 shadow">
-					<div
-						class="mr-2 flex h-8 min-w-5 items-center justify-center rounded bg-blue-700 p-1 text-white"
-					>
-						<div class="text-sm font-bold">D</div>
+			<div class="ml-6 flex w-fit flex-col gap-y-2">
+				<Button
+					onclick={() =>
+						window.open(
+							`https://www.google.com/maps/dir/?api=1&destination=${l.from.lat},${l.from.lon}&travelmode=walking`
+						)}
+					class="w-fit"
+				>
+					{t.meetingPointNavigation}
+				</Button>
+				{#if licensePlate != undefined}
+					<div class="flex items-center">
+						<CarTaxiFront class="relative  mr-1" />
+						<div
+							class="flex w-fit rounded-md border-4 border-double border-double border-black bg-white"
+						>
+							<div class="flex h-8 min-w-5 items-center justify-center bg-blue-700 p-1 text-white">
+								<div class="text-sm font-bold">D</div>
+							</div>
+							<div
+								class="flex h-8 items-center px-1 text-2xl font-bold uppercase tracking-wider text-black"
+							>
+								{licensePlate}
+							</div>
+						</div>
 					</div>
-					<div
-						class="flex h-8 items-center px-2 text-2xl font-bold uppercase tracking-wider text-black"
+				{/if}
+				{#if companyName != undefined}
+					<div class="flex items-center"><Building2 class="mr-1" />{companyName}</div>
+				{/if}
+				{#if companyPhone != undefined}
+					<a href="tel:{companyPhone}"
+						><div class="flex items-center"><Phone class="mr-1" />{companyPhone}</div></a
 					>
-						{licensePlate}
-					</div>
-				</div>
-			{/if}
+				{/if}
+			</div>
 		{/if}
 		<span class="ml-6">
 			{formatDurationSec(l.duration)}

@@ -4,6 +4,7 @@ import type { PageServerLoad } from './$types.js';
 import { covers } from '$lib/server/db/covers.js';
 import { msg } from '$lib/msg.js';
 import { readFloat, readInt } from '$lib/server/util/readForm.js';
+import { verifyPhone } from '$lib/server/verifyPhone';
 
 export const load: PageServerLoad = async (event) => {
 	const companyId = event.locals.session!.companyId!;
@@ -26,6 +27,7 @@ export const actions = {
 		const zone = readInt(data.get('zone'));
 		const lat = readFloat(data.get('lat'));
 		const lng = readFloat(data.get('lng'));
+		const phone = verifyPhone(data.get('phone'));
 
 		if (typeof name !== 'string' || name.length < 2) {
 			return fail(400, { msg: msg('nameTooShort') });
@@ -42,10 +44,13 @@ export const actions = {
 		if (isNaN(lng) || isNaN(lat) || !(await contains(zone, { lng, lat }))) {
 			return fail(400, { msg: msg('addressNotInZone') });
 		}
+		if (phone != null && typeof phone !== 'string') {
+			return phone;
+		}
 
 		await db
 			.updateTable('company')
-			.set({ name, zone, address, lat, lng })
+			.set({ name, zone, address, lat, lng, phone })
 			.where('id', '=', companyId)
 			.execute();
 
