@@ -9,6 +9,7 @@ on:
     branches: [ "master", "deploy" ]
   pull_request:
     branches: [ "master", "deploy" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,7 +17,7 @@ jobs:
     permissions: write-all
     env:
       DATABASE_URL: postgresql://postgres:pw@localhost:6500/prima
-      PUBLIC_MOTIS_URL: https://prima-motis.motis-project.de
+      PUBLIC_MOTIS_URL: https://prima-motis-staging.motis-project.de
     steps:
       - name: Checkout
         uses: actions/checkout@v4
