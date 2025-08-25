@@ -1142,7 +1142,7 @@ const keepsPromises = (
 	const dropoffWindow = expandToFullMinutes(
 		insertionCase.direction == InsertDirection.BUS_STOP_DROPOFF
 			? arrivalWindow
-			: w.shift(MAX_PASSENGER_WAITING_TIME_PICKUP)
+			: w.shift(MAX_PASSENGER_WAITING_TIME_DROPOFF)
 	);
 
 	let checkPickup = false;
