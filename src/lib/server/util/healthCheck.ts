@@ -4,7 +4,11 @@ import { groupBy } from '../../util/groupBy';
 import { Interval } from '../../util/interval';
 import { HOUR } from '../../util/time';
 import { isSamePlace } from '../booking/isSamePlace';
-import { PASSENGER_CHANGE_DURATION, SCHEDULED_TIME_BUFFER } from '$lib/constants';
+import {
+	MAX_PASSENGER_WAITING_TIME_DROPOFF,
+	MAX_PASSENGER_WAITING_TIME_PICKUP,
+	PASSENGER_CHANGE_DURATION
+} from '$lib/constants';
 import { sortEventsByTime } from '$lib/testHelpers';
 import { reverseGeo } from '$lib/server/util/reverseGeocode';
 
@@ -262,7 +266,10 @@ function validateScheduledIntervalSize(tours: ToursWithRequests): boolean {
 	let fail = false;
 	console.log('Validating scheduled time intervals are not growing...');
 	for (const event of tours.flatMap((t) => t.requests.flatMap((r) => r.events))) {
-		if (event.scheduledTimeEnd - event.scheduledTimeStart > SCHEDULED_TIME_BUFFER) {
+		if (
+			event.scheduledTimeEnd - event.scheduledTimeStart >
+			(event.isPickup ? MAX_PASSENGER_WAITING_TIME_PICKUP : MAX_PASSENGER_WAITING_TIME_DROPOFF)
+		) {
 			console.log('Found an event where the scheduled time interval grew, eventId: ', event.id);
 			fail = true;
 		}

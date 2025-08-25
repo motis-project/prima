@@ -3,6 +3,7 @@ import { addCompany, addTaxi, getTours, setAvailability, Zone } from '$lib/testH
 import { describe, it, expect } from 'vitest';
 import type { ExpectedConnection } from '$lib/server/booking/bookRide';
 import { bookingApi } from '$lib/server/booking/bookingApi';
+import { InsertHow } from '$lib/util/booking/insertionTypes';
 
 const inNiesky1 = { lat: 51.29468377345111, lng: 14.833542206420248 };
 const inNiesky2 = { lat: 51.29544187321241, lng: 14.820560314788537 };
@@ -48,19 +49,17 @@ describe('Concatenation tests', () => {
 		const tours = await getTours();
 		expect(tours.length).toBe(1);
 		expect(tours[0].requests.length).toBe(1);
-
-		// Add an other request, which should be appended to the existing tour.
-		// The new requests start will be the last requests destination and as such some of the events will share the same eventgroup
 		const body2 = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: [],
 			directTimes: [inXMinutes(70)],
-			startFixed: true,
+			startFixed: false,
 			capacities
 		});
 		const whiteResponse2 = await white(body2).then((r) => r.json());
+		expect(whiteResponse2.direct[0].pickupCase.how).not.toBe(InsertHow.NEW_TOUR);
 		const appendConnection: ExpectedConnection = {
 			start: { ...inNiesky1, address: 'inNiesky1' },
 			target: { ...inNiesky2, address: 'inNiesky2' },
@@ -80,8 +79,6 @@ describe('Concatenation tests', () => {
 		expect(tours2.length).toBe(1);
 		expect(tours2[0].requests.length).toBe(2);
 
-		// Add an other request, which should be appended to the existing tour.
-		// The new requests' start will be the last requests' destination and as such some of the events will share the same eventgroup
 		const body3 = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,

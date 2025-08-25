@@ -50,14 +50,12 @@ describe('Concatenation tests', () => {
 		expect(tours.length).toBe(1);
 		expect(tours[0].requests.length).toBe(1);
 
-		// Add an other request, which should be appended to the existing tour.
-		// The new requests start will be the last requests destination and as such some of the events will share the same eventgroup
 		const body2 = JSON.stringify({
 			start: inNiesky2,
 			target: inNiesky1,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(60)],
+			directTimes: [inXMinutes(68)],
 			startFixed: true,
 			capacities
 		});
@@ -69,7 +67,7 @@ describe('Concatenation tests', () => {
 			targetTime: whiteResponse2.direct[0].dropoffTime,
 			signature: '',
 			startFixed: true,
-			requestedTime: inXMinutes(60)
+			requestedTime: inXMinutes(68)
 		};
 		const bookingBodyAppend = {
 			connection1: appendConnection,
@@ -81,8 +79,6 @@ describe('Concatenation tests', () => {
 		expect(tours2.length).toBe(1);
 		expect(tours2[0].requests.length).toBe(2);
 
-		// Add an other request, which should be appended to the existing tour.
-		// The new requests' start will be the last requests' destination and as such some of the events will share the same eventgroup
 		const body3 = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,

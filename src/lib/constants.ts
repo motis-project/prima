@@ -4,7 +4,7 @@ export const TZ = 'Europe/Berlin';
 export const LOCALE = 'de-DE';
 export const MIN_PREP = HOUR;
 export const MAX_TRAVEL = HOUR;
-export const MAX_PASSENGER_WAITING_TIME_PICKUP = 10 * MINUTE;
+export const MAX_PASSENGER_WAITING_TIME_PICKUP = 3 * MINUTE;
 export const MAX_PASSENGER_WAITING_TIME_DROPOFF = 10 * MINUTE;
 export const WGS84 = 4326;
 export const MAX_MATCHING_DISTANCE = 250;
@@ -33,7 +33,6 @@ export const MONTHS = [
 	'Dezember'
 ];
 export const QUARTERS = ['Quartal 1', 'Quartal 2', 'Quartal 3', 'Quartal 4'];
-export const SCHEDULED_TIME_BUFFER = 10 * MINUTE;
 export const DIRECT_FREQUENCY = 5 * MINUTE;
 export const MOTIS_SHIFT = 5 * MINUTE;
 export const DIRECT_RIDE_TIME_DIFFERENCE = HOUR;
