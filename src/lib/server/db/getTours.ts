@@ -42,8 +42,8 @@ export const getTours = async (
 						eb
 							.case()
 							.when('event.isPickup', '=', true)
-							.then(eb.ref('scheduledTimeStart'))
-							.else(eb.ref('scheduledTimeEnd'))
+							.then(eb.ref('scheduledTimeEnd'))
+							.else(eb.ref('scheduledTimeStart'))
 							.end()
 							.as('scheduledTime'),
 						'tour.id as tour',
