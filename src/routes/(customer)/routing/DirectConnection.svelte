@@ -14,8 +14,6 @@
 	const modeStyles = [
 		...new Map(d.legs.map((l) => [JSON.stringify(getModeStyle(l)), getModeStyle(l)])).values()
 	];
-
-	const leg = d.legs.find((leg) => leg.mode !== 'WALK') ?? d.legs[0]!;
 </script>
 
 <Button variant="default" {...restProps}>
