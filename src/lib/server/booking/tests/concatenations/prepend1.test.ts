@@ -38,7 +38,8 @@ describe('Concatenation tests', () => {
 			startTime: whiteResponse.direct[0].pickupTime,
 			targetTime: whiteResponse.direct[0].dropoffTime,
 			signature: '',
-			startFixed: false
+			startFixed: false,
+			requestedTime: inXMinutes(70)
 		};
 		const bookingBody = {
 			connection1,
@@ -67,7 +68,8 @@ describe('Concatenation tests', () => {
 			startTime: whiteResponse2.direct[0].pickupTime,
 			targetTime: whiteResponse2.direct[0].dropoffTime,
 			signature: '',
-			startFixed: false
+			startFixed: false,
+			requestedTime: inXMinutes(60)
 		};
 		const bookingBodyAppend = {
 			connection1: appendConnection,

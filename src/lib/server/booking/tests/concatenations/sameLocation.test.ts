@@ -36,7 +36,8 @@ describe('Concatenation tests', () => {
 			startTime: whiteResponse.direct[0].pickupTime,
 			targetTime: whiteResponse.direct[0].dropoffTime,
 			signature: '',
-			startFixed: false
+			startFixed: false,
+			requestedTime: inXMinutes(70)
 		};
 		const bookingBody = {
 			connection1,
@@ -49,14 +50,12 @@ describe('Concatenation tests', () => {
 		expect(tours.length).toBe(1);
 		expect(tours[0].requests.length).toBe(1);
 
-		// Add an other request, which should be appended to the existing tour.
-		// The new requests start will be the last requests destination and as such some of the events will share the same eventgroup
 		const body2 = JSON.stringify({
 			start: inNiesky2,
 			target: inNiesky1,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(60)],
+			directTimes: [inXMinutes(68)],
 			startFixed: true,
 			capacities
 		});
@@ -67,7 +66,8 @@ describe('Concatenation tests', () => {
 			startTime: whiteResponse2.direct[0].pickupTime,
 			targetTime: whiteResponse2.direct[0].dropoffTime,
 			signature: '',
-			startFixed: true
+			startFixed: true,
+			requestedTime: inXMinutes(68)
 		};
 		const bookingBodyAppend = {
 			connection1: appendConnection,
@@ -79,14 +79,12 @@ describe('Concatenation tests', () => {
 		expect(tours2.length).toBe(1);
 		expect(tours2[0].requests.length).toBe(2);
 
-		// Add an other request, which should be appended to the existing tour.
-		// The new requests' start will be the last requests' destination and as such some of the events will share the same eventgroup
 		const body3 = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(95)],
+			directTimes: [inXMinutes(90)],
 			startFixed: false,
 			capacities
 		});
@@ -97,7 +95,8 @@ describe('Concatenation tests', () => {
 			startTime: whiteResponse3.direct[0]!.pickupTime,
 			targetTime: whiteResponse3.direct[0]!.dropoffTime,
 			signature: '',
-			startFixed: false
+			startFixed: false,
+			requestedTime: inXMinutes(80)
 		};
 		const bookingBodyAppend2 = {
 			connection1: appendConnection2,

@@ -121,6 +121,8 @@
 				goto(`/routing?stopId=${stopId}&time=${time.toISOString()}`)}
 			onClickTrip={(tripId: string) => goto(`/routing?tripId=${tripId}`)}
 			licensePlate={data.licensePlate ?? ''}
+			companyName={data.name ?? ''}
+			companyPhone={data.phone ?? ''}
 		/>
 	{/if}
 </div>

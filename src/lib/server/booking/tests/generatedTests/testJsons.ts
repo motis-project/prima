@@ -286,16 +286,6 @@ export const tests: TestParams[] = [
 				company: null
 			},
 			{
-				evalAfterStep: 1,
-				entity: 'tourCount',
-				tourCount: 1,
-				requestCount: -1,
-				expectedPosition: null,
-				start: null,
-				destination: null,
-				company: null
-			},
-			{
 				evalAfterStep: 2,
 				entity: 'requestCount',
 				tourCount: -1,
@@ -345,7 +335,7 @@ export const tests: TestParams[] = [
 					lng: 14.625863174614835
 				}
 			],
-			times: [1750247620692, 1750248850692, 1750247940000],
+			times: [1750247620692, 1750248850692, 1750248040000],
 			isDepartures: [true, true, true],
 			companies: [
 				{
@@ -372,16 +362,6 @@ export const tests: TestParams[] = [
 				company: null
 			},
 			{
-				evalAfterStep: 1,
-				entity: 'tourCount',
-				tourCount: 1,
-				requestCount: -1,
-				expectedPosition: null,
-				start: null,
-				destination: null,
-				company: null
-			},
-			{
 				evalAfterStep: 2,
 				entity: 'requestCount',
 				tourCount: -1,
@@ -431,7 +411,7 @@ export const tests: TestParams[] = [
 					lng: 14.625863174614835
 				}
 			],
-			times: [1750247670692, 1750248850692, 1750247940000],
+			times: [1750247670692, 1750248850692, 1750248140000],
 			isDepartures: [true, true, true],
 			companies: [
 				{

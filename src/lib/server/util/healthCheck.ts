@@ -4,8 +4,13 @@ import { groupBy } from '../../util/groupBy';
 import { Interval } from '../../util/interval';
 import { HOUR } from '../../util/time';
 import { isSamePlace } from '../booking/isSamePlace';
-import { PASSENGER_CHANGE_DURATION, SCHEDULED_TIME_BUFFER } from '$lib/constants';
+import {
+	MAX_PASSENGER_WAITING_TIME_DROPOFF,
+	MAX_PASSENGER_WAITING_TIME_PICKUP,
+	PASSENGER_CHANGE_DURATION
+} from '$lib/constants';
 import { sortEventsByTime } from '$lib/testHelpers';
+import { reverseGeo } from '$lib/server/util/reverseGeocode';
 
 function validateRequestHas2Events(tours: ToursWithRequests): boolean {
 	let fail = false;
@@ -50,7 +55,7 @@ function validateRequestHas2Events(tours: ToursWithRequests): boolean {
 	return fail;
 }
 
-function validateRequestsWithNoEvents(tours: ToursWithRequests): boolean {
+function validateToursWithNoEvents(tours: ToursWithRequests): boolean {
 	let fail = false;
 	console.log('Validating tours with no events...');
 	for (const request of tours.flatMap((t) => t.requests)) {
@@ -159,7 +164,14 @@ function validateEventTimeNoOverlap(tours: ToursWithRequests): boolean {
 				const event1 = events[i];
 				const event2 = events[j];
 
-				if (overlaps(event1, event2)) {
+				if (
+					overlaps(event1, event2) &&
+					!(
+						isSamePlace(event1, event2) &&
+						event1.scheduledTimeEnd === event2.scheduledTimeEnd &&
+						event1.scheduledTimeStart === event2.scheduledTimeStart
+					)
+				) {
 					console.log(
 						`Overlap detected between eventId ${event1.id} and eventId ${event2.id}, ${new Interval(event1.scheduledTimeStart, event1.scheduledTimeEnd).toString()} and ${new Interval(event2.scheduledTimeStart, event2.scheduledTimeEnd).toString()}`
 					);
@@ -254,7 +266,10 @@ function validateScheduledIntervalSize(tours: ToursWithRequests): boolean {
 	let fail = false;
 	console.log('Validating scheduled time intervals are not growing...');
 	for (const event of tours.flatMap((t) => t.requests.flatMap((r) => r.events))) {
-		if (event.scheduledTimeEnd - event.scheduledTimeStart > SCHEDULED_TIME_BUFFER) {
+		if (
+			event.scheduledTimeEnd - event.scheduledTimeStart >
+			(event.isPickup ? MAX_PASSENGER_WAITING_TIME_PICKUP : MAX_PASSENGER_WAITING_TIME_DROPOFF)
+		) {
 			console.log('Found an event where the scheduled time interval grew, eventId: ', event.id);
 			fail = true;
 		}
@@ -357,6 +372,9 @@ async function validateLegDurations(tours: ToursWithRequests): Promise<boolean> 
 		for (let i = 0; i < events.length - 1; i++) {
 			const earlierEvent = events[i];
 			const laterEvent = events[i + 1];
+			if (earlierEvent.eventGroupId === laterEvent.eventGroupId) {
+				continue;
+			}
 			if (earlierEvent.nextLegDuration !== laterEvent.prevLegDuration) {
 				console.log(
 					`Leg duration mismatch between events ${earlierEvent.id} and ${laterEvent.id}, durations: ${earlierEvent.nextLegDuration / 1000} and ${laterEvent.prevLegDuration / 1000} routing results: ${expectedDurations1[i]} and ${expectedDurations2[i]}`
@@ -393,11 +411,11 @@ async function validateLegDurations(tours: ToursWithRequests): Promise<boolean> 
 				);
 				fail = true;
 			}
-			const earlierEventStart = earlierEvent.scheduledTimeEnd;
-			const laterEventEnd = laterEvent.scheduledTimeStart;
+			const earlierEventEnd = earlierEvent.scheduledTimeEnd;
+			const laterEventStart = laterEvent.scheduledTimeStart;
 			const timeDiff = isSamePlace(earlierEvent, laterEvent)
 				? 0
-				: (laterEventEnd - earlierEventStart) / 1000;
+				: (laterEventStart - earlierEventEnd) / 1000;
 			if (
 				expectedDuration !== null &&
 				timeDiff < (isSamePlace(earlierEvent, laterEvent) ? 0 : expectedDuration + 60) &&
@@ -405,7 +423,7 @@ async function validateLegDurations(tours: ToursWithRequests): Promise<boolean> 
 				timeDiff < (isSamePlace(earlierEvent, laterEvent) ? 0 : expectedDuration2 + 60)
 			) {
 				console.log(
-					`Time difference expected duration ${expectedDuration + 60} seconds exceeds difference in event times ${timeDiff} seconds for event_id ${earlierEvent.id} and event_id ${laterEvent.id} ${new Date(earlierEvent.scheduledTimeStart).toISOString()} to ${new Date(laterEvent.scheduledTimeEnd).toISOString()}`
+					`Time difference expected duration ${expectedDuration + 60} seconds exceeds difference in event times ${timeDiff} seconds for event_id ${earlierEvent.id} and event_id ${laterEvent.id} ${new Date(earlierEvent.scheduledTimeEnd).toISOString()} to ${new Date(laterEvent.scheduledTimeStart).toISOString()}`
 				);
 				fail = true;
 			}
@@ -479,6 +497,18 @@ async function validateCompanyDurations(tours: ToursWithRequests): Promise<boole
 	return fail;
 }
 
+async function validateAddressCoordinatesMatch(tours: ToursWithRequests) {
+	let fail = false;
+	console.log('Validating that addresses match coordinates...');
+	for (const event of tours.flatMap((t) => t.requests.flatMap((r) => r.events))) {
+		if (event.address !== (await reverseGeo(event))) {
+			console.log('Address does not match for event with id: ', event.id);
+			fail = true;
+		}
+	}
+	return fail;
+}
+
 export async function healthCheck() {
 	const allTours = await getToursWithRequests(true);
 	const uncancelledTours = await getToursWithRequests(false);
@@ -486,7 +516,7 @@ export async function healthCheck() {
 	if (allTours) {
 		console.log('Validating tours...');
 		fail = validateRequestHas2Events(uncancelledTours) ? true : fail;
-		fail = validateRequestsWithNoEvents(uncancelledTours) ? true : fail;
+		fail = validateToursWithNoEvents(uncancelledTours) ? true : fail;
 		fail = validateTourAndRequestCancelled(allTours) ? true : fail;
 		fail = validateEventParameters(uncancelledTours) ? true : fail;
 		fail = validateEventTimeNoOverlap(uncancelledTours) ? true : fail;
@@ -496,6 +526,7 @@ export async function healthCheck() {
 		fail = (await validateDirectDurations(uncancelledTours)) ? true : fail;
 		fail = (await validateLegDurations(uncancelledTours)) ? true : fail;
 		fail = (await validateCompanyDurations(uncancelledTours)) ? true : fail;
+		fail = (await validateAddressCoordinatesMatch(allTours)) ? true : fail;
 	} else {
 		console.log('No tours found or there was an error fetching the data.');
 	}

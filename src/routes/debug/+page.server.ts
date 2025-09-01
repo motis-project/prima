@@ -66,7 +66,8 @@ export const actions = {
 			startTime: result.pickupTime,
 			targetTime: result.dropoffTime,
 			signature: '',
-			startFixed: false
+			startFixed: false,
+			requestedTime: result.dropoffTime
 		};
 
 		const bookingResponse = await bookingApi(

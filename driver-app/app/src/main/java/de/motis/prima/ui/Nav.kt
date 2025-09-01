@@ -1,4 +1,4 @@
-package de.motis.prima
+package de.motis.prima.ui
 
 import android.content.Intent
 import android.util.Log

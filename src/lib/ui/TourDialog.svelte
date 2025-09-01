@@ -45,6 +45,11 @@
 	};
 
 	let tourIndex = $state(0);
+	$effect(() => {
+		if (tours && tourIndex >= tours.length) {
+			tourIndex = 0;
+		}
+	});
 	let tour = $derived(tours && tours[tourIndex]);
 	let events = $derived(
 		tour?.requests
@@ -122,16 +127,18 @@
 				<div>
 					{#if tours && tours.length > 1}
 						{#each tours as tour, i}
-							{@const tourInfo = getTourInfoShort(tour)}
-							<Button
-								onclick={() => {
-									tourIndex = i;
-								}}
-								variant={tourIndex === i ? 'default' : 'outline'}
-								class="mx-2"
-							>
-								{tourInfo.from} - {tourInfo.to}
-							</Button>
+							{#if tour != undefined}
+								{@const tourInfo = getTourInfoShort(tour)}
+								<Button
+									onclick={() => {
+										tourIndex = i;
+									}}
+									variant={tourIndex === i ? 'default' : 'outline'}
+									class="mx-2"
+								>
+									{tourInfo.from} - {tourInfo.to}
+								</Button>
+							{/if}
 						{/each}
 					{/if}
 				</div>

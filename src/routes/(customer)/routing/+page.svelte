@@ -4,7 +4,6 @@
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount, tick } from 'svelte';
-
 	import ArrowUpDown from 'lucide-svelte/icons/arrow-up-down';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
@@ -13,21 +12,16 @@
 	import LuggageIcon from 'lucide-svelte/icons/luggage';
 	import WheelchairIcon from 'lucide-svelte/icons/accessibility';
 	import PersonIcon from 'lucide-svelte/icons/user';
-
 	import Separator from '$lib/shadcn/separator/separator.svelte';
 	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import { Input } from '$lib/shadcn/input';
 	import { Label } from '$lib/shadcn/label';
-
 	import { trip, type Leg, type Match, type PlanData } from '$lib/openapi';
-
 	import { t } from '$lib/i18n/translation';
 	import { lngLatToStr } from '$lib/util/lngLatToStr';
-
 	import Meta from '$lib/ui/Meta.svelte';
 	import AddressTypeahead from '$lib/ui/AddressTypeahead.svelte';
 	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
-
 	import ItineraryList from './ItineraryList.svelte';
 	import ConnectionDetail from './ConnectionDetail.svelte';
 	import StopTimes from './StopTimes.svelte';
@@ -79,8 +73,8 @@
 	let freeKids = $derived(kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix);
 	let wheelchair = $state(false);
 	let luggage = $state<LuggageType>('none');
-	let time = $state<Date>(new Date());
-	let timeType = $state<TimeType>('departure');
+	let time = $state<Date>(new Date(urlParams?.get('time') || Date.now()));
+	let timeType = $state<TimeType>(urlParams?.get('arriveBy') == 'true' ? 'arrival' : 'departure');
 	let fromParam: Match | undefined = undefined;
 	let toParam: Match | undefined = undefined;
 	if (browser && urlParams && urlParams.has('from') && urlParams.has('to')) {
@@ -88,7 +82,7 @@
 		toParam = JSON.parse(urlParams.get('to') ?? '') ?? {};
 	}
 	let fromMatch = { match: fromParam };
-	let toMatch = { match: fromParam };
+	let toMatch = { match: toParam };
 	let from = $state<Location>({
 		label: fromParam ? fromParam['name'] : '',
 		value: fromParam ? fromMatch : {}
@@ -117,6 +111,19 @@
 			return `${lngLatToStr(l.value.match!)},0`;
 		}
 	};
+
+	const pushStateWithQueryString = (
+		// eslint-disable-next-line
+		queryParams: Record<string, any>,
+		// eslint-disable-next-line
+		newState: App.PageState,
+		replace: boolean = false
+	) => {
+		const params = new URLSearchParams(queryParams);
+		const updateState = replace ? replaceState : pushState;
+		updateState('?' + params.toString(), newState);
+	};
+
 	let baseQuery = $derived(
 		from.value.match && to.value.match
 			? ({
@@ -149,6 +156,16 @@
 				const base = planAndSign(baseQuery).then(updateStartDest(from, to));
 				baseResponse = base;
 				routingResponses = [base];
+				pushStateWithQueryString(
+					{
+						from: JSON.stringify(from?.value?.match),
+						to: JSON.stringify(to?.value?.match),
+						time: time,
+						arriveBy: timeType === 'arrival'
+					},
+					{ showMap: page.state.showMap },
+					true
+				);
 			}, 400);
 		}
 	});
@@ -216,6 +233,7 @@
 			placeholder={t.from}
 			bind:selected={from}
 			items={fromItems}
+			open={true}
 			onValueChange={() => pushState('', {})}
 		/>
 	{:else if page.state.selectTo}
@@ -223,6 +241,7 @@
 			placeholder={t.to}
 			bind:selected={to}
 			items={toItems}
+			open={true}
 			onValueChange={() => pushState('', {})}
 		/>
 	{:else if page.state.showMap}

@@ -37,6 +37,7 @@ export interface Database {
 		name: string | null;
 		address: string | null;
 		zone: number | null;
+		phone: string | null;
 	};
 	vehicle: {
 		id: Generated<number>;
@@ -66,17 +67,20 @@ export interface Database {
 	event: {
 		id: Generated<number>;
 		isPickup: boolean;
+		eventGroupId: number;
+		request: number;
+		cancelled: boolean;
+		communicatedTime: number;
+	};
+	eventGroup: {
+		id: Generated<number>;
 		lat: number;
 		lng: number;
 		scheduledTimeStart: number;
 		scheduledTimeEnd: number;
-		communicatedTime: number;
 		prevLegDuration: number;
 		nextLegDuration: number;
-		eventGroup: string;
 		address: string;
-		request: number;
-		cancelled: boolean;
 	};
 	request: {
 		id: Generated<number>;
@@ -100,7 +104,9 @@ export interface Database {
 		user: number;
 		request1: number | null;
 		request2: number | null;
+		reason: string | null;
 		rating: number | null;
+		ratingBooking: number | null;
 		comment: string | null;
 	};
 	fcmToken: {

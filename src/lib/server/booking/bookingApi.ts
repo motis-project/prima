@@ -8,6 +8,7 @@ import type { Capacities } from '$lib/util/booking/Capacities';
 import { signEntry } from '$lib/server/booking/signEntry';
 import { insertRequest } from './insertRequest';
 import { retry } from '../db/retryQuery';
+import { DIRECT_FREQUENCY, DIRECT_RIDE_TIME_DIFFERENCE } from '$lib/constants';
 
 export type BookingParameters = {
 	connection1: ExpectedConnection | null;
@@ -39,6 +40,27 @@ function isSignatureInvalid(c: ExpectedConnection | null) {
 	);
 }
 
+function getPossibleRequestedTimes(rt: number): number[] {
+	const possibleRequestedTimes = [];
+	const earliestPossibleRequestedTime1 = rt - 2 * DIRECT_RIDE_TIME_DIFFERENCE;
+	const latestPossibleRequestedTime1 = rt + 2 * DIRECT_RIDE_TIME_DIFFERENCE;
+	for (
+		let requestedTimeCandidate = rt;
+		requestedTimeCandidate >= earliestPossibleRequestedTime1;
+		requestedTimeCandidate -= DIRECT_FREQUENCY
+	) {
+		possibleRequestedTimes.push(requestedTimeCandidate);
+	}
+	for (
+		let requestedTimeCandidate = rt;
+		requestedTimeCandidate <= latestPossibleRequestedTime1;
+		requestedTimeCandidate += DIRECT_FREQUENCY
+	) {
+		possibleRequestedTimes.push(requestedTimeCandidate);
+	}
+	return possibleRequestedTimes.sort((t1, t2) => Math.abs(t1 - rt) - Math.abs(t2 - rt));
+}
+
 export async function bookingApi(
 	p: BookingParameters,
 	customer: number,
@@ -55,7 +77,8 @@ export async function bookingApi(
 	request2Id?: number;
 	cost?: number;
 	passengerDuration?: number;
-	taxiTime?: number;
+	approachPlusReturnDurationDelta?: number;
+	fullyPayedDurationDelta?: number;
 	waitingTime?: number;
 }> {
 	console.log(
@@ -76,115 +99,143 @@ export async function bookingApi(
 		};
 	}
 	if (!isLocalhost && (isSignatureInvalid(p.connection1) || isSignatureInvalid(p.connection2))) {
+		console.log(
+			'Attempt to book with invalid signature.',
+			JSON.stringify(p, null, 2),
+			JSON.stringify(customer, null, 2),
+			JSON.stringify(isLocalhost, null, 2),
+			JSON.stringify(kidsZeroToTwo, null, 2),
+			JSON.stringify(kidsThreeToFour, null, 2),
+			JSON.stringify(kidsFiveToSix, null, 2),
+			JSON.stringify(skipPromiseCheck, null, 2)
+		);
 		return { status: 403 };
 	}
 	let request1Id: number | undefined = undefined;
 	let request2Id: number | undefined = undefined;
-	let message: string | undefined = undefined;
-	let success = false;
 	let cost = -1;
 	let passengerDuration = -1;
 	let waitingTime = -1;
-	let taxiTime = -1;
-	await retry(() =>
-		db
-			.transaction()
-			.setIsolationLevel('serializable')
-			.execute(async (trx) => {
-				let firstConnection: undefined | BookRideResponse = undefined;
-				let secondConnection: undefined | BookRideResponse = undefined;
-				if (p.connection1 != null) {
-					firstConnection = await bookRide(p.connection1, p.capacities, trx, skipPromiseCheck);
-					if (firstConnection == undefined) {
-						message = 'Die Anfrage für die erste Meile kann nicht erfüllt werden.';
-						return;
+	let approachPlusReturnDurationDelta = -1;
+	let fullyPayedDurationDelta = -1;
+	let possibleRequestedTimes1: number[] = [];
+	let possibleRequestedTimes2: number[] = [];
+	let message: string | undefined = undefined;
+	let success = false;
+	if (p.connection1) {
+		possibleRequestedTimes1 = getPossibleRequestedTimes(p.connection1.requestedTime);
+	}
+	if (p.connection2) {
+		possibleRequestedTimes2 = getPossibleRequestedTimes(p.connection2.requestedTime);
+	}
+	const possibleRequestedTimes =
+		possibleRequestedTimes1.length === 0 ? possibleRequestedTimes2 : possibleRequestedTimes1;
+	for (const rt of possibleRequestedTimes) {
+		if (p.connection2) {
+			p.connection2!.requestedTime = rt;
+		} else {
+			p.connection1!.requestedTime = rt;
+		}
+		await retry(() =>
+			db
+				.transaction()
+				.setIsolationLevel('serializable')
+				.execute(async (trx) => {
+					let firstConnection: undefined | BookRideResponse = undefined;
+					let secondConnection: undefined | BookRideResponse = undefined;
+					if (p.connection1 != null) {
+						firstConnection = await bookRide(p.connection1, p.capacities, trx, skipPromiseCheck);
+						if (firstConnection == undefined) {
+							message = 'Die Anfrage für die erste Meile kann nicht erfüllt werden.';
+							return;
+						}
+						cost = firstConnection.best.cost;
+						passengerDuration = firstConnection.best.passengerDuration;
+						approachPlusReturnDurationDelta = firstConnection.best.approachPlusReturnDurationDelta;
+						fullyPayedDurationDelta = firstConnection.best.fullyPayedDurationDelta;
+						waitingTime = firstConnection.best.taxiWaitingTime;
 					}
-					cost = firstConnection.best.cost;
-					passengerDuration = firstConnection.best.passengerDuration;
-					taxiTime = firstConnection.best.taxiDuration;
-					waitingTime = firstConnection.best.taxiWaitingTime;
-				}
-				if (p.connection2 != null) {
-					let blockedVehicleId: number | undefined = undefined;
-					if (firstConnection != undefined) {
-						blockedVehicleId = firstConnection.best.vehicle;
-					}
-					secondConnection = await bookRide(
-						p.connection2,
-						p.capacities,
-						trx,
-						skipPromiseCheck,
-						blockedVehicleId
-					);
-					if (secondConnection == undefined) {
-						message = 'Die Anfrage für die zweite Meile kann nicht erfüllt werden.';
-						return;
-					}
-					cost = secondConnection.best.cost;
-					passengerDuration = secondConnection.best.passengerDuration;
-					taxiTime = secondConnection.best.taxiDuration;
-					waitingTime = secondConnection.best.taxiWaitingTime;
-				}
-				if (
-					p.connection1 != null &&
-					p.connection2 != null &&
-					firstConnection!.tour != undefined &&
-					secondConnection!.tour != undefined
-				) {
-					const newTour = getCommonTour(
-						firstConnection!.mergeTourList,
-						secondConnection!.mergeTourList
-					);
-					if (newTour != undefined) {
-						firstConnection!.tour = newTour;
-						secondConnection!.tour = newTour;
-					}
-				}
-				if (firstConnection != null) {
-					request1Id =
-						(await insertRequest(
-							firstConnection.best,
+					if (p.connection2 != null) {
+						let blockedVehicleId: number | undefined = undefined;
+						if (firstConnection != undefined) {
+							blockedVehicleId = firstConnection.best.vehicle;
+						}
+						secondConnection = await bookRide(
+							p.connection2,
 							p.capacities,
-							p.connection1!,
-							customer,
-							firstConnection.mergeTourList,
-							firstConnection.neighbourIds,
-							firstConnection.directDurations,
-							firstConnection.prevLegDurations,
-							firstConnection.nextLegDurations,
-							kidsZeroToTwo,
-							kidsThreeToFour,
-							kidsFiveToSix,
-							kidsSevenToFourteen,
-							firstConnection.scheduledTimes,
-							trx
-						)) ?? null;
-				}
-				if (secondConnection != null) {
-					request2Id =
-						(await insertRequest(
-							secondConnection.best,
-							p.capacities,
-							p.connection2!,
-							customer,
-							secondConnection.mergeTourList,
-							secondConnection.neighbourIds,
-							secondConnection.directDurations,
-							secondConnection.prevLegDurations,
-							secondConnection.nextLegDurations,
-							kidsZeroToTwo,
-							kidsThreeToFour,
-							kidsFiveToSix,
-							kidsSevenToFourteen,
-							secondConnection.scheduledTimes,
-							trx
-						)) ?? null;
-				}
-				message = 'Die Anfrage wurde erfolgreich bearbeitet.';
-				success = true;
-				return;
-			})
-	);
+							trx,
+							skipPromiseCheck,
+							blockedVehicleId
+						);
+						if (secondConnection == undefined) {
+							message = 'Die Anfrage für die zweite Meile kann nicht erfüllt werden.';
+							return;
+						}
+						cost = secondConnection.best.cost;
+						passengerDuration = secondConnection.best.passengerDuration;
+						approachPlusReturnDurationDelta = secondConnection.best.approachPlusReturnDurationDelta;
+						fullyPayedDurationDelta = secondConnection.best.fullyPayedDurationDelta;
+						waitingTime = secondConnection.best.taxiWaitingTime;
+					}
+					if (
+						p.connection1 != null &&
+						p.connection2 != null &&
+						firstConnection!.tour != undefined &&
+						secondConnection!.tour != undefined
+					) {
+						const newTour = getCommonTour(
+							firstConnection!.mergeTourList,
+							secondConnection!.mergeTourList
+						);
+						if (newTour != undefined) {
+							firstConnection!.tour = newTour;
+							secondConnection!.tour = newTour;
+						}
+					}
+					if (firstConnection !== null && firstConnection !== undefined) {
+						request1Id =
+							(await insertRequest(
+								firstConnection,
+								p.capacities,
+								p.connection1!,
+								customer,
+								kidsZeroToTwo,
+								kidsThreeToFour,
+								kidsFiveToSix,
+								kidsSevenToFourteen,
+								trx
+							)) ?? null;
+					}
+					if (secondConnection != null && secondConnection !== undefined) {
+						request2Id =
+							(await insertRequest(
+								secondConnection,
+								p.capacities,
+								p.connection2!,
+								customer,
+								kidsZeroToTwo,
+								kidsThreeToFour,
+								kidsFiveToSix,
+								kidsSevenToFourteen,
+								trx
+							)) ?? null;
+					}
+					message = 'Die Anfrage wurde erfolgreich bearbeitet.';
+					success = true;
+					return;
+				})
+		);
+		if (success) {
+			break;
+		}
+		request1Id = undefined;
+		request2Id = undefined;
+		cost = -1;
+		passengerDuration = -1;
+		waitingTime = -1;
+		approachPlusReturnDurationDelta = -1;
+		fullyPayedDurationDelta = -1;
+	}
 	if (message == undefined) {
 		return { status: 500 };
 	}
@@ -196,6 +247,7 @@ export async function bookingApi(
 		cost,
 		passengerDuration,
 		waitingTime,
-		taxiTime
+		approachPlusReturnDurationDelta,
+		fullyPayedDurationDelta
 	};
 }
