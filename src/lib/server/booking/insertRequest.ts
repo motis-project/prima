@@ -21,9 +21,9 @@ export async function insertRequest(
 	const mergeTourListSql =
 		r.mergeTourList.length > 0
 			? sql`ARRAY[${sql.join(
-				r.mergeTourList.map((id) => sql`${id}`),
-				sql`,`
-			)}]::INTEGER[]`
+					r.mergeTourList.map((id) => sql`${id}`),
+					sql`,`
+				)}]::INTEGER[]`
 			: sql`ARRAY[]::INTEGER[]`;
 	const ticketPrice = legOdmPrice(
 		capacities.passengers,
