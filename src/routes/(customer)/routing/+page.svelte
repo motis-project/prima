@@ -34,7 +34,7 @@
 	import Switch from '$lib/shadcn/switch/switch.svelte';
 	import { cn } from '$lib/shadcn/utils';
 	import { updateStartDest } from '$lib/util/updateStartDest';
-	import { odmPrice } from '$lib/util/odmPrice';
+	import { getEuroString, legOdmPrice, odmPrice } from '$lib/util/odmPrice';
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { HelpCircleIcon, LocateFixed, MapIcon } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
@@ -54,11 +54,23 @@
 	let kidsZeroToTwo = $state(0);
 	let kidsThreeToFour = $state(0);
 	let kidsFiveToSix = $state(0);
-	let maxKidsZeroToTwo = $derived(passengers - 1 - kidsThreeToFour - kidsFiveToSix);
-	let maxKidsThreeToFour = $derived(passengers - 1 - kidsZeroToTwo - kidsFiveToSix);
-	let maxKidsFiveToSix = $derived(passengers - 1 - kidsZeroToTwo - kidsThreeToFour);
-	let minimumPassengers = $derived(1 + kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix);
-	let kids = $derived(kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix);
+	let kidsSevenToFourteen = $state(0);
+	let maxKidsZeroToTwo = $derived(
+		Math.max(0, passengers - 1 - kidsThreeToFour - kidsFiveToSix - kidsSevenToFourteen)
+	);
+	let maxKidsThreeToFour = $derived(
+		Math.max(0, passengers - 1 - kidsZeroToTwo - kidsFiveToSix - kidsSevenToFourteen)
+	);
+	let maxKidsFiveToSix = $derived(
+		Math.max(0, passengers - 1 - kidsZeroToTwo - kidsThreeToFour - kidsSevenToFourteen)
+	);
+	let maxKidsSevenToFourteen = $derived(
+		Math.max(0, passengers - kidsZeroToTwo - kidsThreeToFour - kidsFiveToSix)
+	);
+	let minimumPassengers = $derived(
+		1 + kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix + Math.max(0, kidsSevenToFourteen - 1)
+	);
+	let freeKids = $derived(kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix);
 	let wheelchair = $state(false);
 	let luggage = $state<LuggageType>('none');
 	let time = $state<Date>(new Date(urlParams?.get('time') || Date.now()));
@@ -203,6 +215,11 @@
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
 	};
 
+	/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+	const reportValidity = (e: any) => {
+		e.target.reportValidity();
+	};
+
 	let loading = $state(false);
 </script>
 
@@ -250,7 +267,12 @@
 								{passengers}
 								{wheelchair}
 								luggage={luggageToInt(luggage)}
-								price={odmPrice(page.state.selectedItinerary, passengers, kids)}
+								price={odmPrice(
+									page.state.selectedItinerary,
+									passengers,
+									freeKids,
+									kidsSevenToFourteen
+								)}
 							/>
 
 							<p class="my-2 text-sm">{t.booking.disclaimer}</p>
@@ -278,6 +300,7 @@
 									<input type="hidden" name="kidsZeroToTwo" value={kidsZeroToTwo} />
 									<input type="hidden" name="kidsThreeToFour" value={kidsThreeToFour} />
 									<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
+									<input type="hidden" name="kidsSevenToFourteen" value={kidsSevenToFourteen} />
 									<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
 									<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
 									<input
@@ -442,22 +465,55 @@
 							</Dialog.Description>
 						</Dialog.Header>
 
-						<div class="md-4 grid grid-cols-2 grid-rows-2 items-center gap-4">
-							<Label>{t.booking.passengerNumber}</Label>
-							<Input type="number" bind:value={passengers} min={minimumPassengers} max="6" />
-							<Label class="col-span-2">{t.booking.kidsDescription}</Label>
+						<div class="md-4 grid grid-cols-4 grid-rows-1 items-center gap-4">
+							<Label class="col-span-2">{t.booking.passengerNumber}</Label>
+							<Input
+								class="col-span-2"
+								oninput={reportValidity}
+								type="number"
+								bind:value={passengers}
+								min={minimumPassengers}
+								max="6"
+							/>
+							<Label class="col-span-4">{t.booking.kidsDescription}</Label>
 							<Label>{t.booking.kidsZeroToTwo}</Label>
-							<Input type="number" bind:value={kidsZeroToTwo} min="0" max={maxKidsZeroToTwo} />
+							<Input
+								oninput={reportValidity}
+								type="number"
+								bind:value={kidsZeroToTwo}
+								min="0"
+								max={maxKidsZeroToTwo}
+							/>
 							<Label>{t.booking.kidsThreeToFour}</Label>
-							<Input type="number" bind:value={kidsThreeToFour} min="0" max={maxKidsThreeToFour} />
+							<Input
+								oninput={reportValidity}
+								type="number"
+								bind:value={kidsThreeToFour}
+								min="0"
+								max={maxKidsThreeToFour}
+							/>
 							<Label>{t.booking.kidsFiveToSix}</Label>
-							<Input type="number" bind:value={kidsFiveToSix} min="0" max={maxKidsFiveToSix} />
+							<Input
+								oninput={reportValidity}
+								type="number"
+								bind:value={kidsFiveToSix}
+								min="0"
+								max={maxKidsFiveToSix}
+							/>
+							<Label>{t.booking.kidsSevenToFourteen}</Label>
+							<Input
+								oninput={reportValidity}
+								type="number"
+								bind:value={kidsSevenToFourteen}
+								min="0"
+								max={maxKidsSevenToFourteen}
+							/>
 
-							<Label class="flex items-center gap-2">
+							<Label class="col-span-2 flex items-center gap-2">
 								<WheelchairIcon class="size-5 shrink-0" />
 								{t.booking.foldableWheelchair}
 							</Label>
-							<Switch class="justify-self-end" bind:checked={wheelchair} />
+							<Switch class="col-span-2 justify-self-end" bind:checked={wheelchair} />
 						</div>
 
 						<RadioGroup.Root bind:value={luggage} class="grid grid-cols-3 gap-4">
@@ -498,7 +554,8 @@
 					{baseResponse}
 					{routingResponses}
 					{passengers}
-					{kids}
+					freePassengers={freeKids}
+					reducedPassengers={kidsSevenToFourteen}
 					selectItinerary={(selectedItinerary) => {
 						goto('?detail', { state: { selectedItinerary } });
 					}}
@@ -506,7 +563,11 @@
 				/>
 			</div>
 			<div class="mx-auto mt-6 space-y-2 text-sm">
-				<p><strong>{t.fare}</strong><br />3€ {t.perPerson} {t.perRide}</p>
+				<p>
+					<strong>{t.fare}</strong><br />{getEuroString(legOdmPrice(1, 0, 0))}
+					{t.perPerson}
+					{t.perRide}
+				</p>
 				<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
 				<p>
 					<button

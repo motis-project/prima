@@ -24,6 +24,8 @@
 		<span class="font-bold">{getEuroString(price)}</span>
 	</li>
 
+	<li>{t.booking.ptTicketNeeded}</li>
+
 	<li>{t.booking.bookingFor(passengers)}</li>
 
 	{#if wheelchair}

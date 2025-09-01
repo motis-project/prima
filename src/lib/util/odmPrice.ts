@@ -3,10 +3,26 @@ import { env } from '$env/dynamic/public';
 
 import type { Itinerary, Leg } from '$lib/openapi';
 
-export const odmPrice = (it: Itinerary, passengers: number, kids: number) =>
+export const legOdmPrice = (
+	totalPassengers: number,
+	freePassengers: number,
+	reducedPassengers: number
+) =>
+	Math.abs(
+		(totalPassengers - freePassengers - reducedPassengers) * parseInt(env.PUBLIC_FIXED_PRICE) +
+			reducedPassengers * parseInt(env.PUBLIC_FIXED_REDUCED_PRICE)
+	);
+
+export const odmPrice = (
+	it: Itinerary,
+	totalPassengers: number,
+	freePassengers: number,
+	reducedPassengers: number
+) =>
 	it.legs.reduce(
 		(acc: number, l: Leg) =>
-			acc + (l.mode === 'ODM' ? (passengers - kids) * parseInt(env.PUBLIC_FIXED_PRICE) : 0),
+			acc +
+			(l.mode === 'ODM' ? legOdmPrice(totalPassengers, freePassengers, reducedPassengers) : 0),
 		0
 	);
 
