@@ -2,7 +2,6 @@ package de.motis.prima.data
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.devicelock.DeviceId
 import android.provider.Settings
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -29,6 +28,16 @@ class DataStoreManager(private val context: Context) {
         private val FCM_TOKEN_KEY = stringPreferencesKey("fcm_token")
         private val DEVICE_ID_KEY = stringPreferencesKey("device_id")
         private val TOKEN_PENDING_KEY = booleanPreferencesKey("token_pending")
+        private val DARK_THEME_KEY = booleanPreferencesKey("ui_theme")
+    }
+
+    val uiThemeFlow: Flow<Boolean> = context.dataStore.data
+        .map { preferences -> preferences[DARK_THEME_KEY] ?: false}
+
+    suspend fun setTheme(darkTheme: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[DARK_THEME_KEY] = darkTheme
+        }
     }
 
     val selectedVehicleFlow: Flow<Vehicle> = context.dataStore.data
@@ -70,7 +79,7 @@ class DataStoreManager(private val context: Context) {
     }
 
     @SuppressLint("HardwareIds")
-    private fun getDeviceId(): String {
+    fun getDeviceId(): String {
         return Settings.Secure.getString(
             context.contentResolver,
             Settings.Secure.ANDROID_ID

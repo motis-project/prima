@@ -139,10 +139,17 @@ const translations: Translations = {
 		thanksForUsing: 'Thank you for using the public transport taxi.',
 		howHasItBeen: 'How has it been?',
 		giveFeedback: 'Give us your feedback.',
-		howHasJourneyBeen: 'How has the journey been?',
+		reason: 'Reason for the journey',
+		tourism: 'Tourism',
+		commute: 'Commute',
+		education: 'Education (School/College)',
+		errands: 'Errands',
+		leisure: 'Leisure',
+		howHasBookingBeen: 'Were you satisfied with the booking process?',
+		howHasJourneyBeen: 'Were you satisfied with the journey?',
 		yourFeedback: 'Your feedback',
-		good: 'good',
-		bad: 'bad',
+		good: 'yes',
+		bad: 'no',
 		sendFeedback: 'Send feedback'
 	},
 
@@ -203,6 +210,20 @@ const translations: Translations = {
 	changeBookingInfo: 'Change your search options and booking information.',
 	storeItinerary: 'Save Itinerary',
 	removeItinerary: 'Remove Itinerary',
+	introduction:
+		'The <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> project augments public transport with on-demand taxis and, later, ride-sharing options. The goal is to ensure a service at least every two hours, even in rural areas and at off-peak times.',
+	publicTransitTaxi: 'Public-transit Taxi',
+	serviceArea: 'Service area',
+	serviceTime: 'Service time',
+	serviceTimeContent: 'generally between 5 a.m. and 10 p.m. (depending on taxi availability)',
+	regionAround: 'Region around',
+	perPerson: 'per person',
+	perRide: 'per ride',
+	fare: 'Fare',
+	bookingDeadline: 'Booking deadline',
+	bookingDeadlineContent: 'at least 1 hour in advance, weekend bookings until Friday 6 p.m.',
+	logo: 'The PriMa+ÖV logo. Iconographic representation of a car, bus, train and cab.',
+	toConnectionSearch: 'Go to connection search',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
@@ -240,6 +261,16 @@ const translations: Translations = {
 			'Cancellation cannot be undone. Cancellation less than 24 hours before the trip will incur costs.',
 		cancelTrip: 'Cancel Trip',
 		noCancel: 'No, I do not want to cancel.'
+	},
+
+	explainer: {
+		title: 'Explainer',
+		p1: 'Unfortunately, public transport does not cover everything.',
+		p2: 'We use cabs to extend the range of public transport services. We call the intersection of public transport and cab the public transport cab.',
+		p3: 'The connection search finds public transport connections and also public transport cab connections if public transport alone is not sufficient.',
+		alt1: 'A blue circle that is not completely filled on the right. The unfilled part is hatched.',
+		alt2: 'A blue and a yellow circle that overlap. The overlap is hatched blue and yellow.',
+		alt3: 'A blue circle whose right-hand part is hatched yellow.'
 	}
 };
 

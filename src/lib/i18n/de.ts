@@ -110,7 +110,7 @@ const translations: Translations = {
 		forgotPassword: 'Passwort vergessen?',
 		signupConditions: (tos: string, privacy: string, provider: string) =>
 			`Durch die Anmeldung stimme ich den ${tos} sowie der ${privacy} von ${provider} zu.`,
-		tos: 'Allgemeinen Geschäftsbedingungen',
+		tos: 'Beförderungsbedingungen',
 		imprint: 'Impressum',
 		privacy_short: 'Datenschutz',
 		privacy: 'Datenschutzerklärung',
@@ -144,10 +144,17 @@ const translations: Translations = {
 		thanksForUsing: 'Vielen Dank, dass Sie das ÖPNV Taxi benutzt haben.',
 		howHasItBeen: 'Wie war es?',
 		giveFeedback: 'Geben Sie uns Ihr Feedback.',
-		howHasJourneyBeen: 'Wie war die Fahrt?',
+		reason: 'Anlass der Fahrt',
+		tourism: 'Tourismus',
+		commute: 'Beschäftigung/Pendeln',
+		education: 'Bildung (Schule/Hochschule)',
+		errands: 'Erledigungen',
+		leisure: 'Freizeit',
+		howHasBookingBeen: 'Waren Sie mit dem Buchungsprozess zufrieden?',
+		howHasJourneyBeen: 'Waren Sie mit der Fahrt zufrieden?',
 		yourFeedback: 'Ihr Feedback',
-		good: 'gut',
-		bad: 'schlecht',
+		good: 'ja',
+		bad: 'nein',
 		sendFeedback: 'Feedback abschicken'
 	},
 
@@ -209,6 +216,21 @@ const translations: Translations = {
 	changeBookingInfo: 'Ändern Sie Ihre Such- und Buchungsangaben.',
 	storeItinerary: 'Reisekette speichern',
 	removeItinerary: 'Reisekette entfernen',
+	introduction:
+		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und in Zukunft auch Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten.',
+	publicTransitTaxi: 'ÖPNV-Taxi',
+	serviceArea: 'Bediengebiet',
+	serviceTime: 'Bedienzeit',
+	serviceTimeContent: 'i.d.R. 05:00 - 22:00 Uhr (abhängig von Taxiverfügbarkeit)',
+	regionAround: 'Region um',
+	perPerson: 'pro Person',
+	perRide: 'pro Fahrt',
+	fare: 'Fahrpreis',
+	bookingDeadline: 'Buchungsschluss',
+	bookingDeadlineContent:
+		'min. 1 Stunde im Voraus, bei Buchungen für das Wochenende bis Freitag 18 Uhr',
+	logo: 'Das PriMa+ÖV Logo. Ikonographische Darstellung eines Autos, Busses, Zuges und Taxis.',
+	toConnectionSearch: 'Zur Verbindungssuche',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
@@ -246,6 +268,16 @@ const translations: Translations = {
 		noCancel: 'Nein, Fahrt nicht stornieren.',
 		cancelDescription:
 			'Die Stornierung der Fahrt kann nicht rückgängig gemacht werden. Eine Stornierung weniger als 24 Stunden vor der Fahrt ist mit Kosten verbunden.'
+	},
+
+	explainer: {
+		title: 'Explainer',
+		p1: 'Leider deckt der ÖPNV nicht alles ab.',
+		p2: 'Wir verwenden Taxis, um das Angebot des ÖPNV zu erweitern. Die Schnittmenge aus ÖPNV und Taxi nennen wir das ÖPNV-Taxi.',
+		p3: 'Die Verbindungssuche findet ÖPNV-Verbindungen und zusätzlich ÖPNV-Taxi-Verbindungen, wenn der ÖPNV alleine nicht ausreichend ist.',
+		alt1: 'Ein blauer Kreis, der rechts nicht ganz gefüllt ist. Der nicht gefüllte Teil ist schraffiert.',
+		alt2: 'Ein blauer und ein gelber Kreis, die sich überlappen. Die Überlappung ist blau und gelb schraffiert.',
+		alt3: 'Ein blauer Kreis dessen rechter Teil gelb schraffiert ist.'
 	}
 };
 

@@ -6,11 +6,14 @@ import type { Capacities } from '$lib/util/booking/Capacities';
 import { db, type Database } from '$lib/server/db';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { covers } from '$lib/server/db/covers';
+import { DAY } from '$lib/util/time';
+import { sortEventsByTime } from '$lib/testHelpers';
 
 const selectEvents = (eb: ExpressionBuilder<Database, 'tour'>) => {
 	return jsonArrayFrom(
 		eb
 			.selectFrom('event')
+			.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 			.innerJoin('request', 'event.request', 'request.id')
 			.where('event.cancelled', '=', false)
 			.whereRef('request.tour', '=', 'tour.id')
@@ -18,20 +21,21 @@ const selectEvents = (eb: ExpressionBuilder<Database, 'tour'>) => {
 				'tour.id as tourId',
 				'tour.arrival',
 				'tour.departure',
+				'tour.directDuration',
 				'event.id',
 				'event.communicatedTime',
-				'event.scheduledTimeStart',
-				'event.scheduledTimeEnd',
-				'event.lat',
-				'event.lng',
+				'eventGroup.scheduledTimeStart',
+				'eventGroup.scheduledTimeEnd',
+				'eventGroup.lat',
+				'eventGroup.lng',
+				'event.eventGroupId',
 				'request.passengers',
 				'request.bikes',
 				'request.luggage',
 				'request.wheelchairs',
 				'event.isPickup',
-				'event.prevLegDuration',
-				'event.nextLegDuration',
-				'event.eventGroup'
+				'eventGroup.prevLegDuration',
+				'eventGroup.nextLegDuration'
 			])
 	).as('events');
 };
@@ -130,6 +134,53 @@ const selectCompanies = (
 	).as('companies');
 };
 
+function mergeEventGroups(
+	events: (DbEvent & { time: Interval; hasOneEventType: boolean })[]
+): (DbEvent & { time: Interval; hasOneEventType: boolean })[] {
+	function getMergedEvent(events: (DbEvent & { time: Interval; hasOneEventType: boolean })[]) {
+		if (events.length === 1) {
+			return events[0];
+		}
+		const { time, ...rest } = events[0];
+		const mergedEvent = { ...structuredClone(rest), time, hasOneEventType: false };
+		mergedEvent.isPickup = events.some((e) => e.isPickup);
+		mergedEvent.passengers =
+			events.reduce((acc, curr) => (acc += curr.isPickup ? curr.passengers : -curr.passengers), 0) *
+			(mergedEvent.isPickup ? 1 : -1);
+		mergedEvent.wheelchairs =
+			events.reduce(
+				(acc, curr) => (acc += curr.isPickup ? curr.wheelchairs : -curr.wheelchairs),
+				0
+			) * (mergedEvent.isPickup ? 1 : -1);
+		mergedEvent.bikes =
+			events.reduce((acc, curr) => (acc += curr.isPickup ? curr.bikes : -curr.bikes), 0) *
+			(mergedEvent.isPickup ? 1 : -1);
+		mergedEvent.luggage =
+			events.reduce((acc, curr) => (acc += curr.isPickup ? curr.luggage : -curr.luggage), 0) *
+			(mergedEvent.isPickup ? 1 : -1);
+		mergedEvent.hasOneEventType = !events.some(
+			(e) => e.id === events[0].id && e.isPickup === events[0].isPickup
+		);
+		return mergedEvent;
+	}
+
+	if (events.length === 0) return [];
+	const result: (DbEvent & { time: Interval; hasOneEventType: boolean })[] = [];
+	let currentGroup = [events[0]];
+	for (let i = 1; i != events.length; i++) {
+		const prev = events[i - 1];
+		const curr = events[i];
+		if (curr.eventGroupId === prev.eventGroupId) {
+			currentGroup.push(curr);
+		} else {
+			result.push(getMergedEvent(currentGroup));
+			currentGroup = [curr];
+		}
+	}
+	result.push(getMergedEvent(currentGroup));
+	return result;
+}
+
 const createVehicle = (v: DbVehicle, expandedSearchInterval: Interval) => {
 	const tours = v.tours.filter((tour) =>
 		expandedSearchInterval.overlaps(new Interval(tour.departure, tour.arrival))
@@ -139,6 +190,15 @@ const createVehicle = (v: DbVehicle, expandedSearchInterval: Interval) => {
 	const createEvent = (e: DbEvent): DbEvent & { time: Interval } => {
 		return { ...e, time: new Interval(e.scheduledTimeStart, e.scheduledTimeEnd) };
 	};
+	const events = mergeEventGroups(
+		tours.flatMap((t) =>
+			sortEventsByTime(
+				t.events.map((e) => {
+					return { ...createEvent(e), hasOneEventType: true };
+				})
+			)
+		)
+	);
 	return {
 		...v,
 		availabilities: Interval.merge(
@@ -152,12 +212,16 @@ const createVehicle = (v: DbVehicle, expandedSearchInterval: Interval) => {
 				departure: tour.departure
 			};
 		}),
-		events: tours.flatMap((t) => t.events.map((e) => createEvent(e))),
+		events,
 		lastEventBefore:
 			toursBefore.length == 0
 				? undefined
 				: toursBefore
-						.flatMap((tour) => tour.events.map((event) => createEvent(event)))
+						.flatMap((tour) =>
+							tour.events.map((event) => {
+								return { ...createEvent(event), hasOneEventType: true };
+							})
+						)
 						.reduce((max, current) => {
 							return max == undefined
 								? current
@@ -169,7 +233,11 @@ const createVehicle = (v: DbVehicle, expandedSearchInterval: Interval) => {
 			toursAfter.length == 0
 				? undefined
 				: toursAfter
-						.flatMap((tour) => tour.events.map((event) => createEvent(event)))
+						.flatMap((tour) =>
+							tour.events.map((event) => {
+								return { ...createEvent(event), hasOneEventType: true };
+							})
+						)
 						.reduce((min, current) => {
 							return min == undefined
 								? current
@@ -234,8 +302,7 @@ export const getBookingAvailability = async (
 	trx?: Transaction<Database>
 ) => {
 	const expandedSearchInterval = searchInterval.expand(MAX_TRAVEL * 3, MAX_TRAVEL * 3);
-	const twiceExpandedSearchInterval = searchInterval.expand(MAX_TRAVEL * 6, MAX_TRAVEL * 6);
-
+	const twiceExpandedSearchInterval = searchInterval.expand(DAY, DAY);
 	console.log(
 		'getBookingAvailability params: ',
 		JSON.stringify(
@@ -284,7 +351,13 @@ export const getBookingAvailability = async (
 	companies.forEach((c) =>
 		c.vehicles.forEach((v) => {
 			v.tours.sort((t1, t2) => t1.departure - t2.departure);
-			v.events.sort((e1, e2) => e1.time.startTime - e2.time.startTime);
+			v.events.sort((a, b) => {
+				const startDiff = a.scheduledTimeStart - b.scheduledTimeStart;
+				if (startDiff !== 0) {
+					return startDiff;
+				}
+				return a.scheduledTimeEnd - b.scheduledTimeEnd;
+			});
 		})
 	);
 	const filteredBusStops = new Array<number | undefined>(busStops.length);

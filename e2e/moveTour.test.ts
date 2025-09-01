@@ -34,7 +34,7 @@ test('Move tour to vehicle with cancelled tour', async ({ page }) => {
 
 	await page.getByRole('textbox').fill(`${dayString}T08:30:00Z`);
 	await page.getByRole('button', { name: 'Suchen' }).click();
-	await expect(page.getByText('Vehicle: ')).toBeVisible();
+	await expect(page.getByText('Request: ')).toBeVisible();
 
 	await page.goto(`/taxi/availability?offset=${offset}&date=${dayString}`);
 	await page.waitForTimeout(1000);

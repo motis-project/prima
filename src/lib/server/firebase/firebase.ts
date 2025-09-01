@@ -1,5 +1,16 @@
 import admin from 'firebase-admin';
 import { db } from '$lib/server/db/index.js';
+import Prom from 'prom-client';
+
+let firebase_errors: Prom.Counter | undefined;
+try {
+	firebase_errors = new Prom.Counter({
+		name: 'prima_firebase_errors_total',
+		help: 'Firebase errors occurred'
+	});
+} catch {
+	/* ignored */
+}
 
 export enum TourChange {
 	BOOKED,
@@ -59,7 +70,12 @@ export async function sendPushNotification(
 						e
 					);
 				}
+			} else if (error.code !== 'messaging/registration-token-not-registered') {
+				firebase_errors?.inc();
 			}
+		} else {
+			console.error(error);
+			firebase_errors?.inc();
 		}
 	}
 }

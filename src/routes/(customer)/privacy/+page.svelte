@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { PUBLIC_IMPRINT_URL } from '$env/static/public';
+	import { t } from '$lib/i18n/translation';
 </script>
 
 <div class="fine-print mx-auto max-w-[800px]">
@@ -12,7 +14,10 @@
 		Im Projekt PriMa+ÖV betrachten wir den Schutz der personenbezogenen Daten als wichtige
 		Priorität. Daher verfolgen wir die gesetzlichen Bestimmungen der DSGVO sowie des BDSG. Alle am
 		Projekt beteiligten Partner sind zur Einhaltung dieser datenschutzrechtlichen Vorgaben
-		verpflichtet. Mehr zu unserem Projekt erfahren Sie unter Über uns.
+		verpflichtet. Mehr zu unserem Projekt erfahren Sie unter <a
+			href="https://www.primaplusoev.de/ueber-uns"
+			target="_blank">Über uns.</a
+		>
 	</p>
 
 	<p>
@@ -26,7 +31,7 @@
 		VON<br />
 		Verkehrsverbund Oberlausitz-Niederschlesien<br />
 		Rathenauplatz 1, 02625 Bautzen<br />
-		Ansprechpartnerin: Ilka Hunger, E-Mail: i.hunger@zvon.de<br />
+		Ansprechpartnerin: Ilka Hunger, E-Mail: i.hunger [at] zvon.de<br />
 	</p>
 
 	<p>
@@ -38,15 +43,17 @@
 		Gostritzer Straße 61<br />
 		01217 Dresden<br />
 		Telefon: +49 3591 2197 1182<br />
-		E-Mail: info@kvinne.de<br />
+		E-Mail: info [at] kvinne.de<br />
 	</p>
 	<h2>Zu welchem Zweck erfolgt die Datenerhebung</h2>
 	<p>
 		Das digitale ÖPNV-Taxi im VON-Gebiet ist ein Teilprojekt von PriMa+ÖV mit dem Ziel, vorhandene
 		Ressourcen in den ÖPNV einzubinden. Weitere Informationen hierzu finden Sie unter folgender
-		Webseite https://www.primaplusoev.de/#Projekt. Für die Umsetzung des Vorhabens werden Daten für
-		die Beförderung erhoben. Des Weiteren werden die Daten für Auswertungen bezüglich der Nutzung
-		und des zeitlichen Einsatzes benötigt, um das Angebot im zweiten Schritt zu verstetigen.
+		Webseite <a href="https://www.primaplusoev.de/#Projekt" target="_blank"
+			>https://www.primaplusoev.de/</a
+		>. Für die Umsetzung des Vorhabens werden Daten für die Beförderung erhoben. Des Weiteren werden
+		die Daten für Auswertungen bezüglich der Nutzung und des zeitlichen Einsatzes benötigt, um das
+		Angebot im zweiten Schritt zu verstetigen.
 	</p>
 
 	<p>Es gibt mehrere Zwecke, zu denen Daten gespeichert werden:</p>
@@ -93,12 +100,12 @@
 			Fahrgäste/Nutzer:innen: Personen, die Fahrten und damit verbundene Dienstleistungen in
 			Anspruch nehmen.
 		</li>
-		<li>
-			Fahrer:innen*: Personen, die Fahrgästen Fahrten anbieten. *Die Taxiunternehmen verfügen über
-			Datenschutzinformationen, welche den jeweiligen Webseiten zu entnehmen sind oder beim
-			Taxiunternehmen zu erfragen sind.
-		</li>
+		<li>Fahrer:innen*: Personen, die Fahrgästen Fahrten anbieten.</li>
 	</ul>
+	<p>
+		*Die Taxiunternehmen verfügen über Datenschutzinformationen, welche den jeweiligen Webseiten zu
+		entnehmen sind oder beim Taxiunternehmen zu erfragen sind.
+	</p>
 
 	<h2>Welche Daten werden erfasst?</h2>
 	<h3>Daten, die von Nutzer:nnen bereitgestellt werden. Dazu gehören:</h3>
@@ -162,9 +169,6 @@
 		Textnachricht oder In-App-Nachricht), Datum/Uhrzeit und Inhalt (einschließlich Aufzeichnungen
 		von Telefonanrufen nur dann, wenn Nutzer:innen im Voraus darüber informiert werden).
 	</p>
-
-	<h4>4. Daten aus anderen Quellen. Dies umfasst:</h4>
-	Persönliche Befragungen, andere indirekte Partner o. ä.
 
 	<h2>Wozu werden die erhobenen Daten genutzt?</h2>
 	<p>
@@ -338,7 +342,7 @@
 			Personen, die sie vertreten, wahrnehmen.
 		</li>
 	</ul>
-	<h2>Einschränkungen</h2>
+	<h3>Einschränkungen</h3>
 	<p>
 		Die Daten werden für wissenschaftliche Forschungszwecke verarbeitet. Aus diesem Grund sind
 		einige der in der DSGVO und dem BDSG enthaltenen Rechte insoweit beschränkt, als diese Rechte
@@ -354,12 +358,16 @@
 			Recht auf Berichtigung unrichtiger und Vervollständigung unvollständiger Daten (Art. 16 DSGVO)
 			besteht nicht, soweit diese den Forschungszweck behindern.
 		</li>
-		<li>Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO), wenn</li>
-		<li>Sie die Richtigkeit der Daten bestreiten</li>
-		<li>Sie statt einer Löschung die Einschränkung der Verarbeitung verlangen</li>
 		<li>
-			der Verantwortliche die Daten nicht mehr benötigt, Sie diese aber zur Geltendmachung von
-			Rechten benötigen, besteht nicht, soweit diese den Forschungszweck behindern.
+			Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO), wenn
+			<ul class="list-outside list-disc pl-[revert]">
+				<li>Sie die Richtigkeit der Daten bestreiten</li>
+				<li>Sie statt einer Löschung die Einschränkung der Verarbeitung verlangen</li>
+				<li>
+					der Verantwortliche die Daten nicht mehr benötigt, Sie diese aber zur Geltendmachung von
+					Rechten benötigen, besteht nicht, soweit diese den Forschungszweck behindern.
+				</li>
+			</ul>
 		</li>
 		<li>
 			Recht auf Widerspruch gegen Verarbeitungen die im berechtigten Interesse des Verantwortlichen
@@ -397,4 +405,12 @@
 	</p>
 
 	<p>Stand Mai 2025</p>
+
+	<p class="mt-6 text-center text-xs text-input">
+		<a
+			href={PUBLIC_IMPRINT_URL}
+			target="_blank"
+			class="whitespace-nowrap border-b border-dotted border-input">{t.account.imprint}</a
+		>
+	</p>
 </div>

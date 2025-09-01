@@ -24,7 +24,7 @@
 	import { polylineToGeoJSON } from '$lib/util/polylineToGeoJSON';
 	import { getTourInfoShort } from '$lib/util/getTourInfoShort';
 	import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
-	import { PUBLIC_MOTIS_URL } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 	import CancelMessageDialog from './CancelMessageDialog.svelte';
 	import TableHead from '$lib/shadcn/table/table-head.svelte';
 	import { BabyIcon } from 'lucide-svelte';
@@ -45,18 +45,25 @@
 	};
 
 	let tourIndex = $state(0);
+	$effect(() => {
+		if (tours && tourIndex >= tours.length) {
+			tourIndex = 0;
+		}
+	});
 	let tour = $derived(tours && tours[tourIndex]);
 	let events = $derived(
-		tour?.requests.flatMap((r) =>
-			r.events.map((e) => {
-				return {
-					...e,
-					kidsZeroToTwo: r.kidsZeroToTwo,
-					kidsThreeToFour: r.kidsThreeToFour,
-					kidsFiveToSix: r.kidsFiveToSix
-				};
-			})
-		)
+		tour?.requests
+			.flatMap((r) =>
+				r.events.map((e) => {
+					return {
+						...e,
+						kidsZeroToTwo: r.kidsZeroToTwo,
+						kidsThreeToFour: r.kidsThreeToFour,
+						kidsFiveToSix: r.kidsFiveToSix
+					};
+				})
+			)
+			.sort((e1, e2) => getScheduledEventTime(e1) - getScheduledEventTime(e2))
 	);
 	let company = $derived(tour && { lat: tour.companyLat!, lng: tour.companyLng! });
 
@@ -120,16 +127,18 @@
 				<div>
 					{#if tours && tours.length > 1}
 						{#each tours as tour, i}
-							{@const tourInfo = getTourInfoShort(tour)}
-							<Button
-								onclick={() => {
-									tourIndex = i;
-								}}
-								variant={tourIndex === i ? 'default' : 'outline'}
-								class="mx-2"
-							>
-								{tourInfo.from} - {tourInfo.to}
-							</Button>
+							{#if tour != undefined}
+								{@const tourInfo = getTourInfoShort(tour)}
+								<Button
+									onclick={() => {
+										tourIndex = i;
+									}}
+									variant={tourIndex === i ? 'default' : 'outline'}
+									class="mx-2"
+								>
+									{tourInfo.from} - {tourInfo.to}
+								</Button>
+							{/if}
 						{/each}
 					{/if}
 				</div>
@@ -237,7 +246,7 @@
 			center={company}
 			transformRequest={(url) => {
 				if (url.startsWith('/')) {
-					return { url: `${PUBLIC_MOTIS_URL}/tiles${url}` };
+					return { url: `${env.PUBLIC_MOTIS_URL}/tiles${url}` };
 				}
 			}}
 			style={getStyle('light', 0)}

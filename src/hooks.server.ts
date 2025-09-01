@@ -5,8 +5,13 @@ import {
 } from '$lib/server/auth/session';
 import { error, redirect, type Handle } from '@sveltejs/kit';
 import admin from 'firebase-admin';
+import Prom from 'prom-client';
 import { env } from '$env/dynamic/private';
 import { getIp } from '$lib/server/getIp';
+
+import consoleStamp from 'console-stamp';
+import { getIp } from '$lib/server/getIp';
+consoleStamp(console);
 
 const authHandle: Handle = async ({ event, resolve }) => {
 	const ip = getIp(event);
@@ -16,6 +21,15 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	}
 	const token = event.cookies.get('session');
 	const session = await validateSessionToken(token);
+	const clientIP = getIp(event);
+	const isLocalhost =
+		clientIP === '127.0.0.1' || clientIP === '::1' || clientIP === '::ffff:127.0.0.1';
+	if (
+		!isLocalhost &&
+		(event.url.pathname.startsWith('/debug') || event.url.pathname.startsWith('/tests'))
+	) {
+		error(403);
+	}
 	if (
 		!session &&
 		(event.url.pathname.startsWith('/admin') || event.url.pathname.startsWith('/taxi'))
@@ -66,6 +80,16 @@ const authHandle: Handle = async ({ event, resolve }) => {
 
 export const handle = authHandle;
 
+let firebase_established: Prom.Gauge | undefined;
+try {
+	firebase_established = new Prom.Gauge({
+		name: 'prima_firebase_connection_established',
+		help: 'Whether the connection to firebase is successfully established.'
+	});
+} catch {
+	/* ignored */
+}
+
 try {
 	admin.initializeApp({
 		credential: admin.credential.cert({
@@ -74,6 +98,8 @@ try {
 			clientEmail: env.FIREBASE_CLIENT_EMAIL
 		})
 	});
+	firebase_established?.set(1);
 } catch (e) {
 	console.log(e);
+	firebase_established?.set(0);
 }

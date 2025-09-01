@@ -138,6 +138,13 @@ export type Translations = {
 		thanksForUsing: string;
 		howHasItBeen: string;
 		giveFeedback: string;
+		reason: string;
+		tourism: string;
+		commute: string;
+		education: string;
+		errands: string;
+		leisure: string;
+		howHasBookingBeen: string;
 		howHasJourneyBeen: string;
 		yourFeedback: string;
 		good: string;
@@ -183,6 +190,20 @@ export type Translations = {
 	changeBookingInfo: string;
 	storeItinerary: string;
 	removeItinerary: string;
+	introduction: string;
+	publicTransitTaxi: string;
+	serviceArea: string;
+	serviceTime: string;
+	serviceTimeContent: string;
+	regionAround: string;
+	perPerson: string;
+	perRide: string;
+	fare: string;
+	bookingDeadline: string;
+	bookingDeadlineContent: string;
+	logo: string;
+	toConnectionSearch: string;
+
 	booking: {
 		bookHere: string;
 		summary: string;
@@ -209,6 +230,16 @@ export type Translations = {
 		cancelDescription: string;
 		cancelTrip: string;
 		noCancel: string;
+	};
+
+	explainer: {
+		title: string;
+		p1: string;
+		p2: string;
+		p3: string;
+		alt1: string;
+		alt2: string;
+		alt3: string;
 	};
 };
 

@@ -17,7 +17,6 @@
 	import { t } from '$lib/i18n/translation';
 	import * as Card from '$lib/shadcn/card';
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
-	import { odmPrice } from '$lib/util/odmPrice';
 	import { MapIcon } from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
@@ -86,18 +85,18 @@
 			{:else}
 				<Message msg={msg('cancelled')} />
 			{/if}
-			<Button size="icon" variant="outline" onclick={() => pushState('', { showMap: true })}>
-				<MapIcon class="h-[1.2rem] w-[1.2rem]" />
-			</Button>
 		{:else}
 			<form method="post" action="?/remove" class="flex grow">
 				<input type="hidden" name="journeyId" value={data.journeyId} />
 				<Button type="submit" class="grow">{t.removeItinerary}</Button>
 			</form>
 		{/if}
+		<Button size="icon" variant="outline" onclick={() => pushState('', { showMap: true })}>
+			<MapIcon class="h-[1.2rem] w-[1.2rem]" />
+		</Button>
 	</div>
 
-	{#if page.state.showMap && isOdm}
+	{#if page.state.showMap}
 		<PopupMap itinerary={data.journey} />
 	{:else if showTicket && isOdm}
 		<div class="flex h-full w-full items-center justify-center">
@@ -111,11 +110,7 @@
 					passengers={data.passengers!}
 					wheelchair={data.wheelchairs !== 0}
 					luggage={data.luggage!}
-					price={odmPrice(
-						data.journey,
-						data.passengers!,
-						data.kidsZeroToTwo! + data.kidsThreeToFour! + data.kidsFiveToSix!
-					)}
+					price={data.ticketPrice!}
 				/>
 			</Card.Content>
 		</Card.Root>
@@ -126,6 +121,8 @@
 				goto(`/routing?stopId=${stopId}&time=${time.toISOString()}`)}
 			onClickTrip={(tripId: string) => goto(`/routing?tripId=${tripId}`)}
 			licensePlate={data.licensePlate ?? ''}
+			companyName={data.name ?? ''}
+			companyPhone={data.phone ?? ''}
 		/>
 	{/if}
 </div>

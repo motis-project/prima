@@ -3,7 +3,7 @@ import { oneToMany, type Duration } from '$lib/openapi';
 import type { QuerySerializerOptions } from '@hey-api/client-fetch';
 import { SECOND, secondToMilli } from '../../util/time';
 import maplibregl from 'maplibre-gl';
-import { PUBLIC_MOTIS_URL } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 
 function lngLatToStr(pos: maplibregl.LngLatLike) {
 	const p = maplibregl.LngLat.convert(pos);
@@ -13,15 +13,16 @@ function lngLatToStr(pos: maplibregl.LngLatLike) {
 export const oneToManyCarRouting = async (
 	one: maplibregl.LngLatLike,
 	many: maplibregl.LngLatLike[],
-	arriveBy: boolean
+	arriveBy: boolean,
+	maxDuration?: number
 ): Promise<(number | undefined)[]> => {
 	return await oneToMany({
-		baseUrl: PUBLIC_MOTIS_URL,
+		baseUrl: env.PUBLIC_MOTIS_URL,
 		querySerializer: { array: { explode: false } } as QuerySerializerOptions,
 		query: {
 			one: lngLatToStr(one),
 			many: many.map(lngLatToStr),
-			max: MAX_TRAVEL / SECOND,
+			max: maxDuration === undefined ? MAX_TRAVEL / SECOND : maxDuration,
 			maxMatchingDistance: MAX_MATCHING_DISTANCE,
 			mode: 'CAR',
 			arriveBy
@@ -32,7 +33,8 @@ export const oneToManyCarRouting = async (
 				'ROUTING: ',
 				lngLatToStr(one),
 				lngLatToStr(many[i]),
-				new Date(secondToMilli(d.duration ?? 0)).toISOString()
+				new Date(secondToMilli(d.duration ?? 0)).toISOString(),
+				secondToMilli(d.duration ?? 0)
 			);
 			return d.duration != undefined && d.duration != null ? secondToMilli(d.duration) : undefined;
 		});

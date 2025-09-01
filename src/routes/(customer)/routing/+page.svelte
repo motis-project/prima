@@ -4,7 +4,6 @@
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount, tick } from 'svelte';
-
 	import ArrowUpDown from 'lucide-svelte/icons/arrow-up-down';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
@@ -13,21 +12,16 @@
 	import LuggageIcon from 'lucide-svelte/icons/luggage';
 	import WheelchairIcon from 'lucide-svelte/icons/accessibility';
 	import PersonIcon from 'lucide-svelte/icons/user';
-
 	import Separator from '$lib/shadcn/separator/separator.svelte';
 	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import { Input } from '$lib/shadcn/input';
 	import { Label } from '$lib/shadcn/label';
-
-	import { plan, trip, type Leg, type Match, type PlanData, type PlanResponse } from '$lib/openapi';
-
+	import { trip, type Leg, type Match, type PlanData } from '$lib/openapi';
 	import { t } from '$lib/i18n/translation';
 	import { lngLatToStr } from '$lib/util/lngLatToStr';
-
 	import Meta from '$lib/ui/Meta.svelte';
 	import AddressTypeahead from '$lib/ui/AddressTypeahead.svelte';
 	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
-
 	import ItineraryList from './ItineraryList.svelte';
 	import ConnectionDetail from './ConnectionDetail.svelte';
 	import StopTimes from './StopTimes.svelte';
@@ -42,10 +36,13 @@
 	import { updateStartDest } from '$lib/util/updateStartDest';
 	import { odmPrice } from '$lib/util/odmPrice';
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
-	import { LocateFixed, MapIcon } from 'lucide-svelte';
+	import { HelpCircleIcon, LocateFixed, MapIcon } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
 	import { MAX_MATCHING_DISTANCE } from '$lib/constants';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
+	import { planAndSign, type SignedPlanResponse } from '$lib/planAndSign';
+
+	import logo from '$lib/assets/logo-alpha.png';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -64,8 +61,8 @@
 	let kids = $derived(kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix);
 	let wheelchair = $state(false);
 	let luggage = $state<LuggageType>('none');
-	let time = $state<Date>(new Date());
-	let timeType = $state<TimeType>('departure');
+	let time = $state<Date>(new Date(urlParams?.get('time') || Date.now()));
+	let timeType = $state<TimeType>(urlParams?.get('arriveBy') == 'true' ? 'arrival' : 'departure');
 	let fromParam: Match | undefined = undefined;
 	let toParam: Match | undefined = undefined;
 	if (browser && urlParams && urlParams.has('from') && urlParams.has('to')) {
@@ -73,7 +70,7 @@
 		toParam = JSON.parse(urlParams.get('to') ?? '') ?? {};
 	}
 	let fromMatch = { match: fromParam };
-	let toMatch = { match: fromParam };
+	let toMatch = { match: toParam };
 	let from = $state<Location>({
 		label: fromParam ? fromParam['name'] : '',
 		value: fromParam ? fromMatch : {}
@@ -102,6 +99,19 @@
 			return `${lngLatToStr(l.value.match!)},0`;
 		}
 	};
+
+	const pushStateWithQueryString = (
+		// eslint-disable-next-line
+		queryParams: Record<string, any>,
+		// eslint-disable-next-line
+		newState: App.PageState,
+		replace: boolean = false
+	) => {
+		const params = new URLSearchParams(queryParams);
+		const updateState = replace ? replaceState : pushState;
+		updateState('?' + params.toString(), newState);
+	};
+
 	let baseQuery = $derived(
 		from.value.match && to.value.match
 			? ({
@@ -124,16 +134,26 @@
 	);
 
 	type Timeout = ReturnType<typeof setTimeout>;
-	let baseResponse = $state<Promise<PlanResponse | undefined>>();
-	let routingResponses = $state<Array<Promise<PlanResponse | undefined>>>([]);
+	let baseResponse = $state<Promise<SignedPlanResponse | undefined>>();
+	let routingResponses = $state<Array<Promise<SignedPlanResponse | undefined>>>([]);
 	let searchDebounceTimer: Timeout;
 	$effect(() => {
 		if (baseQuery) {
 			clearTimeout(searchDebounceTimer);
 			searchDebounceTimer = setTimeout(() => {
-				const base = plan<true>(baseQuery).then(updateStartDest(from, to));
+				const base = planAndSign(baseQuery).then(updateStartDest(from, to));
 				baseResponse = base;
 				routingResponses = [base];
+				pushStateWithQueryString(
+					{
+						from: JSON.stringify(from?.value?.match),
+						to: JSON.stringify(to?.value?.match),
+						time: time,
+						arriveBy: timeType === 'arrival'
+					},
+					{ showMap: page.state.showMap },
+					true
+				);
 			}, 400);
 		}
 	});
@@ -182,6 +202,8 @@
 	const applyPosition = (position: { coords: { latitude: number; longitude: number } }) => {
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
 	};
+
+	let loading = $state(false);
 </script>
 
 <Meta title={PUBLIC_PROVIDER} />
@@ -194,17 +216,19 @@
 			placeholder={t.from}
 			bind:selected={from}
 			items={fromItems}
-			onValueChange={() => history.back()}
+			open={true}
+			onValueChange={() => pushState('', {})}
 		/>
 	{:else if page.state.selectTo}
 		<AddressTypeahead
 			placeholder={t.to}
 			bind:selected={to}
 			items={toItems}
-			onValueChange={() => history.back()}
+			open={true}
+			onValueChange={() => pushState('', {})}
 		/>
 	{:else if page.state.showMap}
-		<PopupMap bind:from bind:to itinerary={page.state.selectedItinerary} />
+		<PopupMap bind:from bind:to itinerary={page.state.selectedItinerary} areas={data.areas} />
 	{:else if page.state.selectedItinerary}
 		<div class="flex items-center justify-between gap-4">
 			<Button variant="outline" size="icon" onclick={() => window.history.back()}>
@@ -232,71 +256,23 @@
 							<p class="my-2 text-sm">{t.booking.disclaimer}</p>
 
 							<Dialog.Footer>
-								{@const firstOdmIndex = page.state.selectedItinerary.legs.findIndex(
-									(l: Leg) => l.mode === 'ODM'
-								)}
-								{@const firstOdm =
-									firstOdmIndex === -1
-										? undefined
-										: page.state.selectedItinerary.legs[firstOdmIndex]}
-								{@const lastOdmIndex = page.state.selectedItinerary.legs.findLastIndex(
-									(l: Leg) => l.mode === 'ODM'
-								)}
-								{@const lastOdm =
-									lastOdmIndex === -1 ? undefined : page.state.selectedItinerary.legs[lastOdmIndex]}
-								{@const isDirectODM =
-									page.state.selectedItinerary.legs.length === 1 &&
-									page.state.selectedItinerary.legs[0].mode === 'ODM'}
-
-								<form method="post" action="?/bookItineraryWithOdm" use:enhance>
+								<form
+									method="post"
+									action="?/bookItineraryWithOdm"
+									use:enhance={() => {
+										loading = true;
+										return async ({ update }) => {
+											await update();
+											window.setTimeout(() => {
+												loading = false;
+											}, 5000);
+										};
+									}}
+								>
 									<input
 										type="hidden"
 										name="json"
 										value={JSON.stringify(page.state.selectedItinerary)}
-									/>
-									<input
-										type="hidden"
-										name="startFixed1"
-										value={isDirectODM
-											? timeType === 'departure'
-												? '1'
-												: '0'
-											: firstOdmIndex === 0
-												? '0'
-												: '1'}
-									/>
-									<input type="hidden" name="startFixed2" value="1" />
-									<input type="hidden" name="fromAddress1" value={firstOdm.from.name} />
-									<input type="hidden" name="toAddress1" value={firstOdm.to.name} />
-									<input type="hidden" name="fromAddress2" value={lastOdm.from.name} />
-									<input type="hidden" name="toAddress2" value={lastOdm.to.name} />
-									<input type="hidden" name="fromLat1" value={firstOdm.from.lat} />
-									<input type="hidden" name="fromLng1" value={firstOdm.from.lon} />
-									<input type="hidden" name="toLat1" value={firstOdm.to.lat} />
-									<input type="hidden" name="toLng1" value={firstOdm.to.lon} />
-									<input type="hidden" name="fromLat2" value={lastOdm.from.lat} />
-									<input type="hidden" name="fromLng2" value={lastOdm.from.lon} />
-									<input type="hidden" name="toLat2" value={lastOdm.to.lat} />
-									<input type="hidden" name="toLng2" value={lastOdm.to.lon} />
-									<input
-										type="hidden"
-										name="startTime1"
-										value={new Date(firstOdm.startTime).getTime()}
-									/>
-									<input
-										type="hidden"
-										name="endTime1"
-										value={new Date(firstOdm.endTime).getTime()}
-									/>
-									<input
-										type="hidden"
-										name="startTime2"
-										value={new Date(lastOdm.startTime).getTime()}
-									/>
-									<input
-										type="hidden"
-										name="endTime2"
-										value={new Date(lastOdm.endTime).getTime()}
 									/>
 									<input type="hidden" name="passengers" value={passengers} />
 									<input type="hidden" name="kidsZeroToTwo" value={kidsZeroToTwo} />
@@ -304,7 +280,14 @@
 									<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
 									<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
 									<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
-									<Button type="submit" variant="outline">{t.booking.header}</Button>
+									<input
+										type="hidden"
+										name="startFixed"
+										value={timeType === 'departure' ? '1' : '0'}
+									/>
+									<Button type="submit" variant="outline" disabled={loading}
+										>{t.booking.header}</Button
+									>
 								</form>
 							</Dialog.Footer>
 						</Dialog.Content>
@@ -348,14 +331,32 @@
 			page.state.selectTo}
 	>
 		<div class="flex h-full flex-col gap-4">
-			<Button
-				size="icon"
-				variant="outline"
-				onclick={() => pushState('', { showMap: true })}
-				class="ml-auto"
-			>
-				<MapIcon class="h-[1.2rem] w-[1.2rem]" />
-			</Button>
+			<div class="grid grid-cols-2 gap-4">
+				<div class="relative flex">
+					<img class="w-1/2" src={logo} alt={t.logo} />
+					<p class="absolute bottom-0 right-0 font-bold">PriMa+ÖV</p>
+				</div>
+				<div class="relative" dir="rtl">
+					<div class="absolute bottom-0">
+						<Button
+							size="icon"
+							variant="outline"
+							onclick={() => pushState('', { showMap: true })}
+							class="ml-auto"
+						>
+							<MapIcon class="h-[1.2rem] w-[1.2rem]" />
+						</Button>
+						<Button
+							size="icon"
+							variant="outline"
+							class="ml-auto"
+							onclick={() => goto('/explainer')}
+						>
+							<HelpCircleIcon class="h-[1.2rem] w-[1.2rem]" />
+						</Button>
+					</div>
+				</div>
+			</div>
 			<div class="relative flex flex-col gap-4">
 				<Input
 					placeholder={t.from}
@@ -504,6 +505,24 @@
 					updateStartDest={updateStartDest(from, to)}
 				/>
 			</div>
+			<div class="mx-auto mt-6 space-y-2 text-sm">
+				<p><strong>{t.fare}</strong><br />3€ {t.perPerson} {t.perRide}</p>
+				<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
+				<p>
+					<button
+						class="link"
+						onclick={() =>
+							pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
+						><strong>{t.serviceArea}</strong></button
+					><br />{t.regionAround} Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife,
+					Trebendorf, Weißkeißel, Weißwasser/O.L.
+				</p>
+				<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
+			</div>
+			<p class="mx-auto mt-6 text-sm">
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+				{@html t.introduction}
+			</p>
 		</div>
 		<p class="mx-auto mt-6 max-w-72 text-center text-xs text-input">
 			<a

@@ -1,12 +1,10 @@
-import { BUFFER_TIME, MAX_TRAVEL, PASSENGER_CHANGE_DURATION } from '$lib/constants';
 import { implication } from '$lib/server/util/implication';
+import { InsertHow, InsertWhat } from '$lib/util/booking/insertionTypes';
 import { Interval } from '$lib/util/interval';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
-import type { DbEvent, VehicleWithInterval } from './getBookingAvailability';
+import type { Event, VehicleWithInterval } from './getBookingAvailability';
 import {
 	InsertDirection,
-	InsertHow,
-	InsertWhat,
 	printInsertionType,
 	type InsertionInfo,
 	type InsertionType
@@ -28,30 +26,28 @@ export const getPrevLegDuration = (
 	let relevantRoutingResults: InsertionRoutingResult | undefined = undefined;
 	switch (insertionCase.what) {
 		case InsertWhat.USER_CHOSEN:
-			relevantRoutingResults = routingResults.userChosen;
+			relevantRoutingResults = routingResults.userChosen.toUserChosen;
 			break;
 
 		case InsertWhat.BOTH:
 			console.assert(busStopIdx != undefined);
 			relevantRoutingResults =
 				insertionCase.direction == InsertDirection.BUS_STOP_PICKUP
-					? routingResults.busStops[busStopIdx!]
-					: routingResults.userChosen;
+					? routingResults.busStops.toBusStop[busStopIdx!]
+					: routingResults.userChosen.toUserChosen;
 			break;
 
 		case InsertWhat.BUS_STOP:
-			console.assert(busStopIdx != undefined);
-			relevantRoutingResults = routingResults.busStops[busStopIdx!];
+			console.assert(
+				busStopIdx != undefined,
+				'Found unexpected undefined busstop in getLegDuration function.'
+			);
+			relevantRoutingResults = routingResults.busStops.toBusStop[busStopIdx!];
 			break;
 	}
-
-	const drivingTime = comesFromCompany(insertionCase)
+	return comesFromCompany(insertionCase)
 		? relevantRoutingResults.company[insertionInfo.companyIdx]
-		: relevantRoutingResults.event[insertionInfo.prevEventIdxInRoutingResults];
-	if (drivingTime == undefined || drivingTime > MAX_TRAVEL) {
-		return undefined;
-	}
-	return drivingTime + BUFFER_TIME;
+		: relevantRoutingResults.event[insertionInfo.insertionIdx];
 };
 
 export const getNextLegDuration = (
@@ -63,36 +59,33 @@ export const getNextLegDuration = (
 	let relevantRoutingResults: InsertionRoutingResult | undefined = undefined;
 	switch (insertionCase.what) {
 		case InsertWhat.USER_CHOSEN:
-			relevantRoutingResults = routingResults.userChosen;
+			relevantRoutingResults = routingResults.userChosen.fromUserChosen;
 			break;
 
 		case InsertWhat.BOTH:
-			console.assert(busStopIdx != undefined);
+			console.assert(
+				busStopIdx != undefined,
+				'Found unexpected undefined busstop in getLegDuration function.'
+			);
 			relevantRoutingResults =
 				insertionCase.direction == InsertDirection.BUS_STOP_PICKUP
-					? routingResults.userChosen
-					: routingResults.busStops[busStopIdx!];
+					? routingResults.userChosen.fromUserChosen
+					: routingResults.busStops.fromBusStop[busStopIdx!];
 			break;
 
 		case InsertWhat.BUS_STOP:
 			console.assert(busStopIdx != undefined);
-			relevantRoutingResults = routingResults.busStops[busStopIdx!];
+			relevantRoutingResults = routingResults.busStops.fromBusStop[busStopIdx!];
 			break;
 	}
-
-	const drivingTime = returnsToCompany(insertionCase)
+	return returnsToCompany(insertionCase)
 		? relevantRoutingResults.company[insertionInfo.companyIdx]
-		: relevantRoutingResults.event[insertionInfo.nextEventIdxInRoutingResults];
-	if (drivingTime == undefined || drivingTime > MAX_TRAVEL) {
-		return undefined;
-	}
-	return drivingTime + PASSENGER_CHANGE_DURATION + BUFFER_TIME;
+		: relevantRoutingResults.event[insertionInfo.insertionIdx];
 };
-
 export function getAllowedOperationTimes(
 	insertionCase: InsertionType,
-	prev: DbEvent | undefined,
-	next: DbEvent | undefined,
+	prev: Event | undefined,
+	next: Event | undefined,
 	expandedSearchInterval: Interval,
 	prepTime: UnixtimeMs,
 	vehicle: VehicleWithInterval
@@ -156,9 +149,10 @@ export function getAllowedOperationTimes(
 		!(insertionCase.how != InsertHow.NEW_TOUR && relevantAvailabilities.length > 1),
 		`Found ${relevantAvailabilities.length} intervals, which are supposed to be disjoint, containing the same timestamp.`
 	);
-	return relevantAvailabilities
+	const finalWindow = relevantAvailabilities
 		.map((availability) => new Interval(availability).intersect(window))
 		.filter((availability) => availability != undefined);
+	return finalWindow;
 }
 
 export function getArrivalWindow(
@@ -176,6 +170,7 @@ export function getArrivalWindow(
 			.map((window) => window.shrink(prevLegDuration, nextLegDuration))
 			.filter((window) => window != undefined)
 	);
+
 	let arrivalWindows = directWindows
 		.map((window) =>
 			window.shrink(
@@ -192,8 +187,9 @@ export function getArrivalWindow(
 	if (arrivalWindows.length == 0) {
 		return undefined;
 	}
-	// TODO why?
-	return insertionCase.direction == InsertDirection.BUS_STOP_PICKUP
-		? arrivalWindows.reduce((current, best) => (current.endTime < best.endTime ? current : best))
-		: arrivalWindows.reduce((current, best) => (current.endTime > best.endTime ? current : best));
+	const best =
+		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP
+			? arrivalWindows.reduce((current, best) => (current.endTime < best.endTime ? current : best))
+			: arrivalWindows.reduce((current, best) => (current.endTime > best.endTime ? current : best));
+	return best;
 }

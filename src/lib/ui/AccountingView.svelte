@@ -11,10 +11,10 @@
 	import * as Dialog from '$lib/shadcn/dialog';
 	import { CalendarDate } from '@internationalized/date';
 	import { groupBy } from '$lib/util/groupBy';
+	import { getEuroString } from '$lib/util/odmPrice';
 	import {
 		companyColsAdmin,
 		companyColsCompany,
-		getEuroString,
 		subtractionColsAdmin,
 		subtractionColsCompany,
 		tourColsAdmin,
@@ -316,7 +316,6 @@
 	<SortableTable
 		bind:rows={currentRowsToursTable}
 		cols={isAdmin ? tourColsAdmin : tourColsCompany}
-		{isAdmin}
 		getRowStyle={(_) => 'cursor-pointer '}
 		bind:selectedRow={selectedToursTableRow}
 		bindSelectedRow={true}
@@ -329,7 +328,6 @@
 	<SortableTable
 		bind:rows={currentRowsSubtractionsTable}
 		cols={isAdmin ? subtractionColsAdmin : subtractionColsCompany}
-		{isAdmin}
 	/>
 {/snippet}
 
@@ -337,7 +335,6 @@
 	<SortableTable
 		bind:rows={currentCompanyRows}
 		cols={isAdmin ? companyColsAdmin : companyColsCompany}
-		{isAdmin}
 		fixLastRow={isAdmin}
 	/>
 {/snippet}
