@@ -40,7 +40,7 @@
 	import Switch from '$lib/shadcn/switch/switch.svelte';
 	import { cn } from '$lib/shadcn/utils';
 	import { updateStartDest } from '$lib/util/updateStartDest';
-	import { odmPrice } from '$lib/util/odmPrice';
+	import { getEuroString, legOdmPrice, odmPrice } from '$lib/util/odmPrice';
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { HelpCircleIcon, LocateFixed, MapIcon } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
@@ -544,7 +544,11 @@
 				/>
 			</div>
 			<div class="mx-auto mt-6 space-y-2 text-sm">
-				<p><strong>{t.fare}</strong><br />3€ {t.perPerson} {t.perRide}</p>
+				<p>
+					<strong>{t.fare}</strong><br />{getEuroString(legOdmPrice(1, 0, 0))}
+					{t.perPerson}
+					{t.perRide}
+				</p>
 				<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
 				<p>
 					<button
