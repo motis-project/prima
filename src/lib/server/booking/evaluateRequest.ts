@@ -10,8 +10,9 @@ import type { Range } from '$lib/util/booking/getPossibleInsertions';
 import {
 	EARLIEST_SHIFT_START,
 	LATEST_SHIFT_END,
-	MAX_PASSENGER_WAITING_TIME_PICKUP,
-	PASSENGER_CHANGE_DURATION
+	PASSENGER_CHANGE_DURATION,
+	MAX_PASSENGER_WAITING_TIME_DROPOFF,
+	MAX_PASSENGER_WAITING_TIME_PICKUP
 } from '$lib/constants';
 import {
 	evaluateNewTours,
@@ -63,7 +64,7 @@ export async function evaluateRequest(
 			(t) =>
 				new Interval(
 					startFixed ? t : t - MAX_PASSENGER_WAITING_TIME_PICKUP,
-					startFixed ? t + MAX_PASSENGER_WAITING_TIME_PICKUP : t
+					startFixed ? t + MAX_PASSENGER_WAITING_TIME_DROPOFF : t
 				)
 		)
 	);

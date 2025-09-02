@@ -8,10 +8,7 @@ import {
 	setTour,
 	Zone
 } from '$lib/testHelpers';
-import {
-	MAX_PASSENGER_WAITING_TIME_DROPOFF,
-	MAX_PASSENGER_WAITING_TIME_PICKUP
-} from '$lib/constants';
+import { SCHEDULED_TIME_BUFFER_DROPOFF, SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import { MINUTE } from '$lib/util/time';
 import type { Capacities } from '$lib/util/booking/Capacities';
@@ -432,7 +429,7 @@ describe('blacklisting test', () => {
 			userChosen: inNiesky,
 			busStops: [
 				{
-					times: [dateInXMinutesYMs(90, MAX_PASSENGER_WAITING_TIME_DROPOFF)],
+					times: [dateInXMinutesYMs(90, SCHEDULED_TIME_BUFFER_DROPOFF)],
 					...inNiesky
 				}
 			],
@@ -459,7 +456,7 @@ describe('blacklisting test', () => {
 			userChosen: inNiesky,
 			busStops: [
 				{
-					times: [dateInXMinutesYMs(91, MAX_PASSENGER_WAITING_TIME_DROPOFF)],
+					times: [dateInXMinutesYMs(91, SCHEDULED_TIME_BUFFER_DROPOFF)],
 					...inNiesky
 				}
 			],
@@ -484,9 +481,7 @@ describe('blacklisting test', () => {
 
 		const r = {
 			userChosen: inNiesky,
-			busStops: [
-				{ times: [dateInXMinutesYMs(0, -MAX_PASSENGER_WAITING_TIME_PICKUP)], ...inNiesky }
-			],
+			busStops: [{ times: [dateInXMinutesYMs(0, -SCHEDULED_TIME_BUFFER_PICKUP)], ...inNiesky }],
 			startFixed: true,
 			capacities: { passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }
 		};
@@ -510,7 +505,7 @@ describe('blacklisting test', () => {
 			userChosen: inNiesky,
 			busStops: [
 				{
-					times: [dateInXMinutesYMs(-1, -MAX_PASSENGER_WAITING_TIME_PICKUP)],
+					times: [dateInXMinutesYMs(-1, -SCHEDULED_TIME_BUFFER_PICKUP)],
 					...inNiesky
 				}
 			],

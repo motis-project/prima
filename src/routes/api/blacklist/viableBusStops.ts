@@ -1,9 +1,9 @@
 import {
-	MAX_PASSENGER_WAITING_TIME_PICKUP,
-	MAX_PASSENGER_WAITING_TIME_DROPOFF,
 	WGS84,
 	EARLIEST_SHIFT_START,
-	LATEST_SHIFT_END
+	LATEST_SHIFT_END,
+	MAX_PASSENGER_WAITING_TIME_PICKUP,
+	MAX_PASSENGER_WAITING_TIME_DROPOFF
 } from '$lib/constants';
 import { db, type Database } from '$lib/server/db';
 import { covers } from '$lib/server/db/covers';
@@ -172,8 +172,8 @@ export const getViableBusStops = async (
 		b.times.map(
 			(t) =>
 				new Interval(
-					startFixed ? t : t - MAX_PASSENGER_WAITING_TIME_DROPOFF,
-					!startFixed ? t : t + MAX_PASSENGER_WAITING_TIME_PICKUP
+					startFixed ? t : t - MAX_PASSENGER_WAITING_TIME_PICKUP,
+					!startFixed ? t : t + MAX_PASSENGER_WAITING_TIME_DROPOFF
 				)
 		)
 	);

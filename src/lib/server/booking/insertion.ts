@@ -1,6 +1,6 @@
 import {
-	MAX_PASSENGER_WAITING_TIME_DROPOFF,
-	MAX_PASSENGER_WAITING_TIME_PICKUP,
+	SCHEDULED_TIME_BUFFER_DROPOFF,
+	SCHEDULED_TIME_BUFFER_PICKUP,
 	MIN_PREP,
 	PASSENGER_TIME_COST_FACTOR,
 	APPROACH_AND_RETURN_TIME_COST_FACTOR,
@@ -203,8 +203,8 @@ export function evaluateSingleInsertion(
 	const scheduledTimeCandidate = // TODO
 		communicatedTime +
 		(isPickup(insertionCase)
-			? Math.min(arrivalWindow.size(), MAX_PASSENGER_WAITING_TIME_PICKUP)
-			: -Math.min(arrivalWindow.size(), MAX_PASSENGER_WAITING_TIME_DROPOFF));
+			? Math.min(arrivalWindow.size(), SCHEDULED_TIME_BUFFER_PICKUP)
+			: -Math.min(arrivalWindow.size(), SCHEDULED_TIME_BUFFER_DROPOFF));
 	let newEndTimePrev = undefined;
 	if (
 		!comesFromCompany(insertionCase) &&
@@ -367,11 +367,11 @@ export function evaluateBothInsertion(
 			case InsertHow.APPEND:
 				return 0;
 			case InsertHow.PREPEND:
-				return Math.min(arrivalWindow.size(), MAX_PASSENGER_WAITING_TIME_PICKUP);
+				return Math.min(arrivalWindow.size(), SCHEDULED_TIME_BUFFER_PICKUP);
 			case InsertHow.INSERT:
 				return 0;
 			case InsertHow.NEW_TOUR:
-				return Math.min(Math.floor(arrivalWindow.size() / 2), MAX_PASSENGER_WAITING_TIME_PICKUP);
+				return Math.min(Math.floor(arrivalWindow.size() / 2), SCHEDULED_TIME_BUFFER_PICKUP);
 			case InsertHow.CONNECT:
 				return 0;
 		}
@@ -379,13 +379,13 @@ export function evaluateBothInsertion(
 	const dropoffLeeway = (() => {
 		switch (insertionCase.how) {
 			case InsertHow.APPEND:
-				return Math.min(arrivalWindow.size(), MAX_PASSENGER_WAITING_TIME_DROPOFF);
+				return Math.min(arrivalWindow.size(), SCHEDULED_TIME_BUFFER_DROPOFF);
 			case InsertHow.PREPEND:
 				return 0;
 			case InsertHow.INSERT:
 				return 0;
 			case InsertHow.NEW_TOUR:
-				return Math.min(Math.floor(arrivalWindow.size() / 2), MAX_PASSENGER_WAITING_TIME_DROPOFF);
+				return Math.min(Math.floor(arrivalWindow.size() / 2), SCHEDULED_TIME_BUFFER_DROPOFF);
 			case InsertHow.CONNECT:
 				return 0;
 		}
@@ -866,11 +866,11 @@ export function evaluatePairInsertions(
 					const nextDropoff = events[dropoffIdx];
 					const twoAfterDropoff = events[dropoffIdx + 1];
 					const communicatedPickupTime = Math.max(
-						pickup.window.endTime - MAX_PASSENGER_WAITING_TIME_PICKUP,
+						pickup.window.endTime - SCHEDULED_TIME_BUFFER_PICKUP,
 						pickup.window.startTime
 					);
 					const communicatedDropoffTime = Math.min(
-						dropoff.window.startTime + MAX_PASSENGER_WAITING_TIME_DROPOFF,
+						dropoff.window.startTime + SCHEDULED_TIME_BUFFER_DROPOFF,
 						dropoff.window.endTime
 					);
 
@@ -900,7 +900,7 @@ export function evaluatePairInsertions(
 						dropoff.prevLegDuration;
 					const pickupScheduledShift = Math.min(
 						pickup.window.size(),
-						MAX_PASSENGER_WAITING_TIME_PICKUP,
+						SCHEDULED_TIME_BUFFER_PICKUP,
 						leewayBetweenPickupDropoff
 					);
 					const scheduledPickupTime =
@@ -912,7 +912,7 @@ export function evaluatePairInsertions(
 							? 0
 							: Math.min(
 									dropoff.window.size(),
-									MAX_PASSENGER_WAITING_TIME_DROPOFF,
+									SCHEDULED_TIME_BUFFER_DROPOFF,
 									leewayBetweenPickupDropoff - pickupScheduledShift // TODO
 								));
 
@@ -1137,12 +1137,12 @@ const keepsPromises = (
 	const pickupWindow = expandToFullMinutes(
 		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP
 			? arrivalWindow
-			: w.shift(-MAX_PASSENGER_WAITING_TIME_PICKUP)
+			: w.shift(-SCHEDULED_TIME_BUFFER_PICKUP)
 	);
 	const dropoffWindow = expandToFullMinutes(
 		insertionCase.direction == InsertDirection.BUS_STOP_DROPOFF
 			? arrivalWindow
-			: w.shift(MAX_PASSENGER_WAITING_TIME_DROPOFF)
+			: w.shift(SCHEDULED_TIME_BUFFER_DROPOFF)
 	);
 
 	let checkPickup = false;
@@ -1373,14 +1373,14 @@ function clampTimestamps(
 			scheduledPickupTimeStart,
 			scheduledPickupTimeEnd,
 			communicatedDropoffTime:
-				promisedTimes?.dropoff ?? scheduledDropoffTimeStart + MAX_PASSENGER_WAITING_TIME_DROPOFF,
+				promisedTimes?.dropoff ?? scheduledDropoffTimeStart + SCHEDULED_TIME_BUFFER_DROPOFF,
 			scheduledDropoffTimeStart,
 			scheduledDropoffTimeEnd
 		};
 	}
 	return {
 		communicatedPickupTime:
-			promisedTimes?.pickup ?? scheduledPickupTimeEnd - MAX_PASSENGER_WAITING_TIME_PICKUP,
+			promisedTimes?.pickup ?? scheduledPickupTimeEnd - SCHEDULED_TIME_BUFFER_PICKUP,
 		scheduledPickupTimeStart,
 		scheduledPickupTimeEnd,
 		communicatedDropoffTime: promisedTimes?.dropoff ?? scheduledDropoffTimeEnd,
@@ -1414,7 +1414,7 @@ function getTimestamps(
 		prev.time.overlaps(window) &&
 		(!promisedTimes ||
 			expandToFullMinutes(prev.time).overlaps(
-				new Interval(promisedTimes.pickup, promisedTimes.pickup + MAX_PASSENGER_WAITING_TIME_PICKUP)
+				new Interval(promisedTimes.pickup, promisedTimes.pickup + SCHEDULED_TIME_BUFFER_PICKUP)
 			));
 	const nextIsSameEventGroup =
 		next &&
@@ -1422,10 +1422,7 @@ function getTimestamps(
 		next.time.overlaps(window) &&
 		(!promisedTimes ||
 			expandToFullMinutes(next.time).overlaps(
-				new Interval(
-					promisedTimes.dropoff,
-					promisedTimes.dropoff + MAX_PASSENGER_WAITING_TIME_DROPOFF
-				)
+				new Interval(promisedTimes.dropoff, promisedTimes.dropoff + SCHEDULED_TIME_BUFFER_DROPOFF)
 			));
 	if (prevIsSameEventGroup) {
 		const scheduledPickupTimeStart = Math.max(
