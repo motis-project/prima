@@ -202,6 +202,7 @@ export function evaluateSingleInsertion(
 			? promisedTimes.dropoff
 			: arrivalWindow.endTime;
 
+	console.log('passdurreverse', passengerDuration, passengerDuration / (1 + SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE));
 	const scheduledTimeCandidate = // TODO
 		communicatedTime +
 		(isPickup(insertionCase)
@@ -378,6 +379,8 @@ export function evaluateBothInsertion(
 				return 0;
 		}
 	})();
+	console.log('passdur evalboth', passengerDuration);
+
 	const dropoffLeeway = (() => {
 		switch (insertionCase.how) {
 			case InsertHow.APPEND:
@@ -871,6 +874,7 @@ export function evaluatePairInsertions(
 						pickup.window.endTime - SCHEDULED_TIME_BUFFER_PICKUP,
 						pickup.window.startTime
 					);
+					console.log('passdur evalpair', dropoff.window.startTime - pickup.window.endTime);
 					const communicatedDropoffTime = Math.min(
 						dropoff.window.startTime + getScheduledTimeBufferDropoff(dropoff.window.startTime - pickup.window.endTime),
 						dropoff.window.endTime
@@ -1375,14 +1379,16 @@ function clampTimestamps(
 			scheduledPickupTimeStart,
 			scheduledPickupTimeEnd,
 			communicatedDropoffTime:
-				promisedTimes?.dropoff ?? scheduledDropoffTimeStart + SCHEDULED_TIME_BUFFER_DROPOFF,
+				promisedTimes?.dropoff ?? scheduledDropoffTimeStart + getScheduledTimeBufferDropoff(scheduledDropoffTimeStart - scheduledPickupTimeEnd),
 			scheduledDropoffTimeStart,
 			scheduledDropoffTimeEnd
 		};
 	}
+	console.log('passdur clampTs', scheduledDropoffTimeStart - scheduledPickupTimeEnd);
+
 	return {
 		communicatedPickupTime:
-			promisedTimes?.pickup ?? scheduledPickupTimeEnd - getScheduledTimeBufferDropoff(scheduledDropoffTimeStart - scheduledPickupTimeEnd),
+			promisedTimes?.pickup ?? scheduledPickupTimeEnd - SCHEDULED_TIME_BUFFER_PICKUP,
 		scheduledPickupTimeStart,
 		scheduledPickupTimeEnd,
 		communicatedDropoffTime: promisedTimes?.dropoff ?? scheduledDropoffTimeEnd,
@@ -1418,6 +1424,8 @@ function getTimestamps(
 			expandToFullMinutes(prev.time).overlaps(
 				new Interval(promisedTimes.pickup, promisedTimes.pickup + SCHEDULED_TIME_BUFFER_PICKUP)
 			));
+	console.log('passdur getTs', passengerDuration);
+
 	const nextIsSameEventGroup =
 		next &&
 		nextLegDuration === 0 &&
