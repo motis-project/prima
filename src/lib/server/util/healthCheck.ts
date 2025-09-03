@@ -268,7 +268,7 @@ function validateScheduledIntervalSize(tours: ToursWithRequests): boolean {
 	for (const event of tours.flatMap((t) => t.requests.flatMap((r) => r.events))) {
 		if (
 			event.scheduledTimeEnd - event.scheduledTimeStart >
-			(event.isPickup ? SCHEDULED_TIME_BUFFER_PICKUP : SCHEDULED_TIME_BUFFER_DROPOFF)
+			(event.isPickup ? SCHEDULED_TIME_BUFFER_PICKUP : SCHEDULED_TIME_BUFFER_DROPOFF) // TODO
 		) {
 			console.log('Found an event where the scheduled time interval grew, eventId: ', event.id);
 			fail = true;
