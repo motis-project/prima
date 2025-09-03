@@ -63,8 +63,8 @@ export async function evaluateRequest(
 		bs.times.map(
 			(t) =>
 				new Interval(
-					startFixed ? t : t - MAX_PASSENGER_WAITING_TIME_PICKUP,
-					startFixed ? t + MAX_PASSENGER_WAITING_TIME_DROPOFF : t
+					startFixed ? t : t - MAX_PASSENGER_WAITING_TIME_DROPOFF,
+					startFixed ? t + MAX_PASSENGER_WAITING_TIME_PICKUP : t
 				)
 		)
 	);

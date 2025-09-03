@@ -172,8 +172,8 @@ export const getViableBusStops = async (
 		b.times.map(
 			(t) =>
 				new Interval(
-					startFixed ? t : t - MAX_PASSENGER_WAITING_TIME_PICKUP,
-					!startFixed ? t : t + MAX_PASSENGER_WAITING_TIME_DROPOFF
+					startFixed ? t : t - MAX_PASSENGER_WAITING_TIME_DROPOFF,
+					!startFixed ? t : t + MAX_PASSENGER_WAITING_TIME_PICKUP
 				)
 		)
 	);
