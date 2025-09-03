@@ -8,7 +8,10 @@ import {
 	setTour,
 	Zone
 } from '$lib/testHelpers';
-import { MAX_PASSENGER_WAITING_TIME_PICKUP, MAX_PASSENGER_WAITING_TIME_DROPOFF } from '$lib/constants';
+import {
+	MAX_PASSENGER_WAITING_TIME_PICKUP,
+	MAX_PASSENGER_WAITING_TIME_DROPOFF
+} from '$lib/constants';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import { MINUTE } from '$lib/util/time';
 import type { Capacities } from '$lib/util/booking/Capacities';
@@ -481,7 +484,9 @@ describe('blacklisting test', () => {
 
 		const r = {
 			userChosen: inNiesky,
-			busStops: [{ times: [dateInXMinutesYMs(0, -MAX_PASSENGER_WAITING_TIME_PICKUP)], ...inNiesky }],
+			busStops: [
+				{ times: [dateInXMinutesYMs(0, -MAX_PASSENGER_WAITING_TIME_PICKUP)], ...inNiesky }
+			],
 			startFixed: true,
 			capacities: { passengers: 1, bikes: 0, wheelchairs: 0, luggage: 0 }
 		};
