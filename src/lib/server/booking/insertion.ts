@@ -387,7 +387,10 @@ export function evaluateBothInsertion(
 				return 0;
 			case InsertHow.NEW_TOUR:
 				return Math.min(
-					Math.floor(arrivalWindow.size() / 2),
+					Math.max(
+						Math.floor(arrivalWindow.size() / 2),
+						Math.floor(arrivalWindow.size() - SCHEDULED_TIME_BUFFER_PICKUP)
+					),
 					getScheduledTimeBufferDropoff(passengerDuration)
 				);
 			case InsertHow.CONNECT:
