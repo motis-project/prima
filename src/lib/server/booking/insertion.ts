@@ -1,5 +1,4 @@
 import {
-	SCHEDULED_TIME_BUFFER_DROPOFF,
 	SCHEDULED_TIME_BUFFER_PICKUP,
 	MIN_PREP,
 	PASSENGER_TIME_COST_FACTOR,
@@ -7,7 +6,6 @@ import {
 	TAXI_WAITING_TIME_COST_FACTOR,
 	FULLY_PAYED_COST_FACTOR,
 	MAX_WAITING_TIME,
-	SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE
 } from '$lib/constants';
 import {
 	INSERT_HOW_OPTIONS,
@@ -112,16 +110,16 @@ export function toInsertionWithISOStrings(i: Insertion | undefined) {
 	return i === undefined
 		? undefined
 		: {
-				...i,
-				pickupTime: new Date(i.pickupTime).toISOString(),
-				dropoffTime: new Date(i.dropoffTime).toISOString(),
-				scheduledPickupTimeStart: new Date(i.scheduledPickupTimeStart).toISOString(),
-				scheduledPickupTimeEnd: new Date(i.scheduledPickupTimeEnd).toISOString(),
-				scheduledDropoffTimeStart: new Date(i.scheduledDropoffTimeStart).toISOString(),
-				scheduledDropoffTimeEnd: new Date(i.scheduledDropoffTimeEnd).toISOString(),
-				departure: i.departure == undefined ? undefined : new Date(i.departure).toISOString(),
-				arrival: i.arrival == undefined ? undefined : new Date(i.arrival).toISOString()
-			};
+			...i,
+			pickupTime: new Date(i.pickupTime).toISOString(),
+			dropoffTime: new Date(i.dropoffTime).toISOString(),
+			scheduledPickupTimeStart: new Date(i.scheduledPickupTimeStart).toISOString(),
+			scheduledPickupTimeEnd: new Date(i.scheduledPickupTimeEnd).toISOString(),
+			scheduledDropoffTimeStart: new Date(i.scheduledDropoffTimeStart).toISOString(),
+			scheduledDropoffTimeEnd: new Date(i.scheduledDropoffTimeEnd).toISOString(),
+			departure: i.departure == undefined ? undefined : new Date(i.departure).toISOString(),
+			arrival: i.arrival == undefined ? undefined : new Date(i.arrival).toISOString()
+		};
 }
 
 function isPickup(type: InsertionType) {
@@ -176,7 +174,7 @@ export function evaluateSingleInsertion(
 	}
 	const passengerDuration =
 		(insertionCase.what == InsertWhat.BUS_STOP) ==
-		(insertionCase.direction == InsertDirection.BUS_STOP_PICKUP)
+			(insertionCase.direction == InsertDirection.BUS_STOP_PICKUP)
 			? nextLegDuration
 			: prevLegDuration;
 	if (
@@ -752,7 +750,7 @@ export function evaluateSingleInsertions(
 						(busStopEvaluations[busStopIdx][busTimeIdx] == undefined ||
 							busStopEvaluations[busStopIdx][busTimeIdx][insertionInfo.insertionIdx] == undefined ||
 							resultBus.cost <
-								busStopEvaluations[busStopIdx][busTimeIdx][insertionInfo.insertionIdx]!.cost) &&
+							busStopEvaluations[busStopIdx][busTimeIdx][insertionInfo.insertionIdx]!.cost) &&
 						!waitsTooLong(resultBus.taxiWaitingTime)
 					) {
 						busStopEvaluations[busStopIdx][busTimeIdx][insertionInfo.insertionIdx] = resultBus;
@@ -815,9 +813,9 @@ export function evaluatePairInsertions(
 			pickupIdx < events.length - 1 &&
 			nextPickup?.tourId !== twoAfterPickup?.tourId &&
 			twoAfterPickup.scheduledTimeEnd -
-				nextPickup.scheduledTimeStart -
-				twoAfterPickup.directDuration! <
-				0
+			nextPickup.scheduledTimeStart -
+			twoAfterPickup.directDuration! <
+			0
 		) {
 			return;
 		}
@@ -863,8 +861,8 @@ export function evaluatePairInsertions(
 					const dropoff = startFixed
 						? userChosenEvaluations[insertionInfo.insertionIdx + dropoffIdx - pickupIdx]
 						: busStopEvaluations[busStopIdx][timeIdx][
-								insertionInfo.insertionIdx + dropoffIdx - pickupIdx
-							];
+						insertionInfo.insertionIdx + dropoffIdx - pickupIdx
+						];
 					if (dropoff == undefined) {
 						continue;
 					}
@@ -877,7 +875,7 @@ export function evaluatePairInsertions(
 					);
 					const communicatedDropoffTime = Math.min(
 						dropoff.window.startTime +
-							getScheduledTimeBufferDropoff(dropoff.window.startTime - pickup.window.endTime),
+						getScheduledTimeBufferDropoff(dropoff.window.startTime - pickup.window.endTime),
 						dropoff.window.endTime
 					);
 
@@ -918,10 +916,10 @@ export function evaluatePairInsertions(
 						(dropoff.case.how === InsertHow.PREPEND
 							? 0
 							: Math.min(
-									dropoff.window.size(),
-									getScheduledTimeBufferDropoff(dropoff.window.startTime - pickup.window.endTime),
-									leewayBetweenPickupDropoff - pickupScheduledShift
-								));
+								dropoff.window.size(),
+								getScheduledTimeBufferDropoff(dropoff.window.startTime - pickup.window.endTime),
+								leewayBetweenPickupDropoff - pickupScheduledShift
+							));
 
 					// Compute the delta of the taxi's time spend driving for the tour containing the new request
 					const approachPlusReturnDurationDelta =
@@ -936,17 +934,17 @@ export function evaluatePairInsertions(
 						? scheduledPickupTime - pickup.prevLegDuration
 						: prevPickup.tourId !== twoBeforePickup?.tourId
 							? Math.min(
-									communicatedPickupTime - pickup.prevLegDuration,
-									getScheduledEventTime(prevPickup)
-								) - prevPickup.prevLegDuration
+								communicatedPickupTime - pickup.prevLegDuration,
+								getScheduledEventTime(prevPickup)
+							) - prevPickup.prevLegDuration
 							: prevPickup.departure;
 					const newArrival = returnsToCompany(dropoff.case)
 						? scheduledDropoffTime + dropoff.nextLegDuration
 						: nextDropoff.tourId !== twoAfterDropoff?.tourId
 							? Math.max(
-									communicatedDropoffTime + dropoff.nextLegDuration,
-									getScheduledEventTime(nextDropoff)
-								) + nextDropoff.nextLegDuration
+								communicatedDropoffTime + dropoff.nextLegDuration,
+								getScheduledEventTime(nextDropoff)
+							) + nextDropoff.nextLegDuration
 							: nextDropoff.arrival;
 					const relevantEvents = events.slice(
 						pickup.case.how === InsertHow.CONNECT ? pickupIdx - 1 : pickupIdx,
@@ -994,8 +992,8 @@ export function evaluatePairInsertions(
 						nextShiftDropoff = Math.max(
 							0,
 							communicatedDropoffTime +
-								dropoff.nextLegDuration -
-								getScheduledEventTime(nextDropoff!)
+							dropoff.nextLegDuration -
+							getScheduledEventTime(nextDropoff!)
 						);
 					}
 
@@ -1383,7 +1381,7 @@ function clampTimestamps(
 			communicatedDropoffTime:
 				promisedTimes?.dropoff ??
 				scheduledDropoffTimeStart +
-					getScheduledTimeBufferDropoff(scheduledDropoffTimeStart - scheduledPickupTimeEnd),
+				getScheduledTimeBufferDropoff(scheduledDropoffTimeStart - scheduledPickupTimeEnd),
 			scheduledDropoffTimeStart,
 			scheduledDropoffTimeEnd
 		};
