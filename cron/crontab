@@ -3,3 +3,6 @@
 
 # Cron job to notify customers if vehicle which picks them up changes
 * * * * * /usr/local/bin/node /app/scripts/sendNewVehicleNotice.js >> /var/log/cron.log 2>&1
+
+# Cron job to remind customers and companies of imminent journeys
+*/5 * * * * /usr/local/bin/node /app/scripts/sendReminder.js >> /var/log/cron.log 2>&1
