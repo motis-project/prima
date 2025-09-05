@@ -34,7 +34,8 @@ export const POST = async (_: RequestEvent) => {
 					eb
 						.selectFrom('event')
 						.whereRef('event.request', '=', 'request.id')
-						.select(['event.communicatedTime', 'event.address'])
+						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+						.select(['event.communicatedTime', 'eventGroup.address'])
 				).as('events')
 			])
 			.execute();
@@ -54,30 +55,6 @@ export const POST = async (_: RequestEvent) => {
 					request.tourId
 				);
 			}
-
-			request.events.sort((e1, e2) => e1.communicatedTime - e2.communicatedTime);
-			const startTime = request.events[0].communicatedTime;
-			const endTime = request.events[request.events.length - 1].communicatedTime;
-			const today = new Date(Date.now());
-			const startDate = new Date(startTime);
-			const endDate = new Date(endTime);
-			const firstEventDate = new Date(request.events[0].communicatedTime);
-			const isStartToday =
-				new Date(
-					firstEventDate.getUTCFullYear(),
-					firstEventDate.getUTCMonth(),
-					firstEventDate.getUTCDate()
-				).getTime() ===
-				new Date(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()).getTime();
-
-			console.log(`Guten Tag ${request.name},
-		<li>von ${request.events[0].address}</li>
-		<li>nach ${request.events[request.events.length - 1].address}
-		die
-		${isStartToday ? 'heute' : 'am ' + startDate!.toLocaleDateString('de')} von
-		${startDate!.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' })} bis
-		${endDate!.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' })} geplant ist gab es Änderungen.
-		Die Taxifahrt wird von einem anderen Fahrzeug mit dem Kennzeichen ${request.licensePlate} durchgeführt.`);
 		}
 		if (requests.length === 0) {
 			return;
