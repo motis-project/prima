@@ -84,7 +84,7 @@ export async function moveTour(
 				console.assert(
 					!movedTour.requests.some((r) => r.events.length == 0),
 					'Found a request which contains no events. requestId: ' +
-					movedTour.requests.find((r) => r.events.length === 0)?.requestId
+						movedTour.requests.find((r) => r.events.length === 0)?.requestId
 				);
 				if (vehicleId === undefined) {
 					console.log('MOVE TOUR early exit - no vehicle id was provided. tourId: ', tourId);

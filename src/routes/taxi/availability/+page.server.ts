@@ -66,9 +66,9 @@ export async function load(event: RequestEvent) {
 		companyDataComplete,
 		companyCoordinates: companyDataComplete
 			? {
-				lat: company.lat!,
-				lng: company.lng!
-			}
+					lat: company.lat!,
+					lng: company.lng!
+				}
 			: null
 	};
 }
