@@ -81,6 +81,8 @@ class LoginViewModel @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("error", "${e.message}")
+        } finally { // TODO: tmp
+            _navigationEvent.emit(true)
         }
     }
 
