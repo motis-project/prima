@@ -420,14 +420,14 @@ export function evaluateBothInsertion(
 	let prevShift = 0;
 	if (!comesFromCompany(insertionCase) && prev!.isPickup) {
 		prevShift = Math.max(
-			getScheduledEventTime(prev!) - communicatedPickupTime + prevLegDuration,
+			getScheduledEventTime(prev!) - scheduledPickupTimeEnd + prevLegDuration,
 			0
 		);
 	}
 	let nextShift = 0;
 	if (!returnsToCompany(insertionCase) && !next!.isPickup) {
 		nextShift = Math.max(
-			communicatedDropoffTime + nextLegDuration - getScheduledEventTime(next!),
+			scheduledDropoffTimeStart + nextLegDuration - getScheduledEventTime(next!),
 			0
 		);
 	}
