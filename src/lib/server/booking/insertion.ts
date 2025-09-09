@@ -387,7 +387,10 @@ export function evaluateBothInsertion(
 				return 0;
 			case InsertHow.NEW_TOUR:
 				return Math.min(
-					Math.floor(arrivalWindow.size() / 2),
+					Math.max(
+						Math.floor(arrivalWindow.size() / 2),
+						Math.floor(arrivalWindow.size() - SCHEDULED_TIME_BUFFER_PICKUP)
+					),
 					getScheduledTimeBufferDropoff(passengerDuration)
 				);
 			case InsertHow.CONNECT:
@@ -417,14 +420,14 @@ export function evaluateBothInsertion(
 	let prevShift = 0;
 	if (!comesFromCompany(insertionCase) && prev!.isPickup) {
 		prevShift = Math.max(
-			getScheduledEventTime(prev!) - communicatedPickupTime + prevLegDuration,
+			getScheduledEventTime(prev!) - scheduledPickupTimeEnd + prevLegDuration,
 			0
 		);
 	}
 	let nextShift = 0;
 	if (!returnsToCompany(insertionCase) && !next!.isPickup) {
 		nextShift = Math.max(
-			communicatedDropoffTime + nextLegDuration - getScheduledEventTime(next!),
+			scheduledDropoffTimeStart + nextLegDuration - getScheduledEventTime(next!),
 			0
 		);
 	}
