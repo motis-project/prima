@@ -163,7 +163,11 @@ fun Tours(
                 }
             }
 
-            displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTimeStart }
+            try {
+                displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTimeStart }
+            } catch(e: Exception) {
+                Log.d("error", "Error: ${e.message}")
+            }
 
             ShowTours(navController, displayTours)
         }
