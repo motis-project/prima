@@ -35,7 +35,8 @@ async function createUser(name: string, email: string, password: string, phone: 
 			phone,
 			companyId: null,
 			isTaxiOwner: false,
-			isAdmin: false
+			isAdmin: false,
+			isService: false
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();
