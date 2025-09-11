@@ -263,7 +263,8 @@ const translations: Translations = {
 		noCancel: 'No, I do not want to cancel.',
 		pin: 'PIN:',
 		pinExplainer:
-			'To give to the passenger. The passenger must give this PIN to the taxi driver when starting the journey.'
+			'To give to the passenger. The passenger must give this PIN to the taxi driver when starting the journey.',
+		itineraryOnDate: 'Journey on'
 	},
 
 	explainer: {

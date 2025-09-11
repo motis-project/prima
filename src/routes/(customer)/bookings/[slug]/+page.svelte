@@ -14,7 +14,7 @@
 	import { enhance } from '$app/forms';
 	import Message from '$lib/ui/Message.svelte';
 	import { msg } from '$lib/msg';
-	import { t } from '$lib/i18n/translation';
+	import { language, t } from '$lib/i18n/translation';
 	import * as Card from '$lib/shadcn/card';
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { MapIcon } from 'lucide-svelte';
@@ -128,6 +128,15 @@
 				</Card.Content>
 			</Card.Root>
 		{/if}
+		<p class="my-2 font-bold">
+			{t.booking.itineraryOnDate}
+			{new Date(data.journey.startTime).toLocaleDateString(language, {
+				weekday: 'long',
+				year: 'numeric',
+				month: 'numeric',
+				day: 'numeric'
+			})}
+		</p>
 		<ConnectionDetail
 			itinerary={data.journey}
 			onClickStop={(_name: string, stopId: string, time: Date) =>

@@ -232,6 +232,7 @@ export type Translations = {
 		noCancel: string;
 		pin: string;
 		pinExplainer: string;
+		itineraryOnDate: string;
 	};
 
 	explainer: {
