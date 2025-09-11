@@ -45,7 +45,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	return {
 		...journey,
-		journey: journey.json
+		journey: journey.json,
+		isService: locals.session?.isService
 	};
 };
 

@@ -230,6 +230,8 @@ export type Translations = {
 		cancelDescription: string;
 		cancelTrip: string;
 		noCancel: string;
+		pin: string;
+		pinExplainer: string;
 	};
 
 	explainer: {

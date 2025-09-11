@@ -171,6 +171,7 @@ export const actions = {
 		const bookingResult = await bookingApi(
 			{ connection1, connection2, capacities },
 			user,
+			locals.session?.isService,
 			false,
 			kidsZeroToTwo,
 			kidsThreeToFour,

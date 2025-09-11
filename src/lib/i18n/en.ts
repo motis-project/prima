@@ -260,7 +260,10 @@ const translations: Translations = {
 		cancelDescription:
 			'Cancellation cannot be undone. Cancellation less than 24 hours before the trip will incur costs.',
 		cancelTrip: 'Cancel Trip',
-		noCancel: 'No, I do not want to cancel.'
+		noCancel: 'No, I do not want to cancel.',
+		pin: 'PIN:',
+		pinExplainer:
+			'To give to the passenger. The passenger must give this PIN to the taxi driver when starting the journey.'
 	},
 
 	explainer: {

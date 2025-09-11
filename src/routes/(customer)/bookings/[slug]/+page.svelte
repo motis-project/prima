@@ -46,7 +46,7 @@
 							<Waypoints class="mr-1 size-4" />
 							{t.booking.connection}
 						</Button>
-					{:else}
+					{:else if !data.isService}
 						<Button
 							onclick={() => {
 								showTicket = !showTicket;
@@ -115,6 +115,19 @@
 			</Card.Content>
 		</Card.Root>
 	{:else}
+		{#if data.isService}
+			<Card.Root class="my-2">
+				<Card.Content>
+					<p class="pb-4">{t.booking.pin} <b>{data.ticketCode}</b><br />{t.booking.pinExplainer}</p>
+					<BookingSummary
+						passengers={data.passengers!}
+						wheelchair={data.wheelchairs !== 0}
+						luggage={data.luggage!}
+						price={data.ticketPrice!}
+					/>
+				</Card.Content>
+			</Card.Root>
+		{/if}
 		<ConnectionDetail
 			itinerary={data.journey}
 			onClickStop={(_name: string, stopId: string, time: Date) =>

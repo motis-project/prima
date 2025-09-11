@@ -267,7 +267,10 @@ const translations: Translations = {
 		cancelHeadline: 'Möchten Sie wirklich diese Fahrt stornieren?',
 		noCancel: 'Nein, Fahrt nicht stornieren.',
 		cancelDescription:
-			'Die Stornierung der Fahrt kann nicht rückgängig gemacht werden. Eine Stornierung weniger als 24 Stunden vor der Fahrt ist mit Kosten verbunden.'
+			'Die Stornierung der Fahrt kann nicht rückgängig gemacht werden. Eine Stornierung weniger als 24 Stunden vor der Fahrt ist mit Kosten verbunden.',
+		pin: 'PIN:',
+		pinExplainer:
+			'Zur Weitergabe an den Fahrgast. Der Fahrgast muss die PIN beim Einstieg den Taxifahrer:innen mitteilen.'
 	},
 
 	explainer: {

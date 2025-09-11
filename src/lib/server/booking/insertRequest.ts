@@ -5,12 +5,14 @@ import { sql, Transaction } from 'kysely';
 import { sendNotifications } from '$lib/server/firebase/notifications';
 import { TourChange } from '$lib/server/firebase/firebase';
 import { env } from '$env/dynamic/public';
+import crypto from 'crypto';
 
 export async function insertRequest(
 	r: BookRideResponse,
 	capacities: Capacities,
 	c: ExpectedConnection,
 	customer: number,
+	withoutQr: boolean,
 	kidsZeroToTwo: number,
 	kidsThreeToFour: number,
 	kidsFiveToSix: number,
@@ -24,13 +26,16 @@ export async function insertRequest(
 					sql`,`
 				)}]::INTEGER[]`
 			: sql`ARRAY[]::INTEGER[]`;
+	const ticketCode = withoutQr
+		? crypto.randomInt(10000, 100000)
+		: crypto.createHash('md5').update(crypto.randomUUID()).digest('hex');
 	const ticketPrice =
 		(capacities.passengers - kidsZeroToTwo - kidsThreeToFour - kidsFiveToSix) *
 		parseInt(env.PUBLIC_FIXED_PRICE);
 	const requestId = (
 		await sql<{ request: number }>`
         SELECT create_and_merge_tours(
-            ROW(${capacities.passengers}, ${kidsZeroToTwo}, ${kidsThreeToFour}, ${kidsFiveToSix}, ${capacities.wheelchairs}, ${capacities.bikes}, ${capacities.luggage}, ${customer}, ${ticketPrice})::request_type,
+            ROW(${capacities.passengers}, ${kidsZeroToTwo}, ${kidsThreeToFour}, ${kidsFiveToSix}, ${capacities.wheelchairs}, ${capacities.bikes}, ${capacities.luggage}, ${customer}, ${ticketPrice}, ${ticketCode})::request_type,
             ROW(${true}, ${c.start.lat}, ${c.start.lng}, ${r.best.scheduledPickupTimeStart}, ${r.best.scheduledPickupTimeEnd}, ${r.best.pickupTime}, ${r.best.pickupPrevLegDuration}, ${r.best.pickupNextLegDuration}, ${c.start.address}, ${r.pickupEventGroup ?? null})::event_type,
             ROW(${false}, ${c.target.lat}, ${c.target.lng}, ${r.best.scheduledDropoffTimeStart}, ${r.best.scheduledDropoffTimeEnd}, ${r.best.dropoffTime}, ${r.best.dropoffPrevLegDuration}, ${r.best.dropoffNextLegDuration}, ${c.target.address}, ${r.dropoffEventGroup ?? null})::event_type,
             ${mergeTourListSql},
