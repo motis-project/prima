@@ -289,7 +289,7 @@ describe('Whitelist and Booking API Tests', () => {
 			capacities
 		};
 
-		const bookingResponse = await bookingApi(bookingBody, mockUserId, false, 0, 0, 0);
+		const bookingResponse = await bookingApi(bookingBody, mockUserId, false, false, 0, 0, 0);
 		const tours = await getTours();
 		expect(tours.length).toBe(1);
 		expect(tours[0].requests.length).toBe(1);
@@ -358,7 +358,7 @@ describe('Whitelist and Booking API Tests', () => {
 			capacities
 		};
 
-		await bookingApi(bookingBody, mockUserId, false, 0, 0, 0);
+		await bookingApi(bookingBody, mockUserId, false, false, 0, 0, 0);
 		const tours = await getTours();
 		expect(tours.length).toBe(1);
 	}, 30000);
@@ -405,7 +405,7 @@ describe('Whitelist and Booking API Tests', () => {
 			connection2: null,
 			capacities
 		};
-		const response = await bookingApi(bookingBody, mockUserId, false, 0, 0, 0);
+		const response = await bookingApi(bookingBody, mockUserId, false, false, 0, 0, 0);
 		const tours = await getTours();
 		expect(response.status === 403);
 		expect(tours.length).toBe(0);

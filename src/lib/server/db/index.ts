@@ -16,6 +16,7 @@ export interface Database {
 		passwordResetExpiresAt: number | null;
 		isTaxiOwner: boolean;
 		isAdmin: boolean;
+		isService: boolean;
 		phone: string | null;
 		companyId: number | null;
 	};

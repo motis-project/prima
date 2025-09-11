@@ -73,6 +73,7 @@ export const actions = {
 		const bookingResponse = await bookingApi(
 			{ connection1, connection2: null, capacities },
 			customer,
+			false,
 			true,
 			0,
 			0,
