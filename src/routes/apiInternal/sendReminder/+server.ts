@@ -5,8 +5,11 @@ import { json, type RequestEvent } from '@sveltejs/kit';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import ReminderCompany from '$lib/server/email/ReminderCompany.svelte';
 import ReminderCustomer from '$lib/server/email/ReminderCustomer.svelte';
+import { TourChange } from '$lib/server/firebase/firebase';
+import { sendNotifications } from '$lib/server/firebase/notifications';
 
-const REMINDER_OFFSET = 2 * HOUR;
+const REMINDER_OFFSET_COMPANY = 1 * HOUR;
+const REMINDER_OFFSET_CUSTOMER = 2 * HOUR;
 const REMINDER_FRAME = 5 * MINUTE;
 const REMINDER_FRAME_PHASE = 2 * MINUTE;
 
@@ -19,14 +22,28 @@ export const POST = async (_: RequestEvent) => {
 			.selectFrom('tour')
 			.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 			.innerJoin('user', 'vehicle.company', 'user.companyId')
-			.where('tour.departure', '>=', framed_now + REMINDER_OFFSET)
-			.where('tour.departure', '<', framed_now + REMINDER_OFFSET + REMINDER_FRAME)
+			.where('tour.departure', '>=', framed_now + REMINDER_OFFSET_COMPANY)
+			.where('tour.departure', '<', framed_now + REMINDER_OFFSET_COMPANY + REMINDER_FRAME)
 			.where('tour.cancelled', '=', false)
 			.where('user.isTaxiOwner', '=', true)
-			.select(['tour.id', 'user.email', 'vehicle.licensePlate', 'tour.departure', 'tour.arrival'])
+			.select((eb) => [
+				'tour.id',
+				'user.email',
+				'vehicle.licensePlate',
+				'vehicle.id as vehicleId',
+				'vehicle.company',
+				jsonArrayFrom(
+					eb
+						.selectFrom('event')
+						.innerJoin('request', 'request.id', 'event.request')
+						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+						.whereRef('request.tour', '=', 'tour.id')
+						.where('cancelled', '=', false)
+						.select(['eventGroup.scheduledTimeStart', 'eventGroup.address'])
+				).as('events')
+			])
 			.execute();
 		for (const tour of imminentTours) {
-			console.log(tour);
 			try {
 				console.log('Sending ReminderCompany to ', tour.email);
 				await sendMail(ReminderCompany, 'Bevorstehende Fahrt', tour.email, tour);
@@ -38,6 +55,14 @@ export const POST = async (_: RequestEvent) => {
 					tour.id
 				);
 			}
+			const firstEvent = tour.events.sort((e) => e.scheduledTimeStart)[0];
+			await sendNotifications(tour.company, {
+				tourId: tour.id,
+				pickupTime: firstEvent.scheduledTimeStart,
+				wheelchairs: 0,
+				vehicleId: tour.vehicleId,
+				change: TourChange.REMINDER
+			});
 		}
 
 		const requests = await trx
@@ -48,8 +73,8 @@ export const POST = async (_: RequestEvent) => {
 			.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 			.innerJoin('event', 'event.request', 'request.id')
 			.where('event.isPickup', '=', true)
-			.where('event.communicatedTime', '>=', framed_now + REMINDER_OFFSET)
-			.where('event.communicatedTime', '<', framed_now + REMINDER_OFFSET + REMINDER_FRAME)
+			.where('event.communicatedTime', '>=', framed_now + REMINDER_OFFSET_CUSTOMER)
+			.where('event.communicatedTime', '<', framed_now + REMINDER_OFFSET_CUSTOMER + REMINDER_FRAME)
 			.where('request.cancelled', '=', false)
 			.where('user.isService', '=', false)
 			.select((eb) => [

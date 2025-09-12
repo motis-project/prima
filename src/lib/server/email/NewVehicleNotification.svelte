@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { LOCALE } from '$lib/constants';
 	import type { TourEvent } from '$lib/util/getToursTypes';
 	import EmailFooter from './EmailFooter.svelte';
 	const {
@@ -41,9 +42,10 @@
 	</ul>
 	<p>
 		die
-		{isStartToday ? 'heute' : 'am ' + startDate!.toLocaleDateString('de')} von
-		{startDate!.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' })} bis
-		{endDate!.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' })} geplant ist gab es Änderungen.
+		{isStartToday ? 'heute' : 'am ' + startDate!.toLocaleDateString(LOCALE)} von
+		{startDate!.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' })} bis
+		{endDate!.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' })} geplant ist gab es
+		Änderungen.
 	</p>
 	<p>
 		Die Taxifahrt wird von einem anderen Fahrzeug mit dem Kennzeichen {newLicensePlate} durchgeführt.
