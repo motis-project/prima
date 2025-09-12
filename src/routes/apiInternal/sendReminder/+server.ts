@@ -7,18 +7,20 @@ import ReminderCompany from '$lib/server/email/ReminderCompany.svelte';
 import ReminderCustomer from '$lib/server/email/ReminderCustomer.svelte';
 
 const REMINDER_OFFSET = 2 * HOUR;
-const REMINDER_BUCKET = 2000 * MINUTE;
+const REMINDER_FRAME = 5 * MINUTE;
+const REMINDER_FRAME_PHASE = 2 * MINUTE;
 
 export const POST = async (_: RequestEvent) => {
 	console.log('Sending reminders.');
-	const now = Date.now();
+	const framed_now =
+		Math.floor((Date.now() + REMINDER_FRAME_PHASE) / REMINDER_FRAME) * REMINDER_FRAME;
 	await db.transaction().execute(async (trx) => {
 		const imminentTours = await trx
 			.selectFrom('tour')
 			.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 			.innerJoin('user', 'vehicle.company', 'user.companyId')
-			.where('tour.departure', '>', now + REMINDER_OFFSET)
-			.where('tour.departure', '<', now + REMINDER_OFFSET + REMINDER_BUCKET)
+			.where('tour.departure', '>=', framed_now + REMINDER_OFFSET)
+			.where('tour.departure', '<', framed_now + REMINDER_OFFSET + REMINDER_FRAME)
 			.where('tour.cancelled', '=', false)
 			.where('user.isTaxiOwner', '=', true)
 			.select(['tour.id', 'user.email', 'vehicle.licensePlate', 'tour.departure', 'tour.arrival'])
@@ -46,14 +48,16 @@ export const POST = async (_: RequestEvent) => {
 			.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 			.innerJoin('event', 'event.request', 'request.id')
 			.where('event.isPickup', '=', true)
-			.where('event.communicatedTime', '>', now + REMINDER_OFFSET)
-			.where('event.communicatedTime', '<', now + REMINDER_OFFSET + REMINDER_BUCKET)
+			.where('event.communicatedTime', '>=', framed_now + REMINDER_OFFSET)
+			.where('event.communicatedTime', '<', framed_now + REMINDER_OFFSET + REMINDER_FRAME)
 			.where('request.cancelled', '=', false)
+			.where('user.isService', '=', false)
 			.select((eb) => [
 				'user.name',
 				'user.email',
 				'journey.id as journeyId',
 				'request.id as requestId',
+				'request.ticketCode as ticketCode',
 				'vehicle.licensePlate',
 				'tour.id as tourId',
 				jsonArrayFrom(
@@ -65,7 +69,6 @@ export const POST = async (_: RequestEvent) => {
 				).as('events')
 			])
 			.execute();
-		console.log(requests);
 		for (const request of requests) {
 			try {
 				console.log('Sending ReminderCustomer to ', request.email);
@@ -73,7 +76,8 @@ export const POST = async (_: RequestEvent) => {
 					journeyId: request.journeyId,
 					events: request.events,
 					name: request.name,
-					licensePlate: request.licensePlate
+					licensePlate: request.licensePlate,
+					ticketCode: request.ticketCode
 				});
 			} catch {
 				console.log(
@@ -84,6 +88,15 @@ export const POST = async (_: RequestEvent) => {
 				);
 			}
 		}
+		if (requests.length === 0) {
+			return;
+		}
+		const requestIds = requests.map((r) => r.requestId);
+		await trx
+			.updateTable('request')
+			.set({ licensePlateUpdatedAt: null })
+			.where('id', 'in', requestIds)
+			.execute();
 	});
 	return json({});
 };

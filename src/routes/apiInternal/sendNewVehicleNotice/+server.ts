@@ -4,14 +4,11 @@ import { MINUTE } from '$lib/util/time';
 import { json, type RequestEvent } from '@sveltejs/kit';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import NewVehicleNotification from '$lib/server/email/NewVehicleNotification.svelte';
-import { lockTablesStatement } from '$lib/server/db/lockTables';
 
 export const POST = async (_: RequestEvent) => {
-	const t = Date.now() - MINUTE;
 	console.log('Sending NewVechicleNotices.');
 	const now = Date.now();
 	await db.transaction().execute(async (trx) => {
-		await lockTablesStatement(['request', 'user', 'tour', 'vehicle', 'event']).execute(trx);
 		const requests = await trx
 			.selectFrom('request')
 			.innerJoin('user', 'user.id', 'request.customer')
@@ -19,11 +16,11 @@ export const POST = async (_: RequestEvent) => {
 			.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 			.innerJoin('event', 'event.request', 'request.id')
 			.where('licensePlateUpdatedAt', 'is not', null)
-			.where('licensePlateUpdatedAt', '>=', t)
 			.where('event.isPickup', '=', true)
 			.where('event.communicatedTime', '>', now - 15 * MINUTE)
 			.where('event.communicatedTime', '<', now + 15 * MINUTE)
 			.where('request.cancelled', '=', false)
+			.where('user.isService', '=', false)
 			.select((eb) => [
 				'user.name',
 				'user.email',

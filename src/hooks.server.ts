@@ -10,23 +10,22 @@ import { env } from '$env/dynamic/private';
 import { getIp } from '$lib/server/getIp';
 
 import consoleStamp from 'console-stamp';
-import { getIp } from '$lib/server/getIp';
 consoleStamp(console);
 
 const authHandle: Handle = async ({ event, resolve }) => {
-	const ip = getIp(event);
-	if (!ip.startsWith('172.') && event.url.pathname.startsWith('/apiInternal')) {
-		console.log('Internal api accessed from outside localhost.', { ip });
-		error(403);
-	}
 	const token = event.cookies.get('session');
 	const session = await validateSessionToken(token);
 	const clientIP = getIp(event);
 	const isLocalhost =
-		clientIP === '127.0.0.1' || clientIP === '::1' || clientIP === '::ffff:127.0.0.1';
+		clientIP === '127.0.0.1' ||
+		clientIP === '::1' ||
+		clientIP === '::ffff:127.0.0.1' ||
+		clientIP.startsWith('172.');
 	if (
 		!isLocalhost &&
-		(event.url.pathname.startsWith('/debug') || event.url.pathname.startsWith('/tests'))
+		(event.url.pathname.startsWith('/debug') ||
+			event.url.pathname.startsWith('/tests') ||
+			event.url.pathname.startsWith('/apiInternal'))
 	) {
 		error(403);
 	}

@@ -1,16 +1,22 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/private';
+	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import type { TourEvent } from '$lib/util/getToursTypes';
 	import EmailFooter from './EmailFooter.svelte';
+	// @ts-expect-error Cannot find module 'svelte-qrcode'
+	import QrCode from 'svelte-qrcode';
+
 	const {
 		name,
 		licensePlate,
 		journeyId,
+		ticketCode,
 		events
 	}: {
 		name: string;
 		licensePlate: string;
 		journeyId: string;
+		ticketCode: string;
 		events: TourEvent[];
 	} = $props();
 	events.sort((e1, e2) => e1.communicatedTime - e2.communicatedTime);
@@ -34,7 +40,7 @@
 	Guten Tag {name},
 	<p>
 		es steht {isStartToday ? 'heute' : 'am ' + startDate!.toLocaleDateString('de')} eine von Ihnen gebuchte
-		Fahrt mit PriMa+ÖV bevor:
+		Fahrt mit {PUBLIC_PROVIDER} bevor:
 	</p>
 	<ul>
 		<li>
@@ -52,6 +58,11 @@
 		<li>Fahrzeug: {licensePlate}</li>
 	</ul>
 	<p>Link zur Buchung: <a href={bookingLink}>{bookingLink}</a></p>
+
+	<p><b>Ihr Ticket</b></p>
+	<div>
+		<QrCode value={ticketCode} />
+	</div>
 
 	<EmailFooter />
 </div>
