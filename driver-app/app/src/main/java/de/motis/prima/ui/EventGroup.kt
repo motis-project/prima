@@ -191,7 +191,9 @@ fun EventGroup(
                 modifier = Modifier
                     .weight(1f)
             ) {
-                val validEvents = eventGroup.events.filter { e -> e.cancelled.not() }
+                val validEvents = eventGroup.events
+                    .filter { e -> e.cancelled.not() }
+                    .sortedBy { it.scheduledTimeStart }
                 items(items = validEvents, itemContent = { event ->
                     ShowCustomerDetails(event, viewModel)
                 })
