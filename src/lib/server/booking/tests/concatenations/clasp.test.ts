@@ -1,34 +1,34 @@
-import { describe, it, expect } from 'vitest';
-/*
 import { inXMinutes, prepareTest, white } from '../util';
 import { addCompany, addTaxi, getTours, setAvailability, Zone } from '$lib/testHelpers';
+import { describe, it, expect } from 'vitest';
 import type { ExpectedConnection } from '$lib/server/booking/bookRide';
 import { bookingApi } from '$lib/server/booking/bookingApi';
 import { isSamePlace } from '$lib/server/booking/isSamePlace';
 
-const inRothenburg1 = { lng: 14.962964035976825, lat: 51.34030696433544 };
-const inRothenburg2 = { lng: 14.96375266477358, lat: 51.335866895211666 };
-const inHorka1 = { lng: 14.89811075304624, lat: 51.30115190837412 };
-const inHorka2 = { lng: 14.901778589533393, lat: 51.31925573322806 };
-const inGeheege = { lng: 14.944479873593451, lat: 51.32191394274318 };
+const inSchleife1 = { lng: 14.52871605284534, lat: 51.542426845522584 };
+const inSagar = { lng: 14.758657981530547, lat: 51.51415366508925 };
+const inPechern = { lng: 14.8618514371218, lat: 51.48208047929427 };
+const inSchleife2 = {
+	lng: 14.54208968262708,
+	lat: 51.5452123938403
+};
+const inPriebus = { lng: 14.956745409017884, lat: 51.454554860185084 };
 const capacities = {
 	passengers: 1,
 	wheelchairs: 0,
 	bikes: 0,
 	luggage: 0
-};*/
+};
 
 describe('Concatenation tests', () => {
-	it('create tour concetanation, where pickup and dropoff are not inserted between the same 2 events and there is a detour', async () => {
-		expect(true).toBe(true);
-		/*
+	it('create tour concetanation, simple append', async () => {
 		const mockUserId = await prepareTest();
-		const company = await addCompany(Zone.NIESKY, inRothenburg1);
+		const company = await addCompany(Zone.WEIßWASSER, inSchleife1);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));
 		const body = JSON.stringify({
-			start: inGeheege,
-			target: inHorka2,
+			start: inSagar,
+			target: inPechern,
 			startBusStops: [],
 			targetBusStops: [],
 			directTimes: [inXMinutes(70)],
@@ -36,13 +36,15 @@ describe('Concatenation tests', () => {
 			capacities
 		});
 		const whiteResponse = await white(body).then((r) => r.json());
+		console.log({ whiteResponse: whiteResponse.direct });
 		const connection1: ExpectedConnection = {
-			start: { ...inGeheege, address: 'inGeheege' },
-			target: { ...inHorka2, address: 'inHorka2' },
+			start: { ...inSagar, address: 'sagar' },
+			target: { ...inPechern, address: 'pechern' },
 			startTime: whiteResponse.direct[0].pickupTime,
 			targetTime: whiteResponse.direct[0].dropoffTime,
 			signature: '',
-			startFixed: false
+			startFixed: false,
+			requestedTime: inXMinutes(70)
 		};
 		const bookingBody = {
 			connection1,
@@ -50,31 +52,31 @@ describe('Concatenation tests', () => {
 			capacities
 		};
 
-		await bookingApi(bookingBody, mockUserId, true, false, 0, 0, 0, true);
+		await bookingApi(bookingBody, mockUserId, false, true, 0, 0, 0, true);
 		const tours = await getTours();
 		expect(tours.length).toBe(1);
 		expect(tours[0].requests.length).toBe(1);
-
 		const body2 = JSON.stringify({
-			start: inRothenburg2,
-			target: inHorka1,
+			start: inSchleife2,
+			target: inPriebus,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(65)],
+			directTimes: [inXMinutes(90)],
 			startFixed: false,
 			capacities
 		});
 		const whiteResponse2 = await white(body2).then((r) => r.json());
-		const appendConnection: ExpectedConnection = {
-			start: { ...inRothenburg2, address: 'inRothenburg2' },
-			target: { ...inHorka1, address: 'inHorka1' },
+		const claspConnection: ExpectedConnection = {
+			start: { ...inSchleife2, address: 'schleife' },
+			target: { ...inPriebus, address: 'priebus' },
 			startTime: whiteResponse2.direct[0].pickupTime,
 			targetTime: whiteResponse2.direct[0].dropoffTime,
 			signature: '',
-			startFixed: false
+			startFixed: false,
+			requestedTime: inXMinutes(90)
 		};
 		const bookingBodyAppend = {
-			connection1: appendConnection,
+			connection1: claspConnection,
 			connection2: null,
 			capacities
 		};
@@ -85,12 +87,9 @@ describe('Concatenation tests', () => {
 		const events = tours2
 			.flatMap((t) => t.requests.flatMap((r) => r.events))
 			.sort((e1, e2) => e1.scheduledTimeStart - e2.scheduledTimeStart);
-		expect(isSamePlace(events[0], inRothenburg2)).toBe(true);
-		expect(isSamePlace(events[1], inGeheege)).toBe(true);
-		expect(isSamePlace(events[2], inHorka1)).toBe(true);
-		expect(isSamePlace(events[3], inHorka2)).toBe(true);
-		*/
+		expect(isSamePlace(events[0], inSchleife2)).toBe(true);
+		expect(isSamePlace(events[1], inSagar)).toBe(true);
+		expect(isSamePlace(events[2], inPechern)).toBe(true);
+		expect(isSamePlace(events[3], inPriebus)).toBe(true);
 	});
 });
-
-// Requires distance between schedledTimeStart and scheduledTimeEnd to work since there is a detour

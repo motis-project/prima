@@ -64,6 +64,7 @@ function getPossibleRequestedTimes(rt: number): number[] {
 export async function bookingApi(
 	p: BookingParameters,
 	customer: number,
+	withoutQr: boolean,
 	isLocalhost: boolean,
 	kidsZeroToTwo: number,
 	kidsThreeToFour: number,
@@ -197,6 +198,7 @@ export async function bookingApi(
 								p.capacities,
 								p.connection1!,
 								customer,
+								withoutQr,
 								kidsZeroToTwo,
 								kidsThreeToFour,
 								kidsFiveToSix,
@@ -210,6 +212,7 @@ export async function bookingApi(
 								p.capacities,
 								p.connection2!,
 								customer,
+								withoutQr,
 								kidsZeroToTwo,
 								kidsThreeToFour,
 								kidsFiveToSix,

@@ -5,8 +5,8 @@ import { Interval } from '../../util/interval';
 import { HOUR } from '../../util/time';
 import { isSamePlace } from '../booking/isSamePlace';
 import {
-	MAX_PASSENGER_WAITING_TIME_DROPOFF,
-	MAX_PASSENGER_WAITING_TIME_PICKUP,
+	SCHEDULED_TIME_BUFFER_DROPOFF,
+	SCHEDULED_TIME_BUFFER_PICKUP,
 	PASSENGER_CHANGE_DURATION
 } from '$lib/constants';
 import { sortEventsByTime } from '$lib/testHelpers';
@@ -268,7 +268,7 @@ function validateScheduledIntervalSize(tours: ToursWithRequests): boolean {
 	for (const event of tours.flatMap((t) => t.requests.flatMap((r) => r.events))) {
 		if (
 			event.scheduledTimeEnd - event.scheduledTimeStart >
-			(event.isPickup ? MAX_PASSENGER_WAITING_TIME_PICKUP : MAX_PASSENGER_WAITING_TIME_DROPOFF)
+			(event.isPickup ? SCHEDULED_TIME_BUFFER_PICKUP : SCHEDULED_TIME_BUFFER_DROPOFF) // TODO
 		) {
 			console.log('Found an event where the scheduled time interval grew, eventId: ', event.id);
 			fail = true;

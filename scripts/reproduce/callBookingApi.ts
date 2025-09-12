@@ -38,6 +38,7 @@ async function main() {
 	const response = await bookingApi(
 		parameters,
 		1,
+		false,
 		true,
 		kidsThreeToFour,
 		kidsFiveToSix,
