@@ -220,10 +220,6 @@ class TourStore @Inject constructor(
         return realm.query<EventObject>("tour == $0", tourId).find()
     }
 
-    fun getEventsForRequest(requestId: Int): List<EventObject> {
-        return realm.query<EventObject>("requestId == $0", requestId).find()
-    }
-
     fun getEventGroupsForTour(tourId: Int): List<EventObjectGroup> {
         val events = realm.query<EventObject>("tour == $0", tourId).find()
         val eventGroups = mutableListOf<EventObjectGroup>()

@@ -33,7 +33,6 @@ class LegViewModel @Inject constructor(
     }
 
     fun update(tourId: Int) {
-        repository.fetchTours()
         repository.updateEventGroups(tourId)
     }
 }

@@ -21,7 +21,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ToursViewModel @Inject constructor(
-    private val apiService: ApiService,
     private val repository: DataRepository
 ) : ViewModel() {
 

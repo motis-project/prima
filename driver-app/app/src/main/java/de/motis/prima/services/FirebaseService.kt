@@ -38,11 +38,16 @@ class FirebaseService: FirebaseMessagingService() {
 
         if (data.isNotEmpty()) {
             val tourId = data["tourId"]
+            val pickupTime = data["pickupTime"]
+
             val title = remoteMessage.notification?.title ?: "Default Title"
             val body = remoteMessage.notification?.body ?: "Default Body"
 
-            val pickupTime = data["pickupTime"]
             repository.fetchTours(pickupTime?.toLong())
+
+            tourId?.let { tourIdStr ->
+                repository.updateEventGroups(tourIdStr.toInt())
+            }
 
             /*CoroutineScope(Dispatchers.IO).launch {
                 try {
@@ -56,7 +61,7 @@ class FirebaseService: FirebaseMessagingService() {
                     Log.e("error", "Failed to retrieve stored vehicle id", e)
                 }
             }*/
-            showNotification(title, body, tourId)
+            showNotification(title, body, tourId, pickupTime?.toLong())
         }
     }
 
@@ -72,9 +77,10 @@ class FirebaseService: FirebaseMessagingService() {
         }
     }
 
-    private fun showNotification(title: String?, body: String?, tourId: String?) {
+    private fun showNotification(title: String?, body: String?, tourId: String?, pickupTime: Long?) {
         val intent = Intent(this, MainActivity::class.java).apply {
             putExtra("tourId", tourId)
+            putExtra("pickupTime", pickupTime)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val pendingIntent = PendingIntent.getActivity(
