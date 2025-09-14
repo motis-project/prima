@@ -778,7 +778,7 @@ export function evaluateSingleInsertions(
 			if (
 				resultUserChosen != undefined &&
 				(userChosenEvaluations[insertionInfo.insertionIdx] == undefined ||
-					resultUserChosen.cost < userChosenEvaluations[insertionInfo.insertionIdx]!.cost) 
+					resultUserChosen.cost < userChosenEvaluations[insertionInfo.insertionIdx]!.cost)
 			) {
 				userChosenEvaluations[insertionInfo.insertionIdx] = resultUserChosen;
 			}
