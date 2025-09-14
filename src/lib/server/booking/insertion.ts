@@ -753,8 +753,7 @@ export function evaluateSingleInsertions(
 						(busStopEvaluations[busStopIdx][busTimeIdx] == undefined ||
 							busStopEvaluations[busStopIdx][busTimeIdx][insertionInfo.insertionIdx] == undefined ||
 							resultBus.cost <
-								busStopEvaluations[busStopIdx][busTimeIdx][insertionInfo.insertionIdx]!.cost) &&
-						!waitsTooLong(resultBus.taxiWaitingTime)
+								busStopEvaluations[busStopIdx][busTimeIdx][insertionInfo.insertionIdx]!.cost)
 					) {
 						busStopEvaluations[busStopIdx][busTimeIdx][insertionInfo.insertionIdx] = resultBus;
 					}
@@ -779,8 +778,7 @@ export function evaluateSingleInsertions(
 			if (
 				resultUserChosen != undefined &&
 				(userChosenEvaluations[insertionInfo.insertionIdx] == undefined ||
-					resultUserChosen.cost < userChosenEvaluations[insertionInfo.insertionIdx]!.cost) &&
-				!waitsTooLong(resultUserChosen.taxiWaitingTime)
+					resultUserChosen.cost < userChosenEvaluations[insertionInfo.insertionIdx]!.cost) 
 			) {
 				userChosenEvaluations[insertionInfo.insertionIdx] = resultUserChosen;
 			}
@@ -823,15 +821,11 @@ export function evaluatePairInsertions(
 			return;
 		}
 		let cumulatedTaxiDrivingDelta = 0;
-		let pickupInvalid = false;
 		for (
 			let dropoffIdx = pickupIdx + 1;
 			dropoffIdx != insertionInfo.currentRange.latestDropoff + 1;
 			++dropoffIdx
 		) {
-			if (pickupInvalid) {
-				break;
-			}
 			const prevDropoffIdx = dropoffIdx - 1;
 			if (
 				dropoffIdx > 1 &&
@@ -849,16 +843,12 @@ export function evaluatePairInsertions(
 					events[dropoffIdx - 2].nextLegDuration;
 			}
 			for (let busStopIdx = 0; busStopIdx != busStopTimes.length; ++busStopIdx) {
-				if (pickupInvalid) {
-					break;
-				}
 				for (let timeIdx = 0; timeIdx != busStopTimes[busStopIdx].length; ++timeIdx) {
 					const pickup = startFixed
 						? busStopEvaluations[busStopIdx][timeIdx][insertionInfo.insertionIdx]
 						: userChosenEvaluations[insertionInfo.insertionIdx];
 					if (pickup == undefined) {
-						pickupInvalid = true;
-						break;
+						continue;
 					}
 
 					const dropoff = startFixed
