@@ -476,12 +476,16 @@ fun ShowCustomerDetails(
                     }
 
                     var ticketStatus: ValidationStatus = ValidationStatus.OPEN
+
                     val ticketObject = storedTickets.value
                         .find { t -> t.ticketHash == event.ticketHash }
 
+                    ticketObject?.let { ticket ->
+                        ticketStatus = ValidationStatus.valueOf(ticket.validationStatus)
+                    }
 
-                    if (ticketObject != null) {
-                        ticketStatus = ValidationStatus.valueOf(ticketObject.validationStatus)
+                    if(event.ticketChecked) {
+                        ticketStatus = ValidationStatus.DONE
                     }
 
                     Text(
