@@ -436,36 +436,39 @@ fun WayPointPreview(
         return
     }
 
-    Card(
-        modifier = Modifier
-            .padding(10.dp),
-        colors = CardDefaults.cardColors(containerColor = LocalExtendedColors.current.containerColor)
-    ) {
-        Column(
-            verticalArrangement = Arrangement.Center
+    val cancelled = eventGroup.events.find { e -> e.cancelled.not() } == null
+    if (cancelled.not()) {
+        Card(
+            modifier = Modifier
+                .padding(10.dp),
+            colors = CardDefaults.cardColors(containerColor = LocalExtendedColors.current.containerColor)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-                horizontalArrangement = Arrangement.Center
+            Column(
+                verticalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = scheduledTime,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp, bottom = 6.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = eventGroup.address,
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = scheduledTime,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 6.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = eventGroup.address,
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }
