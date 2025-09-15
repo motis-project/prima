@@ -101,15 +101,14 @@ class TourStore @Inject constructor(
                         this.kidsThreeToFour = event.kidsThreeToFour
                         this.kidsFiveToSix = event.kidsFiveToSix
                     }, updatePolicy = io.realm.kotlin.UpdatePolicy.ALL)
-                }
-            }
 
-            // store a ticket for each pickup event, if not exists
-            for (event in tour.events) {
-                if (event.isPickup.not()) continue
-                ticketStore.update( //TODO: revise
-                    Ticket(event.requestId, event.ticketHash, "",  ValidationStatus.OPEN)
-                )
+                    /* update ticket for pickup events TODO
+                    if (event.isPickup.not()) continue
+                    val validationStatus = if (event.ticketChecked) ValidationStatus.CHECKED_IN else ValidationStatus.OPEN
+                    ticketStore.update(
+                        Ticket(event.requestId, event.ticketHash, "",  validationStatus)
+                    )*/
+                }
             }
 
             // update TourObjects
