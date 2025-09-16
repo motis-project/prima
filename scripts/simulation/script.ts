@@ -322,6 +322,7 @@ async function bookingApiCall(
 	const response = await bookingApi(
 		parameters,
 		1,
+		false,
 		true,
 		kidsZeroToTwo,
 		kidsThreeToFour,
