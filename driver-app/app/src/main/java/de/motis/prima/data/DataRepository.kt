@@ -223,8 +223,10 @@ class DataRepository @Inject constructor(
                     _networkError.value = false
                     val fetchedTours = response.body() ?: emptyList()
                     setTours(fetchedTours)
-                    _toursCache.value = fetchedTours
-                        .filter { t -> t.vehicleId == _vehicleId }
+                    if (time == null) {
+                        _toursCache.value = fetchedTours
+                            .filter { t -> t.vehicleId == _vehicleId }
+                    }
                 }
             } catch (e: Exception) {
                 _networkError.value = true

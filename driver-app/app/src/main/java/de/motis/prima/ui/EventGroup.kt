@@ -59,6 +59,7 @@ import de.motis.prima.R
 import de.motis.prima.data.DataRepository
 import de.motis.prima.data.EventObject
 import de.motis.prima.data.EventObjectGroup
+import de.motis.prima.data.Ticket
 import de.motis.prima.data.ValidationStatus
 import de.motis.prima.ui.theme.LocalExtendedColors
 import java.util.Date
@@ -77,6 +78,10 @@ class EventGroupViewModel @Inject constructor(
                     t.validationStatus == ValidationStatus.CHECKED_IN.name
         }
         return tickets.size
+    }
+
+    fun updateTicket(requestId: Int, ticketHash: String) {
+        repository.updateTicketStore(Ticket(requestId, ticketHash, "", ValidationStatus.DONE))
     }
 }
 
@@ -292,7 +297,7 @@ fun EventGroup(
 @Composable
 fun ShowCustomerDetails(
     event: EventObject,
-    viewModel: EventGroupViewModel// = hiltViewModel()
+    viewModel: EventGroupViewModel
 ) {
     val context = LocalContext.current
     val storedTickets = viewModel.storedTickets.collectAsState()
@@ -486,6 +491,7 @@ fun ShowCustomerDetails(
 
                     if(event.ticketChecked) {
                         ticketStatus = ValidationStatus.DONE
+                        viewModel.updateTicket(event.requestId, event.ticketHash)
                     }
 
                     Text(

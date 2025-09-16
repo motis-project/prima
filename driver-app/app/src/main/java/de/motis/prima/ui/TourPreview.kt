@@ -85,12 +85,18 @@ class TourViewModel @Inject constructor(
         return res
     }
 
-    fun hasPendingValidations(tourId: Int): Boolean {
-        return repository.hasPendingValidations(tourId)
-    }
+    /*fun hasPendingValidations(tourId: Int): Boolean {
+        //return repository.hasPendingValidations(tourId)
+        val tour = repository.getTour(tourId)
+        tour?.let { return tour.ticketValidated }
+        return false
+    }*/
 
     fun hasInvalidatedTickets(tourId: Int): Boolean {
-        return repository.hasInvalidatedTickets(tourId)
+        val tour = repository.getTour(tourId)
+        tour?.let {
+            return tour.ticketValidated.not() }
+        return true
     }
 
     fun isCancelled(tourId: Int): Boolean {
@@ -120,10 +126,10 @@ fun TourPreview(
     tourId: Int,
     viewModel: TourViewModel = hiltViewModel()
 ) {
-    val isCancelled = viewModel.isCancelled(tourId)
-
+    var isCancelled = false
     LaunchedEffect(Unit) {
         viewModel.updateEventGroups(tourId)
+        isCancelled = viewModel.isCancelled(tourId)
     }
 
     Scaffold(
@@ -353,7 +359,7 @@ fun WayPointsView(viewModel: TourViewModel, tourId: Int, navController: NavContr
 
 @Composable
 fun RetroView(viewModel: TourViewModel, tourId: Int, navController: NavController) {
-    val pendingValidationTickets by viewModel.pendingValidationTickets.collectAsState()
+    //val pendingValidationTickets by viewModel.pendingValidationTickets.collectAsState()
 
     Column(
         modifier = Modifier.fillMaxSize().padding(30.dp),
@@ -374,9 +380,7 @@ fun RetroView(viewModel: TourViewModel, tourId: Int, navController: NavControlle
             )
         }
 
-        if (viewModel.hasPendingValidations(tourId).not()
-            && viewModel.hasInvalidatedTickets(tourId)) {
-
+        if (viewModel.hasInvalidatedTickets(tourId)) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
                 horizontalArrangement = Arrangement.Center,
@@ -407,7 +411,7 @@ fun RetroView(viewModel: TourViewModel, tourId: Int, navController: NavControlle
             }
         }
 
-        Row(
+        /*Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -419,7 +423,7 @@ fun RetroView(viewModel: TourViewModel, tourId: Int, navController: NavControlle
                     textAlign = TextAlign.Center
                 )
             }
-        }
+        }*/
     }
 }
 

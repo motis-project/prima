@@ -31,10 +31,6 @@ class LegViewModel @Inject constructor(
     init {
         repository.fetchTours()
     }
-
-    fun update(tourId: Int) {
-        repository.updateEventGroups(tourId)
-    }
 }
 
 @Composable
@@ -68,8 +64,6 @@ fun Leg(
                 horizontalArrangement = Arrangement.Center
             ) {
                 if (eventGroups.isNotEmpty()) {
-                    viewModel.update(tourId)
-
                     var nextIndex = eventGroupIndex + 1
                     val maxIndex = eventGroups.size - 1
 
