@@ -159,7 +159,7 @@ fun Tours(
                 }
 
                 if (displayDay != today) {
-                    displayTours = toursToday.filter { t -> !viewModel.isCancelled(t.tourId) }
+                    displayTours = toursToday
                 }
             }
 
@@ -168,6 +168,8 @@ fun Tours(
             } catch(e: Exception) {
                 Log.d("error", "Error: ${e.message}")
             }
+
+            displayTours = displayTours.filter { t -> !viewModel.isCancelled(t.tourId) }
 
             ShowTours(navController, displayTours)
         }

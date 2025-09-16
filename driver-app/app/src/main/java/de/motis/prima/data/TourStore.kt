@@ -15,7 +15,7 @@ import javax.inject.Inject
 class TourObject : RealmObject {
     @PrimaryKey
     var tourId: Int = 0
-    var ticketValidated: Boolean = false // TODO
+    var ticketValidated: Boolean = false
     var fare: Int = 0
     var fareReported: Boolean = false
     var startTime: Long = 0
@@ -101,13 +101,6 @@ class TourStore @Inject constructor(
                         this.kidsThreeToFour = event.kidsThreeToFour
                         this.kidsFiveToSix = event.kidsFiveToSix
                     }, updatePolicy = io.realm.kotlin.UpdatePolicy.ALL)
-
-                    /* update ticket for pickup events TODO
-                    if (event.isPickup.not()) continue
-                    val validationStatus = if (event.ticketChecked) ValidationStatus.CHECKED_IN else ValidationStatus.OPEN
-                    ticketStore.update(
-                        Ticket(event.requestId, event.ticketHash, "",  validationStatus)
-                    )*/
                 }
             }
 
@@ -121,6 +114,7 @@ class TourStore @Inject constructor(
                             this.endTime = tour.endTime
                             this.vehicleId = tour.vehicleId
                             this.fare = tour.fare
+                            this.ticketValidated = tour.events.any { e -> e.isPickup && e.ticketChecked }
                         }
                     }
                 }
@@ -133,6 +127,7 @@ class TourStore @Inject constructor(
                         this.endTime = tour.endTime
                         this.vehicleId = tour.vehicleId
                         this.fare = tour.fare
+                        this.ticketValidated = tour.events.any { e -> e.isPickup && e.ticketChecked }
                     }, updatePolicy = io.realm.kotlin.UpdatePolicy.ALL)
                 }
             }
