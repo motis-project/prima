@@ -1,5 +1,5 @@
 import { test as setup } from '@playwright/test';
-import { FileMigrationProvider, Kysely, Migrator, PostgresDialect } from 'kysely';
+import { CamelCasePlugin, FileMigrationProvider, Kysely, Migrator, PostgresDialect } from 'kysely';
 import pg from 'pg';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -15,6 +15,7 @@ setup('setup db', async () => {
 
 	const pool = new pg.Pool({ ...dbConfig, database: 'prima' });
 	const db = new Kysely<Database>({
+		plugins: [new CamelCasePlugin()],
 		dialect: new PostgresDialect({ pool: pool })
 	});
 	const migrator = new Migrator({
@@ -33,6 +34,7 @@ setup('setup db', async () => {
 	await db.deleteFrom('event').executeTakeFirstOrThrow();
 	await db.deleteFrom('request').executeTakeFirstOrThrow();
 	await db.deleteFrom('tour').executeTakeFirstOrThrow();
+	await db.deleteFrom('rideShareTour').executeTakeFirstOrThrow();
 	await db.deleteFrom('vehicle').executeTakeFirstOrThrow();
 	await db.deleteFrom('session').executeTakeFirstOrThrow();
 	await db.deleteFrom('user').executeTakeFirstOrThrow();
