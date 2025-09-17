@@ -216,27 +216,15 @@ export function evaluateSingleInsertion(
 	const weightedPassengerDuration =
 		passengersEnteringInPrev * prevShift + passengerExitingAtNext * nextShift;
 
-	const approachPlusReturnDurationDelta = getApproachPlusReturnDurationDelta(
-		insertionCase,
-		prev,
-		next,
-		prevLegDuration,
-		nextLegDuration
-	);
-	const fullyPayedDurationDelta = taxiDurationDelta - approachPlusReturnDurationDelta;
-	const cost = computeCost(
-		weightedPassengerDuration,
-		approachPlusReturnDurationDelta,
-		fullyPayedDurationDelta,
-		taxiWaitingTime
-	);
+	const fullyPayedDurationDelta = taxiDurationDelta;
+	const cost = computeCost(weightedPassengerDuration, 0, fullyPayedDurationDelta, taxiWaitingTime);
 	const sie: SingleInsertionEvaluation = {
 		window: arrivalWindow,
 		prevLegDuration: prevLegDuration,
 		nextLegDuration: nextLegDuration,
 		case: structuredClone(insertionCase),
 		fullyPayedDurationDelta,
-		approachPlusReturnDurationDelta,
+		approachPlusReturnDurationDelta: 0,
 		taxiWaitingTime,
 		cost,
 		prevId: prev?.eventId,
@@ -327,42 +315,6 @@ export function evaluateBothInsertion(
 	const taxiDurationDelta =
 		prevLegDuration + nextLegDuration + passengerDuration - prev.nextLegDuration;
 
-	// Determine new scheduled and communicated times
-	const pickupLeeway = (() => {
-		switch (insertionCase.how) {
-			case InsertHow.APPEND:
-				return 0;
-			case InsertHow.PREPEND:
-				return Math.min(arrivalWindow.size(), SCHEDULED_TIME_BUFFER_PICKUP);
-			case InsertHow.INSERT:
-				return 0;
-			case InsertHow.NEW_TOUR:
-				return Math.min(Math.floor(arrivalWindow.size() / 2), SCHEDULED_TIME_BUFFER_PICKUP);
-			case InsertHow.CONNECT:
-				return 0;
-		}
-	})();
-
-	const dropoffLeeway = (() => {
-		switch (insertionCase.how) {
-			case InsertHow.APPEND:
-				return Math.min(arrivalWindow.size(), getScheduledTimeBufferDropoff(passengerDuration));
-			case InsertHow.PREPEND:
-				return 0;
-			case InsertHow.INSERT:
-				return 0;
-			case InsertHow.NEW_TOUR:
-				return Math.min(
-					Math.max(
-						Math.floor(arrivalWindow.size() / 2),
-						Math.floor(arrivalWindow.size() - SCHEDULED_TIME_BUFFER_PICKUP)
-					),
-					getScheduledTimeBufferDropoff(passengerDuration)
-				);
-			case InsertHow.CONNECT:
-				return 0;
-		}
-	})();
 	const {
 		communicatedPickupTime,
 		scheduledPickupTimeStart,
@@ -378,9 +330,7 @@ export function evaluateBothInsertion(
 		next,
 		prevLegDuration,
 		nextLegDuration,
-		passengerDuration,
-		pickupLeeway,
-		dropoffLeeway
+		passengerDuration
 	);
 	// Compute shifts of scheduled time intervals of previous and next event
 	let prevShift = 0;
@@ -408,25 +358,13 @@ export function evaluateBothInsertion(
 		taxiDurationDelta
 	);
 
-	const approachPlusReturnDurationDelta = getApproachPlusReturnDurationDelta(
-		insertionCase,
-		prev,
-		next,
-		prevLegDuration,
-		nextLegDuration
-	);
 	const fullyPayedDurationDelta = getFullyPayedDurationDelta(
 		prev,
 		prevLegDuration,
 		nextLegDuration,
 		passengerDuration
 	);
-	const cost = computeCost(
-		weightedPassengerDuration,
-		approachPlusReturnDurationDelta,
-		fullyPayedDurationDelta,
-		taxiWaitingTime
-	);
+	const cost = computeCost(weightedPassengerDuration, 0, fullyPayedDurationDelta, taxiWaitingTime);
 	console.log(
 		promisedTimes === undefined ? 'WHITELIST' : 'BOOKING API',
 		'valid insertion found,',
@@ -436,7 +374,6 @@ export function evaluateBothInsertion(
 		{ cost },
 		{ weightedPassengerDuration },
 		{ fullyPayedDurationDelta },
-		{ approachPlusReturnDurationDelta },
 		{ taxiWaitingTime }
 	);
 	return {
@@ -449,7 +386,7 @@ export function evaluateBothInsertion(
 		pickupCase: structuredClone(insertionCase),
 		dropoffCase: structuredClone(insertionCase),
 		passengerDuration: weightedPassengerDuration,
-		approachPlusReturnDurationDelta,
+		approachPlusReturnDurationDelta: 0,
 		fullyPayedDurationDelta,
 		taxiWaitingTime,
 		cost,
@@ -688,18 +625,14 @@ export function evaluatePairInsertions(
 						SCHEDULED_TIME_BUFFER_PICKUP,
 						leewayBetweenPickupDropoff
 					);
-					const scheduledPickupTime =
-						communicatedPickupTime +
-						(pickup.case.how === InsertHow.APPEND ? 0 : pickupScheduledShift);
+					const scheduledPickupTime = communicatedPickupTime + pickupScheduledShift;
 					const scheduledDropoffTime =
 						communicatedDropoffTime -
-						(dropoff.case.how === InsertHow.PREPEND
-							? 0
-							: Math.min(
-									dropoff.window.size(),
-									getScheduledTimeBufferDropoff(dropoff.window.startTime - pickup.window.endTime),
-									leewayBetweenPickupDropoff - pickupScheduledShift
-								));
+						Math.min(
+							dropoff.window.size(),
+							getScheduledTimeBufferDropoff(dropoff.window.startTime - pickup.window.endTime),
+							leewayBetweenPickupDropoff - pickupScheduledShift
+						);
 
 					// Compute the delta of the taxi's time spend driving for the tour containing the new request
 					const approachPlusReturnDurationDelta =
@@ -722,10 +655,7 @@ export function evaluatePairInsertions(
 									getScheduledEventTime(nextDropoff)
 								) + nextDropoff.nextLegDuration
 							: nextDropoff.arrival;
-					const relevantEvents = events.slice(
-						pickup.case.how === InsertHow.CONNECT ? pickupIdx - 1 : pickupIdx,
-						dropoff.case.how === InsertHow.CONNECT ? dropoffIdx + 1 : dropoffIdx
-					);
+					const relevantEvents = events.slice(pickupIdx, dropoffIdx);
 					const tours = new Set<number>();
 					let oldTourDurationSum = 0;
 					relevantEvents.forEach((e) => {
@@ -1005,44 +935,6 @@ function getWeightedPassengerDurationDelta(
 	return passengersEnteringInPrev * prevShift + passengerExitingAtNext * nextShift;
 }
 
-function getApproachPlusReturnDurationDelta(
-	type: InsertionType,
-	prev: RideShareEvent,
-	next: RideShareEvent,
-	prevLegDuration: number,
-	nextLegDuration: number
-) {
-	const oldApproachPlusReturnDuration = (() => {
-		switch (type.how) {
-			case InsertHow.APPEND:
-				return prev.nextLegDuration;
-			case InsertHow.PREPEND:
-				return next.prevLegDuration;
-			case InsertHow.INSERT:
-				return 0;
-			case InsertHow.NEW_TOUR:
-				return 0;
-			case InsertHow.CONNECT:
-				return next.prevLegDuration + prev.nextLegDuration;
-		}
-	})();
-	const newApproachPlusReturnDuration = (() => {
-		switch (type.how) {
-			case InsertHow.APPEND:
-				return nextLegDuration;
-			case InsertHow.PREPEND:
-				return prevLegDuration;
-			case InsertHow.INSERT:
-				return 0;
-			case InsertHow.NEW_TOUR:
-				return prevLegDuration + nextLegDuration;
-			case InsertHow.CONNECT:
-				return 0;
-		}
-	})();
-	return newApproachPlusReturnDuration - oldApproachPlusReturnDuration;
-}
-
 function getFullyPayedDurationDelta(
 	prev: RideShareEvent,
 	prevLegDuration: number,
@@ -1102,9 +994,7 @@ function getTimestamps(
 	next: RideShareEvent,
 	prevLegDuration: number,
 	nextLegDuration: number,
-	passengerDuration: number,
-	pickupLeeway: number,
-	dropoffLeeway: number
+	passengerDuration: number
 ): {
 	communicatedPickupTime: number;
 	scheduledPickupTimeStart: number;
@@ -1139,9 +1029,9 @@ function getTimestamps(
 			promisedTimes?.pickup ?? -1,
 			window.startTime
 		);
-		const scheduledPickupTimeEnd = scheduledPickupTimeStart + pickupLeeway;
+		const scheduledPickupTimeEnd = scheduledPickupTimeStart;
 		const scheduledDropoffTimeStart = scheduledPickupTimeEnd + passengerDuration;
-		const scheduledDropoffTimeEnd = scheduledDropoffTimeStart + dropoffLeeway;
+		const scheduledDropoffTimeEnd = scheduledDropoffTimeStart;
 		return clampTimestamps(
 			scheduledPickupTimeStart,
 			scheduledPickupTimeEnd,
@@ -1157,9 +1047,9 @@ function getTimestamps(
 			promisedTimes?.dropoff ?? Number.MAX_VALUE,
 			window.endTime
 		);
-		const scheduledDropoffTimeStart = scheduledDropoffTimeEnd - dropoffLeeway;
+		const scheduledDropoffTimeStart = scheduledDropoffTimeEnd;
 		const scheduledPickupTimeEnd = scheduledDropoffTimeStart - passengerDuration;
-		const scheduledPickupTimeStart = scheduledPickupTimeEnd - pickupLeeway;
+		const scheduledPickupTimeStart = scheduledPickupTimeEnd;
 		return clampTimestamps(
 			scheduledPickupTimeStart,
 			scheduledPickupTimeEnd,
@@ -1174,9 +1064,9 @@ function getTimestamps(
 			promisedTimes === undefined || !window.covers(promisedTimes.pickup)
 				? window.startTime
 				: promisedTimes.pickup;
-		const scheduledPickupTimeEnd = scheduledPickupTimeStart + pickupLeeway;
+		const scheduledPickupTimeEnd = scheduledPickupTimeStart;
 		const scheduledDropoffTimeStart = scheduledPickupTimeEnd + passengerDuration;
-		const scheduledDropoffTimeEnd = scheduledDropoffTimeStart + dropoffLeeway;
+		const scheduledDropoffTimeEnd = scheduledDropoffTimeStart;
 		return clampTimestamps(
 			scheduledPickupTimeStart,
 			scheduledPickupTimeEnd,
@@ -1190,9 +1080,9 @@ function getTimestamps(
 		promisedTimes === undefined || !window.covers(promisedTimes.dropoff)
 			? window.endTime
 			: promisedTimes.dropoff;
-	const scheduledDropoffTimeStart = scheduledDropoffTimeEnd - dropoffLeeway;
+	const scheduledDropoffTimeStart = scheduledDropoffTimeEnd;
 	const scheduledPickupTimeEnd = scheduledDropoffTimeStart - passengerDuration;
-	const scheduledPickupTimeStart = scheduledPickupTimeEnd - pickupLeeway;
+	const scheduledPickupTimeStart = scheduledPickupTimeEnd;
 	return clampTimestamps(
 		scheduledPickupTimeStart,
 		scheduledPickupTimeEnd,
