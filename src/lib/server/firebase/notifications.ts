@@ -35,6 +35,10 @@ export async function sendNotifications(companyId: number, data: NotificationDat
 			title = 'Fahrt abgesagt';
 			body = `Tour am ${formatTime(data.pickupTime)} wurde abgesagt.`;
 			break;
+		case TourChange.REMINDER:
+			title = 'Bevorstehende Fahrt';
+			body = `Tour am ${formatTime(data.pickupTime)}`;
+			break;
 	}
 
 	tokens.forEach((token) => {

@@ -52,6 +52,7 @@ export const getTours = async (
 						'event.id',
 						'eventGroup.address',
 						'event.isPickup',
+						'event.communicatedTime',
 						'eventGroup.lat',
 						'eventGroup.lng',
 						'eventGroup.nextLegDuration',

@@ -4,7 +4,7 @@
 </script>
 
 <p>
-	Liebe Grüße<br />
+	Viele Grüße<br />
 	Ihr {PUBLIC_PROVIDER} Team<br />
 	<a href={env.ORIGIN} target="_blank">{env.ORIGIN}</a><br />
 </p>
