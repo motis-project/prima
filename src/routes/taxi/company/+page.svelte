@@ -7,6 +7,7 @@
 	import Panel from '$lib/ui/Panel.svelte';
 	import AddressTypeahead from '$lib/ui/AddressTypeahead.svelte';
 	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
+	import { t } from '$lib/i18n/translation';
 
 	import maplibregl from 'maplibre-gl';
 	import { getStyle } from '$lib/map/style';
@@ -117,6 +118,10 @@
 						</select>
 						<ChevronDown class="absolute right-3 top-2.5 size-4 opacity-50" />
 					</div>
+				</div>
+				<div class="field">
+					<Label for="phone">{t.account.phone}</Label>
+					<Input name="phone" type="phone" value={data.company.phone} />
 				</div>
 			</div>
 			<div class="mt-8 w-full text-right">

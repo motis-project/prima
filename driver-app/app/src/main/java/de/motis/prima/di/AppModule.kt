@@ -40,8 +40,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideTourStore(realm: Realm): TourStore {
-        return TourStore(realm)
+    fun provideTourStore(realm: Realm, ticketStore: TicketStore): TourStore {
+        return TourStore(realm, ticketStore)
     }
 
     @Provides
@@ -50,9 +50,10 @@ object AppModule {
         dataStoreManager: DataStoreManager,
         ticketStore: TicketStore,
         tourStore: TourStore,
-        apiService: ApiService
+        apiService: ApiService,
+        @ApplicationContext context: Context
     ): DataRepository {
-        return DataRepository(dataStoreManager, ticketStore, tourStore, apiService)
+        return DataRepository(dataStoreManager, ticketStore, tourStore, apiService, context)
     }
 
     @Provides

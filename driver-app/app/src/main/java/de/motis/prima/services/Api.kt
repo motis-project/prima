@@ -53,18 +53,15 @@ data class Vehicle(
 data class Event(
     val tour: Int,
     val customerName: String,
-    val customerPhone: String,
+    val customerPhone: String?,
     val id: Int,
-    val communicatedTime: Long,
     val address: String,
     val eventGroup: String,
     val isPickup: Boolean,
     val lat: Double,
     val lng: Double,
-    val nextLegDuration: Long,
-    val prevLegDuration: Long,
+    val scheduledTime: Long,
     val scheduledTimeStart: Long,
-    val scheduledTimeEnd: Long,
     val bikes: Int,
     val customer: Int,
     val luggage: Int,
@@ -73,7 +70,11 @@ data class Event(
     val requestId: Int,
     val ticketHash: String,
     val ticketChecked: Boolean,
-    val cancelled: Boolean
+    val cancelled: Boolean,
+    val ticketPrice: Int,
+    val kidsZeroToTwo: Int,
+    val kidsThreeToFour: Int,
+    val kidsFiveToSix: Int,
 )
 
 data class Tour(

@@ -48,7 +48,8 @@ async function createUser(
 			firstName,
 			gender,
 			zipCode,
-			city
+			city,
+			isService: false
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();

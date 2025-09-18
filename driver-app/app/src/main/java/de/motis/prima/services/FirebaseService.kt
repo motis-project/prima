@@ -13,6 +13,7 @@ import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
 import de.motis.prima.MainActivity
 import de.motis.prima.R
+import de.motis.prima.data.DataRepository
 import de.motis.prima.data.DataStoreManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +28,9 @@ class FirebaseService: FirebaseMessagingService() {
     @Inject
     lateinit var dataStore: DataStoreManager
 
+    @Inject
+    lateinit var repository: DataRepository
+
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
@@ -36,6 +40,10 @@ class FirebaseService: FirebaseMessagingService() {
             val tourId = data["tourId"]
             val title = remoteMessage.notification?.title ?: "Default Title"
             val body = remoteMessage.notification?.body ?: "Default Body"
+
+            val pickupTime = data["pickupTime"]
+            repository.fetchTours(pickupTime?.toLong())
+
             /*CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val msgVehicleId = data["vehicleId"]?.toInt()

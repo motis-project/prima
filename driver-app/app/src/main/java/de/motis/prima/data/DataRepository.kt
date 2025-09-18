@@ -1,5 +1,7 @@
 package de.motis.prima.data
 
+import android.content.Context
+import android.content.res.Configuration
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
 import de.motis.prima.services.ApiService
@@ -19,16 +21,25 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import retrofit2.Response
 import java.security.MessageDigest
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.util.Date
 import javax.inject.Inject
+
+data class TourSpecialInfo(
+    var wheelChairs: Int = 0,
+    var kidsZeroToTwo: Int = 0,
+    var kidsThreeToFour: Int = 0,
+    var kidsFiveToSix: Int = 0,
+    var hasInfo: Boolean = false
+)
 
 class DataRepository @Inject constructor(
     private val dataStoreManager: DataStoreManager,
     private val ticketStore: TicketStore,
     private val tourStore: TourStore,
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val context: Context
 ) {
     val storedTickets = ticketStore.storedTickets
     val storedTours = tourStore.storedTours
@@ -53,14 +64,44 @@ class DataRepository @Inject constructor(
 
     val deviceInfo: Flow<DeviceInfo> = dataStoreManager.deviceInfoFlow
 
-    private val _markedTour = MutableStateFlow<Int>(-1)
+    private val _markedTour = MutableStateFlow(-1)
     val markedTour: StateFlow<Int> = _markedTour.asStateFlow()
+
+    private val _eventObjectGroups = MutableStateFlow<List<EventObjectGroup>>(emptyList())
+    val eventObjectGroups: StateFlow<List<EventObjectGroup>> = _eventObjectGroups.asStateFlow()
 
     private var fetchTours = false
 
+    private val _darkTheme = MutableStateFlow(false)
+    val darkTheme: StateFlow<Boolean> = _darkTheme.asStateFlow()
+
+    fun toggleTheme() {
+        _darkTheme.value = !_darkTheme.value
+        CoroutineScope(Dispatchers.IO).launch {
+            dataStoreManager.setTheme(_darkTheme.value)
+        }
+    }
+
+    private fun initializeTheme() {
+        if (isSystemDarkMode(context)) {
+            _darkTheme.value =  true
+        } else {
+            CoroutineScope(Dispatchers.IO).launch {
+                _darkTheme.value = dataStoreManager.uiThemeFlow.first()
+            }
+        }
+    }
+
+    private fun isSystemDarkMode(context: Context): Boolean {
+        return (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+                Configuration.UI_MODE_NIGHT_YES
+    }
+
     init {
+        initializeTheme()
         fetchFirebaseToken()
         startRefreshingTours()
+        startReporting()
     }
 
     fun removeFirebaseToken() {
@@ -113,24 +154,6 @@ class DataRepository @Inject constructor(
         fetchTours = false
     }
 
-    private fun refreshToursDisplayDate() {
-        val today = displayDate.value
-
-        val tomorrow = today.plusDays(1)
-        val start = today.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val end = tomorrow.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val response = apiService.getTours(start, end)
-                val fetchedTours = response.body() ?: emptyList()
-                setTours(fetchedTours)
-            } catch (e: Exception) {
-                _networkError.value = true
-            }
-        }
-    }
-
     private fun refreshTours(): Flow<Response<List<Tour>>> = flow {
         while (fetchTours) {
             val today = LocalDate.now()
@@ -141,12 +164,10 @@ class DataRepository @Inject constructor(
                 val end = tomorrow.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
                 try {
-                    val response = apiService.getTours(start, end)
-                    emit(response)
+                    emit(apiService.getTours(start, end))
                 } catch (e: Exception) {
                     _networkError.value = true
-                    val toursDate = getToursForDate(_displayDate.value, selectedVehicle.first().id)
-                    _toursForDate.value = toursDate
+                    _toursForDate.value = getToursForDate()
                 }
                 delay(10000) // 10 sec
             }
@@ -157,14 +178,15 @@ class DataRepository @Inject constructor(
         fetchTours = true
         CoroutineScope(Dispatchers.IO).launch {
             _vehicleId = selectedVehicle.first().id
-            _toursForDate.value = getToursForDate(_displayDate.value, selectedVehicle.first().id)
+            _toursForDate.value = getToursForDate()
             refreshTours().collect { response ->
                 if (response.isSuccessful) {
                     _networkError.value = false
                     val fetchedTours = response.body() ?: emptyList()
 
-                    var tours = fetchedTours.filter { t -> t.vehicleId == selectedVehicle.first().id }
-                    tours = tours.sortedBy { t -> t.events[0].scheduledTimeStart }
+                    val tours = fetchedTours
+                        .filter { t -> t.vehicleId == selectedVehicle.first().id }
+                        .sortedBy { t -> t.events[0].scheduledTimeStart }
 
                     setTours(fetchedTours)
                     _toursCache.value = tours
@@ -173,32 +195,99 @@ class DataRepository @Inject constructor(
                 }
             }
         }
+        // test TODO
+        fetchTours = false
     }
 
-    private fun fetchTours() {
-        val displayDay = _displayDate.value
+    private fun localDateFromEpochMillis(epochMillis: Long): LocalDate {
+        return Instant.ofEpochMilli(epochMillis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+    }
+
+    fun fetchTours(time: Long? = null) {
+        var displayDay = _displayDate.value
+
+        if (time != null) {
+            displayDay = localDateFromEpochMillis(time)
+        }
+
         val nextDay = displayDay.plusDays(1)
         val start = displayDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val end = nextDay.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
         CoroutineScope(Dispatchers.IO).launch {
+            _toursForDate.value = getToursForDate()
             try {
                 val response = apiService.getTours(start, end)
                 if (response.isSuccessful) {
                     _networkError.value = false
                     val fetchedTours = response.body() ?: emptyList()
-
-                    var tours = fetchedTours.filter { t -> t.vehicleId == _vehicleId }
-                    tours = tours.sortedBy { t -> t.events[0].scheduledTimeStart }
-
                     setTours(fetchedTours)
-
-                    _toursForDate.value = getToursForDate(_displayDate.value, _vehicleId)
-                    _toursCache.value = tours
+                    _toursCache.value = fetchedTours
+                        .filter { t -> t.vehicleId == _vehicleId }
+                        .sortedBy { t -> t.events[0].scheduledTimeStart }
                 }
             } catch (e: Exception) {
                 _networkError.value = true
-                _toursForDate.value = getToursForDate(_displayDate.value, _vehicleId)
+                Log.e("error", "fetchTours: ${e.message}")
+            }
+        }
+    }
+
+    private fun retryScanReport(ticket: Ticket) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = apiService.validateTicket(ticket.requestId, ticket.ticketCode)
+                if (response.isSuccessful) {
+                    ticket.validationStatus = ValidationStatus.DONE
+                    updateTicketStore(ticket)
+                } else {
+                    ticket.validationStatus = ValidationStatus.REJECTED
+                    updateTicketStore(ticket)
+                }
+            } catch (e: Exception) {
+                Log.d("error", "Network Error: ${e.message!!}")
+            }
+        }
+    }
+
+    private fun retryFareReport(tour: TourObject) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = apiService.reportFare(tour.tourId, tour.fare)
+                if (response.isSuccessful) {
+                    updateTourStore(tour.tourId, tour.fare, true)
+                }
+            } catch (e: Exception) {
+                Log.d("error", "Network Error: ${e.message!!}")
+            }
+        }
+    }
+
+    private fun startReporting() {
+        CoroutineScope(Dispatchers.IO).launch {
+            while (true) {
+                val failedScanReports = getTicketsByValidationStatus(ValidationStatus.CHECKED_IN)
+                for (ticket in failedScanReports) {
+                    retryScanReport(
+                        Ticket(
+                            ticket.requestId,
+                            ticket.ticketHash,
+                            ticket.ticketCode,
+                            ValidationStatus.valueOf(ticket.validationStatus)
+                        )
+                    )
+                }
+
+                val failedFareReports = getToursUnreportedFare()
+                for (tour in failedFareReports) {
+                    if (tour.fare > 0) {
+                        retryFareReport(tour)
+                    }
+                }
+
+                delay(10000)
             }
         }
     }
@@ -206,34 +295,45 @@ class DataRepository @Inject constructor(
     fun resetDate() {
         _displayDate.value = LocalDate.now()
         fetchTours()
-        _toursForDate.value = getToursForDate(_displayDate.value, _vehicleId)
     }
 
     fun incrementDate() {
         _displayDate.value = _displayDate.value.plusDays(1)
         fetchTours()
-        _toursForDate.value = getToursForDate(_displayDate.value, _vehicleId)
     }
 
     fun decrementDate() {
         _displayDate.value = _displayDate.value.minusDays(1)
         fetchTours()
-        _toursForDate.value = getToursForDate(_displayDate.value, _vehicleId)
     }
 
-    private fun getToursForDate(date: LocalDate, vehicleId: Int): List<Tour> {
-        refreshToursDisplayDate()
-
+    private suspend fun getToursForDate(): List<Tour> {
+        val date = _displayDate.value
         val start = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val end = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val tours = tourStore.getToursForInterval(start, end)
-        var res = tours.filter { t -> t.vehicleId == vehicleId }
-        res = res.sortedBy { t -> t.events[0].scheduledTimeStart }
+        val res = tours
+            .filter { t -> t.vehicleId == selectedVehicle.first().id }
+            .sortedBy { t -> t.events[0].scheduledTimeStart }
         return res
     }
 
     fun getTicketStatus(ticketCode: String): ValidationStatus? {
         return ticketStore.getTicketStatus(ticketCode)
+    }
+
+    fun getTicketsForEventGroup(eventGroupId: String): List<TicketObject> {
+        val tickets = mutableListOf<TicketObject>()
+        val events = eventObjectGroups.value
+            .find { e -> e.id == eventGroupId }?.events?.filter { e -> e.isPickup }
+        if (events == null) return emptyList()
+        for (e in events) {
+            val ticket = ticketStore.getTicketByRequestId(e.requestId)
+            if (ticket != null) {
+                tickets.add(ticket)
+            }
+        }
+        return tickets
     }
 
     fun md5(input: String): String {
@@ -258,19 +358,17 @@ class DataRepository @Inject constructor(
     }
 
     private val _tours = MutableStateFlow<List<Tour>>(emptyList())
-    val tours: StateFlow<List<Tour>> = _tours.asStateFlow()
 
     private fun setTours(tours: List<Tour>) {
-        _tours.value = tours
-        for (tour in tours) {
-            val ticketValidated = tour.events.find { e -> e.ticketChecked } == null
-            val fareReported = tour.fare != 0
-            tourStore.update(tour, ticketValidated, fareReported)
+        try {
+            _tours.value = tours
+            for (tour in tours) {
+                tourStore.update(tour)
+            }
+        } catch (e: Exception) {
+            Log.e("error", "setTours: ${e.message}")
         }
     }
-
-    private val _eventObjectGroups = MutableStateFlow<List<EventObjectGroup>>(emptyList())
-    val eventObjectGroups: StateFlow<List<EventObjectGroup>> = _eventObjectGroups.asStateFlow()
 
     fun updateEventGroups(tourId: Int) {
         _eventObjectGroups.value = tourStore.getEventGroupsForTour(tourId)
@@ -280,21 +378,21 @@ class DataRepository @Inject constructor(
         return _eventObjectGroups.value.find { e -> e.id == id }
     }
 
-    suspend fun updateTicketStore(ticket: Ticket) {
+    fun updateTicketStore(ticket: Ticket) {
         ticketStore.update(ticket)
         _pendingValidationTickets.value = ticketStore
             .getTicketsByValidationStatus(ValidationStatus.CHECKED_IN)
     }
 
-    suspend fun updateTourStore(tourId: Int, fareCent: Int, fareReported: Boolean) {
+    fun updateTourStore(tourId: Int, fareCent: Int, fareReported: Boolean) {
         tourStore.updateFare(tourId, fareCent, fareReported)
     }
 
-    fun getTicketsByValidationStatus(status: ValidationStatus): RealmResults<TicketObject> {
+    private fun getTicketsByValidationStatus(status: ValidationStatus): RealmResults<TicketObject> {
         return ticketStore.getTicketsByValidationStatus(status)
     }
 
-    fun getToursUnreportedFare(): List<TourObject> {
+    private fun getToursUnreportedFare(): List<TourObject> {
         return tourStore.getToursUnreportedFare()
     }
 
@@ -317,20 +415,21 @@ class DataRepository @Inject constructor(
         return invalidated.isNotEmpty()
     }
 
-    fun hasValidTicket(tourId: Int, eventId: Int): Boolean {
-        val event = tourStore.getEventsForTour(tourId).find { e -> e.id == eventId }
-        if (event != null) {
-            return event.ticketChecked
+    fun getTourSpecialInfo(tourId: Int): TourSpecialInfo {
+        val tourInfo = TourSpecialInfo()
+        val events = tourStore.getEventsForTour(tourId)
+        for (e in events) {
+            if (e.isPickup.not()) continue
+            tourInfo.wheelChairs += e.wheelchairs
+            tourInfo.kidsZeroToTwo += e.kidsZeroToTwo
+            tourInfo.kidsThreeToFour += e.kidsThreeToFour
+            tourInfo.kidsFiveToSix += e.kidsFiveToSix
         }
-        return false
-    }
 
-    fun isTourStarted(tourId: Int): Boolean {
-        val tour = tourStore.getTour(tourId)
-        if (tour != null) {
-            return Date(tour.startTime) < Date()
-        }
-        return false
+        val info = tourInfo.wheelChairs + tourInfo.kidsFiveToSix + tourInfo.kidsThreeToFour + tourInfo.kidsZeroToTwo
+        tourInfo.hasInfo = info != 0
+
+        return tourInfo
     }
 
     fun isTourCancelled(tourId: Int): Boolean {

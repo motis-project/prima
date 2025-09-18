@@ -13,6 +13,7 @@
 	import Message from '$lib/ui/Message.svelte';
 	import { t } from '$lib/i18n/translation';
 	import { Label } from '$lib/shadcn/label';
+	import { enhance } from '$app/forms';
 
 	const { msg, type }: { msg?: Msg; type: 'signup' | 'login' } = $props();
 	const isSignup = type === 'signup';
@@ -21,7 +22,15 @@
 </script>
 
 <div class="flex flex-col">
-	<form method="post" class="flex flex-col gap-6">
+	<form
+		method="post"
+		class="flex flex-col gap-6"
+		use:enhance={() => {
+			return async ({ update }) => {
+				update({ reset: false });
+			};
+		}}
+	>
 		<Message class="mb-6" {msg} />
 		{#if isSignup}
 			<div class="field">

@@ -21,6 +21,7 @@ export type Company = {
 	address: string;
 	zone: string;
 	community: string;
+	phone: string;
 };
 
 export const ADMIN: UserCredentials = {
@@ -42,14 +43,16 @@ export const COMPANY1: Company = {
 	name: 'Taxi Weißwasser',
 	address: 'Werner-Seelenbinder-Straße 70A, 02943 Weißwasser/Oberlausitz',
 	zone: 'Weißwasser',
-	community: 'Weißwasser/O.L.'
+	community: 'Weißwasser/O.L.',
+	phone: '555666'
 };
 
 export const COMPANY2: Company = {
 	name: 'Taxi Gablenz',
 	address: 'Schulstraße 21, 02953 Gablenz',
 	zone: 'Weißwasser',
-	community: 'Gablenz'
+	community: 'Gablenz',
+	phone: '777888'
 };
 
 export async function execSQL(sql: RawBuilder<unknown>) {
@@ -100,6 +103,7 @@ export async function setCompanyData(page: Page, user: UserCredentials, company:
 	await page.getByText('Werner-Seelenbinder-Straße 70a').click();
 
 	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: company.zone });
+	await page.locator('input[name="phone"]').pressSequentially(company.phone, { delay: 10 });
 	await page.getByRole('button', { name: 'Übernehmen' }).click();
 	await expect(page.getByText('Unternehmensdaten erfolgreich aktualisiert.')).toBeVisible();
 }

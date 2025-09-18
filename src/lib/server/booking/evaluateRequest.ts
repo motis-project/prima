@@ -7,17 +7,23 @@ import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import type { Company } from './getBookingAvailability';
 import type { PromisedTimes } from './PromisedTimes';
 import type { Range } from '$lib/util/booking/getPossibleInsertions';
-import { gatherRoutingCoordinates, routing } from './routing';
 import {
-	BUFFER_TIME,
 	EARLIEST_SHIFT_START,
 	LATEST_SHIFT_END,
+	PASSENGER_CHANGE_DURATION,
 	MAX_PASSENGER_WAITING_TIME_DROPOFF,
-	MAX_PASSENGER_WAITING_TIME_PICKUP,
-	PASSENGER_CHANGE_DURATION
+	MAX_PASSENGER_WAITING_TIME_PICKUP
 } from '$lib/constants';
-import { evaluateNewTours } from './insertion';
+import {
+	evaluateNewTours,
+	evaluatePairInsertions,
+	evaluateSingleInsertions,
+	takeBest,
+	type Insertion
+} from './insertion';
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
+import { DAY } from '$lib/util/time';
+import { routing } from './routing';
 
 export async function evaluateRequest(
 	companies: Company[],
@@ -27,13 +33,22 @@ export async function evaluateRequest(
 	required: Capacities,
 	startFixed: boolean,
 	promisedTimes?: PromisedTimes
-) {
+): Promise<(Insertion | undefined)[][]> {
+	console.log(
+		'EVALUATE REQUEST PARAMS: ',
+		{ companies: JSON.stringify(companies, null, 2) },
+		{ expandedSearchInterval: expandedSearchInterval.toString() },
+		{ userChosen },
+		{ busStops: JSON.stringify(busStops, null, 2) },
+		{ required },
+		{ startFixed },
+		{ promisedTimes }
+	);
 	if (companies.length == 0) {
 		return busStops.map((bs) => bs.times.map((_) => undefined));
 	}
 	const directDurations = (await batchOneToManyCarRouting(userChosen, busStops, startFixed)).map(
-		(duration) =>
-			duration === undefined ? undefined : duration + PASSENGER_CHANGE_DURATION + BUFFER_TIME
+		(duration) => (duration === undefined ? undefined : duration + PASSENGER_CHANGE_DURATION)
 	);
 	const insertionRanges = new Map<number, Range[]>();
 	companies.forEach((company) =>
@@ -41,19 +56,15 @@ export async function evaluateRequest(
 			insertionRanges.set(vehicle.id, getPossibleInsertions(vehicle, required, vehicle.events));
 		})
 	);
-	const routingResults = await routing(
-		companies,
-		gatherRoutingCoordinates(companies, insertionRanges),
-		userChosen,
-		busStops,
-		startFixed
-	);
+
+	const routingResults = await routing(companies, userChosen, busStops, insertionRanges);
+
 	const busStopTimes = busStops.map((bs) =>
 		bs.times.map(
 			(t) =>
 				new Interval(
-					startFixed ? t : t - MAX_PASSENGER_WAITING_TIME_PICKUP,
-					startFixed ? t + MAX_PASSENGER_WAITING_TIME_DROPOFF : t
+					startFixed ? t : t - MAX_PASSENGER_WAITING_TIME_DROPOFF,
+					startFixed ? t + MAX_PASSENGER_WAITING_TIME_PICKUP : t
 				)
 		)
 	);
@@ -83,6 +94,8 @@ export async function evaluateRequest(
 	if (earliest >= latest) {
 		return busStops.map((bs) => bs.times.map((_) => undefined));
 	}
+	earliest = Math.max(earliest, Date.now() - 2 * DAY);
+	latest = Math.min(latest, Date.now() + 15 * DAY);
 	const allowedTimes = getAllowedTimes(earliest, latest, EARLIEST_SHIFT_START, LATEST_SHIFT_END);
 	console.log(
 		'WHITELIST REQUEST: ALLOWED TIMES (RESTRICTION FROM 4 TO 23):\n',
@@ -99,5 +112,27 @@ export async function evaluateRequest(
 		allowedTimes,
 		promisedTimes
 	);
-	return newTourEvaluations;
+	const { busStopEvaluations, bothEvaluations, userChosenEvaluations } = evaluateSingleInsertions(
+		companies,
+		required,
+		startFixed,
+		expandedSearchInterval,
+		insertionRanges,
+		busStopTimes,
+		routingResults,
+		directDurations,
+		allowedTimes,
+		promisedTimes
+	);
+	const pairEvaluations = evaluatePairInsertions(
+		companies,
+		startFixed,
+		insertionRanges,
+		busStopTimes,
+		busStopEvaluations,
+		userChosenEvaluations,
+		required,
+		promisedTimes === undefined
+	);
+	return takeBest(takeBest(bothEvaluations, newTourEvaluations), pairEvaluations);
 }

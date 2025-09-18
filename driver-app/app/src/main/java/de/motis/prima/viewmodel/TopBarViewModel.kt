@@ -31,4 +31,8 @@ class TopBarViewModel @Inject constructor(
             }
         }
     }
+
+    fun toggleTheme() {
+        repository.toggleTheme()
+    }
 }

@@ -31,7 +31,7 @@ export async function requestRide(page: Page) {
 
 	await page.getByRole('textbox').fill(`${dayString}T08:30:00Z`);
 	await page.getByRole('button', { name: 'Suchen' }).click();
-	await expect(page.getByText('Vehicle: ')).toBeVisible();
+	await expect(page.getByText('Request: ')).toBeVisible();
 }
 
 test('Set company data', async ({ page }) => {

@@ -21,12 +21,13 @@
     <string name="change_vehicles">Fahrzeug wechseln</string>
     <string name="cancel_tour">Fahrt abbrechen</string>
     <string name="fare_input_error">Die Eingabe konnte nicht verarbeitet werden.</string>
-    <string name="fare_header">Fahrpreis</string>
+    <string name="fare_header">Taxameter</string>
     <string name="abort_scan">Zurück</string>
     <string name="logout">Logout</string>
     <string name="network_error">Bitte überprüfen Sie Ihre Internetverbindung.</string>
     <string name="reload">Aktualisieren</string>
     <string name="tour_preview_header">Tour Übersicht</string>
     <string name="account_error">Ihr Nutzerkonto ist nicht freigeschaltet.</string>
-    <string name="invalidated_tickets">Es wurden nicht alle Tickets gescannt. Fahrt trotzdem fortsetzen?</string>
+    <string name="invalidated_tickets">Es wurden nicht alle Tickets validiert. Fahrt trotzdem fortsetzen?</string>
+    <string name="tickets_validated">Tickets validiert</string>
 </resources>
