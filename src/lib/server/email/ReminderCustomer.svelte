@@ -57,6 +57,7 @@
 		</li>
 		<li>Fahrzeug: {licensePlate}</li>
 	</ul>
+	<p>Bitte stornieren Sie die Fahrt rechtzeitig, wenn Sie sie nicht wahrnehmen können.</p>
 	<p>Link zur Buchung: <a href={bookingLink}>{bookingLink}</a></p>
 
 	<p><b>Ihr Ticket</b></p>
