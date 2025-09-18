@@ -36,6 +36,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -158,11 +159,17 @@ fun Tours(
                 }
 
                 if (displayDay != today) {
-                    displayTours = toursToday.filter { t -> !viewModel.isCancelled(t.tourId) }
+                    displayTours = toursToday
                 }
             }
 
-            displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTimeStart }
+            try {
+                displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTimeStart }
+            } catch(e: Exception) {
+                Log.d("error", "Error: ${e.message}")
+            }
+
+            displayTours = displayTours.filter { t -> !viewModel.isCancelled(t.tourId) }
 
             ShowTours(navController, displayTours)
         }
@@ -281,6 +288,211 @@ fun DateSelect(
 }
 
 @Composable
+fun ToursList(
+    navController: NavController,
+    tours: List<Tour>,
+    viewModel: ToursViewModel = hiltViewModel()
+) {
+    LaunchedEffect(Unit) {
+        for (tour in tours) {
+            viewModel.updateEventGroups(tour.tourId)
+        }
+    }
+
+    val loading by viewModel.loading.collectAsState()
+    val markedTour by viewModel.markedTour.collectAsState()
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(LocalExtendedColors.current.containerColor)
+    ) {
+        items(items = tours, itemContent = { tour ->
+            ConstraintLayout(modifier = Modifier.clickable {
+                if (!loading) {
+                    navController.navigate("preview/${tour.tourId}")
+                    viewModel.removeMarker()
+                }
+            }) {
+                var startEvent: Event? = null
+                try {
+                    startEvent = tour.events[0] // TODO: get from first eventGroup
+                } catch (e: Exception) {
+                    Log.d("error", "Error: Tour has no events")
+                }
+
+                val address = startEvent?.address ?: ""
+
+                var  city = ""
+                try {
+                    val split = address.split(',')
+                    city = if (split[1] == " Deutschland") {
+                        split[0]
+                    } else {
+                        split[1]
+                    }
+                } catch (e: Exception) {
+                    city = address
+                }
+
+                val scheduledTime = startEvent?.scheduledTime ?: 0
+                val scheduledTimeStart = startEvent?.scheduledTimeStart ?: 0
+
+                val displayTime = if (scheduledTime.toInt() != 0) {
+                    Date(scheduledTime)
+                        .formatTo("HH:mm")
+                } else if (scheduledTimeStart.toInt() != 0) {
+                    Date(scheduledTimeStart)
+                        .formatTo("HH:mm")
+                } else {
+                    ""
+                }
+
+                var cardColor = LocalExtendedColors.current.cardColor
+                if (markedTour == tour.tourId) {
+                    cardColor = LocalExtendedColors.current.markedCardColor
+                }
+
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp)
+                        .wrapContentSize(),
+                    colors = CardColors(cardColor, Color.Black, Color.White, Color.White)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(10.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = displayTime,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 24.sp,
+                                textAlign = TextAlign.Center,
+                                color = LocalExtendedColors.current.textColor
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 12.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = city,
+                                fontSize = 24.sp,
+                                textAlign = TextAlign.Center,
+                                color = LocalExtendedColors.current.textColor
+                            )
+                        }
+
+                        if (viewModel.isCancelled(tour.tourId)) {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 12.dp),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "Storniert",
+                                    fontSize = 24.sp,
+                                    textAlign = TextAlign.Center,
+                                    color = Color.Red
+                                )
+                            }
+                        }
+
+                        val now = Date()
+                        val tourDate = Date(tour.endTime)
+                        if (tourDate < now) {
+                            val ticketChecked =
+                                tour.events.any { e -> e.ticketChecked }
+
+                            Spacer(modifier = Modifier.height(40.dp))
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 30.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = stringResource(id = R.string.tickets_validated),
+                                    fontSize = 20.sp,
+                                    textAlign = TextAlign.Center,
+                                    color = LocalExtendedColors.current.textColor
+                                )
+
+                                if (ticketChecked) {
+                                    Icon(
+                                        imageVector = Icons.Default.Done,
+                                        contentDescription = "Localized description",
+                                        tint = Color.Green,
+                                        modifier = Modifier
+                                            .size(width = 32.dp, height = 32.dp)
+                                            .background(LocalExtendedColors.current.containerColor)
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Clear,
+                                        contentDescription = "Localized description",
+                                        tint = Color.Red,
+                                        modifier = Modifier
+                                            .size(width = 32.dp, height = 32.dp)
+                                            .background(LocalExtendedColors.current.containerColor)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 30.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = stringResource(id = R.string.fare_label),
+                                    fontSize = 20.sp,
+                                    textAlign = TextAlign.Center,
+                                    color = LocalExtendedColors.current.textColor
+                                )
+
+                                if (tour.fare != 0) {
+                                    Icon(
+                                        imageVector = Icons.Default.Done,
+                                        contentDescription = "Localized description",
+                                        tint = if (ticketChecked) Color.Green else Color.Gray,
+                                        modifier = Modifier
+                                            .size(width = 32.dp, height = 32.dp)
+                                            .background(LocalExtendedColors.current.containerColor)
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Clear,
+                                        contentDescription = "Localized description",
+                                        tint = Color.Red,
+                                        modifier = Modifier
+                                            .size(width = 32.dp, height = 32.dp)
+                                            .background(LocalExtendedColors.current.containerColor)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        })
+    }
+}
+
+@Composable
 fun ShowTours(
     navController: NavController,
     tours: List<Tour>,
@@ -306,198 +518,7 @@ fun ShowTours(
                 )
             }
         } else {
-            val loading by viewModel.loading.collectAsState()
-            val markedTour by viewModel.markedTour.collectAsState()
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(LocalExtendedColors.current.containerColor)
-            ) {
-                items(items = tours, itemContent = { tour ->
-                    ConstraintLayout(modifier = Modifier.clickable {
-                        viewModel.updateEventGroups(tour.tourId)
-                        if (!loading) {
-                            navController.navigate("preview/${tour.tourId}")
-                            viewModel.removeMarker()
-                        }
-                    }) {
-                        var startEvent: Event? = null
-                        try {
-                            startEvent = tour.events[0]
-                        } catch (e: Exception) {
-                            Log.d("error", "Error: Tour has no events")
-                        }
-
-                        val address = startEvent?.address ?: ""
-
-                        var  city = ""
-                        try {
-                            val split = address.split(',')
-                            city = if (split[1] == " Deutschland") {
-                                split[0]
-                            } else {
-                                split[1]
-                            }
-                        } catch (e: Exception) {
-                            city = address
-                        }
-
-                        val scheduledTime = startEvent?.scheduledTime ?: 0
-                        val scheduledTimeStart = startEvent?.scheduledTimeStart ?: 0
-
-                        val displayTime = if (scheduledTime.toInt() != 0) {
-                            Date(scheduledTime)
-                                .formatTo("HH:mm")
-                        } else if (scheduledTimeStart.toInt() != 0) {
-                            Date(scheduledTimeStart)
-                                .formatTo("HH:mm")
-                        } else {
-                            ""
-                        }
-
-                        var cardColor = LocalExtendedColors.current.cardColor
-                        if (markedTour == tour.tourId) {
-                            cardColor = LocalExtendedColors.current.markedCardColor
-                        }
-
-                        Card(
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(10.dp)
-                                .wrapContentSize(),
-                            colors = CardColors(cardColor, Color.Black, Color.White, Color.White)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(10.dp),
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Text(
-                                        text = displayTime,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 24.sp,
-                                        textAlign = TextAlign.Center,
-                                        color = LocalExtendedColors.current.textColor
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(10.dp))
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 12.dp),
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Text(
-                                        text = city,
-                                        fontSize = 24.sp,
-                                        textAlign = TextAlign.Center,
-                                        color = LocalExtendedColors.current.textColor
-                                    )
-                                }
-
-                                if (viewModel.isCancelled(tour.tourId)) {
-                                    Spacer(modifier = Modifier.height(10.dp))
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(top = 12.dp),
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
-                                        Text(
-                                            text = "Storniert",
-                                            fontSize = 24.sp,
-                                            textAlign = TextAlign.Center,
-                                            color = Color.Red
-                                        )
-                                    }
-                                }
-
-                                val now = Date()
-                                val tourDate = Date(tour.endTime)
-                                if (tourDate < now) {
-                                    val ticketChecked =
-                                        tour.events.any { e -> e.ticketChecked }
-
-                                    Spacer(modifier = Modifier.height(40.dp))
-
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 30.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = stringResource(id = R.string.tickets_validated),
-                                            fontSize = 20.sp,
-                                            textAlign = TextAlign.Center,
-                                            color = LocalExtendedColors.current.textColor
-                                        )
-
-                                        if (ticketChecked) {
-                                            Icon(
-                                                imageVector = Icons.Default.Done,
-                                                contentDescription = "Localized description",
-                                                tint = Color.Green,
-                                                modifier = Modifier
-                                                    .size(width = 32.dp, height = 32.dp)
-                                                    .background(LocalExtendedColors.current.containerColor)
-                                            )
-                                        } else {
-                                            Icon(
-                                                imageVector = Icons.Default.Clear,
-                                                contentDescription = "Localized description",
-                                                tint = Color.Red,
-                                                modifier = Modifier
-                                                    .size(width = 32.dp, height = 32.dp)
-                                                    .background(LocalExtendedColors.current.containerColor)
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.height(10.dp))
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 30.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = stringResource(id = R.string.fare_label),
-                                            fontSize = 20.sp,
-                                            textAlign = TextAlign.Center,
-                                            color = LocalExtendedColors.current.textColor
-                                        )
-
-                                        if (tour.fare != 0) {
-                                            Icon(
-                                                imageVector = Icons.Default.Done,
-                                                contentDescription = "Localized description",
-                                                tint = if (ticketChecked) Color.Green else Color.Gray,
-                                                modifier = Modifier
-                                                    .size(width = 32.dp, height = 32.dp)
-                                                    .background(LocalExtendedColors.current.containerColor)
-                                            )
-                                        } else {
-                                            Icon(
-                                                imageVector = Icons.Default.Clear,
-                                                contentDescription = "Localized description",
-                                                tint = Color.Red,
-                                                modifier = Modifier
-                                                    .size(width = 32.dp, height = 32.dp)
-                                                    .background(LocalExtendedColors.current.containerColor)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                })
-            }
+            ToursList(navController, tours, viewModel)
         }
     }
 }

@@ -186,7 +186,6 @@ class DataRepository @Inject constructor(
 
                     val tours = fetchedTours
                         .filter { t -> t.vehicleId == selectedVehicle.first().id }
-                        .sortedBy { t -> t.events[0].scheduledTimeStart }
 
                     setTours(fetchedTours)
                     _toursCache.value = tours
@@ -224,9 +223,10 @@ class DataRepository @Inject constructor(
                     _networkError.value = false
                     val fetchedTours = response.body() ?: emptyList()
                     setTours(fetchedTours)
-                    _toursCache.value = fetchedTours
-                        .filter { t -> t.vehicleId == _vehicleId }
-                        .sortedBy { t -> t.events[0].scheduledTimeStart }
+                    if (time == null) {
+                        _toursCache.value = fetchedTours
+                            .filter { t -> t.vehicleId == _vehicleId }
+                    }
                 }
             } catch (e: Exception) {
                 _networkError.value = true
@@ -314,7 +314,6 @@ class DataRepository @Inject constructor(
         val tours = tourStore.getToursForInterval(start, end)
         val res = tours
             .filter { t -> t.vehicleId == selectedVehicle.first().id }
-            .sortedBy { t -> t.events[0].scheduledTimeStart }
         return res
     }
 

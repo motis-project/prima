@@ -1,7 +1,6 @@
 package de.motis.prima.ui
 
 import android.content.Intent
-import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -31,8 +30,8 @@ class NavViewModel @Inject constructor(
     val selectedVehicle = repository.selectedVehicle
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    fun fetchTours() {
-        repository.fetchTours()
+    fun fetchTours(pickupTime: Long?) {
+        repository.fetchTours(pickupTime)
     }
 }
 
@@ -46,8 +45,11 @@ fun Nav(intent: Intent?, viewModel: NavViewModel = hiltViewModel()) {
     var notifiedTourId = -1
     intent?.let { safeIntent ->
         runCatching {
-            viewModel.fetchTours()
             val tourIdStr = safeIntent.getStringExtra("tourId")
+            val pickupTime = safeIntent.getStringExtra("pickupTime")
+
+            viewModel.fetchTours(pickupTime?.toLong())
+
             tourIdStr?.let { safeTourIdStr ->
                 notifiedTourId = safeTourIdStr.toInt()
             }
