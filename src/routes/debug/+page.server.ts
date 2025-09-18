@@ -6,6 +6,7 @@ import { whitelist } from '../api/whitelist/whitelist';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import type { Translations } from '$lib/i18n/translation';
 import { bookingApi } from '$lib/server/booking/bookingApi';
+import { Mode } from '$lib/server/booking/bookRide';
 
 export type BookingError = { msg: keyof Translations['msg'] };
 
@@ -67,7 +68,8 @@ export const actions = {
 			targetTime: result.dropoffTime,
 			signature: '',
 			startFixed: false,
-			requestedTime: result.dropoffTime
+			requestedTime: result.dropoffTime,
+			mode: Mode.TAXI
 		};
 
 		const bookingResponse = await bookingApi(

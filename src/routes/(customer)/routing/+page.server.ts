@@ -1,4 +1,4 @@
-import { toExpectedConnectionWithISOStrings } from '$lib/server/booking/bookRide';
+import { Mode, toExpectedConnectionWithISOStrings } from '$lib/server/booking/bookRide';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
 import { readInt } from '$lib/server/util/readForm';
@@ -14,6 +14,7 @@ import type { PageServerLoad } from './$types';
 import Prom from 'prom-client';
 import { expectedConnectionFromLeg } from '$lib/expectedConnectionFromLeg';
 import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhitelistRequestTimes';
+import { rideShareApi } from '$lib/server/rideShareBooking/rideShareApi';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;
@@ -168,15 +169,26 @@ export const actions = {
 			JSON.stringify(toExpectedConnectionWithISOStrings(connection2), null, '\t')
 		);
 
-		const bookingResult = await bookingApi(
-			{ connection1, connection2, capacities },
-			user,
-			locals.session?.isService ?? false,
-			false,
-			kidsZeroToTwo,
-			kidsThreeToFour,
-			kidsFiveToSix
-		);
+		const mode = connection1 !== null ? connection1.mode : connection2?.mode;
+		const bookingResult =
+			mode === Mode.TAXI
+				? await bookingApi(
+						{ connection1, connection2, capacities },
+						user,
+						locals.session?.isService ?? false,
+						false,
+						kidsZeroToTwo,
+						kidsThreeToFour,
+						kidsFiveToSix
+					)
+				: await rideShareApi(
+						{ connection1, connection2, capacities },
+						user,
+						locals.session?.isService ?? false,
+						kidsZeroToTwo,
+						kidsThreeToFour,
+						kidsFiveToSix
+					);
 		if (bookingResult.status !== 200) {
 			console.log(
 				'Booking failed: ',

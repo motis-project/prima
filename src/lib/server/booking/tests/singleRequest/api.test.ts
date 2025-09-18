@@ -11,7 +11,7 @@ import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { COORDINATE_ROUNDING_ERROR_THRESHOLD } from '$lib/constants';
 import { createSession } from '$lib/server/auth/session';
 import { MINUTE, roundToUnit } from '$lib/util/time';
-import type { ExpectedConnection } from '$lib/server/booking/bookRide';
+import { Mode, type ExpectedConnection } from '$lib/server/booking/bookRide';
 import { signEntry } from '$lib/server/booking/signEntry';
 import { bookingApi } from '$lib/server/booking/bookingApi';
 import { black, dateInXMinutes, inXMinutes, white } from '../util';
@@ -281,7 +281,8 @@ describe('Whitelist and Booking API Tests', () => {
 				false
 			),
 			startFixed: true,
-			requestedTime: inXMinutes(70)
+			requestedTime: inXMinutes(70),
+			mode: Mode.TAXI
 		};
 		const bookingBody = {
 			connection1,
@@ -350,6 +351,7 @@ describe('Whitelist and Booking API Tests', () => {
 				false
 			),
 			startFixed: true,
+			mode: Mode.TAXI,
 			requestedTime: inXMinutes(70)
 		};
 		const bookingBody = {
@@ -398,7 +400,8 @@ describe('Whitelist and Booking API Tests', () => {
 				whiteResponse.direct[0].dropoffTime,
 				false
 			),
-			startFixed: true
+			startFixed: true,
+			mode: Mode.TAXI
 		};
 		const bookingBody = {
 			connection1,

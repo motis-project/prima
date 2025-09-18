@@ -18,6 +18,11 @@ import { DAY } from '$lib/util/time';
 import { getFirstAndLastEvents } from './getFirstAndLastEvents';
 import { isSamePlace } from './isSamePlace';
 
+export enum Mode {
+	RIDE_SHARE,
+	TAXI
+}
+
 export type ExpectedConnection = {
 	start: Coordinates;
 	target: Coordinates;
@@ -26,6 +31,7 @@ export type ExpectedConnection = {
 	signature: string;
 	startFixed: boolean;
 	requestedTime: UnixtimeMs;
+	mode: Mode;
 };
 
 export type ExpectedConnectionWithISoStrings = {

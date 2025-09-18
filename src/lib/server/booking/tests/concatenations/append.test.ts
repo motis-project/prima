@@ -1,7 +1,7 @@
 import { inXMinutes, prepareTest, white } from '../util';
 import { addCompany, addTaxi, getTours, setAvailability, Zone } from '$lib/testHelpers';
 import { describe, it, expect } from 'vitest';
-import type { ExpectedConnection } from '$lib/server/booking/bookRide';
+import { Mode, type ExpectedConnection } from '$lib/server/booking/bookRide';
 import { bookingApi } from '$lib/server/booking/bookingApi';
 import { isSamePlace } from '$lib/server/booking/isSamePlace';
 
@@ -39,7 +39,8 @@ describe('Concatenation tests', () => {
 			targetTime: whiteResponse.direct[0].dropoffTime,
 			signature: '',
 			startFixed: false,
-			requestedTime: inXMinutes(70)
+			requestedTime: inXMinutes(70),
+			mode: Mode.TAXI
 		};
 		const bookingBody = {
 			connection1,
@@ -69,7 +70,8 @@ describe('Concatenation tests', () => {
 			targetTime: whiteResponse2.direct[0].dropoffTime,
 			signature: '',
 			startFixed: false,
-			requestedTime: inXMinutes(80)
+			requestedTime: inXMinutes(80),
+			mode: Mode.TAXI
 		};
 		const bookingBodyAppend = {
 			connection1: appendConnection,
