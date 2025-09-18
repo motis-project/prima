@@ -24,7 +24,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "BASE_URL", "\"https://app.primaplusoev.de\"")
+            buildConfigField("String", "BASE_URL", "\"https://prima-staging.motis-project.de\"")
         }
         release {
             isMinifyEnabled = false
