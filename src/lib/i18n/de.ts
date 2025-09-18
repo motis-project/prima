@@ -19,7 +19,7 @@ const translations: Translations = {
 		enterEmailAndPassword: 'Bitte geben Sie Ihre E-Mail und Ihr Passwort ein.',
 		invalidEmail: 'Ungültige E-Mail-Adresse.',
 		invalidPhone: 'Ungültige Telefonnummer.',
-		invalidZipCity: 'Ungültige PLZ/Ort.',
+		invalidZipCity: 'Ungültige PLZ/Ort/Region.',
 		emailAlreadyRegistered: 'Diese E-Mail-Adresse ist bereits registriert.',
 		weakPassword: 'Bitte wählen Sie ein stärkeres Passwort.',
 		tooManyRequests: 'Zu viele Anfragen.',
@@ -114,6 +114,7 @@ const translations: Translations = {
 		phone: 'Telefonnummer',
 		zipCode: 'PLZ',
 		city: 'Ort',
+		region: 'Region',
 		create: 'Nutzerkonto erstellen',
 		forgotPassword: 'Passwort vergessen?',
 		signupConditions: (tos: string, privacy: string, provider: string) =>

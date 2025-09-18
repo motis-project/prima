@@ -154,7 +154,8 @@ export const addTestUser = async (company?: number) => {
 				'$argon2id$v=19$m=19456,t=2,p=1$4lXilBjWTY+DsYpN0eATrw$imFLatxSsy9WjMny7MusOJeAJE5ZenrOEqD88YsZv8o',
 			companyId: company,
 			zipCode: '',
-			city: ''
+			city: '',
+			region: ''
 		})
 		.returning('id')
 		.executeTakeFirstOrThrow();

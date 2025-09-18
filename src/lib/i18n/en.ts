@@ -20,7 +20,7 @@ const translations: Translations = {
 		enterEmailAndPassword: 'Please enter your email and password.',
 		invalidEmail: 'Invalid email address.',
 		invalidPhone: 'Invalid phone number.',
-		invalidZipCity: 'Invalid ZIP code/city.',
+		invalidZipCity: 'Invalid ZIP code/city/region.',
 		emailAlreadyRegistered: 'Email already registered.',
 		weakPassword: 'Weak password.',
 		tooManyRequests: 'Too many requests.',
@@ -111,6 +111,7 @@ const translations: Translations = {
 		phone: 'Phone Number',
 		zipCode: 'ZIP Code',
 		city: 'City',
+		region: 'Region',
 		create: 'Create Account',
 		forgotPassword: 'Forgot your password?',
 		signupConditions: (tos: string, privacy: string, provider: string) =>

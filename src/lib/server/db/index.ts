@@ -23,6 +23,7 @@ export interface Database {
 		gender: string;
 		zipCode: string;
 		city: string;
+		region: string;
 	};
 	session: {
 		id: string;

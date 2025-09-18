@@ -14,11 +14,15 @@
 	import { t } from '$lib/i18n/translation';
 	import { Label } from '$lib/shadcn/label';
 	import { enhance } from '$app/forms';
+	import type { TCountryCode } from 'countries-list';
+	import { getCountryData, getCountryDataList } from 'countries-list';
+	import * as Select from '$lib/shadcn/select';
 
 	const { msg, type }: { msg?: Msg; type: 'signup' | 'login' } = $props();
 	const isSignup = type === 'signup';
 	const requiredField = isSignup ? ' *' : '';
 	let showTooltip = $state(false);
+	let region: TCountryCode | undefined = $state();
 </script>
 
 <div class="flex flex-col">
@@ -91,13 +95,26 @@
 		{#if isSignup}
 			<div class="field">
 				<Label for="zipcode"
-					>{t.account.zipCode}/{t.account.city}<span class="text-red-500">{requiredField}</span
+					>{t.account.zipCode}/{t.account.city}/{t.account.region}<span class="text-red-500"
+						>{requiredField}</span
 					></Label
 				>
 				<div class="grid grid-cols-2 gap-x-1">
 					<Input name="zipcode" type="text" placeholder={t.account.zipCode} />
 					<Input name="city" type="text" placeholder={t.account.city} />
 				</div>
+				<Select.Root type="single" bind:value={region} name="region">
+					<Select.Trigger class="overflow-hidden" aria-label={t.account.region}>
+						{region ? getCountryData(region).native : t.account.region}
+					</Select.Trigger>
+					<Select.Content>
+						{#each getCountryDataList() as r}
+							<Select.Item value={r.iso2} label={r.native}>
+								{r.native}
+							</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
 			</div>
 			<div class="field">
 				<Label for="phone">{t.account.phone}</Label>

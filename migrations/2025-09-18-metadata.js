@@ -12,6 +12,7 @@ export async function up(db) {
 		.addColumn('gender', 'varchar', (col) => col)
 		.addColumn('zip_code', 'varchar', (col) => col.notNull().defaultTo(""))
 		.addColumn('city', 'varchar', (col) => col.notNull().defaultTo(""))
+		.addColumn('region', 'varchar', (col) => col.notNull().defaultTo(""))
 		.execute();
 }
 

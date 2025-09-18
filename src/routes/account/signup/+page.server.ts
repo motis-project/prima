@@ -28,6 +28,7 @@ async function createUser(
 	password: string,
 	zipCode: string,
 	city: string,
+	region: string,
 	phone: string | null
 ) {
 	const passwordHash = await hashPassword(password);
@@ -49,6 +50,7 @@ async function createUser(
 			gender,
 			zipCode,
 			city,
+			region,
 			isService: false
 		})
 		.returningAll()
@@ -76,6 +78,7 @@ export const actions: Actions = {
 		const password = formData.get('password');
 		const zipCode = formData.get('zipcode');
 		const city = formData.get('city');
+		const region = formData.get('region');
 		const phone = verifyPhone(formData.get('phone'));
 		if (
 			typeof name !== 'string' ||
@@ -95,7 +98,9 @@ export const actions: Actions = {
 			typeof zipCode !== 'string' ||
 			zipCode.length < 2 ||
 			typeof city !== 'string' ||
-			city.length < 1
+			city.length < 1 ||
+			typeof region !== 'string' ||
+			region.length < 1
 		) {
 			return fail(400, { msg: msg('invalidZipCity'), email });
 		}
@@ -114,7 +119,17 @@ export const actions: Actions = {
 		if (phone != null && typeof phone !== 'string') {
 			return phone;
 		}
-		const user = await createUser(name, firstName, gender, email, password, zipCode, city, phone);
+		const user = await createUser(
+			name,
+			firstName,
+			gender,
+			email,
+			password,
+			zipCode,
+			city,
+			region,
+			phone
+		);
 		try {
 			await sendMail(Welcome, `Willkommen zu ${PUBLIC_PROVIDER}`, email, {
 				code: user.emailVerificationCode

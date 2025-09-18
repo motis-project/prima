@@ -110,6 +110,7 @@ export type Translations = {
 		phone: string;
 		zipCode: string;
 		city: string;
+		region: string;
 		create: string;
 		forgotPassword: string;
 		signupConditions: (tos: string, privacy: string, provider: string) => string;
