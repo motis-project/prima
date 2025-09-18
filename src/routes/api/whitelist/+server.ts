@@ -19,9 +19,9 @@ export type WhitelistResponse = {
 	start: (Insertion | undefined)[][];
 	target: (Insertion | undefined)[][];
 	direct: (Insertion | undefined)[];
-	startRideShare: (RideShareInsertion | undefined)[][];
-	targetRideShare: (RideShareInsertion | undefined)[][];
-	directRideShare: (RideShareInsertion | undefined)[];
+	startRideShare: RideShareInsertion[][][];
+	targetRideShare: RideShareInsertion[][][];
+	directRideShare: RideShareInsertion[][];
 };
 
 export async function POST(event: RequestEvent) {
@@ -38,7 +38,7 @@ export async function POST(event: RequestEvent) {
 		JSON.stringify(toWhitelistRequestWithISOStrings(p), null, '\t')
 	);
 	let direct: (Insertion | undefined)[] = [];
-	let directRideShare: (RideShareInsertion | undefined)[] = [];
+	let directRideShare: RideShareInsertion[][] = [];
 	if (p.directTimes.length != 0) {
 		if (p.startFixed) {
 			p.targetBusStops.push({
@@ -89,7 +89,7 @@ export async function POST(event: RequestEvent) {
 		direct: filterDirectResponses(direct, p.startFixed),
 		startRideShare,
 		targetRideShare,
-		directRideShare: filterDirectResponses(directRideShare, p.startFixed)
+		directRideShare
 	};
 	console.log(
 		'WHITELIST RESPONSE: ',

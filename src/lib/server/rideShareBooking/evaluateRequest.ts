@@ -9,12 +9,7 @@ import {
 	MAX_PASSENGER_WAITING_TIME_DROPOFF,
 	MAX_PASSENGER_WAITING_TIME_PICKUP
 } from '$lib/constants';
-import {
-	evaluatePairInsertions,
-	evaluateSingleInsertions,
-	takeBest,
-	type Insertion
-} from './insertion';
+import { evaluatePairInsertions, evaluateSingleInsertions, type Insertion } from './insertion';
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 import { DAY } from '$lib/util/time';
 import { routing } from './routing';
@@ -30,7 +25,7 @@ export async function evaluateRequest(
 	required: Capacities,
 	startFixed: boolean,
 	promisedTimes?: PromisedTimes
-): Promise<(Insertion | undefined)[][]> {
+): Promise<Insertion[][][]> {
 	console.log(
 		'EVALUATE REQUEST PARAMS: ',
 		{ companies: JSON.stringify(rideShareTours, null, 2) },
@@ -41,7 +36,7 @@ export async function evaluateRequest(
 		{ promisedTimes }
 	);
 	if (rideShareTours.length == 0) {
-		return busStops.map((bs) => bs.times.map((_) => undefined));
+		return busStops.map((bs) => bs.times.map((_) => new Array<Insertion>()));
 	}
 	const directDurations = (await batchOneToManyCarRouting(userChosen, busStops, startFixed)).map(
 		(duration) => (duration === undefined ? undefined : duration + PASSENGER_CHANGE_DURATION)
@@ -74,7 +69,7 @@ export async function evaluateRequest(
 		}
 	});
 	if (earliest >= latest) {
-		return busStops.map((bs) => bs.times.map((_) => undefined));
+		return busStops.map((bs) => bs.times.map((_) => new Array<Insertion>()));
 	}
 	earliest = Math.max(earliest, Date.now() - 2 * DAY);
 	latest = Math.min(latest, Date.now() + 15 * DAY);
@@ -104,5 +99,16 @@ export async function evaluateRequest(
 		required,
 		promisedTimes === undefined
 	);
-	return takeBest(bothEvaluations, pairEvaluations);
+	return mergeResults(bothEvaluations, pairEvaluations);
+}
+
+function mergeResults(r1: Insertion[][][], r2: Insertion[][][]) {
+	const newR = new Array<Insertion[][]>(r1.length);
+	for (const [idx1, _o] of r1.entries()) {
+		newR[idx1] = new Array<Insertion[]>(r1[idx1].length);
+		for (const [idx2, _i] of r1[idx1].entries()) {
+			newR[idx1][idx2] = r1[idx1][idx2].concat(r2[idx1][idx2]);
+		}
+	}
+	return newR;
 }

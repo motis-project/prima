@@ -11,7 +11,7 @@ export async function whitelistRideShare(
 	busStops: BusStop[],
 	required: Capacities,
 	startFixed: boolean
-): Promise<Array<(Insertion | undefined)[]>> {
+): Promise<Array<Insertion[][]>> {
 	console.log(
 		'Whitelist Request Ride Share: ',
 		JSON.stringify(
@@ -27,7 +27,7 @@ export async function whitelistRideShare(
 	);
 
 	if (!busStops.some((b) => b.times.length !== 0)) {
-		return new Array<(Insertion | undefined)[]>(busStops.length);
+		return new Array<Insertion[][]>(busStops.length);
 	}
 
 	let lastTime = 0;
@@ -78,7 +78,7 @@ export async function whitelistRideShare(
 	console.log(
 		'WHITELIST RESULT Ride Share: ',
 		JSON.stringify(
-			bestEvals.map((arr) => arr.map((i) => toInsertionWithISOStrings(i))),
+			bestEvals.map((arr) => arr.map((i) => i.map((j) => toInsertionWithISOStrings(j)))),
 			null,
 			2
 		)

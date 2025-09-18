@@ -62,7 +62,7 @@ export async function bookSharedRide(
 		return undefined;
 	}
 	const allowedRideShareTours = rideShareTours.filter((t) => t.provider !== blockedProviderId);
-	const best = (
+	const result = (
 		await evaluateRequest(
 			allowedRideShareTours,
 			userChosen,
@@ -77,6 +77,7 @@ export async function bookSharedRide(
 					}
 		)
 	)[0][0];
+	const best = result.sort((r1, r2) => r1.cost - r2.cost)[0];
 	if (best == undefined) {
 		console.log(
 			'surprisingly no possible connection found: ',

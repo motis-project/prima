@@ -53,19 +53,18 @@ describe('add ride share request', () => {
 		console.log('thingyjj', JSON.stringify(whiteResponse, null, 2));
 		expect(whiteResponse.directRideShare.length).toBe(1);
 		expect(whiteResponse.directRideShare[0]).not.toBe(null);
-
 		const connection1: ExpectedConnection = {
 			start: { ...inSagar, address: 'start address' },
 			target: { ...inPechern, address: 'target address' },
-			startTime: whiteResponse.directRideShare[0].pickupTime,
-			targetTime: whiteResponse.directRideShare[0].dropoffTime,
+			startTime: whiteResponse.directRideShare[0][0].pickupTime,
+			targetTime: whiteResponse.directRideShare[0][0].dropoffTime,
 			signature: signEntry(
 				inSagar.lat,
 				inSagar.lng,
 				inPechern.lat,
 				inPechern.lng,
-				whiteResponse.directRideShare[0].pickupTime,
-				whiteResponse.directRideShare[0].dropoffTime,
+				whiteResponse.directRideShare[0][0].pickupTime,
+				whiteResponse.directRideShare[0][0].dropoffTime,
 				false
 			),
 			startFixed: true,

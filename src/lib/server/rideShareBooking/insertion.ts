@@ -82,7 +82,7 @@ type SingleInsertionEvaluation = {
 type Evaluations = {
 	busStopEvaluations: (SingleInsertionEvaluation | undefined)[][][];
 	userChosenEvaluations: (SingleInsertionEvaluation | undefined)[];
-	bothEvaluations: (Insertion | undefined)[][];
+	bothEvaluations: Insertion[][][];
 };
 
 export type NeighbourIds = {
@@ -96,18 +96,16 @@ export type NeighbourIds = {
 	nextDropoffGroup: number | undefined;
 };
 
-export function toInsertionWithISOStrings(i: Insertion | undefined) {
-	return i === undefined
-		? undefined
-		: {
-				...i,
-				pickupTime: new Date(i.pickupTime).toISOString(),
-				dropoffTime: new Date(i.dropoffTime).toISOString(),
-				scheduledPickupTimeStart: new Date(i.scheduledPickupTimeStart).toISOString(),
-				scheduledPickupTimeEnd: new Date(i.scheduledPickupTimeEnd).toISOString(),
-				scheduledDropoffTimeStart: new Date(i.scheduledDropoffTimeStart).toISOString(),
-				scheduledDropoffTimeEnd: new Date(i.scheduledDropoffTimeEnd).toISOString()
-			};
+export function toInsertionWithISOStrings(i: Insertion) {
+	return {
+		...i,
+		pickupTime: new Date(i.pickupTime).toISOString(),
+		dropoffTime: new Date(i.dropoffTime).toISOString(),
+		scheduledPickupTimeStart: new Date(i.scheduledPickupTimeStart).toISOString(),
+		scheduledPickupTimeEnd: new Date(i.scheduledPickupTimeEnd).toISOString(),
+		scheduledDropoffTimeStart: new Date(i.scheduledDropoffTimeStart).toISOString(),
+		scheduledDropoffTimeEnd: new Date(i.scheduledDropoffTimeEnd).toISOString()
+	};
 }
 
 function isPickup(type: InsertionType) {
@@ -408,7 +406,7 @@ export function evaluateSingleInsertions(
 	allowedTimes: Interval[],
 	promisedTimes?: PromisedTimes
 ): Evaluations {
-	const bothEvaluations: (Insertion | undefined)[][] = [];
+	const bothEvaluations: Insertion[][][] = [];
 	const userChosenEvaluations: (SingleInsertionEvaluation | undefined)[] = [];
 	const busStopEvaluations: (SingleInsertionEvaluation | undefined)[][][] = new Array<
 		(SingleInsertionEvaluation | undefined)[][]
@@ -417,17 +415,17 @@ export function evaluateSingleInsertions(
 		busStopEvaluations[i] = new Array<(SingleInsertionEvaluation | undefined)[]>(
 			busStopTimes[i].length
 		);
+		bothEvaluations[i] = new Array<Insertion[]>(busStopTimes[i].length);
 		for (let j = 0; j != busStopTimes[i].length; ++j) {
 			busStopEvaluations[i][j] = new Array<SingleInsertionEvaluation | undefined>();
+			bothEvaluations[i][j] = new Array<Insertion>();
 		}
-		bothEvaluations[i] = new Array<Insertion | undefined>(busStopTimes[i].length);
 	}
 	const prepTime = Date.now() + MIN_PREP;
 	const direction = startFixed ? InsertDirection.BUS_STOP_PICKUP : InsertDirection.BUS_STOP_DROPOFF;
 
 	iterateAllInsertions(rideShareTours, insertionRanges, (insertionInfo: InsertionInfo) => {
 		const events = insertionInfo.events;
-		console.log('klarayy', insertionInfo.insertionIdx);
 		const prev: RideShareEvent = events[insertionInfo.idxInEvents - 1];
 		const next: RideShareEvent = events[insertionInfo.idxInEvents];
 		if (prev === undefined || next === undefined || prev.tourId !== next.tourId) {
@@ -476,13 +474,8 @@ export function evaluateSingleInsertions(
 					required.passengers,
 					promisedTimes
 				);
-				if (
-					resultBoth != undefined &&
-					(bothEvaluations[busStopIdx][busTimeIdx] == undefined ||
-						resultBoth.cost < bothEvaluations[busStopIdx][busTimeIdx]!.cost) &&
-					!waitsTooLong(resultBoth.taxiWaitingTime)
-				) {
-					bothEvaluations[busStopIdx][busTimeIdx] = {
+				if (resultBoth != undefined && !waitsTooLong(resultBoth.taxiWaitingTime)) {
+					bothEvaluations[busStopIdx][busTimeIdx].push({
 						...resultBoth,
 						tour: next.tourId,
 						pickupIdx: insertionInfo.idxInEvents,
@@ -493,7 +486,7 @@ export function evaluateSingleInsertions(
 						nextDropoffId: next.eventId,
 						pickupIdxInEvents: insertionInfo.idxInEvents,
 						dropoffIdxInEvents: insertionInfo.idxInEvents
-					};
+					});
 				}
 
 				insertionCase.what = InsertWhat.BUS_STOP;
@@ -555,12 +548,13 @@ export function evaluatePairInsertions(
 	userChosenEvaluations: (SingleInsertionEvaluation | undefined)[],
 	required: Capacities,
 	whitelist?: boolean
-): (Insertion | undefined)[][] {
-	const bestEvaluations: (Insertion | undefined)[][] = new Array<(Insertion | undefined)[]>(
-		busStopTimes.length
-	);
+): Insertion[][][] {
+	const bestEvaluations = new Array<Insertion[][]>(busStopTimes.length);
 	for (let i = 0; i != busStopTimes.length; ++i) {
-		bestEvaluations[i] = new Array<Insertion | undefined>(busStopTimes[i].length);
+		bestEvaluations[i] = new Array<Insertion[]>(busStopTimes[i].length);
+		for (let j = 0; j != busStopTimes[i].length; ++j) {
+			bestEvaluations[i][j] = new Array<Insertion>();
+		}
 	}
 	iterateAllInsertions(rideShareTours, insertionRanges, (insertionInfo: InsertionInfo) => {
 		const events = insertionInfo.events;
@@ -739,12 +733,9 @@ export function evaluatePairInsertions(
 						{ weightedPassengerDuration },
 						{ taxiWaitingTime }
 					);
-					if (
-						bestEvaluations[busStopIdx][timeIdx] == undefined ||
-						cost < bestEvaluations[busStopIdx][timeIdx]!.cost
-					) {
+					if (bestEvaluations[busStopIdx][timeIdx] == undefined) {
 						const tour = events[pickupIdx].tourId;
-						bestEvaluations[busStopIdx][timeIdx] = {
+						bestEvaluations[busStopIdx][timeIdx].push({
 							pickupTime: communicatedPickupTime,
 							dropoffTime: communicatedDropoffTime,
 							scheduledPickupTimeEnd: scheduledPickupTime,
@@ -771,7 +762,7 @@ export function evaluatePairInsertions(
 							nextDropoffId: dropoff.nextId,
 							pickupIdxInEvents: pickup.idxInEvents,
 							dropoffIdxInEvents: dropoff.idxInEvents
-						};
+						});
 					}
 				}
 			}
@@ -862,39 +853,6 @@ const keepsPromises = (
 		return false;
 	}
 	return true;
-};
-
-export const takeBest = (
-	evals1: (Insertion | undefined)[][],
-	evals2: (Insertion | undefined)[][]
-): (Insertion | undefined)[][] => {
-	const takeBetter = (e1: Insertion | undefined, e2: Insertion | undefined) => {
-		if (e1 == undefined) {
-			return e2;
-		}
-		if (e2 == undefined) {
-			return e1;
-		}
-		return e1.cost < e2.cost ? e1 : e2;
-	};
-	console.assert(
-		evals1.length == evals2.length,
-		'in takeBest, evaluations do not have matching length.'
-	);
-	const result = new Array<(Insertion | undefined)[]>(evals1.length);
-	for (let busStopIdx = 0; busStopIdx != evals1.length; ++busStopIdx) {
-		console.assert(
-			evals1[busStopIdx].length == evals2[busStopIdx].length,
-			"in takeBest, evaluations' inner arrays do not have matching length."
-		);
-		result[busStopIdx] = new Array<Insertion | undefined>(evals1[busStopIdx].length);
-		for (let timeIdx = 0; timeIdx != evals1[busStopIdx].length; ++timeIdx) {
-			const e1 = evals1[busStopIdx][timeIdx];
-			const e2 = evals2[busStopIdx][timeIdx];
-			result[busStopIdx][timeIdx] = takeBetter(e1, e2);
-		}
-	}
-	return result;
 };
 
 function getWaitingTimeDelta(

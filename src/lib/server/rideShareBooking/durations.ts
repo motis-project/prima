@@ -69,7 +69,6 @@ export function getAllowedOperationTimes(
 	if (windowEndTime < prepTime) {
 		return [];
 	}
-	console.log('klarajj', prev);
 	let windowStartTime = prev.scheduledTimeStart;
 	windowStartTime = Math.max(windowStartTime, prepTime);
 	return [new Interval(windowStartTime, windowEndTime)];
