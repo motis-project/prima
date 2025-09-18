@@ -5,7 +5,7 @@ import { createSession } from '$lib/server/auth/session';
 import { dateInXMinutes, inXMinutes, white } from '$lib/server/booking/tests/util';
 import { signEntry } from '../signEntry';
 import type { ExpectedConnection } from '../bookRide';
-import { bookingApi } from '../rideShareApi';
+import { rideShareApi } from '../rideShareApi';
 import { addRideShareTour } from '../addRideShareTour';
 
 let sessionToken: string;
@@ -77,7 +77,7 @@ describe('add ride share request', () => {
 			capacities
 		};
 
-		const bookingResponse = await bookingApi(bookingBody, mockUserId, false, 0, 0, 0);
+		const bookingResponse = await rideShareApi(bookingBody, mockUserId, false, 0, 0, 0);
 		const tours = await getRSTours();
 		expect(tours.length).toBe(1);
 		expect(tours[0].requests.length).toBe(2);

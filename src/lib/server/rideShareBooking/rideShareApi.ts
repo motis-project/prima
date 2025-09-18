@@ -48,7 +48,7 @@ function getPossibleRequestedTimes(rt: number): number[] {
 	return possibleRequestedTimes.sort((t1, t2) => Math.abs(t1 - rt) - Math.abs(t2 - rt));
 }
 
-export async function bookingApi(
+export async function rideShareApi(
 	p: BookingParameters,
 	customer: number,
 	isLocalhost: boolean,
