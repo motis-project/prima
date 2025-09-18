@@ -1,6 +1,5 @@
 package de.motis.prima.data
 
-import android.util.Log
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
 import io.realm.kotlin.query.RealmResults

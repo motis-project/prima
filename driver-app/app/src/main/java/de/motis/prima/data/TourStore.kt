@@ -63,8 +63,7 @@ data class EventObjectGroup(
 )
 
 class TourStore @Inject constructor(
-    private var realm: Realm,
-    private var ticketStore: TicketStore
+    private var realm: Realm
 ) {
 
     private val _storedTours = MutableStateFlow(getAll())
