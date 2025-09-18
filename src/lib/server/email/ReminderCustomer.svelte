@@ -2,21 +2,24 @@
 	import { env } from '$env/dynamic/private';
 	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import type { TourEvent } from '$lib/util/getToursTypes';
+	import { getEuroString } from '$lib/util/odmPrice';
 	import EmailFooter from './EmailFooter.svelte';
-	// @ts-expect-error Cannot find module 'svelte-qrcode'
-	import QrCode from 'svelte-qrcode';
 
 	const {
 		name,
 		licensePlate,
 		journeyId,
 		ticketCode,
+		ticketCodeQr,
+		ticketPrice,
 		events
 	}: {
 		name: string;
 		licensePlate: string;
 		journeyId: string;
 		ticketCode: string;
+		ticketCodeQr: string;
+		ticketPrice: number;
 		events: TourEvent[];
 	} = $props();
 	events.sort((e1, e2) => e1.communicatedTime - e2.communicatedTime);
@@ -61,9 +64,13 @@
 	<p>Link zur Buchung: <a href={bookingLink}>{bookingLink}</a></p>
 
 	<p><b>Ihr Ticket</b></p>
+	<ul>
+		<li>
+			Preis: {getEuroString(ticketPrice)}
+		</li>
+	</ul>
 	<div>
-		<QrCode value={ticketCode} />
+		<img src={ticketCodeQr} alt={ticketCode} class="qrcode" />
 	</div>
-
 	<EmailFooter />
 </div>

@@ -7,6 +7,8 @@ import ReminderCompany from '$lib/server/email/ReminderCompany.svelte';
 import ReminderCustomer from '$lib/server/email/ReminderCustomer.svelte';
 import { TourChange } from '$lib/server/firebase/firebase';
 import { sendNotifications } from '$lib/server/firebase/notifications';
+// @ts-expect-error Cannot find module 'svelte-qrcode'
+import QRCode from 'qrcode';
 
 const REMINDER_OFFSET_COMPANY = 1 * HOUR;
 const REMINDER_OFFSET_CUSTOMER = 2 * HOUR;
@@ -38,7 +40,7 @@ export const POST = async (_: RequestEvent) => {
 						.innerJoin('request', 'request.id', 'event.request')
 						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 						.whereRef('request.tour', '=', 'tour.id')
-						.where('cancelled', '=', false)
+						.where('event.cancelled', '=', false)
 						.select(['eventGroup.scheduledTimeStart', 'eventGroup.address'])
 				).as('events')
 			])
@@ -47,7 +49,8 @@ export const POST = async (_: RequestEvent) => {
 			try {
 				console.log('Sending ReminderCompany to ', tour.email);
 				await sendMail(ReminderCompany, 'Bevorstehende Fahrt', tour.email, tour);
-			} catch {
+			} catch (e) {
+				console.log(e);
 				console.log(
 					'Failed to send ReminderCompany to company with email: ',
 					tour.email,
@@ -82,7 +85,8 @@ export const POST = async (_: RequestEvent) => {
 				'user.email',
 				'journey.id as journeyId',
 				'request.id as requestId',
-				'request.ticketCode as ticketCode',
+				'request.ticketCode',
+				'request.ticketPrice',
 				'vehicle.licensePlate',
 				'tour.id as tourId',
 				jsonArrayFrom(
@@ -102,9 +106,12 @@ export const POST = async (_: RequestEvent) => {
 					events: request.events,
 					name: request.name,
 					licensePlate: request.licensePlate,
-					ticketCode: request.ticketCode
+					ticketCode: request.ticketCode,
+					ticketCodeQr: await QRCode.toDataURL(request.ticketCode),
+					ticketPrice: request.ticketPrice
 				});
-			} catch {
+			} catch (e) {
+				console.log(e);
 				console.log(
 					'Failed to send ReminderCustomer to customer with email: ',
 					request.email,
