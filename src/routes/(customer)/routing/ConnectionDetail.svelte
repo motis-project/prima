@@ -85,9 +85,7 @@
 				{#if licensePlate != undefined}
 					<div class="flex items-center">
 						<CarTaxiFront class="relative  mr-1" />
-						<div
-							class="flex w-fit rounded-md border-4 border-double border-double border-black bg-white"
-						>
+						<div class="flex w-fit rounded-md border-4 border-double border-black bg-white">
 							<div class="flex h-8 min-w-5 items-center justify-center bg-blue-700 p-1 text-white">
 								<div class="text-sm font-bold">D</div>
 							</div>
