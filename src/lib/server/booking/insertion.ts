@@ -1105,7 +1105,8 @@ export const computeCost = (
 	randomValue: number = 0
 ) => {
 	return (
-		APPROACH_AND_RETURN_TIME_COST_FACTOR * (approachPlusReturnDurationDelta + randomValue) +
+		randomValue +
+		APPROACH_AND_RETURN_TIME_COST_FACTOR * approachPlusReturnDurationDelta +
 		FULLY_PAYED_COST_FACTOR * fullyPayedDurationDelta +
 		PASSENGER_TIME_COST_FACTOR * passengerDuration +
 		TAXI_WAITING_TIME_COST_FACTOR * taxiWaitingTime
