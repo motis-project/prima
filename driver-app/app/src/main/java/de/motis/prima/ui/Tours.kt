@@ -105,7 +105,9 @@ fun Tours(
                 .fillMaxSize()
                 .padding(contentPadding)
         ) {
-            Box(
+            //dev
+            Spacer(modifier = Modifier.height(12.dp))
+            /*Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(12.dp),
@@ -118,7 +120,7 @@ fun Tours(
                         textAlign = TextAlign.Center
                     )
                 }
-            }
+            }*/
 
             DateSelect(viewModel)
 
@@ -144,7 +146,7 @@ fun Tours(
                 }
             }
 
-            //tmp val showAll by viewModel.showAll.collectAsState()
+            //dev val showAll by viewModel.showAll.collectAsState()
             val showAll = true
 
             var displayTours = toursToday
@@ -249,7 +251,8 @@ fun DateSelect(
         }
     }
 
-    Row(
+    //dev
+    /*Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 12.dp, bottom = 20.dp),
@@ -285,7 +288,7 @@ fun DateSelect(
                 fontSize = 16.sp
             )
         }
-    }
+    }*/
 }
 
 @Composable
