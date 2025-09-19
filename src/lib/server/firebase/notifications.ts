@@ -25,19 +25,19 @@ export async function sendNotifications(companyId: number, data: NotificationDat
 	switch (data.change) {
 		case TourChange.BOOKED:
 			title = 'Neue Fahrt';
-			body = `Neue Tour am ${formatTime(data.pickupTime)}`;
+			body = `Neue Fahrt am ${formatTime(data.pickupTime)}`;
 			break;
 		case TourChange.MOVED:
 			title = 'Fahrt verschoben';
-			body = `Tour am ${formatTime(data.pickupTime)} wurde einem anderen Fahrzeug zugwiesen.`;
+			body = `Fahrt am ${formatTime(data.pickupTime)} wurde einem anderen Fahrzeug zugwiesen`;
 			break;
 		case TourChange.CANCELLED:
 			title = 'Fahrt abgesagt';
-			body = `Tour am ${formatTime(data.pickupTime)} wurde abgesagt.`;
+			body = `Fahrt am ${formatTime(data.pickupTime)} wurde abgesagt`;
 			break;
 		case TourChange.REMINDER:
 			title = 'Bevorstehende Fahrt';
-			body = `Tour am ${formatTime(data.pickupTime)}`;
+			body = `Fahrt am ${formatTime(data.pickupTime)}`;
 			break;
 	}
 

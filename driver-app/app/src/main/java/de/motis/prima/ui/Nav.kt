@@ -30,6 +30,10 @@ class NavViewModel @Inject constructor(
     val selectedVehicle = repository.selectedVehicle
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    init {
+        repository.updateVehicles()
+    }
+
     fun fetchTours(pickupTime: Long?) {
         repository.fetchTours(pickupTime)
     }
