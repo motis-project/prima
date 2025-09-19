@@ -22,7 +22,7 @@
 	const isSignup = type === 'signup';
 	const requiredField = isSignup ? ' *' : '';
 	let showTooltip = $state(false);
-	let region: TCountryCode | undefined = $state();
+	let region: TCountryCode | undefined = $state('DE');
 </script>
 
 <div class="flex flex-col">
