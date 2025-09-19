@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
+import retrofit2.Call
+import retrofit2.Callback
 import retrofit2.Response
 import java.security.MessageDigest
 import java.time.Instant
@@ -367,6 +369,23 @@ class DataRepository @Inject constructor(
         } catch (e: Exception) {
             Log.e("error", "setTours: ${e.message}")
         }
+    }
+
+    fun updateVehicles() {
+        apiService.getVehicles().enqueue(object : Callback<List<Vehicle>> {
+            override fun onResponse(
+                call: Call<List<Vehicle>>,
+                response: Response<List<Vehicle>>
+            ) {
+                if (response.isSuccessful) {
+                    setVehicles(response.body() ?: emptyList())
+                }
+            }
+
+            override fun onFailure(call: Call<List<Vehicle>>, t: Throwable) {
+                _networkError.value = true
+            }
+        })
     }
 
     fun updateEventGroups(tourId: Int) {
