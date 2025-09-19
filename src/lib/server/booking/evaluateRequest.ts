@@ -24,6 +24,7 @@ import {
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 import { DAY } from '$lib/util/time';
 import { routing } from './routing';
+import { getRandomValue } from './random';
 
 export async function evaluateRequest(
 	companies: Company[],
@@ -101,6 +102,13 @@ export async function evaluateRequest(
 		'WHITELIST REQUEST: ALLOWED TIMES (RESTRICTION FROM 4 TO 23):\n',
 		allowedTimes.map((i) => i.toString())
 	);
+	const randomValues = busStops.map((bs) =>
+		bs.times.map((t) =>
+			companies.map((c) =>
+				getRandomValue(c, startFixed ? userChosen : bs, startFixed ? bs : userChosen, t, startFixed)
+			)
+		)
+	);
 	const newTourEvaluations = evaluateNewTours(
 		companies,
 		required,
@@ -110,6 +118,7 @@ export async function evaluateRequest(
 		routingResults,
 		directDurations,
 		allowedTimes,
+		randomValues,
 		promisedTimes
 	);
 	const { busStopEvaluations, bothEvaluations, userChosenEvaluations } = evaluateSingleInsertions(
@@ -122,6 +131,7 @@ export async function evaluateRequest(
 		routingResults,
 		directDurations,
 		allowedTimes,
+		randomValues,
 		promisedTimes
 	);
 	const pairEvaluations = evaluatePairInsertions(
@@ -132,6 +142,7 @@ export async function evaluateRequest(
 		busStopEvaluations,
 		userChosenEvaluations,
 		required,
+		randomValues,
 		promisedTimes === undefined
 	);
 	return takeBest(takeBest(bothEvaluations, newTourEvaluations), pairEvaluations);
