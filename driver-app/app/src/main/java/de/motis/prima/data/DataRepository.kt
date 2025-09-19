@@ -185,7 +185,7 @@ class DataRepository @Inject constructor(
                     val fetchedTours = response.body() ?: emptyList()
 
                     val tours = fetchedTours
-                        .filter { t -> t.vehicleId == selectedVehicle.first().id }
+                        //tmp .filter { t -> t.vehicleId == selectedVehicle.first().id }
 
                     setTours(fetchedTours)
                     _toursCache.value = tours
@@ -225,7 +225,7 @@ class DataRepository @Inject constructor(
                     setTours(fetchedTours)
                     if (time == null) {
                         _toursCache.value = fetchedTours
-                            .filter { t -> t.vehicleId == _vehicleId }
+                            //tmp .filter { t -> t.vehicleId == _vehicleId }
                     }
                 }
             } catch (e: Exception) {
@@ -313,7 +313,7 @@ class DataRepository @Inject constructor(
         val end = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val tours = tourStore.getToursForInterval(start, end)
         val res = tours
-            .filter { t -> t.vehicleId == selectedVehicle.first().id }
+            //tmp .filter { t -> t.vehicleId == selectedVehicle.first().id }
         return res
     }
 

@@ -144,7 +144,8 @@ fun Tours(
                 }
             }
 
-            val showAll by viewModel.showAll.collectAsState()
+            //tmp val showAll by viewModel.showAll.collectAsState()
+            val showAll = true
 
             var displayTours = toursToday
 
@@ -321,9 +322,19 @@ fun ToursList(
                     Log.d("error", "Error: Tour has no events")
                 }
 
+                var lastEvent: Event? = null
+                try {
+                    lastEvent = tour.events[tour.events.size - 1] // TODO: get from last eventGroup
+                } catch (e: Exception) {
+                    Log.d("error", "Error: Tour has no events")
+                }
+
                 val address = startEvent?.address ?: ""
+                val dstAddress = lastEvent?.address ?: ""
 
                 var  city = ""
+                var  dstCity = ""
+
                 try {
                     val split = address.split(',')
                     city = if (split[1] == " Deutschland") {
@@ -332,7 +343,18 @@ fun ToursList(
                         split[1]
                     }
                 } catch (e: Exception) {
-                    city = address
+                    city = dstAddress
+                }
+
+                try {
+                    val dstSplit = dstAddress.split(',')
+                    dstCity = if (dstSplit[1] == " Deutschland") {
+                        dstSplit[0]
+                    } else {
+                        dstSplit[1]
+                    }
+                } catch (e: Exception) {
+                    dstCity = dstAddress
                 }
 
                 val scheduledTime = startEvent?.scheduledTime ?: 0
@@ -413,6 +435,20 @@ fun ToursList(
                         if (tourDate < now) {
                             val ticketChecked =
                                 tour.events.any { e -> e.ticketChecked }
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 12.dp),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = dstCity,
+                                    fontSize = 24.sp,
+                                    textAlign = TextAlign.Center,
+                                    color = LocalExtendedColors.current.textColor
+                                )
+                            }
 
                             Spacer(modifier = Modifier.height(40.dp))
 
