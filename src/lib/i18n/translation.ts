@@ -251,6 +251,10 @@ export type Translations = {
 		alt2: string;
 		alt3: string;
 	};
+
+	availabilityLookaheadExceededTitle: string;
+	availabilityLookaheadExceededDescription: string;
+	days: string;
 };
 
 const translations: Map<string, Translations> = new Map(Object.entries({ en, de }));
