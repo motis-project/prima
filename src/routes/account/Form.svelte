@@ -8,16 +8,21 @@
 	import ChevronRightIcon from 'lucide-svelte/icons/chevron-right';
 	import { Button } from '$lib/shadcn/button';
 	import { Input } from '$lib/shadcn/input';
+	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import type { Msg } from '$lib/msg';
 	import Message from '$lib/ui/Message.svelte';
 	import { t } from '$lib/i18n/translation';
 	import { Label } from '$lib/shadcn/label';
 	import { enhance } from '$app/forms';
+	import type { TCountryCode } from 'countries-list';
+	import { getCountryData, getCountryDataList } from 'countries-list';
+	import * as Select from '$lib/shadcn/select';
 
 	const { msg, type }: { msg?: Msg; type: 'signup' | 'login' } = $props();
 	const isSignup = type === 'signup';
 	const requiredField = isSignup ? ' *' : '';
 	let showTooltip = $state(false);
+	let region: TCountryCode | undefined = $state('DE');
 </script>
 
 <div class="flex flex-col">
@@ -33,8 +38,27 @@
 		<Message class="mb-6" {msg} />
 		{#if isSignup}
 			<div class="field">
-				<Label for="name">{t.account.name}<span class="text-red-500">{requiredField}</span></Label>
-				<Input name="name" type="text" placeholder={t.account.name} />
+				<Label for="lastname"
+					>{t.account.name}<span class="text-red-500">{requiredField}</span></Label
+				>
+				<RadioGroup.Root value="o" name="gender" class="grid-cols-3">
+					<div class="flex items-center space-x-2">
+						<RadioGroup.Item value="m" id="m" />
+						<Label for="m">{t.account.gender('m')}</Label>
+					</div>
+					<div class="flex items-center space-x-2">
+						<RadioGroup.Item value="f" id="f" />
+						<Label for="f">{t.account.gender('f')}</Label>
+					</div>
+					<div class="flex items-center space-x-2">
+						<RadioGroup.Item value="o" id="o" />
+						<Label for="o">{t.account.gender('o')}</Label>
+					</div>
+				</RadioGroup.Root>
+				<div class="grid grid-cols-2 gap-x-1">
+					<Input name="firstname" type="text" placeholder={t.account.firstName} />
+					<Input name="lastname" type="text" placeholder={t.account.lastName} />
+				</div>
 			</div>
 		{/if}
 
@@ -69,6 +93,29 @@
 		</div>
 
 		{#if isSignup}
+			<div class="field">
+				<Label for="zipcode"
+					>{t.account.zipCode}/{t.account.city}/{t.account.region}<span class="text-red-500"
+						>{requiredField}</span
+					></Label
+				>
+				<div class="grid grid-cols-2 gap-x-1">
+					<Input name="zipcode" type="text" placeholder={t.account.zipCode} />
+					<Input name="city" type="text" placeholder={t.account.city} />
+				</div>
+				<Select.Root type="single" bind:value={region} name="region">
+					<Select.Trigger class="overflow-hidden" aria-label={t.account.region}>
+						{region ? getCountryData(region).native : t.account.region}
+					</Select.Trigger>
+					<Select.Content>
+						{#each getCountryDataList() as r}
+							<Select.Item value={r.iso2} label={r.native}>
+								{r.native}
+							</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
+			</div>
 			<div class="field">
 				<Label for="phone">{t.account.phone}</Label>
 				<Input name="phone" type="phone" placeholder={t.account.phone} />

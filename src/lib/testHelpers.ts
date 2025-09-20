@@ -144,13 +144,18 @@ export const addTestUser = async (company?: number) => {
 		.values({
 			email: company === undefined ? 'test@user.de' : 'company@owner.de',
 			name: '',
+			firstName: '',
+			gender: 'o',
 			isTaxiOwner: company !== undefined,
 			isAdmin: false,
 			isService: false,
 			isEmailVerified: true,
 			passwordHash:
 				'$argon2id$v=19$m=19456,t=2,p=1$4lXilBjWTY+DsYpN0eATrw$imFLatxSsy9WjMny7MusOJeAJE5ZenrOEqD88YsZv8o',
-			companyId: company
+			companyId: company,
+			zipCode: '',
+			city: '',
+			region: ''
 		})
 		.returning('id')
 		.executeTakeFirstOrThrow();

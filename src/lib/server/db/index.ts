@@ -19,6 +19,11 @@ export interface Database {
 		isService: boolean;
 		phone: string | null;
 		companyId: number | null;
+		firstName: string;
+		gender: string;
+		zipCode: string;
+		city: string;
+		region: string;
 	};
 	session: {
 		id: string;

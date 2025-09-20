@@ -41,7 +41,7 @@
 			{/each}
 		</ul>
 	{/if}
-	<p>Die stornierten Buchungen tauchen immer noch auf, sind nun aber als storniert markiert.</p>
+	<p>Die stornierten Buchungen werden weiterhin angezeigt, sind nun aber als storniert markiert.</p>
 	{#if plannedEvents.length < 2}
 		<p>
 			Die Fahrt wurde vollständig storniert. Sie finden diese immer noch unter Abrechnung, sie ist

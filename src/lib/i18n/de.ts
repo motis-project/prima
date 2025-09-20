@@ -19,6 +19,7 @@ const translations: Translations = {
 		enterEmailAndPassword: 'Bitte geben Sie Ihre E-Mail und Ihr Passwort ein.',
 		invalidEmail: 'Ungültige E-Mail-Adresse.',
 		invalidPhone: 'Ungültige Telefonnummer.',
+		invalidZipCity: 'Ungültige PLZ/Ort/Region.',
 		emailAlreadyRegistered: 'Diese E-Mail-Adresse ist bereits registriert.',
 		weakPassword: 'Bitte wählen Sie ein stärkeres Passwort.',
 		tooManyRequests: 'Zu viele Anfragen.',
@@ -103,9 +104,17 @@ const translations: Translations = {
 	},
 	account: {
 		name: 'Name',
+		lastName: 'Nachname',
+		firstName: 'Vorname',
+		gender: (id: string) => {
+			return { o: 'n/a', f: 'Frau', m: 'Herr' }[id]!;
+		},
 		email: 'E-Mail',
 		password: 'Passwort',
 		phone: 'Telefonnummer',
+		zipCode: 'PLZ',
+		city: 'Ort',
+		region: 'Region',
 		create: 'Nutzerkonto erstellen',
 		forgotPassword: 'Passwort vergessen?',
 		signupConditions: (tos: string, privacy: string, provider: string) =>
