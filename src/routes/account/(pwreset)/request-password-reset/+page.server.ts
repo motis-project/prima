@@ -45,7 +45,7 @@ export const actions: Actions = {
 		try {
 			await sendMail(PasswordReset, 'Passwort zurücksetzen', email, {
 				code: user.passwordResetCode,
-				name: user.name,
+				name: user.firstName + ' ' + user.name,
 				email
 			});
 		} catch {

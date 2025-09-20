@@ -22,6 +22,7 @@ export const POST = async (_: RequestEvent) => {
 			.where('request.cancelled', '=', false)
 			.where('user.isService', '=', false)
 			.select((eb) => [
+				'user.firstName',
 				'user.name',
 				'user.email',
 				'request.id as requestId',
@@ -41,7 +42,7 @@ export const POST = async (_: RequestEvent) => {
 				console.log('Sending NewVehicleNotification to ', request.email);
 				await sendMail(NewVehicleNotification, 'Fahrzeugwechsel', request.email, {
 					events: request.events,
-					name: request.name,
+					name: request.firstName + ' ' + request.name,
 					newLicensePlate: request.licensePlate
 				});
 			} catch {
