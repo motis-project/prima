@@ -105,7 +105,7 @@ export const POST = async (_: RequestEvent) => {
 				await sendMail(ReminderCustomer, 'Bevorstehende Fahrt', request.email, {
 					journeyId: request.journeyId,
 					events: request.events,
-					name: request.firstName + ' ' +request.name,
+					name: request.firstName + ' ' + request.name,
 					licensePlate: request.licensePlate,
 					ticketCode: request.ticketCode,
 					ticketCodeQr: await QRCode.toDataURL(request.ticketCode),

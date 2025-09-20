@@ -7,6 +7,7 @@ import {
 	FULLY_PAYED_COST_FACTOR,
 	MAX_WAITING_TIME
 } from '$lib/constants';
+import { env } from '$env/dynamic/public';
 import {
 	INSERT_HOW_OPTIONS,
 	InsertDirection,
@@ -540,7 +541,7 @@ export function evaluateNewTours(
 	const now = new Date();
 	const isWeekend =
 		(now.getDay() == 5 && now.getHours() >= 18) || now.getDay() == 6 || now.getDay() == 0;
-	if (isWeekend) {
+	if (isWeekend && env.PUBLIC_ENABLE_WEEKEND_BOOKING !== 'true') {
 		const nextMonday = new Date();
 		nextMonday.setDate(nextMonday.getDate() + ((1 + 7 - nextMonday.getDay()) % 7));
 		nextMonday.setHours(10);
