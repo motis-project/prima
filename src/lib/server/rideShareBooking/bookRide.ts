@@ -13,6 +13,7 @@ import { getLegDurationUpdates } from './getLegDurationUpdates';
 import type { Insertion, NeighbourIds } from './insertion';
 import { isSamePlace } from '../booking/isSamePlace';
 import { evaluateRequest } from './evaluateRequest';
+import type { Mode } from '../booking/bookRide';
 export type ExpectedConnection = {
 	start: Coordinates;
 	target: Coordinates;
@@ -21,6 +22,8 @@ export type ExpectedConnection = {
 	signature: string;
 	startFixed: boolean;
 	requestedTime: UnixtimeMs;
+	provider: number;
+	mode: Mode;
 };
 
 export type ExpectedConnectionWithISoStrings = {

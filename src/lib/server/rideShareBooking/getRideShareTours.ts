@@ -4,15 +4,30 @@ import type { Capacities } from '$lib/util/booking/Capacities';
 import { db, type Database } from '$lib/server/db';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 
-const dbQuery = async (
+export const getRideShareTours = async (
 	requestCapacities: Capacities,
 	searchInterval: Interval,
-	trx: Transaction<Database> | undefined
+	trx?: Transaction<Database>,
+	provider?: number
 ) => {
-	return (
-		await (trx ?? db)
+	console.log(
+		'getRideShareTours params: ',
+		JSON.stringify(
+			{
+				searchInterval: searchInterval.toString(),
+				requestCapacities
+			},
+			null,
+			'\t'
+		)
+	);
+
+	const dbResult = (await (trx ?? db)
 			.selectFrom('rideShareTour')
 			.where('rideShareTour.passengers', '>=', requestCapacities.passengers)
+			.$if(provider !== undefined, (qb) =>
+				qb.where('rideShareTour.provider', '=', provider!)
+			)
 			.where((eb) =>
 				eb(
 					'rideShareTour.luggage',
@@ -103,29 +118,7 @@ const dbQuery = async (
 			departure,
 			arrival
 		};
-	});
-};
-
-export type DbResult = NonNullable<Awaited<ReturnType<typeof dbQuery>>>;
-
-export const getRideShareTours = async (
-	requestCapacities: Capacities,
-	searchInterval: Interval,
-	trx?: Transaction<Database>
-) => {
-	console.log(
-		'getRideShareTours params: ',
-		JSON.stringify(
-			{
-				searchInterval: searchInterval.toString(),
-				requestCapacities
-			},
-			null,
-			'\t'
-		)
-	);
-
-	const dbResult = await dbQuery(requestCapacities, searchInterval, trx);
+	});;
 
 	console.log('getRideShareTours: dbResult=', JSON.stringify(dbResult, null, '\t'));
 	return dbResult;

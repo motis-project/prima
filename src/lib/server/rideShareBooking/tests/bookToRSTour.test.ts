@@ -7,6 +7,7 @@ import { signEntry } from '../signEntry';
 import type { ExpectedConnection } from '../bookRide';
 import { rideShareApi } from '../rideShareApi';
 import { addRideShareTour } from '../addRideShareTour';
+import { Mode } from '$lib/server/booking/bookRide';
 
 let sessionToken: string;
 
@@ -68,7 +69,9 @@ describe('add ride share request', () => {
 				false
 			),
 			startFixed: true,
-			requestedTime: inXMinutes(70)
+			requestedTime: inXMinutes(70),
+			mode: Mode.RIDE_SHARE,
+			provider: mockUserId
 		};
 		const bookingBody = {
 			connection1,

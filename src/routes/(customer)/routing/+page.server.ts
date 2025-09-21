@@ -12,9 +12,9 @@ import type { SignedItinerary } from '$lib/planAndSign';
 import { sql } from 'kysely';
 import type { PageServerLoad } from './$types';
 import Prom from 'prom-client';
-import { expectedConnectionFromLeg } from '$lib/expectedConnectionFromLeg';
 import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhitelistRequestTimes';
 import { rideShareApi } from '$lib/server/rideShareBooking/rideShareApi';
+import { expectedConnectionFromLeg } from '$lib/server/rideShareBooking/expectedConnectionFromLeg';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;
@@ -49,6 +49,7 @@ export const actions = {
 		const kidsThreeToFourString = formData.get('kidsThreeToFour');
 		const kidsFiveToSixString = formData.get('kidsFiveToSix');
 		const startFixedString = formData.get('startFixed');
+		const providerString = formData.get('providerString');
 		const json = formData.get('json');
 
 		if (
@@ -59,7 +60,8 @@ export const actions = {
 			typeof kidsZeroToTwoString !== 'string' ||
 			typeof kidsThreeToFourString !== 'string' ||
 			typeof kidsFiveToSixString !== 'string' ||
-			typeof startFixedString !== 'string'
+			typeof startFixedString !== 'string' ||
+			typeof providerString !== 'string'
 		) {
 			booking_errors?.inc();
 			throw 'invalid booking params';
@@ -70,6 +72,7 @@ export const actions = {
 		const kidsZeroToTwo = readInt(kidsZeroToTwoString);
 		const kidsThreeToFour = readInt(kidsThreeToFourString);
 		const kidsFiveToSix = readInt(kidsFiveToSixString);
+		const provider = readInt(providerString);
 		const startFixed = startFixedString === '1';
 
 		if (
@@ -153,12 +156,13 @@ export const actions = {
 			firstOdm,
 			parsedJson.signature1,
 			isDirect ? startFixed : firstOdmIndex !== 0,
-			requestedTime1
+			requestedTime1,
+			provider
 		);
 		const connection2 =
 			firstOdmIndex === lastOdmIndex
 				? null
-				: expectedConnectionFromLeg(lastOdm, parsedJson.signature2, true, requestedTime2);
+				: expectedConnectionFromLeg(lastOdm, parsedJson.signature2, true, requestedTime2, provider);
 
 		console.log(
 			'BOOKING: C1=',
