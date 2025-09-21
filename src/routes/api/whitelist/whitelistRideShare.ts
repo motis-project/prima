@@ -69,7 +69,6 @@ export async function whitelistRideShare(
 	);
 	const bestEvals = await evaluateRequest(
 		rideShareTours,
-
 		userChosen,
 		busStops,
 		required,

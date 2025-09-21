@@ -107,9 +107,7 @@ export const addRideShareTour = async (
 			.values({
 				passengers,
 				luggage,
-				fare: null,
 				cancelled: false,
-				message: null,
 				provider
 			})
 			.returning('id')

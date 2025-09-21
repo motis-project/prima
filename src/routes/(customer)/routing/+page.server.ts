@@ -49,7 +49,7 @@ export const actions = {
 		const kidsThreeToFourString = formData.get('kidsThreeToFour');
 		const kidsFiveToSixString = formData.get('kidsFiveToSix');
 		const startFixedString = formData.get('startFixed');
-		const providerString = formData.get('providerString');
+		const tourIdString = formData.get('tourIdString');
 		const json = formData.get('json');
 
 		if (
@@ -61,7 +61,7 @@ export const actions = {
 			typeof kidsThreeToFourString !== 'string' ||
 			typeof kidsFiveToSixString !== 'string' ||
 			typeof startFixedString !== 'string' ||
-			typeof providerString !== 'string'
+			typeof tourIdString !== 'string'
 		) {
 			booking_errors?.inc();
 			throw 'invalid booking params';
@@ -72,7 +72,7 @@ export const actions = {
 		const kidsZeroToTwo = readInt(kidsZeroToTwoString);
 		const kidsThreeToFour = readInt(kidsThreeToFourString);
 		const kidsFiveToSix = readInt(kidsFiveToSixString);
-		const provider = readInt(providerString);
+		const tourId = readInt(tourIdString);
 		const startFixed = startFixedString === '1';
 
 		if (
@@ -157,12 +157,12 @@ export const actions = {
 			parsedJson.signature1,
 			isDirect ? startFixed : firstOdmIndex !== 0,
 			requestedTime1,
-			provider
+			tourId
 		);
 		const connection2 =
 			firstOdmIndex === lastOdmIndex
 				? null
-				: expectedConnectionFromLeg(lastOdm, parsedJson.signature2, true, requestedTime2, provider);
+				: expectedConnectionFromLeg(lastOdm, parsedJson.signature2, true, requestedTime2, tourId);
 
 		console.log(
 			'BOOKING: C1=',

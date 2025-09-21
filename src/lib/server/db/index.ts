@@ -121,9 +121,7 @@ export interface Database {
 		id: Generated<number>;
 		passengers: number;
 		luggage: number;
-		fare: number | null;
 		cancelled: boolean;
-		message: string | null;
 		provider: number;
 	};
 }

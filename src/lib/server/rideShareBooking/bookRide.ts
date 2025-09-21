@@ -22,7 +22,7 @@ export type ExpectedConnection = {
 	signature: string;
 	startFixed: boolean;
 	requestedTime: UnixtimeMs;
-	provider: number;
+	tourId: number;
 	mode: Mode;
 };
 

@@ -39,7 +39,15 @@ beforeEach(async () => {
 
 describe('add ride share request', () => {
 	it('simple success case', async () => {
-		await addRideShareTour(inXMinutes(40), true, 3, 0, mockUserId, inSchleife, inKleinPriebus);
+		const tourId = await addRideShareTour(
+			inXMinutes(40),
+			true,
+			3,
+			0,
+			mockUserId,
+			inSchleife,
+			inKleinPriebus
+		);
 		const body = JSON.stringify({
 			start: inSagar,
 			target: inPechern,
@@ -71,7 +79,7 @@ describe('add ride share request', () => {
 			startFixed: true,
 			requestedTime: inXMinutes(70),
 			mode: Mode.RIDE_SHARE,
-			provider: mockUserId
+			tourId
 		};
 		const bookingBody = {
 			connection1,
