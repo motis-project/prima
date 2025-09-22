@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { PUBLIC_IMPRINT_URL } from '$env/static/public';
-	import { t } from '$lib/i18n/translation';
+	import Footer from '$lib/ui/Footer.svelte';
 </script>
 
 <div class="fine-print mx-auto max-w-[800px]">
@@ -436,11 +435,5 @@
 
 	<p>Stand Juli 2025</p>
 
-	<p class="mt-6 text-center text-xs text-input">
-		<a
-			href={PUBLIC_IMPRINT_URL}
-			target="_blank"
-			class="whitespace-nowrap border-b border-dotted border-input">{t.account.imprint}</a
-		>
-	</p>
+	<Footer />
 </div>
