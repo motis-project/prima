@@ -116,7 +116,8 @@ export type Translations = {
 		signupConditions: (tos: string, privacy: string, provider: string) => string;
 		tos: string;
 		imprint: string;
-		privacy_short: string;
+		dataLicenses: string;
+		privacyShort: string;
 		privacy: string;
 		login: string;
 		sentAnEmailTo: string;

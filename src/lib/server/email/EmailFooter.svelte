@@ -6,5 +6,6 @@
 <p>
 	Viele Grüße<br />
 	Ihr {PUBLIC_PROVIDER} Team<br />
-	<a href={env.ORIGIN} target="_blank">{env.ORIGIN}</a><br />
+	<a href={env.ORIGIN} target="_blank">{env.ORIGIN}</a><br /><br />
+	Bitte antworten Sie nicht an diese E-Mail-Adresse, sie wird nicht gelesen.
 </p>

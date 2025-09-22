@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PUBLIC_PROVIDER, PUBLIC_PRIVACY_URL, PUBLIC_IMPRINT_URL } from '$env/static/public';
+	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import Meta from '$lib/ui/Meta.svelte';
 	import { Button } from '$lib/shadcn/button';
 	import { Card, CardContent, CardFooter } from '$lib/shadcn/card';
@@ -9,6 +9,7 @@
 	import venn3 from '$lib/assets/venn3.png';
 	import logo from '$lib/assets/logo-alpha.png';
 	import { goto } from '$app/navigation';
+	import Footer from '$lib/ui/Footer.svelte';
 </script>
 
 <Meta title="{t.explainer.title} | {PUBLIC_PROVIDER}" />
@@ -44,16 +45,6 @@
 				>
 			</Card>
 		</div>
-		<p class="mx-auto mt-6 max-w-72 text-center text-xs text-input">
-			<a
-				href={PUBLIC_IMPRINT_URL}
-				target="_blank"
-				class="whitespace-nowrap border-b border-dotted border-input">{t.account.imprint}</a
-			>
-			|
-			<a href={PUBLIC_PRIVACY_URL} class="whitespace-nowrap border-b border-dotted border-input"
-				>{t.account.privacy_short}</a
-			>
-		</p>
+		<Footer />
 	</div>
 </div>
