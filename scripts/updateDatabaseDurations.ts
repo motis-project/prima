@@ -41,7 +41,9 @@ async function updateDatabaseDurations() {
 			for (let i = 1; i != tour.eventGroups.length; ++i) {
 				const earlierEventGroup = tour.eventGroups[i - 1];
 				const laterEventGroup = tour.eventGroups[i];
-				const duration = (await oneToManyCarRouting(earlierEventGroup, [laterEventGroup], false))[0];
+				const duration = (
+					await oneToManyCarRouting(earlierEventGroup, [laterEventGroup], false)
+				)[0];
 				if (duration !== undefined) {
 					await trx
 						.updateTable('eventGroup')
@@ -60,7 +62,6 @@ async function updateDatabaseDurations() {
 				const durationFromCompany = (
 					await oneToManyCarRouting(company, [tour.eventGroups[0]], false)
 				)[0];
-
 
 				if (durationFromCompany) {
 					await trx
