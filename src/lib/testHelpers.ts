@@ -167,6 +167,7 @@ export const clearDatabase = async () => {
 	await db.deleteFrom('vehicle').execute();
 	await db.deleteFrom('session').execute();
 	await db.deleteFrom('rideShareTour').execute();
+	await db.deleteFrom('rideShareVehicle').execute();
 	await db.deleteFrom('user').execute();
 	await db.deleteFrom('company').execute();
 };

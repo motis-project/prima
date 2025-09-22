@@ -8,10 +8,7 @@ import type { Coordinates } from '$lib/util/Coordinates';
 import { InsertWhat } from '$lib/util/booking/insertionTypes';
 import { DAY } from '$lib/util/time';
 import { getRideShareTours } from './getRideShareTours';
-import { getScheduledTimes, type ScheduledTimes } from './getScheduledTimes';
-import { getLegDurationUpdates } from './getLegDurationUpdates';
 import type { Insertion, NeighbourIds } from './insertion';
-import { isSamePlace } from '../booking/isSamePlace';
 import { evaluateRequest } from './evaluateRequest';
 import type { Mode } from '../booking/bookRide';
 export type ExpectedConnection = {
@@ -64,7 +61,7 @@ export async function bookSharedRide(
 		console.log('there were no ride shares tours which could be concatenated with this request.');
 		return undefined;
 	}
-	const allowedRideShareTours = rideShareTours.filter((t) => t.provider !== blockedProviderId);
+	const allowedRideShareTours = rideShareTours.filter((t) => t.owner !== blockedProviderId);
 	const result = (
 		await evaluateRequest(
 			allowedRideShareTours,
@@ -101,57 +98,6 @@ export async function bookSharedRide(
 	const prevDropoffEvent =
 		InsertWhat.BOTH === best.pickupCase.what ? undefined : events[best.dropoffIdx - 1];
 	const nextDropoffEvent = events[best.dropoffIdx];
-	let pickupEventGroup = undefined;
-	let dropoffEventGroup = undefined;
-	const pickupInterval = new Interval(best.scheduledPickupTimeStart, best.scheduledPickupTimeEnd);
-	const dropoffInterval = new Interval(
-		best.scheduledDropoffTimeStart,
-		best.scheduledDropoffTimeEnd
-	);
-	if (belongToSameEventGroup(prevPickupEvent, c.start, pickupInterval)) {
-		pickupEventGroup = prevPickupEvent!.eventGroupId;
-	}
-	if (belongToSameEventGroup(nextPickupEvent, c.start, pickupInterval)) {
-		pickupEventGroup = nextPickupEvent!.eventGroupId;
-	}
-	if (belongToSameEventGroup(prevDropoffEvent, c.target, dropoffInterval)) {
-		dropoffEventGroup = prevDropoffEvent!.eventGroupId;
-	}
-	if (belongToSameEventGroup(nextDropoffEvent, c.target, dropoffInterval)) {
-		dropoffEventGroup = nextDropoffEvent!.eventGroupId;
-	}
-	const { prevLegDurations, nextLegDurations } = await getLegDurationUpdates(
-		prevPickupEvent,
-		nextPickupEvent,
-		prevDropoffEvent,
-		nextDropoffEvent,
-		pickupEventGroup,
-		dropoffEventGroup,
-		best
-	);
-	const scheduledTimes = getScheduledTimes(
-		best,
-		prevPickupEvent,
-		nextPickupEvent,
-		nextDropoffEvent,
-		prevDropoffEvent,
-		pickupEventGroup,
-		dropoffEventGroup
-	);
-
-	const additionalScheduledTimes = new Array<{ event_id: number; time: number; start: boolean }>();
-	scheduledTimes.updates.forEach((update) => {
-		const firstIdx = events.findIndex((e) => e.eventId === update.event_id);
-		const lastIdx = events.findLastIndex((e) => e.eventId === update.event_id);
-		const sameEventGroup = events.slice(firstIdx, lastIdx + 1);
-		sameEventGroup.forEach((event) => {
-			if (event.eventId === update.event_id) {
-				return;
-			}
-			additionalScheduledTimes.push({ ...update, event_id: event.eventId });
-		});
-	});
-	scheduledTimes.updates = scheduledTimes.updates.concat(additionalScheduledTimes);
 	return {
 		best,
 		tour: prevPickupEvent.tourId,
@@ -164,12 +110,7 @@ export async function bookSharedRide(
 			prevDropoffGroup: prevDropoffEvent?.eventGroupId,
 			nextDropoff: nextDropoffEvent.eventId,
 			nextDropoffGroup: nextDropoffEvent.eventGroupId
-		},
-		prevLegDurations,
-		nextLegDurations,
-		scheduledTimes,
-		pickupEventGroup,
-		dropoffEventGroup
+		}
 	};
 }
 
@@ -177,23 +118,4 @@ export type BookRideShareResponse = {
 	best: Insertion;
 	tour: undefined | number;
 	neighbourIds: NeighbourIds;
-	prevLegDurations: { event: number; duration: number | null }[];
-	nextLegDurations: { event: number; duration: number | null }[];
-	scheduledTimes: ScheduledTimes;
-	pickupEventGroup: number | undefined;
-	dropoffEventGroup: number | undefined;
 };
-
-function belongToSameEventGroup(
-	event: RideShareEvent | undefined,
-	otherEventCoordinates: Coordinates,
-	otherEventInterval: Interval
-) {
-	return (
-		event !== undefined &&
-		isSamePlace(event, otherEventCoordinates) &&
-		(otherEventInterval.overlaps(event.time) ||
-			otherEventInterval.touches(event.time) ||
-			otherEventInterval.equals(event.time))
-	);
-}

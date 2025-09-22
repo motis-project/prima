@@ -174,10 +174,9 @@ export async function rideShareApi(
 								p.capacities,
 								p.connection1!,
 								customer,
-								firstConnection.scheduledTimes,
-								kidsZeroToTwo,
-								kidsThreeToFour,
-								kidsFiveToSix,
+								p.connection1!.startFixed ? p.connection1!.startTime : p.connection1!.targetTime,
+								p.connection1!.requestedTime,
+								p.connection1!.startFixed,
 								trx
 							)) ?? null;
 					}
@@ -188,10 +187,9 @@ export async function rideShareApi(
 								p.capacities,
 								p.connection2!,
 								customer,
-								secondConnection.scheduledTimes,
-								kidsZeroToTwo,
-								kidsThreeToFour,
-								kidsFiveToSix,
+								p.connection2!.startFixed ? p.connection2!.startTime : p.connection2!.targetTime,
+								p.connection2!.requestedTime,
+								p.connection2!.startFixed,
 								trx
 							)) ?? null;
 					}

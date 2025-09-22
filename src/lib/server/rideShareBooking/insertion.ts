@@ -126,7 +126,6 @@ export function evaluateSingleInsertion(
 	busStopIdx: number | undefined,
 	prev: RideShareEvent,
 	next: RideShareEvent,
-	allowedTimes: Interval[],
 	promisedTimes?: PromisedTimes
 ): SingleInsertionEvaluation | undefined {
 	console.assert(insertionCase.what != InsertWhat.BOTH);
@@ -152,8 +151,7 @@ export function evaluateSingleInsertion(
 		0,
 		busStopWindow,
 		prevLegDuration,
-		nextLegDuration,
-		allowedTimes
+		nextLegDuration
 	);
 	if (arrivalWindow == undefined) {
 		return undefined;
@@ -243,7 +241,6 @@ export function evaluateBothInsertion(
 	busStopIdx: number | undefined,
 	prev: RideShareEvent,
 	next: RideShareEvent,
-	allowedTimes: Interval[],
 	passengerCountNewRequest: number,
 	promisedTimes?: PromisedTimes
 ): InsertionEvaluation | undefined {
@@ -278,8 +275,7 @@ export function evaluateBothInsertion(
 		passengerDuration,
 		busStopWindow,
 		prevLegDuration,
-		nextLegDuration,
-		allowedTimes
+		nextLegDuration
 	);
 	if (arrivalWindow == undefined) {
 		console.log(
@@ -291,7 +287,6 @@ export function evaluateBothInsertion(
 			{ busStopWindow: busStopWindow?.toString() },
 			{ prevLegDuration: prevLegDuration.toString() },
 			{ nextLegDuration: nextLegDuration.toString() },
-			{ allowedTimes: allowedTimes.toString() },
 			{ prev: prev.eventId },
 			{ next: next.eventId }
 		);
@@ -403,7 +398,6 @@ export function evaluateSingleInsertions(
 	busStopTimes: Interval[][],
 	routingResults: RoutingResults,
 	travelDurations: (number | undefined)[],
-	allowedTimes: Interval[],
 	promisedTimes?: PromisedTimes
 ): Evaluations {
 	const bothEvaluations: Insertion[][][] = [];
@@ -423,7 +417,6 @@ export function evaluateSingleInsertions(
 	}
 	const prepTime = Date.now() + MIN_PREP;
 	const direction = startFixed ? InsertDirection.BUS_STOP_PICKUP : InsertDirection.BUS_STOP_DROPOFF;
-
 	iterateAllInsertions(rideShareTours, insertionRanges, (insertionInfo: InsertionInfo) => {
 		const events = insertionInfo.events;
 		const prev: RideShareEvent = events[insertionInfo.idxInEvents - 1];
@@ -470,7 +463,6 @@ export function evaluateSingleInsertions(
 					busStopIdx,
 					prev,
 					next,
-					allowedTimes,
 					required.passengers,
 					promisedTimes
 				);
@@ -499,7 +491,6 @@ export function evaluateSingleInsertions(
 					busStopIdx,
 					prev,
 					next,
-					allowedTimes,
 					promisedTimes
 				);
 				if (
@@ -524,7 +515,6 @@ export function evaluateSingleInsertions(
 			undefined,
 			prev,
 			next,
-			allowedTimes,
 			promisedTimes
 		);
 		if (

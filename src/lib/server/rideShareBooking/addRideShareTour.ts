@@ -11,6 +11,7 @@ export const addRideShareTour = async (
 	passengers: number,
 	luggage: number,
 	provider: number,
+	vehicle: number,
 	start: Coordinates,
 	target: Coordinates
 ): Promise<number> => {
@@ -35,7 +36,7 @@ export const addRideShareTour = async (
 		.innerJoin('eventGroup', 'event.eventGroupId', 'event.id')
 		.where('eventGroup.scheduledTimeStart', '>', dayStart.getTime())
 		.where('eventGroup.scheduledTimeStart', '<', dayEnd.getTime())
-		.where('rideShareTour.provider', '=', provider)
+		.where('rideShareTour.vehicle', '=', vehicle)
 		.select([
 			'eventGroup.scheduledTimeStart',
 			'eventGroup.scheduledTimeEnd',
@@ -108,7 +109,7 @@ export const addRideShareTour = async (
 				passengers,
 				luggage,
 				cancelled: false,
-				provider
+				vehicle
 			})
 			.returning('id')
 			.executeTakeFirstOrThrow()

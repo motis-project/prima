@@ -20,8 +20,8 @@ export async function iterateAllInsertions(
 					rideShareTourIdx: tourIdx,
 					currentRange: insertion,
 					insertionIdx,
-					events: tour.events,
-					provider: tour.provider
+					events: tour.events.filter((e) => !e.pending),
+					provider: tour.owner
 				});
 				insertionIdx++;
 			}

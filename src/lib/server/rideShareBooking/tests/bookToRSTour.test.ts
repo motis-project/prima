@@ -8,6 +8,8 @@ import type { ExpectedConnection } from '../bookRide';
 import { rideShareApi } from '../rideShareApi';
 import { addRideShareTour } from '../addRideShareTour';
 import { Mode } from '$lib/server/booking/bookRide';
+import { createRideShareVehicle } from '../createRideShareVehicle';
+import { acceptRideShareRequest } from '../acceptRideShareRequest';
 
 let sessionToken: string;
 
@@ -39,12 +41,14 @@ beforeEach(async () => {
 
 describe('add ride share request', () => {
 	it('simple success case', async () => {
+		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false);
 		const tourId = await addRideShareTour(
 			inXMinutes(40),
 			true,
 			3,
 			0,
 			mockUserId,
+			vehicle,
 			inSchleife,
 			inKleinPriebus
 		);
@@ -59,7 +63,6 @@ describe('add ride share request', () => {
 		});
 
 		const whiteResponse = await white(body).then((r) => r.json());
-		console.log('thingyjj', JSON.stringify(whiteResponse, null, 2));
 		expect(whiteResponse.directRideShare.length).toBe(1);
 		expect(whiteResponse.directRideShare[0]).not.toBe(null);
 		const connection1: ExpectedConnection = {
@@ -113,5 +116,13 @@ describe('add ride share request', () => {
 			Math.abs(inPechern.lat - dropoff.lat) + Math.abs(inPechern.lng - dropoff.lng)
 		).toBeLessThan(COORDINATE_ROUNDING_ERROR_THRESHOLD);
 		newlyAddedRequests.some((r) => r.id == bookingResponse.request1Id);
+
+		// Alter pending status to false
+		const requestId = bookingResponse.request1Id ?? bookingResponse.request2Id!;
+		const response = await acceptRideShareRequest(requestId, mockUserId);
+		expect(response.status).toBe(200);
+		const tours2 = await getRSTours();
+		const r = tours2[0].requests.find((r) => r.id === requestId);
+		expect(r?.pending).toBeFalsy();
 	}, 30000);
 });

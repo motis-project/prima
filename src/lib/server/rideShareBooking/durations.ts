@@ -80,15 +80,11 @@ export function getArrivalWindow(
 	directDuration: number,
 	busStopWindow: Interval | undefined,
 	prevLegDuration: number,
-	nextLegDuration: number,
-	allowedTimes: Interval[]
+	nextLegDuration: number
 ): Interval | undefined {
-	const directWindows = Interval.intersect(
-		allowedTimes,
-		windows
-			.map((window) => window.shrink(prevLegDuration, nextLegDuration))
-			.filter((window) => window != undefined)
-	);
+	const directWindows = windows
+		.map((window) => window.shrink(prevLegDuration, nextLegDuration))
+		.filter((window) => window != undefined);
 
 	let arrivalWindows = directWindows
 		.map((window) =>

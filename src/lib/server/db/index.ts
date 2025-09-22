@@ -100,6 +100,9 @@ export interface Database {
 		ticketPrice: number;
 		cancelled: boolean;
 		pending: boolean;
+		startFixed: boolean | null;
+		busStopTime: number | null;
+		requestedTime: number | null;
 	};
 	journey: {
 		id: Generated<number>;
@@ -122,7 +125,16 @@ export interface Database {
 		passengers: number;
 		luggage: number;
 		cancelled: boolean;
-		provider: number;
+		vehicle: number;
+	};
+	rideShareVehicle: {
+		id: Generated<number>;
+		passengers: number;
+		luggage: number;
+		owner: number;
+		color: string;
+		model: string;
+		smokingAllowed: boolean;
 	};
 }
 

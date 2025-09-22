@@ -3,14 +3,11 @@ import { Interval } from '$lib/util/interval';
 import type { Coordinates } from '$lib/util/Coordinates';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import {
-	EARLIEST_SHIFT_START,
-	LATEST_SHIFT_END,
 	PASSENGER_CHANGE_DURATION,
 	MAX_PASSENGER_WAITING_TIME_DROPOFF,
 	MAX_PASSENGER_WAITING_TIME_PICKUP
 } from '$lib/constants';
 import { evaluatePairInsertions, evaluateSingleInsertions, type Insertion } from './insertion';
-import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 import { DAY } from '$lib/util/time';
 import { routing } from './routing';
 import type { RideShareTour } from './getRideShareTours';
@@ -28,7 +25,7 @@ export async function evaluateRequest(
 ): Promise<Insertion[][][]> {
 	console.log(
 		'EVALUATE REQUEST PARAMS: ',
-		{ companies: JSON.stringify(rideShareTours, null, 2) },
+		{ rideShareTours: JSON.stringify(rideShareTours, null, 2) },
 		{ userChosen },
 		{ busStops: JSON.stringify(busStops, null, 2) },
 		{ required },
@@ -73,11 +70,6 @@ export async function evaluateRequest(
 	}
 	earliest = Math.max(earliest, Date.now() - 2 * DAY);
 	latest = Math.min(latest, Date.now() + 15 * DAY);
-	const allowedTimes = getAllowedTimes(earliest, latest, EARLIEST_SHIFT_START, LATEST_SHIFT_END);
-	console.log(
-		'WHITELIST REQUEST: ALLOWED TIMES (RESTRICTION FROM 4 TO 23):\n',
-		allowedTimes.map((i) => i.toString())
-	);
 	const { busStopEvaluations, bothEvaluations, userChosenEvaluations } = evaluateSingleInsertions(
 		rideShareTours,
 		required,
@@ -86,7 +78,6 @@ export async function evaluateRequest(
 		busStopTimes,
 		routingResults,
 		directDurations,
-		allowedTimes,
 		promisedTimes
 	);
 	const pairEvaluations = evaluatePairInsertions(

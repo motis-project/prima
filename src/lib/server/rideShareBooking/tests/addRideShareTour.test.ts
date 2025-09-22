@@ -5,6 +5,7 @@ import { inXMinutes } from '$lib/server/booking/tests/util';
 import { addRideShareTour } from '../addRideShareTour';
 import { getRideShareTours } from '../getRideShareTours';
 import { Interval } from '$lib/util/interval';
+import { createRideShareVehicle } from '../createRideShareVehicle';
 
 let sessionToken: string;
 
@@ -34,7 +35,18 @@ beforeEach(async () => {
 
 describe('Create new ride share tour', () => {
 	it('simple success case', async () => {
-		await addRideShareTour(inXMinutes(100), true, 3, 0, mockUserId, inKleinPriebus, inSchleife);
+		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false);
+		console.log({ vehicle });
+		await addRideShareTour(
+			inXMinutes(100),
+			true,
+			3,
+			0,
+			mockUserId,
+			vehicle,
+			inKleinPriebus,
+			inSchleife
+		);
 		const rsTours = await getRideShareTours(
 			capacities,
 			new Interval(inXMinutes(0), inXMinutes(600))

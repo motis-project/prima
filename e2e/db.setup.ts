@@ -35,6 +35,7 @@ setup('setup db', async () => {
 	await db.deleteFrom('request').executeTakeFirstOrThrow();
 	await db.deleteFrom('tour').executeTakeFirstOrThrow();
 	await db.deleteFrom('rideShareTour').executeTakeFirstOrThrow();
+	await db.deleteFrom('rideShareVehicle').executeTakeFirstOrThrow();
 	await db.deleteFrom('vehicle').executeTakeFirstOrThrow();
 	await db.deleteFrom('session').executeTakeFirstOrThrow();
 	await db.deleteFrom('user').executeTakeFirstOrThrow();
