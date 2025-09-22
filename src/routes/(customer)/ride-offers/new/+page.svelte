@@ -14,7 +14,6 @@
 	} from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
-	import { type PlanData } from '$lib/openapi/types.gen';
 
 	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
 	import AddressTypeahead from '$lib/ui/AddressTypeahead.svelte';
@@ -27,9 +26,10 @@
 	import * as Select from '$lib/shadcn/select';
 	import { lngLatToStr } from '$lib/util/lngLatToStr';
 	import { posToLocation } from '$lib/map/Location';
-	import { plan } from '$lib/openapi';
 	import Time from '../../routing/Time.svelte';
 	import { formatDurationSec } from '../../routing/formatDuration';
+	import { carRouting } from '$lib/util/carRouting';
+	import maplibregl from 'maplibre-gl';
 
 	const { data } = $props();
 
@@ -59,25 +59,6 @@
 		}
 	};
 
-	let baseQuery = $derived(
-		from.value.match && to.value.match
-			? ({
-					query: {
-						time: time.toISOString(),
-						fromPlace: toPlaceString(from),
-						toPlace: toPlaceString(to),
-						arriveBy: timeType == 'arrival',
-						transitModes: [],
-						preTransitModes: [],
-						postTransitModes: [],
-						directModes: ['CAR'],
-						maxDirectTime: 36000,
-						detailedTransfers: false
-					} as PlanData['query']
-				} as PlanData)
-			: undefined
-	);
-
 	const getLocation = () => {
 		if (navigator && navigator.geolocation) {
 			navigator.geolocation.getCurrentPosition(applyPosition, (e) => console.log(e), {
@@ -94,13 +75,17 @@
 	let searchDebounceTimer: Timeout;
 	let loading = $state(false);
 	$effect(() => {
-		if (baseQuery) {
+		if (from.value.match && to.value.match) {
 			loading = true;
 			clearTimeout(searchDebounceTimer);
 			searchDebounceTimer = setTimeout(() => {
-				plan(baseQuery).then((r) => {
-					const { data, error } = r;
-					if (error || !data?.direct.length) {
+				carRouting(
+					maplibregl.LngLat.convert(from.value.match!),
+					maplibregl.LngLat.convert(to.value.match!),
+					timeType == 'arrival',
+					time.toISOString()
+				).then((data) => {
+					if (!data?.direct.length) {
 						msg = { type: 'error', text: 'noRouteFound' };
 						return;
 					}

@@ -30,7 +30,7 @@
 		id: number;
 		ticketCode: string | null;
 		cancelled: boolean | null;
-		negotiating: boolean | null;
+		pending: boolean | null;
 	}[]
 )}
 	<div class="flex flex-col gap-4">
@@ -38,7 +38,7 @@
 			<a href="/bookings/{it.id}">
 				<ItinerarySummary
 					it={it.journey}
-					info={it.cancelled ? cancelled : it.negotiating ? negotiating : undefined}
+					info={it.cancelled ? cancelled : it.pending ? negotiating : undefined}
 					showAddress={true}
 				/>
 			</a>

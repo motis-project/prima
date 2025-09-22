@@ -3,21 +3,20 @@ import { db } from '$lib/server/db';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const journeys = await db
-		.selectFrom('journey')
-		.leftJoin('request', 'journey.request1', 'request.id')
-		.leftJoin('tour', 'tour.id', 'request.tour')
-		.orderBy('tour.departure asc')
-		.select(['json', 'journey.id as journeyId', 'request.ticketCode', 'request.cancelled'])
-		.where('user', '=', locals.session!.userId!)
+		.selectFrom('rideShareTour')
+		.leftJoin('request', 'rideShareTour.id', 'request.rideShareTour')
+		.groupBy('rideShareTour.id').groupBy('rideShareTour.communicatedStartTime').groupBy('rideShareTour.communicatedEndTime').groupBy('cancelled')
+		.orderBy('rideShareTour.communicatedStartTime')
+		.select(({ fn }) => ['id', 'communicatedStartTime', 'communicatedEndTime', 'cancelled', fn.max<number>('request.pending').as('pending'),])
+		.where('provider', '=', locals.session!.userId!)
 		.execute();
 	return {
 		journeys: journeys.map((journey) => {
 			return {
-				journey: journey.json,
-				id: journey.journeyId,
-				ticketCode: journey.ticketCode,
+				journey: journey.json, // TODO
+				id: journey.id,
 				cancelled: journey.cancelled,
-				negotiating: true
+				negotiating: journey.pending
 			};
 		})
 	};

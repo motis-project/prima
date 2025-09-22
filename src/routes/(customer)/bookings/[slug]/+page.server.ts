@@ -20,6 +20,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			'request.luggage',
 			'request.wheelchairs',
 			'request.cancelled',
+			'request.pending',
 			'request.ticketCode',
 			'request.ticketChecked',
 			'request.ticketPrice',
@@ -46,8 +47,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	return {
 		...journey,
 		journey: journey.json,
-		isService: locals.session?.isService,
-		negotiating: true // TODO
+		isService: locals.session?.isService
 	};
 };
 
