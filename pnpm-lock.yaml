@@ -77,6 +77,9 @@ importers:
       html-to-text:
         specifier: ^9.0.5
         version: 9.0.5
+      imurmurhash:
+        specifier: ^0.1.4
+        version: 0.1.4
       jsonschema:
         specifier: ^1.5.0
         version: 1.5.0
@@ -138,6 +141,9 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^5.0.3
         version: 5.0.3(svelte@5.19.2)(vite@6.0.11(@types/node@22.10.10)(jiti@2.4.2)(tsx@4.19.2)(yaml@2.7.0))
+      '@types/imurmurhash':
+        specifier: ^0.1.4
+        version: 0.1.4
       '@types/nodemailer':
         specifier: ^6.4.17
         version: 6.4.17
@@ -1104,6 +1110,9 @@ packages:
 
   '@types/http-errors@2.0.4':
     resolution: {integrity: sha512-D0CFMMtydbJAegzOyHjtiKPLlvnm3iTZyZRSZoLq2mRhDdmLfIWOCYPfQJ4cu2erKghU++QvjcUjp/5h7hESpA==}
+
+  '@types/imurmurhash@0.1.4':
+    resolution: {integrity: sha512-Zo/QlTiAvOP3pd9nuPOw33k0l/QssLOBrriShWzUE4qhIZByIF3rCoyF8ZTxdyFTUM2mYljYLqMUeLvA3NJUmQ==}
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
@@ -4208,6 +4217,8 @@ snapshots:
   '@types/html-to-text@9.0.4': {}
 
   '@types/http-errors@2.0.4': {}
+
+  '@types/imurmurhash@0.1.4': {}
 
   '@types/json-schema@7.0.15': {}
 

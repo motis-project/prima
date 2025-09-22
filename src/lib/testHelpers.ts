@@ -176,6 +176,7 @@ export const clearDatabase = async () => {
 
 export const clearTours = async () => {
 	await db.deleteFrom('event').execute();
+	await db.deleteFrom('eventGroup').execute();
 	await db.deleteFrom('request').execute();
 	await db.deleteFrom('tour').execute();
 };

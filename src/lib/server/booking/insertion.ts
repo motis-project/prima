@@ -291,6 +291,7 @@ export function evaluateBothInsertion(
 	next: Event | undefined,
 	allowedTimes: Interval[],
 	passengerCountNewRequest: number,
+	randomValue: number,
 	promisedTimes?: PromisedTimes
 ): InsertionEvaluation | undefined {
 	console.assert(
@@ -478,7 +479,8 @@ export function evaluateBothInsertion(
 		weightedPassengerDuration,
 		approachPlusReturnDurationDelta,
 		fullyPayedDurationDelta,
-		taxiWaitingTime
+		taxiWaitingTime,
+		randomValue
 	);
 	console.log(
 		promisedTimes === undefined ? 'WHITELIST' : 'BOOKING API',
@@ -524,6 +526,7 @@ export function evaluateNewTours(
 	routingResults: RoutingResults,
 	travelDurations: (number | undefined)[],
 	allowedTimes: Interval[],
+	randomValues: number[][][],
 	promisedTimes?: PromisedTimes
 ): (Insertion | undefined)[][] {
 	const bestEvaluations = new Array<(Insertion | undefined)[]>(busStopTimes.length);
@@ -582,6 +585,7 @@ export function evaluateNewTours(
 						undefined,
 						allowedTimes,
 						required.passengers,
+						randomValues[busStopIdx][busTimeIdx][insertionInfo.companyIdx],
 						promisedTimes
 					);
 					if (
@@ -621,6 +625,7 @@ export function evaluateSingleInsertions(
 	routingResults: RoutingResults,
 	travelDurations: (number | undefined)[],
 	allowedTimes: Interval[],
+	randomValues: number[][][],
 	promisedTimes?: PromisedTimes
 ): Evaluations {
 	const bothEvaluations: (Insertion | undefined)[][] = [];
@@ -709,6 +714,7 @@ export function evaluateSingleInsertions(
 						next,
 						allowedTimes,
 						required.passengers,
+						randomValues[busStopIdx][busTimeIdx][insertionInfo.companyIdx],
 						promisedTimes
 					);
 					if (
@@ -798,6 +804,7 @@ export function evaluatePairInsertions(
 	busStopEvaluations: (SingleInsertionEvaluation | undefined)[][][],
 	userChosenEvaluations: (SingleInsertionEvaluation | undefined)[],
 	required: Capacities,
+	randomValues: number[][][],
 	whitelist?: boolean
 ): (Insertion | undefined)[][] {
 	const bestEvaluations: (Insertion | undefined)[][] = new Array<(Insertion | undefined)[]>(
@@ -1023,7 +1030,8 @@ export function evaluatePairInsertions(
 						weightedPassengerDuration,
 						approachPlusReturnDurationDelta,
 						fullyPayedDurationDelta,
-						taxiWaitingTime
+						taxiWaitingTime,
+						randomValues[busStopIdx][timeIdx][insertionInfo.companyIdx]
 					);
 
 					console.log(
@@ -1094,9 +1102,11 @@ export const computeCost = (
 	passengerDuration: number,
 	approachPlusReturnDurationDelta: number,
 	fullyPayedDurationDelta: number,
-	taxiWaitingTime: number
+	taxiWaitingTime: number,
+	randomValue: number = 0
 ) => {
 	return (
+		randomValue +
 		APPROACH_AND_RETURN_TIME_COST_FACTOR * approachPlusReturnDurationDelta +
 		FULLY_PAYED_COST_FACTOR * fullyPayedDurationDelta +
 		PASSENGER_TIME_COST_FACTOR * passengerDuration +
