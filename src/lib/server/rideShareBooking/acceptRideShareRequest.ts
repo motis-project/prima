@@ -8,7 +8,6 @@ import { getScheduledTimes } from './getScheduledTimes';
 import type { Coordinates } from '$lib/util/Coordinates';
 import { Interval } from '$lib/util/interval';
 import { isSamePlace } from '../booking/isSamePlace';
-import { getLegDurationUpdates } from './getLegDurationUpdates';
 
 export async function acceptRideShareRequest(requestId: number, provider: number) {
 	let message = 'success';

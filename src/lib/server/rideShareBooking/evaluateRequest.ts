@@ -24,7 +24,7 @@ export async function evaluateRequest(
 	promisedTimes?: PromisedTimes
 ): Promise<Insertion[][][]> {
 	console.log(
-		'EVALUATE REQUEST PARAMS: ',
+		'EVALUATE REQUEST PARAMS RIDE SHARE: ',
 		{ rideShareTours: JSON.stringify(rideShareTours, null, 2) },
 		{ userChosen },
 		{ busStops: JSON.stringify(busStops, null, 2) },

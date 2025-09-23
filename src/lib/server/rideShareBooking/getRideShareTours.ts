@@ -14,12 +14,7 @@ function selectByRequestId(requestId: number, trx: Transaction<Database>) {
 				eb
 					.selectFrom('request')
 					.whereRef('request.rideShareTour', '=', 'rideShareTour.id')
-					.where((eb) =>
-						eb.or([
-							eb('request.id', '=', requestId),
-							eb.and([eb('request.cancelled', '=', false), eb('request.pending', '=', false)])
-						])
-					)
+					.where('request.id', '=', requestId)
 					.select('id')
 			)
 		);
@@ -91,6 +86,7 @@ async function select(query: RideShareQuery, requestId?: number) {
 						.where((eb) =>
 							eb.or([eb('request.pending', '=', false), eb('request.id', '=', requestId ?? -1)])
 						)
+						.whereRef('rideShareTour.id', '=', 'request.rideShareTour')
 						.select((eb) => [
 							'request.pending',
 							jsonArrayFrom(
