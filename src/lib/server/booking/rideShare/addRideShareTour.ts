@@ -1,9 +1,9 @@
 import type { Coordinates } from '$lib/util/Coordinates';
 import { db } from '$lib/server/db';
-import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
 import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
 import { SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
+import { carRouting } from '$lib/util/carRouting';
 
 export const addRideShareTour = async (
 	time: number,
@@ -14,11 +14,12 @@ export const addRideShareTour = async (
 	vehicle: number,
 	start: Coordinates,
 	target: Coordinates
-): Promise<number> => {
-	const duration = (await oneToManyCarRouting(start, [target], false))[0];
-	if (duration === null || duration === undefined) {
-		return -1;
+): Promise<number | undefined> => {
+	const routingResult = (await carRouting(start, target)).direct;
+	if (routingResult.length === 0) {
+		return undefined;
 	}
+	const duration = routingResult[0].duration
 	const startTime = startFixed ? time : time - duration;
 	const endTime = startFixed ? time + duration : time;
 	const newTourInterval = new Interval(startTime, endTime);
@@ -70,26 +71,24 @@ export const addRideShareTour = async (
 	let prevLegDuration = 0;
 	let nextLegDuration = 0;
 	if (lastEventBefore !== null) {
-		const prevLegDurationResult = await oneToManyCarRouting(lastEventBefore, [start], false);
+		const prevLegDurationResult = (await carRouting(lastEventBefore, start)).direct;
 		if (
 			prevLegDurationResult.length === 0 ||
-			prevLegDurationResult[0] === undefined ||
-			newTourInterval.expand(prevLegDurationResult[0], 0).covers(lastEventBefore.scheduledTimeEnd)
+			newTourInterval.expand(prevLegDurationResult[0].duration, 0).covers(lastEventBefore.scheduledTimeEnd)
 		) {
 			return -1;
 		}
-		prevLegDuration = prevLegDurationResult[0];
+		prevLegDuration = prevLegDurationResult[0].duration;
 	}
 	if (firstEventAfter !== null) {
-		const nextLegDurationResult = await oneToManyCarRouting(target, [firstEventAfter], false);
+		const nextLegDurationResult = (await carRouting(target, firstEventAfter)).direct;
 		if (
 			nextLegDurationResult.length === 0 ||
-			nextLegDurationResult[0] === undefined ||
-			newTourInterval.expand(0, nextLegDurationResult[0]).covers(firstEventAfter.scheduledTimeStart)
+			newTourInterval.expand(0, nextLegDurationResult[0].duration).covers(firstEventAfter.scheduledTimeStart)
 		) {
 			return -1;
 		}
-		nextLegDuration = nextLegDurationResult[0];
+		nextLegDuration = nextLegDurationResult[0].duration;
 	}
 	const prevLegLeeway =
 		lastEventBefore === null

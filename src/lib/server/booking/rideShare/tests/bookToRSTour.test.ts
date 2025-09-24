@@ -52,6 +52,7 @@ describe('add ride share request', () => {
 			inSchleife,
 			inKleinPriebus
 		);
+		expect(tourId).not.toBe(undefined);
 		const body = JSON.stringify({
 			start: inSagar,
 			target: inPechern,
@@ -82,7 +83,7 @@ describe('add ride share request', () => {
 			startFixed: true,
 			requestedTime: inXMinutes(70),
 			mode: Mode.RIDE_SHARE,
-			tourId
+			tourId: tourId!
 		};
 		const bookingBody = {
 			connection1,
