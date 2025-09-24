@@ -19,7 +19,7 @@ export const addRideShareTour = async (
 	if (routingResult.length === 0) {
 		return undefined;
 	}
-	const duration = routingResult[0].duration
+	const duration = routingResult[0].duration * 1000;
 	const startTime = startFixed ? time : time - duration;
 	const endTime = startFixed ? time + duration : time;
 	const newTourInterval = new Interval(startTime, endTime);
@@ -74,21 +74,25 @@ export const addRideShareTour = async (
 		const prevLegDurationResult = (await carRouting(lastEventBefore, start)).direct;
 		if (
 			prevLegDurationResult.length === 0 ||
-			newTourInterval.expand(prevLegDurationResult[0].duration, 0).covers(lastEventBefore.scheduledTimeEnd)
+			newTourInterval
+				.expand(prevLegDurationResult[0].duration, 0)
+				.covers(lastEventBefore.scheduledTimeEnd)
 		) {
 			return -1;
 		}
-		prevLegDuration = prevLegDurationResult[0].duration;
+		prevLegDuration = prevLegDurationResult[0].duration * 1000;
 	}
 	if (firstEventAfter !== null) {
 		const nextLegDurationResult = (await carRouting(target, firstEventAfter)).direct;
 		if (
 			nextLegDurationResult.length === 0 ||
-			newTourInterval.expand(0, nextLegDurationResult[0].duration).covers(firstEventAfter.scheduledTimeStart)
+			newTourInterval
+				.expand(0, nextLegDurationResult[0].duration)
+				.covers(firstEventAfter.scheduledTimeStart)
 		) {
 			return -1;
 		}
-		nextLegDuration = nextLegDurationResult[0].duration;
+		nextLegDuration = nextLegDurationResult[0].duration * 1000;
 	}
 	const prevLegLeeway =
 		lastEventBefore === null
