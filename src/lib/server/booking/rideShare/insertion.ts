@@ -432,7 +432,7 @@ export function evaluateSingleInsertions(
 		};
 		const windows = getAllowedOperationTimes(prev, next, prepTime);
 		// Ensure shifting the previous or next events' scheduledTime does not cause the whole tour to be prolonged too much
-		//TODOTODO
+		//TODOTO
 		//if (windows.length != 0) {
 		//     const twoBefore =
 		//         events[insertionInfo.idxInEvents - 2] ?? insertionInfo.vehicle.lastEventBefore;
@@ -553,7 +553,7 @@ export function evaluatePairInsertions(
 		const twoBeforePickup = events[pickupIdx - 2];
 		const nextPickup = events[pickupIdx];
 		//const twoAfterPickup = events[pickupIdx + 1];
-		//TODOTODO
+		//TODOTO
 		//if (
 		//    pickupIdx < events.length - 1 &&
 		//    nextPickup?.tourId !== twoAfterPickup?.tourId &&

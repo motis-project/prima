@@ -113,16 +113,6 @@ export async function acceptRideShareRequest(requestId: number, provider: number
 					});
 				});
 				scheduledTimes.updates = scheduledTimes.updates.concat(additionalScheduledTimes);
-				//TODO
-				//const { prevLegDurations, nextLegDurations } = await getLegDurationUpdates(
-				//	prevPickupEvent,
-				//	nextPickupEvent,
-				//	prevDropoffEvent,
-				//	nextDropoffEvent,
-				//	pickupEventGroup,
-				//	dropoffEventGroup,
-				//	best
-				//);
 
 				await sql<{ request: number }>`
 				CALL accept_ride_share_request(
