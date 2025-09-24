@@ -27,10 +27,6 @@ export async function up(db) {
         .addColumn('id', 'serial', (col) => col.primaryKey())
         .addColumn('passengers', 'integer')
         .addColumn('luggage', 'integer')
-        .addColumn('scheduled_start_time', 'bigint')
-        .addColumn('scheduled_end_time', 'bigint')
-        .addColumn('communicated_start_time', 'bigint')
-        .addColumn('communicated_end_time', 'bigint')
         .addColumn('cancelled', 'boolean', (col) => col.notNull())
         .addColumn('vehicle', 'integer', (col) => col.references('ride_share_vehicle.id').notNull())
         .execute();
