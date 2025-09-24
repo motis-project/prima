@@ -1,4 +1,4 @@
-import type { RideShareEvent } from '$lib/server/rideShareBooking/getRideShareTours';
+import type { RideShareEvent } from '$lib/server/booking/rideShare/getRideShareTours';
 import type { Capacities } from './Capacities';
 
 export type Range = {

@@ -4,7 +4,7 @@ import type { Coordinates } from '$lib/util/Coordinates';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
-import type { BusStop } from './server/booking/BusStop';
+import type { BusStop } from './server/booking/taxi/BusStop';
 import type { TourWithRequests } from './util/getToursTypes';
 import { getScheduledEventTime } from './util/getScheduledEventTime';
 

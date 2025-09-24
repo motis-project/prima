@@ -1,4 +1,5 @@
-import { Mode, toExpectedConnectionWithISOStrings } from '$lib/server/booking/bookRide';
+import { toExpectedConnectionWithISOStrings } from '$lib/server/booking/taxi/bookRide';
+import { Mode } from '$lib/server/booking/mode';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
 import { readInt } from '$lib/server/util/readForm';
@@ -6,15 +7,15 @@ import { msg, type Msg } from '$lib/msg';
 import { redirect } from '@sveltejs/kit';
 import { sendMail } from '$lib/server/sendMail';
 import NewRide from '$lib/server/email/NewRide.svelte';
-import { bookingApi } from '$lib/server/booking/bookingApi';
+import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
 import type { Leg } from '$lib/openapi';
 import type { SignedItinerary } from '$lib/planAndSign';
 import { sql } from 'kysely';
 import type { PageServerLoad } from './$types';
 import Prom from 'prom-client';
 import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhitelistRequestTimes';
-import { rideShareApi } from '$lib/server/rideShareBooking/rideShareApi';
-import { expectedConnectionFromLeg } from '$lib/server/rideShareBooking/expectedConnectionFromLeg';
+import { rideShareApi } from '$lib/server/booking/rideShare/rideShareApi';
+import { expectedConnectionFromLeg } from '$lib/server/booking/rideShare/expectedConnectionFromLeg';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;

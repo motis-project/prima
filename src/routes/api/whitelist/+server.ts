@@ -8,8 +8,8 @@ import {
 	whitelistSchema,
 	type WhitelistRequest
 } from './WhitelistRequest';
-import { toInsertionWithISOStrings, type Insertion } from '$lib/server/booking/insertion';
-import { type Insertion as RideShareInsertion } from '$lib/server/rideShareBooking/insertion';
+import { toInsertionWithISOStrings, type Insertion } from '$lib/server/booking/taxi/insertion';
+import { type Insertion as RideShareInsertion } from '$lib/server/booking/rideShare/insertion';
 import { assertArraySizes } from '$lib/testHelpers';
 import { MINUTE } from '$lib/util/time';
 import { InsertHow } from '$lib/util/booking/insertionTypes';
