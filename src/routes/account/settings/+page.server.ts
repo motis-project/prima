@@ -85,7 +85,7 @@ export const actions: Actions = {
 		try {
 			await sendMail(EmailVerification, 'Email Verifikation', email, {
 				code: user.emailVerificationCode,
-				name: user.name
+				name: user.firstName + ' ' + user.name
 			});
 		} catch {
 			return fail(500, { msg: msg('failedToSendVerificationEmail'), email });
