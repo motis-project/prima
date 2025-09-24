@@ -15,7 +15,8 @@ try {
 export enum TourChange {
 	BOOKED,
 	MOVED,
-	CANCELLED
+	CANCELLED,
+	REMINDER
 }
 
 export type NotificationData = {

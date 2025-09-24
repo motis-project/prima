@@ -99,6 +99,7 @@ export interface Database {
 		ticketChecked: boolean;
 		ticketPrice: number;
 		cancelled: boolean;
+		licensePlateUpdatedAt: number | null;
 		pending: boolean;
 		startFixed: boolean | null;
 		busStopTime: number | null;

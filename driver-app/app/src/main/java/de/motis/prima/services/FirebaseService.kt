@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class FirebaseService: FirebaseMessagingService() {
+class FirebaseService : FirebaseMessagingService() {
     @Inject
     lateinit var apiService: ApiService
 
@@ -38,12 +38,25 @@ class FirebaseService: FirebaseMessagingService() {
 
         if (data.isNotEmpty()) {
             val tourId = data["tourId"]
-            val title = remoteMessage.notification?.title ?: "Default Title"
-            val body = remoteMessage.notification?.body ?: "Default Body"
-
             val pickupTime = data["pickupTime"]
+            val vehicleId = data["vehicleId"]
+
+            val title = remoteMessage.notification?.title ?: "Default Title"
+            var body = remoteMessage.notification?.body ?: "Default Body"
+
+            repository.updateVehicles()
             repository.fetchTours(pickupTime?.toLong())
 
+            tourId?.let { tourIdStr ->
+                repository.updateEventGroups(tourIdStr.toInt())
+            }
+
+            vehicleId?.let { id ->
+                val vehicle = repository.vehicles.value.find { e -> e.id == id.toInt() }
+                vehicle?.let { v -> body +=  ": ${v.licensePlate}" }
+            }
+
+            // TODO: reminder for upcoming tours?
             /*CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val msgVehicleId = data["vehicleId"]?.toInt()
@@ -56,7 +69,8 @@ class FirebaseService: FirebaseMessagingService() {
                     Log.e("error", "Failed to retrieve stored vehicle id", e)
                 }
             }*/
-            showNotification(title, body, tourId)
+
+            showNotification(title, body, tourId, pickupTime?.toLong())
         }
     }
 
@@ -72,9 +86,15 @@ class FirebaseService: FirebaseMessagingService() {
         }
     }
 
-    private fun showNotification(title: String?, body: String?, tourId: String?) {
+    private fun showNotification(
+        title: String?,
+        body: String?,
+        tourId: String?,
+        pickupTime: Long?
+    ) {
         val intent = Intent(this, MainActivity::class.java).apply {
             putExtra("tourId", tourId)
+            putExtra("pickupTime", pickupTime)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val pendingIntent = PendingIntent.getActivity(
@@ -88,10 +108,15 @@ class FirebaseService: FirebaseMessagingService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channelId = "default_channel_id"
             val channelName = "Default Channel"
-            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT).apply {
+            val channel = NotificationChannel(
+                channelId,
+                channelName,
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
                 description = "Channel description"
             }
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
 
@@ -103,7 +128,8 @@ class FirebaseService: FirebaseMessagingService() {
             .setAutoCancel(true)
             .build()
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(0, notification)
     }
 }

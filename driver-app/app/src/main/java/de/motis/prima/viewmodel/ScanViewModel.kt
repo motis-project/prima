@@ -17,6 +17,7 @@ class ScanViewModel @Inject constructor(
     private val apiService: ApiService,
     private val repository: DataRepository
 ) : ViewModel() {
+
     fun reportTicketScan(requestId: Int, ticketHash: String, ticketCode: String) {
         val ticketStatus = repository.getTicketStatus(ticketCode)
         val shouldReport =
