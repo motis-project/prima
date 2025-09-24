@@ -95,7 +95,6 @@ export async function acceptRideShareRequest(requestId: number, provider: number
 					pickupEventGroup,
 					dropoffEventGroup
 				);
-				console.log({ scheduledTimes: JSON.stringify(scheduledTimes, null, 2) });
 				const additionalScheduledTimes = new Array<{
 					event_id: number;
 					time: number;

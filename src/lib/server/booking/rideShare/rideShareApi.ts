@@ -68,7 +68,7 @@ export async function rideShareApi(
 	waitingTime?: number;
 }> {
 	console.log(
-		'BOOKING API PARAMS: ',
+		'RIDE SHARE API PARAMS: ',
 		JSON.stringify(p, null, 2),
 		JSON.stringify(customer, null, 2),
 		JSON.stringify(isLocalhost, null, 2),

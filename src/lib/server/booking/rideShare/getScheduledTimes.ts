@@ -51,7 +51,6 @@ export function getScheduledTimes(
 		const oldTime = isPickup ? event.scheduledTimeStart : event.scheduledTimeEnd;
 		const leeway = (isPickup ? newTime - oldTime : oldTime - newTime) - duration;
 		const newShiftedTime = newTime + (isPickup ? -duration : duration);
-		console.log({ oldTime }, { leeway }, { duration }, { isPickup });
 		if (leeway < 0) {
 			console.log(
 				'leeway was less than zero in getScheduledTimes',

@@ -36,7 +36,6 @@ beforeEach(async () => {
 describe('Create new ride share tour', () => {
 	it('simple success case', async () => {
 		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false);
-		console.log({ vehicle });
 		await addRideShareTour(
 			inXMinutes(100),
 			true,

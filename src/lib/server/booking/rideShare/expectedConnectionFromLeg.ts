@@ -10,6 +10,7 @@ export function expectedConnectionFromLeg(
 	tourId: number
 ): ExpectedConnection | null {
 	if (leg.mode !== 'ODM' && leg.mode !== 'BUS') {
+		//TODO  && leg.mode !== 'RIDE_SHARE'
 		console.log('booking requests leg has unexpected mode');
 		throw new Error();
 	}
