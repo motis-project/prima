@@ -14,7 +14,7 @@ import { sql } from 'kysely';
 import type { PageServerLoad } from './$types';
 import Prom from 'prom-client';
 import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhitelistRequestTimes';
-import { rideShareApi } from '$lib/server/booking/rideShare/rideShareApi';
+import { rideShareApi } from '$lib/server/booking/index';
 import { expectedConnectionFromLeg } from '$lib/server/booking/rideShare/expectedConnectionFromLeg';
 
 let booking_errors: Prom.Counter | undefined;
