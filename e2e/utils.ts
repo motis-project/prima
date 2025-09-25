@@ -103,9 +103,9 @@ async function chooseFromTypeAhead(
 	expectedOption: string
 ) {
 	await page.getByLabel(label).pressSequentially(search, { delay: 10 });
-	const suggestion = page.getByText(expectedOption, { exact: true });
 	await page.waitForTimeout(1000);
 	await page.screenshot({ path: 'screenshots/waitingForTypeahead.png', fullPage: true });
+	const suggestion = page.getByText(expectedOption, { exact: true });
 	await suggestion.waitFor({ state: 'visible', timeout: 5000 });
 	await suggestion.click();
 }
@@ -120,7 +120,7 @@ export async function setCompanyData(page: Page, user: UserCredentials, company:
 		page,
 		'Unternehmenssitz',
 		company.address,
-		'Werner-Seelenbinder-Straße 70a'
+		'Werner-Seelenbinder-Straße 70A'
 	);
 
 	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: company.zone });
