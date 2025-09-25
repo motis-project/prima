@@ -110,6 +110,7 @@ export const getToursWithRequests = async (
 			jsonArrayFrom(
 				eb
 					.selectFrom('request')
+					.where('request.tour', 'is not', null)
 					.whereRef('tour.id', '=', 'request.tour')
 					.$if(!selectCancelled, (qb) => qb.where('request.cancelled', '=', false))
 					.select((eb) => [
