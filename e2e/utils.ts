@@ -102,7 +102,7 @@ async function chooseFromTypeAhead(
 	search: string,
 	expectedOption: string
 ) {
-	await page.getByLabel(label).pressSequentially(search, { delay: 10 });
+	await page.getByLabel(label).fill(search);
 	await page.waitForTimeout(1000);
 	await page.screenshot({ path: 'screenshots/waitingForTypeahead.png', fullPage: true });
 	const suggestion = page.getByText(expectedOption, { exact: true });
