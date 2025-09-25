@@ -183,7 +183,7 @@ export function evaluateSingleInsertion(
 			? promisedTimes.dropoff
 			: arrivalWindow.endTime;
 
-	const scheduledTimeCandidate = // TODO
+	const scheduledTimeCandidate =
 		communicatedTime +
 		(isPickup(insertionCase)
 			? Math.min(arrivalWindow.size(), SCHEDULED_TIME_BUFFER_PICKUP)
@@ -431,24 +431,6 @@ export function evaluateSingleInsertions(
 			direction
 		};
 		const windows = getAllowedOperationTimes(prev, next, prepTime);
-		// Ensure shifting the previous or next events' scheduledTime does not cause the whole tour to be prolonged too much
-		//TODOTO
-		//if (windows.length != 0) {
-		//     const twoBefore =
-		//         events[insertionInfo.idxInEvents - 2] ?? insertionInfo.vehicle.lastEventBefore;
-		//     if (twoBefore && twoBefore.tourId != prev.tourId) {
-		//         const tourDifference = prev.departure - twoBefore.arrival;
-		//         const scheduledTimeLength = prev.scheduledTimeEnd - prev.scheduledTimeStart;
-		//         windows[0].startTime += Math.max(0, scheduledTimeLength - tourDifference);
-		//     }
-		//     const twoAfter =
-		//         events[insertionInfo.idxInEvents + 1] ?? insertionInfo.vehicle.firstEventAfter;
-		//     if (twoAfter && twoAfter.tourId != next.tourId) {
-		//         const tourDifference = twoAfter.departure - next.arrival;
-		//         const scheduledTimeLength = next.scheduledTimeEnd - next.scheduledTimeStart;
-		//         windows[0].endTime -= Math.max(0, scheduledTimeLength - tourDifference);
-		//     }
-		// }
 		for (let busStopIdx = 0; busStopIdx != busStopTimes.length; ++busStopIdx) {
 			for (let busTimeIdx = 0; busTimeIdx != busStopTimes[busStopIdx].length; ++busTimeIdx) {
 				insertionCase.what = InsertWhat.BOTH;
@@ -552,18 +534,6 @@ export function evaluatePairInsertions(
 		const prevPickup = events[pickupIdx - 1];
 		const twoBeforePickup = events[pickupIdx - 2];
 		const nextPickup = events[pickupIdx];
-		//const twoAfterPickup = events[pickupIdx + 1];
-		//TODOTO
-		//if (
-		//    pickupIdx < events.length - 1 &&
-		//    nextPickup?.tourId !== twoAfterPickup?.tourId &&
-		//    twoAfterPickup.scheduledTimeEnd -
-		//        nextPickup.scheduledTimeStart -
-		//        twoAfterPickup.directDuration! <
-		//        0
-		//) {
-		//    return;
-		//}
 		for (
 			let dropoffIdx = pickupIdx + 1;
 			dropoffIdx != insertionInfo.currentRange.latestDropoff + 1;
