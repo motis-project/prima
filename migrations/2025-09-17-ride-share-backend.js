@@ -28,6 +28,10 @@ export async function up(db) {
         .addColumn('passengers', 'integer')
         .addColumn('luggage', 'integer')
         .addColumn('cancelled', 'boolean', (col) => col.notNull())
+        .addColumn('communicated_start', 'bigint', (col) => col.notNull())
+        .addColumn('communicated_end', 'bigint', (col) => col.notNull())
+        .addColumn('earliest_start', 'bigint', (col) => col.notNull())
+        .addColumn('latest_end', 'bigint', (col) => col.notNull())
         .addColumn('vehicle', 'integer', (col) => col.references('ride_share_vehicle.id').notNull())
         .execute();
 

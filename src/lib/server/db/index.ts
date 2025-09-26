@@ -132,6 +132,10 @@ export interface Database {
 		luggage: number;
 		cancelled: boolean;
 		vehicle: number;
+		communicatedStart: number;
+		communicatedEnd: number;
+		earliestStart: number;
+		latestEnd: number;
 	};
 	rideShareVehicle: {
 		id: Generated<number>;

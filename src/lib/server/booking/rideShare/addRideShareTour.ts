@@ -153,7 +153,11 @@ export const addRideShareTour = async (
 				passengers,
 				luggage,
 				cancelled: false,
-				vehicle
+				vehicle,
+				earliestStart: startTimeStart,
+				communicatedStart: startTimeStart,
+				latestEnd: targetTimeEnd,
+				communicatedEnd: targetTimeEnd
 			})
 			.returning('id')
 			.executeTakeFirstOrThrow()
