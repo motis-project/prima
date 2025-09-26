@@ -5,7 +5,7 @@ import { getLatestEventTime } from '$lib/util/getLatestEventTime';
 import { sendNotifications } from '$lib/server/firebase/notifications.js';
 import { TourChange } from '$lib/server/firebase/firebase';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
-import { updateDirectDurations } from '$lib/server/booking/updateDirectDuration';
+import { updateDirectDurations } from '$lib/server/booking/taxi/updateDirectDuration';
 import { retry } from './db/retryQuery';
 
 export async function moveTour(

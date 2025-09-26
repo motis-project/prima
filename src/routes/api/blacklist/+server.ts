@@ -8,7 +8,7 @@ import {
 	whitelistSchema
 } from '../whitelist/WhitelistRequest';
 import { type WhitelistRequest as BlacklistRequest } from '../whitelist/WhitelistRequest';
-import type { BusStop } from '$lib/server/booking/BusStop';
+import type { BusStop } from '$lib/server/booking/taxi/BusStop';
 import { assertArraySizes } from '$lib/testHelpers';
 
 export const POST = async (event: RequestEvent) => {

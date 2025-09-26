@@ -1,7 +1,7 @@
 #!/usr/bin/env ts-node
 
 import 'dotenv/config';
-import { bookingApi } from '../../src/lib/server/booking/bookingApi';
+import { bookingApi } from '../../src/lib/server/booking/taxi/bookingApi';
 
 const parameters = {
 	capacities: {

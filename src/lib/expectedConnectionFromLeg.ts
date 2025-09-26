@@ -1,5 +1,6 @@
 import type { Leg } from './openapi';
-import type { ExpectedConnection } from './server/booking/bookRide';
+import { type ExpectedConnection } from './server/booking/taxi/bookRide';
+import { Mode } from '$lib/server/booking/mode';
 
 export function expectedConnectionFromLeg(
 	leg: Leg,
@@ -7,6 +8,11 @@ export function expectedConnectionFromLeg(
 	startFixed: boolean,
 	requestedTime: number
 ): ExpectedConnection | null {
+	if (leg.mode !== 'ODM' && leg.mode !== 'BUS') {
+		console.log('booking requests leg has unexpected mode');
+		throw new Error();
+	}
+	const mode = leg.mode === 'ODM' ? Mode.TAXI : Mode.RIDE_SHARE;
 	return signature
 		? {
 				start: { lat: leg.from.lat, lng: leg.from.lon, address: leg.from.name },
@@ -15,7 +21,8 @@ export function expectedConnectionFromLeg(
 				targetTime: new Date(leg.endTime).getTime(),
 				signature,
 				startFixed,
-				requestedTime
+				requestedTime,
+				mode
 			}
 		: null;
 }

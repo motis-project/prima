@@ -1,11 +1,11 @@
 import type { Capacities } from '$lib/util/booking/Capacities';
-import { getBookingAvailability } from '$lib/server/booking/getBookingAvailability';
+import { getBookingAvailability } from '$lib/server/booking/taxi/getBookingAvailability';
 import { MAX_TRAVEL } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
 import type { Coordinates } from '$lib/util/Coordinates';
-import { evaluateRequest } from '$lib/server/booking/evaluateRequest';
-import { toBusStopWithISOStrings, type BusStop } from '$lib/server/booking/BusStop';
-import { toInsertionWithISOStrings, type Insertion } from '$lib/server/booking/insertion';
+import { evaluateRequest } from '$lib/server/booking/taxi/evaluateRequest';
+import { toBusStopWithISOStrings, type BusStop } from '$lib/server/booking/taxi/BusStop';
+import { toInsertionWithISOStrings, type Insertion } from '$lib/server/booking/taxi/insertion';
 
 export async function whitelist(
 	userChosen: Coordinates,

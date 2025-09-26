@@ -11,7 +11,7 @@ import type { ExpressionBuilder } from 'kysely';
 import { sql, type RawBuilder } from 'kysely';
 import type { Coordinates } from '$lib/util/Coordinates';
 import type { Capacities } from '$lib/util/booking/Capacities';
-import type { BusStop } from '$lib/server/booking/BusStop';
+import type { BusStop } from '$lib/server/booking/taxi/BusStop';
 import { Interval } from '$lib/util/interval';
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 

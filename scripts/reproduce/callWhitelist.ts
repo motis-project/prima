@@ -3,7 +3,7 @@
 import 'dotenv/config';
 import { whitelist } from '../../src/routes/api/whitelist/whitelist';
 import { type WhitelistRequest } from '../../src/routes/api/whitelist/WhitelistRequest';
-import { Insertion } from '../../src/lib/server/booking/insertion';
+import { Insertion } from '../../src/lib/server/booking/taxi/insertion';
 
 const params = {
 	start: {
