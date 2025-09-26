@@ -5,16 +5,33 @@ import { SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
 import { carRouting } from '$lib/util/carRouting';
 
-export const addRideShareTour = async (
+export async function getRideShareTourTimes(
 	time: number,
 	startFixed: boolean,
-	passengers: number,
-	luggage: number,
-	provider: number,
 	vehicle: number,
 	start: Coordinates,
 	target: Coordinates
-): Promise<number | undefined> => {
+) {
+	const r = await util(time, startFixed, vehicle, start, target);
+	return r === undefined ? undefined : { start: r.startTimeStart, end: r.targetTimeEnd };
+}
+
+async function util(
+	time: number,
+	startFixed: boolean,
+	vehicle: number,
+	start: Coordinates,
+	target: Coordinates
+): Promise<
+	| {
+			startTimeStart: number;
+			startTimeEnd: number;
+			targetTimeStart: number;
+			targetTimeEnd: number;
+			duration: number;
+	  }
+	| undefined
+> {
 	const routingResult = (await carRouting(start, target)).direct;
 	if (routingResult.length === 0) {
 		return undefined;
@@ -52,7 +69,7 @@ export const addRideShareTour = async (
 			newTourInterval.overlaps(new Interval(e.scheduledTimeStart, e.scheduledTimeEnd))
 		)
 	) {
-		return -1;
+		return undefined;
 	}
 	const earlierEvents = otherTourEvents.filter((e) => e.scheduledTimeStart < startTime);
 	const lastEventBefore =
@@ -78,7 +95,7 @@ export const addRideShareTour = async (
 				.expand(prevLegDurationResult[0].duration, 0)
 				.covers(lastEventBefore.scheduledTimeEnd)
 		) {
-			return -1;
+			return undefined;
 		}
 		prevLegDuration = prevLegDurationResult[0].duration * 1000;
 	}
@@ -90,7 +107,7 @@ export const addRideShareTour = async (
 				.expand(0, nextLegDurationResult[0].duration)
 				.covers(firstEventAfter.scheduledTimeStart)
 		) {
-			return -1;
+			return undefined;
 		}
 		nextLegDuration = nextLegDurationResult[0].duration * 1000;
 	}
@@ -105,6 +122,30 @@ export const addRideShareTour = async (
 	const startTimeShifted = startTime - Math.min(SCHEDULED_TIME_BUFFER_PICKUP, prevLegLeeway);
 	const endTimeShifted =
 		endTime + Math.min(getScheduledTimeBufferDropoff(endTime - startTime), nextLegLeeway);
+	return {
+		startTimeStart: startTimeShifted,
+		startTimeEnd: startTime,
+		targetTimeStart: endTime,
+		targetTimeEnd: endTimeShifted,
+		duration
+	};
+}
+
+export const addRideShareTour = async (
+	time: number,
+	startFixed: boolean,
+	passengers: number,
+	luggage: number,
+	provider: number,
+	vehicle: number,
+	start: Coordinates,
+	target: Coordinates
+): Promise<number | undefined> => {
+	const timesResult = await util(time, startFixed, vehicle, start, target);
+	if (timesResult === undefined) {
+		return undefined;
+	}
+	const { startTimeStart, startTimeEnd, targetTimeStart, targetTimeEnd, duration } = timesResult;
 	const tourId = (
 		await db
 			.insertInto('rideShareTour')
@@ -146,8 +187,8 @@ export const addRideShareTour = async (
 			.values({
 				lat: start.lat,
 				lng: start.lng,
-				scheduledTimeStart: startTimeShifted,
-				scheduledTimeEnd: startTime,
+				scheduledTimeStart: startTimeStart,
+				scheduledTimeEnd: startTimeEnd,
 				prevLegDuration: 0,
 				nextLegDuration: duration,
 				address: ''
@@ -159,7 +200,7 @@ export const addRideShareTour = async (
 		.insertInto('event')
 		.values({
 			isPickup: true,
-			communicatedTime: startTimeShifted,
+			communicatedTime: startTimeStart,
 			request: requestId,
 			cancelled: false,
 			eventGroupId: eventGroupPickup
@@ -171,8 +212,8 @@ export const addRideShareTour = async (
 			.values({
 				lat: target.lat,
 				lng: target.lng,
-				scheduledTimeStart: endTime,
-				scheduledTimeEnd: endTimeShifted,
+				scheduledTimeStart: targetTimeStart,
+				scheduledTimeEnd: targetTimeEnd,
 				prevLegDuration: duration,
 				nextLegDuration: 0,
 				address: ''
@@ -184,7 +225,7 @@ export const addRideShareTour = async (
 		.insertInto('event')
 		.values({
 			isPickup: false,
-			communicatedTime: endTimeShifted,
+			communicatedTime: targetTimeEnd,
 			request: requestId,
 			cancelled: false,
 			eventGroupId: eventGroupDropoff
