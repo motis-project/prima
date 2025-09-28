@@ -63,8 +63,9 @@ describe('add ride share request', () => {
 			capacities
 		});
 
-		const blackResponse = await black(body);
-		console.log({blackResponse})
+		const blackResponse = await black(body).then((r) => r.json());
+		expect(blackResponse.direct.length).toBe(1);
+		expect(blackResponse.direct[0]).toBe(true);
 
 		const whiteResponse = await white(body).then((r) => r.json());
 		expect(whiteResponse.directRideShare.length).toBe(1);
@@ -128,5 +129,20 @@ describe('add ride share request', () => {
 		const tours2 = await getRSTours();
 		const r = tours2[0].requests.find((r) => r.id === requestId);
 		expect(r?.pending).toBeFalsy();
+	}, 30000);
+	it('blacklisting fail if no tour present', async () => {
+		const body = JSON.stringify({
+			start: inSagar,
+			target: inPechern,
+			startBusStops: [],
+			targetBusStops: [],
+			directTimes: [inXMinutes(70)],
+			startFixed: true,
+			capacities
+		});
+
+		const blackResponse = await black(body).then((r) => r.json());
+		expect(blackResponse.direct.length).toBe(1);
+		expect(blackResponse.direct[0]).toBe(false);
 	}, 30000);
 });

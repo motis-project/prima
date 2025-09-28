@@ -25,8 +25,8 @@ interface CoordinatesTable {
 type TimesTable = {
 	bus_stop_index: number;
 	time_index: number;
-	startTime: number;
-	endTime: number;
+	start_time: number;
+	end_time: number;
 };
 
 type TmpDatabase = Database & { busstopzone: CoordinatesTable } & { times_taxi: TimesTable } & {
@@ -100,8 +100,8 @@ const doesAvailabilityExist = (eb: ExpressionBuilder<TmpDatabase, 'vehicle' | 't
 		eb
 			.selectFrom('availability')
 			.whereRef('availability.vehicle', '=', 'vehicle.id')
-			.whereRef('availability.startTime', '<=', 'times_taxi.endTime')
-			.whereRef('availability.endTime', '>=', 'times_taxi.startTime')
+			.whereRef('availability.startTime', '<=', 'times_taxi.end_time')
+			.whereRef('availability.endTime', '>=', 'times_taxi.start_time')
 	);
 };
 
@@ -153,15 +153,6 @@ const doesCompanyExist = (
 	);
 };
 
-function rideShareTourExists(
-	eb: ExpressionBuilder<TmpDatabase, 'rideShareVehicle' | 'rideShareTour'>
-) {
-	return eb.exists(eb.selectFrom('times_ride_share')
-		.whereRef('rideShareTour.earliestStart', '<=', 'times_ride_share.endTime')
-		.whereRef('rideShareTour.latestEnd', '>=', 'times_ride_share.startTime')
-	);
-}
-
 export const getViableBusStops = async (
 	userChosen: Coordinates,
 	busStops: BusStop[],
@@ -178,9 +169,9 @@ export const getViableBusStops = async (
 		busStopIntervalsRideShare: Interval[][],
 		busStopIntervalsTaxi: Interval[][],
 		capacities: Capacities
-	): Promise<{ taxi: BlacklistingResult[]; ride_share: BlacklistingResult[] } | undefined> => {
+	): Promise<{ taxi: BlacklistingResult[]; rideshare: BlacklistingResult[] } | undefined> => {
 		if (!busStopIntervalsRideShare.some((x) => x.length !== 0)) {
-			return Promise.resolve({ taxi: [], ride_share: [] });
+			return Promise.resolve({ taxi: [], rideshare: [] });
 		}
 		return withBusStops(busStops, busStopIntervalsRideShare, busStopIntervalsTaxi)
 			.selectFrom('busstops')
@@ -203,22 +194,32 @@ export const getViableBusStops = async (
 						.innerJoin('times_taxi', 'times_taxi.bus_stop_index', 'busstopzone.bus_stop_index')
 						.where((eb) => doesCompanyExist(eb, capacities))
 						.select([
-							sql<number>`times_taxi.time_index`.as('time_index'),
-							sql<number>`times_taxi.bus_stop_index`.as('bus_stop_index')
+							sql<number>`times_taxi.time_index`.as('timeIndex'),
+							sql<number>`times_taxi.bus_stop_index`.as('busStopIndex')
 						])
 				).as('taxi'),
 				jsonArrayFrom(
 					eb
 						.selectFrom('rideShareVehicle')
 						.innerJoin('rideShareTour', 'rideShareTour.vehicle', 'rideShareVehicle.id')
+						.innerJoin('times_ride_share', (jb) =>
+							jb
+								.onRef('times_ride_share.end_time', '>=', 'rideShareTour.earliestStart')
+								.onRef('times_ride_share.start_time', '<=', 'rideShareTour.latestEnd')
+						)
 						.where('rideShareVehicle.passengers', '>=', capacities.passengers)
-						.where((eb) => sql<boolean>`"rideShareVehicle"."luggage" >= cast(${capacities.luggage} as integer) + cast(${capacities.passengers} as integer) - cast(${eb.ref('rideShareVehicle.passengers')} as integer)`)
-						.where((eb) => rideShareTourExists(eb))
+						.where((eb) =>
+							eb(
+								'rideShareVehicle.luggage',
+								'>=',
+								sql<number>`cast(${capacities.luggage} as integer) + cast(${capacities.passengers} as integer) - cast(${eb.ref('rideShareVehicle.passengers')} as integer)`
+							)
+						)
 						.select([
-							sql<number>`times_ride_share.time_index`.as('time_index'),
-							sql<number>`times_ride_share.bus_stop_index`.as('bus_stop_index')
+							sql<number>`times_ride_share.time_index`.as('timeIndex'),
+							sql<number>`times_ride_share.bus_stop_index`.as('busStopIndex')
 						])
-				).as('ride_share')
+				).as('rideshare')
 			])
 			.executeTakeFirst();
 	};
@@ -286,15 +287,15 @@ export const getViableBusStops = async (
 				batchResponse.taxi
 					.map((rTaxi) => {
 						return {
-							time_index: rTaxi.time_index,
-							bus_stop_index: rTaxi.bus_stop_index + idx * batchSize
+							timeIndex: rTaxi.timeIndex,
+							busStopIndex: rTaxi.busStopIndex + idx * batchSize
 						};
 					})
 					.concat(
-						batchResponse.ride_share.map((rRideShare) => {
+						batchResponse.rideshare.map((rRideShare) => {
 							return {
-								time_index: rRideShare.time_index,
-								bus_stop_index: rRideShare.bus_stop_index + idx * batchSize
+								timeIndex: rRideShare.timeIndex,
+								busStopIndex: rRideShare.busStopIndex + idx * batchSize
 							};
 						})
 					)
@@ -305,6 +306,6 @@ export const getViableBusStops = async (
 };
 
 export type BlacklistingResult = {
-	time_index: number;
-	bus_stop_index: number;
+	timeIndex: number;
+	busStopIndex: number;
 };
