@@ -79,8 +79,14 @@ export async function signup(page: Page, credentials: UserCredentials) {
 	await expect(page.getByRole('heading', { name: 'Nutzerkonto erstellen' })).toBeVisible();
 	await page.getByRole('textbox', { name: 'E-Mail' }).fill(credentials.email);
 	await page.getByRole('textbox', { name: 'Passwort' }).fill(credentials.password);
-	await page.getByRole('textbox', { name: 'Name' }).fill(credentials.email);
-	await page.getByRole('button', { name: 'Nutzerkonto erstellen' }).click();
+	await page.getByRole('textbox', { name: 'Nachname' }).fill(credentials.email);
+	await page.getByRole('textbox', { name: 'Vorname' }).fill('Vorname');
+	await page.getByRole('textbox', { name: 'PLZ' }).fill('ZIP');
+	await page.getByRole('textbox', { name: 'Ort', exact: true }).fill('City');
+	await Promise.all([
+		page.waitForResponse((r) => r.url().includes('/verify-email') && r.status() === 200),
+		page.getByRole('button', { name: 'Nutzerkonto erstellen' }).click()
+	]);
 
 	await execSQL(sql`UPDATE "user" SET is_email_verified = true WHERE email = ${credentials.email}`);
 
@@ -90,14 +96,30 @@ export async function signup(page: Page, credentials: UserCredentials) {
 	await page.getByRole('button', { name: 'Abmelden' }).click();
 }
 
+async function chooseFromTypeAhead(
+	page: Page,
+	label: string,
+	search: string,
+	expectedOption: string
+) {
+	await page.getByLabel(label).pressSequentially(search, { delay: 10 });
+	const suggestion = page.getByText(expectedOption, { exact: true });
+	await suggestion.waitFor({ state: 'visible', timeout: 5000 });
+	await suggestion.click();
+}
+
 export async function setCompanyData(page: Page, user: UserCredentials, company: Company) {
 	await login(page, user);
 	await page.goto('/taxi/company');
 	await expect(page.getByRole('heading', { name: 'Stammdaten Ihres Unternehmens' })).toBeVisible();
 
 	await page.getByLabel('Name').fill(company.name);
-	await page.getByLabel('Unternehmenssitz').pressSequentially(company.address, { delay: 10 });
-	await page.getByText('Werner-Seelenbinder-Straße 70a').click();
+	await chooseFromTypeAhead(
+		page,
+		'Unternehmenssitz',
+		company.address,
+		'Werner-Seelenbinder-Straße 70a'
+	);
 
 	await page.getByLabel('Pflichtfahrgebiet').selectOption({ label: company.zone });
 	await page.locator('input[name="phone"]').pressSequentially(company.phone, { delay: 10 });

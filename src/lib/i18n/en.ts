@@ -20,6 +20,7 @@ const translations: Translations = {
 		enterEmailAndPassword: 'Please enter your email and password.',
 		invalidEmail: 'Invalid email address.',
 		invalidPhone: 'Invalid phone number.',
+		invalidZipCity: 'Invalid ZIP code/city/region.',
 		emailAlreadyRegistered: 'Email already registered.',
 		weakPassword: 'Weak password.',
 		tooManyRequests: 'Too many requests.',
@@ -102,16 +103,25 @@ const translations: Translations = {
 	},
 	account: {
 		name: 'Name',
+		lastName: 'Last Name',
+		firstName: 'First Name',
+		gender: (id: string) => {
+			return { o: 'other', f: 'Ms.', m: 'Mr.' }[id]!;
+		},
 		email: 'Email',
 		password: 'Password',
 		phone: 'Phone Number',
+		zipCode: 'ZIP Code',
+		city: 'City',
+		region: 'Region',
 		create: 'Create Account',
 		forgotPassword: 'Forgot your password?',
 		signupConditions: (tos: string, privacy: string, provider: string) =>
 			`By registering, I agree to the ${tos} and the ${privacy} of ${provider}.`,
 		tos: 'terms of service',
 		imprint: 'Imprint',
-		privacy_short: 'Privacy Policy',
+		dataLicenses: 'Timetable Data Sources',
+		privacyShort: 'Privacy Policy',
 		privacy: 'privacy policy',
 		login: 'Login',
 		sentAnEmailTo: 'We sent a code to',
@@ -216,7 +226,7 @@ const translations: Translations = {
 	storeItinerary: 'Save Itinerary',
 	removeItinerary: 'Remove Itinerary',
 	introduction:
-		'The <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> project augments public transport with on-demand taxis and, later, ride-sharing options. The goal is to ensure a service at least every two hours, even in rural areas and at off-peak times.',
+		'The <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> project augments public transport with on-demand taxis and, later, ride-sharing options. The goal is to ensure a service at least every two hours, even in rural areas and at off-peak times. More about <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a>',
 	publicTransitTaxi: 'Public-transit Taxi',
 	serviceArea: 'Service area',
 	serviceTime: 'Service time',

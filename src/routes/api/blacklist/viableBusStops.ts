@@ -11,26 +11,33 @@ import type { ExpressionBuilder } from 'kysely';
 import { sql, type RawBuilder } from 'kysely';
 import type { Coordinates } from '$lib/util/Coordinates';
 import type { Capacities } from '$lib/util/booking/Capacities';
-import type { BusStop } from '$lib/server/booking/BusStop';
+import type { BusStop } from '$lib/server/booking/taxi/BusStop';
 import { Interval } from '$lib/util/interval';
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
+import { jsonArrayFrom } from 'kysely/helpers/postgres';
 
 interface CoordinatesTable {
-	busStopIndex: number;
+	bus_stop_index: number;
 	lat: number;
 	lng: number;
 }
 
 type TimesTable = {
-	busStopIndex: number;
-	timeIndex: number;
-	startTime: number;
-	endTime: number;
+	bus_stop_index: number;
+	time_index: number;
+	start_time: number;
+	end_time: number;
 };
 
-type TmpDatabase = Database & { busstopzone: CoordinatesTable } & { times: TimesTable };
+type TmpDatabase = Database & { busstopzone: CoordinatesTable } & { times_taxi: TimesTable } & {
+	times_ride_share: TimesTable;
+};
 
-const withBusStops = (busStops: BusStop[], busStopIntervals: Interval[][]) => {
+const withBusStops = (
+	busStops: BusStop[],
+	busStopIntervalsRideShare: Interval[][],
+	busStopIntervalsTaxi: Interval[][]
+) => {
 	return db
 		.with('busstops', (db) => {
 			const busStopsSelect = busStops.map(
@@ -48,37 +55,57 @@ const withBusStops = (busStops: BusStop[], busStopIntervals: Interval[][]) => {
 				)
 				.selectAll();
 		})
-		.with('times', (db) => {
-			const busStopIntervalSelect: RawBuilder<string>[] = busStopIntervals.flatMap((busStop, i) =>
-				busStop.map((t, j) => {
-					return sql<string>`SELECT
+		.with('times_taxi', (db) => {
+			const busStopIntervalSelect: RawBuilder<string>[] = busStopIntervalsTaxi.flatMap(
+				(busStop, i) =>
+					busStop.map((t, j) => {
+						return sql<string>`SELECT
 					 cast(${i} as INTEGER) AS bus_stop_index,
 					 cast(${j} as INTEGER) AS time_index,
 					 cast(${t.startTime} as BIGINT) AS start_time,
 					 cast(${t.endTime} as BIGINT) AS end_time`;
-				})
+					})
 			);
 			return db
 				.selectFrom(
 					sql<TimesTable>`(${sql.join(busStopIntervalSelect, sql<string>` UNION ALL `)})`.as(
-						'times'
+						'times_taxi'
+					)
+				)
+				.selectAll();
+		})
+		.with('times_ride_share', (db) => {
+			const busStopIntervalSelect: RawBuilder<string>[] = busStopIntervalsRideShare.flatMap(
+				(busStop, i) =>
+					busStop.map((t, j) => {
+						return sql<string>`SELECT
+					 cast(${i} as INTEGER) AS bus_stop_index,
+					 cast(${j} as INTEGER) AS time_index,
+					 cast(${t.startTime} as BIGINT) AS start_time,
+					 cast(${t.endTime} as BIGINT) AS end_time`;
+					})
+			);
+			return db
+				.selectFrom(
+					sql<TimesTable>`(${sql.join(busStopIntervalSelect, sql<string>` UNION ALL `)})`.as(
+						'times_ride_share'
 					)
 				)
 				.selectAll();
 		});
 };
 
-const doesAvailabilityExist = (eb: ExpressionBuilder<TmpDatabase, 'vehicle' | 'times'>) => {
+const doesAvailabilityExist = (eb: ExpressionBuilder<TmpDatabase, 'vehicle' | 'times_taxi'>) => {
 	return eb.exists(
 		eb
 			.selectFrom('availability')
 			.whereRef('availability.vehicle', '=', 'vehicle.id')
-			.whereRef('availability.startTime', '<=', 'times.endTime')
-			.whereRef('availability.endTime', '>=', 'times.startTime')
+			.whereRef('availability.startTime', '<=', 'times_taxi.end_time')
+			.whereRef('availability.endTime', '>=', 'times_taxi.start_time')
 	);
 };
 
-const doesTourExist = (eb: ExpressionBuilder<TmpDatabase, 'vehicle' | 'times'>) => {
+const doesTourExist = (eb: ExpressionBuilder<TmpDatabase, 'vehicle' | 'times_taxi'>) => {
 	return eb.exists(
 		eb
 			.selectFrom('tour')
@@ -86,15 +113,15 @@ const doesTourExist = (eb: ExpressionBuilder<TmpDatabase, 'vehicle' | 'times'>) 
 			.where((eb) =>
 				eb.and([
 					eb('tour.cancelled', '=', false),
-					sql<boolean>`tour.departure <= times.end_time`,
-					sql<boolean>`tour.arrival >= times.start_time`
+					sql<boolean>`tour.departure <= times_taxi.end_time`,
+					sql<boolean>`tour.arrival >= times_taxi.start_time`
 				])
 			)
 	);
 };
 
 const doesVehicleExist = (
-	eb: ExpressionBuilder<TmpDatabase, 'company' | 'zone' | 'busstopzone' | 'times'>,
+	eb: ExpressionBuilder<TmpDatabase, 'company' | 'zone' | 'busstopzone' | 'times_taxi'>,
 	capacities: Capacities
 ) => {
 	return eb.exists((eb) =>
@@ -114,7 +141,7 @@ const doesVehicleExist = (
 };
 
 const doesCompanyExist = (
-	eb: ExpressionBuilder<TmpDatabase, 'zone' | 'busstopzone' | 'times'>,
+	eb: ExpressionBuilder<TmpDatabase, 'zone' | 'busstopzone' | 'times_taxi'>,
 	capacities: Capacities
 ) => {
 	return eb.exists(
@@ -139,36 +166,68 @@ export const getViableBusStops = async (
 	const createBatchQuery = (
 		userChosen: Coordinates,
 		busStops: BusStop[],
-		busStopIntervals: Interval[][],
+		busStopIntervalsRideShare: Interval[][],
+		busStopIntervalsTaxi: Interval[][],
 		capacities: Capacities
-	): Promise<BlacklistingResult[]> => {
-		if (!busStopIntervals.some((x) => x.length !== 0)) {
-			return Promise.resolve(new Array<BlacklistingResult>());
+	): Promise<{ taxi: BlacklistingResult[]; rideshare: BlacklistingResult[] } | undefined> => {
+		if (!busStopIntervalsRideShare.some((x) => x.length !== 0)) {
+			return Promise.resolve({ taxi: [], rideshare: [] });
 		}
-		return withBusStops(busStops, busStopIntervals)
-			.selectFrom('zone')
-			.where(covers(userChosen))
-			.innerJoinLateral(
-				(eb) =>
+		return withBusStops(busStops, busStopIntervalsRideShare, busStopIntervalsTaxi)
+			.selectFrom('busstops')
+			.select((eb) => [
+				jsonArrayFrom(
 					eb
-						.selectFrom('busstops')
-						.where(
-							sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(busstops.lng, busstops.lat), ${WGS84}))`
+						.selectFrom('zone')
+						.where(covers(userChosen))
+						.innerJoinLateral(
+							(eb) =>
+								eb
+									.selectFrom('busstops')
+									.where(
+										sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(busstops.lng, busstops.lat), ${WGS84}))`
+									)
+									.selectAll()
+									.as('busstopzone'),
+							(join) => join.onTrue()
 						)
-						.selectAll()
-						.as('busstopzone'),
-				(join) => join.onTrue()
-			)
-			.innerJoin('times', 'times.busStopIndex', 'busstopzone.busStopIndex')
-			.where((eb) => doesCompanyExist(eb, capacities))
-			.select(['times.timeIndex as timeIndex', 'times.busStopIndex as busStopIndex'])
-			.execute();
+						.innerJoin('times_taxi', 'times_taxi.bus_stop_index', 'busstopzone.bus_stop_index')
+						.where((eb) => doesCompanyExist(eb, capacities))
+						.select([
+							sql<number>`times_taxi.time_index`.as('timeIndex'),
+							sql<number>`times_taxi.bus_stop_index`.as('busStopIndex')
+						])
+				).as('taxi'),
+				jsonArrayFrom(
+					eb
+						.selectFrom('rideShareVehicle')
+						.innerJoin('rideShareTour', 'rideShareTour.vehicle', 'rideShareVehicle.id')
+						.innerJoin('times_ride_share', (jb) =>
+							jb
+								.onRef('times_ride_share.end_time', '>=', 'rideShareTour.earliestStart')
+								.onRef('times_ride_share.start_time', '<=', 'rideShareTour.latestEnd')
+						)
+						.where('rideShareVehicle.passengers', '>=', capacities.passengers)
+						.where((eb) =>
+							eb(
+								'rideShareVehicle.luggage',
+								'>=',
+								sql<number>`cast(${capacities.luggage} as integer) + cast(${capacities.passengers} as integer) - cast(${eb.ref('rideShareVehicle.passengers')} as integer)`
+							)
+						)
+						.select([
+							sql<number>`times_ride_share.time_index`.as('timeIndex'),
+							sql<number>`times_ride_share.bus_stop_index`.as('busStopIndex')
+						])
+				).as('rideshare')
+			])
+			.executeTakeFirst();
 	};
 
 	// Find the smallest Interval containing all availabilities and tours of the companies received as a parameter.
 	let earliest = Number.MAX_VALUE;
 	let latest = 0;
-	let busStopIntervals = busStops.map((b) =>
+	const busStopIntervalsRideShare = busStops.map((b) =>
 		b.times.map(
 			(t) =>
 				new Interval(
@@ -177,7 +236,7 @@ export const getViableBusStops = async (
 				)
 		)
 	);
-	busStopIntervals.forEach((b) =>
+	busStopIntervalsRideShare.forEach((b) =>
 		b.forEach((i) => {
 			if (i.startTime < earliest) {
 				earliest = i.startTime;
@@ -191,7 +250,7 @@ export const getViableBusStops = async (
 		return [];
 	}
 	const allowedTimes = getAllowedTimes(earliest, latest, EARLIEST_SHIFT_START, LATEST_SHIFT_END);
-	busStopIntervals = busStopIntervals.map((b) =>
+	const busStopIntervalsTaxi = busStopIntervalsRideShare.map((b) =>
 		b.map((t) => {
 			const allowed = Interval.intersect(allowedTimes, [t]);
 			console.assert(
@@ -210,18 +269,38 @@ export const getViableBusStops = async (
 			createBatchQuery(
 				userChosen,
 				busStops.slice(currentPos, Math.min(currentPos + batchSize, busStops.length)),
-				busStopIntervals.slice(currentPos, Math.min(currentPos + batchSize, busStops.length)),
+				busStopIntervalsRideShare.slice(
+					currentPos,
+					Math.min(currentPos + batchSize, busStops.length)
+				),
+				busStopIntervalsTaxi.slice(currentPos, Math.min(currentPos + batchSize, busStops.length)),
 				capacities
 			)
 		);
 		currentPos += batchSize;
 	}
 	const batchResponses = await Promise.all(batches);
-	const response = batchResponses.flatMap((batchResponse, idx) =>
-		batchResponse.map((r) => {
-			return { timeIndex: r.timeIndex, busStopIndex: r.busStopIndex + idx * batchSize };
-		})
-	);
+	const response = batchResponses
+		.filter((batchResponse) => batchResponse !== undefined)
+		.flatMap((batchResponse, idx) => [
+			...new Set(
+				batchResponse.taxi
+					.map((rTaxi) => {
+						return {
+							timeIndex: rTaxi.timeIndex,
+							busStopIndex: rTaxi.busStopIndex + idx * batchSize
+						};
+					})
+					.concat(
+						batchResponse.rideshare.map((rRideShare) => {
+							return {
+								timeIndex: rRideShare.timeIndex,
+								busStopIndex: rRideShare.busStopIndex + idx * batchSize
+							};
+						})
+					)
+			)
+		]);
 	console.log('BLACKLIST QUERY RESULT: ', JSON.stringify(response, null, '\t'));
 	return response;
 };

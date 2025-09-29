@@ -31,11 +31,6 @@ class LegViewModel @Inject constructor(
     init {
         repository.fetchTours()
     }
-
-    fun update(tourId: Int) {
-        repository.fetchTours()
-        repository.updateEventGroups(tourId)
-    }
 }
 
 @Composable
@@ -69,9 +64,18 @@ fun Leg(
                 horizontalArrangement = Arrangement.Center
             ) {
                 if (eventGroups.isNotEmpty()) {
-                    viewModel.update(tourId)
-                    val nav = if (eventGroupIndex < eventGroups.size - 1) {
-                        "leg/$tourId/${eventGroupIndex + 1}"
+                    var nextIndex = eventGroupIndex + 1
+                    val maxIndex = eventGroups.size - 1
+
+                    if (nextIndex < maxIndex) {
+                        val nextGroup = eventGroups[nextIndex]
+                        if ((nextGroup.events.find { e -> e.cancelled.not() }) == null) {
+                            nextIndex++
+                        }
+                    }
+
+                    val nav = if (nextIndex <= maxIndex) {
+                        "leg/$tourId/${nextIndex}"
                     } else {
                         "fare/$tourId"
                     }

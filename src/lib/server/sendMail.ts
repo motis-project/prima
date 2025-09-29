@@ -49,7 +49,8 @@ export async function send(subject: string, email: string, content: EmailContent
 			to: email,
 			subject: subject,
 			html: content.html,
-			text: content.text
+			text: content.text,
+			attachDataUrls: true
 		});
 	} catch (e) {
 		email_errors?.inc();

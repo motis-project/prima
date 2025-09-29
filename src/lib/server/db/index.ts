@@ -19,6 +19,11 @@ export interface Database {
 		isService: boolean;
 		phone: string | null;
 		companyId: number | null;
+		firstName: string;
+		gender: string;
+		zipCode: string;
+		city: string;
+		region: string;
 	};
 	session: {
 		id: string;
@@ -99,7 +104,11 @@ export interface Database {
 		ticketChecked: boolean;
 		ticketPrice: number;
 		cancelled: boolean;
+		licensePlateUpdatedAt: number | null;
 		pending: boolean;
+		startFixed: boolean | null;
+		busStopTime: number | null;
+		requestedTime: number | null;
 	};
 	journey: {
 		id: Generated<number>;
@@ -122,7 +131,20 @@ export interface Database {
 		passengers: number;
 		luggage: number;
 		cancelled: boolean;
-		provider: number;
+		vehicle: number;
+		communicatedStart: number;
+		communicatedEnd: number;
+		earliestStart: number;
+		latestEnd: number;
+	};
+	rideShareVehicle: {
+		id: Generated<number>;
+		passengers: number;
+		luggage: number;
+		owner: number;
+		color: string;
+		model: string;
+		smokingAllowed: boolean;
 	};
 }
 

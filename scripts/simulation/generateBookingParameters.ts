@@ -1,10 +1,11 @@
-import { type BookingParameters } from '../../src/lib/server/booking/bookingApi';
-import type { ExpectedConnection } from '../../src/lib/server/booking/bookRide';
+import { type BookingParameters } from '../../src/lib/server/booking/taxi/bookingApi';
+import type { ExpectedConnection } from '../../src/lib/server/booking/taxi/bookRide';
 import type { Capacities } from '../../src/lib/util/booking/Capacities';
 import { type Coordinates } from '../../src/lib/util/Coordinates';
 import { HOUR, MINUTE, DAY } from '../../src/lib/util/time';
 import { randomInt } from './randomInt';
 import { reverseGeo } from '../../src/lib/server/util/reverseGeocode';
+import { Mode } from '../../src/lib/server/booking/mode';
 
 export async function generateBookingParameters(
 	coordinates: Coordinates[],
@@ -45,7 +46,9 @@ async function generateExpectedConnection(
 		startTime: rt1,
 		targetTime: rt2,
 		signature: '',
-		startFixed: Math.random() < 0.5
+		startFixed: Math.random() < 0.5,
+		mode: Mode.TAXI,
+		requestedTime: undefined
 	};
 }
 

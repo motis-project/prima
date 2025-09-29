@@ -1,4 +1,4 @@
-import type { VehicleWithInterval } from './getBookingAvailability';
+import type { VehicleWithInterval } from './taxi/getBookingAvailability';
 import type { Range } from '$lib/util/booking/getPossibleInsertions';
 import { InsertHow, InsertWhat } from '$lib/util/booking/insertionTypes';
 

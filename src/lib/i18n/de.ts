@@ -19,6 +19,7 @@ const translations: Translations = {
 		enterEmailAndPassword: 'Bitte geben Sie Ihre E-Mail und Ihr Passwort ein.',
 		invalidEmail: 'Ungültige E-Mail-Adresse.',
 		invalidPhone: 'Ungültige Telefonnummer.',
+		invalidZipCity: 'Ungültige PLZ/Ort/Region.',
 		emailAlreadyRegistered: 'Diese E-Mail-Adresse ist bereits registriert.',
 		weakPassword: 'Bitte wählen Sie ein stärkeres Passwort.',
 		tooManyRequests: 'Zu viele Anfragen.',
@@ -105,16 +106,25 @@ const translations: Translations = {
 	},
 	account: {
 		name: 'Name',
+		lastName: 'Nachname',
+		firstName: 'Vorname',
+		gender: (id: string) => {
+			return { o: 'n/a', f: 'Frau', m: 'Herr' }[id]!;
+		},
 		email: 'E-Mail',
 		password: 'Passwort',
 		phone: 'Telefonnummer',
+		zipCode: 'PLZ',
+		city: 'Ort',
+		region: 'Region',
 		create: 'Nutzerkonto erstellen',
 		forgotPassword: 'Passwort vergessen?',
 		signupConditions: (tos: string, privacy: string, provider: string) =>
 			`Durch die Anmeldung stimme ich den ${tos} sowie der ${privacy} von ${provider} zu.`,
 		tos: 'Beförderungsbedingungen',
 		imprint: 'Impressum',
-		privacy_short: 'Datenschutz',
+		dataLicenses: 'Fahrplandatenquellen',
+		privacyShort: 'Datenschutz',
 		privacy: 'Datenschutzerklärung',
 		login: 'Login',
 		sentAnEmailTo: 'Wir haben Ihnen einen Code an folgende E-Mail-Adresse geschickt:',
@@ -222,7 +232,7 @@ const translations: Translations = {
 	storeItinerary: 'Reisekette speichern',
 	removeItinerary: 'Reisekette entfernen',
 	introduction:
-		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und in Zukunft auch Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten.',
+		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und in Zukunft auch Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Mehr über <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a>',
 	publicTransitTaxi: 'ÖPNV-Taxi',
 	serviceArea: 'Bediengebiet',
 	serviceTime: 'Bedienzeit',

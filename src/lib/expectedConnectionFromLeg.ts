@@ -1,5 +1,6 @@
 import type { Leg } from './openapi';
-import { Mode, type ExpectedConnection } from './server/booking/bookRide';
+import { type ExpectedConnection } from './server/booking/taxi/bookRide';
+import { Mode } from '$lib/server/booking/mode';
 
 export function expectedConnectionFromLeg(
 	leg: Leg,
@@ -7,7 +8,6 @@ export function expectedConnectionFromLeg(
 	startFixed: boolean,
 	requestedTime: number
 ): ExpectedConnection | null {
-	//TODODO
 	if (leg.mode !== 'ODM' && leg.mode !== 'BUS') {
 		console.log('booking requests leg has unexpected mode');
 		throw new Error();

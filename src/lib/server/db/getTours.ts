@@ -52,6 +52,7 @@ export const getTours = async (
 						'event.id',
 						'eventGroup.address',
 						'event.isPickup',
+						'event.communicatedTime',
 						'eventGroup.lat',
 						'eventGroup.lng',
 						'eventGroup.nextLegDuration',
@@ -109,6 +110,7 @@ export const getToursWithRequests = async (
 			jsonArrayFrom(
 				eb
 					.selectFrom('request')
+					.where('request.tour', 'is not', null)
 					.whereRef('tour.id', '=', 'request.tour')
 					.$if(!selectCancelled, (qb) => qb.where('request.cancelled', '=', false))
 					.select((eb) => [

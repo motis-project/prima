@@ -4,7 +4,7 @@ import type { Coordinates } from '$lib/util/Coordinates';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
-import type { BusStop } from './server/booking/BusStop';
+import type { BusStop } from './server/booking/taxi/BusStop';
 import type { TourWithRequests } from './util/getToursTypes';
 import { getScheduledEventTime } from './util/getScheduledEventTime';
 
@@ -145,13 +145,18 @@ export const addTestUser = async (company?: number) => {
 		.values({
 			email: company === undefined ? 'test@user.de' : 'company@owner.de',
 			name: '',
+			firstName: '',
+			gender: 'o',
 			isTaxiOwner: company !== undefined,
 			isAdmin: false,
 			isService: false,
 			isEmailVerified: true,
 			passwordHash:
 				'$argon2id$v=19$m=19456,t=2,p=1$4lXilBjWTY+DsYpN0eATrw$imFLatxSsy9WjMny7MusOJeAJE5ZenrOEqD88YsZv8o',
-			companyId: company
+			companyId: company,
+			zipCode: '',
+			city: '',
+			region: ''
 		})
 		.returning('id')
 		.executeTakeFirstOrThrow();
@@ -167,6 +172,7 @@ export const clearDatabase = async () => {
 	await db.deleteFrom('vehicle').execute();
 	await db.deleteFrom('session').execute();
 	await db.deleteFrom('rideShareTour').execute();
+	await db.deleteFrom('rideShareVehicle').execute();
 	await db.deleteFrom('user').execute();
 	await db.deleteFrom('company').execute();
 };
@@ -174,6 +180,7 @@ export const clearDatabase = async () => {
 export const clearTours = async () => {
 	await db.deleteFrom('event').execute();
 	await db.deleteFrom('request').execute();
+	await db.deleteFrom('eventGroup').execute();
 	await db.deleteFrom('tour').execute();
 	await db.deleteFrom('rideShareTour').execute();
 };

@@ -22,6 +22,7 @@ export type Translations = {
 		enterEmailAndPassword: string;
 		invalidEmail: string;
 		invalidPhone: string;
+		invalidZipCity: string;
 		emailAlreadyRegistered: string;
 		weakPassword: string;
 		tooManyRequests: string;
@@ -103,15 +104,22 @@ export type Translations = {
 	};
 	account: {
 		name: string;
+		lastName: string;
+		firstName: string;
+		gender: (id: string) => string;
 		email: string;
 		password: string;
 		phone: string;
+		zipCode: string;
+		city: string;
+		region: string;
 		create: string;
 		forgotPassword: string;
 		signupConditions: (tos: string, privacy: string, provider: string) => string;
 		tos: string;
 		imprint: string;
-		privacy_short: string;
+		dataLicenses: string;
+		privacyShort: string;
 		privacy: string;
 		login: string;
 		sentAnEmailTo: string;

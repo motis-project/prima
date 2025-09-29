@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PUBLIC_PROVIDER, PUBLIC_IMPRINT_URL, PUBLIC_PRIVACY_URL } from '$env/static/public';
+	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import { browser } from '$app/environment';
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
@@ -45,6 +45,7 @@
 	import logo from '$lib/assets/logo-alpha.png';
 	import { isRideShareLeg } from './utils';
 	import { Textarea } from '$lib/shadcn/textarea';
+	import Footer from '$lib/ui/Footer.svelte';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -596,16 +597,6 @@
 				{@html t.introduction}
 			</p>
 		</div>
-		<p class="mx-auto mt-6 max-w-72 text-center text-xs text-input">
-			<a
-				href={PUBLIC_IMPRINT_URL}
-				target="_blank"
-				class="whitespace-nowrap border-b border-dotted border-input">{t.account.imprint}</a
-			>
-			|
-			<a href={PUBLIC_PRIVACY_URL} class="whitespace-nowrap border-b border-dotted border-input"
-				>{t.account.privacy_short}</a
-			>
-		</p>
+		<Footer />
 	</div>
 </div>

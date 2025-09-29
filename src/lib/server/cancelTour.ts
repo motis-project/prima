@@ -5,7 +5,7 @@ import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { sendNotifications } from '$lib/server/firebase/notifications';
 import { TourChange } from '$lib/server/firebase/firebase';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
-import { updateDirectDurations } from '$lib/server/booking/updateDirectDuration';
+import { updateDirectDurations } from '$lib/server/booking/taxi/updateDirectDuration';
 import { db } from '$lib/server/db';
 import { retry } from './db/retryQuery';
 
@@ -32,6 +32,7 @@ export async function cancelTour(
 							.select((eb) => [
 								'user.email',
 								'user.name',
+								'user.firstName',
 								'request.ticketChecked',
 								'request.wheelchairs',
 								jsonArrayFrom(
@@ -81,7 +82,7 @@ export async function cancelTour(
 						start: request.events[0].address,
 						target: request.events[1].address,
 						startTime: request.events[0].communicatedTime,
-						name: request.name
+						name: request.firstName + ' ' + request.name
 					});
 				} catch {
 					console.log(

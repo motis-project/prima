@@ -1,10 +1,10 @@
 import type { Capacities } from '$lib/util/booking/Capacities';
-import { getRideShareTours } from '$lib/server/rideShareBooking/getRideShareTours';
+import { getRideShareTours } from '$lib/server/booking/rideShare/getRideShareTours';
 import { Interval } from '$lib/util/interval';
 import type { Coordinates } from '$lib/util/Coordinates';
-import { evaluateRequest } from '$lib/server/rideShareBooking/evaluateRequest';
-import { toBusStopWithISOStrings, type BusStop } from '$lib/server/booking/BusStop';
-import { toInsertionWithISOStrings, type Insertion } from '$lib/server/rideShareBooking/insertion';
+import { evaluateRequest } from '$lib/server/booking/rideShare/evaluateRequest';
+import { toBusStopWithISOStrings, type BusStop } from '$lib/server/booking/taxi/BusStop';
+import { toInsertionWithISOStrings, type Insertion } from '$lib/server/booking/rideShare/insertion';
 
 export async function whitelistRideShare(
 	userChosen: Coordinates,
