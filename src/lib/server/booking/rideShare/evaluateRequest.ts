@@ -72,7 +72,6 @@ export async function evaluateRequest(
 	latest = Math.min(latest, Date.now() + 15 * DAY);
 	const { busStopEvaluations, bothEvaluations, userChosenEvaluations } = evaluateSingleInsertions(
 		rideShareTours,
-		required,
 		startFixed,
 		insertionRanges,
 		busStopTimes,
@@ -87,7 +86,6 @@ export async function evaluateRequest(
 		busStopTimes,
 		busStopEvaluations,
 		userChosenEvaluations,
-		required,
 		promisedTimes === undefined
 	);
 	return mergeResults(bothEvaluations, pairEvaluations);

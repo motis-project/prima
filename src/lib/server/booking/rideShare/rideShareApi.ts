@@ -98,11 +98,6 @@ export async function rideShareApi(
 	}
 	let request1Id: number | undefined = undefined;
 	let request2Id: number | undefined = undefined;
-	let cost = -1;
-	let passengerDuration = -1;
-	let waitingTime = -1;
-	let approachPlusReturnDurationDelta = -1;
-	let fullyPayedDurationDelta = -1;
 	let possibleRequestedTimes1: number[] = [];
 	let possibleRequestedTimes2: number[] = [];
 	let message: string | undefined = undefined;
@@ -139,11 +134,6 @@ export async function rideShareApi(
 							message = 'Die Anfrage für die erste Meile kann nicht erfüllt werden.';
 							return;
 						}
-						cost = firstConnection.best.cost;
-						passengerDuration = firstConnection.best.passengerDuration;
-						approachPlusReturnDurationDelta = firstConnection.best.approachPlusReturnDurationDelta;
-						fullyPayedDurationDelta = firstConnection.best.fullyPayedDurationDelta;
-						waitingTime = firstConnection.best.taxiWaitingTime;
 					}
 					if (p.connection2 != null) {
 						let blockedProviderId: number | undefined = undefined;
@@ -161,11 +151,6 @@ export async function rideShareApi(
 							message = 'Die Anfrage für die zweite Meile kann nicht erfüllt werden.';
 							return;
 						}
-						cost = secondConnection.best.cost;
-						passengerDuration = secondConnection.best.passengerDuration;
-						approachPlusReturnDurationDelta = secondConnection.best.approachPlusReturnDurationDelta;
-						fullyPayedDurationDelta = secondConnection.best.fullyPayedDurationDelta;
-						waitingTime = secondConnection.best.taxiWaitingTime;
 					}
 					if (firstConnection !== null && firstConnection !== undefined) {
 						request1Id =
@@ -203,11 +188,6 @@ export async function rideShareApi(
 		}
 		request1Id = undefined;
 		request2Id = undefined;
-		cost = -1;
-		passengerDuration = -1;
-		waitingTime = -1;
-		approachPlusReturnDurationDelta = -1;
-		fullyPayedDurationDelta = -1;
 	}
 	if (message == undefined) {
 		return { status: 500 };
@@ -216,11 +196,6 @@ export async function rideShareApi(
 		message,
 		request1Id,
 		request2Id,
-		status: success ? 200 : 400,
-		cost,
-		passengerDuration,
-		waitingTime,
-		approachPlusReturnDurationDelta,
-		fullyPayedDurationDelta
+		status: success ? 200 : 400
 	};
 }

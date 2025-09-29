@@ -7,17 +7,15 @@ import {
 	whitelistSchema,
 	type WhitelistRequest
 } from '$lib/server/util/whitelistRequest';
-import { type Insertion } from '$lib/server/booking/taxi/insertion';
-import { type Insertion as RideShareInsertion } from '$lib/server/booking/rideShare/insertion';
+import { type Insertion } from '$lib/server/booking/rideShare/insertion';
 import { assertArraySizes } from '$lib/testHelpers';
 import { MINUTE } from '$lib/util/time';
-import { InsertHow } from '$lib/util/booking/insertionTypes';
 import { whitelistRideShare } from './whitelist';
 
 export type WhitelistResponse = {
-	start: RideShareInsertion[][][];
-	target: RideShareInsertion[][][];
-	direct: RideShareInsertion[][];
+	start: Insertion[][][];
+	target: Insertion[][][];
+	direct: Insertion[][];
 };
 
 export async function POST(event: RequestEvent) {
@@ -33,8 +31,7 @@ export async function POST(event: RequestEvent) {
 		'WHITELIST REQUEST PARAMS',
 		JSON.stringify(toWhitelistRequestWithISOStrings(p), null, '\t')
 	);
-	let direct: (Insertion | undefined)[] = [];
-	let directRideShare: RideShareInsertion[][] = [];
+	let directRideShare: Insertion[][] = [];
 	if (p.directTimes.length != 0) {
 		if (p.startFixed) {
 			p.targetBusStops.push({
@@ -67,69 +64,54 @@ export async function POST(event: RequestEvent) {
 		}
 	}
 
-	console.assert(
-		direct.length === p.directTimes.length,
-		'Array size mismatch in Whitelist - direct.'
-	);
-
 	const response: WhitelistResponse = {
 		start: startRideShare,
 		target: targetRideShare,
-		direct: directRideShare
+		direct: filterDirectResponses(directRideShare, p.startFixed)
 	};
-	console.log(
-		'WHITELIST RESPONSE: ',
-		JSON.stringify(response, null, '\t')
-	);
+	console.log('WHITELIST RESPONSE: ', JSON.stringify(response, null, '\t'));
 	return json(response);
 }
 
-function filterDirectResponses<T extends Insertion | RideShareInsertion>(
-	response: (T | undefined)[],
-	startFixed: boolean
-): (T | undefined)[] {
-	function getPickupTime(i: T) {
+function filterDirectResponses(response: Insertion[][], startFixed: boolean): Insertion[][] {
+	function getPickupTime(i: Insertion) {
 		return i.scheduledPickupTimeEnd;
 	}
-	function getDropoffTime(i: T) {
+	function getDropoffTime(i: Insertion) {
 		return i.scheduledDropoffTimeStart;
 	}
 	function addInsertionsHourly(
-		insertions: (T & { idx: number })[],
-		selected: (T & { idx: number })[]
+		insertions: (Insertion & { idx: number })[],
+		selected: (Insertion & { idx: number })[][]
 	) {
-		const ret = structuredClone(selected).sort((s1, s2) => getTime(s1) - getTime(s2));
-		const tmp = insertions.sort((i1, i2) => i1.cost - i2.cost);
+		const ret = structuredClone(selected).sort((s1, s2) => getTime(s1[0]) - getTime(s2[0]));
+		const tmp = insertions.sort((i1, i2) => i2.profit - i1.profit);
 		for (const i of tmp) {
-			if (ret.every((r) => Math.abs(getTime(i) - getTime(r)) >= 40 * MINUTE)) {
-				ret.push(i);
+			const idxInRet = ret.findIndex((r) => r[0].idx === i.idx);
+			if (idxInRet !== -1) {
+				ret[idxInRet].push(i);
+			} else if (ret.every((r) => Math.abs(getTime(i) - getTime(r[0])) >= 40 * MINUTE)) {
+				ret.push([i]);
 			}
 		}
-		return ret.sort((r1, r2) => getTime(r1) - getTime(r2));
+		return ret.sort((r1, r2) => getTime(r1[0]) - getTime(r2[0]));
 	}
 
 	const getTime = startFixed ? getPickupTime : getDropoffTime;
-	const definedResponse: (T & { idx: number })[] = response
-		.map((r, idx) => (r === undefined ? undefined : { ...r, idx }))
-		.filter((r) => r !== undefined);
-	const concatenations = definedResponse
-		.filter((r) => r.pickupCase.how !== InsertHow.NEW_TOUR)
-		.sort((r1, r2) => r1.cost - r2.cost);
-	const concatenationsPerTour = new Array<T & { idx: number }>();
-	for (const concatenation of concatenations) {
+	const definedResponse: (Insertion & { idx: number })[][] = response
+		.map((arr, idx) =>
+			arr.map((r) => {
+				return { ...r, idx };
+			})
+		)
+		.filter((arr) => arr.length !== 0);
+	const concatenationsPerTour = new Array<Insertion & { idx: number }>();
+	for (const concatenation of definedResponse.flat()) {
 		if (!concatenationsPerTour.some((c) => c.tour === concatenation.tour)) {
 			concatenationsPerTour.push(concatenation);
 		}
 	}
-	const newTours = definedResponse
-		.filter((r) => r.pickupCase.how === InsertHow.NEW_TOUR)
-		.sort((t1, t2) => t1.cost - t2.cost);
-	let selected = new Array<T & { idx: number }>();
-	let expensiveConcatenations = new Array<T & { idx: number }>();
-	const cutoff = newTours.length === 0 ? Number.MAX_VALUE : newTours[0].cost;
-	selected = concatenationsPerTour.filter((c) => c.cost < cutoff);
-	expensiveConcatenations = concatenationsPerTour.filter((c) => c.cost >= cutoff);
-	selected = addInsertionsHourly(newTours, selected);
-	selected = addInsertionsHourly(expensiveConcatenations, selected);
-	return response.map((r, idx) => (selected.some((s) => s.idx === idx) ? r : undefined));
+	let selected = new Array<(Insertion & { idx: number })[]>();
+	selected = addInsertionsHourly(concatenationsPerTour, selected);
+	return response.map((r, idx) => (selected.some((s) => s[0].idx === idx) ? r : []));
 }

@@ -9,7 +9,6 @@ import {
 	type WhitelistRequest
 } from '../../../lib/server/util/whitelistRequest';
 import { toInsertionWithISOStrings, type Insertion } from '$lib/server/booking/taxi/insertion';
-import { type Insertion as RideShareInsertion } from '$lib/server/booking/rideShare/insertion';
 import { assertArraySizes } from '$lib/testHelpers';
 import { MINUTE } from '$lib/util/time';
 import { InsertHow } from '$lib/util/booking/insertionTypes';
@@ -89,19 +88,19 @@ function toWhitelistResponseWithISOStrings(r: WhitelistResponse) {
 	};
 }
 
-function filterDirectResponses<T extends Insertion | RideShareInsertion>(
-	response: (T | undefined)[],
+function filterDirectResponses(
+	response: (Insertion | undefined)[],
 	startFixed: boolean
-): (T | undefined)[] {
-	function getPickupTime(i: T) {
+): (Insertion | undefined)[] {
+	function getPickupTime(i: Insertion) {
 		return i.scheduledPickupTimeEnd;
 	}
-	function getDropoffTime(i: T) {
+	function getDropoffTime(i: Insertion) {
 		return i.scheduledDropoffTimeStart;
 	}
 	function addInsertionsHourly(
-		insertions: (T & { idx: number })[],
-		selected: (T & { idx: number })[]
+		insertions: (Insertion & { idx: number })[],
+		selected: (Insertion & { idx: number })[]
 	) {
 		const ret = structuredClone(selected).sort((s1, s2) => getTime(s1) - getTime(s2));
 		const tmp = insertions.sort((i1, i2) => i1.cost - i2.cost);
@@ -114,13 +113,13 @@ function filterDirectResponses<T extends Insertion | RideShareInsertion>(
 	}
 
 	const getTime = startFixed ? getPickupTime : getDropoffTime;
-	const definedResponse: (T & { idx: number })[] = response
+	const definedResponse: (Insertion & { idx: number })[] = response
 		.map((r, idx) => (r === undefined ? undefined : { ...r, idx }))
 		.filter((r) => r !== undefined);
 	const concatenations = definedResponse
 		.filter((r) => r.pickupCase.how !== InsertHow.NEW_TOUR)
 		.sort((r1, r2) => r1.cost - r2.cost);
-	const concatenationsPerTour = new Array<T & { idx: number }>();
+	const concatenationsPerTour = new Array<Insertion & { idx: number }>();
 	for (const concatenation of concatenations) {
 		if (!concatenationsPerTour.some((c) => c.tour === concatenation.tour)) {
 			concatenationsPerTour.push(concatenation);
@@ -129,8 +128,8 @@ function filterDirectResponses<T extends Insertion | RideShareInsertion>(
 	const newTours = definedResponse
 		.filter((r) => r.pickupCase.how === InsertHow.NEW_TOUR)
 		.sort((t1, t2) => t1.cost - t2.cost);
-	let selected = new Array<T & { idx: number }>();
-	let expensiveConcatenations = new Array<T & { idx: number }>();
+	let selected = new Array<Insertion & { idx: number }>();
+	let expensiveConcatenations = new Array<Insertion & { idx: number }>();
 	const cutoff = newTours.length === 0 ? Number.MAX_VALUE : newTours[0].cost;
 	selected = concatenationsPerTour.filter((c) => c.cost < cutoff);
 	expensiveConcatenations = concatenationsPerTour.filter((c) => c.cost >= cutoff);

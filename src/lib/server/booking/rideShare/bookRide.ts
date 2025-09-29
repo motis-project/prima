@@ -77,7 +77,7 @@ export async function bookSharedRide(
 					}
 		)
 	)[0][0];
-	const best = result.sort((r1, r2) => r1.cost - r2.cost)[0];
+	const best = result.sort((r1, r2) => r2.profit - r1.profit)[0];
 	if (best == undefined) {
 		console.log(
 			'surprisingly no possible connection found: ',
