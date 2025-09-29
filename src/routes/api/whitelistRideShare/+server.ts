@@ -15,9 +15,9 @@ import { InsertHow } from '$lib/util/booking/insertionTypes';
 import { whitelistRideShare } from './whitelist';
 
 export type WhitelistResponse = {
-	startRideShare: RideShareInsertion[][][];
-	targetRideShare: RideShareInsertion[][][];
-	directRideShare: RideShareInsertion[][];
+	start: RideShareInsertion[][][];
+	target: RideShareInsertion[][][];
+	direct: RideShareInsertion[][];
 };
 
 export async function POST(event: RequestEvent) {
@@ -73,9 +73,9 @@ export async function POST(event: RequestEvent) {
 	);
 
 	const response: WhitelistResponse = {
-		startRideShare,
-		targetRideShare,
-		directRideShare
+		start: startRideShare,
+		target: targetRideShare,
+		direct: directRideShare
 	};
 	console.log(
 		'WHITELIST RESPONSE: ',
