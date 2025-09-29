@@ -84,7 +84,7 @@ describe('Whitelist and Booking API Tests', () => {
 			),
 			startFixed: true,
 			requestedTime: inXMinutes(70),
-            mode: Mode.TAXI
+			mode: Mode.TAXI
 		};
 		const bookingBody = {
 			connection1,
