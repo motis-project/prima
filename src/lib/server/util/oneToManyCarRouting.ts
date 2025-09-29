@@ -1,7 +1,7 @@
 import { MAX_MATCHING_DISTANCE, MAX_TRAVEL } from '$lib/constants';
 import { oneToMany, type Duration } from '$lib/openapi';
 import type { QuerySerializerOptions } from '@hey-api/client-fetch';
-import { SECOND, secondToMilli } from '../../util/time';
+import { SECOND, secondToMilli } from '$lib/util/time';
 import maplibregl from 'maplibre-gl';
 import { env } from '$env/dynamic/public';
 

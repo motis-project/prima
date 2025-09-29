@@ -6,8 +6,8 @@ import {
 	schemaDefinitions,
 	toWhitelistRequestWithISOStrings,
 	whitelistSchema
-} from '../../../lib/server/util/whitelistRequest';
-import { type WhitelistRequest as BlacklistRequest } from '../../../lib/server/util/whitelistRequest';
+} from '$lib/server/util/whitelistRequest';
+import { type WhitelistRequest as BlacklistRequest } from '$lib/server/util/whitelistRequest';
 import type { BusStop } from '$lib/server/booking/taxi/BusStop';
 import { assertArraySizes } from '$lib/testHelpers';
 
