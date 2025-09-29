@@ -1,4 +1,4 @@
-import { inXMinutes, prepareTest, white } from '../../../testUtil';
+import { inXMinutes, prepareTest, white } from '$lib/server/booking/testUtils';
 import { addCompany, addTaxi, getTours, setAvailability, Zone } from '$lib/testHelpers';
 import { describe, it, expect } from 'vitest';
 import { type ExpectedConnection } from '$lib/server/booking/taxi/bookRide';

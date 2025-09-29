@@ -2,7 +2,7 @@ import { addTestUser, clearDatabase, getRSTours } from '$lib/testHelpers';
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { COORDINATE_ROUNDING_ERROR_THRESHOLD } from '$lib/constants';
 import { createSession } from '$lib/server/auth/session';
-import { black, dateInXMinutes, inXMinutes, whiteRideShare } from '$lib/server/booking/testUtil';
+import { black, dateInXMinutes, inXMinutes, whiteRideShare } from '$lib/server/booking/testUtils';
 import { signEntry } from '../../signEntry';
 import type { ExpectedConnection } from '../bookRide';
 import { rideShareApi } from '../rideShareApi';

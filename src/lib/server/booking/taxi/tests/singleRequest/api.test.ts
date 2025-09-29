@@ -14,7 +14,7 @@ import { MINUTE, roundToUnit } from '$lib/util/time';
 import { type ExpectedConnection } from '$lib/server/booking/taxi/bookRide';
 import { signEntry } from '$lib/server/booking/signEntry';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
-import { black, dateInXMinutes, inXMinutes, white } from '$lib/server/booking/testUtil';
+import { black, dateInXMinutes, inXMinutes, white } from '$lib/server/booking/testUtils';
 import { Mode } from '$lib/server/booking/mode';
 
 let sessionToken: string;

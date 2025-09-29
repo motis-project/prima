@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getNextWednesday, prepareTest, white } from '../../../testUtil';
+import { getNextWednesday, prepareTest, white } from '$lib/server/booking/testUtils';
 import { addCompany, addTaxi, getTours, setAvailability, Zone } from '$lib/testHelpers';
 import { type ExpectedConnection } from '$lib/server/booking/taxi/bookRide';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
