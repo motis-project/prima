@@ -35,6 +35,7 @@ db_backups
 /scripts/simulation/backups
 
 /package-lock.json
+.pnpm-store
 
 # Driver app
 driver-app/app/google-services.json
