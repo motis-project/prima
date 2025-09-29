@@ -9,8 +9,8 @@ import {
 } from '$lib/server/util/whitelistRequest';
 import { type Insertion } from '$lib/server/booking/rideShare/insertion';
 import { assertArraySizes } from '$lib/testHelpers';
-import { MINUTE } from '$lib/util/time';
 import { whitelistRideShare } from './whitelist';
+import { groupBy } from '$lib/util/groupBy';
 
 export type WhitelistResponse = {
 	start: Insertion[][][];
@@ -31,7 +31,7 @@ export async function POST(event: RequestEvent) {
 		'WHITELIST REQUEST PARAMS',
 		JSON.stringify(toWhitelistRequestWithISOStrings(p), null, '\t')
 	);
-	let directRideShare: Insertion[][] = [];
+	let direct: Insertion[][] = [];
 	if (p.directTimes.length != 0) {
 		if (p.startFixed) {
 			p.targetBusStops.push({
@@ -45,73 +45,48 @@ export async function POST(event: RequestEvent) {
 			});
 		}
 	}
-	let [startRideShare, targetRideShare] = await Promise.all([
+	let [start, target] = await Promise.all([
 		whitelistRideShare(p.start, p.startBusStops, p.capacities, false),
 		whitelistRideShare(p.target, p.targetBusStops, p.capacities, true)
 	]);
 
-	assertArraySizes(startRideShare, p.startBusStops, 'Whitelist', false);
-	assertArraySizes(targetRideShare, p.targetBusStops, 'Whitelist', false);
+	assertArraySizes(start, p.startBusStops, 'Whitelist', false);
+	assertArraySizes(target, p.targetBusStops, 'Whitelist', false);
 
 	if (p.directTimes.length != 0) {
-		directRideShare = p.startFixed
-			? targetRideShare[targetRideShare.length - 1]
-			: startRideShare[startRideShare.length - 1];
+		direct = p.startFixed ? target[target.length - 1] : start[start.length - 1];
 		if (p.startFixed) {
-			targetRideShare = targetRideShare.slice(0, targetRideShare.length - 1);
+			target = target.slice(0, target.length - 1);
 		} else {
-			startRideShare = startRideShare.slice(0, startRideShare.length - 1);
+			start = start.slice(0, start.length - 1);
 		}
 	}
 
+	const directByTourId = groupBy(
+		direct.flatMap((d, idx) =>
+			d.map((d2) => {
+				return { ...d2, idx };
+			})
+		),
+		(d) => d.tour,
+		(d) => d
+	);
+	const directResponse = new Array<Insertion[]>(direct.length);
+	for (const [idx, _] of directResponse.entries()) {
+		directResponse[idx] = new Array<Insertion>();
+	}
+	for (const [_, insertions] of directByTourId) {
+		const best = insertions.reduce(
+			(curr, best) => (best = curr.profit > best.profit ? curr : best),
+			insertions[0]
+		);
+		directResponse[best.idx].push(best);
+	}
 	const response: WhitelistResponse = {
-		start: startRideShare,
-		target: targetRideShare,
-		direct: filterDirectResponses(directRideShare, p.startFixed)
+		start,
+		target,
+		direct: directResponse
 	};
 	console.log('WHITELIST RESPONSE: ', JSON.stringify(response, null, '\t'));
 	return json(response);
-}
-
-function filterDirectResponses(response: Insertion[][], startFixed: boolean): Insertion[][] {
-	function getPickupTime(i: Insertion) {
-		return i.scheduledPickupTimeEnd;
-	}
-	function getDropoffTime(i: Insertion) {
-		return i.scheduledDropoffTimeStart;
-	}
-	function addInsertionsHourly(
-		insertions: (Insertion & { idx: number })[],
-		selected: (Insertion & { idx: number })[][]
-	) {
-		const ret = structuredClone(selected).sort((s1, s2) => getTime(s1[0]) - getTime(s2[0]));
-		const tmp = insertions.sort((i1, i2) => i2.profit - i1.profit);
-		for (const i of tmp) {
-			const idxInRet = ret.findIndex((r) => r[0].idx === i.idx);
-			if (idxInRet !== -1) {
-				ret[idxInRet].push(i);
-			} else if (ret.every((r) => Math.abs(getTime(i) - getTime(r[0])) >= 40 * MINUTE)) {
-				ret.push([i]);
-			}
-		}
-		return ret.sort((r1, r2) => getTime(r1[0]) - getTime(r2[0]));
-	}
-
-	const getTime = startFixed ? getPickupTime : getDropoffTime;
-	const definedResponse: (Insertion & { idx: number })[][] = response
-		.map((arr, idx) =>
-			arr.map((r) => {
-				return { ...r, idx };
-			})
-		)
-		.filter((arr) => arr.length !== 0);
-	const concatenationsPerTour = new Array<Insertion & { idx: number }>();
-	for (const concatenation of definedResponse.flat()) {
-		if (!concatenationsPerTour.some((c) => c.tour === concatenation.tour)) {
-			concatenationsPerTour.push(concatenation);
-		}
-	}
-	let selected = new Array<(Insertion & { idx: number })[]>();
-	selected = addInsertionsHourly(concatenationsPerTour, selected);
-	return response.map((r, idx) => (selected.some((s) => s[0].idx === idx) ? r : []));
 }
