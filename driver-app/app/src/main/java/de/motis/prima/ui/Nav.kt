@@ -59,7 +59,7 @@ fun Nav(intent: Intent?, viewModel: NavViewModel = hiltViewModel()) {
     if (selectedVehicle == null) {
         LoadingScreen()
     } else {
-        val startDestination = if (!loggedIn) {
+        val startDestination = "availability"/*if (!loggedIn) {
             "login"
         } else {
             if (notifiedTourId != -1) {
@@ -70,7 +70,7 @@ fun Nav(intent: Intent?, viewModel: NavViewModel = hiltViewModel()) {
             } else {
                 "tours"
             }
-        }
+        }*/
 
         val deviceInfo by loginViewModel.deviceInfo.collectAsState(DeviceInfo("", "", false))
         if (loggedIn && deviceInfo.tokenPending) {
@@ -109,6 +109,10 @@ fun Nav(intent: Intent?, viewModel: NavViewModel = hiltViewModel()) {
             composable(route = "fare/{tourId}") {
                 val tourId = it.arguments?.getString("tourId")?.toInt()
                 Fare(navController, tourId!!)
+            }
+
+            composable(route = "availability") {
+                Availability(navController)
             }
         }
     }
