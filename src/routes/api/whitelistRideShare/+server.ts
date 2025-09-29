@@ -1,23 +1,23 @@
 import type { RequestEvent } from './$types';
 import { Validator } from 'jsonschema';
 import { json } from '@sveltejs/kit';
-import { whitelist } from './whitelist';
 import {
 	schemaDefinitions,
 	toWhitelistRequestWithISOStrings,
 	whitelistSchema,
 	type WhitelistRequest
-} from '../../../lib/server/util/whitelistRequest';
-import { toInsertionWithISOStrings, type Insertion } from '$lib/server/booking/taxi/insertion';
+} from '$lib/server/util/whitelistRequest';
+import { type Insertion } from '$lib/server/booking/taxi/insertion';
 import { type Insertion as RideShareInsertion } from '$lib/server/booking/rideShare/insertion';
 import { assertArraySizes } from '$lib/testHelpers';
 import { MINUTE } from '$lib/util/time';
 import { InsertHow } from '$lib/util/booking/insertionTypes';
+import { whitelistRideShare } from './whitelist';
 
 export type WhitelistResponse = {
-	start: (Insertion | undefined)[][];
-	target: (Insertion | undefined)[][];
-	direct: (Insertion | undefined)[];
+	startRideShare: RideShareInsertion[][][];
+	targetRideShare: RideShareInsertion[][][];
+	directRideShare: RideShareInsertion[][];
 };
 
 export async function POST(event: RequestEvent) {
@@ -34,6 +34,7 @@ export async function POST(event: RequestEvent) {
 		JSON.stringify(toWhitelistRequestWithISOStrings(p), null, '\t')
 	);
 	let direct: (Insertion | undefined)[] = [];
+	let directRideShare: RideShareInsertion[][] = [];
 	if (p.directTimes.length != 0) {
 		if (p.startFixed) {
 			p.targetBusStops.push({
@@ -47,20 +48,22 @@ export async function POST(event: RequestEvent) {
 			});
 		}
 	}
-	let [start, target] = await Promise.all([
-		whitelist(p.start, p.startBusStops, p.capacities, false),
-		whitelist(p.target, p.targetBusStops, p.capacities, true)
+	let [startRideShare, targetRideShare] = await Promise.all([
+		whitelistRideShare(p.start, p.startBusStops, p.capacities, false),
+		whitelistRideShare(p.target, p.targetBusStops, p.capacities, true)
 	]);
 
-	assertArraySizes(start, p.startBusStops, 'Whitelist', false);
-	assertArraySizes(target, p.targetBusStops, 'Whitelist', false);
+	assertArraySizes(startRideShare, p.startBusStops, 'Whitelist', false);
+	assertArraySizes(targetRideShare, p.targetBusStops, 'Whitelist', false);
 
 	if (p.directTimes.length != 0) {
-		direct = p.startFixed ? target[target.length - 1] : start[start.length - 1];
+		directRideShare = p.startFixed
+			? targetRideShare[targetRideShare.length - 1]
+			: startRideShare[startRideShare.length - 1];
 		if (p.startFixed) {
-			target = target.slice(0, target.length - 1);
+			targetRideShare = targetRideShare.slice(0, targetRideShare.length - 1);
 		} else {
-			start = start.slice(0, start.length - 1);
+			startRideShare = startRideShare.slice(0, startRideShare.length - 1);
 		}
 	}
 
@@ -70,23 +73,15 @@ export async function POST(event: RequestEvent) {
 	);
 
 	const response: WhitelistResponse = {
-		start,
-		target,
-		direct: filterDirectResponses(direct, p.startFixed)
+		startRideShare,
+		targetRideShare,
+		directRideShare
 	};
 	console.log(
 		'WHITELIST RESPONSE: ',
-		JSON.stringify(toWhitelistResponseWithISOStrings(response), null, '\t')
+		JSON.stringify(response, null, '\t')
 	);
 	return json(response);
-}
-
-function toWhitelistResponseWithISOStrings(r: WhitelistResponse) {
-	return {
-		start: r.start.map((i) => i.map((j) => toInsertionWithISOStrings(j))),
-		target: r.target.map((i) => i.map((j) => toInsertionWithISOStrings(j))),
-		direct: r.direct.map((j) => toInsertionWithISOStrings(j))
-	};
 }
 
 function filterDirectResponses<T extends Insertion | RideShareInsertion>(

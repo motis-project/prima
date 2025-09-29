@@ -2,7 +2,7 @@ import { addTestUser, clearDatabase, getRSTours } from '$lib/testHelpers';
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { COORDINATE_ROUNDING_ERROR_THRESHOLD } from '$lib/constants';
 import { createSession } from '$lib/server/auth/session';
-import { black, dateInXMinutes, inXMinutes, white } from '$lib/server/booking/testUtil';
+import { black, dateInXMinutes, inXMinutes, whiteRideShare } from '$lib/server/booking/testUtil';
 import { signEntry } from '../../signEntry';
 import type { ExpectedConnection } from '../bookRide';
 import { rideShareApi } from '../rideShareApi';
@@ -67,7 +67,7 @@ describe('add ride share request', () => {
 		expect(blackResponse.direct.length).toBe(1);
 		expect(blackResponse.direct[0]).toBe(true);
 
-		const whiteResponse = await white(body).then((r) => r.json());
+		const whiteResponse = await whiteRideShare(body).then((r) => r.json());
 		expect(whiteResponse.directRideShare.length).toBe(1);
 		expect(whiteResponse.directRideShare[0]).not.toBe(null);
 		const connection1: ExpectedConnection = {
