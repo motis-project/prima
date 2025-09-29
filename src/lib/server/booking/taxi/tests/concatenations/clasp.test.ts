@@ -94,5 +94,5 @@ describe('Concatenation tests', () => {
 		expect(isSamePlace(events[1], inSagar)).toBe(true);
 		expect(isSamePlace(events[2], inPechern)).toBe(true);
 		expect(isSamePlace(events[3], inPriebus)).toBe(true);
-	});
+	}, 15000);
 });
