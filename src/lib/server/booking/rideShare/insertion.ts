@@ -371,7 +371,7 @@ export function evaluateBothInsertion(
 	}
 	console.log(
 		promisedTimes === undefined ? 'WHITELIST' : 'BOOKING API',
-		'valid insertion found,',
+		'feasible insertion found,',
 		printInsertionType(insertionCase),
 		{ prevId: prev.eventId },
 		{ nextId: next.eventId },
@@ -658,7 +658,7 @@ export function evaluatePairInsertions(
 					}
 					console.log(
 						whitelist ? 'WHITELIST' : 'BOOKING API',
-						'valid insertion found,',
+						'feasible insertion found,',
 						'pickup: ',
 						printInsertionType(pickup.case),
 						'dropoff: ',

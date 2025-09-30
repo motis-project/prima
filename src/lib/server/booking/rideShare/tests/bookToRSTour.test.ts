@@ -24,8 +24,10 @@ const inSchleife = { lat: 51.54065368738395, lng: 14.53267340988063 };
 const inKleinPriebus = { lat: 51.45418081100274, lng: 14.95863481385976 };
 const inSagar = { lat: 51.513491399158426, lng: 14.758423042222006 };
 const inPechern = { lat: 51.48316025426172, lng: 14.862461509965812 };
-const inGora1 = { lat: 51.50717128906919, lng: 14.622989053100525 };
-const inGora2 = { lat: 51.50412563855747, lng: 14.635632731583911 };
+const inWeisswasser1 = { lat: 51.50717128906919, lng: 14.622989053100525 };
+const inWeisswasser2 = { lat: 51.50412563855747, lng: 14.635632731583911 };
+const inDüben1 = { lat: 51.57081851189798, lng: 14.614068743138432 };
+const inDüben2 = { lat: 51.56434272469306, lng: 14.615612304230666 };
 
 let mockUserId = -1;
 
@@ -128,6 +130,33 @@ describe('add ride share request', () => {
 		expect(r?.pending).toBeFalsy();
 	}, 30000);
 
+	it('request accpepted, sufficient profit', async () => {
+		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test');
+		const tourId = await addRideShareTour(
+			inXMinutes(40),
+			true,
+			3,
+			0,
+			mockUserId,
+			vehicle,
+			inSchleife,
+			inKleinPriebus
+		);
+		expect(tourId).not.toBe(undefined);
+		const body = JSON.stringify({
+			start: inWeisswasser1,
+			target: inWeisswasser2,
+			startBusStops: [],
+			targetBusStops: [],
+			directTimes: [inXMinutes(50)],
+			startFixed: true,
+			capacities
+		});
+		const whiteResponse = await whiteRideShare(body).then((r) => r.json());
+		expect(whiteResponse.direct.length).toBe(1);
+		expect(whiteResponse.direct[0].length).not.toBe(0);
+	}, 30000);
+
 	it('request denied, insufficient profit', async () => {
 		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test');
 		const tourId = await addRideShareTour(
@@ -142,51 +171,16 @@ describe('add ride share request', () => {
 		);
 		expect(tourId).not.toBe(undefined);
 		const body = JSON.stringify({
-			start: inGora1,
-			target: inGora2,
+			start: inDüben1,
+			target: inDüben2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(70)],
+			directTimes: [inXMinutes(52)],
 			startFixed: true,
 			capacities
 		});
 		const whiteResponse = await whiteRideShare(body).then((r) => r.json());
 		expect(whiteResponse.direct.length).toBe(1);
 		expect(whiteResponse.direct[0].length).toBe(0);
-		/*
-		const connection1: ExpectedConnection = {
-			start: { ...inGora1, address: 'start address' },
-			target: { ...inGora2, address: 'target address' },
-			startTime: whiteResponse.direct[0][0].pickupTime,
-			targetTime: whiteResponse.direct[0][0].dropoffTime,
-			signature: signEntry(
-				inSagar.lat,
-				inSagar.lng,
-				inPechern.lat,
-				inPechern.lng,
-				whiteResponse.direct[0][0].pickupTime,
-				whiteResponse.direct[0][0].dropoffTime,
-				false
-			),
-			startFixed: true,
-			requestedTime: inXMinutes(70),
-			mode: Mode.RIDE_SHARE,
-			tourId: tourId!
-		};
-		const bookingBody = {
-			connection1,
-			connection2: null,
-			capacities
-		};
-
-		const bookingResponse = await rideShareApi(bookingBody, mockUserId, false, 0, 0, 0);
-
-		// Alter pending status to false
-		const requestId = bookingResponse.request1Id ?? bookingResponse.request2Id!;
-		const response = await acceptRideShareRequest(requestId, mockUserId);
-		expect(response.status).toBe(200);
-		const tours2 = await getRSTours();
-		const r = tours2[0].requests.find((r) => r.id === requestId);
-		expect(r?.pending).toBeFalsy();*/
 	}, 30000);
 });
