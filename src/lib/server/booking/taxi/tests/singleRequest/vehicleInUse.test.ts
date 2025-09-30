@@ -9,7 +9,7 @@ import {
 } from '$lib/testHelpers';
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { createSession } from '$lib/server/auth/session';
-import type { ExpectedConnection } from '$lib/server/booking/taxi/bookRide';
+import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 import { signEntry } from '$lib/server/booking/signEntry';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
 import { black, inXMinutes, white } from '$lib/server/booking/testUtils';

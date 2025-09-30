@@ -1,7 +1,7 @@
 import { inXMinutes, prepareTest, white } from '$lib/server/booking/testUtils';
 import { addCompany, addTaxi, getTours, setAvailability, Zone } from '$lib/testHelpers';
 import { describe, it, expect } from 'vitest';
-import { type ExpectedConnection } from '$lib/server/booking/taxi/bookRide';
+import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
 import { isSamePlace } from '$lib/server/booking/isSamePlace';
 import { Mode } from '$lib/server/booking/mode';

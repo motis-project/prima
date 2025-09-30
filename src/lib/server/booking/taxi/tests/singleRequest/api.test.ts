@@ -11,7 +11,7 @@ import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { COORDINATE_ROUNDING_ERROR_THRESHOLD } from '$lib/constants';
 import { createSession } from '$lib/server/auth/session';
 import { MINUTE, roundToUnit } from '$lib/util/time';
-import { type ExpectedConnection } from '$lib/server/booking/taxi/bookRide';
+import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 import { signEntry } from '$lib/server/booking/signEntry';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
 import { black, dateInXMinutes, inXMinutes, white } from '$lib/server/booking/testUtils';

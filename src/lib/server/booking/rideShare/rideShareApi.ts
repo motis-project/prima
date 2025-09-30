@@ -2,9 +2,10 @@ import { db } from '$lib/server/db';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { retry } from '$lib/server/db/retryQuery';
 import { DIRECT_FREQUENCY, DIRECT_RIDE_TIME_DIFFERENCE } from '$lib/constants';
-import { bookSharedRide, type BookRideShareResponse, type ExpectedConnection } from './bookRide';
+import { bookSharedRide, type BookRideShareResponse } from './bookRide';
 import { signEntry } from '../signEntry';
 import { insertRideShareRequest } from './insertRideShareRequest';
+import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 
 export type BookingParameters = {
 	connection1: ExpectedConnection | null;
@@ -55,6 +56,7 @@ export async function rideShareApi(
 	kidsZeroToTwo: number,
 	kidsThreeToFour: number,
 	kidsFiveToSix: number,
+	tourId: number,
 	skipPromiseCheck?: boolean
 ): Promise<{
 	message?: string;
@@ -127,6 +129,7 @@ export async function rideShareApi(
 						firstConnection = await bookSharedRide(
 							p.connection1,
 							p.capacities,
+							tourId,
 							trx,
 							skipPromiseCheck
 						);
@@ -143,6 +146,7 @@ export async function rideShareApi(
 						secondConnection = await bookSharedRide(
 							p.connection2,
 							p.capacities,
+							tourId,
 							trx,
 							skipPromiseCheck,
 							blockedProviderId

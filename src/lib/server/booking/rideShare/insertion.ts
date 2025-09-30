@@ -30,6 +30,7 @@ import {
 	getNextLegDuration,
 	getPrevLegDuration
 } from './durations';
+import type { PromisedTimesRideShare } from './PromisedTimesRideShare';
 
 export type InsertionEvaluation = {
 	pickupTime: number;
@@ -121,7 +122,7 @@ export function evaluateSingleInsertion(
 	busStopIdx: number | undefined,
 	prev: RideShareEvent,
 	next: RideShareEvent,
-	promisedTimes?: PromisedTimes
+	promisedTimes?: PromisedTimesRideShare
 ): SingleInsertionEvaluation | undefined {
 	console.assert(insertionCase.what != InsertWhat.BOTH);
 	const events = insertionInfo.events;
@@ -158,7 +159,13 @@ export function evaluateSingleInsertion(
 			: prevLegDuration;
 	if (
 		promisedTimes != undefined &&
-		!keepsPromises(insertionCase, arrivalWindow, passengerDuration, promisedTimes)
+		!keepsPromises(
+			insertionCase,
+			arrivalWindow,
+			passengerDuration,
+			insertionInfo.tourId,
+			promisedTimes
+		)
 	) {
 		console.log(
 			'Promise not kept',
@@ -230,7 +237,7 @@ export function evaluateBothInsertion(
 	busStopIdx: number | undefined,
 	prev: RideShareEvent,
 	next: RideShareEvent,
-	promisedTimes?: PromisedTimes
+	promisedTimes?: PromisedTimesRideShare
 ): InsertionEvaluation | undefined {
 	console.assert(
 		insertionCase.what == InsertWhat.BOTH,
@@ -282,7 +289,13 @@ export function evaluateBothInsertion(
 	}
 	if (
 		promisedTimes != undefined &&
-		!keepsPromises(insertionCase, arrivalWindow, passengerDuration, promisedTimes)
+		!keepsPromises(
+			insertionCase,
+			arrivalWindow,
+			passengerDuration,
+			insertionInfo.tourId,
+			promisedTimes
+		)
 	) {
 		console.log(
 			'promise not kept',
@@ -392,7 +405,7 @@ export function evaluateSingleInsertions(
 	busStopTimes: Interval[][],
 	routingResults: RoutingResults,
 	travelDurations: (number | undefined)[],
-	promisedTimes?: PromisedTimes
+	promisedTimes?: PromisedTimesRideShare
 ): Evaluations {
 	const bothEvaluations: Insertion[][][] = [];
 	const userChosenEvaluations: (SingleInsertionEvaluation | undefined)[] = [];
@@ -703,8 +716,16 @@ const keepsPromises = (
 	insertionCase: InsertionType,
 	arrivalWindow: Interval,
 	directDuration: number,
-	promisedTimes: PromisedTimes
+	tourId: number,
+	promisedTimes: PromisedTimesRideShare
 ): boolean => {
+	if (tourId !== promisedTimes.tourId) {
+		console.log('PROMISE CHECK: DROPOFF WINDOW FAILED', {
+			tourId,
+			promisedTourId: promisedTimes.tourId
+		});
+		return false;
+	}
 	const shift = insertionCase.what === InsertWhat.BOTH ? directDuration : 0;
 	const w = arrivalWindow.shift(
 		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? shift : -shift

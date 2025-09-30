@@ -15,7 +15,7 @@ import type { PageServerLoad } from './$types';
 import Prom from 'prom-client';
 import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhitelistRequestTimes';
 import { rideShareApi } from '$lib/server/booking/index';
-import { expectedConnectionFromLeg } from '$lib/server/booking/rideShare/expectedConnectionFromLeg';
+import { expectedConnectionFromLeg } from '$lib/server/booking/expectedConnection';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;
@@ -61,8 +61,7 @@ export const actions = {
 			typeof kidsZeroToTwoString !== 'string' ||
 			typeof kidsThreeToFourString !== 'string' ||
 			typeof kidsFiveToSixString !== 'string' ||
-			typeof startFixedString !== 'string' ||
-			typeof tourIdString !== 'string'
+			typeof startFixedString !== 'string'
 		) {
 			booking_errors?.inc();
 			throw 'invalid booking params';
@@ -73,7 +72,6 @@ export const actions = {
 		const kidsZeroToTwo = readInt(kidsZeroToTwoString);
 		const kidsThreeToFour = readInt(kidsThreeToFourString);
 		const kidsFiveToSix = readInt(kidsFiveToSixString);
-		const tourId = readInt(tourIdString);
 		const startFixed = startFixedString === '1';
 
 		if (
@@ -157,13 +155,12 @@ export const actions = {
 			firstOdm,
 			parsedJson.signature1,
 			isDirect ? startFixed : firstOdmIndex !== 0,
-			requestedTime1,
-			tourId
+			requestedTime1
 		);
 		const connection2 =
 			firstOdmIndex === lastOdmIndex
 				? null
-				: expectedConnectionFromLeg(lastOdm, parsedJson.signature2, true, requestedTime2, tourId);
+				: expectedConnectionFromLeg(lastOdm, parsedJson.signature2, true, requestedTime2);
 
 		console.log(
 			'BOOKING: C1=',
@@ -175,6 +172,13 @@ export const actions = {
 		);
 
 		const mode = connection1 !== null ? connection1.mode : connection2?.mode;
+		let tourId = -1;
+		if (mode === Mode.RIDE_SHARE) {
+			if (typeof tourIdString !== 'string') {
+				throw `invalid booking params, tourIdString: ${tourIdString} is not a string. `;
+			}
+			tourId = readInt(tourIdString);
+		}
 		const bookingResult =
 			mode === Mode.TAXI
 				? await bookingApi(
@@ -192,7 +196,8 @@ export const actions = {
 						locals.session?.isService ?? false,
 						kidsZeroToTwo,
 						kidsThreeToFour,
-						kidsFiveToSix
+						kidsFiveToSix,
+						tourId
 					);
 		if (bookingResult.status !== 200) {
 			console.log(

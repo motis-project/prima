@@ -29,7 +29,8 @@ export async function iterateAllInsertions(
 						insertionIdx,
 						events: tour.events.filter((e) => !e.pending),
 						provider: tour.owner,
-						vehicle: tour.vehicle
+						vehicle: tour.vehicle,
+						tourId: tour.rideShareTour
 					});
 					insertionIdx++;
 				}

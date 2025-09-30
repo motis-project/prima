@@ -1,13 +1,24 @@
 import type { Leg } from '$lib/openapi';
-import { Mode } from '../mode';
-import type { ExpectedConnection } from './bookRide';
+import { Mode } from '$lib/server/booking/mode';
+import type { Coordinates } from '$lib/util/Coordinates';
+import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
+
+export type ExpectedConnection = {
+	start: Coordinates;
+	target: Coordinates;
+	startTime: UnixtimeMs;
+	targetTime: UnixtimeMs;
+	signature: string;
+	startFixed: boolean;
+	requestedTime: UnixtimeMs;
+	mode: Mode;
+};
 
 export function expectedConnectionFromLeg(
 	leg: Leg,
 	signature: string | undefined,
 	startFixed: boolean,
-	requestedTime: number,
-	tourId: number
+	requestedTime: number
 ): ExpectedConnection | null {
 	if (leg.mode !== 'ODM' && leg.mode !== 'BUS') {
 		//TODO  && leg.mode !== 'RIDE_SHARE'
@@ -24,8 +35,7 @@ export function expectedConnectionFromLeg(
 				signature,
 				startFixed,
 				requestedTime,
-				mode,
-				tourId
+				mode
 			}
 		: null;
 }

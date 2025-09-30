@@ -2,7 +2,6 @@ import type { Transaction } from 'kysely';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import type { Database } from '$lib/server/db';
 import { Interval } from '$lib/util/interval';
-import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import { type RideShareEvent } from '$lib/server/booking/rideShare/getRideShareTours';
 import type { Coordinates } from '$lib/util/Coordinates';
 import { InsertWhat } from '$lib/util/booking/insertionTypes';
@@ -10,18 +9,7 @@ import { DAY } from '$lib/util/time';
 import { getRideShareTours } from './getRideShareTours';
 import type { Insertion, NeighbourIds } from './insertion';
 import { evaluateRequest } from './evaluateRequest';
-import type { Mode } from '../mode';
-export type ExpectedConnection = {
-	start: Coordinates;
-	target: Coordinates;
-	startTime: UnixtimeMs;
-	targetTime: UnixtimeMs;
-	signature: string;
-	startFixed: boolean;
-	requestedTime: UnixtimeMs;
-	tourId: number;
-	mode: Mode;
-};
+import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 
 export type ExpectedConnectionWithISoStrings = {
 	start: Coordinates;
@@ -47,6 +35,7 @@ export function toExpectedConnectionWithISOStrings(
 export async function bookSharedRide(
 	c: ExpectedConnection,
 	required: Capacities,
+	tourId: number,
 	trx?: Transaction<Database>,
 	skipPromiseCheck?: boolean,
 	blockedProviderId?: number
@@ -73,7 +62,8 @@ export async function bookSharedRide(
 				? undefined
 				: {
 						pickup: c.startTime,
-						dropoff: c.targetTime
+						dropoff: c.targetTime,
+						tourId
 					}
 		)
 	)[0][0];

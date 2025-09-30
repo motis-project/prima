@@ -12,8 +12,8 @@ import { DAY } from '$lib/util/time';
 import { routing } from './routing';
 import type { RideShareTour } from './getRideShareTours';
 import type { BusStop } from '../taxi/BusStop';
-import type { PromisedTimes } from '../taxi/PromisedTimes';
 import { getPossibleInsertions, type Range } from '$lib/util/booking/getPossibleInsertions';
+import type { PromisedTimesRideShare } from './PromisedTimesRideShare';
 
 export async function evaluateRequest(
 	rideShareTours: RideShareTour[],
@@ -21,7 +21,7 @@ export async function evaluateRequest(
 	busStops: BusStop[],
 	required: Capacities,
 	startFixed: boolean,
-	promisedTimes?: PromisedTimes
+	promisedTimes?: PromisedTimesRideShare
 ): Promise<Insertion[][][]> {
 	console.log(
 		'EVALUATE REQUEST PARAMS RIDE SHARE: ',

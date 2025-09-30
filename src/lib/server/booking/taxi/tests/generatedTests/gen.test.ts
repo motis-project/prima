@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getNextWednesday, prepareTest, white } from '$lib/server/booking/testUtils';
 import { addCompany, addTaxi, getTours, setAvailability, Zone } from '$lib/testHelpers';
-import { type ExpectedConnection } from '$lib/server/booking/taxi/bookRide';
+import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
 import { db } from '$lib/server/db';
 import type { Condition } from '$lib/util/booking/testParams';
