@@ -41,9 +41,13 @@ export const MOTIS_SHIFT = 5 * MINUTE;
 export const DIRECT_RIDE_TIME_DIFFERENCE = HOUR;
 export const MAX_WAITING_TIME = 47 * MINUTE;
 const EXPECTED_AVERAGE_KM_PER_H = 60;
-export const PROFIT_PER_TIME = (20 * EXPECTED_AVERAGE_KM_PER_H) / HOUR;
+export const PROFIT_PER_TIME = centsToCentsPerMs(20);
 export const BASE_PROFIT = 200;
-const FUEL_COST = (18 * EXPECTED_AVERAGE_KM_PER_H) / HOUR;
+const FUEL_COST = centsToCentsPerMs(18);
 export const COST_PER_WAITING_TIME = 1000 / HOUR;
 export const COST_PER_DRIVING_TIME = COST_PER_WAITING_TIME + FUEL_COST;
 export const MINIMUM_PROFIT = 0;
+
+function centsToCentsPerMs(cents: number) {
+	return (cents * EXPECTED_AVERAGE_KM_PER_H) / HOUR;
+}

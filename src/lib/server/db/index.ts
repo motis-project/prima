@@ -145,6 +145,7 @@ export interface Database {
 		color: string;
 		model: string;
 		smokingAllowed: boolean;
+		licensePlate: string;
 	};
 }
 
