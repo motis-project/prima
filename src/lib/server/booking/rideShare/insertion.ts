@@ -3,8 +3,9 @@ import {
 	COST_PER_WAITING_TIME,
 	PROFIT_PER_TIME,
 	MIN_PREP,
-	MINIMUM_GAIN as MINIMUM_PROFIT,
-	SCHEDULED_TIME_BUFFER_PICKUP
+	MINIMUM_PROFIT,
+	SCHEDULED_TIME_BUFFER_PICKUP,
+	BASE_PROFIT
 } from '$lib/constants';
 import { InsertHow, InsertWhat } from '$lib/util/booking/insertionTypes';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
@@ -323,7 +324,6 @@ export function evaluateBothInsertion(
 		);
 	}
 
-	const payedDurationDelta = scheduledDropoffTimeStart - scheduledPickupTimeEnd;
 	const drivingDurationDelta =
 		prevLegDuration + nextLegDuration + passengerDuration - prev.nextLegDuration;
 	const waitingTime = getWaitingTimeDelta(
@@ -335,7 +335,7 @@ export function evaluateBothInsertion(
 		drivingDurationDelta
 	);
 
-	const profit = getProfit(payedDurationDelta, drivingDurationDelta, waitingTime);
+	const profit = getProfit(passengerDuration, drivingDurationDelta, waitingTime);
 	if (profit < MINIMUM_PROFIT) {
 		console.log(
 			promisedTimes === undefined ? 'WHITELIST' : 'BOOKING API',
@@ -343,9 +343,16 @@ export function evaluateBothInsertion(
 			printInsertionType(insertionCase),
 			{ prevId: prev.eventId },
 			{ nextId: next.eventId },
-			{ waitingTime: waitingTime * COST_PER_WAITING_TIME },
-			{ payedDurationDelta: payedDurationDelta * PROFIT_PER_TIME },
-			{ drivingDurationDelta: drivingDurationDelta * COST_PER_DRIVING_TIME }
+			{ waitingTime: waitingTime },
+			{ payedDurationDelta: passengerDuration },
+			{ drivingDurationDelta: drivingDurationDelta },
+			{ drivingCost: drivingDurationDelta * COST_PER_DRIVING_TIME },
+			{ income: passengerDuration * PROFIT_PER_TIME },
+			{ waitingCost: waitingTime * COST_PER_WAITING_TIME },
+			COST_PER_DRIVING_TIME,
+			COST_PER_WAITING_TIME,
+			PROFIT_PER_TIME,
+			{ profit }
 		);
 		return undefined;
 	}
@@ -355,9 +362,10 @@ export function evaluateBothInsertion(
 		printInsertionType(insertionCase),
 		{ prevId: prev.eventId },
 		{ nextId: next.eventId },
-		{ waitingTime: waitingTime * COST_PER_WAITING_TIME },
-		{ payedDurationDelta: payedDurationDelta * PROFIT_PER_TIME },
-		{ drivingDurationDelta: drivingDurationDelta * COST_PER_DRIVING_TIME }
+		{ waitingTime: waitingTime },
+		{ payedDurationDelta: passengerDuration },
+		{ drivingDurationDelta: drivingDurationDelta },
+		{ profit }
 	);
 	return {
 		pickupTime: communicatedPickupTime,
@@ -630,7 +638,8 @@ export function evaluatePairInsertions(
 							{ prevDropoffId: prevDropoff.eventId },
 							{ nextDropoffId: nextDropoff.eventId },
 							{ waitingTime },
-							{ payedDurationDelta }
+							{ payedDurationDelta },
+							{ profit }
 						);
 						return undefined;
 					}
@@ -645,7 +654,8 @@ export function evaluatePairInsertions(
 						{ nextPickupId: nextPickup.eventId },
 						{ prevDropoffId: prevDropoff.eventId },
 						{ nextDropoffId: nextDropoff.eventId },
-						{ waitingTime }
+						{ waitingTime },
+						{ profit }
 					);
 					if (bestEvaluations[busStopIdx][timeIdx] == undefined) {
 						const tour = events[pickupIdx].tourId;
@@ -928,8 +938,9 @@ function getTimestamps(
 
 function getProfit(payedDuration: number, unpayedDrivingDuration: number, waitingTime: number) {
 	return (
+		BASE_PROFIT +
 		PROFIT_PER_TIME * payedDuration -
-		COST_PER_DRIVING_TIME * (unpayedDrivingDuration + payedDuration) -
+		COST_PER_DRIVING_TIME * unpayedDrivingDuration -
 		COST_PER_WAITING_TIME * waitingTime
 	);
 }
