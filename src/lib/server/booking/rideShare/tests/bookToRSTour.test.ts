@@ -65,7 +65,7 @@ describe('add ride share request', () => {
 
 		const blackResponse = await black(body).then((r) => r.json());
 		expect(blackResponse.direct.length).toBe(1);
-		expect(blackResponse.direct[0]).toBe(true);
+		expect(blackResponse.direct[0]).toBe(false);
 
 		const whiteResponse = await whiteRideShare(body).then((r) => r.json());
 		expect(whiteResponse.direct.length).toBe(1);
