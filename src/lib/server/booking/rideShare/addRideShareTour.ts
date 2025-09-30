@@ -5,7 +5,7 @@ import { SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
 import { carRouting } from '$lib/util/carRouting';
 
-export async function getRideShareTourTimes(
+export async function getRideShareTourCommunicatedTimes(
 	time: number,
 	startFixed: boolean,
 	vehicle: number,
@@ -13,7 +13,7 @@ export async function getRideShareTourTimes(
 	target: Coordinates
 ) {
 	const r = await util(time, startFixed, vehicle, start, target);
-	return r === undefined ? undefined : { start: r.startTime, end: r.targetTime };
+	return r === undefined ? undefined : { start: r.startTimeStart, end: r.targetTimeEnd };
 }
 
 async function util(
@@ -24,8 +24,10 @@ async function util(
 	target: Coordinates
 ): Promise<
 	| {
-			startTime: number;
-			targetTime: number;
+			startTimeStart: number;
+			startTimeEnd: number;
+			targetTimeStart: number;
+			targetTimeEnd: number;
 			duration: number;
 	  }
 	| undefined
@@ -121,8 +123,10 @@ async function util(
 	const endTimeShifted =
 		endTime + Math.min(getScheduledTimeBufferDropoff(endTime - startTime), nextLegLeeway);
 	return {
-		startTime: startTimeShifted,
-		targetTime: endTimeShifted,
+		startTimeStart: startTimeShifted,
+		startTimeEnd: startTime,
+		targetTimeStart: endTime,
+		targetTimeEnd: endTimeShifted,
 		duration
 	};
 }
@@ -141,7 +145,7 @@ export const addRideShareTour = async (
 	if (timesResult === undefined) {
 		return undefined;
 	}
-	const { startTime, targetTime, duration } = timesResult;
+	const { startTimeStart, startTimeEnd, targetTimeStart, targetTimeEnd, duration } = timesResult;
 	const tourId = (
 		await db
 			.insertInto('rideShareTour')
@@ -150,10 +154,10 @@ export const addRideShareTour = async (
 				luggage,
 				cancelled: false,
 				vehicle,
-				earliestStart: startTime,
-				communicatedStart: startTime,
-				latestEnd: targetTime,
-				communicatedEnd: targetTime
+				earliestStart: startTimeStart,
+				communicatedStart: startTimeStart,
+				latestEnd: targetTimeEnd,
+				communicatedEnd: targetTimeEnd
 			})
 			.returning('id')
 			.executeTakeFirstOrThrow()
@@ -187,8 +191,8 @@ export const addRideShareTour = async (
 			.values({
 				lat: start.lat,
 				lng: start.lng,
-				scheduledTimeStart: startTime,
-				scheduledTimeEnd: startTime,
+				scheduledTimeStart: startTimeStart,
+				scheduledTimeEnd: startTimeEnd,
 				prevLegDuration: 0,
 				nextLegDuration: duration,
 				address: ''
@@ -200,7 +204,7 @@ export const addRideShareTour = async (
 		.insertInto('event')
 		.values({
 			isPickup: true,
-			communicatedTime: startTime,
+			communicatedTime: startTimeStart,
 			request: requestId,
 			cancelled: false,
 			eventGroupId: eventGroupPickup
@@ -212,8 +216,8 @@ export const addRideShareTour = async (
 			.values({
 				lat: target.lat,
 				lng: target.lng,
-				scheduledTimeStart: targetTime,
-				scheduledTimeEnd: targetTime,
+				scheduledTimeStart: targetTimeStart,
+				scheduledTimeEnd: targetTimeEnd,
 				prevLegDuration: duration,
 				nextLegDuration: 0,
 				address: ''
@@ -225,7 +229,7 @@ export const addRideShareTour = async (
 		.insertInto('event')
 		.values({
 			isPickup: false,
-			communicatedTime: targetTime,
+			communicatedTime: targetTimeEnd,
 			request: requestId,
 			cancelled: false,
 			eventGroupId: eventGroupDropoff

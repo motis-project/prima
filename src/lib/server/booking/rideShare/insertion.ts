@@ -417,6 +417,27 @@ export function evaluateSingleInsertions(
 			direction
 		};
 		const windows = getAllowedOperationTimes(prev, next, prepTime);
+
+		// Ensure shifting the previous or next events' scheduledTime does not cause the whole tour to be prolonged too much
+		if (windows.length != 0) {
+			const twoBefore = events[insertionInfo.idxInEvents - 2];
+			if (twoBefore && twoBefore?.tourId != prev.tourId) {
+				const tourDifference = prev.departure - twoBefore.arrival;
+				const scheduledTimeLength = prev.scheduledTimeEnd - prev.scheduledTimeStart;
+				windows.forEach((w) => {
+					w.startTime += Math.max(0, scheduledTimeLength - tourDifference);
+				});
+			}
+			const twoAfter = events[insertionInfo.idxInEvents + 1];
+			if (twoAfter && twoAfter?.tourId != next.tourId && windows.length != 0) {
+				const tourDifference = twoAfter.departure - next.arrival;
+				const scheduledTimeLength = next.scheduledTimeEnd - next.scheduledTimeStart;
+				windows.forEach((w) => {
+					w.endTime -= Math.max(0, scheduledTimeLength - tourDifference);
+				});
+			}
+		}
+
 		for (let busStopIdx = 0; busStopIdx != busStopTimes.length; ++busStopIdx) {
 			for (let busTimeIdx = 0; busTimeIdx != busStopTimes[busStopIdx].length; ++busTimeIdx) {
 				insertionCase.what = InsertWhat.BOTH;
