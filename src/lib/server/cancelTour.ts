@@ -5,7 +5,7 @@ import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { sendNotifications } from '$lib/server/firebase/notifications';
 import { TourChange } from '$lib/server/firebase/firebase';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
-import { updateDirectDurations } from '$lib/server/booking/updateDirectDuration';
+import { updateDirectDurations } from '$lib/server/booking/taxi/updateDirectDuration';
 import { db } from '$lib/server/db';
 import { retry } from './db/retryQuery';
 

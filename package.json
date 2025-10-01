@@ -17,7 +17,7 @@
 		"test:e2e": "playwright test",
 		"test:unit": "./setup-db.sh && vitest --fileParallelism false",
 		"test:gen": "./setup-db.sh && vitest src/lib/server/booking/tests/generatedTests/gen.test.ts --fileParallelism false",
-		"test:one": "./setup-db.sh && vitest src/lib/server/booking/tests/concatenations/connect.test.ts --fileParallelism false",
+		"test:one": "./setup-db.sh && vitest src/lib/server/booking/rideShare/tests/bookToRSTour.test.ts --fileParallelism false",
 		"sim": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/simulation/script.ts",
 		"sim:health": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/simulation/script.ts -- --ongoing --health --restrict --bu --wl",
 		"sim:nohealth": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/simulation/script.ts -- --ongoing --restrict --bu",

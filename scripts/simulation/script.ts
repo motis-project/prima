@@ -1,7 +1,7 @@
 #!/usr/bin/env ts-node
 
 import 'dotenv/config';
-import { bookingApi, BookingParameters } from '../../src/lib/server/booking/bookingApi';
+import { bookingApi, BookingParameters } from '../../src/lib/server/booking/taxi/bookingApi';
 import { cancelRequest } from '../../src/lib/server/db/cancelRequest';
 import { moveTour } from '../../src/lib/server/moveTour';
 import { addAvailability } from '../../src/lib/server/addAvailability';
@@ -18,8 +18,7 @@ import { healthCheck } from '../../src/lib/server/util/healthCheck';
 import { logHelp } from './logHelp';
 import { exec } from 'child_process';
 import path from 'path';
-import { white } from '../../src/lib/server/booking/tests/util';
-import type { ToursWithRequests } from '../../src/lib/util/getToursTypes';
+import { white } from '../../src/lib/server/booking/testUtil';
 import { getCost } from '../../src/lib/testHelpers';
 import { MAX_MATCHING_DISTANCE } from '../../src/lib/constants';
 import { PlanData } from '../../src/lib/openapi';
@@ -315,10 +314,7 @@ async function bookingApiCall(
 	doWhitelist?: boolean,
 	compareCosts?: boolean
 ) {
-	let toursBefore: ToursWithRequests = [];
-	if (compareCosts) {
-		toursBefore = await getToursWithRequests(false);
-	}
+	const toursBefore = await getToursWithRequests(false);
 	const response = await bookingApi(
 		parameters,
 		1,
@@ -341,7 +337,7 @@ async function bookingApiCall(
 			}
 		}
 		const newTour = t[0];
-		const oldTours: ToursWithRequests = toursBefore.filter((t) =>
+		const oldTours = toursBefore.filter((t) =>
 			t.requests.some((r1) => newTour.requests.some((r2) => r2.requestId === r1.requestId))
 		);
 		const newCost = getCost(newTour);

@@ -1,4 +1,5 @@
-import { toExpectedConnectionWithISOStrings } from '$lib/server/booking/bookRide';
+import { toExpectedConnectionWithISOStrings } from '$lib/server/booking/taxi/bookRide';
+import { Mode } from '$lib/server/booking/mode';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
 import { readInt } from '$lib/server/util/readForm';
@@ -6,14 +7,15 @@ import { msg, type Msg } from '$lib/msg';
 import { redirect } from '@sveltejs/kit';
 import { sendMail } from '$lib/server/sendMail';
 import NewRide from '$lib/server/email/NewRide.svelte';
-import { bookingApi } from '$lib/server/booking/bookingApi';
+import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
 import type { Leg } from '$lib/openapi';
 import type { SignedItinerary } from '$lib/planAndSign';
 import { sql } from 'kysely';
 import type { PageServerLoad } from './$types';
 import Prom from 'prom-client';
-import { expectedConnectionFromLeg } from '$lib/expectedConnectionFromLeg';
 import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhitelistRequestTimes';
+import { rideShareApi } from '$lib/server/booking/index';
+import { expectedConnectionFromLeg } from '$lib/server/booking/expectedConnection';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;
@@ -48,6 +50,7 @@ export const actions = {
 		const kidsThreeToFourString = formData.get('kidsThreeToFour');
 		const kidsFiveToSixString = formData.get('kidsFiveToSix');
 		const startFixedString = formData.get('startFixed');
+		const tourIdString = formData.get('tourIdString');
 		const json = formData.get('json');
 
 		if (
@@ -168,15 +171,34 @@ export const actions = {
 			JSON.stringify(toExpectedConnectionWithISOStrings(connection2), null, '\t')
 		);
 
-		const bookingResult = await bookingApi(
-			{ connection1, connection2, capacities },
-			user,
-			locals.session?.isService ?? false,
-			false,
-			kidsZeroToTwo,
-			kidsThreeToFour,
-			kidsFiveToSix
-		);
+		const mode = connection1 !== null ? connection1.mode : connection2?.mode;
+		let tourId = -1;
+		if (mode === Mode.RIDE_SHARE) {
+			if (typeof tourIdString !== 'string') {
+				throw `invalid booking params, tourIdString: ${tourIdString} is not a string. `;
+			}
+			tourId = readInt(tourIdString);
+		}
+		const bookingResult =
+			mode === Mode.TAXI
+				? await bookingApi(
+						{ connection1, connection2, capacities },
+						user,
+						locals.session?.isService ?? false,
+						false,
+						kidsZeroToTwo,
+						kidsThreeToFour,
+						kidsFiveToSix
+					)
+				: await rideShareApi(
+						{ connection1, connection2, capacities },
+						user,
+						locals.session?.isService ?? false,
+						kidsZeroToTwo,
+						kidsThreeToFour,
+						kidsFiveToSix,
+						tourId
+					);
 		if (bookingResult.status !== 200) {
 			console.log(
 				'Booking failed: ',

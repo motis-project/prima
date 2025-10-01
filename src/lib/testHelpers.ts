@@ -4,7 +4,7 @@ import type { Coordinates } from '$lib/util/Coordinates';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
-import type { BusStop } from './server/booking/BusStop';
+import type { BusStop } from './server/booking/taxi/BusStop';
 import type { TourWithRequests } from './util/getToursTypes';
 import { getScheduledEventTime } from './util/getScheduledEventTime';
 
@@ -95,7 +95,8 @@ export const setRequest = async (
 			kidsFiveToSix: 0,
 			kidsThreeToFour: 0,
 			kidsZeroToTwo: 0,
-			ticketPrice: (passengers ?? 1) * 300
+			ticketPrice: (passengers ?? 1) * 300,
+			pending: false
 		})
 		.returning('id')
 		.executeTakeFirstOrThrow();
@@ -164,12 +165,14 @@ export const addTestUser = async (company?: number) => {
 export const clearDatabase = async () => {
 	await db.deleteFrom('availability').execute();
 	await db.deleteFrom('event').execute();
+	await db.deleteFrom('journey').execute();
 	await db.deleteFrom('request').execute();
 	await db.deleteFrom('eventGroup').execute();
-	await db.deleteFrom('journey').execute();
 	await db.deleteFrom('tour').execute();
 	await db.deleteFrom('vehicle').execute();
 	await db.deleteFrom('session').execute();
+	await db.deleteFrom('rideShareTour').execute();
+	await db.deleteFrom('rideShareVehicle').execute();
 	await db.deleteFrom('user').execute();
 	await db.deleteFrom('company').execute();
 };
@@ -177,7 +180,9 @@ export const clearDatabase = async () => {
 export const clearTours = async () => {
 	await db.deleteFrom('event').execute();
 	await db.deleteFrom('request').execute();
+	await db.deleteFrom('eventGroup').execute();
 	await db.deleteFrom('tour').execute();
+	await db.deleteFrom('rideShareTour').execute();
 };
 
 export const getTours = async () => {
@@ -189,6 +194,30 @@ export const getTours = async () => {
 				eb
 					.selectFrom('request')
 					.whereRef('request.tour', '=', 'tour.id')
+					.selectAll()
+					.select((eb) => [
+						jsonArrayFrom(
+							eb
+								.selectFrom('event')
+								.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+								.whereRef('event.request', '=', 'request.id')
+								.selectAll()
+						).as('events')
+					])
+			).as('requests')
+		])
+		.execute();
+};
+
+export const getRSTours = async () => {
+	return await db
+		.selectFrom('rideShareTour')
+		.selectAll()
+		.select((eb) => [
+			jsonArrayFrom(
+				eb
+					.selectFrom('request')
+					.whereRef('request.rideShareTour', '=', 'rideShareTour.id')
 					.selectAll()
 					.select((eb) => [
 						jsonArrayFrom(
