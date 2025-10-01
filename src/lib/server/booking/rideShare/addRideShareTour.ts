@@ -4,6 +4,7 @@ import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer'
 import { SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
 import { carRouting } from '$lib/util/carRouting';
+import { MINUTE } from '$lib/util/time';
 
 export async function getRideShareTourCommunicatedTimes(
 	time: number,
@@ -38,10 +39,19 @@ async function util(
 		return undefined;
 	}
 	const duration = routingResult[0].duration * 1000;
-	const startTime = startFixed ? time : time - duration;
-	const endTime = startFixed ? time + duration : time;
-	const newTourInterval = new Interval(startTime, endTime);
-
+	const allowedArrivalsAtFixed = new Interval(
+		startFixed ? time : time - 10 * MINUTE,
+		startFixed ? time + 10 * MINUTE : time
+	);
+	const allowedArrivalsAtOther = allowedArrivalsAtFixed.shift(
+		(getScheduledTimeBufferDropoff(duration) + duration) * (startFixed ? 1 : -1)
+	);
+	const allowedArrivalsAtStart = startFixed ? allowedArrivalsAtFixed : allowedArrivalsAtOther;
+	const allowedArrivalsAtEnd = !startFixed ? allowedArrivalsAtFixed : allowedArrivalsAtOther;
+	const fullTravelInterval = new Interval(
+		Math.max(Date.now(), allowedArrivalsAtStart.startTime),
+		allowedArrivalsAtEnd.endTime
+	);
 	const dayStart = new Date(time);
 	dayStart.setHours(0, 0, 0, 0);
 
@@ -65,72 +75,84 @@ async function util(
 			'rideShareTour.id as tourId'
 		])
 		.execute();
-	if (
-		otherTourEvents.some((e) =>
-			newTourInterval.overlaps(new Interval(e.scheduledTimeStart, e.scheduledTimeEnd))
-		)
-	) {
-		console.log('adding tour: interval overlaps with other tour events', otherTourEvents, newTourInterval);
-		return undefined;
-	}
-	const earlierEvents = otherTourEvents.filter((e) => e.scheduledTimeStart < startTime);
+
+	const splitTime = allowedArrivalsAtStart.startTime + duration;
+	const earlierEvents = otherTourEvents.filter((e) => e.scheduledTimeStart < splitTime);
 	const lastEventBefore =
 		earlierEvents.length === 0
 			? null
 			: earlierEvents.reduce((max, curr) =>
 					curr.scheduledTimeStart > max.scheduledTimeStart ? curr : max
 				);
-	const laterEvents = otherTourEvents.filter((e) => e.scheduledTimeStart >= startTime);
+	const laterEvents = otherTourEvents.filter((e) => e.scheduledTimeStart >= splitTime);
 	const firstEventAfter =
 		laterEvents.length === 0
 			? null
 			: laterEvents.reduce((min, curr) =>
 					curr.scheduledTimeStart < min.scheduledTimeStart ? curr : min
 				);
-	let prevLegDuration = 0;
-	let nextLegDuration = 0;
+	let allowedIntervals = [fullTravelInterval];
 	if (lastEventBefore !== null) {
 		const prevLegDurationResult = (await carRouting(lastEventBefore, start)).direct;
-		if (
-			prevLegDurationResult.length === 0 ||
-			newTourInterval
-				.expand(prevLegDurationResult[0].duration, 0)
-				.covers(lastEventBefore.scheduledTimeEnd)
-		) {
-			console.log('adding tour: previous leg conflict', newTourInterval, prevLegDurationResult, lastEventBefore);
+		if (prevLegDurationResult.length === 0) {
+			console.log('adding tour: previous leg conflict', prevLegDurationResult, lastEventBefore);
 			return undefined;
 		}
-		prevLegDuration = prevLegDurationResult[0].duration * 1000;
+		allowedIntervals = Interval.subtract(allowedIntervals, [
+			new Interval(lastEventBefore.scheduledTimeStart, lastEventBefore.scheduledTimeEnd).expand(
+				prevLegDurationResult[0].duration,
+				0
+			)
+		]);
 	}
 	if (firstEventAfter !== null) {
 		const nextLegDurationResult = (await carRouting(target, firstEventAfter)).direct;
-		if (
-			nextLegDurationResult.length === 0 ||
-			newTourInterval
-				.expand(0, nextLegDurationResult[0].duration)
-				.covers(firstEventAfter.scheduledTimeStart)
-		) {
-			console.log('adding tour: next leg conflict', newTourInterval, nextLegDurationResult, firstEventAfter);
+		if (nextLegDurationResult.length === 0) {
+			console.log('adding tour: next leg conflict', nextLegDurationResult, firstEventAfter);
 			return undefined;
 		}
-		nextLegDuration = nextLegDurationResult[0].duration * 1000;
+		allowedIntervals = Interval.subtract(allowedIntervals, [
+			new Interval(firstEventAfter.scheduledTimeStart, firstEventAfter.scheduledTimeEnd).expand(
+				0,
+				nextLegDurationResult[0].duration
+			)
+		]);
 	}
-	const prevLegLeeway =
-		lastEventBefore === null
-			? Number.MAX_VALUE
-			: startTime - prevLegDuration - lastEventBefore.scheduledTimeEnd;
-	const nextLegLeeway =
-		firstEventAfter === null
-			? Number.MAX_VALUE
-			: firstEventAfter.scheduledTimeStart - endTime - nextLegDuration;
-	const startTimeShifted = startTime - Math.min(SCHEDULED_TIME_BUFFER_PICKUP, prevLegLeeway);
-	const endTimeShifted =
-		endTime + Math.min(getScheduledTimeBufferDropoff(endTime - startTime), nextLegLeeway);
+	allowedIntervals = allowedIntervals.filter((i) => i.size() >= duration);
+	if (allowedIntervals.length === 0) {
+		console.log('adding tour: allowed intervals conflict', allowedIntervals)
+		return undefined;
+	}
+	const bestInterval = allowedIntervals.reduce(
+		(best, curr) =>
+			(best = (startFixed ? best.startTime > curr.startTime : best.startTime < curr.startTime)
+				? curr
+				: best),
+		allowedIntervals[0]
+	);
+	let startTime = -1;
+	let targetTime = -1;
+	let startTimeShifted = -1;
+	let targetTimeShifted = -1;
+	let leeway = bestInterval.size() - duration;
+	if (startFixed) {
+		startTimeShifted = bestInterval.startTime;
+		startTime = startTimeShifted + Math.min(leeway, SCHEDULED_TIME_BUFFER_PICKUP);
+		leeway -= Math.min(leeway, SCHEDULED_TIME_BUFFER_PICKUP);
+		targetTime = startTime + duration;
+		targetTimeShifted = targetTime + Math.min(leeway, getScheduledTimeBufferDropoff(duration));
+	} else {
+		targetTimeShifted = bestInterval.endTime;
+		targetTime = targetTimeShifted - Math.min(leeway, getScheduledTimeBufferDropoff(duration));
+		leeway -= Math.min(leeway, getScheduledTimeBufferDropoff(duration));
+		startTime = targetTime - duration;
+		startTimeShifted = startTime - Math.min(leeway, SCHEDULED_TIME_BUFFER_PICKUP);
+	}
 	return {
 		startTimeStart: startTimeShifted,
 		startTimeEnd: startTime,
-		targetTimeStart: endTime,
-		targetTimeEnd: endTimeShifted,
+		targetTimeStart: targetTime,
+		targetTimeEnd: targetTimeShifted,
 		duration
 	};
 }
