@@ -7,9 +7,8 @@ import { cancelRequest } from '$lib/server/db/cancelRequest';
 import { getRideshareToursAsItinerary } from '$lib/server/booking/index';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-
 	const result = await getRideshareToursAsItinerary(locals.session?.userId!, parseInt(params.slug));
-	
+
 	if (result.journeys.length != 1) {
 		error(404, 'Not found');
 	}

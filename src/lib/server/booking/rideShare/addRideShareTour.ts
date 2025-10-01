@@ -120,7 +120,7 @@ async function util(
 	}
 	allowedIntervals = allowedIntervals.filter((i) => i.size() >= duration);
 	if (allowedIntervals.length === 0) {
-		console.log('adding tour: allowed intervals conflict', allowedIntervals)
+		console.log('adding tour: allowed intervals conflict', allowedIntervals);
 		return undefined;
 	}
 	const bestInterval = allowedIntervals.reduce(

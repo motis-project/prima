@@ -14,6 +14,7 @@
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
 	import Time from '../../routing/Time.svelte';
+	import { posToLocation } from '$lib/map/Location';
 
 	const { data } = $props();
 </script>
@@ -61,12 +62,15 @@
 	</div>
 
 	{#if page.state.showMap}
-		<PopupMap itinerary={data.journey} />
+		<PopupMap
+			from={posToLocation(data.journey.legs[0].from, 0)}
+			to={posToLocation(data.journey.legs[data.journey.legs.length - 1].to, 0)}
+		/>
 	{:else}
 		{#if data.negotiating}
 			<Message msg={msg('openRequest')} />
 
-			{#each data.negotiating as n}
+			{#each data.requests as n}
 				<Card.Root class="min-w-72 border-input">
 					<Card.Content class="flex flex-col gap-4 p-4">
 						<h3>{t.ride.requestBy} {n.name}</h3>

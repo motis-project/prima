@@ -8,6 +8,7 @@
 	import { t } from '$lib/i18n/translation';
 	import type { Snippet } from 'svelte';
 	import DisplayAddresses from '$lib/ui/DisplayAddresses.svelte';
+	import { isRideShareLeg } from './utils';
 
 	const {
 		it,
@@ -43,8 +44,10 @@
 		<div class="flex gap-4">
 			<span>{formatDurationSec(it.duration)}</span>
 			<Separator orientation="vertical" />
-			{it.transfers}
-			{t.transfers}
+			{#if !it.legs.every(isRideShareLeg)}
+				{it.transfers}
+				{t.transfers}
+			{/if}
 		</div>
 		{#if showAddress}
 			<span class="break-words text-left">

@@ -34,7 +34,7 @@
 
 	const { data, form } = $props();
 
-	let msg = $state<Msg>();
+	let msg = $state<Msg | undefined>();
 	let fromItems = $state<Array<Location>>([]);
 	let toItems = $state<Array<Location>>([]);
 	let from = $state<Location>({
@@ -79,6 +79,7 @@
 	$effect(() => {
 		if (from.value.match && to.value.match && vehicle && time && timeType) {
 			loading = true;
+			msg = undefined;
 			clearTimeout(searchDebounceTimer);
 			searchDebounceTimer = setTimeout(() => {
 				fetch('/api/rideShareTimes', {
@@ -98,10 +99,10 @@
 						return response.json();
 					})
 					.then((j) => {
-						if (!j) {
+						if (!j || !j.end || !j.start) {
 							msg = { type: 'error', text: 'noRouteFound' };
 							loading = false;
-
+							replaceState('', {});
 							return;
 						}
 						const it: Itinerary = {
@@ -116,6 +117,7 @@
 					})
 					.catch((err) => {
 						msg = { type: 'error', text: 'routingRequestFailed' };
+						replaceState('', {});
 						loading = false;
 					});
 			}, 400);
@@ -127,15 +129,19 @@
 	{#if page.state.showMap}
 		<PopupMap bind:from bind:to itinerary={page.state.selectedItinerary} />
 	{:else}
-		<form method="post" class="flex flex-col gap-6" use:enhance={() => {
-			return async ({ update }) => {
-				update({ reset: false });
-			};
-		}}>
+		<form
+			method="post"
+			class="flex flex-col gap-6"
+			use:enhance={() => {
+				return async ({ update }) => {
+					update({ reset: false });
+				};
+			}}
+		>
 			<h3 class="text-xl font-medium">{t.ride.create}</h3>
 			<p>{t.ride.intro}</p>
 
-			<Message class="mb-6" msg={form?.msg} />
+			<Message class="mb-6" msg={form?.msg || msg} />
 
 			<div class="flex flex-row gap-2">
 				<Select.Root type="single" name="vehicle" bind:value={vehicle}>
