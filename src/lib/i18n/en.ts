@@ -81,6 +81,7 @@ const translations: Translations = {
 		startDestNotInSameZone: 'Start and destination not in the same zone.',
 		noVehicle: 'No vehicle available.',
 		routingRequestFailed: 'Routing request failed.',
+		vehicleConflict: 'The selected vehicle is not available at the selected time.',
 
 		// Booking
 		bookingError: 'The ride could not be booked.',

@@ -82,6 +82,7 @@ export type Translations = {
 		startDestNotInSameZone: string;
 		noVehicle: string;
 		routingRequestFailed: string;
+		vehicleConflict: string;
 
 		// Booking
 		bookingError: string;

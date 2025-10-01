@@ -4,55 +4,17 @@ import { db } from '$lib/server/db';
 import { msg, type Msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
 import { cancelRequest } from '$lib/server/db/cancelRequest';
+import { getRideshareToursAsItinerary } from '$lib/server/booking/index';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const journey = await db
-		.selectFrom('journey')
-		.leftJoin('request', 'journey.request1', 'request.id')
-		.leftJoin('event', 'event.request', 'request.id')
-		.leftJoin('tour', 'tour.id', 'request.tour')
-		.leftJoin('vehicle', 'vehicle.id', 'tour.vehicle')
-		.orderBy('event.communicatedTime', 'asc')
-		.select([
-			'json',
-			'request.passengers',
-			'request.luggage',
-			'request.wheelchairs',
-			'request.cancelled',
-			'request.ticketCode',
-			'request.ticketChecked',
-			'request.ticketPrice',
-			'request.customer',
-			'request.id as requestId',
-			'request.kidsZeroToTwo',
-			'request.kidsThreeToFour',
-			'request.kidsFiveToSix',
-			'event.communicatedTime',
-			'vehicle.licensePlate',
-			'journey.id as journeyId'
-		])
-		.where('journey.id', '=', parseInt(params.slug))
-		.where('user', '=', locals.session!.userId!)
-		.limit(1)
-		.executeTakeFirst();
 
-	if (journey == undefined) {
+	const result = await getRideshareToursAsItinerary(locals.session?.userId!, parseInt(params.slug));
+	
+	if (result.journeys.length != 1) {
 		error(404, 'Not found');
 	}
 
-	return {
-		...journey,
-		journey: journey.json,
-		negotiating: [
-			{
-				// TODO
-				name: 'Dummy',
-				email: 'email@email.com',
-				phone: '115',
-				journey: journey.json
-			}
-		]
-	};
+	return result.journeys[0];
 };
 
 export const actions = {

@@ -84,6 +84,7 @@ const translations: Translations = {
 		startDestNotInSameZone: 'Start und Ziel nicht im selben Pflichtfahrgebiet.',
 		noVehicle: 'Kein Fahrzeug verfügbar.',
 		routingRequestFailed: 'Routinganfrage fehlgeschlagen.',
+		vehicleConflict: 'Das gewählte Fahrzeug ist zum gewählten Zeitpunkt nicht verfügbar.',
 
 		// Booking
 		bookingError: 'Die Fahrt konnte nicht gebucht werden.',

@@ -1,29 +1,33 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
-import { msg, type Msg } from '$lib/msg';
-import { readInt } from '$lib/server/util/readForm';
-import { cancelRequest } from '$lib/server/db/cancelRequest';
+import { addRideShareTour } from '$lib/server/booking/index';
+import { msg } from '$lib/msg';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	return {};
+	const vehicles = await db
+		.selectFrom('rideShareVehicle')
+		.where('owner', '=', locals.session?.userId!)
+		.select(['rideShareVehicle.id', 'model as licensePlate', 'passengers', 'luggage']).execute();
+	return { vehicles };
 };
 
 export const actions = {
-	cancel: async ({ request, locals }): Promise<{ msg: Msg }> => {
+	default: async ({ request, locals }) => {
 		const formData = await request.formData();
-		const requestId = readInt(formData.get('requestId'));
-		await cancelRequest(requestId, locals.session!.userId!);
-		return { msg: msg('requestCancelled', 'success') };
-	},
-	remove: async ({ request, locals }) => {
-		const formData = await request.formData();
-		const journeyId = readInt(formData.get('journeyId'));
-		await db
-			.deleteFrom('journey')
-			.where('journey.id', '=', journeyId)
-			.where('user', '=', locals.session!.userId!)
-			.execute();
-		return redirect(302, `/bookings`);
+		const parseCoords = (prefix: string) => {
+			return {
+				lat: parseFloat(formData.get(prefix + 'Lat')),
+				lng: parseFloat(formData.get(prefix + 'Lon')),
+			};
+		};
+		console.log(formData);
+		// TODO transaction, address
+		const tourId = await addRideShareTour(new Date(formData.get('time')).getTime(), formData.get('timeType') !== 'arrival', parseInt(formData.get('passengers')), parseInt(formData.get('luggage')), locals.session.userId!, parseInt(formData.get('vehicle')), parseCoords('start'), parseCoords('end'));
+		console.log('weird');
+		if (tourId == undefined) {
+			return fail(400, { msg: msg('vehicleConflict') });
+		}
+		return redirect(302, `/ride-offers`);
 	}
 };

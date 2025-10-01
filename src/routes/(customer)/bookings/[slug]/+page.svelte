@@ -138,7 +138,7 @@
 				day: 'numeric'
 			})}
 		</p>
-		{#if data.negotiating}
+		{#if data.pending}
 			<Message msg={msg('stillNegotiating')} />
 		{/if}
 		<ConnectionDetail
