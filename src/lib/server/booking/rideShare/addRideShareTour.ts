@@ -90,8 +90,6 @@ async function util(
 			: laterEvents.reduce((min, curr) =>
 					curr.scheduledTimeStart < min.scheduledTimeStart ? curr : min
 				);
-	let prevLegDuration = 0;
-	let nextLegDuration = 0;
 	let allowedIntervals = [fullTravelInterval];
 	if (lastEventBefore !== null) {
 		const prevLegDurationResult = (await carRouting(lastEventBefore, start)).direct;
@@ -104,7 +102,6 @@ async function util(
 				0
 			)
 		]);
-		prevLegDuration = prevLegDurationResult[0].duration * 1000;
 	}
 	if (firstEventAfter !== null) {
 		const nextLegDurationResult = (await carRouting(target, firstEventAfter)).direct;
@@ -117,7 +114,6 @@ async function util(
 				nextLegDurationResult[0].duration
 			)
 		]);
-		nextLegDuration = nextLegDurationResult[0].duration * 1000;
 	}
 	allowedIntervals = allowedIntervals.filter((i) => i.size() >= duration);
 	if (allowedIntervals.length === 0) {
