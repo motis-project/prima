@@ -268,7 +268,7 @@
 			<input type="hidden" name="startLat" value={from.value.match?.lat} />
 			<input type="hidden" name="startLon" value={from.value.match?.lon} />
 			<input type="hidden" name="startLabel" value={from.label} />
-			<input type="hidden" name="endLat" value={to.value.match?.lon} />
+			<input type="hidden" name="endLat" value={to.value.match?.lat} />
 			<input type="hidden" name="endLon" value={to.value.match?.lon} />
 			<input type="hidden" name="endLabel" value={to.label} />
 			<input type="hidden" name="time" value={time.getTime()} />

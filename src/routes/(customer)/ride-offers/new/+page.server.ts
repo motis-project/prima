@@ -8,7 +8,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const vehicles = await db
 		.selectFrom('rideShareVehicle')
 		.where('owner', '=', locals.session?.userId!)
-		.select(['rideShareVehicle.id', 'model as licensePlate', 'passengers', 'luggage']).execute();
+		.select(['rideShareVehicle.id', 'licensePlate', 'passengers', 'luggage']).execute();
 	return { vehicles };
 };
 
@@ -23,7 +23,7 @@ export const actions = {
 		};
 		console.log(formData);
 		// TODO transaction, address
-		const tourId = await addRideShareTour(new Date(formData.get('time')).getTime(), formData.get('timeType') !== 'arrival', parseInt(formData.get('passengers')), parseInt(formData.get('luggage')), locals.session.userId!, parseInt(formData.get('vehicle')), parseCoords('start'), parseCoords('end'));
+		const tourId = await addRideShareTour(parseInt(formData.get('time')), formData.get('timeType') !== 'arrival', parseInt(formData.get('passengers')), parseInt(formData.get('luggage')), locals.session.userId!, parseInt(formData.get('vehicle')), parseCoords('start'), parseCoords('end'));
 		console.log('weird');
 		if (tourId == undefined) {
 			return fail(400, { msg: msg('vehicleConflict') });

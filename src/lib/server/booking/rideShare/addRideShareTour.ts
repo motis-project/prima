@@ -34,6 +34,7 @@ async function util(
 > {
 	const routingResult = (await carRouting(start, target)).direct;
 	if (routingResult.length === 0) {
+		console.log('adding tour: routing failed');
 		return undefined;
 	}
 	const duration = routingResult[0].duration * 1000;
@@ -69,6 +70,7 @@ async function util(
 			newTourInterval.overlaps(new Interval(e.scheduledTimeStart, e.scheduledTimeEnd))
 		)
 	) {
+		console.log('adding tour: interval overlaps with other tour events', otherTourEvents, newTourInterval);
 		return undefined;
 	}
 	const earlierEvents = otherTourEvents.filter((e) => e.scheduledTimeStart < startTime);
@@ -95,6 +97,7 @@ async function util(
 				.expand(prevLegDurationResult[0].duration, 0)
 				.covers(lastEventBefore.scheduledTimeEnd)
 		) {
+			console.log('adding tour: previous leg conflict', newTourInterval, prevLegDurationResult, lastEventBefore);
 			return undefined;
 		}
 		prevLegDuration = prevLegDurationResult[0].duration * 1000;
@@ -107,6 +110,7 @@ async function util(
 				.expand(0, nextLegDurationResult[0].duration)
 				.covers(firstEventAfter.scheduledTimeStart)
 		) {
+			console.log('adding tour: next leg conflict', newTourInterval, nextLegDurationResult, firstEventAfter);
 			return undefined;
 		}
 		nextLegDuration = nextLegDurationResult[0].duration * 1000;

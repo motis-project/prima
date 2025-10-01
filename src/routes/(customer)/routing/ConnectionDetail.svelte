@@ -110,7 +110,7 @@
 		<span class="ml-6">
 			{formatDurationSec(l.duration)}
 			{getModeName(l)}
-			{formatDistanceMeters(Math.round(l.distance!))}
+			{l.distance ? formatDistanceMeters(Math.round(l.distance!)) : ''}
 		</span>
 		{#if l.rental && l.rental.systemName}
 			<span class="ml-6">

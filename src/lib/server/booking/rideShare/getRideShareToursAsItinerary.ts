@@ -9,9 +9,8 @@ export async function getRideshareToursAsItinerary(
 	const query = db
 		.selectFrom('rideShareTour')
 		.innerJoin('rideShareVehicle', 'rideShareVehicle.id', 'rideShareTour.vehicle')
-		.select(['rideShareTour.id', 'communicatedStart', 'communicatedEnd', 'cancelled'])
 		.select((eb) => [
-			'rideShareTour.id', 'communicatedStart', 'communicatedEnd', 'cancelled',
+			'rideShareTour.id', 'communicatedStart', 'communicatedEnd', 'cancelled', 'rideShareVehicle.licensePlate',
 			jsonArrayFrom(
 				eb
 					.selectFrom('request')
@@ -84,7 +83,7 @@ export async function getRideshareToursAsItinerary(
 					}
 				};
 			});
-			const events = journey.requests.flatMap(r => r.events).sort((a, b) => b.communicatedTime - a.communicatedTime);
+			const events = journey.requests.flatMap(r => r.events).sort((a, b) => a.communicatedTime - b.communicatedTime);
 			for (let i = 1; i < events.length; i++) {
 				j.legs.push(createLeg(events[i - 1], events[i]));
 			}
