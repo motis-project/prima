@@ -8,4 +8,6 @@ export type InsertionInfo = {
 	insertionIdx: number;
 	currentRange: Range;
 	provider: number;
+	vehicle: number;
+	tourId: number;
 };

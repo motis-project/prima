@@ -1,7 +1,8 @@
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { type Database } from '$lib/server/db';
 import { sql, Transaction } from 'kysely';
-import type { BookRideShareResponse, ExpectedConnection } from './bookRide';
+import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
+import type { BookRideShareResponse } from './bookRide';
 
 export async function insertRideShareRequest(
 	r: BookRideShareResponse,

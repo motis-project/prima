@@ -19,6 +19,7 @@ export async function up(db) {
         .addColumn('color', 'varchar', (col) => col.notNull())
         .addColumn('model', 'varchar', (col) => col.notNull())
         .addColumn('smoking_allowed', 'boolean', (col) => col.notNull())
+        .addColumn('license_plate', 'varchar', (col) => col.notNull())
         .addColumn('owner', 'integer', (col) => col.references('user.id').notNull())
         .execute();
 

@@ -2,7 +2,6 @@ import type { Transaction } from 'kysely';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import type { Database } from '$lib/server/db';
 import { Interval } from '$lib/util/interval';
-import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import {
 	getBookingAvailability,
 	type Event
@@ -20,18 +19,7 @@ import { getLegDurationUpdates } from './getLegDurationUpdates';
 import { DAY } from '$lib/util/time';
 import { getFirstAndLastEvents } from './getFirstAndLastEvents';
 import { isSamePlace } from '../isSamePlace';
-import { Mode } from '../mode';
-
-export type ExpectedConnection = {
-	start: Coordinates;
-	target: Coordinates;
-	startTime: UnixtimeMs;
-	targetTime: UnixtimeMs;
-	signature: string;
-	startFixed: boolean;
-	requestedTime: UnixtimeMs;
-	mode: Mode;
-};
+import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 
 export type ExpectedConnectionWithISoStrings = {
 	start: Coordinates;

@@ -53,3 +53,13 @@ export const white = async (body: string) => {
 		body
 	});
 };
+
+export const whiteRideShare = async (body: string) => {
+	return await fetch('http://localhost:5173/api/whitelistRideShare', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body
+	});
+};

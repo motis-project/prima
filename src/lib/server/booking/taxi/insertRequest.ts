@@ -1,4 +1,5 @@
-import type { BookRideResponse, ExpectedConnection } from '$lib/server/booking/taxi/bookRide';
+import type { BookRideResponse } from '$lib/server/booking/taxi/bookRide';
+import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { type Database } from '$lib/server/db';
 import { sql, Transaction } from 'kysely';

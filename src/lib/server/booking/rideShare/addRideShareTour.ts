@@ -5,7 +5,7 @@ import { SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
 import { carRouting } from '$lib/util/carRouting';
 
-export async function getRideShareTourTimes(
+export async function getRideShareTourCommunicatedTimes(
 	time: number,
 	startFixed: boolean,
 	vehicle: number,

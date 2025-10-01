@@ -1,7 +1,7 @@
 import { addTestUser, clearDatabase } from '$lib/testHelpers';
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { createSession } from '$lib/server/auth/session';
-import { inXMinutes } from '$lib/server/booking/testUtil';
+import { inXMinutes } from '$lib/server/booking/testUtils';
 import { addRideShareTour } from '../addRideShareTour';
 import { getRideShareTours } from '../getRideShareTours';
 import { Interval } from '$lib/util/interval';
@@ -35,7 +35,7 @@ beforeEach(async () => {
 
 describe('Create new ride share tour', () => {
 	it('simple success case', async () => {
-		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false);
+		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test');
 		await addRideShareTour(
 			inXMinutes(100),
 			true,

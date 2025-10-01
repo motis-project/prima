@@ -1,4 +1,4 @@
-import type { ExpectedConnection } from './bookRide';
+import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
 import type { Insertion } from './insertion';
 import { type Event, type VehicleWithInterval } from './getBookingAvailability';

@@ -1,9 +1,6 @@
 import { db } from '$lib/server/db';
-import {
-	bookRide,
-	type BookRideResponse,
-	type ExpectedConnection
-} from '$lib/server/booking/taxi/bookRide';
+import { bookRide, type BookRideResponse } from '$lib/server/booking/taxi/bookRide';
+import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { signEntry } from '$lib/server/booking/signEntry';
 import { insertRequest } from './insertRequest';
