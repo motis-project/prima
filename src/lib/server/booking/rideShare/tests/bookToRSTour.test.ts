@@ -5,7 +5,7 @@ import { createSession } from '$lib/server/auth/session';
 import { dateInXMinutes, inXMinutes, whiteRideShare } from '$lib/server/booking/testUtils';
 import { signEntry } from '$lib/server/booking/signEntry';
 import { rideShareApi } from '../rideShareApi';
-import { addRideShareTour } from '../addRideShareTour';
+import { addRideShareTour, getRideShareTourCommunicatedTimes } from '../addRideShareTour';
 import { Mode } from '$lib/server/booking/mode';
 import { createRideShareVehicle } from '../createRideShareVehicle';
 import { acceptRideShareRequest } from '../acceptRideShareRequest';
@@ -46,6 +46,14 @@ beforeEach(async () => {
 describe('add ride share request', () => {
 	it('simple success case', async () => {
 		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test');
+		const communicatedTimes = await getRideShareTourCommunicatedTimes(
+			inXMinutes(40),
+			true,
+			vehicle,
+			inSchleife,
+			inKleinPriebus
+		);
+		expect(communicatedTimes?.start).toBe(inXMinutes(40));
 		const tourId = await addRideShareTour(
 			inXMinutes(40),
 			true,
