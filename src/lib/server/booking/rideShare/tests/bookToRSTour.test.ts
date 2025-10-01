@@ -46,14 +46,22 @@ beforeEach(async () => {
 describe('add ride share request', () => {
 	it('simple success case', async () => {
 		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test');
-		const communicatedTimes = await getRideShareTourCommunicatedTimes(
+		const communicatedTimesStartFixed = await getRideShareTourCommunicatedTimes(
 			inXMinutes(40),
 			true,
 			vehicle,
 			inSchleife,
 			inKleinPriebus
 		);
-		expect(communicatedTimes?.start).toBe(inXMinutes(40));
+		expect(communicatedTimesStartFixed?.start).toBe(inXMinutes(40));
+		const communicatedTimesStartNotFixed = await getRideShareTourCommunicatedTimes(
+			inXMinutes(40),
+			false,
+			vehicle,
+			inSchleife,
+			inKleinPriebus
+		);
+		expect(communicatedTimesStartNotFixed?.end).toBe(inXMinutes(40));
 		const tourId = await addRideShareTour(
 			inXMinutes(40),
 			true,
