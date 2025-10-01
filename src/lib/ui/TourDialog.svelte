@@ -28,6 +28,7 @@
 	import CancelMessageDialog from './CancelMessageDialog.svelte';
 	import TableHead from '$lib/shadcn/table/table-head.svelte';
 	import { BabyIcon } from 'lucide-svelte';
+	import IntermediateMarkers from './IntermediateMarkers.svelte';
 
 	let {
 		tours = $bindable(),
@@ -233,6 +234,7 @@
 							}}
 						/>
 					</GeoJSON>
+					<IntermediateMarkers prefix={name + '-r_ ' + i} legs={[leg]} />
 				{/each}
 			{/if}
 		{/await}

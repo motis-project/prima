@@ -247,6 +247,7 @@ export type Translations = {
 		pin: string;
 		pinExplainer: string;
 		itineraryOnDate: string;
+		withVehicle: string;
 	};
 
 	explainer: {

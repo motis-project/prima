@@ -11,7 +11,14 @@ export async function getRideshareToursAsItinerary(
 		id: number;
 		cancelled: boolean;
 		negotiating: boolean;
-		requests: { journey: Itinerary }[];
+		requests: {
+			journey: Itinerary;
+			name: string;
+			email: string;
+			phone: string | undefined;
+			pending: boolean;
+			id: number;
+		}[];
 		licensePlate: string | undefined;
 	}[];
 }> {
@@ -31,6 +38,7 @@ export async function getRideshareToursAsItinerary(
 					.whereRef('rideShareTour.id', '=', 'request.rideShareTour')
 					.where('request.cancelled', '=', false)
 					.select((eb) => [
+						'request.id',
 						'pending',
 						'user.firstName',
 						'user.name',
@@ -96,7 +104,12 @@ export async function getRideshareToursAsItinerary(
 									startTime: new Date(a.communicatedTime || 0).toISOString(),
 									endTime: new Date(b.communicatedTime || 0).toISOString(),
 									legs: [createLeg(a, b)]
-								}
+								},
+								name: r.firstName + ' ' + r.name,
+								email: r.email,
+								phone: undefined,
+								pending: r.pending,
+								id: r.id
 							};
 						});
 			const events = journey.requests

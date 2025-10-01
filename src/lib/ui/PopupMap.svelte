@@ -15,17 +15,20 @@
 	import Layer from '$lib/map/Layer.svelte';
 	import { t } from '$lib/i18n/translation';
 	import type { SignedItinerary } from '$lib/planAndSign';
+	import IntermediateMarkers from './IntermediateMarkers.svelte';
 
 	let {
 		from = $bindable(),
 		to = $bindable(),
 		itinerary,
-		areas = $bindable()
+		areas = $bindable(),
+		intermediateStops = $bindable()
 	}: {
 		from?: Location | undefined;
 		to?: Location | undefined;
 		itinerary?: SignedItinerary | undefined;
 		areas?: unknown;
+		intermediateStops?: boolean;
 	} = $props();
 
 	let fromMarker = $state<maplibregl.Marker>();
@@ -177,6 +180,10 @@
 
 		{#if to}
 			<Marker color="red" draggable={true} {level} bind:location={to} bind:marker={toMarker} />
+		{/if}
+
+		{#if intermediateStops && itinerary}
+			<IntermediateMarkers legs={itinerary.legs} />
 		{/if}
 	</Map>
 </div>
