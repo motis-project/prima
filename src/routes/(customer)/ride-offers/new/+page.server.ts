@@ -1,13 +1,13 @@
-import { error, fail, redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { addRideShareTour } from '$lib/server/booking/index';
 import { msg } from '$lib/msg';
 
-export const load: PageServerLoad = async ({ params, locals }) => {
+export const load: PageServerLoad = async ({ locals }) => {
 	const vehicles = await db
 		.selectFrom('rideShareVehicle')
-		.where('owner', '=', locals.session?.userId!)
+		.where('owner', '=', locals.session!.userId!)
 		.select(['rideShareVehicle.id', 'licensePlate', 'passengers', 'luggage'])
 		.execute();
 	return { vehicles };
@@ -32,7 +32,9 @@ export const actions = {
 			locals.session.userId!,
 			parseInt(formData.get('vehicle')),
 			parseCoords('start'),
-			parseCoords('end')
+			parseCoords('end'),
+			formData.get('startLabel'),
+			formData.get('endLabel')
 		);
 		console.log('weird');
 		if (tourId == undefined) {

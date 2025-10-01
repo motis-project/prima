@@ -24,7 +24,6 @@
 	import { type TimeType } from '$lib/util/TimeType';
 	import { Label } from '$lib/shadcn/label';
 	import * as Select from '$lib/shadcn/select';
-	import { lngLatToStr } from '$lib/util/lngLatToStr';
 	import { posToLocation } from '$lib/map/Location';
 	import Time from '../../routing/Time.svelte';
 	import { formatDurationSec } from '../../routing/formatDuration';
@@ -52,14 +51,6 @@
 	let vehicle = $state<string | undefined>(
 		data.vehicles.length ? data.vehicles[0].id.toString() : undefined
 	);
-
-	const toPlaceString = (l: Location) => {
-		if (l.value.match?.level) {
-			return `${lngLatToStr(l.value.match!)},${l.value.match.level}`;
-		} else {
-			return `${lngLatToStr(l.value.match!)},0`;
-		}
-	};
 
 	const getLocation = () => {
 		if (navigator && navigator.geolocation) {
@@ -115,7 +106,7 @@
 						replaceState('', { selectedItinerary: it });
 						loading = false;
 					})
-					.catch((err) => {
+					.catch(() => {
 						msg = { type: 'error', text: 'routingRequestFailed' };
 						replaceState('', {});
 						loading = false;

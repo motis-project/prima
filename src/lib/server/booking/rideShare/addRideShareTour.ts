@@ -165,7 +165,9 @@ export const addRideShareTour = async (
 	provider: number,
 	vehicle: number,
 	start: Coordinates,
-	target: Coordinates
+	target: Coordinates,
+	startAddress = '',
+	targetAddress = ''
 ): Promise<number | undefined> => {
 	const timesResult = await util(time, startFixed, vehicle, start, target);
 	if (timesResult === undefined) {
@@ -221,7 +223,7 @@ export const addRideShareTour = async (
 				scheduledTimeEnd: startTimeEnd,
 				prevLegDuration: 0,
 				nextLegDuration: duration,
-				address: ''
+				address: startAddress
 			})
 			.returning('id')
 			.execute()
@@ -246,7 +248,7 @@ export const addRideShareTour = async (
 				scheduledTimeEnd: targetTimeEnd,
 				prevLegDuration: duration,
 				nextLegDuration: 0,
-				address: ''
+				address: targetAddress
 			})
 			.returning('id')
 			.execute()

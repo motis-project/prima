@@ -1,5 +1,5 @@
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
-import { db, type Database } from '$lib/server/db';
+import { db } from '$lib/server/db';
 import type { Itinerary, Mode } from '$lib/openapi';
 
 export async function getRideshareToursAsItinerary(
@@ -15,7 +15,7 @@ export async function getRideshareToursAsItinerary(
 		licensePlate: string | undefined;
 	}[];
 }> {
-	const query = db
+	let query = db
 		.selectFrom('rideShareTour')
 		.innerJoin('rideShareVehicle', 'rideShareVehicle.id', 'rideShareTour.vehicle')
 		.select((eb) => [
@@ -54,7 +54,7 @@ export async function getRideshareToursAsItinerary(
 		])
 		.where('owner', '=', userId);
 	if (tourId != undefined) {
-		query.where('id', '=', tourId);
+		query = query.where('rideShareTour.id', '=', tourId);
 	}
 	const journeys = await query.execute();
 

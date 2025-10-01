@@ -43,8 +43,8 @@
 	<Card.Content class="flex flex-col gap-4 p-4">
 		<div class="flex gap-4">
 			<span>{formatDurationSec(it.duration)}</span>
-			<Separator orientation="vertical" />
 			{#if !it.legs.every(isRideShareLeg)}
+				<Separator orientation="vertical" />
 				{it.transfers}
 				{t.transfers}
 			{/if}
