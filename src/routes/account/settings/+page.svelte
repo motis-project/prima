@@ -6,6 +6,7 @@
 	import Meta from '$lib/ui/Meta.svelte';
 	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import { t } from '$lib/i18n/translation';
+	import AddRideShareVehicle from './AddRideShareVehicle.svelte';
 
 	const { data, form } = $props();
 	let showTooltip = $state(false);
@@ -69,5 +70,9 @@
 				<Button type="submit" variant="outline">{t.account.logout}</Button>
 			</div>
 		</form>
+	</Panel>
+
+	<Panel title={t.buttons.addVehicle} subtitle={''}>
+		<AddRideShareVehicle text={t.buttons.addVehicle} useWFit={true}></AddRideShareVehicle>
 	</Panel>
 </div>

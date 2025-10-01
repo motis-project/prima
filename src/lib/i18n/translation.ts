@@ -252,6 +252,15 @@ export type Translations = {
 		alt2: string;
 		alt3: string;
 	};
+
+	buttons: {
+		addVehicle: string;
+	};
+
+	rideShare: {
+		maxPassengers: string;
+		passengers: string;
+	};
 };
 
 const translations: Map<string, Translations> = new Map(Object.entries({ en, de }));
