@@ -42,13 +42,16 @@ async function util(
 		startFixed ? time : time - 10 * MINUTE,
 		startFixed ? time + 10 * MINUTE : time
 	);
+	const fullCommunicatedDuration =
+		SCHEDULED_TIME_BUFFER_PICKUP + (getScheduledTimeBufferDropoff(duration) + duration);
 	const allowedArrivalsAtOther = allowedArrivalsAtFixed.shift(
-		(getScheduledTimeBufferDropoff(duration) + duration) * (startFixed ? 1 : -1)
+		fullCommunicatedDuration * (startFixed ? 1 : -1)
 	);
 	const allowedArrivalsAtStart = startFixed ? allowedArrivalsAtFixed : allowedArrivalsAtOther;
+	allowedArrivalsAtStart.startTime = Math.max(Date.now(), allowedArrivalsAtStart.startTime);
 	const allowedArrivalsAtEnd = !startFixed ? allowedArrivalsAtFixed : allowedArrivalsAtOther;
 	const fullTravelInterval = new Interval(
-		Math.max(Date.now(), allowedArrivalsAtStart.startTime),
+		allowedArrivalsAtStart.startTime,
 		allowedArrivalsAtEnd.endTime
 	);
 	const dayStart = new Date(time);
@@ -115,7 +118,9 @@ async function util(
 			)
 		]);
 	}
-	allowedIntervals = allowedIntervals.filter((i) => i.size() >= duration);
+	allowedIntervals = allowedIntervals.filter(
+		(i) => i.size() >= duration && allowedArrivalsAtFixed.overlaps(i)
+	);
 	if (allowedIntervals.length === 0) {
 		return undefined;
 	}
@@ -133,13 +138,25 @@ async function util(
 	let leeway = bestInterval.size() - duration;
 	if (startFixed) {
 		startTimeShifted = bestInterval.startTime;
-		startTime = startTimeShifted + Math.min(leeway, SCHEDULED_TIME_BUFFER_PICKUP);
+		startTime =
+			startTimeShifted +
+			Math.min(
+				leeway,
+				SCHEDULED_TIME_BUFFER_PICKUP,
+				bestInterval.intersect(allowedArrivalsAtFixed)!.size()
+			);
 		leeway -= Math.min(leeway, SCHEDULED_TIME_BUFFER_PICKUP);
 		targetTime = startTime + duration;
 		targetTimeShifted = targetTime + Math.min(leeway, getScheduledTimeBufferDropoff(duration));
 	} else {
 		targetTimeShifted = bestInterval.endTime;
-		targetTime = targetTimeShifted - Math.min(leeway, getScheduledTimeBufferDropoff(duration));
+		targetTime =
+			targetTimeShifted -
+			Math.min(
+				leeway,
+				getScheduledTimeBufferDropoff(duration),
+				bestInterval.intersect(allowedArrivalsAtFixed)!.size()
+			);
 		leeway -= Math.min(leeway, getScheduledTimeBufferDropoff(duration));
 		startTime = targetTime - duration;
 		startTimeShifted = startTime - Math.min(leeway, SCHEDULED_TIME_BUFFER_PICKUP);

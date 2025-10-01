@@ -44,7 +44,7 @@ beforeEach(async () => {
 });
 
 describe('add ride share request', () => {
-	it('simple success case', async () => {
+	it('getRideShareTourCommunicatedTimes', async () => {
 		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test');
 		const communicatedTimesStartFixed = await getRideShareTourCommunicatedTimes(
 			inXMinutes(40),
@@ -62,6 +62,9 @@ describe('add ride share request', () => {
 			inKleinPriebus
 		);
 		expect(communicatedTimesStartNotFixed?.end).toBe(inXMinutes(40));
+	});
+	it('simple success case', async () => {
+		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test');
 		const tourId = await addRideShareTour(
 			inXMinutes(40),
 			true,
