@@ -5,7 +5,7 @@ import { createSession } from '$lib/server/auth/session';
 import { dateInXMinutes, inXMinutes, whiteRideShare } from '$lib/server/booking/testUtils';
 import { signEntry } from '$lib/server/booking/signEntry';
 import { rideShareApi } from '../rideShareApi';
-import { addRideShareTour } from '../addRideShareTour';
+import { addRideShareTour, getRideShareTourCommunicatedTimes } from '../addRideShareTour';
 import { Mode } from '$lib/server/booking/mode';
 import { createRideShareVehicle } from '../createRideShareVehicle';
 import { acceptRideShareRequest } from '../acceptRideShareRequest';
@@ -44,6 +44,25 @@ beforeEach(async () => {
 });
 
 describe('add ride share request', () => {
+	it('getRideShareTourCommunicatedTimes', async () => {
+		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test');
+		const communicatedTimesStartFixed = await getRideShareTourCommunicatedTimes(
+			inXMinutes(40),
+			true,
+			vehicle,
+			inSchleife,
+			inKleinPriebus
+		);
+		expect(communicatedTimesStartFixed?.start).toBe(inXMinutes(40));
+		const communicatedTimesStartNotFixed = await getRideShareTourCommunicatedTimes(
+			inXMinutes(40),
+			false,
+			vehicle,
+			inSchleife,
+			inKleinPriebus
+		);
+		expect(communicatedTimesStartNotFixed?.end).toBe(inXMinutes(40));
+	});
 	it('simple success case', async () => {
 		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test');
 		const tourId = await addRideShareTour(
