@@ -3,7 +3,7 @@ import { msg } from '$lib/msg';
 import fs from 'fs/promises';
 import path from 'path';
 
-export async function uploadPhoto(
+export async function replacePhoto(
 	userId: number | undefined,
 	file: FormDataEntryValue | null,
 	relativePath: string,

@@ -8,6 +8,7 @@
 	import { enhance } from '$app/forms';
 	import { t } from '$lib/i18n/translation';
 	import * as ToggleGroup from '$lib/shadcn/toggle-group';
+	import UploadPhoto from '$lib/ui/UploadPhoto.svelte';
 
 	const {
 		text,
@@ -40,8 +41,9 @@
 		{/if}
 		{text}
 	</Popover.Trigger>
-	<Popover.Content>
+	<Popover.Content class="max-h-[80vh] w-96 overflow-y-auto p-6">
 		<form
+			enctype="multipart/form-data"
 			method="post"
 			action={'?/addVehicle'}
 			class="flex flex-col gap-4"
@@ -91,7 +93,7 @@
 				<div>
 					{#if hasColor}
 						<Button onclick={() => (hasColor = false)}>Farbe nicht angeben</Button>
-						<Input name="color" type="color" bind:value={color} />
+						<Input type="color" bind:value={color} />
 					{:else}
 						<Button onclick={() => (hasColor = true)}>Farbe angeben</Button>
 					{/if}
@@ -102,7 +104,7 @@
 				<div>
 					{#if hasModel}
 						<Button onclick={() => (hasModel = false)}>Modell nicht angeben</Button>
-						<Input name="model" type="string" bind:value={model} />
+						<Input type="string" bind:value={model} />
 					{:else}
 						<Button onclick={() => (hasModel = true)}>Modell angeben</Button>
 					{/if}
@@ -117,13 +119,16 @@
 				</ToggleGroup.Root>
 			</div>
 			<input type="hidden" name="id" value={undefined} />
-			<input type="hidden" name="hasModelString" value={hasColor ? '1' : '0'} />
-			<input type="hidden" name="hasColorString" value={hasModel ? '1' : '0'} />
+			<input type="hidden" name="color" value={color} />
+			<input type="hidden" name="model" value={model} />
+			<input type="hidden" name="hasModelString" value={hasModel ? '1' : '0'} />
+			<input type="hidden" name="hasColorString" value={hasColor ? '1' : '0'} />
 			<input
 				type="hidden"
 				name="smokingAllowed"
 				value={smokingAllowed === smokingOptions[0] ? '0' : '1'}
 			/>
+			<UploadPhoto name="vehiclePicture" />
 			<Button type="submit" variant="outline" data-testid="create-vehicle">
 				{v == undefined ? 'Fahrzeug anlegen' : 'Änderungen speichern'}
 			</Button>

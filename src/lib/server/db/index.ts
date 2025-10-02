@@ -147,6 +147,7 @@ export interface Database {
 		model: string | null;
 		smokingAllowed: boolean;
 		licensePlate: string;
+		picture: string | null;
 	};
 }
 

@@ -78,9 +78,17 @@
 	</Panel>
 
 	<Panel title={t.account.profilePicture} subtitle={t.account.profilePictureSubtitle}>
-		<UploadPhoto
-			action="/account/settings?/uploadProfilePicture"
-			currentUrl={data.profilePicture ?? undefined}
-		/>
+		<form
+			method="post"
+			action={'/account/settings?/uploadProfilePicture'}
+			enctype="multipart/form-data"
+			class="mt-8"
+		>
+			<UploadPhoto
+				name="profilePicture"
+				displaySaveButton={true}
+				currentUrl={data.profilePicture ?? undefined}
+			/>
+		</form>
 	</Panel>
 </div>

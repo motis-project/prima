@@ -14,7 +14,7 @@ import { getUserPasswordHash } from '$lib/server/auth/user';
 import { readInt } from '$lib/server/util/readForm';
 import { LICENSE_PLATE_REGEX } from '$lib/constants';
 import { createRideShareVehicle } from '$lib/server/booking';
-import { uploadPhoto as replacePhoto } from '$lib/server/util/uploadPhoto';
+import { replacePhoto } from '$lib/server/util/uploadPhoto';
 
 export async function load(event: PageServerLoadEvent) {
 	const user = await db
@@ -133,6 +133,7 @@ export const actions: Actions = {
 		const smokingAllowedString = formData.get('smokingAllowed');
 		const luggage = readInt(formData.get('luggage'));
 		const passengers = readInt(formData.get('passengers'));
+		const vehiclePicture = formData.get('vehiclePicture');
 
 		if (passengers !== 1 && passengers !== 2 && passengers !== 3 && passengers !== 4) {
 			return fail(400, { msg: msg('invalidSeats') });
@@ -168,6 +169,20 @@ export const actions: Actions = {
 		if (isNaN(luggage) || luggage <= 0 || luggage >= 11) {
 			return fail(400, { msg: msg('invalidStorage') });
 		}
+
+		let vehiclePicturePath: string | null = null;
+		if (vehiclePicture !== null) {
+			const uploadResult = await replacePhoto(
+				user,
+				vehiclePicture,
+				'/uploads/vehicle_pictures',
+				null
+			);
+			if (typeof uploadResult !== 'string') {
+				return uploadResult;
+			}
+			vehiclePicturePath = uploadResult;
+		}
 		console.log(
 			'created ride share vehicle',
 			await createRideShareVehicle(
@@ -177,7 +192,8 @@ export const actions: Actions = {
 				hasColor ? color : null,
 				hasModel ? model : null,
 				smokingAllowed,
-				licensePlate
+				licensePlate,
+				vehiclePicturePath
 			)
 		);
 	},
@@ -185,7 +201,7 @@ export const actions: Actions = {
 	uploadProfilePicture: async (event) => {
 		const userId = event.locals.session?.userId;
 		const formData = await event.request.formData();
-		const file = formData.get('photo');
+		const file = formData.get('profilePicture');
 		const oldPhoto = await db
 			.selectFrom('user')
 			.where('user.id', '=', userId!)
