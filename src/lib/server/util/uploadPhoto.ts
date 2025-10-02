@@ -6,7 +6,8 @@ import path from 'path';
 export async function uploadPhoto(
 	userId: number | undefined,
 	file: FormDataEntryValue | null,
-	relativePath: string
+	relativePath: string,
+	oldPhoto: string | null
 ) {
 	if (!userId) {
 		return fail(403);
@@ -34,5 +35,17 @@ export async function uploadPhoto(
 	await fs.writeFile(filePath, buffer);
 
 	const lookupPath = `${relativePath}/${fileName}`;
+
+	if (oldPhoto !== null) {
+		try {
+			const oldFilePath = path.resolve(`static${oldPhoto}`);
+			await fs.unlink(oldFilePath);
+		} catch (err) {
+			if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+				console.error('Failed to delete old profile picture:', err);
+			}
+		}
+	}
+
 	return lookupPath;
 }

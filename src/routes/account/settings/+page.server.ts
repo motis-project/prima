@@ -14,7 +14,7 @@ import { getUserPasswordHash } from '$lib/server/auth/user';
 import { readInt } from '$lib/server/util/readForm';
 import { LICENSE_PLATE_REGEX } from '$lib/constants';
 import { createRideShareVehicle } from '$lib/server/booking';
-import { uploadPhoto } from '$lib/server/util/uploadPhoto';
+import { uploadPhoto as replacePhoto } from '$lib/server/util/uploadPhoto';
 
 export async function load(event: PageServerLoadEvent) {
 	const user = await db
@@ -186,7 +186,17 @@ export const actions: Actions = {
 		const userId = event.locals.session?.userId;
 		const formData = await event.request.formData();
 		const file = formData.get('photo');
-		const uploadResult = await uploadPhoto(userId, file, '/uploads/profile_pictures');
+		const oldPhoto = await db
+			.selectFrom('user')
+			.where('user.id', '=', userId!)
+			.select(['user.profilePicture'])
+			.executeTakeFirst();
+		const uploadResult = await replacePhoto(
+			userId,
+			file,
+			'/uploads/profile_pictures',
+			oldPhoto?.profilePicture ?? null
+		);
 		if (!(typeof uploadResult === 'string')) {
 			return uploadResult;
 		}
