@@ -96,7 +96,12 @@ const translations: Translations = {
 
 		// Feedback
 		feedbackThank: 'Vielen Dank für Ihr Feedback!',
-		feedbackMissing: 'Kein Feedback gegeben'
+		feedbackMissing: 'Kein Feedback gegeben',
+
+		// Picture Upload
+		noFileUploaded: 'kein Bild hochgeladen',
+		invalidFileType: 'ungültiger Dateityp',
+		fileTooLarge: 'Datei ist zu groß'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',
@@ -148,7 +153,9 @@ const translations: Translations = {
 		newPassword: 'Neues Passwort',
 		oldPassword: 'Altes Passwort',
 		resendCode: 'Code erneut senden',
-		verify: 'Verifizieren'
+		verify: 'Verifizieren',
+		profilePicture: 'Profilbild',
+		profilePictureSubtitle: 'Hier können Sie Ihr Profilbild ändern'
 	},
 	rating: {
 		thanksForUsing: 'Vielen Dank, dass Sie das ÖPNV Taxi benutzt haben.',
@@ -295,7 +302,9 @@ const translations: Translations = {
 	},
 
 	buttons: {
-		addVehicle: 'Fahrzeug hinzufügen'
+		addVehicle: 'Fahrzeug hinzufügen',
+		uploadPhoto: 'Foto hochladen',
+		savePhoto: 'Foto speichern'
 	},
 
 	rideShare: {

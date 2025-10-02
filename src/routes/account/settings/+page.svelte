@@ -7,6 +7,7 @@
 	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import { t } from '$lib/i18n/translation';
 	import AddRideShareVehicle from './AddRideShareVehicle.svelte';
+	import UploadPhoto from '$lib/ui/UploadPhoto.svelte';
 
 	const { data, form } = $props();
 	let showTooltip = $state(false);
@@ -74,5 +75,12 @@
 
 	<Panel title={t.buttons.addVehicle} subtitle={''}>
 		<AddRideShareVehicle text={t.buttons.addVehicle} useWFit={true}></AddRideShareVehicle>
+	</Panel>
+
+	<Panel title={t.account.profilePicture} subtitle={t.account.profilePictureSubtitle}>
+		<UploadPhoto
+			action="/account/settings?/uploadProfilePicture"
+			currentUrl={data.profilePicture ?? undefined}
+		/>
 	</Panel>
 </div>

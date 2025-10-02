@@ -93,7 +93,12 @@ const translations: Translations = {
 
 		// Feedback
 		feedbackThank: 'Thank you very much for your feedback!',
-		feedbackMissing: 'No feedback given'
+		feedbackMissing: 'No feedback given',
+
+		// Picture Upload
+		noFileUploaded: 'no file uploaded',
+		invalidFileType: 'invalid file type',
+		fileTooLarge: 'file too large'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',
@@ -143,7 +148,9 @@ const translations: Translations = {
 		newPassword: 'New Password',
 		oldPassword: 'Old Password',
 		resendCode: 'Resend code',
-		verify: 'Verify'
+		verify: 'Verify',
+		profilePicture: 'Profile Picture',
+		profilePictureSubtitle: 'Change your profile picture here'
 	},
 	rating: {
 		thanksForUsing: 'Thank you for using the public transport taxi.',
@@ -288,7 +295,9 @@ const translations: Translations = {
 	},
 
 	buttons: {
-		addVehicle: 'Add vehicle'
+		addVehicle: 'Add vehicle',
+		uploadPhoto: 'upload photo',
+		savePhoto: 'save photo'
 	},
 
 	rideShare: {

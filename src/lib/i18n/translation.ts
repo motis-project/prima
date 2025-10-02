@@ -95,6 +95,11 @@ export type Translations = {
 		// Feedback
 		feedbackThank: string;
 		feedbackMissing: string;
+
+		// Picture Upload
+		noFileUploaded: string;
+		invalidFileType: string;
+		fileTooLarge: string;
 	};
 	admin: {
 		completedToursSubtitle: string;
@@ -141,6 +146,8 @@ export type Translations = {
 		oldPassword: string;
 		resendCode: string;
 		verify: string;
+		profilePicture: string;
+		profilePictureSubtitle: string;
 	};
 	rating: {
 		thanksForUsing: string;
@@ -255,6 +262,8 @@ export type Translations = {
 
 	buttons: {
 		addVehicle: string;
+		uploadPhoto: string;
+		savePhoto: string;
 	};
 
 	rideShare: {

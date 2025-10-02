@@ -14,19 +14,21 @@ import { getUserPasswordHash } from '$lib/server/auth/user';
 import { readInt } from '$lib/server/util/readForm';
 import { LICENSE_PLATE_REGEX } from '$lib/constants';
 import { createRideShareVehicle } from '$lib/server/booking';
+import { uploadPhoto } from '$lib/server/util/uploadPhoto';
 
 export async function load(event: PageServerLoadEvent) {
 	const user = await db
 		.selectFrom('user')
 		.where('user.id', '=', event.locals.session!.userId)
-		.select(['user.email', 'user.phone'])
+		.select(['user.email', 'user.phone', 'user.profilePicture'])
 		.executeTakeFirst();
 	if (user === undefined) {
 		error(404, { message: 'User not found' });
 	}
 	return {
 		email: user.email,
-		phone: user.phone
+		phone: user.phone,
+		profilePicture: user.profilePicture
 	};
 }
 
@@ -178,5 +180,21 @@ export const actions: Actions = {
 				licensePlate
 			)
 		);
+	},
+
+	uploadProfilePicture: async (event) => {
+		const userId = event.locals.session?.userId;
+		const formData = await event.request.formData();
+		const file = formData.get('photo');
+		const uploadResult = await uploadPhoto(userId, file, '/uploads/profile_pictures');
+		if (!(typeof uploadResult === 'string')) {
+			return uploadResult;
+		}
+
+		await db
+			.updateTable('user')
+			.where('id', '=', userId!)
+			.set({ profilePicture: uploadResult })
+			.execute();
 	}
 };

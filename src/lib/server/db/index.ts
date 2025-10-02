@@ -24,6 +24,7 @@ export interface Database {
 		zipCode: string;
 		city: string;
 		region: string;
+		profilePicture: string | null;
 	};
 	session: {
 		id: string;
