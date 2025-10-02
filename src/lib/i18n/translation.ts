@@ -275,6 +275,7 @@ export type Translations = {
 		negotiateHeader: string;
 		negotiatePrivacy: string;
 		negotiateExplanation: string;
+		startAndEnd: string;
 		profile: string;
 		email: string;
 		phone: string;
@@ -283,6 +284,7 @@ export type Translations = {
 		sendNegotiationRequest: string;
 		requestBy: string;
 		acceptRequest: string;
+		requestAccepted: string;
 	};
 };
 

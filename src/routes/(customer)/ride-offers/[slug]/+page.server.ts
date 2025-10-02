@@ -1,6 +1,6 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { type Msg } from '$lib/msg';
+import { msg, type Msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
 import { cancelRequest } from '$lib/server/db/cancelRequest';
 import { acceptRideShareRequest, getRideshareToursAsItinerary } from '$lib/server/booking/index';
@@ -25,6 +25,9 @@ export const actions = {
 	accept: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const requestId = readInt(formData.get('requestId'));
-		return await acceptRideShareRequest(requestId, locals.session!.userId!);
+		const result = await acceptRideShareRequest(requestId, locals.session!.userId!);
+		if (result.status != 200) {
+			return fail(result.status, { msg: msg('unknownError') });
+		}
 	}
 };

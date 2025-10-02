@@ -40,6 +40,7 @@ export async function getRideshareToursAsItinerary(
 					.select((eb) => [
 						'request.id',
 						'pending',
+						'user.id as customerId',
 						'user.firstName',
 						'user.name',
 						'user.email',
@@ -65,9 +66,9 @@ export async function getRideshareToursAsItinerary(
 		query = query.where('rideShareTour.id', '=', tourId);
 	}
 	const journeys = await query.execute();
-
 	return {
 		journeys: journeys.map((journey) => {
+			type Evt = (typeof journeys)[0]['requests'][0]['events'][0];
 			const j: Itinerary = {
 				transfers: 0,
 				duration: (journey.communicatedEnd - journey.communicatedStart) / 1000,
@@ -75,7 +76,7 @@ export async function getRideshareToursAsItinerary(
 				endTime: new Date(journey.communicatedEnd).toISOString(),
 				legs: []
 			};
-			const createLeg = (a, b) => {
+			const createLeg = (a: Evt, b: Evt) => {
 				const start = new Date(a.communicatedTime || 0).toISOString();
 				const end = new Date(b.communicatedTime || 0).toISOString();
 				return {
@@ -94,24 +95,26 @@ export async function getRideshareToursAsItinerary(
 			const requests =
 				tourId == undefined
 					? []
-					: journey.requests.map((r) => {
-							const a = r.events[0];
-							const b = r.events[1];
-							return {
-								journey: {
-									transfers: 0,
-									duration: ((b.communicatedTime || 0) - (a.communicatedTime || 0)) / 1000,
-									startTime: new Date(a.communicatedTime || 0).toISOString(),
-									endTime: new Date(b.communicatedTime || 0).toISOString(),
-									legs: [createLeg(a, b)]
-								},
-								name: r.firstName + ' ' + r.name,
-								email: r.email,
-								phone: undefined,
-								pending: r.pending,
-								id: r.id
-							};
-						});
+					: journey.requests
+							.filter((r) => r.customerId != userId)
+							.map((r) => {
+								const a = r.events[0];
+								const b = r.events[1];
+								return {
+									journey: {
+										transfers: 0,
+										duration: ((b.communicatedTime || 0) - (a.communicatedTime || 0)) / 1000,
+										startTime: new Date(a.communicatedTime || 0).toISOString(),
+										endTime: new Date(b.communicatedTime || 0).toISOString(),
+										legs: [createLeg(a, b)]
+									},
+									name: r.firstName + ' ' + r.name,
+									email: r.email,
+									phone: undefined,
+									pending: r.pending,
+									id: r.id
+								};
+							});
 			const events = journey.requests
 				.flatMap((r) => r.events)
 				.sort((a, b) => a.communicatedTime - b.communicatedTime);
@@ -122,7 +125,8 @@ export async function getRideshareToursAsItinerary(
 				journey: j,
 				id: journey.id,
 				cancelled: journey.cancelled,
-				negotiating: journey.requests.some((r) => r.pending),
+				negotiating:
+					journey.requests.some((r) => r.pending) && journey.communicatedStart > Date.now(),
 				licensePlate: journey.licensePlate,
 				requests: requests
 			};

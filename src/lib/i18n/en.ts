@@ -313,15 +313,17 @@ const translations: Translations = {
 			'The following data will be shared with the person offering the ride when sending the negotiation request:',
 		negotiateExplanation:
 			'You need to negotiate the price and details with the person offering this ride.',
+		startAndEnd: 'Start and destination of the journey',
 		profile: 'Your profile',
 		email: 'Your email',
 		phone: 'Your phone',
 		noPhone:
-			'You have not set a phone number in your account. Consider providing a direct means of contact in the message field below.',
+			'You have not set a phone number in your account. The person offering the ride will only be able to contact you via email.',
 		negotiateMessage: 'Message to the person offering the ride',
 		sendNegotiationRequest: 'Send negotation request',
 		requestBy: 'Request from',
-		acceptRequest: 'Confirm ride'
+		acceptRequest: 'Confirm ride',
+		requestAccepted: 'Ride confirmed'
 	}
 };
 

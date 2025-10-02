@@ -17,6 +17,7 @@
 	import { posToLocation } from '$lib/map/Location';
 
 	const { data, form } = $props();
+	let loading = $state(false);
 </script>
 
 <div class="flex h-full flex-col gap-4 md:min-h-[70dvh] md:w-96">
@@ -120,13 +121,30 @@
 						<span>{n.journey.legs[0].to.name}</span>
 					</div>
 					{#if n.pending}
-						<form method="post" action="?/accept" use:enhance>
+						<form
+							method="post"
+							action="?/accept"
+							use:enhance={() => {
+								loading = true;
+								return async ({ update }) => {
+									await update();
+									window.setTimeout(() => {
+										loading = false;
+									}, 5000);
+								};
+							}}
+						>
 							<input type="hidden" name="requestId" value={n.id} />
-							<Button type="submit" class="w-full">
+							<Button type="submit" class="w-full" disabled={loading}>
 								<Check class="mr-1 size-4" />
 								{t.ride.acceptRequest}
 							</Button>
 						</form>
+					{:else}
+						<Button type="submit" class="w-full" disabled={true}>
+							<Check class="mr-1 size-4" />
+							{t.ride.requestAccepted}
+						</Button>
 					{/if}
 				</Card.Content>
 			</Card.Root>

@@ -1,16 +1,17 @@
 import { toExpectedConnectionWithISOStrings } from '$lib/server/booking/taxi/bookRide';
 import { Mode } from '$lib/server/booking/mode';
 import type { Capacities } from '$lib/util/booking/Capacities';
-import { db } from '$lib/server/db';
+import { db, type Database } from '$lib/server/db';
 import { readInt } from '$lib/server/util/readForm';
 import { msg, type Msg } from '$lib/msg';
 import { redirect } from '@sveltejs/kit';
 import { sendMail } from '$lib/server/sendMail';
 import NewRide from '$lib/server/email/NewRide.svelte';
+import NewRideSharingRequest from '$lib/server/email/NewRideSharingRequest.svelte';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
 import type { Leg } from '$lib/openapi';
 import type { SignedItinerary } from '$lib/planAndSign';
-import { sql } from 'kysely';
+import { sql, type ExpressionBuilder } from 'kysely';
 import type { PageServerLoad, PageServerLoadEvent } from './$types';
 import Prom from 'prom-client';
 import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhitelistRequestTimes';
@@ -227,54 +228,98 @@ export const actions = {
 				.executeTakeFirstOrThrow()
 		).id;
 
-		console.log('SENDING EMAIL TO TAXI OWNERS');
 		try {
-			const rideInfo = await db
-				.selectFrom('request')
-				.innerJoin('tour', 'request.tour', 'tour.id')
-				.innerJoin('vehicle', 'tour.vehicle', 'vehicle.id')
-				.innerJoin('user', 'vehicle.company', 'user.companyId')
-				.select((eb) => [
-					'user.email',
-					'user.name',
-					'tour.id as tourId',
-					eb
-						.selectFrom('event')
-						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-						.where('event.request', '=', request1)
-						.orderBy('eventGroup.scheduledTimeStart', 'asc')
-						.limit(1)
-						.select('address')
-						.as('firstAddress'),
-					eb
-						.selectFrom('event')
-						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-						.where('event.request', '=', request1)
-						.orderBy('eventGroup.scheduledTimeStart', 'asc')
-						.limit(1)
-						.select('eventGroup.scheduledTimeStart')
-						.as('firstTime'),
-					eb
-						.selectFrom('event')
-						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-						.where('event.request', '=', request1)
-						.orderBy('eventGroup.scheduledTimeStart', 'desc')
-						.limit(1)
-						.select('address')
-						.as('lastAddress'),
-					eb
-						.selectFrom('event')
-						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-						.where('event.request', '=', request1)
-						.orderBy('eventGroup.scheduledTimeStart', 'desc')
-						.limit(1)
-						.select('eventGroup.scheduledTimeStart')
-						.as('lastTime')
-				])
-				.where('request.id', '=', request1)
-				.where('user.isTaxiOwner', '=', true)
-				.execute();
-			await Promise.all(rideInfo.map((r) => sendMail(NewRide, 'Neue Beförderung', r.email, r)));
+			const getEvents = (eb: ExpressionBuilder<Database, 'request'>) => [
+				eb
+					.selectFrom('event')
+					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+					.where('event.request', '=', request1)
+					.orderBy('eventGroup.scheduledTimeStart', 'asc')
+					.limit(1)
+					.select('address')
+					.as('firstAddress'),
+				eb
+					.selectFrom('event')
+					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+					.where('event.request', '=', request1)
+					.orderBy('eventGroup.scheduledTimeStart', 'asc')
+					.limit(1)
+					.select('eventGroup.scheduledTimeStart')
+					.as('firstTime'),
+				eb
+					.selectFrom('event')
+					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+					.where('event.request', '=', request1)
+					.orderBy('eventGroup.scheduledTimeStart', 'desc')
+					.limit(1)
+					.select('address')
+					.as('lastAddress'),
+				eb
+					.selectFrom('event')
+					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+					.where('event.request', '=', request1)
+					.orderBy('eventGroup.scheduledTimeStart', 'desc')
+					.limit(1)
+					.select('eventGroup.scheduledTimeStart')
+					.as('lastTime')
+			];
+
+			if (mode == Mode.TAXI) {
+				console.log('SENDING EMAIL TO TAXI OWNERS');
+				const rideInfo = await db
+					.selectFrom('request')
+					.innerJoin('tour', 'request.tour', 'tour.id')
+					.innerJoin('vehicle', 'tour.vehicle', 'vehicle.id')
+					.innerJoin('user', 'vehicle.company', 'user.companyId')
+					.select((eb) => ['user.email', 'user.name', 'tour.id as tourId', ...getEvents(eb)])
+					.where('request.id', '=', request1)
+					.where('user.isTaxiOwner', '=', true)
+					.execute();
+				await Promise.all(rideInfo.map((r) => sendMail(NewRide, 'Neue Beförderung', r.email, r)));
+			} else {
+				console.log('SENDING EMAIL TO RIDE SHARE PROVIDER');
+				const rideInfo = await db
+					.selectFrom('request')
+					.innerJoin('rideShareTour', 'request.rideShareTour', 'rideShareTour.id')
+					.innerJoin('rideShareVehicle', 'rideShareTour.vehicle', 'rideShareVehicle.id')
+					.innerJoin('user as provider', 'rideShareVehicle.owner', 'provider.id')
+					.innerJoin('user as passenger', 'request.customer', 'passenger.id')
+					.select((eb) => [
+						'provider.email as providerMail',
+						'provider.name as providerName',
+						'passenger.email as passengerMail',
+						'passenger.name as passengerName',
+						'passenger.phone as passengerPhone',
+						'rideShareTour.id as tourId',
+						'rideShareTour.communicatedStart as journeyTime',
+						...getEvents(eb),
+						eb
+							.selectFrom('event')
+							.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+							.innerJoin('request', 'request.id', 'event.request')
+							.whereRef('request.rideShareTour', '=', 'rideShareTour.id')
+							.orderBy('eventGroup.scheduledTimeStart', 'asc')
+							.limit(1)
+							.select('address')
+							.as('journeyFirst'),
+						eb
+							.selectFrom('event')
+							.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+							.innerJoin('request', 'request.id', 'event.request')
+							.whereRef('request.rideShareTour', '=', 'rideShareTour.id')
+							.orderBy('eventGroup.scheduledTimeStart', 'desc')
+							.limit(1)
+							.select('address')
+							.as('journeyLast')
+					])
+					.where('request.id', '=', request1)
+					.execute();
+				await Promise.all(
+					rideInfo.map((r) =>
+						sendMail(NewRideSharingRequest, 'Neue Mitfahr-Anfrage', r.providerMail, r)
+					)
+				);
+			}
 		} catch {
 			/* nothing we can do about this */
 		}

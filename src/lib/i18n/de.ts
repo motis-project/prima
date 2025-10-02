@@ -320,15 +320,17 @@ const translations: Translations = {
 			'Die folgenden Daten werden beim Senden der Anfrage mit der Person, die diese Mitfahrgelegenheit anbietet, geteilt:',
 		negotiateExplanation:
 			'Sie müssen den Preis und weitere Details mit der anbietenden Person vereinbaren.',
+		startAndEnd: 'Start und Ziel der Fahrt',
 		profile: 'Ihr Profil',
 		email: 'Ihre E-Mail',
 		phone: 'Ihre Telefonnummer',
 		noPhone:
-			'Sie haben keine Telefonnummer in Ihrem Account hinterlegt. Sie sollten eine direkte Kontaktmöglichkeit in der Nachricht unten angeben.',
+			'Sie haben keine Telefonnummer in Ihrem Account hinterlegt. Der Anbieter wird Sie daher nur per E-Mail kontaktieren können.',
 		negotiateMessage: 'Nachricht an den Anbieter der Mitfahrgelegenheit',
 		sendNegotiationRequest: 'Anfrage senden',
 		requestBy: 'Anfrage von',
-		acceptRequest: 'Mitfahrt bestätigen'
+		acceptRequest: 'Mitfahrt bestätigen',
+		requestAccepted: 'Mitfahrt bestätigt'
 	}
 };
 

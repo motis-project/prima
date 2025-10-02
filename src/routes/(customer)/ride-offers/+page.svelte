@@ -29,7 +29,6 @@
 	journeys: {
 		journey: Itinerary;
 		id: number;
-		ticketCode: string | null;
 		cancelled: boolean | null;
 		negotiating: boolean | null;
 	}[]

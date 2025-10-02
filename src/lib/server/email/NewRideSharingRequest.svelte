@@ -10,18 +10,17 @@
 		lastAddress,
 		firstTime,
 		lastTime,
-		name,
 		tourId,
 		passengerName,
-		email,
-		phone,
+		passengerMail,
+		passengerPhone,
 		message
 	} = $props();
 	const tourLink = $derived(`${env.ORIGIN}/ride-offers/${tourId}`);
 </script>
 
 <div>
-	Guten Tag {name},
+	Guten Tag,
 
 	<p>
 		Es gibt eine neue Anfrage zur Ihrem Mitfahrangebot am {formatTime(journeyTime)} von {journeyFirst}
@@ -40,11 +39,13 @@
 
 	<ul>
 		<li>Name: {passengerName}</li>
-		<li>E-Mail: <a href="mailto:{email}">{email}</a></li>
-		{#if phone}
-			<li>Telefonnummer: {phone}</li>
+		<li>E-Mail: <a href="mailto:{passengerMail}">{passengerMail}</a></li>
+		{#if passengerPhone}
+			<li>Telefonnummer: {passengerPhone}</li>
 		{/if}
-		<li>Nachricht: {message}</li>
+		{#if message}
+			<li>Nachricht: {message}</li>
+		{/if}
 	</ul>
 	<p>
 		Bitte nehmen Sie Kontakt mit der interessierten Person auf. Wenn Sie sich auf eine Mitnahme

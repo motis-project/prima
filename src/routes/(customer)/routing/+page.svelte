@@ -44,7 +44,6 @@
 
 	import logo from '$lib/assets/logo-alpha.png';
 	import { isRideShareLeg } from './utils';
-	import { Textarea } from '$lib/shadcn/textarea';
 	import Footer from '$lib/ui/Footer.svelte';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
@@ -273,6 +272,7 @@
 								>
 									<p class="my-2 text-sm">{t.ride.negotiatePrivacy}</p>
 									<ul class="flex list-inside list-disc flex-col gap-2">
+										<li>{t.ride.startAndEnd}</li>
 										<li>{t.ride.profile}</li>
 										<li>{t.ride.email}: {data.user.email}</li>
 										{#if data.user.phone}
@@ -285,12 +285,6 @@
 											{t.ride.noPhone}
 										{/if}
 									</p>
-									<Textarea
-										name="negotationMessage"
-										class="mb-3 h-auto"
-										rows={3}
-										placeholder={t.ride.negotiateMessage}
-									/>
 									<Dialog.Footer>
 										<input
 											type="hidden"
