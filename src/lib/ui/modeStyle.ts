@@ -50,11 +50,9 @@ export const getModeStyle = (l: LegLike): [string, string, string] => {
 			return ['car', '#333333', 'white'];
 
 		case 'ODM':
-			if (isRideShareLeg(l)) {
-				return ['car', '#fdb813', 'white'];
-			} else {
-				return ['taxi', '#fdb813', 'white'];
-			}
+			return ['taxi', '#fdb813', 'white'];
+		case 'RIDE_SHARING':
+			return ['car', '#fdb813', 'white'];
 
 		case 'TRANSIT':
 		case 'BUS':

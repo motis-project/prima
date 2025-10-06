@@ -11,6 +11,7 @@
 	import { getModeName } from './getModeName';
 	import Route from './Route.svelte';
 	import { routeBorderColor, routeColor } from '$lib/ui/modeStyle';
+	import { isOdmLeg } from './utils';
 
 	const {
 		itinerary,
@@ -71,7 +72,7 @@
 
 {#snippet streetLeg(l: Leg)}
 	<div class="flex flex-col gap-y-4 py-8 pl-8 text-muted-foreground">
-		{#if l.mode === 'ODM'}
+		{#if isOdmLeg(l)}
 			<div class="ml-6 flex w-fit flex-col gap-y-2">
 				<Button
 					onclick={() =>
@@ -145,7 +146,7 @@
 						{#if pred.duration}
 							<span class="text-nowrap"
 								>{formatDurationSec(pred.duration)}
-								{#if predpred?.mode === 'ODM'}{t.transfer}{:else}{t.walk}{/if}</span
+								{#if predpred && isOdmLeg(predpred)}{t.transfer}{:else}{t.walk}{/if}</span
 							>
 						{/if}
 						{#if pred.distance}
@@ -228,10 +229,10 @@
 					<div class="pb-8"></div>
 				{/if}
 			</div>
-		{:else if !(isLast && l.duration === 0) && ((i == 0 && l.duration !== 0) || !next || !next.routeShortName || l.mode != 'WALK' || (pred && (pred.mode == 'BIKE' || pred.mode == 'RENTAL'))) && !(isLastPred && l.mode === 'WALK' && next && next.mode === 'ODM')}
+		{:else if !(isLast && l.duration === 0) && ((i == 0 && l.duration !== 0) || !next || !next.routeShortName || l.mode != 'WALK' || (pred && (pred.mode == 'BIKE' || pred.mode == 'RENTAL'))) && !(isLastPred && l.mode === 'WALK' && next && isOdmLeg(next))}
 			<div class="flex w-full items-center justify-between space-x-1">
 				<Route {onClickTrip} {l} />
-				{#if l.mode === 'ODM' && pred}
+				{#if isOdmLeg(l) && pred}
 					<div class="h-0 shrink grow border-t"></div>
 					<div class="content-center px-2 text-sm leading-none text-muted-foreground">
 						{#if pred.mode === 'WALK' && pred.duration}

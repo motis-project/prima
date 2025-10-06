@@ -43,7 +43,7 @@
 	import { planAndSign, type SignedPlanResponse } from '$lib/planAndSign';
 
 	import logo from '$lib/assets/logo-alpha.png';
-	import { isRideShareLeg } from './utils';
+	import { isOdmLeg, isRideShareLeg } from './utils';
 	import Footer from '$lib/ui/Footer.svelte';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
@@ -122,9 +122,9 @@
 						arriveBy: timeType === 'arrival',
 						fromPlace: toPlaceString(from),
 						toPlace: toPlaceString(to),
-						preTransitModes: ['WALK', 'ODM'],
-						postTransitModes: ['WALK', 'ODM'],
-						directModes: ['WALK', 'ODM'],
+						preTransitModes: ['WALK', 'ODM', 'RIDE_SHARING'],
+						postTransitModes: ['WALK', 'ODM', 'RIDE_SHARING'],
+						directModes: ['WALK', 'ODM', 'RIDE_SHARING'],
 						luggage: luggageToInt(luggage),
 						fastestDirectFactor: 1.6,
 						maxMatchingDistance: MAX_MATCHING_DISTANCE,
@@ -236,7 +236,7 @@
 			<Button variant="outline" size="icon" onclick={() => window.history.back()}>
 				<ChevronLeft />
 			</Button>
-			{#if page.state.selectedItinerary.legs.some((l: Leg) => l.mode === 'ODM')}
+			{#if page.state.selectedItinerary.legs.some(isOdmLeg) }
 				{#if data.isLoggedIn}
 					{@const isRideShare = page.state.selectedItinerary.legs.some(isRideShareLeg)}
 					<Dialog.Root>
@@ -259,7 +259,7 @@
 
 								<form
 									method="post"
-									action="?/sendRideShareNegotiationRequest"
+									action="?/bookItineraryWithOdm"
 									use:enhance={() => {
 										loading = true;
 										return async ({ update }) => {
@@ -297,6 +297,7 @@
 										<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
 										<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
 										<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
+										<input type="hidden" name="wheelchairs" value={page.state.selectedItinerary. ? 1 : 0} />
 										<input
 											type="hidden"
 											name="startFixed"

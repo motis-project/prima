@@ -8,7 +8,7 @@
 	import DirectConnection from './DirectConnection.svelte';
 	import { odmPrice, getEuroString } from '$lib/util/odmPrice';
 	import { planAndSign, type SignedItinerary, type SignedPlanResponse } from '$lib/planAndSign';
-	import { isRideShareLeg } from './utils';
+	import { isOdmLeg, isRideShareLeg, isTaxiLeg } from './utils';
 
 	let {
 		routingResponses,
@@ -35,9 +35,9 @@
 </script>
 
 {#snippet odmInfo(it: SignedItinerary)}
-	{#if it.legs.some((l) => l.mode === 'ODM' && isRideShareLeg(l))}
+	{#if it.legs.some((l) => isRideShareLeg(l))}
 		<Info class="size-4" /> {t.ride.negotiateHere}
-	{:else if it.legs.some((l) => l.mode === 'ODM' && !isRideShareLeg(l))}
+	{:else if it.legs.some((l) => isTaxiLeg(l))}
 		<Info class="size-4" /> {t.booking.bookHere} {getEuroString(odmPrice(it, passengers, kids))}
 	{/if}
 {/snippet}
@@ -104,7 +104,7 @@
 											<div class="h-0 shrink grow border-t"></div>
 										</div>
 									{/if}
-									{@const hasODM = it.legs.some((l) => l.mode === 'ODM')}
+									{@const hasODM = it.legs.some(isOdmLeg)}
 									<button onclick={() => selectItinerary(it)}>
 										<ItinerarySummary {it} {baseQuery} info={hasODM ? odmInfo : undefined} />
 									</button>

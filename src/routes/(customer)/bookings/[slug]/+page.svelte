@@ -21,12 +21,12 @@
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
 	import { type Leg } from '$lib/openapi/types.gen';
-	import { isRideShareLeg } from '../../routing/utils';
+	import { isOdmLeg, isRideShareLeg, isTaxiLeg } from '../../routing/utils';
 
 	const { data } = $props();
 
 	let showTicket = $state(false);
-	const isOdm = data.journey.legs.some((l: Leg) => l.mode === 'ODM');
+	const isOdm = data.journey.legs.some(isOdmLeg);
 </script>
 
 <div class="flex h-full flex-col gap-4 md:min-h-[70dvh] md:w-96">
@@ -47,7 +47,7 @@
 							<Waypoints class="mr-1 size-4" />
 							{t.booking.connection}
 						</Button>
-					{:else if !data.isService && data.journey.legs.some((l) => l.mode === 'ODM' && !isRideShareLeg(l))}
+					{:else if !data.isService && data.journey.legs.some(isTaxiLeg)}
 						<Button
 							onclick={() => {
 								showTicket = !showTicket;

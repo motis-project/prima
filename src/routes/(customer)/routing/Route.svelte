@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { t } from '$lib/i18n/translation';
 	import { getModeStyle, routeColor, type LegLike } from '$lib/ui/modeStyle';
-	import { cn, isRideShareLeg } from './utils';
+	import { cn, isOdmLeg, isRideShareLeg } from './utils';
 
 	const {
 		l,
@@ -36,7 +36,7 @@
 	</svg>
 	<div class="text-center">
 		{l.routeShortName}
-		{#if l.mode === 'ODM'}
+		{#if isOdmLeg(l)}
 			{isRideShareLeg(l) ? t.rideSharing : t.taxi}
 		{/if}
 	</div>

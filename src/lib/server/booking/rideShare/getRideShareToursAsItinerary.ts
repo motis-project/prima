@@ -84,7 +84,7 @@ export async function getRideshareToursAsItinerary(
 					scheduledStartTime: start,
 					endTime: end,
 					scheduledEndTime: end,
-					mode: 'ODM' as Mode, // TODO
+					mode: 'RIDE_SHARING' as Mode,
 					from: { name: a.address || '', lat: a.lat || 0, lon: a.lng || 0, level: 0 }, // TODO nullable?
 					to: { name: b.address || '', lat: b.lat || 0, lon: b.lng || 0, level: 0 },
 					duration: ((b.communicatedTime || 0) - (a.communicatedTime || 0)) / 1000,

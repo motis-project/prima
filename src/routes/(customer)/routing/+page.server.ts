@@ -17,6 +17,7 @@ import Prom from 'prom-client';
 import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhitelistRequestTimes';
 import { rideShareApi } from '$lib/server/booking/index';
 import { expectedConnectionFromLeg } from '$lib/server/booking/expectedConnection';
+import { isOdmLeg } from './utils';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;
@@ -112,7 +113,7 @@ export const actions = {
 		}
 
 		const legs = parsedJson!.legs;
-		const firstOdmIndex = legs.findIndex((l: Leg) => l.mode === 'ODM');
+		const firstOdmIndex = legs.findIndex(isOdmLeg);
 		if (firstOdmIndex === -1) {
 			console.log(
 				'Journey with no ODM in bookItineraryWithOdm action. ',
@@ -127,7 +128,7 @@ export const actions = {
 			return { msg: msg('unknownError') };
 		}
 		const firstOdm = legs[firstOdmIndex];
-		const lastOdmIndex = legs.findLastIndex((l: Leg) => l.mode === 'ODM');
+		const lastOdmIndex = legs.findLastIndex(isOdmLeg);
 		const lastOdm = legs[lastOdmIndex];
 		if (!parsedJson.signature1) {
 			console.log(

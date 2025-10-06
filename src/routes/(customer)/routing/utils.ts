@@ -8,5 +8,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function isRideShareLeg(l: Leg | LegLike) {
-	return l.agencyId === 'RideShare' || true;
+	return l.mode == 'RIDE_SHARING';
+}
+
+export function isTaxiLeg(l: Leg | LegLike) {
+	return l.mode == 'ODM';
+}
+
+export function isOdmLeg(l: Leg | LegLike) {
+	return l.mode == 'ODM' || l.mode == 'RIDE_SHARING';
 }
