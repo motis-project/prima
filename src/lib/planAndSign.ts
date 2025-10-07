@@ -1,6 +1,12 @@
 import { type Itinerary, type PlanData, type PlanResponse } from './openapi';
+import type { RideShareTourInfo } from './server/booking/rideShare/getRideShareInfo';
 
-export type SignedItinerary = Itinerary & { signature1?: string; signature2?: string };
+export type SignedItinerary = Itinerary & {
+	signature1?: string;
+	signature2?: string;
+	rideShareTourInfoFirstLeg?: RideShareTourInfo;
+	rideShareTourInfoLastLeg?: RideShareTourInfo;
+};
 
 export type SignedPlanResponse = Omit<PlanResponse, 'itineraries'> & {
 	itineraries: SignedItinerary[];
@@ -19,5 +25,6 @@ export async function planAndSign(
 			...q
 		})
 	});
+	const abc: undefined | SignedPlanResponse = await result.json();
 	return await result.json();
 }

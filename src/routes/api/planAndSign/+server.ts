@@ -4,7 +4,11 @@ import { plan } from '$lib/openapi/services.gen';
 import { signEntry } from '$lib/server/booking/signEntry';
 import type { QuerySerializerOptions } from '@hey-api/client-fetch';
 import { json, type RequestEvent } from '@sveltejs/kit';
-import { isOdmLeg } from '../../(customer)/routing/utils';
+import { isOdmLeg, isRideShareLeg } from '../../(customer)/routing/utils';
+import {
+	getRideShareInfo,
+	type RideShareTourInfo
+} from '$lib/server/booking/rideShare/getRideShareInfo';
 
 export const POST = async (event: RequestEvent) => {
 	const q: PlanData = await event.request.json();
@@ -20,9 +24,24 @@ export const POST = async (event: RequestEvent) => {
 	}
 	return json({
 		...response!,
-		itineraries: response!.itineraries.map((i) => {
+		itineraries: response!.itineraries.map(async (i) => {
 			const odmLeg1 = i.legs.find(isOdmLeg);
 			const odmLeg2 = i.legs.findLast(isOdmLeg);
+			const rideShareTourFirstLeg = isRideShareLeg(i.legs[0])
+				? parseInt(i.legs[0].tripId!)
+				: undefined;
+			const rideShareTourLastLeg =
+				i.legs.length > 1 && isRideShareLeg(i.legs[i.legs.length - 1])
+					? parseInt(i.legs[i.legs.length - 1].tripId!)
+					: undefined;
+			let rideShareTourInfoFirstLeg: RideShareTourInfo | undefined = undefined;
+			if (rideShareTourFirstLeg !== undefined) {
+				rideShareTourInfoFirstLeg = await getRideShareInfo(rideShareTourFirstLeg);
+			}
+			let rideShareTourInfoLastLeg: RideShareTourInfo | undefined = undefined;
+			if (rideShareTourLastLeg !== undefined) {
+				rideShareTourInfoLastLeg = await getRideShareInfo(rideShareTourLastLeg);
+			}
 			return {
 				...i,
 				signature1:
@@ -48,7 +67,9 @@ export const POST = async (event: RequestEvent) => {
 								new Date(odmLeg2.endTime).getTime(),
 								true
 							)
-						: undefined
+						: undefined,
+				rideShareTourInfoFirstLeg,
+				rideShareTourInfoLastLeg
 			};
 		})
 	});
