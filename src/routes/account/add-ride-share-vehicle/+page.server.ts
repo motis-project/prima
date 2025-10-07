@@ -67,12 +67,12 @@ export const actions: Actions = {
 				'/uploads/vehicle_pictures',
 				null
 			);
-            if(uploadResult !== null) {
-			    if (typeof uploadResult !== 'string') {
-			    	return uploadResult;
-			    }
-			    vehiclePicturePath = uploadResult;
-            }
+			if (uploadResult !== null) {
+				if (typeof uploadResult !== 'string') {
+					return uploadResult;
+				}
+				vehiclePicturePath = uploadResult;
+			}
 		}
 		console.log(
 			'created ride share vehicle',
@@ -87,6 +87,6 @@ export const actions: Actions = {
 				vehiclePicturePath
 			)
 		);
-        return redirect(302, '/account/settings');
+		return redirect(302, '/account/settings');
 	}
-}
+};

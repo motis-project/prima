@@ -15,7 +15,7 @@ export async function replacePhoto(
 	if (!(file instanceof File)) {
 		return fail(400, { msg: msg('noFileUploaded') });
 	}
-	if(file.size === 0) {
+	if (file.size === 0) {
 		return null;
 	}
 	const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
