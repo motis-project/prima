@@ -3,11 +3,12 @@
 	import { Input } from '$lib/shadcn/input';
 	import Label from '$lib/shadcn/label/label.svelte';
 	import { Button } from '$lib/shadcn/button';
-	import { enhance } from '$app/forms';
 	import { t } from '$lib/i18n/translation';
 	import * as ToggleGroup from '$lib/shadcn/toggle-group';
 	import UploadPhoto from '$lib/ui/UploadPhoto.svelte';
 	import Message from '$lib/ui/Message.svelte';
+	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
+	import Panel from '$lib/ui/Panel.svelte';
 
 	const { form } = $props();
 	let v = $derived(undefined);
@@ -15,7 +16,7 @@
 	let hasColor = $state(false);
 	let model: string = $state('');
 	let hasModel = $state(false);
-	let smokingOptions = ['nicht erlaubt', 'erlaubt'];
+	let smokingOptions = t.buttons.smokingOptions;
 	let smokingAllowed = $state(smokingOptions[0]);
 </script>
 
@@ -26,74 +27,65 @@
 		method="post"
 		action={'?/addVehicle'}
 		class="flex flex-col gap-4"
-		use:enhance={() => {
-			return async ({ result, update }) => {
-				await update({ reset: false });
-			};
-		}}
 	>
 		<h2 class="font-medium leading-none">
-			{v == undefined ? 'Neues Fahrzeug' : 'Fahrzeug anpassen'}
+			{v == undefined ? t.rideShare.createNewVehicle : 'Fahrzeug anpassen'}
 		</h2>
-		<div class="field">
-			<Label for="licensePlate">Nummernschild:</Label>
+		<Panel title={t.rideShare.licensePlate} subtitle={''}>
 			<Input name="licensePlate" type="string" placeholder="DA-AB-1234" value={undefined} />
-		</div>
-		<div>
-			<h6 class="mb-1">{t.rideShare.maxPassengers}</h6>
+		</Panel>
+		<Panel title={t.rideShare.maxPassengers} subtitle={''}>
 			<RadioGroup.Root name="passengers" value={'3'}>
 				<div class="flex items-center gap-2">
-					<RadioGroup.Item value="3" id="r1" />
+					<RadioGroup.Item value="1" id="r1" />
 					<Label for="r1">1 {t.rideShare.passengers}</Label>
 				</div>
 				<div class="flex items-center gap-2">
-					<RadioGroup.Item value="5" id="r2" />
+					<RadioGroup.Item value="2" id="r2" />
 					<Label for="r2">2 {t.rideShare.passengers}</Label>
 				</div>
 				<div class="flex items-center gap-2">
-					<RadioGroup.Item value="7" id="r3" />
+					<RadioGroup.Item value="3" id="r3" />
 					<Label for="r3">3 {t.rideShare.passengers}</Label>
 				</div>
 				<div class="flex items-center gap-2">
-					<RadioGroup.Item value="7" id="r4" />
+					<RadioGroup.Item value="4" id="r4" />
 					<Label for="r4">4 {t.rideShare.passengers}</Label>
 				</div>
 			</RadioGroup.Root>
-		</div>
-		<div class="field">
-			<Label for="luggage">Gepäckstücke:</Label>
+		</Panel>
+		<Panel title={t.rideShare.luggage} subtitle={''}>
 			<Input name="luggage" type="number" placeholder="4" value={'4'} />
-		</div>
+		</Panel>
 		<div>
-			<Label for="color">Farbe</Label>
-			<div>
+			<Panel title={t.rideShare.color} subtitle={''}>
+				<label for="specifyColor" class="flex items-center gap-2">
+					<Checkbox name="specifyColor" bind:checked={hasColor} />
+					{t.rideShare.specifyColor}
+				</label>
 				{#if hasColor}
-					<Button onclick={() => (hasColor = false)}>Farbe nicht angeben</Button>
 					<Input type="color" bind:value={color} />
-				{:else}
-					<Button onclick={() => (hasColor = true)}>Farbe angeben</Button>
 				{/if}
-			</div>
+			</Panel>
 		</div>
 		<div>
-			<Label for="model">Fahrzeugmodell</Label>
-			<div>
+			<Panel title={t.rideShare.model} subtitle={''}>
+				<label for="specifyModel" class="flex items-center gap-2">
+					<Checkbox name="specifyModel" bind:checked={hasModel} />
+					{t.rideShare.specifyModel}
+				</label>
 				{#if hasModel}
-					<Button onclick={() => (hasModel = false)}>Modell nicht angeben</Button>
 					<Input type="string" bind:value={model} />
-				{:else}
-					<Button onclick={() => (hasModel = true)}>Modell angeben</Button>
 				{/if}
-			</div>
+			</Panel>
 		</div>
-		<div>
-			<Label>Rauchen im Fahrzeug</Label>
+		<Panel title={t.rideShare.smokingInVehicle} subtitle={''}>
 			<ToggleGroup.Root type="single" bind:value={smokingAllowed}>
 				{#each smokingOptions as smokingOption}
 					<ToggleGroup.Item value={smokingOption}>{smokingOption}</ToggleGroup.Item>
 				{/each}
 			</ToggleGroup.Root>
-		</div>
+		</Panel>
 		<input type="hidden" name="id" value={undefined} />
 		<input type="hidden" name="color" value={color} />
 		<input type="hidden" name="model" value={model} />

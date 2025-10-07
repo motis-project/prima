@@ -264,11 +264,20 @@ export type Translations = {
 		addVehicle: string;
 		uploadPhoto: string;
 		savePhoto: string;
+		smokingOptions: string[];
 	};
 
 	rideShare: {
 		maxPassengers: string;
 		passengers: string;
+		smokingInVehicle: string;
+		color: string;
+		model: string;
+		specifyColor: string;
+		specifyModel: string;
+		luggage: string;
+		licensePlate: string;
+		createNewVehicle: string;
 	};
 };
 

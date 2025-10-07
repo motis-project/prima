@@ -297,12 +297,21 @@ const translations: Translations = {
 	buttons: {
 		addVehicle: 'Add vehicle',
 		uploadPhoto: 'upload photo',
-		savePhoto: 'save photo'
+		savePhoto: 'save photo',
+		smokingOptions: ['not allowed', 'allowed']
 	},
 
 	rideShare: {
-		maxPassengers: 'maximum carpoolers',
-		passengers: 'carpoolers'
+		maxPassengers: 'Maximum Carpoolers',
+		passengers: 'Carpoolers',
+		smokingInVehicle: 'Smoking in the vehicle',
+		color: 'Color',
+		model: 'Car Model',
+		specifyColor: 'Specify Color',
+		specifyModel: 'Specify Model',
+		luggage: 'Luggage',
+		licensePlate: 'License Plate',
+		createNewVehicle: 'Create new Vehicle'
 	}
 };
 

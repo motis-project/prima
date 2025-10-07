@@ -304,12 +304,21 @@ const translations: Translations = {
 	buttons: {
 		addVehicle: 'Fahrzeug hinzufügen',
 		uploadPhoto: 'Foto hochladen',
-		savePhoto: 'Foto speichern'
+		savePhoto: 'Foto speichern',
+		smokingOptions: ['nicht erlaubt', 'erlaubt']
 	},
 
 	rideShare: {
 		maxPassengers: 'aximale Anzahl Mitfahrer',
-		passengers: 'Mitfahrer'
+		passengers: 'Mitfahrer',
+		smokingInVehicle: 'Rauchen im Fahrzeug',
+		color: 'Farbe',
+		model: 'Fahrzeugmodell',
+		specifyColor: 'Farbe angeben',
+		specifyModel: 'Fahrzeugmodell angeben',
+		luggage: 'Gepäckstücke',
+		licensePlate: 'Nummernschild',
+		createNewVehicle: 'Neues Fahrzeug anlegen'
 	}
 };
 
