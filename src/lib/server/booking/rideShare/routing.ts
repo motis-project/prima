@@ -52,11 +52,19 @@ export async function routing(
 	fromUserChosen = setZeroDistanceForMatchingPlaces(userChosen, forward, fromUserChosen);
 	toUserChosen = setZeroDistanceForMatchingPlaces(userChosen, backward, toUserChosen);
 
-	const fromBusStop = await Promise.all(
-		busStops.map((b) => batchOneToManyCarRouting(b, forward, false))
+	const fromBusStop: (number | undefined)[][] = await Promise.all(
+		forward.map((b) =>
+			b === undefined
+				? new Array<undefined>(busStops.length)
+				: batchOneToManyCarRouting(b, busStops, false)
+		)
 	);
-	const toBusStop = await Promise.all(
-		busStops.map((b) => batchOneToManyCarRouting(b, backward, true))
+	const toBusStop: (number | undefined)[][] = await Promise.all(
+		backward.map((b) =>
+			b === undefined
+				? new Array<undefined>(busStops.length)
+				: batchOneToManyCarRouting(b, busStops, true)
+		)
 	);
 	return {
 		userChosen: {
@@ -64,12 +72,17 @@ export async function routing(
 			toUserChosen
 		},
 		busStops: {
-			fromBusStop: fromBusStop.map((b, busStopIdx) =>
+			fromBusStop: transpose(fromBusStop).map((b, busStopIdx) =>
 				setZeroDistanceForMatchingPlaces(busStops[busStopIdx], forward, b)
 			),
-			toBusStop: toBusStop.map((b, busStopIdx) =>
+			toBusStop: transpose(toBusStop).map((b, busStopIdx) =>
 				setZeroDistanceForMatchingPlaces(busStops[busStopIdx], backward, b)
 			)
 		}
 	};
+}
+
+function transpose<T>(arr: (T | undefined)[][]): (T | undefined)[][] {
+	const maxLen = Math.max(0, ...arr.map((r) => r.length));
+	return Array.from({ length: maxLen }, (_, idx) => arr.map((row) => row[idx]));
 }
