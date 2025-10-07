@@ -20,7 +20,7 @@
 	function handleFileChange(e: Event) {
 		const target = e.target as HTMLInputElement | null;
 
-		if (target && target.files && target.files.length > 0) {
+		if (target && target.files && target.files.length !== 0) {
 			selectedFile = target.files[0];
 			if (
 				!(allowedTypes ?? ['image/jpeg', 'image/png', 'image/webp']).includes(selectedFile.type)

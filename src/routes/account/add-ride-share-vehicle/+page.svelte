@@ -1,24 +1,15 @@
 <script lang="ts">
-	import { Plus } from 'lucide-svelte';
 	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import { Input } from '$lib/shadcn/input';
 	import Label from '$lib/shadcn/label/label.svelte';
-	import * as Popover from '$lib/shadcn/popover';
-	import { Button, buttonVariants } from '$lib/shadcn/button';
+	import { Button } from '$lib/shadcn/button';
 	import { enhance } from '$app/forms';
 	import { t } from '$lib/i18n/translation';
 	import * as ToggleGroup from '$lib/shadcn/toggle-group';
 	import UploadPhoto from '$lib/ui/UploadPhoto.svelte';
+	import Message from '$lib/ui/Message.svelte';
 
-	const {
-		text,
-		useWFit
-	}: {
-		text: string;
-		useWFit?: boolean;
-	} = $props();
-
-	let popoverOpen = $state(false);
+	const { form } = $props();
 	let v = $derived(undefined);
 	let color: string = $state('#FFFFFF');
 	let hasColor = $state(false);
@@ -28,20 +19,8 @@
 	let smokingAllowed = $state(smokingOptions[0]);
 </script>
 
-<Popover.Root bind:open={popoverOpen}>
-	<Popover.Trigger
-		data-testid={'add-vehicle'}
-		class={buttonVariants({
-			variant: 'outline',
-			class: `${useWFit ? 'w-fit' : `w-32`} justify-start text-left font-normal`
-		})}
-	>
-		{#if v == undefined}
-			<Plus class="mr-2 size-4" />
-		{/if}
-		{text}
-	</Popover.Trigger>
-	<Popover.Content class="max-h-[80vh] w-96 overflow-y-auto p-6">
+<div>
+	<Message msg={form?.msg} class="mb-4" />
 		<form
 			enctype="multipart/form-data"
 			method="post"
@@ -49,9 +28,6 @@
 			class="flex flex-col gap-4"
 			use:enhance={() => {
 				return async ({ result, update }) => {
-					if (result.type === 'success') {
-						popoverOpen = false;
-					}
 					await update({ reset: false });
 				};
 			}}
@@ -133,5 +109,4 @@
 				{v == undefined ? 'Fahrzeug anlegen' : 'Änderungen speichern'}
 			</Button>
 		</form>
-	</Popover.Content>
-</Popover.Root>
+	</div>
