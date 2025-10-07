@@ -1,7 +1,7 @@
 import { readInt } from '$lib/server/util/readForm';
 import { LICENSE_PLATE_REGEX } from '$lib/constants';
 import { createRideShareVehicle } from '$lib/server/booking';
-import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
+import { fail, type RequestEvent } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import { msg } from '$lib/msg';
 import { replacePhoto } from '$lib/server/util/uploadPhoto';
@@ -87,6 +87,9 @@ export const actions: Actions = {
 				vehiclePicturePath
 			)
 		);
-		return redirect(302, '/account/settings');
+		return {
+			success: true,
+			msg: msg('vehicleAddedSuccessfully', 'success')
+		};
 	}
 };
