@@ -38,9 +38,8 @@ export async function routing(
 		return result;
 	};
 
-	const forward: ((Coordinates & { eventId: number }) | undefined)[] = [];
-
-	const backward: ((Coordinates & { eventId: number }) | undefined)[] = [];
+	const forward: (Coordinates | undefined)[] = [];
+	const backward: (Coordinates | undefined)[] = [];
 	iterateAllInsertions(rideShareTours, insertionRanges, (info) => {
 		forward.push(
 			info.idxInEvents === info.events.length ? undefined : info.events[info.idxInEvents]
@@ -52,18 +51,32 @@ export async function routing(
 	fromUserChosen = setZeroDistanceForMatchingPlaces(userChosen, forward, fromUserChosen);
 	toUserChosen = setZeroDistanceForMatchingPlaces(userChosen, backward, toUserChosen);
 
+	const forwardSmallerBusStops = forward.length < busStops.length;
+	const forwardSmallerArray: (Coordinates | undefined)[] = forwardSmallerBusStops
+		? forward
+		: busStops;
+	const forwardLargerArray: (Coordinates | undefined)[] = !forwardSmallerBusStops
+		? forward
+		: busStops;
 	const fromBusStop: (number | undefined)[][] = await Promise.all(
-		forward.map((b) =>
+		forwardSmallerArray.map((b) =>
 			b === undefined
 				? new Array<undefined>(busStops.length)
-				: batchOneToManyCarRouting(b, busStops, false)
+				: batchOneToManyCarRouting(b, forwardLargerArray, false)
 		)
 	);
+	const backwardSmallerBusStops = backward.length < busStops.length;
+	const backwardSmallerArray: (Coordinates | undefined)[] = backwardSmallerBusStops
+		? backward
+		: busStops;
+	const backwardLargerArray: (Coordinates | undefined)[] = !backwardSmallerBusStops
+		? backward
+		: busStops;
 	const toBusStop: (number | undefined)[][] = await Promise.all(
-		backward.map((b) =>
+		backwardSmallerArray.map((b) =>
 			b === undefined
 				? new Array<undefined>(busStops.length)
-				: batchOneToManyCarRouting(b, busStops, true)
+				: batchOneToManyCarRouting(b, backwardLargerArray, true)
 		)
 	);
 	return {
@@ -72,11 +85,12 @@ export async function routing(
 			toUserChosen
 		},
 		busStops: {
-			fromBusStop: transpose(fromBusStop).map((b, busStopIdx) =>
-				setZeroDistanceForMatchingPlaces(busStops[busStopIdx], forward, b)
+			fromBusStop: (forwardSmallerBusStops ? transpose(fromBusStop) : fromBusStop).map(
+				(b, busStopIdx) =>
+					setZeroDistanceForMatchingPlaces(busStops[busStopIdx], forwardSmallerArray, b)
 			),
-			toBusStop: transpose(toBusStop).map((b, busStopIdx) =>
-				setZeroDistanceForMatchingPlaces(busStops[busStopIdx], backward, b)
+			toBusStop: (backwardSmallerBusStops ? transpose(toBusStop) : toBusStop).map((b, busStopIdx) =>
+				setZeroDistanceForMatchingPlaces(busStops[busStopIdx], backwardSmallerArray, b)
 			)
 		}
 	};
