@@ -21,8 +21,8 @@ export const POST = async (event: RequestEvent) => {
 	return json({
 		...response!,
 		itineraries: response!.itineraries.map((i) => {
-			const odmLeg1 = i.legs.find((l) => isOdmLeg);
-			const odmLeg2 = i.legs.findLast((l) => isOdmLeg);
+			const odmLeg1 = i.legs.find(isOdmLeg);
+			const odmLeg2 = i.legs.findLast(isOdmLeg);
 			return {
 				...i,
 				signature1:
