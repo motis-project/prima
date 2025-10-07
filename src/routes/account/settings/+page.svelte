@@ -8,6 +8,7 @@
 	import { t } from '$lib/i18n/translation';
 	import UploadPhoto from '$lib/ui/UploadPhoto.svelte';
 	import { goto } from '$app/navigation';
+	import { Plus } from 'lucide-svelte';
 
 	const { data, form } = $props();
 	let showTooltip = $state(false);
@@ -75,6 +76,7 @@
 
 	<Panel title={t.buttons.addVehicle} subtitle={''}>
 		<Button variant="outline" onclick={() => goto('/account/add-ride-share-vehicle')}>
+			<Plus class="mr-2 size-4" />
 			{t.buttons.addVehicle}
 		</Button>
 	</Panel>
