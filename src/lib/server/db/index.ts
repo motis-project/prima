@@ -24,6 +24,7 @@ export interface Database {
 		zipCode: string;
 		city: string;
 		region: string;
+		profilePicture: string | null;
 	};
 	session: {
 		id: string;
@@ -146,6 +147,7 @@ export interface Database {
 		model: string;
 		smokingAllowed: boolean;
 		licensePlate: string;
+		picture: string | null;
 	};
 }
 
