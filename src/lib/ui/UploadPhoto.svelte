@@ -40,11 +40,13 @@
 {#if selectedFile}
 	<div class="mt-4">
 		<p class="text-sm">Preview:</p>
-		<img
-			src={URL.createObjectURL(selectedFile)}
-			alt="Preview"
-			class="h-full w-full rounded-full object-cover"
-		/>
+		<div class="h-32 w-32 overflow-hidden border border-gray-200">
+			<img
+				src={URL.createObjectURL(selectedFile)}
+				alt="Preview"
+				class="h-full w-full object-cover"
+			/>
+		</div>
 	</div>
 {:else if currentUrl}
 	<div class="mb-4">
