@@ -1,6 +1,5 @@
 import type { Leg } from '$lib/openapi';
 import { t } from '$lib/i18n/translation';
-import { isRideShareLeg } from './utils';
 
 export const getModeName = (l: Leg) => {
 	switch (l.mode) {

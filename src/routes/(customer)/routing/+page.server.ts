@@ -9,7 +9,6 @@ import { sendMail } from '$lib/server/sendMail';
 import NewRide from '$lib/server/email/NewRide.svelte';
 import NewRideSharingRequest from '$lib/server/email/NewRideSharingRequest.svelte';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
-import type { Leg } from '$lib/openapi';
 import type { SignedItinerary } from '$lib/planAndSign';
 import { sql, type ExpressionBuilder } from 'kysely';
 import type { PageServerLoad, PageServerLoadEvent } from './$types';
@@ -52,7 +51,7 @@ export const actions = {
 		const kidsThreeToFourString = formData.get('kidsThreeToFour');
 		const kidsFiveToSixString = formData.get('kidsFiveToSix');
 		const startFixedString = formData.get('startFixed');
-		const tourIdString = formData.get('tourIdString');
+		const tourIdString = formData.get('tourId');
 		const json = formData.get('json');
 
 		if (

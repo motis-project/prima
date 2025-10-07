@@ -20,8 +20,7 @@
 	import { MapIcon } from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
-	import { type Leg } from '$lib/openapi/types.gen';
-	import { isOdmLeg, isRideShareLeg, isTaxiLeg } from '../../routing/utils';
+	import { isOdmLeg, isTaxiLeg } from '../../routing/utils';
 
 	const { data } = $props();
 

@@ -16,7 +16,7 @@
 	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import { Input } from '$lib/shadcn/input';
 	import { Label } from '$lib/shadcn/label';
-	import { trip, type Leg, type Match, type PlanData } from '$lib/openapi';
+	import { trip, type Match, type PlanData } from '$lib/openapi';
 	import { t } from '$lib/i18n/translation';
 	import { lngLatToStr } from '$lib/util/lngLatToStr';
 	import Meta from '$lib/ui/Meta.svelte';
@@ -236,7 +236,7 @@
 			<Button variant="outline" size="icon" onclick={() => window.history.back()}>
 				<ChevronLeft />
 			</Button>
-			{#if page.state.selectedItinerary.legs.some(isOdmLeg) }
+			{#if page.state.selectedItinerary.legs.some(isOdmLeg)}
 				{#if data.isLoggedIn}
 					{@const isRideShare = page.state.selectedItinerary.legs.some(isRideShareLeg)}
 					<Dialog.Root>
@@ -297,7 +297,11 @@
 										<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
 										<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
 										<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
-										<input type="hidden" name="wheelchairs" value={page.state.selectedItinerary. ? 1 : 0} />
+										<input
+											type="hidden"
+											name="tourId"
+											value={page.state.selectedItinerary.legs.find(isRideShareLeg)?.tripId}
+										/>
 										<input
 											type="hidden"
 											name="startFixed"

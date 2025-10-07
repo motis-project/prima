@@ -1,5 +1,4 @@
 import type { Mode, Rental } from '$lib/openapi';
-import { isRideShareLeg } from '../../routes/(customer)/routing/utils';
 
 export type Colorable = {
 	routeColor?: string;
