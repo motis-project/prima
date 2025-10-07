@@ -25,6 +25,5 @@ export async function planAndSign(
 			...q
 		})
 	});
-	const abc: undefined | SignedPlanResponse = await result.json();
 	return await result.json();
 }
