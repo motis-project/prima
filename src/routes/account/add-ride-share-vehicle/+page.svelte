@@ -9,6 +9,7 @@
 	import Message from '$lib/ui/Message.svelte';
 	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
 	import Panel from '$lib/ui/Panel.svelte';
+	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 
 	const { form } = $props();
 	let v = $derived(undefined);
@@ -21,6 +22,9 @@
 </script>
 
 <div>
+	<Button class="mb-2" size="icon" variant="outline" onclick={() => history.back()}>
+		<ChevronLeft />
+	</Button>
 	<Message msg={form?.msg} class="mb-4" />
 	<form
 		enctype="multipart/form-data"
