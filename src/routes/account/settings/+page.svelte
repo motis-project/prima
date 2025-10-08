@@ -9,6 +9,8 @@
 	import UploadPhoto from '$lib/ui/UploadPhoto.svelte';
 	import { goto } from '$app/navigation';
 	import { Plus } from 'lucide-svelte';
+	import { Label } from '$lib/shadcn/label';
+	import * as RadioGroup from '$lib/shadcn/radio-group/index.js';
 
 	const { data, form } = $props();
 	let showTooltip = $state(false);
@@ -93,6 +95,40 @@
 				displaySaveButton={true}
 				currentUrl={data.profilePicture ?? undefined}
 			/>
+		</form>
+	</Panel>
+
+	<Panel title={t.account.personalInfo} subtitle={t.account.adjustPersonalInfo}>
+		<form method="post" action="/account/settings?/personalInfo" class="mt-8">
+			<Label for="lastname">{t.account.genderString}</Label>
+			<RadioGroup.Root value={data.gender ?? 'n'} name="gender" class="grid-cols-4">
+				<div class="flex items-center space-x-2">
+					<RadioGroup.Item value="m" id="m" />
+					<Label for="m">{t.account.gender('m')}</Label>
+				</div>
+				<div class="flex items-center space-x-2">
+					<RadioGroup.Item value="f" id="f" />
+					<Label for="f">{t.account.gender('f')}</Label>
+				</div>
+				<div class="flex items-center space-x-2">
+					<RadioGroup.Item value="o" id="o" />
+					<Label for="o">{t.account.gender('o')}</Label>
+				</div>
+				<div class="flex items-center space-x-2">
+					<RadioGroup.Item value="n" id="n" />
+					<Label for="n">{t.account.gender('n')}</Label>
+				</div>
+			</RadioGroup.Root>
+			<Label for="lastname">{t.account.name}</Label>
+			<div class="grid grid-cols-2 gap-x-1">
+				<Input
+					name="firstname"
+					type="text"
+					value={data.firstName}
+					placeholder={t.account.firstName}
+				/>
+				<Input name="lastname" type="text" value={data.name} placeholder={t.account.lastName} />
+			</div>
 		</form>
 	</Panel>
 </div>

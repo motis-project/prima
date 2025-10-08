@@ -109,8 +109,9 @@ const translations: Translations = {
 		lastName: 'Last Name',
 		firstName: 'First Name',
 		gender: (id: string) => {
-			return { o: 'other', f: 'Ms.', m: 'Mr.' }[id]!;
+			return { o: 'other', f: 'Ms.', m: 'Mr.', n: 'not specified' }[id]!;
 		},
+		genderString: 'Gender',
 		email: 'Email',
 		password: 'Password',
 		phone: 'Phone Number',
@@ -150,7 +151,9 @@ const translations: Translations = {
 		resendCode: 'Resend code',
 		verify: 'Verify',
 		profilePicture: 'Profile Picture',
-		profilePictureSubtitle: 'Change your profile picture here'
+		profilePictureSubtitle: 'Change your profile picture here',
+		personalInfo: 'Personal Information',
+		adjustPersonalInfo: 'Change your personal information here'
 	},
 	rating: {
 		thanksForUsing: 'Thank you for using the public transport taxi.',
@@ -311,7 +314,9 @@ const translations: Translations = {
 		specifyModel: 'Specify Model',
 		luggage: 'Luggage',
 		licensePlate: 'License Plate',
-		createNewVehicle: 'Create new Vehicle'
+		createNewVehicle: 'Create new Vehicle',
+		createVehicle: 'Create Vehicle',
+		saveChanges: 'Änderungen speichern'
 	}
 };
 

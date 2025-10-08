@@ -112,8 +112,9 @@ const translations: Translations = {
 		lastName: 'Nachname',
 		firstName: 'Vorname',
 		gender: (id: string) => {
-			return { o: 'n/a', f: 'Frau', m: 'Herr' }[id]!;
+			return { o: 'n/a', f: 'Frau', m: 'Herr', n: 'keine Angabe' }[id]!;
 		},
+		genderString: 'Geschlecht',
 		email: 'E-Mail',
 		password: 'Passwort',
 		phone: 'Telefonnummer',
@@ -155,7 +156,9 @@ const translations: Translations = {
 		resendCode: 'Code erneut senden',
 		verify: 'Verifizieren',
 		profilePicture: 'Profilbild',
-		profilePictureSubtitle: 'Hier können Sie Ihr Profilbild ändern'
+		profilePictureSubtitle: 'Hier können Sie Ihr Profilbild ändern',
+		personalInfo: 'Personenbezogene Informationen',
+		adjustPersonalInfo: 'Ändern Sie Ihre persönlichen Informationen'
 	},
 	rating: {
 		thanksForUsing: 'Vielen Dank, dass Sie das ÖPNV Taxi benutzt haben.',
@@ -318,7 +321,9 @@ const translations: Translations = {
 		specifyModel: 'Fahrzeugmodell angeben',
 		luggage: 'Gepäckstücke',
 		licensePlate: 'Nummernschild',
-		createNewVehicle: 'Neues Fahrzeug anlegen'
+		createNewVehicle: 'Neues Fahrzeug anlegen',
+		createVehicle: 'Fahrzeug anlegen',
+		saveChanges: 'Änderungen speichern'
 	}
 };
 

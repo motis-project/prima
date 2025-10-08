@@ -110,6 +110,7 @@ export type Translations = {
 		lastName: string;
 		firstName: string;
 		gender: (id: string) => string;
+		genderString: string;
 		email: string;
 		password: string;
 		phone: string;
@@ -148,6 +149,8 @@ export type Translations = {
 		verify: string;
 		profilePicture: string;
 		profilePictureSubtitle: string;
+		personalInfo: string;
+		adjustPersonalInfo: string;
 	};
 	rating: {
 		thanksForUsing: string;
@@ -278,6 +281,8 @@ export type Translations = {
 		luggage: string;
 		licensePlate: string;
 		createNewVehicle: string;
+		createVehicle: string;
+		saveChanges: string;
 	};
 };
 

@@ -98,7 +98,7 @@
 		/>
 		<UploadPhoto name="vehiclePicture" />
 		<Button type="submit" variant="outline" data-testid="create-vehicle">
-			{v == undefined ? 'Fahrzeug anlegen' : 'Änderungen speichern'}
+			{v == undefined ? t.rideShare.createVehicle : t.rideShare.saveChanges}
 		</Button>
 	</form>
 </div>

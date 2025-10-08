@@ -17,7 +17,14 @@ export async function load(event: PageServerLoadEvent) {
 	const user = await db
 		.selectFrom('user')
 		.where('user.id', '=', event.locals.session!.userId)
-		.select(['user.email', 'user.phone', 'user.profilePicture'])
+		.select([
+			'user.email',
+			'user.phone',
+			'user.profilePicture',
+			'user.name',
+			'user.firstName',
+			'user.gender'
+		])
 		.executeTakeFirst();
 	if (user === undefined) {
 		error(404, { message: 'User not found' });
@@ -25,13 +32,19 @@ export async function load(event: PageServerLoadEvent) {
 	return {
 		email: user.email,
 		phone: user.phone,
-		profilePicture: user.profilePicture
+		profilePicture: user.profilePicture,
+		gender: user.gender,
+		name: user.name,
+		firstName: user.firstName
 	};
 }
 
 export const actions: Actions = {
 	changePassword: async function verifyCode(event: RequestEvent) {
-		const userId = event.locals.session!.userId;
+		const userId = event.locals.session?.userId;
+		if (!userId) {
+			return fail(403);
+		}
 		const formData = await event.request.formData();
 		const newPassword = formData.get('newPassword');
 		const oldPassword = formData.get('oldPassword');
@@ -51,13 +64,17 @@ export const actions: Actions = {
 		const passwordHash = await hashPassword(newPassword);
 		await db
 			.updateTable('user')
-			.where('user.id', '=', event.locals.session!.userId!)
+			.where('user.id', '=', event.locals.session!.userId)
 			.set({ passwordHash })
 			.execute();
 		return { msg: msg('passwordChanged', 'success') };
 	},
 
 	changeEmail: async function resendEmail(event: RequestEvent) {
+		const userId = event.locals.session?.userId;
+		if (!userId) {
+			return fail(403);
+		}
 		const formData = await event.request.formData();
 		const email = formData.get('email');
 		if (typeof email !== 'string' || email === '') {
@@ -79,7 +96,7 @@ export const actions: Actions = {
 				emailVerificationExpiresAt: Date.now() + 10 * MINUTE,
 				isEmailVerified: false
 			})
-			.where('id', '=', event.locals.session!.userId)
+			.where('id', '=', userId)
 			.returningAll()
 			.executeTakeFirstOrThrow();
 
@@ -97,15 +114,15 @@ export const actions: Actions = {
 	},
 
 	changePhone: async function changePhone(event: RequestEvent) {
+		const userId = event.locals.session!.userId!;
+		if (!userId) {
+			return fail(403);
+		}
 		const phone = verifyPhone((await event.request.formData()).get('phone'));
 		if (phone != null && typeof phone !== 'string') {
 			return phone;
 		}
-		await db
-			.updateTable('user')
-			.where('user.id', '=', event.locals.session!.userId!)
-			.set({ phone })
-			.execute();
+		await db.updateTable('user').where('user.id', '=', userId).set({ phone }).execute();
 		return { msg: msg('phoneChanged', 'success') };
 	},
 
@@ -117,11 +134,14 @@ export const actions: Actions = {
 
 	uploadProfilePicture: async (event) => {
 		const userId = event.locals.session?.userId;
+		if (!userId) {
+			return fail(403);
+		}
 		const formData = await event.request.formData();
 		const file = formData.get('profilePicture');
 		const oldPhoto = await db
 			.selectFrom('user')
-			.where('user.id', '=', userId!)
+			.where('user.id', '=', userId)
 			.select(['user.profilePicture'])
 			.executeTakeFirst();
 		const uploadResult = await replacePhoto(
@@ -136,8 +156,31 @@ export const actions: Actions = {
 
 		await db
 			.updateTable('user')
-			.where('id', '=', userId!)
+			.where('user.id', '=', userId)
 			.set({ profilePicture: uploadResult })
+			.execute();
+	},
+
+	personalInfo: async (event) => {
+		const userId = event.locals.session?.userId;
+		if (!userId) {
+			return fail(403);
+		}
+		const formData = await event.request.formData();
+		const gender = await formData.get('gender');
+		const firstName = await formData.get('firstname');
+		const lastName = await formData.get('lastname');
+		if (
+			typeof gender !== 'string' ||
+			typeof firstName !== 'string' ||
+			typeof lastName !== 'string'
+		) {
+			return fail(400);
+		}
+		await db
+			.updateTable('user')
+			.where('user.id', '=', userId)
+			.set({ gender: gender, firstName: firstName, name: lastName })
 			.execute();
 	}
 };
