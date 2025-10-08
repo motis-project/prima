@@ -30,6 +30,7 @@
 	import maplibregl from 'maplibre-gl';
 	import type { Itinerary } from '$lib/openapi';
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 
 	const { data, form } = $props();
 
@@ -148,9 +149,14 @@
 					</Select.Content>
 				</Select.Root>
 
-				<Button variant="outline">
-					<Plus class="mr-1 size-4" />
-					{t.ride.addVehicle}
+				<Button
+					variant="outline"
+					onclick={() => {
+						goto('/account/add-ride-share-vehicle');
+					}}
+				>
+					<Plus class="mr-2 size-4" />
+					{t.buttons.addVehicle}
 				</Button>
 			</div>
 
