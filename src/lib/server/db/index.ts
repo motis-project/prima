@@ -143,8 +143,8 @@ export interface Database {
 		passengers: number;
 		luggage: number;
 		owner: number;
-		color: string;
-		model: string;
+		color: string | null;
+		model: string | null;
 		smokingAllowed: boolean;
 		licensePlate: string;
 		picture: string | null;

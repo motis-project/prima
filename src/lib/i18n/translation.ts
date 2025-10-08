@@ -98,6 +98,11 @@ export type Translations = {
 		// Feedback
 		feedbackThank: string;
 		feedbackMissing: string;
+
+		// Picture Upload
+		noFileUploaded: string;
+		invalidFileType: string;
+		fileTooLarge: string;
 	};
 	admin: {
 		completedToursSubtitle: string;
@@ -108,6 +113,7 @@ export type Translations = {
 		lastName: string;
 		firstName: string;
 		gender: (id: string) => string;
+		genderString: string;
 		email: string;
 		password: string;
 		phone: string;
@@ -144,6 +150,10 @@ export type Translations = {
 		oldPassword: string;
 		resendCode: string;
 		verify: string;
+		profilePicture: string;
+		profilePictureSubtitle: string;
+		personalInfo: string;
+		adjustPersonalInfo: string;
 	};
 	rating: {
 		thanksForUsing: string;
@@ -285,6 +295,27 @@ export type Translations = {
 		requestBy: string;
 		acceptRequest: string;
 		requestAccepted: string;
+
+	buttons: {
+		addVehicle: string;
+		uploadPhoto: string;
+		savePhoto: string;
+		smokingOptions: string[];
+	};
+
+	rideShare: {
+		maxPassengers: string;
+		passengers: string;
+		smokingInVehicle: string;
+		color: string;
+		model: string;
+		specifyColor: string;
+		specifyModel: string;
+		luggage: string;
+		licensePlate: string;
+		createNewVehicle: string;
+		createVehicle: string;
+		saveChanges: string;
 	};
 };
 

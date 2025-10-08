@@ -99,7 +99,12 @@ const translations: Translations = {
 
 		// Feedback
 		feedbackThank: 'Vielen Dank für Ihr Feedback!',
-		feedbackMissing: 'Kein Feedback gegeben'
+		feedbackMissing: 'Kein Feedback gegeben',
+
+		// Picture Upload
+		noFileUploaded: 'kein Bild hochgeladen',
+		invalidFileType: 'ungültiger Dateityp',
+		fileTooLarge: 'Datei ist zu groß'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',
@@ -110,8 +115,9 @@ const translations: Translations = {
 		lastName: 'Nachname',
 		firstName: 'Vorname',
 		gender: (id: string) => {
-			return { o: 'n/a', f: 'Frau', m: 'Herr' }[id]!;
+			return { o: 'n/a', f: 'Frau', m: 'Herr', n: 'keine Angabe' }[id]!;
 		},
+		genderString: 'Geschlecht',
 		email: 'E-Mail',
 		password: 'Passwort',
 		phone: 'Telefonnummer',
@@ -151,7 +157,11 @@ const translations: Translations = {
 		newPassword: 'Neues Passwort',
 		oldPassword: 'Altes Passwort',
 		resendCode: 'Code erneut senden',
-		verify: 'Verifizieren'
+		verify: 'Verifizieren',
+		profilePicture: 'Profilbild',
+		profilePictureSubtitle: 'Hier können Sie Ihr Profilbild ändern',
+		personalInfo: 'Personenbezogene Informationen',
+		adjustPersonalInfo: 'Ändern Sie Ihre persönlichen Informationen'
 	},
 	rating: {
 		thanksForUsing: 'Vielen Dank, dass Sie das ÖPNV Taxi benutzt haben.',
@@ -331,6 +341,27 @@ const translations: Translations = {
 		requestBy: 'Anfrage von',
 		acceptRequest: 'Mitfahrt bestätigen',
 		requestAccepted: 'Mitfahrt bestätigt'
+
+	buttons: {
+		addVehicle: 'Fahrzeug hinzufügen',
+		uploadPhoto: 'Foto hochladen',
+		savePhoto: 'Foto speichern',
+		smokingOptions: ['nicht erlaubt', 'erlaubt']
+	},
+
+	rideShare: {
+		maxPassengers: 'aximale Anzahl Mitfahrer',
+		passengers: 'Mitfahrer',
+		smokingInVehicle: 'Rauchen im Fahrzeug',
+		color: 'Farbe',
+		model: 'Fahrzeugmodell',
+		specifyColor: 'Farbe angeben',
+		specifyModel: 'Fahrzeugmodell angeben',
+		luggage: 'Gepäckstücke',
+		licensePlate: 'Nummernschild',
+		createNewVehicle: 'Neues Fahrzeug anlegen',
+		createVehicle: 'Fahrzeug anlegen',
+		saveChanges: 'Änderungen speichern'
 	}
 };
 

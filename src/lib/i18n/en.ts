@@ -96,7 +96,12 @@ const translations: Translations = {
 
 		// Feedback
 		feedbackThank: 'Thank you very much for your feedback!',
-		feedbackMissing: 'No feedback given'
+		feedbackMissing: 'No feedback given',
+
+		// Picture Upload
+		noFileUploaded: 'no file uploaded',
+		invalidFileType: 'invalid file type',
+		fileTooLarge: 'file too large'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',
@@ -107,8 +112,9 @@ const translations: Translations = {
 		lastName: 'Last Name',
 		firstName: 'First Name',
 		gender: (id: string) => {
-			return { o: 'other', f: 'Ms.', m: 'Mr.' }[id]!;
+			return { o: 'other', f: 'Ms.', m: 'Mr.', n: 'not specified' }[id]!;
 		},
+		genderString: 'Gender',
 		email: 'Email',
 		password: 'Password',
 		phone: 'Phone Number',
@@ -146,7 +152,11 @@ const translations: Translations = {
 		newPassword: 'New Password',
 		oldPassword: 'Old Password',
 		resendCode: 'Resend code',
-		verify: 'Verify'
+		verify: 'Verify',
+		profilePicture: 'Profile Picture',
+		profilePictureSubtitle: 'Change your profile picture here',
+		personalInfo: 'Personal Information',
+		adjustPersonalInfo: 'Change your personal information here'
 	},
 	rating: {
 		thanksForUsing: 'Thank you for using the public transport taxi.',
@@ -324,6 +334,27 @@ const translations: Translations = {
 		requestBy: 'Request from',
 		acceptRequest: 'Confirm ride',
 		requestAccepted: 'Ride confirmed'
+
+	buttons: {
+		addVehicle: 'Add vehicle',
+		uploadPhoto: 'upload photo',
+		savePhoto: 'save photo',
+		smokingOptions: ['not allowed', 'allowed']
+	},
+
+	rideShare: {
+		maxPassengers: 'Maximum Carpoolers',
+		passengers: 'Carpoolers',
+		smokingInVehicle: 'Smoking in the vehicle',
+		color: 'Color',
+		model: 'Car Model',
+		specifyColor: 'Specify Color',
+		specifyModel: 'Specify Model',
+		luggage: 'Luggage',
+		licensePlate: 'License Plate',
+		createNewVehicle: 'Create new Vehicle',
+		createVehicle: 'Create Vehicle',
+		saveChanges: 'Änderungen speichern'
 	}
 };
 

@@ -39,3 +39,6 @@ db_backups
 
 # Driver app
 driver-app/app/google-services.json
+
+# Uploads
+static/uploads
