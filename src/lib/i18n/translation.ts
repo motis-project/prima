@@ -295,6 +295,7 @@ export type Translations = {
 		requestBy: string;
 		acceptRequest: string;
 		requestAccepted: string;
+	};
 
 	buttons: {
 		addVehicle: string;

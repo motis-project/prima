@@ -341,6 +341,7 @@ const translations: Translations = {
 		requestBy: 'Anfrage von',
 		acceptRequest: 'Mitfahrt bestätigen',
 		requestAccepted: 'Mitfahrt bestätigt'
+	},
 
 	buttons: {
 		addVehicle: 'Fahrzeug hinzufügen',

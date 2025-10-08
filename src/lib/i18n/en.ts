@@ -334,6 +334,7 @@ const translations: Translations = {
 		requestBy: 'Request from',
 		acceptRequest: 'Confirm ride',
 		requestAccepted: 'Ride confirmed'
+	},
 
 	buttons: {
 		addVehicle: 'Add vehicle',
