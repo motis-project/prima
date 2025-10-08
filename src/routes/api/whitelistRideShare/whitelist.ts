@@ -75,7 +75,7 @@ export async function whitelistRideShare(
 		startFixed
 	);
 	console.log(
-		'WHITELIST RESULT Ride Share: ',
+		'WHITELIST RESULT RIDE SHARE: ',
 		JSON.stringify(
 			bestEvals.map((arr) => arr.map((i) => i.map((j) => toInsertionWithISOStrings(j)))),
 			null,
