@@ -21,7 +21,7 @@
 	}: {
 		routingResponses: Array<Promise<SignedPlanResponse | undefined>>;
 		baseResponse: Promise<SignedPlanResponse | undefined> | undefined;
-		baseQuery: PlanData | undefined;
+		baseQuery: PlanData['query'] | undefined;
 		selectItinerary: (it: SignedItinerary) => void;
 		updateStartDest: (r: SignedPlanResponse | undefined) => SignedPlanResponse | undefined;
 		passengers: number;
@@ -85,7 +85,8 @@
 													0,
 													0,
 													planAndSign({
-														query: { ...baseQuery.query, pageCursor: r.previousPageCursor }
+														...baseQuery,
+														pageCursor: r.previousPageCursor
 													}).then(updateStartDest)
 												);
 											}}
@@ -119,7 +120,8 @@
 											onclick={() => {
 												routingResponses.push(
 													planAndSign({
-														query: { ...baseQuery.query, pageCursor: r.nextPageCursor }
+														...baseQuery,
+														pageCursor: r.nextPageCursor
 													}).then(updateStartDest)
 												);
 											}}

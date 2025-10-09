@@ -18,7 +18,7 @@
 	}: {
 		showAddress?: boolean;
 		it: Itinerary;
-		baseQuery?: PlanData | undefined;
+		baseQuery?: PlanData['query'] | undefined;
 		info?: Snippet<[Itinerary]> | undefined;
 	} = $props();
 </script>
@@ -64,7 +64,7 @@
 				timestamp={it.startTime}
 				scheduledTimestamp={it.legs[0].scheduledStartTime}
 				variant={'realtime-show-always'}
-				queriedTime={baseQuery?.query.time}
+				queriedTime={baseQuery?.time}
 			/> - <Time
 				class="inline"
 				isRealtime={it.legs[it.legs.length - 1].realTime}

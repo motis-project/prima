@@ -1,6 +1,5 @@
 import { env } from '$env/dynamic/public';
-import type { PlanData } from '$lib/openapi';
-import { plan } from '$lib/openapi/services.gen';
+import { plan, type Itinerary, type PlanData } from '$lib/openapi';
 import { signEntry } from '$lib/server/booking/signEntry';
 import type { QuerySerializerOptions } from '@hey-api/client-fetch';
 import { json, type RequestEvent } from '@sveltejs/kit';
@@ -11,11 +10,11 @@ import {
 } from '$lib/server/booking/rideShare/getRideShareInfo';
 
 export const POST = async (event: RequestEvent) => {
-	const q: PlanData = await event.request.json();
+	const q: PlanData['query'] = await event.request.json();
 	const r = await plan({
 		baseUrl: env.PUBLIC_MOTIS_URL,
 		querySerializer: { array: { explode: false } } as QuerySerializerOptions,
-		query: q.query
+		query: q
 	});
 	const response = r.data;
 	console.log(r.request);
@@ -25,7 +24,7 @@ export const POST = async (event: RequestEvent) => {
 	return json({
 		...response!,
 		itineraries: await Promise.all(
-			response!.itineraries.map(async (i) => {
+			response!.itineraries.map(async (i: Itinerary) => {
 				const odmLeg1 = i.legs.find(isOdmLeg);
 				const odmLeg2 = i.legs.findLast(isOdmLeg);
 				let rideShareTourInfoFirstLeg: RideShareTourInfo | undefined = undefined;

@@ -13,7 +13,7 @@ export type SignedPlanResponse = Omit<PlanResponse, 'itineraries'> & {
 };
 
 export async function planAndSign(
-	q: PlanData,
+	q: PlanData['query'],
 	baseUrl?: string
 ): Promise<undefined | SignedPlanResponse> {
 	const result = await fetch(`${baseUrl ? baseUrl : ''}/api/planAndSign`, {

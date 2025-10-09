@@ -117,21 +117,19 @@
 	let baseQuery = $derived(
 		from.value.match && to.value.match
 			? ({
-					query: {
-						time: time.toISOString(),
-						arriveBy: timeType === 'arrival',
-						fromPlace: toPlaceString(from),
-						toPlace: toPlaceString(to),
-						preTransitModes: ['WALK', 'ODM', 'RIDE_SHARING'],
-						postTransitModes: ['WALK', 'ODM', 'RIDE_SHARING'],
-						directModes: ['WALK', 'ODM', 'RIDE_SHARING'],
-						luggage: luggageToInt(luggage),
-						fastestDirectFactor: 1.6,
-						maxMatchingDistance: MAX_MATCHING_DISTANCE,
-						maxTravelTime: 1440,
-						passengers
-					}
-				} as PlanData)
+					time: time.toISOString(),
+					arriveBy: timeType === 'arrival',
+					fromPlace: toPlaceString(from),
+					toPlace: toPlaceString(to),
+					preTransitModes: ['WALK', 'ODM', 'RIDE_SHARING'],
+					postTransitModes: ['WALK', 'ODM', 'RIDE_SHARING'],
+					directModes: ['WALK', 'ODM', 'RIDE_SHARING'],
+					luggage: luggageToInt(luggage),
+					fastestDirectFactor: 1.6,
+					maxMatchingDistance: MAX_MATCHING_DISTANCE,
+					maxTravelTime: 1440,
+					passengers
+				} as PlanData['query'])
 			: undefined
 	);
 
