@@ -149,6 +149,12 @@ export interface Database {
 		licensePlate: string;
 		picture: string | null;
 	};
+	rideShareRating: {
+		id: number;
+		rating: number;
+		ratedUser: number;
+		ratingUser: number;
+	};
 }
 
 export const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
