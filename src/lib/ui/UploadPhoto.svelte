@@ -40,7 +40,7 @@
 <input id={name} {name} type="file" accept="image/*" class="hidden" onchange={handleFileChange} />
 {#if selectedFile}
 	<div class="mt-4">
-		<p class="text-sm">Preview:</p>
+		<p class="text-sm">${t.rideShare.preview}</p>
 		<div class={pictureClass}>
 			<img
 				src={URL.createObjectURL(selectedFile)}

@@ -355,7 +355,8 @@ const translations: Translations = {
 		licensePlate: 'License Plate',
 		createNewVehicle: 'Create new Vehicle',
 		createVehicle: 'Create Vehicle',
-		saveChanges: 'Änderungen speichern'
+		saveChanges: 'Save changes',
+		preview: 'preview'
 	}
 };
 

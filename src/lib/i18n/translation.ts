@@ -317,6 +317,7 @@ export type Translations = {
 		createNewVehicle: string;
 		createVehicle: string;
 		saveChanges: string;
+		preview: string;
 	};
 };
 

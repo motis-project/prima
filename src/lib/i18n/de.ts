@@ -362,7 +362,8 @@ const translations: Translations = {
 		licensePlate: 'Nummernschild',
 		createNewVehicle: 'Neues Fahrzeug anlegen',
 		createVehicle: 'Fahrzeug anlegen',
-		saveChanges: 'Änderungen speichern'
+		saveChanges: 'Änderungen speichern',
+		preview: 'Voransicht'
 	}
 };
 
