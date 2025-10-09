@@ -31,9 +31,11 @@ export async function routing(
 			}
 			if (isSamePlace(coordinatesOne, coordinatesMany[i]!)) {
 				result[i] = 0;
-			} else{
+			} else {
 				result[i] =
-					routingResult[i] !== undefined ? routingResult[i]! + PASSENGER_CHANGE_DURATION : undefined;
+					routingResult[i] !== undefined
+						? routingResult[i]! + PASSENGER_CHANGE_DURATION
+						: undefined;
 			}
 		}
 		return result;
