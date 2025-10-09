@@ -18,10 +18,10 @@
 	let { children, data } = $props();
 
 	const baseItems: Array<MenuItem> = [{ title: t.menu.account, href: '/account', Icon: UserRound }];
-	const customerItems: Array<MenuItem> = [
+	const customerItems: Array<MenuItem> = $derived([
 		{ title: t.menu.connections, href: '/routing', Icon: ChevronsRight },
 		...(data.isLoggedIn ? [{ title: t.menu.bookings, href: '/bookings', Icon: TicketCheck }] : [])
-	];
+	]);
 	const taxiOwnerItems: Array<MenuItem> = [
 		{ title: t.menu.accounting, href: '/taxi/accounting', Icon: Receipt },
 		{ title: t.menu.availability, href: '/taxi/availability', Icon: CarTaxiFront },
