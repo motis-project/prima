@@ -115,7 +115,10 @@ const translations: Translations = {
 		lastName: 'Nachname',
 		firstName: 'Vorname',
 		gender: (id: string) => {
-			return { o: 'n/a', f: 'Frau', m: 'Herr', n: 'keine Angabe' }[id]!;
+			return { o: 'divers', f: 'Frau', m: 'Herr', n: 'keine Angabe' }[id]!;
+		},
+		genderShort: (id: string) => {
+			return { o: '(divers)', f: '(w)', m: '(m)', n: '' }[id]!;
 		},
 		genderString: 'Geschlecht',
 		email: 'E-Mail',

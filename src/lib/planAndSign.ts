@@ -4,8 +4,7 @@ import type { RideShareTourInfo } from './server/booking/rideShare/getRideShareI
 export type SignedItinerary = Itinerary & {
 	signature1?: string;
 	signature2?: string;
-	rideShareTourInfoFirstLeg?: RideShareTourInfo;
-	rideShareTourInfoLastLeg?: RideShareTourInfo;
+	rideShareTourInfos?: RideShareTourInfo[];
 };
 
 export type SignedPlanResponse = Omit<PlanResponse, 'itineraries'> & {

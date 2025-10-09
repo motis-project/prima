@@ -14,7 +14,8 @@ export async function getRideShareInfo(tourId: number) {
 			'user.name',
 			'user.gender',
 			'user.profilePicture',
-			'rideShareVehicle.picture'
+			'rideShareVehicle.picture',
+			'rideShareTour.id as tourId'
 		])
 		.where('rideShareTour.id', '=', tourId)
 		.executeTakeFirst();

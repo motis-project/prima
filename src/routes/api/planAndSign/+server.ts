@@ -27,8 +27,7 @@ export const POST = async (event: RequestEvent) => {
 			response!.itineraries.map(async (i: Itinerary) => {
 				const odmLeg1 = i.legs.find(isOdmLeg);
 				const odmLeg2 = i.legs.findLast(isOdmLeg);
-				let rideShareTourInfoFirstLeg: RideShareTourInfo | undefined = undefined;
-				let rideShareTourInfoLastLeg: RideShareTourInfo | undefined = undefined;
+				const rideShareTourInfos: RideShareTourInfo[] = [];
 				if (i.legs.length !== 0) {
 					const rideShareTourFirstLeg = isRideShareLeg(i.legs[0])
 						? parseInt(i.legs[0].tripId!)
@@ -37,11 +36,11 @@ export const POST = async (event: RequestEvent) => {
 						i.legs.length > 1 && isRideShareLeg(i.legs[i.legs.length - 1])
 							? parseInt(i.legs[i.legs.length - 1].tripId!)
 							: undefined;
-					if (rideShareTourFirstLeg !== undefined) {
-						rideShareTourInfoFirstLeg = await getRideShareInfo(rideShareTourFirstLeg);
+					if (rideShareTourFirstLeg !== undefined && !isNaN(rideShareTourFirstLeg)) {
+						rideShareTourInfos.push(await getRideShareInfo(rideShareTourFirstLeg));
 					}
-					if (rideShareTourLastLeg !== undefined) {
-						rideShareTourInfoLastLeg = await getRideShareInfo(rideShareTourLastLeg);
+					if (rideShareTourLastLeg !== undefined && !isNaN(rideShareTourLastLeg)) {
+						rideShareTourInfos.push(await getRideShareInfo(rideShareTourLastLeg));
 					}
 				}
 				return {
@@ -70,8 +69,7 @@ export const POST = async (event: RequestEvent) => {
 									true
 								)
 							: undefined,
-					rideShareTourInfoFirstLeg,
-					rideShareTourInfoLastLeg
+					rideShareTourInfos
 				};
 			})
 		)

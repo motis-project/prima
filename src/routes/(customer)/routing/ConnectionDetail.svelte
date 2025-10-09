@@ -3,7 +3,7 @@
 	import Building2 from 'lucide-svelte/icons/building-2';
 	import Phone from 'lucide-svelte/icons/phone';
 	import CarTaxiFront from 'lucide-svelte/icons/car-taxi-front';
-	import type { Itinerary, Leg } from '$lib/openapi';
+	import type { Leg } from '$lib/openapi';
 	import { Button } from '$lib/shadcn/button';
 	import { t } from '$lib/i18n/translation';
 	import Time from './Time.svelte';
@@ -11,7 +11,9 @@
 	import { getModeName } from './getModeName';
 	import Route from './Route.svelte';
 	import { routeBorderColor, routeColor } from '$lib/ui/modeStyle';
-	import { isOdmLeg } from './utils';
+	import { isOdmLeg, isRideShareLeg } from './utils';
+	import type { SignedItinerary } from '$lib/planAndSign';
+	import { CigaretteIcon, CigaretteOffIcon, SquareUserIcon } from 'lucide-svelte';
 
 	const {
 		itinerary,
@@ -21,7 +23,7 @@
 		companyName,
 		companyPhone
 	}: {
-		itinerary: Itinerary;
+		itinerary: SignedItinerary;
 		onClickStop: (name: string, stopId: string, time: Date) => void;
 		onClickTrip: (tripId: string) => void;
 		licensePlate?: string;
@@ -74,16 +76,16 @@
 	<div class="flex flex-col gap-y-4 py-8 pl-8 text-muted-foreground">
 		{#if isOdmLeg(l)}
 			<div class="ml-6 flex w-fit flex-col gap-y-2">
-				<Button
-					onclick={() =>
-						window.open(
-							`https://www.google.com/maps/dir/?api=1&destination=${l.from.lat},${l.from.lon}&travelmode=walking`
-						)}
-					class="w-fit"
-				>
-					{t.meetingPointNavigation}
-				</Button>
 				{#if licensePlate != undefined}
+					<Button
+						onclick={() =>
+							window.open(
+								`https://www.google.com/maps/dir/?api=1&destination=${l.from.lat},${l.from.lon}&travelmode=walking`
+							)}
+						class="w-fit"
+					>
+						{t.meetingPointNavigation}
+					</Button>
 					<div class="flex items-center">
 						<CarTaxiFront class="relative  mr-1" />
 						<div class="flex w-fit rounded-md border-4 border-double border-black bg-white">
@@ -113,6 +115,30 @@
 			{getModeName(l)}
 			{l.distance ? formatDistanceMeters(Math.round(l.distance!)) : ''}
 		</span>
+
+		{#if isRideShareLeg(l)}
+			{@const tourInfo = itinerary.rideShareTourInfos?.find(
+				(i) => i?.tourId == parseInt(l.tripId || '')
+			)}
+			{#if tourInfo}
+				<span class="ml-6">
+					{#if tourInfo.profilePicture}
+						<img src={tourInfo.profilePicture || '/fallback'} alt="profile" class="inline" />
+					{:else}
+						<SquareUserIcon class="inline" />
+					{/if}
+					{tourInfo.firstName || tourInfo.name}
+					{t.account.genderShort(tourInfo.gender || 'n')}
+				</span>
+				<span class="ml-6">
+					{#if tourInfo.smokingAllowed}
+						<CigaretteIcon />
+					{:else}
+						<CigaretteOffIcon />
+					{/if}
+				</span>
+			{/if}
+		{/if}
 		{#if l.rental && l.rental.systemName}
 			<span class="ml-6">
 				{t.sharingProvider}: <a href={l.rental.url} target="_blank">{l.rental.systemName}</a>

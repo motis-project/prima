@@ -112,7 +112,10 @@ const translations: Translations = {
 		lastName: 'Last Name',
 		firstName: 'First Name',
 		gender: (id: string) => {
-			return { o: 'other', f: 'Ms.', m: 'Mr.', n: 'not specified' }[id]!;
+			return { o: 'non-binary', f: 'Ms.', m: 'Mr.', n: 'not specified' }[id]!;
+		},
+		genderShort: (id: string) => {
+			return { o: '(non-binary)', f: '(f)', m: '(m)', n: '' }[id]!;
 		},
 		genderString: 'Gender',
 		email: 'Email',
