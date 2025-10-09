@@ -16,6 +16,7 @@
 	} = $props();
 
 	let selectedFile: File | null = $state(null);
+	const pictureClass = 'h-32 w-32 overflow-hidden border border-gray-200';
 
 	function handleFileChange(e: Event) {
 		const target = e.target as HTMLInputElement | null;
@@ -40,7 +41,7 @@
 {#if selectedFile}
 	<div class="mt-4">
 		<p class="text-sm">Preview:</p>
-		<div class="h-32 w-32 overflow-hidden border border-gray-200">
+		<div class={pictureClass}>
 			<img
 				src={URL.createObjectURL(selectedFile)}
 				alt="Preview"
@@ -50,7 +51,7 @@
 	</div>
 {:else if currentUrl}
 	<div class="mb-4">
-		<img src={currentUrl} alt={currentUrl} class="h-full w-full rounded-full object-cover" />
+		<img src={currentUrl} alt={currentUrl} class={pictureClass} />
 	</div>
 {/if}
 
