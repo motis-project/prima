@@ -2,6 +2,7 @@ import { fail } from '@sveltejs/kit';
 import { msg } from '$lib/msg';
 import fs from 'fs/promises';
 import path from 'path';
+import sharp from 'sharp';
 
 export async function replacePhoto(
 	userId: number | undefined,
@@ -23,7 +24,7 @@ export async function replacePhoto(
 		return fail(400, { msg: msg('invalidFileType') });
 	}
 
-	const maxSize = 5 * 1024 * 1024;
+	const maxSize = 10 * 1024 * 1024;
 	if (file.size > maxSize) {
 		return fail(400, { msg: msg('fileTooLarge') });
 	}
@@ -35,7 +36,11 @@ export async function replacePhoto(
 	const filePath = path.join(uploadDir, fileName);
 
 	const buffer = Buffer.from(await file.arrayBuffer());
-	await fs.writeFile(filePath, buffer);
+	const resizedBuffer = await sharp(buffer)
+		.resize({ width: 500, height: 500, fit: 'cover' })
+		.toFormat('jpeg')
+		.toBuffer();
+	await fs.writeFile(filePath, resizedBuffer);
 
 	const lookupPath = `${relativePath}/${fileName}`;
 
