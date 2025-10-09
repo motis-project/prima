@@ -88,8 +88,9 @@ export async function getRideshareToursAsItinerary(
 					from: { name: a.address || '', lat: a.lat || 0, lon: a.lng || 0, level: 0 }, // TODO nullable?
 					to: { name: b.address || '', lat: b.lat || 0, lon: b.lng || 0, level: 0 },
 					duration: ((b.communicatedTime || 0) - (a.communicatedTime || 0)) / 1000,
+					scheduled: false,
 					realTime: false,
-					legGeometry: { points: '', length: 0 }
+					legGeometry: { points: '', length: 0, precision: 7 }
 				};
 			};
 			const requests =
