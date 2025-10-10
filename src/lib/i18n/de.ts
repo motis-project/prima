@@ -164,7 +164,8 @@ const translations: Translations = {
 		profilePicture: 'Profilbild',
 		profilePictureSubtitle: 'Hier können Sie Ihr Profilbild ändern',
 		personalInfo: 'Personenbezogene Informationen',
-		adjustPersonalInfo: 'Ändern Sie Ihre persönlichen Informationen'
+		adjustPersonalInfo: 'Ändern Sie Ihre persönlichen Informationen',
+		updatePersonalInfo: 'Persönlich Informationen neu setzen'
 	},
 	rating: {
 		thanksForUsing: 'Vielen Dank, dass Sie das ÖPNV Taxi benutzt haben.',

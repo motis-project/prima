@@ -129,6 +129,9 @@
 				/>
 				<Input name="lastname" type="text" value={data.name} placeholder={t.account.lastName} />
 			</div>
+			<div class="mt-2 flex justify-end">
+				<Button type="submit" variant="outline">{t.account.updatePersonalInfo}</Button>
+			</div>
 		</form>
 	</Panel>
 </div>

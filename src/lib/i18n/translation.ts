@@ -155,6 +155,7 @@ export type Translations = {
 		profilePictureSubtitle: string;
 		personalInfo: string;
 		adjustPersonalInfo: string;
+		updatePersonalInfo: string;
 	};
 	rating: {
 		thanksForUsing: string;

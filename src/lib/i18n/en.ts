@@ -159,7 +159,8 @@ const translations: Translations = {
 		profilePicture: 'Profile Picture',
 		profilePictureSubtitle: 'Change your profile picture here',
 		personalInfo: 'Personal Information',
-		adjustPersonalInfo: 'Change your personal information here'
+		adjustPersonalInfo: 'Change your personal information here',
+		updatePersonalInfo: 'Update personal info'
 	},
 	rating: {
 		thanksForUsing: 'Thank you for using the public transport taxi.',
