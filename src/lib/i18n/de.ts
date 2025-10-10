@@ -366,7 +366,10 @@ const translations: Translations = {
 		createNewVehicle: 'Neues Fahrzeug anlegen',
 		createVehicle: 'Fahrzeug anlegen',
 		saveChanges: 'Änderungen speichern',
-		preview: 'Voransicht'
+		preview: 'Voransicht',
+		feedbackPrompt: 'Bitte bewerten Sie Ihre Reise mit',
+		feedbackPromptProvider: 'Bitte bewerten Sie Ihren Mitfahrer',
+		howHasItBeen: 'Sie können Ihre letzt Mitfahrerfahrung hier bewerten'
 	}
 };
 

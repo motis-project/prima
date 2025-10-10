@@ -3,8 +3,8 @@ export async function up(db) {
 		.createTable('ride_share_rating')
 		.addColumn('id', 'serial', (col) => col.primaryKey())
         .addColumn('rating', 'integer', (col) => col.notNull())
-		.addColumn('rated_user', 'integer', (col) => col.references('user.id').notNull())
-		.addColumn('rating_user', 'integer', (col) => col.references('user.id').notNull())
+		.addColumn('request', 'integer', (col) => col.references('request.id').notNull())
+		.addColumn('rated_is_customer', 'boolean', (col) => col.notNull())
 		.execute();
 }
 

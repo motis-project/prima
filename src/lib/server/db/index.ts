@@ -150,10 +150,10 @@ export interface Database {
 		picture: string | null;
 	};
 	rideShareRating: {
-		id: number;
+		id: Generated<number>;
 		rating: number;
-		ratedUser: number;
-		ratingUser: number;
+		request: number;
+		ratedIsCustomer: boolean;
 	};
 }
 

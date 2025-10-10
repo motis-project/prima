@@ -319,6 +319,9 @@ export type Translations = {
 		createVehicle: string;
 		saveChanges: string;
 		preview: string;
+		feedbackPrompt: string;
+		feedbackPromptProvider: string;
+		howHasItBeen: string;
 	};
 };
 

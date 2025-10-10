@@ -359,7 +359,10 @@ const translations: Translations = {
 		createNewVehicle: 'Create new Vehicle',
 		createVehicle: 'Create Vehicle',
 		saveChanges: 'Save changes',
-		preview: 'preview'
+		preview: 'preview',
+		feedbackPrompt: 'Please rate your journey with',
+		feedbackPromptProvider: 'Please rate your recent carpooler',
+		howHasItBeen: 'You can rate your last ride share experience here'
 	}
 };
 
