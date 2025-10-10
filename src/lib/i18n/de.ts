@@ -342,6 +342,7 @@ const translations: Translations = {
 		negotiateMessage: 'Nachricht an den Anbieter der Mitfahrgelegenheit',
 		sendNegotiationRequest: 'Anfrage senden',
 		requestBy: 'Anfrage von',
+		offerBy: 'Angebot von',
 		acceptRequest: 'Mitfahrt bestätigen',
 		requestAccepted: 'Mitfahrt bestätigt'
 	},

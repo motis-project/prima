@@ -10,13 +10,15 @@
 		draggable,
 		level,
 		location = $bindable(),
-		marker = $bindable()
+		marker = $bindable(),
+		popup
 	}: {
 		color: string;
 		draggable: boolean;
 		level?: number;
 		location: Location;
 		marker?: maplibregl.Marker;
+		popup?: string;
 	} = $props();
 
 	let initialized = false;
@@ -38,6 +40,15 @@
 							location.label = x.label;
 						}
 					});
+
+				if (popup) {
+					marker.setPopup(
+						new maplibregl.Popup({
+							anchor: 'bottom',
+							offset: [0, -42]
+						}).setText(popup)
+					);
+				}
 				initialized = true;
 			}
 		}

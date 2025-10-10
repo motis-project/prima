@@ -1,6 +1,6 @@
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { db } from '$lib/server/db';
-import type { Itinerary, Mode } from '$lib/openapi';
+import type { Itinerary, Leg, Mode } from '$lib/openapi';
 
 export async function getRideshareToursAsItinerary(
 	userId: number,
@@ -13,7 +13,10 @@ export async function getRideshareToursAsItinerary(
 		negotiating: boolean;
 		requests: {
 			journey: Itinerary;
+			firstName: string;
 			name: string;
+			gender: string;
+			profilePicture: string | null;
 			email: string;
 			phone: string | undefined;
 			pending: boolean;
@@ -43,7 +46,9 @@ export async function getRideshareToursAsItinerary(
 						'user.id as customerId',
 						'user.firstName',
 						'user.name',
+						'user.gender',
 						'user.email',
+						'user.profilePicture',
 						jsonArrayFrom(
 							eb
 								.selectFrom('event')
@@ -76,7 +81,7 @@ export async function getRideshareToursAsItinerary(
 				endTime: new Date(journey.communicatedEnd).toISOString(),
 				legs: []
 			};
-			const createLeg = (a: Evt, b: Evt) => {
+			const createLeg = (a: Evt, b: Evt): Leg => {
 				const start = new Date(a.communicatedTime || 0).toISOString();
 				const end = new Date(b.communicatedTime || 0).toISOString();
 				return {
@@ -109,7 +114,10 @@ export async function getRideshareToursAsItinerary(
 										endTime: new Date(b.communicatedTime || 0).toISOString(),
 										legs: [createLeg(a, b)]
 									},
-									name: r.firstName + ' ' + r.name,
+									firstName: r.firstName,
+									name: r.name,
+									gender: r.gender,
+									profilePicture: r.profilePicture,
 									email: r.email,
 									phone: undefined,
 									pending: r.pending,
@@ -119,9 +127,23 @@ export async function getRideshareToursAsItinerary(
 			const events = journey.requests
 				.flatMap((r) => r.events)
 				.sort((a, b) => a.communicatedTime - b.communicatedTime);
-			for (let i = 1; i < events.length; i++) {
-				j.legs.push(createLeg(events[i - 1], events[i]));
+			const leg = createLeg(events[0], events[events.length - 1]);
+			leg.intermediateStops = [];
+			for (let i = 1; i < events.length - 1; i++) {
+				const a = events[i];
+				const time = new Date(a.communicatedTime || 0).toISOString();
+				leg.intermediateStops.push({
+					name: a.address || '',
+					lat: a.lat || 0,
+					lon: a.lng || 0,
+					level: 0,
+					arrival: time,
+					departure: time,
+					scheduledArrival: time,
+					scheduledDeparture: time
+				});
 			}
+			j.legs.push(leg);
 			return {
 				journey: j,
 				id: journey.id,

@@ -13,7 +13,7 @@
 	import { routeBorderColor, routeColor } from '$lib/ui/modeStyle';
 	import { isOdmLeg, isRideShareLeg } from './utils';
 	import type { SignedItinerary } from '$lib/planAndSign';
-	import { CigaretteIcon, CigaretteOffIcon, SquareUserIcon } from 'lucide-svelte';
+	import { CigaretteIcon, CigaretteOffIcon, StarIcon } from 'lucide-svelte';
 
 	const {
 		itinerary,
@@ -122,20 +122,31 @@
 			)}
 			{#if tourInfo}
 				<span class="ml-6">
-					{#if tourInfo.profilePicture}
-						<img src={tourInfo.profilePicture || '/fallback'} alt="profile" class="inline" />
-					{:else}
-						<SquareUserIcon class="inline" />
-					{/if}
-					{tourInfo.firstName || tourInfo.name}
-					{t.account.genderShort(tourInfo.gender || 'n')}
-				</span>
-				<span class="ml-6">
-					{#if tourInfo.smokingAllowed}
-						<CigaretteIcon />
-					{:else}
-						<CigaretteOffIcon />
-					{/if}
+					<div class="flex flex-row gap-4">
+						<img
+							src={tourInfo.profilePicture || 'user-default.jpg'}
+							alt="profile"
+							class="mt-2 h-20 w-20 overflow-hidden border border-gray-200"
+						/>
+						<div>
+							<span class="text-sm">{t.ride.offerBy}</span>
+							<h3 class="font-bold">
+								{tourInfo.firstName || tourInfo.name}
+								{t.account.genderShort(tourInfo.gender || 'n')}
+							</h3>
+							<div>
+								{#if tourInfo.smokingAllowed}
+									<CigaretteIcon class="inline" />
+								{:else}
+									<CigaretteOffIcon class="inline" />
+								{/if}
+								{#if tourInfo.averageRatingProvider != null && typeof tourInfo.averageRatingProvider === 'number'}
+									<StarIcon fill="gold" color="gold" class="ml-4 inline" />
+									{(tourInfo.averageRatingProvider + 1).toFixed(1)}
+								{/if}
+							</div>
+						</div>
+					</div>
 				</span>
 			{/if}
 		{/if}
@@ -160,7 +171,7 @@
 		{@const predpred = i <= 1 ? undefined : itinerary.legs[i - 2]}
 		{@const next = isLast ? undefined : itinerary.legs[i + 1]}
 
-		{#if l.routeShortName}
+		{#if l.routeShortName || l.intermediateStops}
 			<div class="flex w-full items-center justify-between space-x-1">
 				<Route {onClickTrip} {l} />
 				{#if pred && (pred.from.track || pred.duration !== 0) && (i != 1 || pred.routeShortName)}

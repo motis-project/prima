@@ -335,6 +335,7 @@ const translations: Translations = {
 		negotiateMessage: 'Message to the person offering the ride',
 		sendNegotiationRequest: 'Send negotation request',
 		requestBy: 'Request from',
+		offerBy: 'Offered by',
 		acceptRequest: 'Confirm ride',
 		requestAccepted: 'Ride confirmed'
 	},

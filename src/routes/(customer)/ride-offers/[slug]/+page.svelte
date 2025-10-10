@@ -91,7 +91,20 @@
 		{#each data.requests as n}
 			<Card.Root class="min-w-72 border-input">
 				<Card.Content class="flex flex-col gap-4 p-4">
-					<h3>{t.ride.requestBy} {n.name}</h3>
+					<div class="flex flex-row gap-4">
+						<img
+							src={n.profilePicture || 'user-default.jpg'}
+							alt="profile"
+							class="inline h-20 w-20 overflow-hidden border border-gray-200"
+						/>
+						<div>
+							<span class="text-sm">{t.ride.requestBy}</span>
+							<h3 class="font-bold">
+								{n.firstName || n.name}
+								{t.account.genderShort(n.gender || 'n')}
+							</h3>
+						</div>
+					</div>
 					<div class="grid grid-cols-[max-content_auto] gap-x-2">
 						<span>{t.account.email}:</span><span><a href="mailto:{n.email}">{n.email}</a></span>
 						{#if n.phone}

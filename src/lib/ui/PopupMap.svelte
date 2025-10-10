@@ -15,7 +15,6 @@
 	import Layer from '$lib/map/Layer.svelte';
 	import { t } from '$lib/i18n/translation';
 	import type { SignedItinerary } from '$lib/planAndSign';
-	import IntermediateMarkers from './IntermediateMarkers.svelte';
 
 	let {
 		from = $bindable(),
@@ -168,6 +167,18 @@
 			<ItineraryGeoJson {itinerary} {level} />
 		{/if}
 
+		{#if intermediateStops && itinerary}
+			{#each itinerary.legs.flatMap((l) => l.intermediateStops || []) as e}
+				<Marker
+					color="black"
+					draggable={false}
+					{level}
+					location={posToLocation(e, 0)}
+					popup={e.name}
+				/>
+			{/each}
+		{/if}
+
 		{#if from}
 			<Marker
 				color="green"
@@ -180,10 +191,6 @@
 
 		{#if to}
 			<Marker color="red" draggable={true} {level} bind:location={to} bind:marker={toMarker} />
-		{/if}
-
-		{#if intermediateStops && itinerary}
-			<IntermediateMarkers legs={itinerary.legs} />
 		{/if}
 	</Map>
 </div>

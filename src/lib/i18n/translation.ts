@@ -294,6 +294,7 @@ export type Translations = {
 		negotiateMessage: string;
 		sendNegotiationRequest: string;
 		requestBy: string;
+		offerBy: string;
 		acceptRequest: string;
 		requestAccepted: string;
 	};
