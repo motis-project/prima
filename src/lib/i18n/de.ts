@@ -356,7 +356,7 @@ const translations: Translations = {
 	},
 
 	rideShare: {
-		maxPassengers: 'aximale Anzahl Mitfahrer',
+		maxPassengers: 'maximale Anzahl Mitfahrer',
 		passengers: 'Mitfahrer',
 		smokingInVehicle: 'Rauchen im Fahrzeug',
 		color: 'Farbe',

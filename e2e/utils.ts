@@ -39,6 +39,16 @@ export const TAXI_OWNER_2: UserCredentials = {
 	password: 'longEnough2'
 };
 
+export const RIDE_SHARE_PROVIDER: UserCredentials = {
+	email: 'rsp@example.com',
+	password: 'longEnough1'
+};
+
+export const RIDE_SHARE_CUSTOMER: UserCredentials = {
+	email: 'rsc@example.com',
+	password: 'longEnough1'
+};
+
 export const COMPANY1: Company = {
 	name: 'Taxi Weißwasser',
 	address: 'Werner-Seelenbinder-Straße 70A, 02943 Weißwasser/Oberlausitz',
@@ -74,7 +84,7 @@ export async function login(page: Page, credentials: UserCredentials) {
 	await page.waitForTimeout(500);
 }
 
-export async function signup(page: Page, credentials: UserCredentials) {
+export async function signup(page: Page, credentials: UserCredentials, skipLogout?: boolean) {
 	await page.goto('/account/signup');
 	await expect(page.getByRole('heading', { name: 'Nutzerkonto erstellen' })).toBeVisible();
 	await page.getByRole('textbox', { name: 'E-Mail' }).fill(credentials.email);
@@ -90,10 +100,12 @@ export async function signup(page: Page, credentials: UserCredentials) {
 
 	await execSQL(sql`UPDATE "user" SET is_email_verified = true WHERE email = ${credentials.email}`);
 
-	await page.goto('/account/settings');
-	await page.waitForTimeout(1000);
-	await page.screenshot({ path: 'screenshots/beforeLogout.png', fullPage: true });
-	await page.getByRole('button', { name: 'Abmelden' }).click();
+	if (!skipLogout) {
+		await page.goto('/account/settings');
+		await page.waitForTimeout(1000);
+		await page.screenshot({ path: 'screenshots/beforeLogout.png', fullPage: true });
+		await page.getByRole('button', { name: 'Abmelden' }).click();
+	}
 }
 
 async function chooseFromTypeAhead(
