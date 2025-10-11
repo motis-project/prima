@@ -11,7 +11,7 @@ test('add ride share tour', async ({ page }) => {
 	await page.waitForTimeout(1000);
 	await page.goto('/ride-offers/new');
 	await page.waitForTimeout(1000);
-	await chooseFromTypeAhead(page, 'Von', 'schleife', 'Schleife Sachsen');
+	await chooseFromTypeAhead(page, 'Von', 'schleife', 'Schleife Deutschland');
 	await chooseFromTypeAhead(page, 'Nach', 'klein prie', 'Klein Priebus Krauschwitz');
 	await page.locator('input[type="datetime-local"]').fill('2025-12-12T00:00');
 	await page.getByRole('button', { name: 'Mitfahrangebot veröffentlichen' }).click();
@@ -23,7 +23,7 @@ test('start ride share negotiation', async ({ page }) => {
 	await signup(page, RIDE_SHARE_CUSTOMER, true);
 	await page.goto('/routing');
 	await page.waitForTimeout(1000);
-	await chooseFromTypeAhead(page, 'Von', 'schleife', 'Schleife Sachsen');
+	await chooseFromTypeAhead(page, 'Von', 'schleife', 'Schleife Deutschland');
 	await page.waitForTimeout(1000);
 	await chooseFromTypeAhead(page, 'Nach', 'klein prie', 'Klein Priebus Krauschwitz');
 	await page.waitForTimeout(1000);
