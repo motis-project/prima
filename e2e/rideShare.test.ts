@@ -30,7 +30,7 @@ test('start ride share negotiation', async ({ page }) => {
 	await page.click('#bits-1');
 	await page.locator('input[type="datetime-local"]').fill('2025-12-12T00:00');
 	await page.keyboard.press('Escape');
-	await page.waitForTimeout(1000);
+	await page.waitForTimeout(2000);
 	await page.screenshot({ path: 'screenshots/findSearchResult.png', fullPage: true });
 	await page.getByRole('button').nth(7).click();
 	await page.getByRole('button', { name: 'Mitfahrgelegenheit vereinbaren' }).click();
