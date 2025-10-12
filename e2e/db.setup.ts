@@ -33,6 +33,7 @@ setup('setup db', async () => {
 	await db.deleteFrom('availability').executeTakeFirstOrThrow();
 	await db.deleteFrom('event').executeTakeFirstOrThrow();
 	await db.deleteFrom('eventGroup').executeTakeFirstOrThrow();
+	await db.deleteFrom('rideShareRating').executeTakeFirstOrThrow();
 	await db.deleteFrom('request').executeTakeFirstOrThrow();
 	await db.deleteFrom('tour').executeTakeFirstOrThrow();
 	await db.deleteFrom('rideShareTour').executeTakeFirstOrThrow();

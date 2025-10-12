@@ -33,6 +33,7 @@
 			<div class="flex gap-1">
 				{#each Array(5) as _, idx}
 					<Star
+						data-testid={`star-${idx + 1}`}
 						fill={(hover || rating) > idx ? 'gold' : ''}
 						size={24}
 						color="gold"
