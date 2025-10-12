@@ -6,18 +6,16 @@
 
 	const {
 		name,
-		events,
-		departure
+		events
 	}: {
 		name: string;
 		events: TourEvent[];
-		departure: number;
 	} = $props();
 
 	events.sort(
 		(e1: TourEvent, e2: TourEvent) => getScheduledEventTime(e1) - getScheduledEventTime(e2)
 	);
-	console.log('sending cancelation notice mail to company: ', { name }, { events }, { departure });
+	console.log('sending cancelation notice mail to company: ', { name }, { events });
 	const plannedEvents = events.filter((e) => !e.cancelled);
 </script>
 
