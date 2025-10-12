@@ -37,7 +37,7 @@
 				<Label for="lastname"
 					>{t.account.name}<span class="text-red-500">{requiredField}</span></Label
 				>
-				<RadioGroup.Root value="o" name="gender" class="grid-cols-4">
+				<RadioGroup.Root value="n" name="gender" class="grid-cols-4">
 					<div class="flex items-center space-x-2">
 						<RadioGroup.Item value="m" id="m" />
 						<Label for="m">{t.account.gender('m')}</Label>

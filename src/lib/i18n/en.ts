@@ -343,7 +343,7 @@ const translations: Translations = {
 
 	buttons: {
 		addVehicle: 'Add vehicle',
-		uploadPhoto: 'upload photo',
+		uploadPhoto: 'Upload photo',
 		savePhoto: 'save photo',
 		smokingOptions: ['not allowed', 'allowed']
 	},
