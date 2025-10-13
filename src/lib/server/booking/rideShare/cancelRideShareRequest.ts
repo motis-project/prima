@@ -64,9 +64,7 @@ export const cancelRideShareRequest = async (requestId: number, userId: number) 
 					return;
 				}
 				const queryResult =
-					await sql`CALL cancel_ride_share_request(${requestId}, ${userId}, ${Date.now()}) AS wasTourCancelled`.execute(
-						trx
-					);
+					await sql`CALL cancel_ride_share_request(${requestId}, ${userId})`.execute(trx);
 				const tourInfo = await trx
 					.selectFrom('request as cancelled_request')
 					.where('cancelled_request.id', '=', requestId)
@@ -172,6 +170,9 @@ async function updateLegDurations(
 		}[],
 		trx: Transaction<Database>
 	) => {
+		if (prevIdx === -1 || nextIdx === events.length) {
+			return;
+		}
 		const routingResult =
 			(await oneToManyCarRouting(events[prevIdx], [events[nextIdx]], false))[0] ??
 			(await oneToManyCarRouting(events[nextIdx], [events[prevIdx]], true))[0];
