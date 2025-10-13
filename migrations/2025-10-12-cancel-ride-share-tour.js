@@ -34,7 +34,7 @@ export async function up(db) {
 
 
     await sql`
-    CREATE OR REPLACE PROCEDURE cancel_request(
+    CREATE OR REPLACE PROCEDURE cancel_ride_share_request(
     	p_request_id INTEGER,
     	p_user_id INTEGER
     ) AS  $$

@@ -64,7 +64,7 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 					return;
 				}
 				const queryResult =
-					await sql`CALL cancel_request(${requestId}, ${userId}, ${Date.now()}) AS wasTourCancelled`.execute(
+					await sql`CALL cancel_ride_share_request(${requestId}, ${userId}, ${Date.now()}) AS wasTourCancelled`.execute(
 						trx
 					);
 				const tourInfo = await trx
