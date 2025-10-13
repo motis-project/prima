@@ -1,5 +1,6 @@
 package de.motis.prima.services
 
+import TimeBlock
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Field
@@ -43,11 +44,40 @@ interface ApiService {
         @Query("deviceId") deviceId: String,
         @Query("token") token: String
     ): Response<Void>
+
+    @GET("/taxi/availability/api/availability")
+    suspend fun getAvailability(
+        @Query("offset") offset: String, // -120
+        @Query("date") date: String // 2025-10-10
+    ): Response<AvailabilityResponse>
+
+    @PUT("/taxi/availability")
+    suspend fun setAvailability(
+        // {vehicleId: 1, from: 1760104800000, to: 1760106600000}
+        @Query("vehicleId") vehicleId: String,
+        @Query("from") from: String,
+        @Query("to") to: String
+    ): Response<Void>
 }
+
+val testAvailability = Availability(4, 1760104800000, 1760106600000)
+
+data class AvailabilityResponse(
+    val tours: List<Tour> = emptyList(),
+    val vehicles: List<Vehicle>  = listOf(Vehicle(1, "GR-TU-11", listOf(testAvailability))),
+    val utcDate: String = "2025-10-10T14:25:52.442Z"
+)
+
+data class Availability(
+    val id: Int,
+    val startTime: Long,
+    val endTime: Long,
+)
 
 data class Vehicle(
     val id: Int,
-    val licensePlate: String
+    val licensePlate: String,
+    val availability: List<Availability> = emptyList()
 )
 
 data class Event(

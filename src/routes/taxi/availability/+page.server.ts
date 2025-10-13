@@ -59,6 +59,7 @@ export async function load(event: RequestEvent) {
 		company.lat !== null &&
 		company.lng !== null;
 
+	console.log("aaaaaa", (await vehicles).map(v => v.availability))
 	return {
 		tours: await tours,
 		vehicles: await vehicles,
@@ -66,9 +67,9 @@ export async function load(event: RequestEvent) {
 		companyDataComplete,
 		companyCoordinates: companyDataComplete
 			? {
-					lat: company.lat!,
-					lng: company.lng!
-				}
+				lat: company.lat!,
+				lng: company.lng!
+			}
 			: null
 	};
 }

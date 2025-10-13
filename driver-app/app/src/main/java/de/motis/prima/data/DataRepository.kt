@@ -1,10 +1,13 @@
 package de.motis.prima.data
 
+import TimeBlock
 import android.content.Context
 import android.content.res.Configuration
 import android.util.Log
+import colorAvailable
 import com.google.firebase.messaging.FirebaseMessaging
 import de.motis.prima.services.ApiService
+import de.motis.prima.services.AvailabilityResponse
 import de.motis.prima.services.Tour
 import de.motis.prima.services.Vehicle
 import io.realm.kotlin.query.RealmResults
@@ -75,6 +78,9 @@ class DataRepository @Inject constructor(
     private val _darkTheme = MutableStateFlow(false)
     val darkTheme: StateFlow<Boolean> = _darkTheme.asStateFlow()
 
+    private val _availability = MutableStateFlow<List<TimeBlock>>(emptyList())
+    val availability = _availability.asStateFlow()
+
     fun toggleTheme() {
         _darkTheme.value = !_darkTheme.value
         CoroutineScope(Dispatchers.IO).launch {
@@ -102,6 +108,48 @@ class DataRepository @Inject constructor(
         fetchFirebaseToken()
         startRefreshingTours()
         startReporting()
+    }
+
+    private fun minutesSinceStartOfDay(epochMillis: Long, zoneId: ZoneId = ZoneId.systemDefault()): Long {
+        val time = Instant.ofEpochMilli(epochMillis).atZone(zoneId)
+        val startOfDay = time.toLocalDate().atStartOfDay(zoneId)
+        val duration = java.time.Duration.between(startOfDay, time)
+        return duration.toMinutes()
+    }
+
+    private fun getTimeBlocks(availability: AvailabilityResponse): MutableList<TimeBlock> {
+        val blocks: MutableList<TimeBlock> = emptyList<TimeBlock>().toMutableList()
+        for (vehicle in availability.vehicles) {
+            for (av in vehicle.availability) {
+                val startTime = minutesSinceStartOfDay(av.startTime)
+                val endTime = minutesSinceStartOfDay(av.endTime)
+                val timeBlock = TimeBlock(startTime.toInt(), endTime.toInt(), colorAvailable)
+                blocks += timeBlock
+            }
+        }
+        for (tour in availability.tours) {
+            // TODO
+        }
+        return blocks
+    }
+
+    fun getAvailability() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+
+                /*val response = apiService.getAvailability(offset = "-120" , date = "2025-10-10")
+                Log.d("test", "$response")
+                if (response.isSuccessful) {
+                    _networkError.value = false
+                    //val fetchedBlocks = response.body() ?: emptyList()
+                    //Log.d("test", "$fetchedBlocks")
+                }*/
+                _availability.value = getTimeBlocks(AvailabilityResponse())
+            } catch (e: Exception) {
+                _networkError.value = true
+                Log.e("error", "${e.message}")
+            }
+        }
     }
 
     fun removeFirebaseToken() {

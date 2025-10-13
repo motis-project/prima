@@ -1,3 +1,4 @@
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -17,6 +18,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,18 +32,24 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.motis.prima.services.AvailabilityResponse
+import de.motis.prima.ui.AvailabilityViewModel
 
 data class TimeBlock(
     val startMinutes: Int, // minutes since start of day
     val endMinutes: Int,
-    val color: Color = Color.Blue
+    val color: Color = Color.White
 )
+
+val colorAvailable = Color(254, 249, 195)
+val colorTour = Color(251 ,146, 60)
 
 @Composable
 fun DayTimeline(
     modifier: Modifier = Modifier,
     blocks: List<TimeBlock> = emptyList(),
-    onRangeSelected: (startMinutes: Int, endMinutes: Int) -> Unit = { _, _ -> }
+    onRangeSelected: (startMinutes: Int, endMinutes: Int, dragStart: Int) -> Unit = { _, _, _ -> },
+    viewModel: AvailabilityViewModel
 ) {
     val totalMinutes = 24 * 60
     val slotMinutes = 15
@@ -51,9 +60,18 @@ fun DayTimeline(
 
     val scrollState = rememberScrollState()
 
+    val fetchedBlocks = viewModel.availability.collectAsState().value
+
+    LaunchedEffect(Unit) {
+        for (block in fetchedBlocks) {
+            onRangeSelected(block.startMinutes, block.endMinutes, block.startMinutes)
+        }
+    }
+
     Row {
         val heightPerSlotDp = 120.dp / (60 / slotMinutes)
         val totalHeight = heightPerSlotDp * 97
+
         // time line
         Column(
             modifier = Modifier
@@ -103,7 +121,7 @@ fun DayTimeline(
                                     val end = start + slotMinutes
 
                                     if (end > start) {
-                                        onRangeSelected(start, end)
+                                        onRangeSelected(start, end, start)
                                     }
                                 }
                             }
@@ -122,7 +140,7 @@ fun DayTimeline(
                                         val start = minOf(dragStart ?: 0, dragEnd ?: 0)
                                         val end = maxOf(dragStart ?: 0, dragEnd ?: 0) + slotMinutes
                                         if (end > start) {
-                                            onRangeSelected(start, end)
+                                            onRangeSelected(start, end, dragStart!!)
                                         }
                                         dragStart = null
                                         dragEnd = null
@@ -193,7 +211,7 @@ fun DayTimeline(
 
                 Column(
                     modifier = Modifier
-                        .background(Color.LightGray.copy(alpha = 0.3f))
+                        .background(Color(240, 240, 240).copy(alpha = 0.3f))
                         .width(50.dp)
                         .height(totalHeight),
                     horizontalAlignment = Alignment.End
@@ -204,18 +222,18 @@ fun DayTimeline(
         }
 
         // scroll bar
-        val visibleHours = 4
+        val visibleHours = 6
         val visibleMinutes = visibleHours * 60
-        val proportionVisible = visibleMinutes / totalMinutes.toFloat()
+        val proportionVisible = 1/4 //visibleMinutes / totalMinutes.toFloat()
         val scrollProportion = scrollState.value / scrollState.maxValue.toFloat().coerceAtLeast(1f)
         val indicatorHeight = 30.dp
-        val indicatorOffset = scrollProportion * (1f - proportionVisible) / visibleHours
+        val indicatorOffset = scrollProportion * (1f - proportionVisible) / 1.8
 
         Column(
             modifier = Modifier
                 .background(Color.LightGray.copy(alpha = 0.3f))
                 .fillMaxWidth()
-                .height(600.dp),
+                .height(totalHeight / visibleHours * 60),
             horizontalAlignment = Alignment.End
         ) {
             // Scrollbar overlay
@@ -241,35 +259,33 @@ fun DayTimeline(
 }
 
 @Composable
-fun PreviewDayTimeline() {
+fun PreviewDayTimeline(
+    viewModel: AvailabilityViewModel
+) {
     var blocks by remember { mutableStateOf(listOf<TimeBlock>()) }
 
     DayTimeline(
         modifier = Modifier
             .fillMaxSize(),
         blocks = blocks,
-        onRangeSelected = { start, end ->
-            var remove = false
+        onRangeSelected = { start, end, dragStart ->
+            val remove = blocks.contains(TimeBlock(dragStart, dragStart + 15, colorAvailable))
             var a = start
             while ( a < end ) {
                 val b = a + 15
-                val newBlock = TimeBlock(a, b, Color.Yellow)
-
-                if (a == start) { // first block
-                    if (blocks.contains(newBlock)) {
-                        remove = true
-                    }
-                }
-
+                val newBlock = TimeBlock(a, b, colorAvailable)
                 if (remove) {
                     val tmp = blocks.toMutableList()
                     tmp.remove(newBlock)
                     blocks = tmp
                 } else {
-                    blocks = blocks + newBlock
+                    if (blocks.contains(newBlock).not()) {
+                        blocks = blocks + newBlock
+                    }
                 }
                 a = b
             }
-        }
+        },
+        viewModel
     )
 }
