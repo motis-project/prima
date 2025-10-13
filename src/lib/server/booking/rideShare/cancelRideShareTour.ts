@@ -5,7 +5,7 @@ import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { db } from '$lib/server/db';
 import { retry } from '$lib/server/db/retryQuery';
 
-export async function cancelTour(
+export async function cancelRideShareTour(
 	tourId: number,
 	user: number
 ): Promise<{ status?: number; message?: string }> {

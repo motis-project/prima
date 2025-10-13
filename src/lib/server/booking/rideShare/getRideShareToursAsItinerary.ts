@@ -3,7 +3,7 @@ import { db } from '$lib/server/db';
 import type { Itinerary, Leg, Mode } from '$lib/openapi';
 
 export async function getRideshareToursAsItinerary(
-	userId: number,
+	providerId: number,
 	tourId: number | undefined
 ): Promise<{
 	journeys: {
@@ -39,7 +39,6 @@ export async function getRideshareToursAsItinerary(
 					.selectFrom('request')
 					.innerJoin('user', 'user.id', 'request.customer')
 					.whereRef('rideShareTour.id', '=', 'request.rideShareTour')
-					.where('request.cancelled', '=', false)
 					.select((eb) => [
 						'request.id',
 						'pending',
@@ -66,7 +65,7 @@ export async function getRideshareToursAsItinerary(
 					])
 			).as('requests')
 		])
-		.where('owner', '=', userId);
+		.where('owner', '=', providerId);
 	if (tourId != undefined) {
 		query = query.where('rideShareTour.id', '=', tourId);
 	}
@@ -102,7 +101,7 @@ export async function getRideshareToursAsItinerary(
 				tourId == undefined
 					? []
 					: journey.requests
-							.filter((r) => r.customerId != userId)
+							.filter((r) => r.customerId != providerId)
 							.map((r) => {
 								const a = r.events[0];
 								const b = r.events[1];
