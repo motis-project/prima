@@ -31,6 +31,7 @@
 	import type { Itinerary } from '$lib/openapi';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
+	import { HOUR } from '$lib/util/time';
 
 	const { data, form } = $props();
 
@@ -46,7 +47,7 @@
 		value: {}
 	});
 
-	let time = $state<Date>(new Date());
+	let time = $state<Date>(new Date(Date.now() + HOUR * 2));
 	let timeType = $state<TimeType>('departure');
 
 	let vehicle = $state<string | undefined>(

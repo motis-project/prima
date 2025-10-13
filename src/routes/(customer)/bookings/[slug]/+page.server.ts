@@ -5,6 +5,7 @@ import { msg, type Msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
 import { cancelRequest } from '$lib/server/db/cancelRequest';
 import { cancelRideShareRequest } from '$lib/server/booking/rideShare/cancelRideShareRequest';
+import { getRideShareInfos } from '$lib/server/booking/rideShare/getRideShareInfo';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const journey = await db
@@ -45,9 +46,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		error(404, 'Not found');
 	}
 
+	const rideShareTourInfos = await getRideShareInfos(journey.json);
+
 	return {
 		...journey,
-		journey: journey.json,
+		journey: {
+			...journey.json,
+			rideShareTourInfos
+		},
 		isService: locals.session?.isService
 	};
 };

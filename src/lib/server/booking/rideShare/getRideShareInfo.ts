@@ -1,4 +1,6 @@
+import type { Itinerary } from '$lib/openapi';
 import { db } from '$lib/server/db';
+import { isRideShareLeg } from '../../../../routes/(customer)/routing/utils';
 
 export async function getRideShareInfo(tourId: number) {
 	return await db
@@ -39,6 +41,27 @@ export async function getRideShareInfo(tourId: number) {
 		])
 		.where('rideShareTour.id', '=', tourId)
 		.executeTakeFirst();
+}
+
+export async function getRideShareInfos(i: Itinerary) {
+	const rideShareTourInfos: RideShareTourInfo[] = [];
+
+	if (i.legs.length !== 0) {
+		const rideShareTourFirstLeg = isRideShareLeg(i.legs[0])
+			? parseInt(i.legs[0].tripId!)
+			: undefined;
+		const rideShareTourLastLeg =
+			i.legs.length > 1 && isRideShareLeg(i.legs[i.legs.length - 1])
+				? parseInt(i.legs[i.legs.length - 1].tripId!)
+				: undefined;
+		if (rideShareTourFirstLeg !== undefined && !isNaN(rideShareTourFirstLeg)) {
+			rideShareTourInfos.push(await getRideShareInfo(rideShareTourFirstLeg));
+		}
+		if (rideShareTourLastLeg !== undefined && !isNaN(rideShareTourLastLeg)) {
+			rideShareTourInfos.push(await getRideShareInfo(rideShareTourLastLeg));
+		}
+	}
+	return rideShareTourInfos;
 }
 
 export type RideShareTourInfo = Awaited<ReturnType<typeof getRideShareInfo>>;

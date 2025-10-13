@@ -215,6 +215,7 @@ export const actions = {
 		console.log('INSERTION DONE - REQUESTS:', { request1, request2 });
 
 		console.log('SAVING JOURNEY');
+		delete parsedJson.rideShareTourInfos;
 		const id = (
 			await db
 				.insertInto('journey')
