@@ -8,7 +8,7 @@ import { PASSENGER_CHANGE_DURATION } from '$lib/constants';
 import { sortEventsByTime } from '$lib/testHelpers';
 import { retry } from '$lib/server/db/retryQuery';
 
-export const cancelRequest = async (requestId: number, userId: number) => {
+export const cancelRideShareRequest = async (requestId: number, userId: number) => {
 	console.log(
 		'Cancel Request PARAMS START: ',
 		JSON.stringify({ requestId, userId }, null, '\t'),

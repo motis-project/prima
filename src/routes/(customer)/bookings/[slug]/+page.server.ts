@@ -1,9 +1,10 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { msg, type Msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
 import { cancelRequest } from '$lib/server/db/cancelRequest';
+import { cancelRideShareRequest } from '$lib/server/booking/rideShare/cancelRideShareRequest';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const journey = await db
@@ -55,7 +56,24 @@ export const actions = {
 	cancel: async ({ request, locals }): Promise<{ msg: Msg }> => {
 		const formData = await request.formData();
 		const requestId = readInt(formData.get('requestId'));
-		await cancelRequest(requestId, locals.session!.userId!);
+		const tourType = await db
+			.selectFrom('request')
+			.leftJoin('rideShareTour', 'rideShareTour.id', 'request.rideShareTour')
+			.leftJoin('tour', 'tour.id', 'request.tour')
+			.select(['tour.id as tour', 'rideShareTour.id as rideShareTour', 'request.customer'])
+			.executeTakeFirst();
+		if (tourType === undefined) {
+			fail(500);
+		}
+		if (tourType!.customer !== locals.session!.userId) {
+			fail(403);
+		}
+		if (tourType!.tour !== null) {
+			await cancelRequest(requestId, locals.session!.userId!);
+		}
+		if (tourType!.rideShareTour !== null) {
+			await cancelRideShareRequest(requestId, locals.session!.userId!);
+		}
 		return { msg: msg('requestCancelled', 'success') };
 	},
 	remove: async ({ request, locals }) => {
