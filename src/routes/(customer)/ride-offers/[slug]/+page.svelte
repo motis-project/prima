@@ -15,6 +15,7 @@
 	import { page } from '$app/state';
 	import Time from '../../routing/Time.svelte';
 	import { posToLocation } from '$lib/map/Location';
+	import { defaultProfilePicture } from '$lib/constants';
 
 	const { data, form } = $props();
 	let loading = $state(false);
@@ -93,7 +94,7 @@
 				<Card.Content class="flex flex-col gap-4 p-4">
 					<div class="flex flex-row gap-4">
 						<img
-							src={n.profilePicture || 'user-default.jpg'}
+							src={n.profilePicture || defaultProfilePicture}
 							alt="profile"
 							class="inline h-20 w-20 overflow-hidden border border-gray-200"
 						/>

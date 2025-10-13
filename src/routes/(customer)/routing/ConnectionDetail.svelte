@@ -14,6 +14,7 @@
 	import { isOdmLeg, isRideShareLeg } from './utils';
 	import type { SignedItinerary } from '$lib/planAndSign';
 	import { CigaretteIcon, CigaretteOffIcon, StarIcon } from 'lucide-svelte';
+	import { defaultProfilePicture } from '$lib/constants';
 
 	const {
 		itinerary,
@@ -124,7 +125,7 @@
 				<span class="ml-6">
 					<div class="flex flex-row gap-4">
 						<img
-							src={tourInfo.profilePicture || 'user-default.jpg'}
+							src={tourInfo.profilePicture || defaultProfilePicture}
 							alt="profile"
 							class="mt-2 h-20 w-20 overflow-hidden border border-gray-200"
 						/>
