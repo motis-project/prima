@@ -3,6 +3,8 @@ import { msg } from '$lib/msg';
 import fs from 'fs/promises';
 import path from 'path';
 import sharp from 'sharp';
+import crypto from 'crypto';
+import { fileTypeFromBuffer } from 'file-type';
 
 export async function replacePhoto(
 	userId: number | undefined,
@@ -19,28 +21,31 @@ export async function replacePhoto(
 	if (file.size === 0) {
 		return null;
 	}
-	const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-	if (!allowedTypes.includes(file.type)) {
-		return fail(400, { msg: msg('invalidFileType') });
-	}
 
 	const maxSize = 10 * 1024 * 1024;
 	if (file.size > maxSize) {
 		return fail(400, { msg: msg('fileTooLarge') });
 	}
 
-	const extension = path.extname(file.name) || '.jpg';
-	const fileName = `user_${userId}_${Date.now()}${extension}`;
+	const base = `user_${userId}_${Date.now()}${crypto.randomUUID()}`;
+	const hash = crypto.createHash('sha256').update(base).digest('hex');
+	const fileName = hash.slice(0, 30) + '.jpg';
 	const uploadDir = path.resolve(`static${relativePath}`);
 	await fs.mkdir(uploadDir, { recursive: true });
 	const filePath = path.join(uploadDir, fileName);
 
 	const buffer = Buffer.from(await file.arrayBuffer());
+	const detected = await fileTypeFromBuffer(buffer);
+	const ALLOWED_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+	if (!detected || !ALLOWED_MIMES.has(detected.mime)) {
+		fail(400, { msg: msg('invalidFileType') });
+	}
 	const resizedBuffer = await sharp(buffer)
 		.resize({ width: 500, height: 500, fit: 'cover' })
 		.toFormat('jpeg')
 		.toBuffer();
-	await fs.writeFile(filePath, resizedBuffer);
+	await fs.writeFile(filePath, resizedBuffer, { mode: 0o600 });
 
 	const lookupPath = `${relativePath}/${fileName}`;
 
