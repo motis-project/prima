@@ -29,12 +29,11 @@ export async function getRideShareInfo(tourId: number) {
 			eb
 				.selectFrom('rideShareRating')
 				.innerJoin('request', 'rideShareRating.request', 'request.id')
-				.innerJoin('rideShareTour', 'rideShareRating.request', 'request.rideShareTour')
+				.innerJoin('rideShareTour', 'rideShareTour.id', 'request.rideShareTour')
 				.innerJoin('rideShareVehicle', 'rideShareVehicle.id', 'rideShareTour.vehicle')
 				.whereRef('rideShareVehicle.owner', '=', 'user.id')
 				.where('rideShareRating.ratedIsCustomer', '=', false)
 				.where('rideShareRequest.pending', '=', false)
-				.where('rideShareRequest.startFixed', 'is not', null)
 				.select(db.fn.avg('rideShareRating.rating').as('averageRating'))
 				.as('averageRatingProvider')
 		])

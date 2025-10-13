@@ -13,8 +13,7 @@
 	import { routeBorderColor, routeColor } from '$lib/ui/modeStyle';
 	import { isOdmLeg, isRideShareLeg } from './utils';
 	import type { SignedItinerary } from '$lib/planAndSign';
-	import { CigaretteIcon, CigaretteOffIcon, StarIcon } from 'lucide-svelte';
-	import { defaultProfilePicture } from '$lib/constants';
+	import ProfileBadge from '$lib/ui/ProfileBadge.svelte';
 
 	const {
 		itinerary,
@@ -123,31 +122,15 @@
 			)}
 			{#if tourInfo}
 				<span class="ml-6">
-					<div class="flex flex-row gap-4">
-						<img
-							src={tourInfo.profilePicture || defaultProfilePicture}
-							alt="profile"
-							class="mt-2 h-20 w-20 overflow-hidden border border-gray-200"
-						/>
-						<div>
-							<span class="text-sm">{t.ride.offerBy}</span>
-							<h3 class="font-bold">
-								{tourInfo.firstName || tourInfo.name}
-								{t.account.genderShort(tourInfo.gender || 'n')}
-							</h3>
-							<div>
-								{#if tourInfo.smokingAllowed}
-									<CigaretteIcon class="inline" />
-								{:else}
-									<CigaretteOffIcon class="inline" />
-								{/if}
-								{#if tourInfo.averageRatingProvider != null && typeof tourInfo.averageRatingProvider === 'number'}
-									<StarIcon fill="gold" color="gold" class="ml-4 inline" />
-									{(tourInfo.averageRatingProvider + 1).toFixed(1)}
-								{/if}
-							</div>
-						</div>
-					</div>
+					<ProfileBadge
+						isCustomer={false}
+						firstName={tourInfo.firstName}
+						name={tourInfo.name}
+						gender={tourInfo.gender}
+						profilePicture={tourInfo.profilePicture}
+						smokingAllowed={tourInfo.smokingAllowed}
+						averageRating={tourInfo.averageRatingProvider}
+					/>
 				</span>
 			{/if}
 		{/if}

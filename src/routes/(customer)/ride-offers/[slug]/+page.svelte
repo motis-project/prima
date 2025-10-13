@@ -15,7 +15,7 @@
 	import { page } from '$app/state';
 	import Time from '../../routing/Time.svelte';
 	import { posToLocation } from '$lib/map/Location';
-	import { defaultProfilePicture } from '$lib/constants';
+	import ProfileBadge from '$lib/ui/ProfileBadge.svelte';
 
 	const { data, form } = $props();
 	let loading = $state(false);
@@ -92,20 +92,15 @@
 		{#each data.requests as n}
 			<Card.Root class="min-w-72 border-input">
 				<Card.Content class="flex flex-col gap-4 p-4">
-					<div class="flex flex-row gap-4">
-						<img
-							src={n.profilePicture || defaultProfilePicture}
-							alt="profile"
-							class="inline h-20 w-20 overflow-hidden border border-gray-200"
-						/>
-						<div>
-							<span class="text-sm">{t.ride.requestBy}</span>
-							<h3 class="font-bold">
-								{n.firstName || n.name}
-								{t.account.genderShort(n.gender || 'n')}
-							</h3>
-						</div>
-					</div>
+					<ProfileBadge
+						isCustomer={true}
+						firstName={n.firstName}
+						name={n.name}
+						gender={n.gender}
+						profilePicture={n.profilePicture}
+						smokingAllowed={undefined}
+						averageRating={n.averageRatingCustomer}
+					/>
 					<div class="grid grid-cols-[max-content_auto] gap-x-2">
 						<span>{t.account.email}:</span><span><a href="mailto:{n.email}">{n.email}</a></span>
 						{#if n.phone}

@@ -21,6 +21,7 @@ export async function getRideshareToursAsItinerary(
 			phone: string | undefined;
 			pending: boolean;
 			id: number;
+			averageRatingCustomer: string | number | null;
 		}[];
 		licensePlate: string | undefined;
 	}[];
@@ -61,7 +62,16 @@ export async function getRideshareToursAsItinerary(
 									'eventGroup.lng',
 									'eventGroup.address'
 								])
-						).as('events')
+						).as('events'),
+						eb
+							.selectFrom('rideShareRating')
+							.innerJoin('request as ratedRequest', 'rideShareRating.request', 'ratedRequest.id')
+							.whereRef('ratedRequest.customer', '=', 'user.id')
+							.where('rideShareRating.ratedIsCustomer', '=', true)
+							.where('ratedRequest.pending', '=', false)
+							.where('ratedRequest.startFixed', 'is not', null)
+							.select(db.fn.avg('rideShareRating.rating').as('averageRating'))
+							.as('averageRatingCustomer')
 					])
 			).as('requests')
 		])
@@ -120,7 +130,8 @@ export async function getRideshareToursAsItinerary(
 									email: r.email,
 									phone: undefined,
 									pending: r.pending,
-									id: r.id
+									id: r.id,
+									averageRatingCustomer: r.averageRatingCustomer
 								};
 							});
 			const events = journey.requests
