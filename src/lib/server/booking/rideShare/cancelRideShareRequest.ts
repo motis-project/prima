@@ -77,6 +77,7 @@ export const cancelRideShareRequest = async (requestId: number, userId: number) 
 						'rideShareTour.id',
 						'user.name',
 						'user.email',
+						'cancelled_request.pending',
 						jsonArrayFrom(
 							eb
 								.selectFrom('request as cancelled_request')
@@ -101,7 +102,8 @@ export const cancelRideShareRequest = async (requestId: number, userId: number) 
 									'request.id as requestid',
 									'cancelled_tour.id as tourid',
 									'event.id as eventid',
-									'event.eventGroupId'
+									'event.eventGroupId',
+									'request.pending'
 								])
 						).as('events')
 					])
@@ -118,7 +120,9 @@ export const cancelRideShareRequest = async (requestId: number, userId: number) 
 					return;
 				}
 				console.assert(queryResult.rows.length === 1);
-				await updateLegDurations(tourInfo.events, requestId, trx);
+				if (!tourInfo.pending) {
+					await updateLegDurations(tourInfo.events, requestId, trx);
+				}
 				try {
 					await sendMail(CancelNotificationCompany, 'Stornierte Buchung', tourInfo.email, {
 						events: tourInfo.events,
@@ -150,6 +154,7 @@ async function updateLegDurations(
 		tourid: number;
 		eventid: number;
 		eventGroupId: number;
+		pending: boolean;
 	}[],
 	requestId: number,
 	trx: Transaction<Database>
@@ -167,6 +172,7 @@ async function updateLegDurations(
 			tourid: number;
 			eventid: number;
 			eventGroupId: number;
+			pending: boolean;
 		}[],
 		trx: Transaction<Database>
 	) => {
@@ -196,7 +202,7 @@ async function updateLegDurations(
 	};
 
 	const uncancelledEvents = sortEventsByTime(
-		events.filter((e) => e.requestid === requestId || e.cancelled === false)
+		events.filter((e) => (e.requestid === requestId || !e.cancelled) && !e.pending)
 	);
 	const cancelledIdx1 = uncancelledEvents.findIndex((e) => e.requestid === requestId);
 	const cancelledIdx2 = uncancelledEvents.findLastIndex((e) => e.requestid === requestId);

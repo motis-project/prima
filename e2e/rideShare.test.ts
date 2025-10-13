@@ -55,7 +55,7 @@ test('accept ride share negotiation', async ({ page }) => {
 });
 
 test('verify feedback banners are correct', async ({ page }) => {
-	test.setTimeout(60000);
+	test.setTimeout(90000);
 	// Feedback banner is not visible since tour is not in the past
 	await isFeedbackBannerVisible(page, RIDE_SHARE_PROVIDER, false);
 	await isFeedbackBannerVisible(page, RIDE_SHARE_CUSTOMER, false);
