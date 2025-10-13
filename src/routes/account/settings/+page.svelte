@@ -99,7 +99,7 @@
 	</Panel>
 
 	<Panel title={t.account.personalInfo} subtitle={t.account.adjustPersonalInfo}>
-		<form method="post" action="/account/settings?/personalInfo" class="mt-8">
+		<form method="post" action="/account/settings?/personalInfo" class="mt-8 flex flex-col gap-2">
 			<Label for="lastname">{t.account.genderString}</Label>
 			<RadioGroup.Root value={data.gender ?? 'n'} name="gender" class="grid-cols-4">
 				<div class="flex items-center space-x-2">

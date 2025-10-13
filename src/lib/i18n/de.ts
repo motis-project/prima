@@ -165,7 +165,7 @@ const translations: Translations = {
 		profilePictureSubtitle: 'Hier können Sie Ihr Profilbild ändern',
 		personalInfo: 'Personenbezogene Informationen',
 		adjustPersonalInfo: 'Ändern Sie Ihre persönlichen Informationen',
-		updatePersonalInfo: 'Persönlich Informationen neu setzen'
+		updatePersonalInfo: 'Persönliche Informationen ändern'
 	},
 	rating: {
 		thanksForUsing: 'Vielen Dank, dass Sie das ÖPNV Taxi benutzt haben.',
@@ -350,7 +350,7 @@ const translations: Translations = {
 
 	buttons: {
 		addVehicle: 'Fahrzeug hinzufügen',
-		uploadPhoto: 'Foto hochladen',
+		uploadPhoto: 'Foto auswählen',
 		savePhoto: 'Foto speichern',
 		smokingOptions: ['nicht erlaubt', 'erlaubt']
 	},
