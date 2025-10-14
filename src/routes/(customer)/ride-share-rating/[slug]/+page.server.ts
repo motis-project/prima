@@ -3,6 +3,7 @@ import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { readInt } from '$lib/server/util/readForm';
 import { msg } from '$lib/msg';
+import { getRideshareToursAsItinerary } from '$lib/server/booking';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const journey = await db
@@ -25,7 +26,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			'provider.name',
 			'provider.firstName',
 			'journey.json as journey',
-			'request.customer'
+			'request.customer',
+			'rideShareTour.id as tourId'
 		])
 		.where('request.id', '=', parseInt(params.slug))
 		.where((eb) =>
@@ -39,13 +41,30 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		error(404, 'Not found');
 	}
 
-	return {
-		journey: journey.journey,
-		name: journey.name,
-		firstName: journey.firstName,
-		isCustomer: journey.customer === locals.session!.userId,
-		id: params.slug
-	};
+	if (journey.customer === locals.session!.userId) {
+		return {
+			journey: journey.journey,
+			name: journey.name,
+			firstName: journey.firstName,
+			isCustomer: true,
+			id: params.slug
+		};
+	} else {
+		const itineraries = await getRideshareToursAsItinerary(locals.session!.userId, journey.tourId);
+
+		if (!itineraries.journeys.length) {
+			error(404, 'Not found');
+		}
+
+		const j = itineraries.journeys[0].requests.find((r) => r.id == parseInt(params.slug))!;
+		return {
+			journey: j.journey,
+			name: j.name,
+			firstName: j.firstName,
+			isCustomer: false,
+			id: params.slug
+		};
+	}
 };
 
 export const actions = {
