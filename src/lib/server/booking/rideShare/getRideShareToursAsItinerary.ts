@@ -22,6 +22,7 @@ export async function getRideshareToursAsItinerary(
 			pending: boolean;
 			id: number;
 			averageRatingCustomer: string | number | null;
+			requestCancelled: boolean;
 		}[];
 		licensePlate: string | undefined;
 	}[];
@@ -33,7 +34,7 @@ export async function getRideshareToursAsItinerary(
 			'rideShareTour.id',
 			'communicatedStart',
 			'communicatedEnd',
-			'cancelled',
+			'rideShareTour.cancelled as tourCancelled',
 			'rideShareVehicle.licensePlate',
 			jsonArrayFrom(
 				eb
@@ -49,6 +50,7 @@ export async function getRideshareToursAsItinerary(
 						'user.gender',
 						'user.email',
 						'user.profilePicture',
+						'request.cancelled as requestCancelled',
 						jsonArrayFrom(
 							eb
 								.selectFrom('event')
@@ -131,7 +133,8 @@ export async function getRideshareToursAsItinerary(
 									phone: undefined,
 									pending: r.pending,
 									id: r.id,
-									averageRatingCustomer: r.averageRatingCustomer
+									averageRatingCustomer: r.averageRatingCustomer,
+									requestCancelled: r.requestCancelled
 								};
 							});
 			const events = journey.requests
@@ -157,11 +160,12 @@ export async function getRideshareToursAsItinerary(
 			return {
 				journey: j,
 				id: journey.id,
-				cancelled: journey.cancelled,
+				cancelled: journey.tourCancelled,
 				negotiating:
-					journey.requests.some((r) => r.pending) && journey.communicatedStart > Date.now(),
+					journey.requests.some((r) => r.pending && !r.requestCancelled) &&
+					journey.communicatedStart > Date.now(),
 				licensePlate: journey.licensePlate,
-				requests: requests
+				requests
 			};
 		})
 	};

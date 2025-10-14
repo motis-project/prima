@@ -345,7 +345,8 @@ const translations: Translations = {
 		requestBy: 'Anfrage von',
 		offerBy: 'Angebot von',
 		acceptRequest: 'Mitfahrt bestätigen',
-		requestAccepted: 'Mitfahrt bestätigt'
+		requestAccepted: 'Mitfahrt bestätigt',
+		requestCancelled: 'Mitfahrt abgesagt'
 	},
 
 	buttons: {

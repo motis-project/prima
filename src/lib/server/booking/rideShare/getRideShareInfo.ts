@@ -25,7 +25,6 @@ export async function getRideShareInfo(tourId: number) {
 				.whereRef('request.customer', '=', 'user.id')
 				.where('rideShareRating.ratedIsCustomer', '=', true)
 				.where('rideShareRequest.pending', '=', false)
-				.where('rideShareRequest.startFixed', 'is not', null)
 				.select(db.fn.avg('rideShareRating.rating').as('averageRating'))
 				.as('averageRatingCustomer'),
 			eb

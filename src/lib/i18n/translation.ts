@@ -298,6 +298,7 @@ export type Translations = {
 		offerBy: string;
 		acceptRequest: string;
 		requestAccepted: string;
+		requestCancelled: string;
 	};
 
 	buttons: {

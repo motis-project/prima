@@ -338,7 +338,8 @@ const translations: Translations = {
 		requestBy: 'Request from',
 		offerBy: 'Offered by',
 		acceptRequest: 'Confirm ride',
-		requestAccepted: 'Ride confirmed'
+		requestAccepted: 'Ride confirmed',
+		requestCancelled: 'Ride cancelled'
 	},
 
 	buttons: {

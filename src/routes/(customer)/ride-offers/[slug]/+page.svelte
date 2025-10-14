@@ -129,7 +129,11 @@
 						/>
 						<span>{n.journey.legs[0].to.name}</span>
 					</div>
-					{#if n.pending}
+					{#if n.requestCancelled}
+						<Button type="submit" class="w-full" disabled={true}>
+							{t.ride.requestCancelled}
+						</Button>
+					{:else if n.pending}
 						<form
 							method="post"
 							action="?/accept"
