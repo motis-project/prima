@@ -37,7 +37,7 @@ test('start ride share negotiation', async ({ page }) => {
 	await chooseFromTypeAhead(page, 'Nach', 'klein prie', 'Klein Priebus Krauschwitz');
 	await page.waitForTimeout(1000);
 	await page.click('#bits-1');
-	await page.locator('input[type="datetime-local"]').fill('2025-12-12T03:00');
+	await page.locator('input[type="datetime-local"]').fill('2025-12-12T01:00');
 	await page.keyboard.press('Escape');
 	await page.waitForTimeout(2000);
 	await page.screenshot({ path: 'screenshots/findSearchResult.png', fullPage: true });
