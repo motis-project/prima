@@ -25,10 +25,8 @@
 	{:else}
 		<form method="post" class="flex flex-col gap-4">
 			<Label
-				>{data.isCustomer
-					? t.rideShare.feedbackPrompt +
-						` ${data.firstName !== '' ? data.firstName + ' ' : ''}${data.name}`
-					: t.rideShare.feedbackPromptProvider}</Label
+				>{(data.isCustomer ? t.rideShare.feedbackPrompt : t.rideShare.feedbackPromptProvider) +
+					` ${data.firstName !== '' ? data.firstName + ' ' : ''}${data.name}`}</Label
 			>
 			<div class="flex gap-1">
 				{#each Array(5) as _, idx}
