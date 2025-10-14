@@ -96,6 +96,7 @@ async function select(query: RideShareQuery, requestId?: number) {
 									.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 									.orderBy('eventGroup.scheduledTimeEnd asc')
 									.orderBy('eventGroup.scheduledTimeStart asc')
+									.where('request.cancelled', '=', false)
 									.select([
 										'event.id as eventId',
 										'request.id as requestId',

@@ -10,6 +10,7 @@ import { Mode } from '$lib/server/booking/mode';
 import { createRideShareVehicle } from '../createRideShareVehicle';
 import { acceptRideShareRequest } from '../acceptRideShareRequest';
 import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
+import { cancelRideShareRequest } from '../cancelRideShareRequest';
 
 let sessionToken: string;
 
@@ -201,5 +202,85 @@ describe('add ride share request', () => {
 		const whiteResponse = await whiteRideShare(body).then((r) => r.json());
 		expect(whiteResponse.direct.length).toBe(1);
 		expect(whiteResponse.direct[0].length).toBe(0);
+	}, 30000);
+
+	it('tour with cancelled request is handled correctly', async () => {
+		const vehicle = await createRideShareVehicle(mockUserId, 0, 1, '', '', false, 'test', null);
+		const tourId = await addRideShareTour(
+			inXMinutes(40),
+			true,
+			1,
+			0,
+			mockUserId,
+			vehicle,
+			inSchleife,
+			inKleinPriebus
+		);
+		expect(tourId).not.toBe(undefined);
+		const body = JSON.stringify({
+			start: inSagar,
+			target: inPechern,
+			startBusStops: [],
+			targetBusStops: [],
+			directTimes: [inXMinutes(50)],
+			startFixed: true,
+			capacities
+		});
+		const whiteResponse = await whiteRideShare(body).then((r) => r.json());
+		expect(whiteResponse.direct.length).toBe(1);
+		expect(whiteResponse.direct[0].length).not.toBe(0);
+		const connection1: ExpectedConnection = {
+			start: { ...inSagar, address: 'start address' },
+			target: { ...inPechern, address: 'target address' },
+			startTime: whiteResponse.direct[0][0].pickupTime,
+			targetTime: whiteResponse.direct[0][0].dropoffTime,
+			signature: signEntry(
+				inSagar.lat,
+				inSagar.lng,
+				inPechern.lat,
+				inPechern.lng,
+				whiteResponse.direct[0][0].pickupTime,
+				whiteResponse.direct[0][0].dropoffTime,
+				false
+			),
+			startFixed: true,
+			requestedTime: inXMinutes(50),
+			mode: Mode.RIDE_SHARE
+		};
+		const bookingBody = {
+			connection1,
+			connection2: null,
+			capacities
+		};
+		const bookingResponse = await rideShareApi(bookingBody, mockUserId, false, 0, 0, 0, tourId!);
+		expect(bookingResponse.status).toBe(200);
+		const tours = await getRSTours();
+		expect(tours.length).toBe(1);
+		expect(tours[0].requests.length).toBe(2);
+
+		//accept request
+		const requestId = bookingResponse.request1Id ?? bookingResponse.request2Id!;
+		const acceptResponse = await acceptRideShareRequest(requestId, mockUserId);
+		expect(acceptResponse.status).toBe(200);
+
+		// vehicle is full next request is denied
+		const body2 = JSON.stringify({
+			start: inSchleife,
+			target: inKleinPriebus,
+			startBusStops: [],
+			targetBusStops: [],
+			directTimes: [inXMinutes(50)],
+			startFixed: true,
+			capacities
+		});
+		const whiteResponse2 = await whiteRideShare(body2).then((r) => r.json());
+		expect(whiteResponse2.direct.length).toBe(1);
+		expect(whiteResponse2.direct[0].length).toBe(0);
+
+		// cancel request -> a new request should bookable
+		await cancelRideShareRequest(requestId, mockUserId);
+		const whiteResponse3 = await whiteRideShare(body2).then((r) => r.json());
+		expect(whiteResponse3.direct.length).toBe(1);
+		expect(whiteResponse3.direct[0].length).not.toBe(0);
 	}, 30000);
 });
