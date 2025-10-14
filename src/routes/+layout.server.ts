@@ -44,11 +44,11 @@ async function getLatestPendingRating(column: 'tour' | 'rideShareTour', userId: 
 				eb.and([
 					eb('rideShareRating.request', '=', eb.ref('request.id')),
 					eb.or([
-						eb('rideShareRating.ratedIsCustomer', '=', true),
+						eb('rideShareRating.ratedIsCustomer', '=', false),
 						eb('rideShareVehicle.owner', '=', userId)
 					]),
 					eb.or([
-						eb('rideShareRating.ratedIsCustomer', '=', false),
+						eb('rideShareRating.ratedIsCustomer', '=', true),
 						eb('request.customer', '=', userId)
 					])
 				])

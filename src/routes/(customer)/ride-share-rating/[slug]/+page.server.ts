@@ -90,7 +90,7 @@ export const actions = {
 			.values({
 				request: requestId,
 				rating: rating,
-				ratedIsCustomer: isCustomer
+				ratedIsCustomer: !isCustomer
 			})
 			.execute();
 

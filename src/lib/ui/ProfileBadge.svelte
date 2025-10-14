@@ -41,9 +41,7 @@
 			{/if}
 			{#if averageRating != null}
 				<StarIcon fill="gold" color="gold" />
-				{(
-					(typeof averageRating === 'number' ? averageRating : parseFloat(averageRating)) + 1
-				).toFixed(1)}
+				{(typeof averageRating === 'number' ? averageRating : parseFloat(averageRating)).toFixed(1)}
 			{/if}
 		</div>
 	</div>
