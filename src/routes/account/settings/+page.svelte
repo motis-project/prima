@@ -11,9 +11,12 @@
 	import { Plus } from 'lucide-svelte';
 	import { Label } from '$lib/shadcn/label';
 	import * as RadioGroup from '$lib/shadcn/radio-group/index.js';
+	import * as Select from '$lib/shadcn/select';
+	import { getCountryData, getCountryDataList, type TCountryCode } from 'countries-list';
 
 	const { data, form } = $props();
 	let showTooltip = $state(false);
+	let region: TCountryCode | undefined = $state(data.region ? (data.region as TCountryCode) : 'DE');
 </script>
 
 <Meta title="Account | {PUBLIC_PROVIDER}" />
@@ -129,6 +132,24 @@
 				/>
 				<Input name="lastname" type="text" value={data.name} placeholder={t.account.lastName} />
 			</div>
+			<Label for="zipcode">{t.account.zipCode}/{t.account.city}/{t.account.region}</Label>
+			<div class="grid grid-cols-2 gap-x-1">
+				<Input name="zipcode" type="text" value={data.zipCode} placeholder={t.account.zipCode} />
+				<Input name="city" type="text" value={data.city} placeholder={t.account.city} />
+			</div>
+			<Select.Root type="single" bind:value={region} name="region">
+				<Select.Trigger class="overflow-hidden" aria-label={t.account.region}>
+					{region ? getCountryData(region).native : t.account.region}
+				</Select.Trigger>
+				<Select.Content>
+					{#each getCountryDataList() as r}
+						<Select.Item value={r.iso2} label={r.native}>
+							{r.native}
+						</Select.Item>
+					{/each}
+				</Select.Content>
+			</Select.Root>
+
 			<div class="mt-2 flex justify-end">
 				<Button type="submit" variant="outline">{t.account.updatePersonalInfo}</Button>
 			</div>

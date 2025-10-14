@@ -23,7 +23,10 @@ export async function load(event: PageServerLoadEvent) {
 			'user.profilePicture',
 			'user.name',
 			'user.firstName',
-			'user.gender'
+			'user.gender',
+			'user.zipCode',
+			'user.city',
+			'user.region'
 		])
 		.executeTakeFirst();
 	if (user === undefined) {
@@ -35,7 +38,10 @@ export async function load(event: PageServerLoadEvent) {
 		profilePicture: user.profilePicture,
 		gender: user.gender,
 		name: user.name,
-		firstName: user.firstName
+		firstName: user.firstName,
+		city: user.city,
+		region: user.region,
+		zipCode: user.zipCode
 	};
 }
 
@@ -167,20 +173,26 @@ export const actions: Actions = {
 			return fail(403);
 		}
 		const formData = await event.request.formData();
-		const gender = await formData.get('gender');
-		const firstName = await formData.get('firstname');
-		const lastName = await formData.get('lastname');
+		const gender = formData.get('gender');
+		const firstName = formData.get('firstname');
+		const lastName = formData.get('lastname');
+		const city = formData.get('city');
+		const region = formData.get('region');
+		const zipCode = formData.get('zipcode');
 		if (
 			typeof gender !== 'string' ||
 			typeof firstName !== 'string' ||
-			typeof lastName !== 'string'
+			typeof lastName !== 'string' ||
+			typeof city !== 'string' ||
+			typeof region !== 'string' ||
+			typeof zipCode !== 'string'
 		) {
 			return fail(400);
 		}
 		await db
 			.updateTable('user')
 			.where('user.id', '=', userId)
-			.set({ gender: gender, firstName: firstName, name: lastName })
+			.set({ gender, firstName: firstName, name: lastName, city, region, zipCode })
 			.execute();
 	}
 };
