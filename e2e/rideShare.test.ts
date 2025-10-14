@@ -111,11 +111,11 @@ async function isFeedbackBannerVisible(page: Page, user: UserCredentials, xpct: 
 	await page.goto('/routing');
 	if (xpct) {
 		await expect(
-			page.getByText('Sie können Ihre letzt Mitfahrerfahrung hier bewerten ')
+			page.getByText('Sie können Ihre letzte Mitfahrerfahrung hier bewerten ')
 		).toBeVisible();
 	} else {
 		await expect(
-			page.getByText('Sie können Ihre letzt Mitfahrerfahrung hier bewerten ')
+			page.getByText('Sie können Ihre letzte Mitfahrerfahrung hier bewerten ')
 		).not.toBeVisible();
 	}
 	await logout(page);
@@ -132,7 +132,7 @@ async function giveFeedback(page: Page, user: UserCredentials, stars: number) {
 	await page.getByText('Feedback abschicken').click();
 	await page.goto('/routing');
 	await expect(
-		page.getByText('Sie können Ihre letzt Mitfahrerfahrung hier bewerten ')
+		page.getByText('Sie können Ihre letzte Mitfahrerfahrung hier bewerten ')
 	).not.toBeVisible();
 	await logout(page);
 }

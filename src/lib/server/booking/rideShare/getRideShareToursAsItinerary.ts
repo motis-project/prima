@@ -87,7 +87,7 @@ export async function getRideshareToursAsItinerary(
 			type Evt = (typeof journeys)[0]['requests'][0]['events'][0];
 			const j: Itinerary = {
 				transfers: 0,
-				duration: (journey.communicatedEnd - journey.communicatedStart) / 1000,
+				duration: (journey.communicatedEnd - journey.communicatedStart) / 1000 || 1,
 				startTime: new Date(journey.communicatedStart).toISOString(),
 				endTime: new Date(journey.communicatedEnd).toISOString(),
 				legs: []
@@ -103,7 +103,7 @@ export async function getRideshareToursAsItinerary(
 					mode: 'RIDE_SHARING' as Mode,
 					from: { name: a.address || '', lat: a.lat || 0, lon: a.lng || 0, level: 0 }, // TODO nullable?
 					to: { name: b.address || '', lat: b.lat || 0, lon: b.lng || 0, level: 0 },
-					duration: ((b.communicatedTime || 0) - (a.communicatedTime || 0)) / 1000,
+					duration: ((b.communicatedTime || 0) - (a.communicatedTime || 0)) / 1000 || 1,
 					scheduled: false,
 					realTime: false,
 					legGeometry: { points: '', length: 0, precision: 7 }
@@ -120,7 +120,7 @@ export async function getRideshareToursAsItinerary(
 								return {
 									journey: {
 										transfers: 0,
-										duration: ((b.communicatedTime || 0) - (a.communicatedTime || 0)) / 1000,
+										duration: ((b.communicatedTime || 0) - (a.communicatedTime || 0)) / 1000 || 1,
 										startTime: new Date(a.communicatedTime || 0).toISOString(),
 										endTime: new Date(b.communicatedTime || 0).toISOString(),
 										legs: [createLeg(a, b)]
