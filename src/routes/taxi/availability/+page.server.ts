@@ -1,5 +1,4 @@
 import { db } from '$lib/server/db';
-import { getToursWithRequests } from '$lib/server/db/getTours.js';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import type { Actions, RequestEvent } from './$types';
 import { fail } from '@sveltejs/kit';
@@ -7,71 +6,20 @@ import { msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
 import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import { retry } from '$lib/server/db/retryQuery';
+import { getAvailability } from '$lib/server/getAvailability.js';
 
 const LICENSE_PLATE_REGEX = /^([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})$/;
+
 export async function load(event: RequestEvent) {
 	const companyId = event.locals.session?.companyId;
 	if (!companyId) {
 		throw 'company not defined';
 	}
 
-	const url = event.url;
-	const localDateParam = url.searchParams.get('date');
-	const timezoneOffset = url.searchParams.get('offset');
-	const utcDate =
-		localDateParam && timezoneOffset
-			? new Date(new Date(localDateParam!).getTime() + Number(timezoneOffset) * 60 * 1000)
-			: new Date();
-	const fromTime = new Date(utcDate);
-	fromTime.setHours(utcDate.getHours() - 1);
-	const toTime = new Date(utcDate);
-	toTime.setHours(utcDate.getHours() + 25);
+	const localDateParam = event.url.searchParams.get('date');
+	const timezoneOffset = event.url.searchParams.get('offset');
 
-	const vehicles = db
-		.selectFrom('vehicle')
-		.where('company', '=', companyId)
-		.selectAll()
-		.select((eb) => [
-			jsonArrayFrom(
-				eb
-					.selectFrom('availability')
-					.whereRef('availability.vehicle', '=', 'vehicle.id')
-					.where('availability.startTime', '<', toTime.getTime())
-					.where('availability.endTime', '>', fromTime.getTime())
-					.select(['availability.id', 'availability.startTime', 'availability.endTime'])
-					.orderBy('availability.startTime')
-			).as('availability')
-		])
-		.execute();
-
-	const tours = getToursWithRequests(false, companyId, [fromTime.getTime(), toTime.getTime()]);
-
-	const company = await db
-		.selectFrom('company')
-		.where('id', '=', companyId)
-		.selectAll()
-		.executeTakeFirstOrThrow();
-
-	const companyDataComplete =
-		company.name !== null &&
-		company.address !== null &&
-		company.zone !== null &&
-		company.lat !== null &&
-		company.lng !== null;
-
-	console.log("aaaaaa", (await vehicles).map(v => v.availability))
-	return {
-		tours: await tours,
-		vehicles: await vehicles,
-		utcDate,
-		companyDataComplete,
-		companyCoordinates: companyDataComplete
-			? {
-				lat: company.lat!,
-				lng: company.lng!
-			}
-			: null
-	};
+	return getAvailability(localDateParam, timezoneOffset, companyId);
 }
 
 export const actions: Actions = {
