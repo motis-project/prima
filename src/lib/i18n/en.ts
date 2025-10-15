@@ -91,7 +91,7 @@ const translations: Translations = {
 
 		// Journey
 		cancelled: 'This trip has been cancelled.',
-		stillNegotiating: 'This ride is still being negotiated.',
+		stillNegotiating: 'The request has been sent. This ride is still being negotiated.',
 		openRequest: 'This ride offer has open requests.',
 
 		// Feedback
@@ -326,7 +326,7 @@ const translations: Translations = {
 		negotiatePrivacy:
 			'The following data will be shared with the person offering the ride when sending the negotiation request:',
 		negotiateExplanation:
-			'You need to negotiate the price and details with the person offering this ride.',
+			'You need to negotiate the price and exact pickup location and time with the person offering this ride.',
 		startAndEnd: 'Start and destination of the journey',
 		profile: 'Your profile',
 		email: 'Your email',
@@ -343,6 +343,7 @@ const translations: Translations = {
 	},
 
 	buttons: {
+		addVehicleTitle: 'Add vehicle for ride offers',
 		addVehicle: 'Add vehicle',
 		uploadPhoto: 'Select photo',
 		savePhoto: 'Save photo',

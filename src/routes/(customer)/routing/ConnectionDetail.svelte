@@ -39,7 +39,8 @@
 	scheduledTimestamp: string,
 	isRealtime: boolean,
 	name: string,
-	stopId?: string
+	stopId?: string,
+	fuzzy?: boolean
 )}
 	<Time
 		variant="schedule"
@@ -48,6 +49,7 @@
 		{isRealtime}
 		{timestamp}
 		{scheduledTimestamp}
+		{fuzzy}
 	/>
 	<Time
 		variant="realtime"
@@ -273,13 +275,21 @@
 						l.scheduledStartTime,
 						l.realTime,
 						l.from.name,
-						l.from.stopId
+						l.from.stopId,
+						isRideShareLeg(l)
 					)}
 				</div>
 				{@render streetLeg(l)}
 				{#if !isLast}
 					<div class="grid grid-cols-[max-content_max-content_auto] items-center gap-y-6 pb-2">
-						{@render stopTimes(l.endTime, l.scheduledEndTime, l.realTime, l.to.name, l.to.stopId)}
+						{@render stopTimes(
+							l.endTime,
+							l.scheduledEndTime,
+							l.realTime,
+							l.to.name,
+							l.to.stopId,
+							isRideShareLeg(l)
+						)}
 					</div>
 				{/if}
 				{#if isLast || (isLastPred && next!.duration === 0)}
@@ -302,7 +312,8 @@
 				lastLeg!.scheduledEndTime,
 				lastLeg!.realTime,
 				lastLeg!.to.name,
-				lastLeg!.to.stopId
+				lastLeg!.to.stopId,
+				isRideShareLeg(lastLeg!)
 			)}
 		</div>
 	</div>

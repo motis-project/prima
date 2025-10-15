@@ -116,6 +116,7 @@
 							isRealtime={false}
 							scheduledTimestamp={n.journey.startTime}
 							timestamp={n.journey.startTime}
+							fuzzy={true}
 						/>
 						<span>{n.journey.legs[0].from.name}</span>
 						<span>{t.to}</span>
@@ -126,6 +127,7 @@
 							isRealtime={false}
 							scheduledTimestamp={n.journey.endTime}
 							timestamp={n.journey.endTime}
+							fuzzy={true}
 						/>
 						<span>{n.journey.legs[0].to.name}</span>
 					</div>
