@@ -9,7 +9,8 @@
 		scheduledTimestamp,
 		isRealtime,
 		variant,
-		queriedTime
+		queriedTime,
+		fuzzy
 	}: {
 		class?: string;
 		timestamp: string;
@@ -17,6 +18,7 @@
 		isRealtime: boolean;
 		variant: 'schedule' | 'realtime' | 'realtime-show-always';
 		queriedTime?: string | undefined;
+		fuzzy?: boolean;
 	} = $props();
 
 	const t = $derived(new Date(timestamp));
@@ -41,7 +43,7 @@
 
 <div class={cn('w-16', className)}>
 	{#if variant == 'schedule'}
-		{formatTime(scheduled)}
+		{#if fuzzy}~{/if}{formatTime(scheduled)}
 		{weekday(scheduled)}
 	{:else if variant === 'realtime-show-always' || (variant === 'realtime' && isRealtime)}
 		<span class:text-destructive={highDelay} class:text-green-600={lowDelay}>
