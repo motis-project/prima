@@ -343,6 +343,7 @@ const translations: Translations = {
 	},
 
 	buttons: {
+		addVehicleTitle: 'Add vehicle for ride offers',
 		addVehicle: 'Add vehicle',
 		uploadPhoto: 'Select photo',
 		savePhoto: 'Save photo',

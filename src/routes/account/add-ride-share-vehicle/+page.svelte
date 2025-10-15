@@ -32,7 +32,7 @@
 		action={'?/addVehicle'}
 		class="flex flex-col gap-4"
 	>
-		<h2 class="font-medium leading-none">
+		<h2 class="font-semibold">
 			{v == undefined ? t.rideShare.createNewVehicle : 'Fahrzeug anpassen'}
 		</h2>
 		<Panel title={t.rideShare.licensePlate} subtitle={''}>

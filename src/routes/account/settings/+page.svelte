@@ -71,15 +71,7 @@
 		</form>
 	</Panel>
 
-	<Panel title={t.account.logout} subtitle={''}>
-		<form method="post" action="/account/settings?/logout" class="mt-8">
-			<div class="mt-4 flex justify-end">
-				<Button type="submit" variant="outline">{t.account.logout}</Button>
-			</div>
-		</form>
-	</Panel>
-
-	<Panel title={t.buttons.addVehicle} subtitle={''}>
+	<Panel title={t.buttons.addVehicleTitle} subtitle={''}>
 		<Button variant="outline" onclick={() => goto('/account/add-ride-share-vehicle')}>
 			<Plus class="mr-2 size-4" />
 			{t.buttons.addVehicle}
@@ -152,6 +144,14 @@
 
 			<div class="mt-2 flex justify-end">
 				<Button type="submit" variant="outline">{t.account.updatePersonalInfo}</Button>
+			</div>
+		</form>
+	</Panel>
+
+	<Panel title={t.account.logout} subtitle={''}>
+		<form method="post" action="/account/settings?/logout" class="mt-8">
+			<div class="mt-4 flex justify-end">
+				<Button type="submit" variant="outline">{t.account.logout}</Button>
 			</div>
 		</form>
 	</Panel>
