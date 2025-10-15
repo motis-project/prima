@@ -13,6 +13,7 @@ export type TripInfo = {
 
 export type RentalInfo = {
 	rental?: Rental;
+	agencyId?: string;
 };
 
 export type LegLike = Colorable & TripInfo & RentalInfo;
@@ -49,6 +50,8 @@ export const getModeStyle = (l: LegLike): [string, string, string] => {
 
 		case 'ODM':
 			return ['taxi', '#fdb813', 'white'];
+		case 'RIDE_SHARING':
+			return ['car', '#fdb813', 'white'];
 
 		case 'TRANSIT':
 		case 'BUS':

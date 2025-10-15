@@ -80,7 +80,6 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 					'tour.vehicle',
 					'tour.id',
 					'tour.departure',
-					'tour.vehicle',
 					jsonArrayFrom(
 						eb
 							.selectFrom('request as cancelled_request')
@@ -152,8 +151,7 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 				try {
 					await sendMail(CancelNotificationCompany, 'Stornierte Buchung', companyOwner.email, {
 						events: tourInfo.events,
-						name: companyOwner.name,
-						departure: tourInfo.departure
+						name: companyOwner.name
 					});
 				} catch {
 					console.log(

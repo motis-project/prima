@@ -28,6 +28,8 @@
 	import CancelMessageDialog from './CancelMessageDialog.svelte';
 	import TableHead from '$lib/shadcn/table/table-head.svelte';
 	import { BabyIcon } from 'lucide-svelte';
+	import { posToLocation } from '$lib/map/Location';
+	import Marker from '$lib/map/Marker.svelte';
 
 	let {
 		tours = $bindable(),
@@ -233,6 +235,7 @@
 							}}
 						/>
 					</GeoJSON>
+					<Marker color="black" draggable={false} level={0} location={posToLocation(leg.from, 0)} />
 				{/each}
 			{/if}
 		{/await}

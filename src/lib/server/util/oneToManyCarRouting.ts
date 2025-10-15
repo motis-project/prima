@@ -28,15 +28,19 @@ export const oneToManyCarRouting = async (
 			arriveBy
 		}
 	}).then((res) => {
-		return res.data!.map((d: Duration, i) => {
-			console.log(
-				'ROUTING: ',
-				lngLatToStr(one),
-				lngLatToStr(many[i]),
-				new Date(secondToMilli(d.duration ?? 0)).toISOString(),
-				secondToMilli(d.duration ?? 0)
-			);
-			return d.duration != undefined && d.duration != null ? secondToMilli(d.duration) : undefined;
-		});
+		return (
+			res.data?.map((d: Duration, i) => {
+				console.log(
+					'ROUTING: ',
+					lngLatToStr(one),
+					lngLatToStr(many[i]),
+					new Date(secondToMilli(d.duration ?? 0)).toISOString(),
+					secondToMilli(d.duration ?? 0)
+				);
+				return d.duration != undefined && d.duration != null
+					? secondToMilli(d.duration)
+					: undefined;
+			}) || []
+		);
 	});
 };

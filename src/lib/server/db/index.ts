@@ -24,6 +24,7 @@ export interface Database {
 		zipCode: string;
 		city: string;
 		region: string;
+		profilePicture: string | null;
 	};
 	session: {
 		id: string;
@@ -142,10 +143,17 @@ export interface Database {
 		passengers: number;
 		luggage: number;
 		owner: number;
-		color: string;
-		model: string;
+		color: string | null;
+		model: string | null;
 		smokingAllowed: boolean;
 		licensePlate: string;
+		picture: string | null;
+	};
+	rideShareRating: {
+		id: Generated<number>;
+		rating: number;
+		request: number;
+		ratedIsCustomer: boolean;
 	};
 }
 

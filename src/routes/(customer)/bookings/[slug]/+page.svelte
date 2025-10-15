@@ -20,12 +20,12 @@
 	import { MapIcon } from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
-	import { type Leg } from '$lib/openapi/types.gen';
+	import { isOdmLeg, isTaxiLeg } from '../../routing/utils';
 
 	const { data } = $props();
 
 	let showTicket = $state(false);
-	const isOdm = data.journey.legs.some((l: Leg) => l.mode === 'ODM');
+	const isOdm = data.journey.legs.some(isOdmLeg);
 </script>
 
 <div class="flex h-full flex-col gap-4 md:min-h-[70dvh] md:w-96">
@@ -46,7 +46,7 @@
 							<Waypoints class="mr-1 size-4" />
 							{t.booking.connection}
 						</Button>
-					{:else if !data.isService}
+					{:else if !data.isService && data.journey.legs.some(isTaxiLeg)}
 						<Button
 							onclick={() => {
 								showTicket = !showTicket;
@@ -137,14 +137,17 @@
 				day: 'numeric'
 			})}
 		</p>
+		{#if data.pending}
+			<Message msg={msg('stillNegotiating')} />
+		{/if}
 		<ConnectionDetail
 			itinerary={data.journey}
 			onClickStop={(_name: string, stopId: string, time: Date) =>
 				goto(`/routing?stopId=${stopId}&time=${time.toISOString()}`)}
 			onClickTrip={(tripId: string) => goto(`/routing?tripId=${tripId}`)}
-			licensePlate={data.licensePlate ?? ''}
-			companyName={data.name ?? ''}
-			companyPhone={data.phone ?? ''}
+			licensePlate={data.licensePlate || undefined}
+			companyName={data.name || undefined}
+			companyPhone={data.phone || undefined}
 		/>
 	{/if}
 </div>

@@ -51,3 +51,5 @@ export const MINIMUM_PROFIT = 0;
 function centsToCentsPerMs(cents: number) {
 	return (cents * EXPECTED_AVERAGE_KM_PER_H) / HOUR;
 }
+export const LICENSE_PLATE_REGEX = /^([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})$/;
+export const defaultProfilePicture = '/user-default.jpg';

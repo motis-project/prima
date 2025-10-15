@@ -3,7 +3,7 @@
 	import Building2 from 'lucide-svelte/icons/building-2';
 	import Phone from 'lucide-svelte/icons/phone';
 	import CarTaxiFront from 'lucide-svelte/icons/car-taxi-front';
-	import type { Itinerary, Leg } from '$lib/openapi';
+	import type { Leg } from '$lib/openapi';
 	import { Button } from '$lib/shadcn/button';
 	import { t } from '$lib/i18n/translation';
 	import Time from './Time.svelte';
@@ -11,6 +11,9 @@
 	import { getModeName } from './getModeName';
 	import Route from './Route.svelte';
 	import { routeBorderColor, routeColor } from '$lib/ui/modeStyle';
+	import { isOdmLeg, isRideShareLeg } from './utils';
+	import type { SignedItinerary } from '$lib/planAndSign';
+	import ProfileBadge from '$lib/ui/ProfileBadge.svelte';
 
 	const {
 		itinerary,
@@ -20,7 +23,7 @@
 		companyName,
 		companyPhone
 	}: {
-		itinerary: Itinerary;
+		itinerary: SignedItinerary;
 		onClickStop: (name: string, stopId: string, time: Date) => void;
 		onClickTrip: (tripId: string) => void;
 		licensePlate?: string;
@@ -71,18 +74,18 @@
 
 {#snippet streetLeg(l: Leg)}
 	<div class="flex flex-col gap-y-4 py-8 pl-8 text-muted-foreground">
-		{#if l.mode === 'ODM'}
+		{#if isOdmLeg(l)}
 			<div class="ml-6 flex w-fit flex-col gap-y-2">
-				<Button
-					onclick={() =>
-						window.open(
-							`https://www.google.com/maps/dir/?api=1&destination=${l.from.lat},${l.from.lon}&travelmode=walking`
-						)}
-					class="w-fit"
-				>
-					{t.meetingPointNavigation}
-				</Button>
 				{#if licensePlate != undefined}
+					<Button
+						onclick={() =>
+							window.open(
+								`https://www.google.com/maps/dir/?api=1&destination=${l.from.lat},${l.from.lon}&travelmode=walking`
+							)}
+						class="w-fit"
+					>
+						{t.meetingPointNavigation}
+					</Button>
 					<div class="flex items-center">
 						<CarTaxiFront class="relative  mr-1" />
 						<div class="flex w-fit rounded-md border-4 border-double border-black bg-white">
@@ -110,8 +113,27 @@
 		<span class="ml-6">
 			{formatDurationSec(l.duration)}
 			{getModeName(l)}
-			{formatDistanceMeters(Math.round(l.distance!))}
+			{l.distance ? formatDistanceMeters(Math.round(l.distance!)) : ''}
 		</span>
+
+		{#if isRideShareLeg(l)}
+			{@const tourInfo = itinerary.rideShareTourInfos?.find(
+				(i) => i?.tourId == parseInt(l.tripId || '')
+			)}
+			{#if tourInfo}
+				<span class="ml-6">
+					<ProfileBadge
+						isCustomer={false}
+						firstName={tourInfo.firstName}
+						name={tourInfo.name}
+						gender={tourInfo.gender}
+						profilePicture={tourInfo.profilePicture}
+						smokingAllowed={tourInfo.smokingAllowed}
+						averageRating={tourInfo.averageRatingProvider}
+					/>
+				</span>
+			{/if}
+		{/if}
 		{#if l.rental && l.rental.systemName}
 			<span class="ml-6">
 				{t.sharingProvider}: <a href={l.rental.url} target="_blank">{l.rental.systemName}</a>
@@ -133,7 +155,7 @@
 		{@const predpred = i <= 1 ? undefined : itinerary.legs[i - 2]}
 		{@const next = isLast ? undefined : itinerary.legs[i + 1]}
 
-		{#if l.routeShortName}
+		{#if l.routeShortName || l.intermediateStops}
 			<div class="flex w-full items-center justify-between space-x-1">
 				<Route {onClickTrip} {l} />
 				{#if pred && (pred.from.track || pred.duration !== 0) && (i != 1 || pred.routeShortName)}
@@ -145,7 +167,7 @@
 						{#if pred.duration}
 							<span class="text-nowrap"
 								>{formatDurationSec(pred.duration)}
-								{#if predpred?.mode === 'ODM'}{t.transfer}{:else}{t.walk}{/if}</span
+								{#if predpred && isOdmLeg(predpred)}{t.transfer}{:else}{t.walk}{/if}</span
 							>
 						{/if}
 						{#if pred.distance}
@@ -228,10 +250,10 @@
 					<div class="pb-8"></div>
 				{/if}
 			</div>
-		{:else if !(isLast && l.duration === 0) && ((i == 0 && l.duration !== 0) || !next || !next.routeShortName || l.mode != 'WALK' || (pred && (pred.mode == 'BIKE' || pred.mode == 'RENTAL'))) && !(isLastPred && l.mode === 'WALK' && next && next.mode === 'ODM')}
+		{:else if !(isLast && l.duration === 0) && ((i == 0 && l.duration !== 0) || !next || !next.routeShortName || l.mode != 'WALK' || (pred && (pred.mode == 'BIKE' || pred.mode == 'RENTAL'))) && !(isLastPred && l.mode === 'WALK' && next && isOdmLeg(next))}
 			<div class="flex w-full items-center justify-between space-x-1">
 				<Route {onClickTrip} {l} />
-				{#if l.mode === 'ODM' && pred}
+				{#if isOdmLeg(l) && pred}
 					<div class="h-0 shrink grow border-t"></div>
 					<div class="content-center px-2 text-sm leading-none text-muted-foreground">
 						{#if pred.mode === 'WALK' && pred.duration}

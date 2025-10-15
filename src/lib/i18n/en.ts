@@ -3,7 +3,7 @@ import type { Translations } from './translation';
 const translations: Translations = {
 	menu: {
 		connections: 'Connections',
-		bookings: 'Bookings',
+		bookings: 'My Journeys',
 		account: 'Account',
 		availability: 'Availability',
 		company: 'Company',
@@ -81,6 +81,7 @@ const translations: Translations = {
 		startDestNotInSameZone: 'Start and destination not in the same zone.',
 		noVehicle: 'No vehicle available.',
 		routingRequestFailed: 'Routing request failed.',
+		vehicleConflict: 'The selected vehicle is not available at the selected time.',
 
 		// Booking
 		bookingError: 'The ride could not be booked.',
@@ -90,10 +91,17 @@ const translations: Translations = {
 
 		// Journey
 		cancelled: 'This trip has been cancelled.',
+		stillNegotiating: 'This ride is still being negotiated.',
+		openRequest: 'This ride offer has open requests.',
 
 		// Feedback
 		feedbackThank: 'Thank you very much for your feedback!',
-		feedbackMissing: 'No feedback given'
+		feedbackMissing: 'No feedback given',
+
+		// Picture Upload
+		noFileUploaded: 'no file uploaded',
+		invalidFileType: 'invalid file type',
+		fileTooLarge: 'file too large'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',
@@ -104,8 +112,12 @@ const translations: Translations = {
 		lastName: 'Last Name',
 		firstName: 'First Name',
 		gender: (id: string) => {
-			return { o: 'other', f: 'Ms.', m: 'Mr.' }[id]!;
+			return { o: 'non-binary', f: 'Ms.', m: 'Mr.', n: 'not specified' }[id]!;
 		},
+		genderShort: (id: string) => {
+			return { o: '(non-binary)', f: '(f)', m: '(m)', n: '' }[id]!;
+		},
+		genderString: 'Gender',
 		email: 'Email',
 		password: 'Password',
 		phone: 'Phone Number',
@@ -143,7 +155,12 @@ const translations: Translations = {
 		newPassword: 'New Password',
 		oldPassword: 'Old Password',
 		resendCode: 'Resend code',
-		verify: 'Verify'
+		verify: 'Verify',
+		profilePicture: 'Profile Picture',
+		profilePictureSubtitle: 'Change your profile picture here',
+		personalInfo: 'Personal Information',
+		adjustPersonalInfo: 'Change your personal information here',
+		updatePersonalInfo: 'Update personal info'
 	},
 	rating: {
 		thanksForUsing: 'Thank you for using the public transport taxi.',
@@ -174,6 +191,7 @@ const translations: Translations = {
 			year: isToday ? undefined : '2-digit'
 		}),
 
+	bookingsHeader: 'My booked and saved journeys',
 	cancelledJourneys: 'Past and Cancelled Journeys',
 	noBookings: 'There are no bookings or stored itineraries yet.',
 	journeyDetails: 'Journey Details',
@@ -188,6 +206,8 @@ const translations: Translations = {
 	taxi: 'Taxi',
 	moped: 'Moped',
 	odm: 'Public Transport Taxi, booking required!',
+	rideSharing: 'Ride sharing offer',
+	rideSharingBookingRequired: 'Ride sharing offer, negotiation required!',
 	from: 'From',
 	to: 'To',
 	arrival: 'Arrival',
@@ -237,7 +257,7 @@ const translations: Translations = {
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
-		summary: 'Booking summary',
+		summary: 'Summary',
 		header: 'Book ride (incurs cost)',
 		disclaimer:
 			"Cancel your ride one hour early if you don't want to take it. In case you do not cancel your ride in time or don't show up, you are liable to pay the full call-out-fee of the taxi.",
@@ -274,7 +294,8 @@ const translations: Translations = {
 		pin: 'PIN:',
 		pinExplainer:
 			'To give to the passenger. The passenger must give this PIN to the taxi driver when starting the journey.',
-		itineraryOnDate: 'Journey on'
+		itineraryOnDate: 'Journey on',
+		withVehicle: 'with vehicle'
 	},
 
 	explainer: {
@@ -285,6 +306,66 @@ const translations: Translations = {
 		alt1: 'A blue circle that is not completely filled on the right. The unfilled part is hatched.',
 		alt2: 'A blue and a yellow circle that overlap. The overlap is hatched blue and yellow.',
 		alt3: 'A blue circle whose right-hand part is hatched yellow.'
+	},
+	ride: {
+		myRideOffers: 'My ride offers',
+		create: 'Create new ride offer',
+		intro: 'Enter your journey to offer other users to ride with you.',
+		vehicle: 'Vehicle',
+		addVehicle: 'Add vehicle',
+		outro:
+			'Your offer will be visible to everybody using the journey planner. You will be notified about requests via e-mail.',
+		publish: 'Publish ride offer',
+		cancelTrip: 'Cancel ride offer',
+		cancelHeadline: 'Do you really want to cancel this ride offer?',
+		noCancel: 'No, I do not want to cancel.',
+		cancelDescription:
+			'You should inform any people riding with you yourself, even if they will receive an email about the cancellation.',
+		negotiateHere: 'Negotiate here',
+		negotiateHeader: 'Negotiate the ride',
+		negotiatePrivacy:
+			'The following data will be shared with the person offering the ride when sending the negotiation request:',
+		negotiateExplanation:
+			'You need to negotiate the price and details with the person offering this ride.',
+		startAndEnd: 'Start and destination of the journey',
+		profile: 'Your profile',
+		email: 'Your email',
+		phone: 'Your phone',
+		noPhone:
+			'You have not set a phone number in your account. The person offering the ride will only be able to contact you via email.',
+		negotiateMessage: 'Message to the person offering the ride',
+		sendNegotiationRequest: 'Send negotation request',
+		requestBy: 'Request from',
+		offerBy: 'Offered by',
+		acceptRequest: 'Confirm ride',
+		requestAccepted: 'Ride confirmed',
+		requestCancelled: 'Ride cancelled'
+	},
+
+	buttons: {
+		addVehicle: 'Add vehicle',
+		uploadPhoto: 'Select photo',
+		savePhoto: 'Save photo',
+		smokingOptions: ['not allowed', 'allowed']
+	},
+
+	rideShare: {
+		maxPassengers: 'Maximum Carpoolers',
+		passengers: 'Carpoolers',
+		smokingInVehicle: 'Smoking in the vehicle',
+		color: 'Color',
+		model: 'Car Model',
+		specifyColor: 'Specify Color',
+		specifyModel: 'Specify Model',
+		luggage: 'Luggage',
+		licensePlate: 'License Plate',
+		createNewVehicle: 'Create new Vehicle',
+		createVehicle: 'Create Vehicle',
+		saveChanges: 'Save changes',
+		preview: 'preview',
+		feedbackPrompt: 'Please rate your journey with',
+		feedbackPromptProvider: 'Please rate your recent carpooler',
+		howHasItBeen: 'You can rate your last ride share experience here'
 	}
 };
 

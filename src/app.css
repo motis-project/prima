@@ -121,3 +121,7 @@ details summary::-webkit-details-marker {
 .fine-print p {
 	margin: 0.5em 0;
 }
+
+.maplibregl-popup-content {
+	color: black;
+}

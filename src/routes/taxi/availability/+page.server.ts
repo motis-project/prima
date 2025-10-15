@@ -7,8 +7,8 @@ import { msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
 import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import { retry } from '$lib/server/db/retryQuery';
+import { LICENSE_PLATE_REGEX } from '$lib/constants';
 
-const LICENSE_PLATE_REGEX = /^([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})$/;
 export async function load(event: RequestEvent) {
 	const companyId = event.locals.session?.companyId;
 	if (!companyId) {

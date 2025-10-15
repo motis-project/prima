@@ -20,12 +20,14 @@
 		from = $bindable(),
 		to = $bindable(),
 		itinerary,
-		areas = $bindable()
+		areas = $bindable(),
+		intermediateStops = $bindable()
 	}: {
 		from?: Location | undefined;
 		to?: Location | undefined;
 		itinerary?: SignedItinerary | undefined;
 		areas?: unknown;
+		intermediateStops?: boolean;
 	} = $props();
 
 	let fromMarker = $state<maplibregl.Marker>();
@@ -163,6 +165,18 @@
 
 		{#if itinerary}
 			<ItineraryGeoJson {itinerary} {level} />
+		{/if}
+
+		{#if intermediateStops && itinerary}
+			{#each itinerary.legs.flatMap((l) => l.intermediateStops || []) as e}
+				<Marker
+					color="black"
+					draggable={false}
+					{level}
+					location={posToLocation(e, 0)}
+					popup={e.name}
+				/>
+			{/each}
 		{/if}
 
 		{#if from}

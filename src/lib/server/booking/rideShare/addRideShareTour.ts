@@ -35,6 +35,7 @@ async function util(
 > {
 	const routingResult = (await carRouting(start, target)).direct;
 	if (routingResult.length === 0) {
+		console.log('adding tour: routing failed');
 		return undefined;
 	}
 	const duration = routingResult[0].duration * 1000;
@@ -97,6 +98,7 @@ async function util(
 	if (lastEventBefore !== null) {
 		const prevLegDurationResult = (await carRouting(lastEventBefore, start)).direct;
 		if (prevLegDurationResult.length === 0) {
+			console.log('adding tour: previous leg conflict', prevLegDurationResult, lastEventBefore);
 			return undefined;
 		}
 		allowedIntervals = Interval.subtract(allowedIntervals, [
@@ -109,6 +111,7 @@ async function util(
 	if (firstEventAfter !== null) {
 		const nextLegDurationResult = (await carRouting(target, firstEventAfter)).direct;
 		if (nextLegDurationResult.length === 0) {
+			console.log('adding tour: next leg conflict', nextLegDurationResult, firstEventAfter);
 			return undefined;
 		}
 		allowedIntervals = Interval.subtract(allowedIntervals, [
@@ -122,6 +125,7 @@ async function util(
 		(i) => i.size() >= duration && allowedArrivalsAtFixed.overlaps(i)
 	);
 	if (allowedIntervals.length === 0) {
+		console.log('adding tour: allowed intervals conflict', allowedIntervals);
 		return undefined;
 	}
 	const bestInterval = allowedIntervals.reduce(
@@ -178,7 +182,9 @@ export const addRideShareTour = async (
 	provider: number,
 	vehicle: number,
 	start: Coordinates,
-	target: Coordinates
+	target: Coordinates,
+	startAddress = '',
+	targetAddress = ''
 ): Promise<number | undefined> => {
 	const timesResult = await util(time, startFixed, vehicle, start, target);
 	if (timesResult === undefined) {
@@ -234,7 +240,7 @@ export const addRideShareTour = async (
 				scheduledTimeEnd: startTimeEnd,
 				prevLegDuration: 0,
 				nextLegDuration: duration,
-				address: ''
+				address: startAddress
 			})
 			.returning('id')
 			.execute()
@@ -259,7 +265,7 @@ export const addRideShareTour = async (
 				scheduledTimeEnd: targetTimeEnd,
 				prevLegDuration: duration,
 				nextLegDuration: 0,
-				address: ''
+				address: targetAddress
 			})
 			.returning('id')
 			.execute()

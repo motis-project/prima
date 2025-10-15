@@ -28,7 +28,7 @@ export async function POST(event: RequestEvent) {
 	}
 
 	console.log(
-		'WHITELIST REQUEST PARAMS',
+		'WHITELIST REQUEST PARAMS RIDE SHARE',
 		JSON.stringify(toWhitelistRequestWithISOStrings(p), null, '\t')
 	);
 	let direct: Insertion[][] = [];
@@ -87,6 +87,6 @@ export async function POST(event: RequestEvent) {
 		target,
 		direct: directResponse
 	};
-	console.log('WHITELIST RESPONSE: ', JSON.stringify(response, null, '\t'));
+	console.log('RIDESHARE WHITELIST RESPONSE: ', JSON.stringify(response, null, '\t'));
 	return json(response);
 }

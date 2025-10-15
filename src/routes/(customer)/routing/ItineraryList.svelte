@@ -8,6 +8,7 @@
 	import DirectConnection from './DirectConnection.svelte';
 	import { odmPrice, getEuroString } from '$lib/util/odmPrice';
 	import { planAndSign, type SignedItinerary, type SignedPlanResponse } from '$lib/planAndSign';
+	import { isOdmLeg, isRideShareLeg, isTaxiLeg } from './utils';
 
 	let {
 		routingResponses,
@@ -20,7 +21,7 @@
 	}: {
 		routingResponses: Array<Promise<SignedPlanResponse | undefined>>;
 		baseResponse: Promise<SignedPlanResponse | undefined> | undefined;
-		baseQuery: PlanData | undefined;
+		baseQuery: PlanData['query'] | undefined;
 		selectItinerary: (it: SignedItinerary) => void;
 		updateStartDest: (r: SignedPlanResponse | undefined) => SignedPlanResponse | undefined;
 		passengers: number;
@@ -34,7 +35,11 @@
 </script>
 
 {#snippet odmInfo(it: SignedItinerary)}
-	<Info class="size-4" /> {t.booking.bookHere} {getEuroString(odmPrice(it, passengers, kids))}
+	{#if it.legs.some((l) => isRideShareLeg(l))}
+		<Info class="size-4" /> {t.ride.negotiateHere}
+	{:else if it.legs.some((l) => isTaxiLeg(l))}
+		<Info class="size-4" /> {t.booking.bookHere} {getEuroString(odmPrice(it, passengers, kids))}
+	{/if}
 {/snippet}
 
 {#if baseResponse}
@@ -80,7 +85,8 @@
 													0,
 													0,
 													planAndSign({
-														query: { ...baseQuery.query, pageCursor: r.previousPageCursor }
+														...baseQuery,
+														pageCursor: r.previousPageCursor
 													}).then(updateStartDest)
 												);
 											}}
@@ -99,7 +105,7 @@
 											<div class="h-0 shrink grow border-t"></div>
 										</div>
 									{/if}
-									{@const hasODM = it.legs.some((l) => l.mode === 'ODM')}
+									{@const hasODM = it.legs.some(isOdmLeg)}
 									<button onclick={() => selectItinerary(it)}>
 										<ItinerarySummary {it} {baseQuery} info={hasODM ? odmInfo : undefined} />
 									</button>
@@ -114,7 +120,8 @@
 											onclick={() => {
 												routingResponses.push(
 													planAndSign({
-														query: { ...baseQuery.query, pageCursor: r.nextPageCursor }
+														...baseQuery,
+														pageCursor: r.nextPageCursor
 													}).then(updateStartDest)
 												);
 											}}
