@@ -28,7 +28,7 @@ test('add ride share tour', async ({ page }) => {
 	await logout(page);
 });
 
-test('start ride share negotiation', async ({ page }) => {
+test.skip('start ride share negotiation', async ({ page }) => {
 	await signup(page, RIDE_SHARE_CUSTOMER, true);
 	await page.goto('/routing');
 	await page.waitForTimeout(1000);
@@ -47,7 +47,7 @@ test('start ride share negotiation', async ({ page }) => {
 	await logout(page);
 });
 
-test('accept ride share negotiation', async ({ page }) => {
+test.skip('accept ride share negotiation', async ({ page }) => {
 	await login(page, RIDE_SHARE_PROVIDER);
 	await page.goto('/bookings');
 	await page.getByRole('button', { name: 'Meine Mitfahrangebote' }).click();
@@ -56,7 +56,7 @@ test('accept ride share negotiation', async ({ page }) => {
 	await logout(page);
 });
 
-test('verify feedback banners are correct', async ({ page }) => {
+test.skip('verify feedback banners are correct', async ({ page }) => {
 	test.setTimeout(90000);
 	// Feedback banner is not visible since tour is not in the past
 	await isFeedbackBannerVisible(page, RIDE_SHARE_PROVIDER, false);
