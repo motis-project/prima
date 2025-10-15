@@ -30,4 +30,5 @@
     <string name="account_error">Ihr Nutzerkonto ist nicht freigeschaltet.</string>
     <string name="invalidated_tickets">Es wurden nicht alle Tickets validiert. Fahrt trotzdem fortsetzen?</string>
     <string name="tickets_validated">Tickets validiert</string>
+    <string name="availability">Verfügbarkeit</string>
 </resources>

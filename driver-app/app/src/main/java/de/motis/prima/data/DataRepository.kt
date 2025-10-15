@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.util.Log
 import colorAvailable
+import colorTour
 import com.google.firebase.messaging.FirebaseMessaging
 import de.motis.prima.services.ApiService
 import de.motis.prima.services.AvailabilityResponse
@@ -130,7 +131,10 @@ class DataRepository @Inject constructor(
             }
         }
         for (tour in availability.tours) {
-            // TODO
+            val startTime = minutesSinceStartOfDay(tour.startTime)
+            val endTime = minutesSinceStartOfDay(tour.endTime)
+            val timeBlock = TimeBlock(startTime.toInt(), endTime.toInt(), colorTour)
+            blocks += timeBlock
         }
         return blocks
     }

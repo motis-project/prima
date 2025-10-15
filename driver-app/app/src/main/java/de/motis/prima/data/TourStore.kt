@@ -199,8 +199,8 @@ class TourStore @Inject constructor(
                 fare = tour.fare,
                 startTime = tour.startTime,
                 endTime = tour.endTime,
-                companyName = "",
-                companyAddress = "",
+                //companyName = "",
+                //companyAddress = "",
                 vehicleId = tour.vehicleId,
                 licensePlate = "",
                 events = events

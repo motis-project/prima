@@ -2,7 +2,19 @@ import { db } from '$lib/server/db';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { getToursWithRequests } from '$lib/server/db/getTours.js';
 
+<<<<<<< HEAD
 export async function getAvailability(utcDate: Date, companyId: number) {
+=======
+export async function getAvailability(
+	localDateParam: string | null,
+	timezoneOffset: string | null,
+	companyId: number
+) {
+	const utcDate =
+		localDateParam && timezoneOffset
+			? new Date(new Date(localDateParam!).getTime() + Number(timezoneOffset) * 60 * 1000)
+			: new Date();
+>>>>>>> 37e64a8b (api get availability)
 	const fromTime = new Date(utcDate);
 	fromTime.setHours(utcDate.getHours() - 1);
 	const toTime = new Date(utcDate);

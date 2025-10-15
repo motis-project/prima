@@ -54,11 +54,11 @@ fun Availability(
     Scaffold(
         topBar = {
             TopBar(
-                stringResource(id = R.string.vehicles_header),
+                stringResource(id = R.string.availability),
                 true,
                 listOf(
                     NavItem(
-                        text = stringResource(id = R.string.reload),
+                        text = stringResource(id = R.string.change_vehicles),
                         action = { navController.navigate("vehicles") }
                     )
                 ),
