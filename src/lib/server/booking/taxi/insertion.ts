@@ -878,8 +878,10 @@ export function evaluatePairInsertions(
 						pickup.window.startTime
 					);
 					const communicatedDropoffTime = Math.min(
-						dropoff.window.startTime +
-							getScheduledTimeBufferDropoff(dropoff.window.startTime - pickup.window.endTime),
+						Math.max(
+							dropoff.window.startTime,
+							communicatedPickupTime + pickup.nextLegDuration + dropoff.prevLegDuration
+						) + getScheduledTimeBufferDropoff(dropoff.window.startTime - pickup.window.endTime),
 						dropoff.window.endTime
 					);
 
