@@ -22,7 +22,7 @@ const capacities = {
 };
 
 describe('Concatenation tests', () => {
-	it('create tour concetanation, simple append', async () => {
+	it('create tour concetanation, insert pickup - append dropoff', async () => {
 		const mockUserId = await prepareTest();
 		const company = await addCompany(Zone.WEIßWASSER, inWW1);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
