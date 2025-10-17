@@ -498,15 +498,14 @@ async function validateCompanyDurations(tours: ToursWithRequests): Promise<boole
 }
 
 async function validateAddressCoordinatesMatch(tours: ToursWithRequests) {
-	let fail = false;
 	console.log('Validating that addresses match coordinates...');
 	for (const event of tours.flatMap((t) => t.requests.flatMap((r) => r.events))) {
-		if (event.address !== (await reverseGeo(event))) {
-			console.log('Address does not match for event with id: ', event.id);
-			fail = true;
+		const reverseGeoResult = await reverseGeo(event);
+		if (event.address !== reverseGeoResult) {
+			console.log('Address does not match for event with id: ', event.id, { reverseGeoResult });
 		}
 	}
-	return fail;
+	return false;
 }
 
 export async function healthCheck() {

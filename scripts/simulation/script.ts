@@ -18,13 +18,13 @@ import { healthCheck } from '../../src/lib/server/util/healthCheck';
 import { logHelp } from './logHelp';
 import { exec } from 'child_process';
 import path from 'path';
-import { white } from '../../src/lib/server/booking/testUtil';
+import { white } from '../../src/lib/server/booking/testUtils';
 import { getCost } from '../../src/lib/testHelpers';
 import { MAX_MATCHING_DISTANCE } from '../../src/lib/constants';
 import { PlanData } from '../../src/lib/openapi';
 import { planAndSign } from '../../src/lib/planAndSign';
 import { lngLatToStr } from '../../src/lib/util/lngLatToStr';
-import { expectedConnectionFromLeg } from '../../src/lib/expectedConnectionFromLeg';
+import { expectedConnectionFromLeg } from '../../src/lib/server/booking/expectedConnection';
 import { rediscoverWhitelistRequestTimes } from '../../src/lib/server/util/rediscoverWhitelistRequestTimes';
 
 const BACKUP_DIR = './scripts/simulation/backups/';
@@ -157,7 +157,7 @@ async function bookingFull(
 			passengers: parameters.capacities.passengers
 		}
 	} as PlanData;
-	const planResponse = await planAndSign(q, 'http://localhost:5173');
+	const planResponse = await planAndSign(q.query, 'http://localhost:5173');
 	if (planResponse === undefined) {
 		console.log('PlanResponse was undefined.');
 		return true;
