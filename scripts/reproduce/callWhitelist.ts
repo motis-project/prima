@@ -9,7 +9,6 @@ import { BusStop } from '../../src/lib/server/booking/taxi/BusStop';
 import { Capacities } from '../../src/lib/util/booking/Capacities';
 
 const params: {start: Coordinates, target: Coordinates, startBusStops: BusStop[], targetBusStops: BusStop[], directTimes: string[], startFixed: boolean, capacities: Capacities} = {
-const params = {
         "start": {
                 "lat": 51.5360245,
                 "lng": 14.5286573
