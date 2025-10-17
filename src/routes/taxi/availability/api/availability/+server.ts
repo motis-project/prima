@@ -143,15 +143,17 @@ export const GET = async ({ locals, url }) => {
 	if (!localDateParam) {
 		error(400, { message: 'Invalid date parameter' });
 	}
-	const time = new Date(localDateParam).getTime()
+	const time = new Date(localDateParam).getTime();
 	if (isNaN(time)) {
 		error(400, { message: 'Invalid date parameter' });
 	}
 	const utcDate =
-		localDateParam && timezoneOffset
-			? new Date(time + timezoneOffset * 60 * 1000)
-			: new Date();
+		localDateParam && timezoneOffset ? new Date(time + timezoneOffset * 60 * 1000) : new Date();
 
-	const { companyDataComplete, companyCoordinates, ...res } = await getAvailability(utcDate, companyId)
+	const {
+		companyDataComplete: _a,
+		companyCoordinates: _b,
+		...res
+	} = await getAvailability(utcDate, companyId);
 	return json(res);
 };

@@ -2,10 +2,7 @@ import { db } from '$lib/server/db';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { getToursWithRequests } from '$lib/server/db/getTours.js';
 
-export async function getAvailability(
-	utcDate: Date,
-	companyId: number
-) {
+export async function getAvailability(utcDate: Date, companyId: number) {
 	const fromTime = new Date(utcDate);
 	fromTime.setHours(utcDate.getHours() - 1);
 	const toTime = new Date(utcDate);
@@ -50,9 +47,9 @@ export async function getAvailability(
 		companyDataComplete,
 		companyCoordinates: companyDataComplete
 			? {
-				lat: company.lat!,
-				lng: company.lng!
-			}
+					lat: company.lat!,
+					lng: company.lng!
+				}
 			: null
 	};
 }
