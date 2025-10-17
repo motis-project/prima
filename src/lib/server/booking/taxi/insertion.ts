@@ -886,21 +886,13 @@ export function evaluatePairInsertions(
 					);
 
 					// Verify, that the shift induced to other events by pickup and dropoff are mutually compatible
-					if (dropoffIdx < pickupIdx + 3) {
-						let availableDistance =
-							communicatedDropoffTime -
-							communicatedPickupTime -
-							dropoff.prevLegDuration -
-							pickup.nextLegDuration;
-						if (pickupIdx + 2 === dropoffIdx) {
-							availableDistance -=
-								nextPickup.tourId !== prevDropoff.tourId
-									? (prevDropoff.directDuration ?? Number.MAX_SAFE_INTEGER / 2)
-									: prevDropoff.prevLegDuration;
-						}
-						if (availableDistance - 2 < 0) {
-							continue;
-						}
+					const availableDistance =
+						communicatedDropoffTime -
+						communicatedPickupTime -
+						dropoff.prevLegDuration -
+						pickup.nextLegDuration;
+					if (availableDistance < 0) {
+						continue;
 					}
 
 					// Determine the scheduled times for pickup and dropoff

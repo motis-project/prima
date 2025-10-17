@@ -573,10 +573,22 @@ export function evaluatePairInsertions(
 						pickup.window.startTime
 					);
 					const communicatedDropoffTime = Math.min(
-						dropoff.window.startTime +
-							getScheduledTimeBufferDropoff(dropoff.window.startTime - pickup.window.endTime),
+						Math.max(
+							dropoff.window.startTime,
+							communicatedPickupTime + pickup.nextLegDuration + dropoff.prevLegDuration
+						) + getScheduledTimeBufferDropoff(dropoff.window.startTime - pickup.window.endTime),
 						dropoff.window.endTime
 					);
+
+					// Verify, that the shift induced to other events by pickup and dropoff are mutually compatible
+					const availableDistance =
+						communicatedDropoffTime -
+						communicatedPickupTime -
+						dropoff.prevLegDuration -
+						pickup.nextLegDuration;
+					if (availableDistance < 0) {
+						continue;
+					}
 
 					// Determine the scheduled times for pickup and dropoff
 					const leewayBetweenPickupDropoff =
