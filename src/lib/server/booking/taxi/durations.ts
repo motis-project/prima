@@ -150,9 +150,12 @@ export function getAllowedOperationTimes(
 		!(insertionCase.how != InsertHow.NEW_TOUR && relevantAvailabilities.length > 1),
 		`Found ${relevantAvailabilities.length} intervals, which are supposed to be disjoint, containing the same timestamp.`
 	);
-	const finalWindow = Interval.intersect(relevantAvailabilities
-		.map((availability) => new Interval(availability).intersect(window))
-		.filter((availability) => availability != undefined), allowedTimes).filter((availability) => availability != undefined);
+	const finalWindow = Interval.intersect(
+		relevantAvailabilities
+			.map((availability) => new Interval(availability).intersect(window))
+			.filter((availability) => availability != undefined),
+		allowedTimes
+	).filter((availability) => availability != undefined);
 	return finalWindow;
 }
 
@@ -164,8 +167,7 @@ export function getArrivalWindow(
 	prevLegDuration: number,
 	nextLegDuration: number
 ): Interval | undefined {
-	const directWindows = 
-		windows
+	const directWindows = windows
 		.map((window) => window.shrink(prevLegDuration, nextLegDuration))
 		.filter((window) => window != undefined);
 
