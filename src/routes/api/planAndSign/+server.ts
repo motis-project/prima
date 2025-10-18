@@ -3,8 +3,8 @@ import { plan, type Itinerary, type PlanData } from '$lib/openapi';
 import { signEntry } from '$lib/server/booking/signEntry';
 import type { QuerySerializerOptions } from '@hey-api/client-fetch';
 import { json, type RequestEvent } from '@sveltejs/kit';
-import { isOdmLeg } from '../../(customer)/routing/utils';
 import { getRideShareInfos } from '$lib/server/booking/rideShare/getRideShareInfo';
+import { isOdmLeg } from '$lib/util/booking/checkLegType';
 
 export const POST = async (event: RequestEvent) => {
 	const q: PlanData['query'] = await event.request.json();

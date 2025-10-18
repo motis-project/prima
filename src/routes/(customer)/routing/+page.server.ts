@@ -16,7 +16,7 @@ import Prom from 'prom-client';
 import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhitelistRequestTimes';
 import { rideShareApi } from '$lib/server/booking/index';
 import { expectedConnectionFromLeg } from '$lib/server/booking/expectedConnection';
-import { isOdmLeg } from './utils';
+import { isOdmLeg } from '$lib/util/booking/checkLegType';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;

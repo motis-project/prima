@@ -1,6 +1,6 @@
 import type { Itinerary } from '$lib/openapi';
 import { db } from '$lib/server/db';
-import { isRideShareLeg } from '../../../../routes/(customer)/routing/utils';
+import { isRideShareLeg } from '$lib/util/booking/checkLegType';
 
 export async function getRideShareInfo(tourId: number) {
 	return await db

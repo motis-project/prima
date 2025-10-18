@@ -1,8 +1,8 @@
 import type { Leg } from '$lib/openapi';
 import { Mode } from '$lib/server/booking/mode';
+import { isOdmLeg, isTaxiLeg } from '$lib/util/booking/checkLegType';
 import type { Coordinates } from '$lib/util/Coordinates';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
-import { isOdmLeg, isTaxiLeg } from '../../../routes/(customer)/routing/utils';
 
 export type ExpectedConnection = {
 	start: Coordinates;

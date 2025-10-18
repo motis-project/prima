@@ -8,7 +8,7 @@
 	import { t } from '$lib/i18n/translation';
 	import type { Snippet } from 'svelte';
 	import DisplayAddresses from '$lib/ui/DisplayAddresses.svelte';
-	import { isRideShareLeg } from './utils';
+	import { isRideShareLeg } from '$lib/util/booking/checkLegType';
 
 	const {
 		it,
