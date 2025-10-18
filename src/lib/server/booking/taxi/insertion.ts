@@ -167,8 +167,7 @@ export function evaluateSingleInsertion(
 		0,
 		busStopWindow,
 		prevLegDuration,
-		nextLegDuration,
-		allowedTimes
+		nextLegDuration
 	);
 	if (arrivalWindow == undefined) {
 		return undefined;
@@ -289,7 +288,6 @@ export function evaluateBothInsertion(
 	busStopIdx: number | undefined,
 	prev: Event | undefined,
 	next: Event | undefined,
-	allowedTimes: Interval[],
 	passengerCountNewRequest: number,
 	promisedTimes?: PromisedTimes
 ): InsertionEvaluation | undefined {
@@ -324,8 +322,7 @@ export function evaluateBothInsertion(
 		passengerDuration,
 		busStopWindow,
 		prevLegDuration,
-		nextLegDuration,
-		allowedTimes
+		nextLegDuration
 	);
 	if (arrivalWindow == undefined) {
 		console.log(
@@ -337,7 +334,6 @@ export function evaluateBothInsertion(
 			{ busStopWindow: busStopWindow?.toString() },
 			{ prevLegDuration: prevLegDuration.toString() },
 			{ nextLegDuration: nextLegDuration.toString() },
-			{ allowedTimes: allowedTimes.toString() },
 			{ prev: prev?.id },
 			{ next: next?.id }
 		);
@@ -566,7 +562,8 @@ export function evaluateNewTours(
 				undefined,
 				expandedSearchInterval,
 				prepTime,
-				vehicle
+				vehicle,
+				allowedTimes
 			);
 			for (let busStopIdx = 0; busStopIdx != busStopTimes.length; ++busStopIdx) {
 				for (let busTimeIdx = 0; busTimeIdx != busStopTimes[busStopIdx].length; ++busTimeIdx) {
@@ -580,7 +577,6 @@ export function evaluateNewTours(
 						busStopIdx,
 						undefined,
 						undefined,
-						allowedTimes,
 						required.passengers,
 						promisedTimes
 					);
@@ -690,7 +686,8 @@ export function evaluateSingleInsertions(
 				next,
 				expandedSearchInterval,
 				prepTime,
-				insertionInfo.vehicle
+				insertionInfo.vehicle,
+				allowedTimes
 			);
 
 			// Ensure shifting the previous or next events' scheduledTime does not cause the whole tour to be prolonged too much
@@ -724,7 +721,6 @@ export function evaluateSingleInsertions(
 						busStopIdx,
 						prev,
 						next,
-						allowedTimes,
 						required.passengers,
 						promisedTimes
 					);
