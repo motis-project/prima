@@ -43,8 +43,8 @@
 	import { planAndSign, type SignedPlanResponse } from '$lib/planAndSign';
 
 	import logo from '$lib/assets/logo-alpha.png';
-	import { isOdmLeg, isRideShareLeg } from './utils';
 	import Footer from '$lib/ui/Footer.svelte';
+	import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 

@@ -8,7 +8,7 @@
 	import DirectConnection from './DirectConnection.svelte';
 	import { odmPrice, getEuroString } from '$lib/util/odmPrice';
 	import { planAndSign, type SignedItinerary, type SignedPlanResponse } from '$lib/planAndSign';
-	import { isOdmLeg, isRideShareLeg, isTaxiLeg } from './utils';
+	import { isOdmLeg, isRideShareLeg, isTaxiLeg } from '$lib/util/booking/checkLegType';
 
 	let {
 		routingResponses,
