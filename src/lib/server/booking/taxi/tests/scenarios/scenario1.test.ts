@@ -111,13 +111,14 @@ describe('Concatenation tests', () => {
 	}, 15000);
 
 	it('concatenate 2 and 3', async () => {
-		// wwBhf, wwBautzener, boxbergAlteBautzener, boxbergDiesterweg - would be preferable order, but might not be possible due to time constraints
-		await testScenario(wwBhf, boxbergDiesterweg, wwBautzener, boxbergAlteBautzener, [
+		await testScenario(
 			wwBhf,
+			boxbergDiesterweg,
 			wwBautzener,
-			undefined,
-			undefined
-		]);
+			boxbergAlteBautzener,
+			[wwBhf, wwBautzener, boxbergAlteBautzener, boxbergDiesterweg],
+			0
+		);
 	}, 15000);
 
 	it('concatenate 3 and 4', async () => {
@@ -150,7 +151,8 @@ async function testScenario(
 	target1: Coordinates,
 	start2: Coordinates,
 	target2: Coordinates,
-	expectedCoordinates: (Coordinates | undefined)[]
+	expectedCoordinates: (Coordinates | undefined)[],
+	timeDifference?: number
 ) {
 	const mockUserId = await prepareTest();
 	const company = await addCompany(Zone.WEIßWASSER, companyCentral);
@@ -161,6 +163,13 @@ async function testScenario(
 	const tours = await getTours();
 	expect(tours.length).toBe(1);
 	expect(tours[0].requests.length).toBe(1);
-	await whiteAndBook(start2, target2, mockUserId, inXMinutes(90), false, capacities);
+	await whiteAndBook(
+		start2,
+		target2,
+		mockUserId,
+		inXMinutes(70 + (timeDifference ?? 20)),
+		false,
+		capacities
+	);
 	await checkEventOrder(expectedCoordinates);
 }
