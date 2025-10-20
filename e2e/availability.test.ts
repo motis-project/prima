@@ -102,9 +102,9 @@ test('Get availability', async ({ page }) => {
 	const responseBody = await response.json();
 	expect(responseBody).toHaveProperty('tours');
 	expect(responseBody).toHaveProperty('vehicles');
-	expect(responseBody).toHaveProperty('utcDate');
 	expect(responseBody).not.toHaveProperty('companyDataComplete');
 	expect(responseBody).not.toHaveProperty('companyCoordinates');
+	expect(responseBody).not.toHaveProperty('utcDate');
 
 	const vehicles = responseBody['vehicles'];
 	expect(vehicles).toHaveLength(1);

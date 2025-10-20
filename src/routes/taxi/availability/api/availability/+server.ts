@@ -147,12 +147,11 @@ export const GET = async ({ locals, url }) => {
 	if (isNaN(time)) {
 		error(400, { message: 'Invalid date parameter' });
 	}
-	const utcDate =
-		localDateParam && timezoneOffset ? new Date(time + timezoneOffset * 60 * 1000) : new Date();
-
+	const utcDate = new Date(time + timezoneOffset * 60 * 1000);
 	const {
 		companyDataComplete: _a,
 		companyCoordinates: _b,
+		utcDate: _c,
 		...res
 	} = await getAvailability(utcDate, companyId);
 	return json(res);
