@@ -76,8 +76,8 @@ type SingleInsertionEvaluation = {
 };
 
 type Evaluations = {
-	busStopEvaluations: (SingleInsertionEvaluation | undefined)[][][];
-	userChosenEvaluations: (SingleInsertionEvaluation | undefined)[];
+	busStopEvaluations: SingleInsertionEvaluation[][][][];
+	userChosenEvaluations: SingleInsertionEvaluation[][];
 	bothEvaluations: Insertion[][][];
 };
 
@@ -407,19 +407,33 @@ export function evaluateSingleInsertions(
 	travelDurations: (number | undefined)[],
 	promisedTimes?: PromisedTimesRideShare
 ): Evaluations {
+	const insertionIdxCount = rideShareTours.reduce(
+		(acc, curr) =>
+			(acc += insertionRanges
+				.get(curr.rideShareTour)
+							?.reduce((acc, curr) => (acc += curr.latestDropoff + 1 - curr.earliestPickup), 0) ??
+						0),
+				0
+	);
 	const bothEvaluations: Insertion[][][] = [];
-	const userChosenEvaluations: (SingleInsertionEvaluation | undefined)[] = [];
-	const busStopEvaluations: (SingleInsertionEvaluation | undefined)[][][] = new Array<
-		(SingleInsertionEvaluation | undefined)[][]
+	const userChosenEvaluations: SingleInsertionEvaluation[][] = [];
+	const busStopEvaluations: SingleInsertionEvaluation[][][][] = new Array<
+		SingleInsertionEvaluation[][][]
 	>(busStopTimes.length);
+	for (let i = 0; i != insertionIdxCount + 1; i++) {
+		userChosenEvaluations[i] = new Array<SingleInsertionEvaluation>();
+	}
 	for (let i = 0; i != busStopTimes.length; ++i) {
-		busStopEvaluations[i] = new Array<(SingleInsertionEvaluation | undefined)[]>(
+		busStopEvaluations[i] = new Array<SingleInsertionEvaluation[][]>(
 			busStopTimes[i].length
 		);
 		bothEvaluations[i] = new Array<Insertion[]>(busStopTimes[i].length);
 		for (let j = 0; j != busStopTimes[i].length; ++j) {
-			busStopEvaluations[i][j] = new Array<SingleInsertionEvaluation | undefined>();
+			busStopEvaluations[i][j] = new Array<SingleInsertionEvaluation[]>();
 			bothEvaluations[i][j] = new Array<Insertion>();
+			for(let k=0;k!=insertionIdxCount;++k) {
+				busStopEvaluations[i][j][k] = new Array<SingleInsertionEvaluation>();
+			}
 		}
 	}
 	const prepTime = Date.now() + MIN_PREP;
@@ -502,7 +516,9 @@ export function evaluateSingleInsertions(
 					next,
 					promisedTimes
 				);
-				busStopEvaluations[busStopIdx][busTimeIdx][insertionInfo.insertionIdx] = resultBus; // TODO
+				if(resultBus !== undefined) {
+					busStopEvaluations[busStopIdx][busTimeIdx][insertionInfo.insertionIdx].push(resultBus);
+				}
 			}
 		}
 		insertionCase.what = InsertWhat.USER_CHOSEN;
@@ -517,7 +533,9 @@ export function evaluateSingleInsertions(
 			next,
 			promisedTimes
 		);
-		userChosenEvaluations[insertionInfo.insertionIdx] = resultUserChosen; // TODO
+		if (resultUserChosen != undefined) {
+			userChosenEvaluations[insertionInfo.insertionIdx].push(resultUserChosen);
+		}
 	});
 	return { busStopEvaluations, userChosenEvaluations, bothEvaluations };
 }
@@ -527,8 +545,8 @@ export function evaluatePairInsertions(
 	startFixed: boolean,
 	insertionRanges: Map<number, Range[]>,
 	busStopTimes: Interval[][],
-	busStopEvaluations: (SingleInsertionEvaluation | undefined)[][][],
-	userChosenEvaluations: (SingleInsertionEvaluation | undefined)[],
+	busStopEvaluations: SingleInsertionEvaluation[][][][],
+	userChosenEvaluations: SingleInsertionEvaluation[][],
 	whitelist?: boolean
 ): Insertion[][][] {
 	const bestEvaluations = new Array<Insertion[][]>(busStopTimes.length);
@@ -551,23 +569,25 @@ export function evaluatePairInsertions(
 		) {
 			for (let busStopIdx = 0; busStopIdx != busStopTimes.length; ++busStopIdx) {
 				for (let timeIdx = 0; timeIdx != busStopTimes[busStopIdx].length; ++timeIdx) {
-					const pickup = startFixed
+					const pickupCases = startFixed
 						? busStopEvaluations[busStopIdx][timeIdx][insertionInfo.insertionIdx]
 						: userChosenEvaluations[insertionInfo.insertionIdx];
-					if (pickup == undefined) {
+					if (pickupCases == undefined) {
 						break;
 					}
-					const dropoff = startFixed
+					const dropoffCases = startFixed
 						? userChosenEvaluations[insertionInfo.insertionIdx + dropoffIdx - pickupIdx]
 						: busStopEvaluations[busStopIdx][timeIdx][
 								insertionInfo.insertionIdx + dropoffIdx - pickupIdx
 							];
-					if (dropoff == undefined) {
+					if (dropoffCases == undefined) {
 						continue;
 					}
 					const prevDropoff = events[dropoffIdx - 1];
 					const nextDropoff = events[dropoffIdx];
 					const twoAfterDropoff = events[dropoffIdx + 1];
+					for (const pickup of pickupCases) {
+						for (const dropoff of dropoffCases) {
 					const communicatedPickupTime = Math.max(
 						pickup.window.endTime - SCHEDULED_TIME_BUFFER_PICKUP,
 						pickup.window.startTime
@@ -712,7 +732,7 @@ export function evaluatePairInsertions(
 					}
 				}
 			}
-		}
+		}}}
 	});
 	return bestEvaluations;
 }
