@@ -13,6 +13,7 @@
 	import * as RadioGroup from '$lib/shadcn/radio-group/index.js';
 	import * as Select from '$lib/shadcn/select';
 	import { getCountryData, getCountryDataList, type TCountryCode } from 'countries-list';
+	import { defaultProfilePicture } from '$lib/constants.js';
 
 	const { data, form } = $props();
 	let showTooltip = $state(false);
@@ -97,6 +98,7 @@
 				name="profilePicture"
 				displaySaveButton={true}
 				currentUrl={data.profilePicture ?? undefined}
+				defaultPicture={defaultProfilePicture}
 			/>
 		</form>
 	</Panel>
