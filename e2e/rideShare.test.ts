@@ -8,13 +8,14 @@ import {
 	UserCredentials
 } from './utils';
 import { sql } from 'kysely';
+import { LICENSE_PLATE_PLACEHOLDER } from '../src/lib/constants';
 
 test.describe.configure({ mode: 'serial' });
 
 test('add ride share tour', async ({ page }) => {
 	await signup(page, RIDE_SHARE_PROVIDER, true);
 	await page.goto('/account/add-ride-share-vehicle');
-	await page.getByPlaceholder('DA-AB-1234').fill('DA-AB-1234');
+	await page.getByPlaceholder(LICENSE_PLATE_PLACEHOLDER).fill(LICENSE_PLATE_PLACEHOLDER);
 	await page.getByRole('button', { name: 'Fahrzeug anlegen' }).click();
 	await page.waitForTimeout(1000);
 	await page.goto('/ride-offers/new');
