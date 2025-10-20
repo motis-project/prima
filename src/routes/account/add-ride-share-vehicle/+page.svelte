@@ -10,6 +10,8 @@
 	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
 	import Panel from '$lib/ui/Panel.svelte';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	const { form } = $props();
 	let v = $derived(undefined);
@@ -19,10 +21,21 @@
 	let hasModel = $state(false);
 	let smokingOptions = t.buttons.smokingOptions;
 	let smokingAllowed = $state(smokingOptions[0]);
+	let fromUrl: string | null = null;
+
+	onMount(() => {
+		fromUrl = sessionStorage.getItem('lastPage') ?? '/default';
+		console.log('Came from:', fromUrl);
+	});
 </script>
 
 <div>
-	<Button class="mb-2" size="icon" variant="outline" onclick={() => history.back()}>
+	<Button
+		class="mb-2"
+		size="icon"
+		variant="outline"
+		onclick={() => (fromUrl === null ? history.back() : goto(fromUrl!))}
+	>
 		<ChevronLeft />
 	</Button>
 	<Message msg={form?.msg} class="mb-4" />

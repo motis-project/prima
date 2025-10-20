@@ -30,8 +30,8 @@
 	import maplibregl from 'maplibre-gl';
 	import type { Itinerary } from '$lib/openapi';
 	import { enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
 	import { HOUR } from '$lib/util/time';
+	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
 
 	const { data, form } = $props();
 
@@ -153,7 +153,7 @@
 				<Button
 					variant="outline"
 					onclick={() => {
-						goto('/account/add-ride-share-vehicle');
+						storeLastPageAndGoto('/account/add-ride-share-vehicle');
 					}}
 				>
 					<Plus class="mr-2 size-4" />

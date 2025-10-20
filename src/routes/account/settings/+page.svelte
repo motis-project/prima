@@ -7,12 +7,12 @@
 	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import { t } from '$lib/i18n/translation';
 	import UploadPhoto from '$lib/ui/UploadPhoto.svelte';
-	import { goto } from '$app/navigation';
 	import { Plus } from 'lucide-svelte';
 	import { Label } from '$lib/shadcn/label';
 	import * as RadioGroup from '$lib/shadcn/radio-group/index.js';
 	import * as Select from '$lib/shadcn/select';
 	import { getCountryData, getCountryDataList, type TCountryCode } from 'countries-list';
+	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
 
 	const { data, form } = $props();
 	let showTooltip = $state(false);
@@ -80,7 +80,10 @@
 	</Panel>
 
 	<Panel title={t.buttons.addVehicle} subtitle={''}>
-		<Button variant="outline" onclick={() => goto('/account/add-ride-share-vehicle')}>
+		<Button
+			variant="outline"
+			onclick={() => storeLastPageAndGoto('/account/add-ride-share-vehicle')}
+		>
 			<Plus class="mr-2 size-4" />
 			{t.buttons.addVehicle}
 		</Button>
