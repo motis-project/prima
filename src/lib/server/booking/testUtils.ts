@@ -29,6 +29,7 @@ const baseDate = new Date();
 baseDate.setDate(baseDate.getDate() + 2);
 baseDate.setHours(13, 0, 0, 0);
 const BASE_DATE = getNextWednesday(baseDate, baseDate);
+console.log("BASEDATE: ", new Date(BASE_DATE).toISOString())
 
 export const dateInXMinutes = (x: number) => new Date(BASE_DATE + x * MINUTE);
 export const inXMinutes = (x: number) => BASE_DATE + x * MINUTE;
