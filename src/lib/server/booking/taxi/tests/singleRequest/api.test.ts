@@ -217,7 +217,7 @@ describe('Whitelist and Booking API Tests', () => {
 			startFixed: true,
 			capacities
 		});
-		console.log("testtime: ", new Date(inXMinutes(477)));
+		console.log('testtime: ', new Date(inXMinutes(477)));
 		const blackResponse = await black(body).then((r) => r.json());
 		expect(blackResponse.start.length).toBe(0);
 		expect(blackResponse.target.length).toBe(0);

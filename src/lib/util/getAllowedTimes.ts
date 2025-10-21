@@ -22,6 +22,9 @@ export function getAllowedTimes(
 		const offset = getOffset(noon.getTime());
 		allowedTimes.push(new Interval(t + startOnDay - offset, t + endOnDay - offset));
 	}
-	console.log("allowed Times:", allowedTimes.map((t) => t.toString()));
+	console.log(
+		'allowed Times:',
+		allowedTimes.map((t) => t.toString())
+	);
 	return allowedTimes;
 }
