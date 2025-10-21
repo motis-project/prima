@@ -235,7 +235,7 @@ async function bookingFull(
 				return {
 					start: new Date(l.scheduledStartTime).toISOString(),
 					end: new Date(l.scheduledEndTime).toISOString(),
-					mode: l.mode
+					mode: l.mode,from:l.from,to:l.to
 				};
 			})
 		},

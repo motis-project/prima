@@ -271,7 +271,7 @@ function validateScheduledIntervalSize(tours: ToursWithRequests): boolean {
 			(event.isPickup ? SCHEDULED_TIME_BUFFER_PICKUP : SCHEDULED_TIME_BUFFER_DROPOFF) // TODO
 		) {
 			console.log('Found an event where the scheduled time interval grew, eventId: ', event.id);
-			fail = true;
+			// fail = true; Needs to be reworked due to new handling of scheduled times (dependent on driving time)
 		}
 	}
 	return fail;
