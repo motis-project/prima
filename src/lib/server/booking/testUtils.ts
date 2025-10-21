@@ -1,7 +1,7 @@
 import { createSession } from '$lib/server/auth/session';
 import { addTestUser, clearDatabase } from '$lib/testHelpers';
 import { getOffset } from '$lib/util/getOffset';
-import { MINUTE } from '$lib/util/time';
+import { DAY, HOUR, MINUTE, roundToUnit } from '$lib/util/time';
 
 export async function prepareTest() {
 	await clearDatabase();
@@ -26,12 +26,21 @@ export function getNextWednesday(dateWithCorrectDayTime: Date, dateRelativeToNex
 	return nextWednesday.getTime();
 }
 
-const baseDate = new Date();
-baseDate.setDate(baseDate.getDate() + 2);
-baseDate.setHours(13, 0, 0, 0);
+const now = new Date();
+const baseDate = new Date(
+	Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 2, 13, 0, 0, 0)
+);
 const nextWednesday = getNextWednesday(baseDate, baseDate);
-const BASE_DATE = nextWednesday - getOffset(nextWednesday);
-console.log('BASEDATE: ', new Date(BASE_DATE).toISOString());
+const nextWednesdayNoon = roundToUnit(nextWednesday, DAY, Math.floor) + 12 * HOUR;
+const offset = getOffset(nextWednesdayNoon);
+const BASE_DATE = nextWednesday; // + offset;
+console.log(
+	'BASEDATE: ',
+	new Date(BASE_DATE).toISOString(),
+	{ offset },
+	new Date(baseDate).toISOString(),
+	new Date(nextWednesday).toISOString()
+);
 
 export const dateInXMinutes = (x: number) => new Date(BASE_DATE + x * MINUTE);
 export const inXMinutes = (x: number) => BASE_DATE + x * MINUTE;
