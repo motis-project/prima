@@ -26,9 +26,7 @@ export function getNextWednesday(dateWithCorrectDayTime: Date, dateRelativeToNex
 }
 
 const now = new Date();
-const baseDate = new Date(
-	Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 2, 13, 0, 0, 0)
-);
+const baseDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2, 13, 0, 0, 0);
 const BASE_DATE = getNextWednesday(baseDate, baseDate);
 
 export const dateInXMinutes = (x: number) => new Date(BASE_DATE + x * MINUTE);
