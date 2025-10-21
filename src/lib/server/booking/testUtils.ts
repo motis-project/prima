@@ -33,7 +33,7 @@ const baseDate = new Date(
 const nextWednesday = getNextWednesday(baseDate, baseDate);
 const nextWednesdayNoon = roundToUnit(nextWednesday, DAY, Math.floor) + 12 * HOUR;
 const offset = getOffset(nextWednesdayNoon);
-const BASE_DATE = nextWednesday; // + offset;
+const BASE_DATE = nextWednesday + offset;
 console.log(
 	'BASEDATE: ',
 	new Date(BASE_DATE).toISOString(),
