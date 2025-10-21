@@ -1,4 +1,4 @@
-import { DIRECT_FREQUENCY, MOTIS_SHIFT } from '$lib/constants';
+import { DIRECT_FREQUENCY } from '$lib/constants';
 import type { Leg } from '$lib/openapi';
 import { isOdmLeg } from '$lib/util/booking/checkLegType';
 
@@ -35,8 +35,8 @@ export function rediscoverWhitelistRequestTimes(
 				: legs.findLast((l) => l.mode !== 'WALK' && !isOdmLeg(l));
 		requestedTime1 =
 			firstOdmIndex === 0
-				? new Date(legAdjacentToOdm!.scheduledStartTime).getTime() - MOTIS_SHIFT
-				: new Date(legAdjacentToOdm!.scheduledEndTime).getTime() + MOTIS_SHIFT;
+				? new Date(legAdjacentToOdm!.scheduledStartTime).getTime()
+				: new Date(legAdjacentToOdm!.scheduledEndTime).getTime();
 		if (firstOdmIndex !== lastOdmIndex) {
 			const legBeforeOdm = legs.findLast((l) => l.mode !== 'WALK' && !isOdmLeg(l));
 			requestedTime2 = new Date(legBeforeOdm!.scheduledStartTime).getTime();

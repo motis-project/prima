@@ -231,6 +231,15 @@ async function bookingFull(
 		{ requestedTime1: new Date(requestedTime1).toISOString() },
 		{ startFixed: parameters.connection1.startFixed },
 		{
+			legs: chosenItinerary.legs.map((l) => {
+				return {
+					start: new Date(l.scheduledStartTime).toISOString(),
+					end: new Date(l.scheduledEndTime).toISOString(),
+					mode: l.mode
+				};
+			})
+		},
+		{
 			time: new Date(
 				parameters.connection1.startFixed
 					? parameters.connection1.startTime
