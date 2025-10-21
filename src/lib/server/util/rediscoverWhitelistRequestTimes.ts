@@ -1,4 +1,4 @@
-import { DIRECT_FREQUENCY } from '$lib/constants';
+import { DIRECT_FREQUENCY, MOTIS_SHIFT } from '$lib/constants';
 import type { Leg } from '$lib/openapi';
 import { isOdmLeg } from '$lib/util/booking/checkLegType';
 
@@ -30,15 +30,24 @@ export function rediscoverWhitelistRequestTimes(
 		}
 	} else {
 		const legAdjacentToOdm =
-			firstOdmIndex === 0
-				? legs.find((l) => l.mode !== 'WALK' && !isOdmLeg(l))
-				: legs.findLast((l) => l.mode !== 'WALK' && !isOdmLeg(l));
-		requestedTime1 =
-			firstOdmIndex === 0
-				? new Date(legAdjacentToOdm!.scheduledStartTime).getTime()
-				: new Date(legAdjacentToOdm!.scheduledEndTime).getTime();
+			firstOdmIndex === 0 ? legs.find((l) => !isOdmLeg(l)) : legs.findLast((l) => !isOdmLeg(l));
+		console.assert(
+			legAdjacentToOdm!.mode === 'WALK',
+			`leg adjacent to odm does not have mode WALK ${legAdjacentToOdm}`
+		);
+		if (legAdjacentToOdm!.duration * 1000 > MOTIS_SHIFT) {
+			requestedTime1 =
+				firstOdmIndex === 0
+					? new Date(legAdjacentToOdm!.scheduledEndTime).getTime()
+					: new Date(legAdjacentToOdm!.scheduledStartTime).getTime();
+		} else {
+			requestedTime1 =
+				firstOdmIndex === 0
+					? new Date(legAdjacentToOdm!.scheduledStartTime).getTime()
+					: new Date(legAdjacentToOdm!.scheduledEndTime).getTime();
+		}
 		if (firstOdmIndex !== lastOdmIndex) {
-			const legBeforeOdm = legs.findLast((l) => l.mode !== 'WALK' && !isOdmLeg(l));
+			const legBeforeOdm = legs.findLast((l) => !isOdmLeg(l));
 			requestedTime2 = new Date(legBeforeOdm!.scheduledStartTime).getTime();
 		}
 	}
