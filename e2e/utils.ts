@@ -156,3 +156,8 @@ export async function moveMouse(page: Page, id: string) {
 	const { x, y, width, height } = (await element.boundingBox())!;
 	await page.mouse.move(x + width / 2, y + height / 2);
 }
+
+export async function logout(page: Page) {
+	await page.goto('/account/settings');
+	await page.getByRole('button', { name: 'Abmelden' }).click();
+}
