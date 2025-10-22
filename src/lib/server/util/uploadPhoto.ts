@@ -45,7 +45,7 @@ export async function replacePhoto(
 		.resize({ width: 500, height: 500, fit: 'cover' })
 		.toFormat('jpeg')
 		.toBuffer();
-	await fs.writeFile(filePath, resizedBuffer, { mode: 0o600 });
+	await fs.writeFile(filePath, resizedBuffer, { mode: 0o644 });
 
 	const lookupPath = `${relativePath}/${fileName}`;
 

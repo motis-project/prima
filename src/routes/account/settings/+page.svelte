@@ -160,4 +160,12 @@
 			</div>
 		</form>
 	</Panel>
+
+	<Panel title={t.account.logout} subtitle={''}>
+		<form method="post" action="/account/settings?/logout" class="mt-8">
+			<div class="mt-4 flex justify-end">
+				<Button type="submit" variant="outline">{t.account.logout}</Button>
+			</div>
+		</form>
+	</Panel>
 </div>

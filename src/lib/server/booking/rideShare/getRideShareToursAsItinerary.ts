@@ -30,6 +30,7 @@ export async function getRideshareToursAsItinerary(
 	let query = db
 		.selectFrom('rideShareTour')
 		.innerJoin('rideShareVehicle', 'rideShareVehicle.id', 'rideShareTour.vehicle')
+		.orderBy('rideShareTour.communicatedStart asc')
 		.select((eb) => [
 			'rideShareTour.id',
 			'communicatedStart',

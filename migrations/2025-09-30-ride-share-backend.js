@@ -43,7 +43,7 @@ export async function up(db) {
         .addColumn('start_fixed', 'boolean')
         .addColumn('bus_stop_time', 'bigint')
         .addColumn('requested_time', 'bigint')
-        .addColumn('pending', 'boolean', (col) => col.notNull())
+        .addColumn('pending', 'boolean', (col) => col.notNull().defaultTo(false))
         .execute();
 
     await sql`
