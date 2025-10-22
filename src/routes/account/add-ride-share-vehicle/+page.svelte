@@ -10,6 +10,7 @@
 	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
 	import Panel from '$lib/ui/Panel.svelte';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
+	import { defaultCarPicture } from '$lib/constants.js';
 
 	const { form } = $props();
 	let v = $derived(undefined);
@@ -19,6 +20,16 @@
 	let hasModel = $state(false);
 	let smokingOptions = t.buttons.smokingOptions;
 	let smokingAllowed = $state(smokingOptions[0]);
+	let lastSmokingAllowed = smokingOptions[0];
+	$effect(() => {
+		if (smokingAllowed === null || smokingAllowed === '') {
+			smokingAllowed = lastSmokingAllowed;
+			return;
+		}
+		if (smokingAllowed !== lastSmokingAllowed) {
+			lastSmokingAllowed = smokingAllowed;
+		}
+	});
 </script>
 
 <div>
@@ -100,7 +111,7 @@
 			name="smokingAllowed"
 			value={smokingAllowed === smokingOptions[0] ? '0' : '1'}
 		/>
-		<UploadPhoto name="vehiclePicture" />
+		<UploadPhoto name="vehiclePicture" defaultPicture={defaultCarPicture} />
 		<Button type="submit" variant="outline" data-testid="create-vehicle">
 			{v == undefined ? t.rideShare.createVehicle : t.rideShare.saveChanges}
 		</Button>
