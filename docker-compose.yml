@@ -46,6 +46,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:pw@pg/prima
       - ORIGIN=http://localhost:7777
+      - TZ=Europe/Berlin
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     build:
