@@ -76,7 +76,7 @@ const translations: Translations = {
 		requestCancelled: 'Fahrt storniert',
 
 		// Booking
-		noRouteFound: 'Keine Route gefunden.',
+		noRouteFound: 'Keine Route gefunden. Die maximale Fahrtzeit beträgt eine Stunde.',
 		distanceTooLong: 'Distanz zu lang.',
 		startDestTooClose: 'Distanz zu kurz.',
 		maxTravelTimeExceeded: 'Fahrstrecke zu lang.',

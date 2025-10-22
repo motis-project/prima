@@ -73,7 +73,7 @@ const translations: Translations = {
 		requestCancelled: 'Ride cancelled',
 
 		// Booking
-		noRouteFound: 'No route found.',
+		noRouteFound: 'No route found. The maximum travel duration is one hour.',
 		distanceTooLong: 'Distance too long.',
 		startDestTooClose: 'Distance too short.',
 		maxTravelTimeExceeded: 'Maximum travel time exceeded.',
