@@ -12,6 +12,7 @@
 	import * as RadioGroup from '$lib/shadcn/radio-group/index.js';
 	import * as Select from '$lib/shadcn/select';
 	import { getCountryData, getCountryDataList, type TCountryCode } from 'countries-list';
+	import { defaultProfilePicture } from '$lib/constants.js';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
 
 	const { data, form } = $props();
@@ -100,6 +101,7 @@
 				name="profilePicture"
 				displaySaveButton={true}
 				currentUrl={data.profilePicture ?? undefined}
+				defaultPicture={defaultProfilePicture}
 			/>
 		</form>
 	</Panel>
