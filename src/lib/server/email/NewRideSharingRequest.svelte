@@ -30,10 +30,10 @@
 		<li>Von: {firstAddress}</li>
 		<li>Nach: {lastAddress}</li>
 		<li>
-			Geplanter Start: {formatTime(firstTime)}
+			Geplanter Start: ~{formatTime(firstTime)}
 		</li>
 		<li>
-			Geplante Ankunft: {formatTime(lastTime)}
+			Geplante Ankunft: ~{formatTime(lastTime)}
 		</li>
 	</ul>
 
@@ -48,8 +48,9 @@
 		{/if}
 	</ul>
 	<p>
-		Bitte nehmen Sie Kontakt mit der interessierten Person auf. Wenn Sie sich auf eine Mitnahme
-		einigen, bestätigen Sie bitte die am Mitfahrangebot vermerkte Anfrage:
+		Bitte nehmen Sie Kontakt mit der interessierten Person auf. Preis sowie genauer Abholort und
+		-zeitpunkt sind noch zu vereinbaren. Wenn Sie sich auf eine Mitnahme einigen, bestätigen Sie
+		bitte die am Mitfahrangebot vermerkte Anfrage:
 		<a href={tourLink}>{tourLink}</a>
 	</p>
 

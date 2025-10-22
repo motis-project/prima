@@ -3,7 +3,7 @@ import { Kysely, PostgresDialect, RawBuilder, sql } from 'kysely';
 import { dbConfig } from './config';
 import pg from 'pg';
 import { DAY, HOUR, MINUTE } from '../src/lib/util/time';
-import { LOCALE } from '../src/lib/constants';
+import { LICENSE_PLATE_PLACEHOLDER, LOCALE } from '../src/lib/constants';
 import { getOffset } from '../src/lib/util/getOffset';
 
 test.use({ locale: LOCALE });
@@ -146,7 +146,7 @@ export async function addVehicle(page: Page, licensePlate: string) {
 	await page.getByTestId('add-vehicle').click();
 	await page.waitForTimeout(1000);
 	await page.screenshot({ path: 'screenshots/afterAddVehicleButton.png', fullPage: true });
-	await page.getByPlaceholder('DA-AB-1234').fill(licensePlate);
+	await page.getByPlaceholder(LICENSE_PLATE_PLACEHOLDER).fill(licensePlate);
 	await page.getByLabel('3 Passagiere').check();
 	await page.getByTestId('create-vehicle').click();
 }
