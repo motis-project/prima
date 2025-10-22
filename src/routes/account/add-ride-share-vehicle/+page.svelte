@@ -12,6 +12,8 @@
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import { LICENSE_PLATE_PLACEHOLDER } from '$lib/constants.js';
 	import { defaultCarPicture } from '$lib/constants.js';
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	const { form } = $props();
 	let v = $derived(undefined);
@@ -31,10 +33,21 @@
 			lastSmokingAllowed = smokingAllowed;
 		}
 	});
+	let fromUrl: string | null = null;
+
+	onMount(() => {
+		fromUrl = sessionStorage.getItem('lastPage') ?? '/default';
+		console.log('Came from:', fromUrl);
+	});
 </script>
 
 <div>
-	<Button class="mb-2" size="icon" variant="outline" onclick={() => history.back()}>
+	<Button
+		class="mb-2"
+		size="icon"
+		variant="outline"
+		onclick={() => (fromUrl === null ? history.back() : goto(fromUrl!))}
+	>
 		<ChevronLeft />
 	</Button>
 	<Message msg={form?.msg} class="mb-4" />
