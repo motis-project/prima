@@ -193,7 +193,7 @@ describe('Whitelist and Booking API Tests', () => {
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(480)],
+			directTimes: [inXMinutes(600)],
 			startFixed: true,
 			capacities
 		});
@@ -213,11 +213,10 @@ describe('Whitelist and Booking API Tests', () => {
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(477)],
+			directTimes: [inXMinutes(597)],
 			startFixed: true,
 			capacities
 		});
-		console.log('testtime: ', new Date(inXMinutes(477)));
 		const blackResponse = await black(body).then((r) => r.json());
 		expect(blackResponse.start.length).toBe(0);
 		expect(blackResponse.target.length).toBe(0);
