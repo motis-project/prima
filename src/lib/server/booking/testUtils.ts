@@ -13,15 +13,15 @@ export async function prepareTest() {
 }
 
 export function getNextWednesday(dateWithCorrectDayTime: Date, dateRelativeToNextWednesday: Date) {
-	const dayOfWeek = dateRelativeToNextWednesday.getDay();
+	const dayOfWeek = dateRelativeToNextWednesday.getUTCDay();
 	const daysUntilNextWednesday = (10 - dayOfWeek) % 7 || 7;
 	const nextWednesday = new Date(dateRelativeToNextWednesday);
-	nextWednesday.setDate(nextWednesday.getDate() + daysUntilNextWednesday);
-	nextWednesday.setHours(
-		dateWithCorrectDayTime.getHours(),
-		dateWithCorrectDayTime.getMinutes(),
-		dateWithCorrectDayTime.getSeconds(),
-		dateWithCorrectDayTime.getMilliseconds()
+	nextWednesday.setUTCDate(nextWednesday.getUTCDate() + daysUntilNextWednesday);
+	nextWednesday.setUTCHours(
+		dateWithCorrectDayTime.getUTCHours(),
+		dateWithCorrectDayTime.getUTCMinutes(),
+		dateWithCorrectDayTime.getUTCSeconds(),
+		dateWithCorrectDayTime.getUTCMilliseconds()
 	);
 	return nextWednesday.getTime();
 }
@@ -30,17 +30,7 @@ const now = new Date();
 const baseDate = new Date(
 	Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 2, 13, 0, 0, 0)
 );
-const nextWednesday = getNextWednesday(baseDate, baseDate);
-const nextWednesdayNoon = roundToUnit(nextWednesday, DAY, Math.floor) + 12 * HOUR;
-const offset = getOffset(nextWednesdayNoon);
-const BASE_DATE = nextWednesday;
-console.log(
-	'BASEDATE: ',
-	new Date(BASE_DATE).toISOString(),
-	{ offset },
-	new Date(baseDate).toISOString(),
-	new Date(nextWednesday).toISOString()
-);
+const BASE_DATE = getNextWednesday(baseDate, baseDate);
 
 export const dateInXMinutes = (x: number) => new Date(BASE_DATE + x * MINUTE);
 export const inXMinutes = (x: number) => BASE_DATE + x * MINUTE;
