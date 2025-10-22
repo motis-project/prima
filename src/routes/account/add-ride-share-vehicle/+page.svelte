@@ -11,6 +11,7 @@
 	import Panel from '$lib/ui/Panel.svelte';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import { LICENSE_PLATE_PLACEHOLDER } from '$lib/constants.js';
+	import { defaultCarPicture } from '$lib/constants.js';
 
 	const { form } = $props();
 	let v = $derived(undefined);
@@ -116,7 +117,7 @@
 			name="smokingAllowed"
 			value={smokingAllowed === smokingOptions[0] ? '0' : '1'}
 		/>
-		<UploadPhoto name="vehiclePicture" />
+		<UploadPhoto name="vehiclePicture" defaultPicture={defaultCarPicture} />
 		<Button type="submit" variant="outline" data-testid="create-vehicle">
 			{v == undefined ? t.rideShare.createVehicle : t.rideShare.saveChanges}
 		</Button>

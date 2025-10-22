@@ -5,7 +5,8 @@ import {
 	login,
 	RIDE_SHARE_CUSTOMER,
 	execSQL,
-	UserCredentials
+	UserCredentials,
+	logout
 } from './utils';
 import { sql } from 'kysely';
 import { LICENSE_PLATE_PLACEHOLDER } from '../src/lib/constants';
@@ -102,11 +103,6 @@ async function chooseFromTypeAhead(
 	const suggestion = page.getByText(new RegExp(`^\\s*${expectedOption}`, 'i')).first();
 	await suggestion.waitFor({ state: 'visible', timeout: 5000 });
 	await suggestion.click();
-}
-
-async function logout(page: Page) {
-	await page.goto('/account/settings');
-	await page.getByRole('button', { name: 'Abmelden' }).click();
 }
 
 async function isFeedbackBannerVisible(page: Page, user: UserCredentials, xpct: boolean) {
