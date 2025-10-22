@@ -4,13 +4,10 @@ import { groupBy } from '../../util/groupBy';
 import { Interval } from '../../util/interval';
 import { HOUR } from '../../util/time';
 import { isSamePlace } from '../booking/isSamePlace';
-import {
-	SCHEDULED_TIME_BUFFER_DROPOFF,
-	SCHEDULED_TIME_BUFFER_PICKUP,
-	PASSENGER_CHANGE_DURATION
-} from '$lib/constants';
+import { SCHEDULED_TIME_BUFFER_PICKUP, PASSENGER_CHANGE_DURATION } from '$lib/constants';
 import { sortEventsByTime } from '$lib/testHelpers';
 import { reverseGeo } from '$lib/server/util/reverseGeocode';
+import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
 
 function validateRequestHas2Events(tours: ToursWithRequests): boolean {
 	let fail = false;
@@ -265,13 +262,21 @@ function validateScheduledTimeStartBeforeEnd(tours: ToursWithRequests): boolean 
 function validateScheduledIntervalSize(tours: ToursWithRequests): boolean {
 	let fail = false;
 	console.log('Validating scheduled time intervals are not growing...');
-	for (const event of tours.flatMap((t) => t.requests.flatMap((r) => r.events))) {
-		if (
-			event.scheduledTimeEnd - event.scheduledTimeStart >
-			(event.isPickup ? SCHEDULED_TIME_BUFFER_PICKUP : SCHEDULED_TIME_BUFFER_DROPOFF) // TODO
-		) {
-			console.log('Found an event where the scheduled time interval grew, eventId: ', event.id);
-			// fail = true; Needs to be reworked due to new handling of scheduled times (dependent on driving time)
+	for (const request of tours.flatMap((t) => t.requests)) {
+		if (request.events.length !== 2) {
+			console.log('Found a request with not exactly 2 events requestId: ', request.requestId);
+		}
+		const pickup = request.events.find((e) => e.isPickup)!;
+		const dropoff = request.events.find((e) => !e.isPickup)!;
+		const durationApprox = dropoff.scheduledTimeStart - pickup.scheduledTimeEnd;
+		const bufferUpperBound = getScheduledTimeBufferDropoff(durationApprox);
+		if (pickup.scheduledTimeEnd - pickup.scheduledTimeStart > SCHEDULED_TIME_BUFFER_PICKUP) {
+			console.log('Found an event where the scheduled time interval grew, eventId: ', pickup.id);
+			fail = true;
+		}
+		if (dropoff.scheduledTimeEnd - dropoff.scheduledTimeStart > bufferUpperBound) {
+			console.log('Found an event where the scheduled time interval grew, eventId: ', dropoff.id);
+			fail = true;
 		}
 	}
 	return fail;
