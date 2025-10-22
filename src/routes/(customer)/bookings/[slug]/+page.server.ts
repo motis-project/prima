@@ -66,6 +66,7 @@ export const actions = {
 			.selectFrom('request')
 			.leftJoin('rideShareTour', 'rideShareTour.id', 'request.rideShareTour')
 			.leftJoin('tour', 'tour.id', 'request.tour')
+			.where('request.id', '=', requestId)
 			.select(['tour.id as tour', 'rideShareTour.id as rideShareTour', 'request.customer'])
 			.executeTakeFirst();
 		if (tourType === undefined) {

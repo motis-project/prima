@@ -94,7 +94,8 @@ const translations: Translations = {
 
 		// Journey
 		cancelled: 'Diese Fahrt wurde storniert.',
-		stillNegotiating: 'Die Mitfahrgelegenheit ist noch nicht fest vereinbart.',
+		stillNegotiating:
+			'Die Anfrage wurde gesendet. Die Mitfahrgelegenheit ist noch nicht fest vereinbart.',
 		openRequest: 'Dieses Mitfahrangebot hat offene Anfragen.',
 
 		// Feedback
@@ -333,7 +334,7 @@ const translations: Translations = {
 		negotiatePrivacy:
 			'Die folgenden Daten werden beim Senden der Anfrage mit der Person, die diese Mitfahrgelegenheit anbietet, geteilt:',
 		negotiateExplanation:
-			'Sie müssen den Preis und weitere Details mit der anbietenden Person vereinbaren.',
+			'Sie müssen den Preis sowie genaue Abfahrtszeit und -ort mit der anbietenden Person vereinbaren.',
 		startAndEnd: 'Start und Ziel der Fahrt',
 		profile: 'Ihr Profil',
 		email: 'Ihre E-Mail',
@@ -350,6 +351,7 @@ const translations: Translations = {
 	},
 
 	buttons: {
+		addVehicleTitle: 'Fahrzeug für Mitfahrangebote hinzufügen',
 		addVehicle: 'Fahrzeug hinzufügen',
 		uploadPhoto: 'Foto auswählen',
 		savePhoto: 'Foto speichern',
