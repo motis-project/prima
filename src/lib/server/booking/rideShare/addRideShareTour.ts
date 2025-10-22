@@ -1,7 +1,7 @@
 import type { Coordinates } from '$lib/util/Coordinates';
 import { db } from '$lib/server/db';
 import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
-import { SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
+import { MAX_RIDE_SHARE_TOUR_TIME, SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
 import { carRouting } from '$lib/util/carRouting';
 import { MINUTE } from '$lib/util/time';
@@ -33,7 +33,9 @@ async function util(
 	  }
 	| undefined
 > {
-	const routingResult = (await carRouting(start, target)).direct;
+	const routingResult = (
+		await carRouting(start, target, false, new Date().toISOString(), MAX_RIDE_SHARE_TOUR_TIME)
+	).direct;
 	if (routingResult.length === 0) {
 		console.log('adding tour: routing failed');
 		return undefined;
