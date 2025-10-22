@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { defaultProfilePicture } from '$lib/constants';
 	import { t } from '$lib/i18n/translation';
 	import { Button } from '$lib/shadcn/button';
 	const {
@@ -7,12 +6,14 @@
 		maxSizeMB,
 		allowedTypes,
 		name,
-		displaySaveButton
+		displaySaveButton,
+		defaultPicture
 	}: {
 		currentUrl?: string;
 		maxSizeMB?: number;
 		allowedTypes?: string[];
 		name: string;
+		defaultPicture: string;
 		displaySaveButton?: boolean;
 	} = $props();
 
@@ -56,7 +57,7 @@
 	</div>
 {:else}
 	<div class="mb-4">
-		<img src={defaultProfilePicture} alt={currentUrl} class={pictureClass} />
+		<img src={defaultPicture} alt={currentUrl} class={pictureClass} />
 	</div>
 {/if}
 
