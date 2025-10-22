@@ -324,11 +324,6 @@ export function evaluateBothInsertion(
 		nextLegDuration,
 		passengerDuration
 	);
-	if(insertionCase.direction===InsertDirection.BUS_STOP_DROPOFF){
-		console.log(insertionCase.direction,"blabli",new Date(communicatedDropoffTime).toISOString(),
-		new Date(scheduledDropoffTimeEnd-scheduledPickupTimeStart - passengerDuration).toISOString(), arrivalWindow.toString(),busStopWindow?.toString())
-		console.log(new Date(passengerDuration).toISOString())
-	}
 	// Compute shifts of scheduled time intervals of previous and next event
 	let prevShift = 0;
 	if (prev.isPickup) {
@@ -858,20 +853,26 @@ function getTimestamps(
 	let scheduledDropoffTimeEnd = -1;
 	if (prevIsSameEventGroup) {
 		scheduledPickupTimeStart =
-		promisedTimes === undefined || !window.covers(promisedTimes.pickup)
-			? window.startTime
-			: promisedTimes.pickup;
-		scheduledPickupTimeEnd = Math.min(window.endTime, SCHEDULED_TIME_BUFFER_PICKUP + scheduledPickupTimeStart);
+			promisedTimes === undefined || !window.covers(promisedTimes.pickup)
+				? window.startTime
+				: promisedTimes.pickup;
+		scheduledPickupTimeEnd = Math.min(
+			window.endTime,
+			SCHEDULED_TIME_BUFFER_PICKUP + scheduledPickupTimeStart
+		);
 		scheduledDropoffTimeStart = scheduledPickupTimeEnd + passengerDuration;
-		scheduledDropoffTimeEnd = Math.min(scheduledDropoffTimeStart + getScheduledTimeBufferDropoff(passengerDuration), window.endTime + passengerDuration);
-	return {
-		scheduledPickupTimeStart,
-		scheduledPickupTimeEnd,
-		communicatedPickupTime: scheduledPickupTimeStart,
-		scheduledDropoffTimeStart,
-		scheduledDropoffTimeEnd,
-		communicatedDropoffTime: scheduledDropoffTimeEnd
-	};
+		scheduledDropoffTimeEnd = Math.min(
+			scheduledDropoffTimeStart + getScheduledTimeBufferDropoff(passengerDuration),
+			window.endTime + passengerDuration
+		);
+		return {
+			scheduledPickupTimeStart,
+			scheduledPickupTimeEnd,
+			communicatedPickupTime: scheduledPickupTimeStart,
+			scheduledDropoffTimeStart,
+			scheduledDropoffTimeEnd,
+			communicatedDropoffTime: scheduledDropoffTimeEnd
+		};
 	}
 	if (nextIsSameEventGroup) {
 		scheduledDropoffTimeEnd = Math.min(
@@ -882,31 +883,43 @@ function getTimestamps(
 		scheduledDropoffTimeStart = scheduledDropoffTimeEnd;
 		scheduledPickupTimeEnd = scheduledDropoffTimeStart - passengerDuration;
 		scheduledPickupTimeStart = scheduledPickupTimeEnd;
-	return {
-		scheduledPickupTimeStart,
-		scheduledPickupTimeEnd,
-		communicatedPickupTime: scheduledPickupTimeStart,
-		scheduledDropoffTimeStart,
-		scheduledDropoffTimeEnd,
-		communicatedDropoffTime: scheduledDropoffTimeEnd
-	};
+		return {
+			scheduledPickupTimeStart,
+			scheduledPickupTimeEnd,
+			communicatedPickupTime: scheduledPickupTimeStart,
+			scheduledDropoffTimeStart,
+			scheduledDropoffTimeEnd,
+			communicatedDropoffTime: scheduledDropoffTimeEnd
+		};
 	}
 	if (insertionCase.direction == InsertDirection.BUS_STOP_PICKUP) {
 		scheduledPickupTimeStart =
-		promisedTimes === undefined || !window.covers(promisedTimes.pickup)
-			? window.startTime
-			: promisedTimes.pickup;
-		scheduledPickupTimeEnd = Math.min(window.endTime, SCHEDULED_TIME_BUFFER_PICKUP + scheduledPickupTimeStart);
+			promisedTimes === undefined || !window.covers(promisedTimes.pickup)
+				? window.startTime
+				: promisedTimes.pickup;
+		scheduledPickupTimeEnd = Math.min(
+			window.endTime,
+			SCHEDULED_TIME_BUFFER_PICKUP + scheduledPickupTimeStart
+		);
 		scheduledDropoffTimeStart = scheduledPickupTimeEnd + passengerDuration;
-		scheduledDropoffTimeEnd = Math.min(scheduledDropoffTimeStart + getScheduledTimeBufferDropoff(passengerDuration), window.endTime + passengerDuration);
+		scheduledDropoffTimeEnd = Math.min(
+			scheduledDropoffTimeStart + getScheduledTimeBufferDropoff(passengerDuration),
+			window.endTime + passengerDuration
+		);
 	} else {
 		scheduledDropoffTimeEnd =
-		promisedTimes === undefined || !window.covers(promisedTimes.dropoff)
-			? window.endTime
-			: promisedTimes.dropoff;
-		scheduledDropoffTimeStart = Math.max(scheduledDropoffTimeEnd - getScheduledTimeBufferDropoff(passengerDuration), window.startTime);
+			promisedTimes === undefined || !window.covers(promisedTimes.dropoff)
+				? window.endTime
+				: promisedTimes.dropoff;
+		scheduledDropoffTimeStart = Math.max(
+			scheduledDropoffTimeEnd - getScheduledTimeBufferDropoff(passengerDuration),
+			window.startTime
+		);
 		scheduledPickupTimeEnd = scheduledDropoffTimeStart - passengerDuration;
-		scheduledPickupTimeStart = Math.max(window.startTime - passengerDuration, scheduledPickupTimeEnd - SCHEDULED_TIME_BUFFER_PICKUP);
+		scheduledPickupTimeStart = Math.max(
+			window.startTime - passengerDuration,
+			scheduledPickupTimeEnd - SCHEDULED_TIME_BUFFER_PICKUP
+		);
 	}
 	return {
 		scheduledPickupTimeStart,
