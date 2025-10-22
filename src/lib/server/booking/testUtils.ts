@@ -1,7 +1,6 @@
 import { createSession } from '$lib/server/auth/session';
 import { addTestUser, clearDatabase } from '$lib/testHelpers';
-import { getOffset } from '$lib/util/getOffset';
-import { DAY, HOUR, MINUTE, roundToUnit } from '$lib/util/time';
+import { MINUTE } from '$lib/util/time';
 
 export async function prepareTest() {
 	await clearDatabase();
