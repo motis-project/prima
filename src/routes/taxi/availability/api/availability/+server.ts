@@ -1,10 +1,12 @@
 import { db, type Database } from '$lib/server/db';
 import { Interval } from '$lib/util/interval';
-import { json } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 import { type Insertable, type Selectable } from 'kysely';
 import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
 import { addAvailability } from '$lib/server/addAvailability';
 import { retry } from '$lib/server/db/retryQuery';
+import { getAvailability } from '$lib/server/getAvailability.js';
+import { readInt } from '$lib/server/util/readForm';
 
 type Availability = Selectable<Database['availability']>;
 type NewAvailability = Insertable<Database['availability']>;
@@ -126,4 +128,31 @@ export const POST = async ({ locals, request }) => {
 	}
 	await addAvailability(interval, companyId, vehicleId);
 	return json({});
+};
+
+export const GET = async ({ locals, url }) => {
+	const companyId = locals.session?.companyId;
+	if (!companyId) {
+		throw 'no company';
+	}
+	const timezoneOffset = readInt(url.searchParams.get('offset'));
+	if (isNaN(timezoneOffset)) {
+		error(400, { message: 'Invalid offset parameter' });
+	}
+	const localDateParam = url.searchParams.get('date');
+	if (!localDateParam) {
+		error(400, { message: 'Invalid date parameter' });
+	}
+	const time = new Date(localDateParam).getTime();
+	if (isNaN(time)) {
+		error(400, { message: 'Invalid date parameter' });
+	}
+	const utcDate = new Date(time + timezoneOffset * 60 * 1000);
+	const {
+		companyDataComplete: _a,
+		companyCoordinates: _b,
+		utcDate: _c,
+		...res
+	} = await getAvailability(utcDate, companyId);
+	return json(res);
 };
