@@ -54,3 +54,4 @@ function centsToCentsPerMs(cents: number) {
 export const LICENSE_PLATE_REGEX = /^([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})$/;
 export const defaultProfilePicture = '/user-default.jpg';
 export const defaultCarPicture = '/car-default.jpg';
+export const LICENSE_PLATE_PLACEHOLDER = 'WSW-AB-1234';

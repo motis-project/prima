@@ -10,6 +10,7 @@
 	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
 	import Panel from '$lib/ui/Panel.svelte';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
+	import { LICENSE_PLATE_PLACEHOLDER } from '$lib/constants.js';
 	import { defaultCarPicture } from '$lib/constants.js';
 
 	const { form } = $props();
@@ -47,7 +48,12 @@
 			{v == undefined ? t.rideShare.createNewVehicle : 'Fahrzeug anpassen'}
 		</h2>
 		<Panel title={t.rideShare.licensePlate} subtitle={''}>
-			<Input name="licensePlate" type="string" placeholder="DA-AB-1234" value={undefined} />
+			<Input
+				name="licensePlate"
+				type="string"
+				placeholder={LICENSE_PLATE_PLACEHOLDER}
+				value={undefined}
+			/>
 		</Panel>
 		<Panel title={t.rideShare.maxPassengers} subtitle={''}>
 			<RadioGroup.Root name="passengers" value={'3'}>
