@@ -19,6 +19,16 @@
 	let hasModel = $state(false);
 	let smokingOptions = t.buttons.smokingOptions;
 	let smokingAllowed = $state(smokingOptions[0]);
+	let lastSmokingAllowed = smokingOptions[0];
+	$effect(() => {
+		if (smokingAllowed === null || smokingAllowed === '') {
+			smokingAllowed = lastSmokingAllowed;
+			return;
+		}
+		if (smokingAllowed !== lastSmokingAllowed) {
+			lastSmokingAllowed = smokingAllowed;
+		}
+	});
 </script>
 
 <div>
