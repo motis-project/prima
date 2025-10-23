@@ -121,39 +121,53 @@ class DataRepository @Inject constructor(
     private fun getTimeBlocks(availability: AvailabilityResponse): MutableList<TimeBlock> {
         val blocks: MutableList<TimeBlock> = emptyList<TimeBlock>().toMutableList()
         for (vehicle in availability.vehicles) {
+            if (vehicle.id != _vehicleId) {
+                continue
+            }
             for (av in vehicle.availability) {
                 val startTime = minutesSinceStartOfDay(av.startTime)
                 val endTime = minutesSinceStartOfDay(av.endTime)
-                val timeBlock = TimeBlock(startTime.toInt(), endTime.toInt(), colorAvailable)
-                blocks += timeBlock
+                var a = startTime
+                while (a < endTime) {
+                    val b = a + 15
+                    val date = localDateFromEpochMillis(av.startTime)
+                    val timeBlock = TimeBlock(date, a.toInt(), b.toInt(), colorAvailable)
+                    blocks += timeBlock
+                    a = b
+                }
             }
         }
         for (tour in availability.tours) {
+            if (tour.vehicleId != _vehicleId) {
+                continue
+            }
             val startTime = minutesSinceStartOfDay(tour.startTime)
             val endTime = minutesSinceStartOfDay(tour.endTime)
-            val timeBlock = TimeBlock(startTime.toInt(), endTime.toInt(), colorTour)
+            val date = localDateFromEpochMillis(tour.startTime)
+            val timeBlock = TimeBlock(date, startTime.toInt(), endTime.toInt(), colorTour)
             blocks += timeBlock
         }
         return blocks
     }
 
-    fun getAvailability() {
+    fun getAvailability(date: LocalDate) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-
-                /*val response = apiService.getAvailability(offset = "-120" , date = "2025-10-10")
-                Log.d("test", "$response")
+                val response = apiService.getAvailability(offset = "-120", date = "${date}")
                 if (response.isSuccessful) {
                     _networkError.value = false
-                    //val fetchedBlocks = response.body() ?: emptyList()
-                    //Log.d("test", "$fetchedBlocks")
-                }*/
-                _availability.value = getTimeBlocks(AvailabilityResponse())
+                    val fetchedBlocks = response.body() ?: AvailabilityResponse()
+                    _availability.value = getTimeBlocks(fetchedBlocks)
+                }
             } catch (e: Exception) {
                 _networkError.value = true
                 Log.e("error", "${e.message}")
             }
         }
+    }
+
+    fun updateAvailability(blocks: List<TimeBlock>) {
+        _availability.value = blocks
     }
 
     fun removeFirebaseToken() {

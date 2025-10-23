@@ -1,6 +1,5 @@
 package de.motis.prima.services
 
-import TimeBlock
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Field
@@ -60,24 +59,10 @@ interface ApiService {
     ): Response<Void>
 }
 
-val testAvailability = Availability(4, 1760104800000, 1760106600000)
-
 data class AvailabilityResponse(
-    val tours: List<Tour> = listOf(
-        Tour(
-            1,//tourId: Int,
-            0,//val fare: Int,
-            1760550553000,//val startTime: Long,
-            1760555040000,//val endTime: Long,
-            1,//val vehicleId: Int,
-            "",//val licensePlate: String,
-            emptyList()//val events: List<Event>
-        )
-    ),
-    val vehicles: List<Vehicle>  = listOf(
-        Vehicle(1, "GR-TU-11", listOf(testAvailability))
-    ),
-    val utcDate: String = "2025-10-10T14:25:52.442Z"
+    val tours: List<Tour> = emptyList(),
+    val vehicles: List<Vehicle>  = emptyList(),
+    val utcDate: String = ""
 )
 
 data class Availability(
@@ -124,8 +109,6 @@ data class Tour(
     val fare: Int,
     val startTime: Long,
     val endTime: Long,
-    //val companyName: String,
-    //val companyAddress: String,
     val vehicleId: Int,
     val licensePlate: String,
     val events: List<Event>
