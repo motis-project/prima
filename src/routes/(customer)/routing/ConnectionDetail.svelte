@@ -11,9 +11,10 @@
 	import { getModeName } from './getModeName';
 	import Route from './Route.svelte';
 	import { routeBorderColor, routeColor } from '$lib/ui/modeStyle';
-	import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
+	import { isOdmLeg, isRideShareLeg, isTaxiLeg } from '$lib/util/booking/checkLegType';
 	import type { SignedItinerary } from '$lib/planAndSign';
 	import ProfileBadge from '$lib/ui/ProfileBadge.svelte';
+	import { defaultCarPicture } from '$lib/constants';
 
 	const {
 		itinerary,
@@ -76,7 +77,7 @@
 
 {#snippet streetLeg(l: Leg)}
 	<div class="flex flex-col gap-y-4 py-8 pl-8 text-muted-foreground">
-		{#if isOdmLeg(l)}
+		{#if isTaxiLeg(l)}
 			<div class="ml-6 flex w-fit flex-col gap-y-2">
 				{#if licensePlate != undefined}
 					<Button
@@ -133,6 +134,39 @@
 						smokingAllowed={tourInfo.smokingAllowed}
 						averageRating={tourInfo.averageRatingProvider}
 					/>
+
+					{#if tourInfo.picture || tourInfo.color}
+						<div class="flex flex-row gap-4">
+							<img
+								src={tourInfo.picture || defaultCarPicture}
+								alt="vehicle"
+								class="mt-2 h-20 w-20 overflow-hidden border border-gray-200"
+							/>
+							<div>
+								<span>
+									{tourInfo.model}
+								</span>
+								<div class="flex flex-row items-center gap-1">
+									<div
+										class="h-4 w-4 border border-gray-200"
+										style="background-color: {tourInfo.color}"
+									></div>
+								</div>
+							</div>
+						</div>
+					{/if}
+					{#if tourInfo.licensePlate}
+						<div class="flex w-fit rounded-md border-4 border-double border-black bg-white my-2">
+							<div class="flex h-8 min-w-5 items-center justify-center bg-blue-700 p-1 text-white">
+								<div class="text-sm font-bold">D</div>
+							</div>
+							<div
+								class="flex h-8 items-center px-1 text-2xl font-bold uppercase tracking-wider text-black"
+							>
+								{tourInfo.licensePlate}
+							</div>
+						</div>
+					{/if}
 				</span>
 			{/if}
 		{/if}
