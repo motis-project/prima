@@ -1,4 +1,3 @@
-import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -7,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -18,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,10 +29,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.motis.prima.services.AvailabilityResponse
 import de.motis.prima.ui.AvailabilityViewModel
+import java.time.LocalDate
 
 data class TimeBlock(
+    val date: LocalDate,
     val startMinutes: Int, // minutes since start of day
     val endMinutes: Int,
     val color: Color = Color.White
@@ -43,34 +41,32 @@ data class TimeBlock(
 
 val colorAvailable = Color(254, 249, 195)
 val colorTour = Color(251 ,146, 60)
+val colorPassed = Color.LightGray
 
 @Composable
 fun DayTimeline(
-    modifier: Modifier = Modifier,
     blocks: List<TimeBlock> = emptyList(),
-    onRangeSelected: (startMinutes: Int, endMinutes: Int, dragStart: Int) -> Unit = { _, _, _ -> },
+    fetchedBlocks: List<TimeBlock> = emptyList(),
+    onRangeSelected: (startMinutes: Int, endMinutes: Int, dragStart: Int, color: Color) -> Unit = { _, _, _, _ -> },
     viewModel: AvailabilityViewModel
 ) {
     val totalMinutes = 24 * 60
     val slotMinutes = 15
     val slots = totalMinutes / slotMinutes
 
+    val passedHours = viewModel.currentHour
+    val passedSlots = passedHours * 60 / slotMinutes
+
     var dragStart by remember { mutableStateOf<Int?>(null) }
     var dragEnd by remember { mutableStateOf<Int?>(null) }
 
     val scrollState = rememberScrollState()
 
-    val fetchedBlocks = viewModel.availability.collectAsState().value
+    val displayDate by viewModel.displayDate.collectAsState()
 
-    LaunchedEffect(Unit) {
-        for (block in fetchedBlocks) {
-            onRangeSelected(block.startMinutes, block.endMinutes, block.startMinutes)
-        }
-    }
-
-    Row {
+    Row (modifier = Modifier.padding(top = 65.dp)) {
         val heightPerSlotDp = 120.dp / (60 / slotMinutes)
-        val totalHeight = heightPerSlotDp * 97
+        val totalHeight = heightPerSlotDp * (slots + 1 - passedSlots)
 
         // time line
         Column(
@@ -80,7 +76,7 @@ fun DayTimeline(
                 .verticalScroll(scrollState)
         ) {
             Row(
-                modifier = modifier
+                modifier = Modifier
                     .background(Color.White)
             ) {
                 // Hour labels
@@ -91,7 +87,7 @@ fun DayTimeline(
                     horizontalAlignment = Alignment.End
                 ) {
                     val heightPerHourDp = heightPerSlotDp * 4
-                    for (hour in 0..24) {
+                    for (hour in passedHours..24) {
                         Box(
                             modifier = Modifier
                                 .height(heightPerHourDp)
@@ -109,38 +105,39 @@ fun DayTimeline(
 
                 // Timeline drawing area
                 Box(modifier = Modifier.weight(1f)) {
+                    val visibleHeight = heightPerSlotDp * slots - heightPerSlotDp * passedSlots
                     Canvas(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(heightPerSlotDp * slots)
+                            .height(visibleHeight)
                             .padding(top = 12.dp, start = 6.dp, end = 12.dp)
                             .pointerInput(Unit) {
                                 detectTapGestures { offset ->
-                                    val slot = (offset.y / heightPerSlotDp.toPx()).toInt()
+                                    val slot = (offset.y / heightPerSlotDp.toPx()).toInt() + passedSlots
                                     val start = slot * slotMinutes
                                     val end = start + slotMinutes
 
                                     if (end > start) {
-                                        onRangeSelected(start, end, start)
+                                        onRangeSelected(start, end, start, colorAvailable)
                                     }
                                 }
                             }
                             .pointerInput(Unit) {
                                 detectDragGestures(
                                     onDragStart = { offset ->
-                                        val slot = (offset.y / heightPerSlotDp.toPx()).toInt()
+                                        val slot = (offset.y / heightPerSlotDp.toPx()).toInt() + passedSlots
                                         dragStart = slot * slotMinutes
                                         dragEnd = slot * slotMinutes
                                     },
                                     onDrag = { change, _ ->
-                                        val slot = (change.position.y / heightPerSlotDp.toPx()).toInt()
+                                        val slot = (change.position.y / heightPerSlotDp.toPx()).toInt() + passedSlots
                                         dragEnd = slot * slotMinutes
                                     },
                                     onDragEnd = {
                                         val start = minOf(dragStart ?: 0, dragEnd ?: 0)
                                         val end = maxOf(dragStart ?: 0, dragEnd ?: 0) + slotMinutes
                                         if (end > start) {
-                                            onRangeSelected(start, end, dragStart!!)
+                                            onRangeSelected(start, end, dragStart!!, colorAvailable)
                                         }
                                         dragStart = null
                                         dragEnd = null
@@ -149,8 +146,8 @@ fun DayTimeline(
                             }
                     ) {
                         // Draw slot lines with quarter-hour markers
-                        for (i in 0..slots) {
-                            val y = i * heightPerSlotDp.toPx()
+                        for (i in passedSlots..slots) {
+                            val y = i * heightPerSlotDp.toPx() - passedSlots * heightPerSlotDp.toPx()
                             val isHour = i % (60 / slotMinutes) == 0
                             val isHalf = i % (30 / slotMinutes) == 0 && !isHour
                             val isQuarter = i % (15 / slotMinutes) == 0 && !isHour && !isHalf
@@ -180,11 +177,12 @@ fun DayTimeline(
                         }
 
                         // Draw blocks
-                        blocks.forEach { block ->
+                        val allBlocks = fetchedBlocks + blocks
+                        allBlocks.filter { b -> b.date == displayDate }.forEach { block ->
                             val topSlot = block.startMinutes / slotMinutes
                             val bottomSlot = block.endMinutes / slotMinutes
-                            val topY = topSlot * heightPerSlotDp.toPx()
-                            val bottomY = bottomSlot * heightPerSlotDp.toPx()
+                            val topY = topSlot * heightPerSlotDp.toPx() - passedSlots * heightPerSlotDp.toPx()
+                            val bottomY = bottomSlot * heightPerSlotDp.toPx() - passedSlots * heightPerSlotDp.toPx()
 
                             drawRect(
                                 color = block.color.copy(alpha = 0.6f),
@@ -195,10 +193,10 @@ fun DayTimeline(
 
                         // Draw dragging selection preview
                         if (dragStart != null && dragEnd != null) {
-                            val startSlot = (minOf(dragStart!!, dragEnd!!)) / slotMinutes
-                            val endSlot = (maxOf(dragStart!!, dragEnd!!)) / slotMinutes + 1
-                            val topY = startSlot * heightPerSlotDp.toPx()
-                            val bottomY = endSlot * heightPerSlotDp.toPx()
+                            val topSlot = (minOf(dragStart!!, dragEnd!!)) / slotMinutes
+                            val bottomSlot = (maxOf(dragStart!!, dragEnd!!)) / slotMinutes + 1
+                            val topY = topSlot * heightPerSlotDp.toPx() - passedSlots * heightPerSlotDp.toPx()
+                            val bottomY = bottomSlot * heightPerSlotDp.toPx() - passedSlots * heightPerSlotDp.toPx()
 
                             drawRect(
                                 color = Color.LightGray.copy(alpha = 0.3f),
@@ -215,9 +213,7 @@ fun DayTimeline(
                         .width(50.dp)
                         .height(totalHeight),
                     horizontalAlignment = Alignment.End
-                ) {
-                    // scroll area
-                }
+                ) { /* scroll area */ }
             }
         }
 
@@ -263,27 +259,33 @@ fun PreviewDayTimeline(
     viewModel: AvailabilityViewModel
 ) {
     var blocks by remember { mutableStateOf(listOf<TimeBlock>()) }
+    val fetchedBlocks by viewModel.availability.collectAsState()
 
     DayTimeline(
-        modifier = Modifier
-            .fillMaxSize(),
         blocks = blocks,
-        onRangeSelected = { start, end, dragStart ->
-            val remove = blocks.contains(TimeBlock(dragStart, dragStart + 15, colorAvailable))
+        fetchedBlocks = fetchedBlocks,
+        onRangeSelected = { start, end, dragStart, color ->
+            val removeFetched = fetchedBlocks.contains(TimeBlock(viewModel.displayDate.value, dragStart, dragStart + 15, color))
+            val removeInput = blocks.contains(TimeBlock(viewModel.displayDate.value, dragStart, dragStart + 15, color))
+            val tmpFetched = fetchedBlocks.toMutableList()
+            val tmpInput = blocks.toMutableList()
             var a = start
             while ( a < end ) {
                 val b = a + 15
-                val newBlock = TimeBlock(a, b, colorAvailable)
-                if (remove) {
-                    val tmp = blocks.toMutableList()
-                    tmp.remove(newBlock)
-                    blocks = tmp
+                val newBlock = TimeBlock(viewModel.displayDate.value, a, b, color)
+                if (removeFetched || removeInput) {
+                    tmpFetched.remove(newBlock)
+                    tmpInput.remove(newBlock)
+                    blocks = tmpInput
                 } else {
                     if (blocks.contains(newBlock).not()) {
                         blocks = blocks + newBlock
                     }
                 }
                 a = b
+            }
+            if (removeFetched || removeInput) {
+                viewModel.setBlocks(tmpFetched)
             }
         },
         viewModel
