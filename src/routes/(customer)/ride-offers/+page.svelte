@@ -39,6 +39,7 @@
 				<ItinerarySummary
 					it={it.journey}
 					info={it.cancelled ? cancelled : it.negotiating ? negotiating : undefined}
+					infoVariant={it.negotiating ? 'warning' : undefined}
 					showAddress={true}
 				/>
 			</a>

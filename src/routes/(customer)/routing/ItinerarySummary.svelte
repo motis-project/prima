@@ -14,12 +14,14 @@
 		it,
 		baseQuery,
 		info,
-		showAddress
+		showAddress,
+		infoVariant
 	}: {
 		showAddress?: boolean;
 		it: Itinerary;
 		baseQuery?: PlanData['query'] | undefined;
 		info?: Snippet<[Itinerary]> | undefined;
+		infoVariant?: string;
 	} = $props();
 </script>
 
@@ -82,7 +84,7 @@
 	</Card.Content>
 	{#if info}
 		<div
-			class="flex items-center justify-end gap-1 rounded-b-lg border-t border-input bg-accent px-4 py-1.5 text-sm text-destructive"
+			class={`flex items-center justify-end gap-1 rounded-b-lg border-t border-input bg-accent px-4 py-1.5 text-sm text-${infoVariant ?? 'destructive'}`}
 		>
 			{@render info(it)}
 		</div>

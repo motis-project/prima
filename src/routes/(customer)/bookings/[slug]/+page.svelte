@@ -138,7 +138,7 @@
 			})}
 		</p>
 		{#if data.pending}
-			<Message msg={msg('stillNegotiating')} />
+			<Message msg={msg('stillNegotiating', 'warning')} />
 		{/if}
 		<ConnectionDetail
 			itinerary={data.journey}
