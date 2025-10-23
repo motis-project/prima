@@ -847,21 +847,17 @@ function getTimestamps(
 					promisedTimes.dropoff + getScheduledTimeBufferDropoff(passengerDuration)
 				)
 			));
-	let scheduledPickupTimeStart = -1;
-	let scheduledPickupTimeEnd = -1;
-	let scheduledDropoffTimeStart = -1;
-	let scheduledDropoffTimeEnd = -1;
 	if (prevIsSameEventGroup) {
-		scheduledPickupTimeStart =
+		const scheduledPickupTimeStart =
 			promisedTimes === undefined || !window.covers(promisedTimes.pickup)
 				? window.startTime
 				: promisedTimes.pickup;
-		scheduledPickupTimeEnd = Math.min(
+		const scheduledPickupTimeEnd = Math.min(
 			window.endTime,
 			SCHEDULED_TIME_BUFFER_PICKUP + scheduledPickupTimeStart
 		);
-		scheduledDropoffTimeStart = scheduledPickupTimeEnd + passengerDuration;
-		scheduledDropoffTimeEnd = Math.min(
+		const scheduledDropoffTimeStart = scheduledPickupTimeEnd + passengerDuration;
+		const scheduledDropoffTimeEnd = Math.min(
 			scheduledDropoffTimeStart + getScheduledTimeBufferDropoff(passengerDuration),
 			window.endTime + passengerDuration
 		);
@@ -875,14 +871,14 @@ function getTimestamps(
 		};
 	}
 	if (nextIsSameEventGroup) {
-		scheduledDropoffTimeEnd = Math.min(
+		const scheduledDropoffTimeEnd = Math.min(
 			next.scheduledTimeStart,
 			promisedTimes?.dropoff ?? Number.MAX_VALUE,
 			window.endTime
 		);
-		scheduledDropoffTimeStart = scheduledDropoffTimeEnd;
-		scheduledPickupTimeEnd = scheduledDropoffTimeStart - passengerDuration;
-		scheduledPickupTimeStart = scheduledPickupTimeEnd;
+		const scheduledDropoffTimeStart = scheduledDropoffTimeEnd;
+		const scheduledPickupTimeEnd = scheduledDropoffTimeStart - passengerDuration;
+		const scheduledPickupTimeStart = scheduledPickupTimeEnd;
 		return {
 			scheduledPickupTimeStart,
 			scheduledPickupTimeEnd,
@@ -893,42 +889,50 @@ function getTimestamps(
 		};
 	}
 	if (insertionCase.direction == InsertDirection.BUS_STOP_PICKUP) {
-		scheduledPickupTimeStart =
+		const scheduledPickupTimeStart =
 			promisedTimes === undefined || !window.covers(promisedTimes.pickup)
 				? window.startTime
 				: promisedTimes.pickup;
-		scheduledPickupTimeEnd = Math.min(
+		const scheduledPickupTimeEnd = Math.min(
 			window.endTime,
 			SCHEDULED_TIME_BUFFER_PICKUP + scheduledPickupTimeStart
 		);
-		scheduledDropoffTimeStart = scheduledPickupTimeEnd + passengerDuration;
-		scheduledDropoffTimeEnd = Math.min(
+		const scheduledDropoffTimeStart = scheduledPickupTimeEnd + passengerDuration;
+		const scheduledDropoffTimeEnd = Math.min(
 			scheduledDropoffTimeStart + getScheduledTimeBufferDropoff(passengerDuration),
 			window.endTime + passengerDuration
 		);
+		return {
+			scheduledPickupTimeStart,
+			scheduledPickupTimeEnd,
+			communicatedPickupTime: scheduledPickupTimeStart,
+			scheduledDropoffTimeStart,
+			scheduledDropoffTimeEnd,
+			communicatedDropoffTime: scheduledDropoffTimeEnd
+		};
 	} else {
-		scheduledDropoffTimeEnd =
+		const scheduledDropoffTimeEnd =
 			promisedTimes === undefined || !window.covers(promisedTimes.dropoff)
 				? window.endTime
 				: promisedTimes.dropoff;
-		scheduledDropoffTimeStart = Math.max(
+		const scheduledDropoffTimeStart = Math.max(
 			scheduledDropoffTimeEnd - getScheduledTimeBufferDropoff(passengerDuration),
 			window.startTime
 		);
-		scheduledPickupTimeEnd = scheduledDropoffTimeStart - passengerDuration;
-		scheduledPickupTimeStart = Math.max(
+		const scheduledPickupTimeEnd = scheduledDropoffTimeStart - passengerDuration;
+		const scheduledPickupTimeStart = Math.max(
 			window.startTime - passengerDuration,
 			scheduledPickupTimeEnd - SCHEDULED_TIME_BUFFER_PICKUP
 		);
+		return {
+			scheduledPickupTimeStart,
+			scheduledPickupTimeEnd,
+			communicatedPickupTime: scheduledPickupTimeStart,
+			scheduledDropoffTimeStart,
+			scheduledDropoffTimeEnd,
+			communicatedDropoffTime: scheduledDropoffTimeEnd
+		};
 	}
-	return {
-		scheduledPickupTimeStart,
-		scheduledPickupTimeEnd,
-		communicatedPickupTime: scheduledPickupTimeStart,
-		scheduledDropoffTimeStart,
-		scheduledDropoffTimeEnd,
-		communicatedDropoffTime: scheduledDropoffTimeEnd
-	};
 }
 
 function getProfit(payedDuration: number, unpayedDrivingDuration: number, waitingTime: number) {
