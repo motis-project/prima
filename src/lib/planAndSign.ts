@@ -24,5 +24,9 @@ export async function planAndSign(
 			...q
 		})
 	});
+
+	if (!result.ok) {
+		return undefined;
+	}
 	return await result.json();
 }
