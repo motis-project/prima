@@ -242,7 +242,7 @@
 							{isRideShare ? t.ride.negotiateHeader : t.booking.header}
 							<ChevronRight />
 						</Dialog.Trigger>
-						<Dialog.Content class="w-[90%] flex-col md:w-96">
+						<Dialog.Content class="max-h-[100vh] w-[90%] flex-col overflow-y-auto md:w-96">
 							{#if isRideShare}
 								<Dialog.Header>
 									<Dialog.Title>{t.ride.negotiateHeader}</Dialog.Title>
