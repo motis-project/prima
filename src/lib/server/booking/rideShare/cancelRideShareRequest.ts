@@ -4,7 +4,7 @@ import { sendMail } from '$lib/server/sendMail';
 import CancelNotificationCompany from '$lib/server/email/CancelNotificationCompany.svelte';
 import { db, type Database } from '$lib/server/db';
 import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
-import { PASSENGER_CHANGE_DURATION } from '$lib/constants';
+import { MAX_RIDE_SHARE_TOUR_TIME, PASSENGER_CHANGE_DURATION } from '$lib/constants';
 import { sortEventsByTime } from '$lib/testHelpers';
 import { retry } from '$lib/server/db/retryQuery';
 
@@ -180,8 +180,8 @@ async function updateLegDurations(
 			return;
 		}
 		const routingResult =
-			(await oneToManyCarRouting(events[prevIdx], [events[nextIdx]], false))[0] ??
-			(await oneToManyCarRouting(events[nextIdx], [events[prevIdx]], true))[0];
+			(await oneToManyCarRouting(events[prevIdx], [events[nextIdx]], false, MAX_RIDE_SHARE_TOUR_TIME))[0] ??
+			(await oneToManyCarRouting(events[nextIdx], [events[prevIdx]], true, MAX_RIDE_SHARE_TOUR_TIME))[0];
 		if (routingResult === undefined) {
 			console.log(
 				`unable to update prevLegDuration for event ${events[prevIdx].eventid} and nextLegDuration for event ${events[nextIdx].eventid}, routing result was undefined.`
