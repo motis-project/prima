@@ -19,7 +19,8 @@ export const batchOneToManyCarRouting = async (
 			oneToManyCarRouting(
 				one,
 				definedMany.slice(currentPos, Math.min(currentPos + batchSize, definedMany.length)),
-				startFixed
+				startFixed,
+				maxDuration
 			)
 		);
 		currentPos += batchSize;

@@ -50,8 +50,18 @@ export async function routing(
 		);
 		backward.push(info.idxInEvents === 0 ? undefined : info.events[info.idxInEvents - 1]);
 	});
-	let fromUserChosen = await batchOneToManyCarRouting(userChosen, forward, false, MAX_RIDE_SHARE_TOUR_TIME);
-	let toUserChosen = await batchOneToManyCarRouting(userChosen, backward, true, MAX_RIDE_SHARE_TOUR_TIME);
+	let fromUserChosen = await batchOneToManyCarRouting(
+		userChosen,
+		forward,
+		false,
+		MAX_RIDE_SHARE_TOUR_TIME
+	);
+	let toUserChosen = await batchOneToManyCarRouting(
+		userChosen,
+		backward,
+		true,
+		MAX_RIDE_SHARE_TOUR_TIME
+	);
 	fromUserChosen = setZeroDistanceForMatchingPlaces(userChosen, forward, fromUserChosen);
 	toUserChosen = setZeroDistanceForMatchingPlaces(userChosen, backward, toUserChosen);
 

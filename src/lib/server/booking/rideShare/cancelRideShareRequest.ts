@@ -180,8 +180,22 @@ async function updateLegDurations(
 			return;
 		}
 		const routingResult =
-			(await oneToManyCarRouting(events[prevIdx], [events[nextIdx]], false, MAX_RIDE_SHARE_TOUR_TIME))[0] ??
-			(await oneToManyCarRouting(events[nextIdx], [events[prevIdx]], true, MAX_RIDE_SHARE_TOUR_TIME))[0];
+			(
+				await oneToManyCarRouting(
+					events[prevIdx],
+					[events[nextIdx]],
+					false,
+					MAX_RIDE_SHARE_TOUR_TIME
+				)
+			)[0] ??
+			(
+				await oneToManyCarRouting(
+					events[nextIdx],
+					[events[prevIdx]],
+					true,
+					MAX_RIDE_SHARE_TOUR_TIME
+				)
+			)[0];
 		if (routingResult === undefined) {
 			console.log(
 				`unable to update prevLegDuration for event ${events[prevIdx].eventid} and nextLegDuration for event ${events[nextIdx].eventid}, routing result was undefined.`
