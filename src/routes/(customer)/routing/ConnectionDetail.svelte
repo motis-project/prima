@@ -11,7 +11,7 @@
 	import { getModeName } from './getModeName';
 	import Route from './Route.svelte';
 	import { routeBorderColor, routeColor } from '$lib/ui/modeStyle';
-	import { isOdmLeg, isRideShareLeg } from './utils';
+	import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
 	import type { SignedItinerary } from '$lib/planAndSign';
 	import ProfileBadge from '$lib/ui/ProfileBadge.svelte';
 

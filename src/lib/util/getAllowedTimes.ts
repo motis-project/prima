@@ -16,13 +16,12 @@ export function getAllowedTimes(
 	const earliestDay = roundToUnit(earliest, DAY, Math.floor);
 	const latestDay = roundToUnit(latest, DAY, Math.floor) + DAY;
 
-	const noonEarliestDay = new Date(earliestDay + 12 * HOUR);
-
 	const allowedTimes: Array<Interval> = [];
 	for (let t = earliestDay; t < latestDay; t += DAY) {
-		const offset = getOffset(noonEarliestDay.getTime());
+		const noon = new Date(t + 12 * HOUR);
+		const offset = getOffset(noon.getTime());
 		allowedTimes.push(new Interval(t + startOnDay - offset, t + endOnDay - offset));
-		noonEarliestDay.setHours(noonEarliestDay.getHours() + 24);
+		noon.setHours(noon.getHours() + 24);
 	}
 	return allowedTimes;
 }

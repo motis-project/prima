@@ -1,5 +1,5 @@
 import { type BookingParameters } from '../../src/lib/server/booking/taxi/bookingApi';
-import type { ExpectedConnection } from '../../src/lib/server/booking/taxi/bookRide';
+import type { ExpectedConnection } from '../../src/lib/server/booking/expectedConnection';
 import type { Capacities } from '../../src/lib/util/booking/Capacities';
 import { type Coordinates } from '../../src/lib/util/Coordinates';
 import { HOUR, MINUTE, DAY } from '../../src/lib/util/time';

@@ -2,7 +2,7 @@ import { LOCALE } from '$lib/constants';
 import { env } from '$env/dynamic/public';
 
 import type { Itinerary, Leg } from '$lib/openapi';
-import { isTaxiLeg } from '../../routes/(customer)/routing/utils';
+import { isTaxiLeg } from './booking/checkLegType';
 
 export const odmPrice = (it: Itinerary, passengers: number, kids: number) =>
 	it.legs.reduce(
