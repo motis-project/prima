@@ -146,12 +146,14 @@
 								<span>
 									{tourInfo.model}
 								</span>
-								<div class="flex flex-row items-center gap-1">
-									<div
-										class="h-4 w-4 border border-gray-200"
-										style="background-color: {tourInfo.color}"
-									></div>
-								</div>
+								{#if tourInfo.color !== null}
+									<div class="flex flex-row items-center gap-1">
+										<div
+											class="h-4 w-4 border border-gray-200"
+											style="background-color: {tourInfo.color}"
+										></div>
+									</div>
+								{/if}
 							</div>
 						</div>
 					{/if}
