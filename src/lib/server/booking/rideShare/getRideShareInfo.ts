@@ -2,23 +2,23 @@ import type { Itinerary } from '$lib/openapi';
 import { db } from '$lib/server/db';
 import { isRideShareLeg } from '$lib/util/booking/checkLegType';
 
-export async function getRideShareInfo(tourId: number) {
-	return await db
+export async function getRideShareInfo(tourId: number, extended: boolean) {
+	const result = await db
 		.selectFrom('rideShareTour')
 		.innerJoin('rideShareVehicle', 'rideShareTour.vehicle', 'rideShareVehicle.id')
 		.leftJoin('request as rideShareRequest', 'rideShareRequest.rideShareTour', 'rideShareTour.id')
 		.innerJoin('user', 'user.id', 'rideShareVehicle.owner')
 		.select((eb) => [
-			'rideShareVehicle.color',
-			'rideShareVehicle.licensePlate',
+			'rideShareTour.id as tourId',
 			'rideShareVehicle.model',
 			'rideShareVehicle.smokingAllowed',
 			'user.firstName',
 			'user.name',
 			'user.gender',
 			'user.profilePicture',
+			'rideShareVehicle.licensePlate',
+			'rideShareVehicle.color',
 			'rideShareVehicle.picture',
-			'rideShareTour.id as tourId',
 			eb
 				.selectFrom('rideShareRating')
 				.innerJoin('request', 'rideShareRating.request', 'request.id')
@@ -40,9 +40,15 @@ export async function getRideShareInfo(tourId: number) {
 		])
 		.where('rideShareTour.id', '=', tourId)
 		.executeTakeFirst();
+	if (!extended && result) {
+		result.licensePlate = '';
+		result.color = null;
+		result.picture = null;
+	}
+	return result;
 }
 
-export async function getRideShareInfos(i: Itinerary) {
+export async function getRideShareInfos(i: Itinerary, extended = false) {
 	const rideShareTourInfos: RideShareTourInfo[] = [];
 
 	if (i.legs.length !== 0) {
@@ -54,10 +60,10 @@ export async function getRideShareInfos(i: Itinerary) {
 				? parseInt(i.legs[i.legs.length - 1].tripId!)
 				: undefined;
 		if (rideShareTourFirstLeg !== undefined && !isNaN(rideShareTourFirstLeg)) {
-			rideShareTourInfos.push(await getRideShareInfo(rideShareTourFirstLeg));
+			rideShareTourInfos.push(await getRideShareInfo(rideShareTourFirstLeg, extended));
 		}
 		if (rideShareTourLastLeg !== undefined && !isNaN(rideShareTourLastLeg)) {
-			rideShareTourInfos.push(await getRideShareInfo(rideShareTourLastLeg));
+			rideShareTourInfos.push(await getRideShareInfo(rideShareTourLastLeg, extended));
 		}
 	}
 	return rideShareTourInfos;

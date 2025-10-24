@@ -2,7 +2,7 @@ import { env } from '$env/dynamic/public';
 import { plan, type Itinerary, type PlanData } from '$lib/openapi';
 import { signEntry } from '$lib/server/booking/signEntry';
 import type { QuerySerializerOptions } from '@hey-api/client-fetch';
-import { json, type RequestEvent } from '@sveltejs/kit';
+import { fail, json, type RequestEvent } from '@sveltejs/kit';
 import { getRideShareInfos } from '$lib/server/booking/rideShare/getRideShareInfo';
 import { isOdmLeg } from '$lib/util/booking/checkLegType';
 
@@ -16,7 +16,7 @@ export const POST = async (event: RequestEvent) => {
 	const response = r.data;
 	console.log(r.request);
 	if (response === undefined) {
-		return json({});
+		return fail(500);
 	}
 	return json({
 		...response!,

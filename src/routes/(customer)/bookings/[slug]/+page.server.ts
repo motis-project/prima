@@ -46,7 +46,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		error(404, 'Not found');
 	}
 
-	const rideShareTourInfos = await getRideShareInfos(journey.json);
+	const rideShareTourInfos = await getRideShareInfos(journey.json, !journey.pending);
 
 	return {
 		...journey,
