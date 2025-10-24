@@ -14,7 +14,7 @@ import { MINUTE, roundToUnit } from '$lib/util/time';
 import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 import { signEntry } from '$lib/server/booking/signEntry';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
-import { black, dateInXMinutes, inXMinutes, white } from '$lib/server/booking/testUtils';
+import { black, inXMinutes, white } from '$lib/server/booking/testUtils';
 import { Mode } from '$lib/server/booking/mode';
 
 let sessionToken: string;
@@ -367,7 +367,7 @@ describe('Whitelist and Booking API Tests', () => {
 		expect(
 			Math.abs(inNiesky1.lat - pickup.lat) + Math.abs(inNiesky1.lng - pickup.lng)
 		).toBeLessThan(COORDINATE_ROUNDING_ERROR_THRESHOLD);
-		expect(new Date(pickup.communicatedTime).toISOString()).toBe(dateInXMinutes(70).toISOString());
+		expect(pickup.communicatedTime).toBe(inXMinutes(70));
 		expect(dropoff.address).toBe('target address');
 		expect(
 			Math.abs(inNiesky2.lat - dropoff.lat) + Math.abs(inNiesky2.lng - dropoff.lng)

@@ -2,7 +2,7 @@ import { addTestUser, clearDatabase, getRSTours } from '$lib/testHelpers';
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { COORDINATE_ROUNDING_ERROR_THRESHOLD } from '$lib/constants';
 import { createSession } from '$lib/server/auth/session';
-import { dateInXMinutes, inXMinutes, whiteRideShare } from '$lib/server/booking/testUtils';
+import { inXMinutes, whiteRideShare } from '$lib/server/booking/testUtils';
 import { signEntry } from '$lib/server/booking/signEntry';
 import { rideShareApi } from '../rideShareApi';
 import { addRideShareTour, getRideShareTourCommunicatedTimes } from '../addRideShareTour';
@@ -134,7 +134,7 @@ describe('add ride share request', () => {
 		expect(Math.abs(inSagar.lat - pickup.lat) + Math.abs(inSagar.lng - pickup.lng)).toBeLessThan(
 			COORDINATE_ROUNDING_ERROR_THRESHOLD
 		);
-		expect(new Date(pickup.communicatedTime).toISOString()).toBe(dateInXMinutes(70).toISOString());
+		expect(pickup.communicatedTime).toBe(inXMinutes(70));
 		expect(dropoff.address).toBe('target address');
 		expect(
 			Math.abs(inPechern.lat - dropoff.lat) + Math.abs(inPechern.lng - dropoff.lng)
