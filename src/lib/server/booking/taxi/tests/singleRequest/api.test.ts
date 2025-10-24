@@ -222,7 +222,7 @@ describe('Whitelist and Booking API Tests', () => {
 	it('blacklist fail because request would require taxi to operate outside of defined shift (4:00-23:00)', async () => {
 		const company = await addCompany(Zone.NIESKY, inNiesky3);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
-		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));
+		await setAvailability(taxi, inXMinutes(0), inXMinutes(1600));
 		const body = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,
@@ -266,7 +266,7 @@ describe('Whitelist and Booking API Tests', () => {
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(478)],
+			directTimes: [inXMinutes(598)],
 			startFixed: true,
 			capacities
 		});
