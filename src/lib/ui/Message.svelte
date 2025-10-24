@@ -31,7 +31,14 @@
 			duration: fadeDuration
 		}}
 	>
-		<Alert.Root class={className} variant={'warning'}>
+		<Alert.Root
+			class={className}
+			variant={msg.type === 'success'
+				? 'default'
+				: msg.type === 'warning'
+					? 'warning'
+					: 'destructive'}
+		>
 			<CircleAlert class="size-4" />
 			<Alert.Description>
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
