@@ -8,7 +8,7 @@ import {
 	Zone
 } from '$lib/testHelpers';
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
-import { COORDINATE_ROUNDING_ERROR_THRESHOLD, LOCALE, TZ } from '$lib/constants';
+import { COORDINATE_ROUNDING_ERROR_THRESHOLD } from '$lib/constants';
 import { createSession } from '$lib/server/auth/session';
 import { MINUTE, roundToUnit } from '$lib/util/time';
 import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
