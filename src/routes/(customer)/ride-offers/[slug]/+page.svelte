@@ -72,7 +72,7 @@
 		/>
 	{:else}
 		{#if data.negotiating}
-			<Message msg={msg('openRequest')} />
+			<Message msg={msg('openRequest', 'warning')} />
 		{/if}
 
 		<Message msg={form?.msg} />
