@@ -10,6 +10,8 @@ import {
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { createSession } from '$lib/server/auth/session';
 import { black, inXMinutes } from '$lib/server/booking/testUtils';
+import { DAY, HOUR, SECOND } from '$lib/util/time';
+import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, MIN_PREP } from '$lib/constants';
 
 let sessionToken: string;
 
@@ -193,5 +195,53 @@ describe('Blacklist Tests', () => {
 		expect(blackResponse.direct.length).toBe(1);
 		expect(blackResponse.direct[0].startTime).toBe(inXMinutes(90));
 		expect(blackResponse.direct[0].endTime).toBe(inXMinutes(200));
+	});
+	it('Blacklist availability in the past', async () => {
+		const now = Date.now();
+		const company = await addCompany(Zone.NIESKY, inNiesky3);
+		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
+		await setAvailability(taxi, now, now + 0.5 * MIN_PREP);
+		const blackBody = JSON.stringify({
+			start: inNiesky1,
+			target: inNiesky2,
+			startBusStops: [],
+			targetBusStops: [],
+			earliest: now - HOUR,
+			latest: now + DAY,
+			startFixed: true,
+			capacities
+		});
+
+		const blackResponse = await black(blackBody).then((r) => r.json());
+		expect(blackResponse.start.length).toBe(0);
+		expect(blackResponse.target.length).toBe(0);
+		expect(blackResponse.direct.length).toBe(0);
+	});
+	it('Blacklist availability overlaps prep time', async () => {
+		const now = Date.now();
+		const currentHour = new Date(now).getHours();
+		if (currentHour < EARLIEST_SHIFT_START + 1 || currentHour > LATEST_SHIFT_END - 1) {
+			return;
+		}
+		const company = await addCompany(Zone.NIESKY, inNiesky3);
+		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
+		await setAvailability(taxi, now, now + 2 * MIN_PREP);
+		const blackBody = JSON.stringify({
+			start: inNiesky1,
+			target: inNiesky2,
+			startBusStops: [],
+			targetBusStops: [],
+			earliest: now - HOUR,
+			latest: now + DAY,
+			startFixed: true,
+			capacities
+		});
+
+		const blackResponse = await black(blackBody).then((r) => r.json());
+		expect(blackResponse.start.length).toBe(0);
+		expect(blackResponse.target.length).toBe(0);
+		expect(blackResponse.direct.length).toBe(1);
+		expect(Math.abs(blackResponse.direct[0].startTime - now - MIN_PREP)).toBeLessThan(10 * SECOND);
+		expect(blackResponse.direct[0].endTime).toBe(now + 2 * MIN_PREP);
 	});
 });
