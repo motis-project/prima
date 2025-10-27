@@ -67,17 +67,23 @@ async function util(
 		.selectFrom('rideShareTour')
 		.innerJoin('request', 'rideShareTour.id', 'request.rideShareTour')
 		.innerJoin('event', 'event.request', 'request.id')
-		.innerJoin('eventGroup', 'event.eventGroupId', 'event.id')
+		.innerJoin('eventGroup', 'event.eventGroupId', 'eventGroup.id')
 		.where('eventGroup.scheduledTimeStart', '>', dayStart.getTime())
 		.where('eventGroup.scheduledTimeStart', '<', dayEnd.getTime())
 		.where('rideShareTour.vehicle', '=', vehicle)
+		.where('rideShareTour.cancelled', '=', false)
+		.where('event.cancelled', '=', false)
+		.where('request.cancelled', '=', false)
+		.where('request.pending', '=', false)
 		.select([
 			'eventGroup.scheduledTimeStart',
 			'eventGroup.scheduledTimeEnd',
 			'event.isPickup',
 			'eventGroup.lat',
 			'eventGroup.lng',
-			'rideShareTour.id as tourId'
+			'rideShareTour.id as tourId',
+			'event.id as eventId',
+			'eventGroup.id as grp'
 		])
 		.execute();
 
