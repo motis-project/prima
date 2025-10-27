@@ -44,7 +44,12 @@ export async function acceptRideShareRequest(requestId: number, provider: number
 						userChosen,
 						[busStop],
 						{ ...newPickup, wheelchairs: 0, bikes: 0 },
-						startFixed
+						startFixed,
+						{
+							pickup: newPickup.communicatedTime,
+							dropoff: newDropoff.communicatedTime,
+							tourId: tour.rideShareTour
+						}
 					)
 				)[0][0][0];
 				if (best === undefined) {
