@@ -130,20 +130,32 @@ export const POST = async ({ locals, request }) => {
 	return json({});
 };
 
-export const GET = async ({ locals, url }) => {
+export const PUT = async ({ locals, request }) => {
 	const companyId = locals.session?.companyId;
 	if (!companyId) {
 		throw 'no company';
 	}
-	const timezoneOffset = readInt(url.searchParams.get('offset'));
+
+	const { vehicleId, from, to, date, offset } = await request.json();
+	if (typeof vehicleId !== 'number' || typeof from !== 'number' || typeof to !== 'number') {
+		console.log('add availability invalid params: ', { vehicleId, from, to });
+		throw 'invalid params';
+	}
+
+	const interval = new Interval(from, to).intersect(getAlterableTimeframe());
+	if (interval === undefined) {
+		return json({});
+	}
+	await addAvailability(interval, companyId, vehicleId);
+
+	const timezoneOffset = readInt(offset);
 	if (isNaN(timezoneOffset)) {
 		error(400, { message: 'Invalid offset parameter' });
 	}
-	const localDateParam = url.searchParams.get('date');
-	if (!localDateParam) {
+	if (!date) {
 		error(400, { message: 'Invalid date parameter' });
 	}
-	const time = new Date(localDateParam).getTime();
+	const time = new Date(date).getTime();
 	if (isNaN(time)) {
 		error(400, { message: 'Invalid date parameter' });
 	}
