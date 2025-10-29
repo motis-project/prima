@@ -29,3 +29,4 @@ export const POST = async ({ locals, request }) => {
 	await addAvailability(from, to, companyId, vehicleId);
 	return json({});
 };
+
