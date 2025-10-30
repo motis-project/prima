@@ -54,9 +54,14 @@ export default defineConfig({
 			dependencies: ['availability']
 		},
 		{
+			name: 'ride share',
+			testMatch: 'rideShare.test.ts',
+			dependencies: ['move tour']
+		},
+		{
 			name: 'driver app',
 			testMatch: 'driver.test.ts',
-			dependencies: ['move tour']
+			dependencies: ['ride share']
 		}
 	]
 });

@@ -28,6 +28,16 @@ class DataStoreManager(private val context: Context) {
         private val FCM_TOKEN_KEY = stringPreferencesKey("fcm_token")
         private val DEVICE_ID_KEY = stringPreferencesKey("device_id")
         private val TOKEN_PENDING_KEY = booleanPreferencesKey("token_pending")
+        private val DARK_THEME_KEY = booleanPreferencesKey("ui_theme")
+    }
+
+    val uiThemeFlow: Flow<Boolean> = context.dataStore.data
+        .map { preferences -> preferences[DARK_THEME_KEY] ?: false}
+
+    suspend fun setTheme(darkTheme: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[DARK_THEME_KEY] = darkTheme
+        }
     }
 
     val selectedVehicleFlow: Flow<Vehicle> = context.dataStore.data

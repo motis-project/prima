@@ -18,10 +18,10 @@
 	let { children, data } = $props();
 
 	const baseItems: Array<MenuItem> = [{ title: t.menu.account, href: '/account', Icon: UserRound }];
-	const customerItems: Array<MenuItem> = [
+	const customerItems: Array<MenuItem> = $derived([
 		{ title: t.menu.connections, href: '/routing', Icon: ChevronsRight },
 		...(data.isLoggedIn ? [{ title: t.menu.bookings, href: '/bookings', Icon: TicketCheck }] : [])
-	];
+	]);
 	const taxiOwnerItems: Array<MenuItem> = [
 		{ title: t.menu.accounting, href: '/taxi/accounting', Icon: Receipt },
 		{ title: t.menu.availability, href: '/taxi/availability', Icon: CarTaxiFront },
@@ -49,7 +49,20 @@
 			<Alert.Description>
 				{t.rating.thanksForUsing}<br />
 				{t.rating.howHasItBeen}
-				<a class="font-bold underline" href="/rating/{data.pendingRating.id}">
+				<a class="font-bold underline" href="/rating/{data.pendingRating}">
+					{t.rating.giveFeedback}
+				</a>
+			</Alert.Description>
+		</Alert.Root>
+	{/if}
+	{#if data.pendingRideShareRating}
+		<Alert.Root class="mb-2">
+			<CircleAlert class="size-4" />
+			<Alert.Title></Alert.Title>
+			<Alert.Description>
+				{t.rating.thanksForUsing}<br />
+				{t.rideShare.howHasItBeen}
+				<a class="font-bold underline" href="/ride-share-rating/{data.pendingRideShareRating}">
 					{t.rating.giveFeedback}
 				</a>
 			</Alert.Description>

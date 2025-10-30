@@ -13,7 +13,13 @@
 		fixLastRow
 	}: {
 		rows: T[];
-		cols: Column<T>[];
+		cols: {
+			text: string[];
+			sort?: (r1: T, r2: T) => number;
+			toTableEntry: (r: T) => string | number;
+			toColumnStyle?: (r: T) => string;
+			hidden?: boolean;
+		}[];
 		getRowStyle?: (row: T) => string;
 		selectedRow?: undefined | T[];
 		bindSelectedRow?: boolean;

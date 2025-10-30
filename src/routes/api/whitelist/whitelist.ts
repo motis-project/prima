@@ -1,12 +1,11 @@
 import type { Capacities } from '$lib/util/booking/Capacities';
-import { getBookingAvailability } from '$lib/server/booking/getBookingAvailability';
+import { getBookingAvailability } from '$lib/server/booking/taxi/getBookingAvailability';
 import { MAX_TRAVEL } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
 import type { Coordinates } from '$lib/util/Coordinates';
-import { evaluateRequest } from '$lib/server/booking/evaluateRequest';
-import { toBusStopWithISOStrings, type BusStop } from '$lib/server/booking/BusStop';
-import type { Insertion } from '$lib/server/booking/insertion';
-import { InsertHow, printInsertionType } from '$lib/server/booking/insertionTypes';
+import { evaluateRequest } from '$lib/server/booking/taxi/evaluateRequest';
+import { toBusStopWithISOStrings, type BusStop } from '$lib/server/booking/taxi/BusStop';
+import { toInsertionWithISOStrings, type Insertion } from '$lib/server/booking/taxi/insertion';
 
 export async function whitelist(
 	userChosen: Coordinates,
@@ -94,44 +93,20 @@ export async function whitelist(
 	);
 	const ret = new Array<(Insertion | undefined)[]>(filteredBusStops.length);
 	for (let i = 0; i != filteredBusStops.length; ++i) {
-		if (filteredBusStops[i] == undefined) {
+		if (filteredBusStops[i] === undefined) {
 			ret[i] = new Array<undefined>(busStops[i].times.length);
 		} else {
 			ret[i] = bestEvals[filteredBusStops[i]!];
 		}
 	}
+	console.log(
+		'WHITELIST RESULT: ',
+		JSON.stringify(
+			ret.map((arr) => arr.map((i) => toInsertionWithISOStrings(i))),
+			null,
+			2
+		)
+	);
 	console.log('WLE');
 	return ret;
-}
-
-export function printMsg(b: Insertion | undefined) {
-	if (b == undefined) {
-		console.log('    not possible');
-		return;
-	}
-	if (b.pickupIdx == undefined) {
-		console.assert(b.dropoffIdx == undefined, 'dropoffIdx==undefined unexpectedly');
-		console.assert(
-			b.pickupCase.how == b.dropoffCase.how && b.pickupCase.how == InsertHow.NEW_TOUR,
-			"undefined pickupIdx doesn't yield NEW_TOUR"
-		);
-		console.log('    accepted as new tour');
-		return;
-	}
-	console.assert(
-		b.pickupIdx != undefined &&
-			b.dropoffIdx != undefined &&
-			b.pickupCase.how != InsertHow.NEW_TOUR &&
-			b.dropoffCase.how != InsertHow.NEW_TOUR,
-		'defined pickupIdx has unexpected behaviour'
-	);
-	if (b.pickupIdx == b.dropoffIdx) {
-		console.log(
-			'    inserted at same position as: ',
-			printInsertionType(b.pickupCase),
-			'   idx: ',
-			b.pickupIdx
-		);
-		return;
-	}
 }

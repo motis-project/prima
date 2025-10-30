@@ -32,6 +32,7 @@
 	import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
 	import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 	import type { Msg } from '$lib/msg';
+	import { t } from '$lib/i18n/translation';
 
 	const { data, form } = $props();
 	const vehicles = $derived.by(() => {
@@ -140,7 +141,9 @@
 		data.tours.some((t) => vehicleId == t.vehicleId && overlaps(t, cell));
 
 	const getTours = (vehicleId: number, cell: Range) =>
-		data.tours.filter((t) => vehicleId == t.vehicleId && overlaps(t, cell));
+		data.tours
+			.filter((t) => vehicleId == t.vehicleId && overlaps(t, cell))
+			.sort((a, b) => a.startTime - b.startTime);
 
 	const isAvailable = (v: Vehicle, cell: Range) => v.availability.some((a) => overlaps(a, cell));
 
@@ -485,7 +488,7 @@
 					<ChevronRight class="size-4" />
 				</Button>
 			</div>
-			<AddVehicle text="Fahrzeug hinzufügen" useWFit={true} />
+			<AddVehicle text={t.buttons.addVehicle} useWFit={true} />
 		</div>
 	</div>
 

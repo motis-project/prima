@@ -1,9 +1,9 @@
 import {
-	MAX_PASSENGER_WAITING_TIME_PICKUP,
-	MAX_PASSENGER_WAITING_TIME_DROPOFF,
 	WGS84,
 	EARLIEST_SHIFT_START,
-	LATEST_SHIFT_END
+	LATEST_SHIFT_END,
+	MAX_PASSENGER_WAITING_TIME_PICKUP,
+	MAX_PASSENGER_WAITING_TIME_DROPOFF
 } from '$lib/constants';
 import { db, type Database } from '$lib/server/db';
 import { covers } from '$lib/server/db/covers';
@@ -11,9 +11,9 @@ import type { ExpressionBuilder } from 'kysely';
 import { sql, type RawBuilder } from 'kysely';
 import type { Coordinates } from '$lib/util/Coordinates';
 import type { Capacities } from '$lib/util/booking/Capacities';
-import type { BusStop } from '$lib/server/booking/BusStop';
 import { Interval } from '$lib/util/interval';
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
+import type { BusStop } from '$lib/server/booking/taxi/BusStop';
 
 interface CoordinatesTable {
 	busStopIndex: number;

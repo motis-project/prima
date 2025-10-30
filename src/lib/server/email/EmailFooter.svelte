@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { ORIGIN } from '$env/static/private';
+	import { env } from '$env/dynamic/private';
 	import { PUBLIC_PROVIDER } from '$env/static/public';
 </script>
 
 <p>
-	Liebe Grüße<br />
+	Viele Grüße<br />
 	Ihr {PUBLIC_PROVIDER} Team<br />
-	<a href={ORIGIN} target="_blank">{ORIGIN}</a><br />
+	<a href={env.ORIGIN} target="_blank">{env.ORIGIN}</a><br /><br />
+	Bitte antworten Sie nicht an diese E-Mail-Adresse, sie wird nicht gelesen.
 </p>

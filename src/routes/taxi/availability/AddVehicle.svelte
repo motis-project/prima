@@ -7,6 +7,7 @@
 	import * as Popover from '$lib/shadcn/popover';
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import { enhance } from '$app/forms';
+	import { LICENSE_PLATE_PLACEHOLDER } from '$lib/constants';
 
 	const {
 		text,
@@ -64,7 +65,7 @@
 				<Input
 					name="licensePlate"
 					type="string"
-					placeholder="DA-AB-1234"
+					placeholder={LICENSE_PLATE_PLACEHOLDER}
 					value={v?.licensePlate ?? undefined}
 				/>
 			</div>

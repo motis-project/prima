@@ -1,3 +1,4 @@
+import type { RideShareEvent } from '$lib/server/booking/rideShare/getRideShareTours';
 import type { Capacities } from './Capacities';
 
 export type Range = {
@@ -19,7 +20,7 @@ type Event = Capacities & { isPickup: boolean };
 export function getPossibleInsertions(
 	taxiCapacities: Capacities,
 	requestCapacities: Capacities,
-	events: Event[]
+	events: (Event | RideShareEvent)[]
 ) {
 	if (events.length == 0 || !isValid(taxiCapacities, requestCapacities)) {
 		return [];

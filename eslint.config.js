@@ -5,6 +5,7 @@ import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript-eslint';
+import uuidRule from './eslint-rules/require-uuid-undefined.js';
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 
 const RULES = {
@@ -35,12 +36,10 @@ export default ts.config(
 				...globals.node
 			}
 		},
-
 		rules: RULES.ts
 	},
 	{
 		files: ['**/*.svelte', 'lib/**/*.ts'],
-
 		languageOptions: {
 			parserOptions: {
 				parser: ts.parser,
@@ -49,7 +48,19 @@ export default ts.config(
 				}
 			}
 		},
-
 		rules: RULES.ts
+	},
+	{
+		files: ['**/gen.test.ts'],
+		rules: {
+			'custom/require-uuid-undefined': 'error'
+		},
+		plugins: {
+			custom: {
+				rules: {
+					'require-uuid-undefined': uuidRule
+				}
+			}
+		}
 	}
 );

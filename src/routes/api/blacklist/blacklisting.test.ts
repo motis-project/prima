@@ -9,8 +9,8 @@ import {
 	Zone
 } from '$lib/testHelpers';
 import {
-	MAX_PASSENGER_WAITING_TIME_DROPOFF,
-	MAX_PASSENGER_WAITING_TIME_PICKUP
+	MAX_PASSENGER_WAITING_TIME_PICKUP,
+	MAX_PASSENGER_WAITING_TIME_DROPOFF
 } from '$lib/constants';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import { MINUTE } from '$lib/util/time';

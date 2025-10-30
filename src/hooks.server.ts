@@ -7,6 +7,7 @@ import { error, redirect, type Handle } from '@sveltejs/kit';
 import admin from 'firebase-admin';
 import Prom from 'prom-client';
 import { env } from '$env/dynamic/private';
+import { getIp } from '$lib/server/getIp';
 
 import consoleStamp from 'console-stamp';
 consoleStamp(console);
@@ -14,6 +15,20 @@ consoleStamp(console);
 const authHandle: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get('session');
 	const session = await validateSessionToken(token);
+	const clientIP = getIp(event);
+	const isLocalhost =
+		clientIP === '127.0.0.1' ||
+		clientIP === '::1' ||
+		clientIP === '::ffff:127.0.0.1' ||
+		clientIP.startsWith('172.');
+	if (
+		!isLocalhost &&
+		(event.url.pathname.startsWith('/debug') ||
+			event.url.pathname.startsWith('/tests') ||
+			event.url.pathname.startsWith('/apiInternal'))
+	) {
+		error(403);
+	}
 	if (
 		!session &&
 		(event.url.pathname.startsWith('/admin') || event.url.pathname.startsWith('/taxi'))

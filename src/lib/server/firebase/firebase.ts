@@ -15,7 +15,8 @@ try {
 export enum TourChange {
 	BOOKED,
 	MOVED,
-	CANCELLED
+	CANCELLED,
+	REMINDER
 }
 
 export type NotificationData = {
@@ -70,10 +71,11 @@ export async function sendPushNotification(
 						e
 					);
 				}
-			} else {
+			} else if (error.code !== 'messaging/registration-token-not-registered') {
 				firebase_errors?.inc();
 			}
 		} else {
+			console.error(error);
 			firebase_errors?.inc();
 		}
 	}

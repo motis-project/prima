@@ -6,9 +6,10 @@ defaults:
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "deploy" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "deploy" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,10 +17,16 @@ jobs:
     permissions: write-all
     env:
       DATABASE_URL: postgresql://postgres:pw@localhost:6500/prima
-      PUBLIC_MOTIS_URL: https://prima-motis.motis-project.de
+      PUBLIC_MOTIS_URL: https://prima-motis-staging.motis-project.de
+      TZ: Europe/Berlin
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Cleanup docker cache
+        run: |
+          docker image prune -f
+          docker builder prune -f
 
       - name: Install Dependencies
         run: pnpm install
@@ -32,6 +39,13 @@ jobs:
 
       - name: Install Playwright Dependencies
         run: npx playwright install
+
+      - name: Docker Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Integration Tests
         run: |
@@ -70,13 +84,6 @@ jobs:
         with:
           install: true
 
-      - name: Docker Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -92,7 +99,7 @@ jobs:
             type=edge
 
       - name: Docker build and push
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/deploy'
         uses: docker/build-push-action@v5
         with:
           push: true

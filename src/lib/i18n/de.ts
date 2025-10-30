@@ -3,7 +3,7 @@ import type { Translations } from './translation';
 const translations: Translations = {
 	menu: {
 		connections: 'Verbindungen',
-		bookings: 'Buchungen',
+		bookings: 'Meine Fahrten',
 		account: 'Konto',
 		availability: 'Verfügbarkeit',
 		company: 'Unternehmen',
@@ -19,6 +19,7 @@ const translations: Translations = {
 		enterEmailAndPassword: 'Bitte geben Sie Ihre E-Mail und Ihr Passwort ein.',
 		invalidEmail: 'Ungültige E-Mail-Adresse.',
 		invalidPhone: 'Ungültige Telefonnummer.',
+		invalidZipCity: 'Ungültige PLZ/Ort/Region.',
 		emailAlreadyRegistered: 'Diese E-Mail-Adresse ist bereits registriert.',
 		weakPassword: 'Bitte wählen Sie ein stärkeres Passwort.',
 		tooManyRequests: 'Zu viele Anfragen.',
@@ -75,7 +76,7 @@ const translations: Translations = {
 		requestCancelled: 'Fahrt storniert',
 
 		// Booking
-		noRouteFound: 'Keine Route gefunden.',
+		noRouteFound: 'Keine Route gefunden. Die maximale Fahrtzeit beträgt eine Stunde.',
 		distanceTooLong: 'Distanz zu lang.',
 		startDestTooClose: 'Distanz zu kurz.',
 		maxTravelTimeExceeded: 'Fahrstrecke zu lang.',
@@ -83,6 +84,7 @@ const translations: Translations = {
 		startDestNotInSameZone: 'Start und Ziel nicht im selben Pflichtfahrgebiet.',
 		noVehicle: 'Kein Fahrzeug verfügbar.',
 		routingRequestFailed: 'Routinganfrage fehlgeschlagen.',
+		vehicleConflict: 'Das gewählte Fahrzeug ist zum gewählten Zeitpunkt nicht verfügbar.',
 
 		// Booking
 		bookingError: 'Die Fahrt konnte nicht gebucht werden.',
@@ -92,10 +94,18 @@ const translations: Translations = {
 
 		// Journey
 		cancelled: 'Diese Fahrt wurde storniert.',
+		stillNegotiating:
+			'Die Anfrage wurde gesendet. Die Mitfahrgelegenheit ist noch nicht fest vereinbart.',
+		openRequest: 'Dieses Mitfahrangebot hat offene Anfragen.',
 
 		// Feedback
 		feedbackThank: 'Vielen Dank für Ihr Feedback!',
-		feedbackMissing: 'Kein Feedback gegeben'
+		feedbackMissing: 'Kein Feedback gegeben',
+
+		// Picture Upload
+		noFileUploaded: 'kein Bild hochgeladen',
+		invalidFileType: 'ungültiger Dateityp',
+		fileTooLarge: 'Datei ist zu groß'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',
@@ -103,16 +113,29 @@ const translations: Translations = {
 	},
 	account: {
 		name: 'Name',
+		lastName: 'Nachname',
+		firstName: 'Vorname',
+		gender: (id: string) => {
+			return { o: 'divers', f: 'Frau', m: 'Herr', n: 'keine Angabe' }[id]!;
+		},
+		genderShort: (id: string) => {
+			return { o: '(divers)', f: '(w)', m: '(m)', n: '' }[id]!;
+		},
+		genderString: 'Geschlecht',
 		email: 'E-Mail',
 		password: 'Passwort',
 		phone: 'Telefonnummer',
+		zipCode: 'PLZ',
+		city: 'Ort',
+		region: 'Region',
 		create: 'Nutzerkonto erstellen',
 		forgotPassword: 'Passwort vergessen?',
 		signupConditions: (tos: string, privacy: string, provider: string) =>
 			`Durch die Anmeldung stimme ich den ${tos} sowie der ${privacy} von ${provider} zu.`,
 		tos: 'Beförderungsbedingungen',
 		imprint: 'Impressum',
-		privacy_short: 'Datenschutz',
+		dataLicenses: 'Fahrplandatenquellen',
+		privacyShort: 'Datenschutz',
 		privacy: 'Datenschutzerklärung',
 		login: 'Login',
 		sentAnEmailTo: 'Wir haben Ihnen einen Code an folgende E-Mail-Adresse geschickt:',
@@ -138,16 +161,28 @@ const translations: Translations = {
 		newPassword: 'Neues Passwort',
 		oldPassword: 'Altes Passwort',
 		resendCode: 'Code erneut senden',
-		verify: 'Verifizieren'
+		verify: 'Verifizieren',
+		profilePicture: 'Profilbild',
+		profilePictureSubtitle: 'Hier können Sie Ihr Profilbild ändern',
+		personalInfo: 'Personenbezogene Informationen',
+		adjustPersonalInfo: 'Ändern Sie Ihre persönlichen Informationen',
+		updatePersonalInfo: 'Persönliche Informationen ändern'
 	},
 	rating: {
 		thanksForUsing: 'Vielen Dank, dass Sie das ÖPNV Taxi benutzt haben.',
 		howHasItBeen: 'Wie war es?',
 		giveFeedback: 'Geben Sie uns Ihr Feedback.',
-		howHasJourneyBeen: 'Wie war die Fahrt?',
+		reason: 'Anlass der Fahrt',
+		tourism: 'Tourismus',
+		commute: 'Beschäftigung/Pendeln',
+		education: 'Bildung (Schule/Hochschule)',
+		errands: 'Erledigungen',
+		leisure: 'Freizeit',
+		howHasBookingBeen: 'Waren Sie mit dem Buchungsprozess zufrieden?',
+		howHasJourneyBeen: 'Waren Sie mit der Fahrt zufrieden?',
 		yourFeedback: 'Ihr Feedback',
-		good: 'gut',
-		bad: 'schlecht',
+		good: 'ja',
+		bad: 'nein',
 		sendFeedback: 'Feedback abschicken'
 	},
 
@@ -162,6 +197,7 @@ const translations: Translations = {
 			year: isToday ? undefined : '2-digit'
 		}),
 
+	bookingsHeader: 'Meine gebuchten und gespeicherten Fahrten',
 	cancelledJourneys: 'Vergangene und stornierte Fahrten',
 	noBookings: 'Sie haben bisher keine gebuchten oder gespeicherten Fahrten.',
 	journeyDetails: 'Verbindungsdetails',
@@ -176,6 +212,8 @@ const translations: Translations = {
 	taxi: 'Taxi',
 	moped: 'Moped',
 	odm: 'ÖPNV-Taxi - Buchung erforderlich!',
+	rideSharing: 'Mitfahrangebot',
+	rideSharingBookingRequired: 'Mitfahrangebot - Vereinbarung erforderlich!',
 	from: 'Von',
 	to: 'Nach',
 	arrival: 'Ankunft',
@@ -210,12 +248,24 @@ const translations: Translations = {
 	storeItinerary: 'Reisekette speichern',
 	removeItinerary: 'Reisekette entfernen',
 	introduction:
-		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und später Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Bisher ist die Region um Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife, Trebendorf, Weißkeißel und Weißwasser/O.L. eingebunden. Die Bedienzeiten der ÖPNV-Taxis liegen in der Regel zwischen 5 und 22 Uhr und können direkt in der obigen Fahrplanauskunft für 3€ pro Person (kostenlos im Mai!) gebucht werden. Die Buchung muss mindestens eine Stunde im Voraus erfolgen bzw. bis Freitag 18 Uhr für das Wochenende.',
-	serviceArea: 'Bediengebiet ',
+		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und in Zukunft auch Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Mehr über <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a>',
+	publicTransitTaxi: 'ÖPNV-Taxi',
+	serviceArea: 'Bediengebiet',
+	serviceTime: 'Bedienzeit',
+	serviceTimeContent: 'i.d.R. 05:00 - 22:00 Uhr (abhängig von Taxiverfügbarkeit)',
+	regionAround: 'Region um',
+	perPerson: 'pro Person',
+	perRide: 'pro Fahrt',
+	fare: 'Fahrpreis',
+	bookingDeadline: 'Buchungsschluss',
+	bookingDeadlineContent:
+		'min. 1 Stunde im Voraus, bei Buchungen für das Wochenende bis Freitag 18 Uhr',
+	logo: 'Das PriMa+ÖV Logo. Ikonographische Darstellung eines Autos, Busses, Zuges und Taxis.',
+	toConnectionSearch: 'Zur Verbindungssuche',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
-		summary: 'Buchungszusammenfassung',
+		summary: 'Zusammenfassung',
 		header: 'Kostenpflichtig buchen',
 		disclaimer:
 			'Stornieren Sie die Fahrt mind. eine Stunde vorher, falls Sie die Fahrt nicht wahrnehmen können. Sollten Sie nicht rechtzeitig stornieren, wird Ihnen die Anfahrt des Taxis voll in Rechnung gestellt.',
@@ -248,7 +298,83 @@ const translations: Translations = {
 		cancelHeadline: 'Möchten Sie wirklich diese Fahrt stornieren?',
 		noCancel: 'Nein, Fahrt nicht stornieren.',
 		cancelDescription:
-			'Die Stornierung der Fahrt kann nicht rückgängig gemacht werden. Eine Stornierung weniger als 24 Stunden vor der Fahrt ist mit Kosten verbunden.'
+			'Die Stornierung der Fahrt kann nicht rückgängig gemacht werden. Eine Stornierung weniger als 24 Stunden vor der Fahrt ist mit Kosten verbunden.',
+		pin: 'PIN:',
+		pinExplainer:
+			'Zur Weitergabe an den Fahrgast. Der Fahrgast muss die PIN beim Einstieg den Taxifahrer:innen mitteilen.',
+		itineraryOnDate: 'Fahrt am',
+		withVehicle: 'mit Fahrzeug'
+	},
+
+	explainer: {
+		title: 'Explainer',
+		p1: 'Leider deckt der ÖPNV nicht alles ab.',
+		p2: 'Wir verwenden Taxis, um das Angebot des ÖPNV zu erweitern. Die Schnittmenge aus ÖPNV und Taxi nennen wir das ÖPNV-Taxi.',
+		p3: 'Die Verbindungssuche findet ÖPNV-Verbindungen und zusätzlich ÖPNV-Taxi-Verbindungen, wenn der ÖPNV alleine nicht ausreichend ist.',
+		alt1: 'Ein blauer Kreis, der rechts nicht ganz gefüllt ist. Der nicht gefüllte Teil ist schraffiert.',
+		alt2: 'Ein blauer und ein gelber Kreis, die sich überlappen. Die Überlappung ist blau und gelb schraffiert.',
+		alt3: 'Ein blauer Kreis dessen rechter Teil gelb schraffiert ist.'
+	},
+	ride: {
+		myRideOffers: 'Meine Mitfahrangebote',
+		create: 'Neues Mitfahrangebot anlegen',
+		intro: 'Hinterlegen Sie Ihre Fahrt, um anderen Nutzern die Mitfahrt bei Ihnen anzubieten.',
+		vehicle: 'Fahrzeug',
+		addVehicle: 'Fahrzeug hinzufügen',
+		outro:
+			'Ihr Mitfahrangebot wird öffentlich in der Verbindungsauskunft angezeigt. Über Anfragen werden Sie per E-Mail benachrichtigt.',
+		publish: 'Mitfahrangebot veröffentlichen',
+		cancelTrip: 'Mitfahrangebot stornieren',
+		cancelHeadline: 'Möchten Sie wirklich dieses Mitfahrangebot stornieren?',
+		noCancel: 'Nein, Fahrt nicht stornieren.',
+		cancelDescription:
+			'Sie sollten ggf. vorhandene Mitfahrer persönlich informieren, auch wenn diese per E-Mail über die Stornierung benachrichtigt werden.',
+		negotiateHere: 'Hier vereinbaren',
+		negotiateHeader: 'Mitfahrgelegenheit vereinbaren',
+		negotiatePrivacy:
+			'Die folgenden Daten werden beim Senden der Anfrage mit der Person, die diese Mitfahrgelegenheit anbietet, geteilt:',
+		negotiateExplanation:
+			'Sie müssen den Preis sowie genaue Abfahrtszeit und -ort mit der anbietenden Person vereinbaren.',
+		startAndEnd: 'Start und Ziel der Fahrt',
+		profile: 'Ihr Profil',
+		email: 'Ihre E-Mail',
+		phone: 'Ihre Telefonnummer',
+		noPhone:
+			'Sie haben keine Telefonnummer in Ihrem Account hinterlegt. Der Anbieter wird Sie daher nur per E-Mail kontaktieren können.',
+		negotiateMessage: 'Nachricht an den Anbieter der Mitfahrgelegenheit',
+		sendNegotiationRequest: 'Anfrage senden',
+		requestBy: 'Anfrage von',
+		offerBy: 'Angebot von',
+		acceptRequest: 'Mitfahrt bestätigen',
+		requestAccepted: 'Mitfahrt bestätigt',
+		requestCancelled: 'Mitfahrt abgesagt'
+	},
+
+	buttons: {
+		addVehicleTitle: 'Fahrzeug für Mitfahrangebote hinzufügen',
+		addVehicle: 'Fahrzeug hinzufügen',
+		uploadPhoto: 'Foto auswählen',
+		savePhoto: 'Foto speichern',
+		smokingOptions: ['nicht erlaubt', 'erlaubt']
+	},
+
+	rideShare: {
+		maxPassengers: 'maximale Anzahl Mitfahrer',
+		passengers: 'Mitfahrer',
+		smokingInVehicle: 'Rauchen im Fahrzeug',
+		color: 'Farbe',
+		model: 'Fahrzeugmodell',
+		specifyColor: 'Farbe angeben',
+		specifyModel: 'Fahrzeugmodell angeben',
+		luggage: 'Gepäckstücke',
+		licensePlate: 'Nummernschild',
+		createNewVehicle: 'Neues Fahrzeug anlegen',
+		createVehicle: 'Fahrzeug anlegen',
+		saveChanges: 'Änderungen speichern',
+		preview: 'Voransicht',
+		feedbackPrompt: 'Bitte bewerten Sie Ihre Reise mit',
+		feedbackPromptProvider: 'Bitte bewerten Sie Ihren Mitfahrer',
+		howHasItBeen: 'Sie können Ihre letzte Mitfahrerfahrung hier bewerten'
 	}
 };
 

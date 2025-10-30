@@ -6,9 +6,18 @@
 	import Meta from '$lib/ui/Meta.svelte';
 	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import { t } from '$lib/i18n/translation';
+	import UploadPhoto from '$lib/ui/UploadPhoto.svelte';
+	import { Plus } from 'lucide-svelte';
+	import { Label } from '$lib/shadcn/label';
+	import * as RadioGroup from '$lib/shadcn/radio-group/index.js';
+	import * as Select from '$lib/shadcn/select';
+	import { getCountryData, getCountryDataList, type TCountryCode } from 'countries-list';
+	import { defaultProfilePicture } from '$lib/constants.js';
+	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
 
 	const { data, form } = $props();
 	let showTooltip = $state(false);
+	let region: TCountryCode | undefined = $state(data.region ? (data.region as TCountryCode) : 'DE');
 </script>
 
 <Meta title="Account | {PUBLIC_PROVIDER}" />
@@ -59,6 +68,87 @@
 			/>
 			<div class="mt-4 flex justify-end">
 				<Button type="submit" variant="outline">{t.account.changePhone}</Button>
+			</div>
+		</form>
+	</Panel>
+
+	<Panel title={t.buttons.addVehicleTitle} subtitle={''}>
+		<Button
+			variant="outline"
+			onclick={() => storeLastPageAndGoto('/account/add-ride-share-vehicle')}
+		>
+			<Plus class="mr-2 size-4" />
+			{t.buttons.addVehicle}
+		</Button>
+	</Panel>
+
+	<Panel title={t.account.profilePicture} subtitle={t.account.profilePictureSubtitle}>
+		<form
+			method="post"
+			action={'/account/settings?/uploadProfilePicture'}
+			enctype="multipart/form-data"
+			class="mt-8"
+		>
+			<UploadPhoto
+				name="profilePicture"
+				displaySaveButton={true}
+				currentUrl={data.profilePicture ?? undefined}
+				defaultPicture={defaultProfilePicture}
+			/>
+		</form>
+	</Panel>
+
+	<Panel title={t.account.personalInfo} subtitle={t.account.adjustPersonalInfo}>
+		<form method="post" action="/account/settings?/personalInfo" class="mt-8 flex flex-col gap-2">
+			<Label for="lastname">{t.account.genderString}</Label>
+			<RadioGroup.Root value={data.gender ?? 'n'} name="gender" class="grid-cols-4">
+				<div class="flex items-center space-x-2">
+					<RadioGroup.Item value="m" id="m" />
+					<Label for="m">{t.account.gender('m')}</Label>
+				</div>
+				<div class="flex items-center space-x-2">
+					<RadioGroup.Item value="f" id="f" />
+					<Label for="f">{t.account.gender('f')}</Label>
+				</div>
+				<div class="flex items-center space-x-2">
+					<RadioGroup.Item value="o" id="o" />
+					<Label for="o">{t.account.gender('o')}</Label>
+				</div>
+				<div class="flex items-center space-x-2">
+					<RadioGroup.Item value="n" id="n" />
+					<Label for="n">{t.account.gender('n')}</Label>
+				</div>
+			</RadioGroup.Root>
+			<Label for="lastname">{t.account.name}</Label>
+			<div class="grid grid-cols-2 gap-x-1">
+				<Input
+					name="firstname"
+					type="text"
+					value={data.firstName}
+					placeholder={t.account.firstName}
+				/>
+				<Input name="lastname" type="text" value={data.name} placeholder={t.account.lastName} />
+			</div>
+			<Label for="zipcode">{t.account.zipCode}/{t.account.city}/{t.account.region}</Label>
+			<div class="grid grid-cols-2 gap-x-1">
+				<Input name="zipcode" type="text" value={data.zipCode} placeholder={t.account.zipCode} />
+				<Input name="city" type="text" value={data.city} placeholder={t.account.city} />
+			</div>
+			<Select.Root type="single" bind:value={region} name="region">
+				<Select.Trigger class="overflow-hidden" aria-label={t.account.region}>
+					{region ? getCountryData(region).native : t.account.region}
+				</Select.Trigger>
+				<Select.Content>
+					{#each getCountryDataList() as r}
+						<Select.Item value={r.iso2} label={r.native}>
+							{r.native}
+						</Select.Item>
+					{/each}
+				</Select.Content>
+			</Select.Root>
+
+			<div class="mt-2 flex justify-end">
+				<Button type="submit" variant="outline">{t.account.updatePersonalInfo}</Button>
 			</div>
 		</form>
 	</Panel>

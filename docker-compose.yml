@@ -20,7 +20,7 @@ services:
       - 6501:8080
 
   motis-import:
-    image: ghcr.io/motis-project/motis:2.0
+    image: ghcr.io/motis-project/motis:master
     volumes:
       - ./GTFS.zip:/input/GTFS.zip
       - ./osm.pbf:/input/osm.pbf
@@ -29,7 +29,7 @@ services:
     command: /bin/sh -c "./motis import"
 
   motis-server:
-    image: ghcr.io/motis-project/motis:2.0
+    image: ghcr.io/motis-project/motis:master
     depends_on:
       - motis-import
     volumes:
@@ -46,6 +46,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:pw@pg/prima
       - ORIGIN=http://localhost:7777
+      - TZ=Europe/Berlin
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     build:
