@@ -2,8 +2,6 @@
 	import * as Table from '$lib/shadcn/table/index';
 	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button } from '$lib/shadcn/button';
-	import type { Column } from './tableData';
-
 	let {
 		rows = $bindable(),
 		cols,
