@@ -334,7 +334,7 @@ const translations: Translations = {
 		noPhone:
 			'You have not set a phone number in your account. The person offering the ride will only be able to contact you via email.',
 		negotiateMessage: 'Message to the person offering the ride',
-		sendNegotiationRequest: 'Send negotation request',
+		sendNegotiationRequest: 'Send negotiation request',
 		requestBy: 'Request from',
 		offerBy: 'Offered by',
 		acceptRequest: 'Confirm ride',
