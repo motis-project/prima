@@ -230,7 +230,7 @@ export const actions = {
 		).id;
 
 		try {
-			const getEvents = (eb: ExpressionBuilder<Database, 'request'>) => [
+			const getEvents = (eb: ExpressionBuilder<Database, 'request'>, outer: boolean) => [
 				eb
 					.selectFrom('event')
 					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
@@ -261,7 +261,7 @@ export const actions = {
 					.where('event.request', '=', request1)
 					.orderBy('eventGroup.scheduledTimeStart', 'desc')
 					.limit(1)
-					.select('eventGroup.scheduledTimeStart')
+					.select(outer ? 'eventGroup.scheduledTimeEnd' : 'eventGroup.scheduledTimeStart')
 					.as('lastTime')
 			];
 
@@ -272,7 +272,7 @@ export const actions = {
 					.innerJoin('tour', 'request.tour', 'tour.id')
 					.innerJoin('vehicle', 'tour.vehicle', 'vehicle.id')
 					.innerJoin('user', 'vehicle.company', 'user.companyId')
-					.select((eb) => ['user.email', 'user.name', 'tour.id as tourId', ...getEvents(eb)])
+					.select((eb) => ['user.email', 'user.name', 'tour.id as tourId', ...getEvents(eb, false)])
 					.where('request.id', '=', request1)
 					.where('user.isTaxiOwner', '=', true)
 					.execute();
@@ -293,7 +293,7 @@ export const actions = {
 						'passenger.phone as passengerPhone',
 						'rideShareTour.id as tourId',
 						'rideShareTour.communicatedStart as journeyTime',
-						...getEvents(eb),
+						...getEvents(eb, true),
 						eb
 							.selectFrom('event')
 							.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')

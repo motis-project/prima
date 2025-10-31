@@ -14,6 +14,7 @@
 	import { defaultCarPicture } from '$lib/constants.js';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { enhance } from '$app/forms';
 
 	const { form } = $props();
 	let v = $derived(undefined);
@@ -55,6 +56,11 @@
 		enctype="multipart/form-data"
 		method="post"
 		action={'?/addVehicle'}
+		use:enhance={() => {
+			return async ({ update }) => {
+				update({ reset: false });
+			};
+		}}
 		class="flex flex-col gap-4"
 	>
 		<h2 class="font-semibold">
@@ -88,13 +94,13 @@
 				</div>
 			</RadioGroup.Root>
 		</Panel>
-		<Panel title={t.rideShare.luggage} subtitle={''}>
+		<Panel title={t.rideShare.luggage} subtitle={t.rideShare.luggageExplanation}>
 			<Input name="luggage" type="number" placeholder="4" value={'4'} />
 		</Panel>
 		<div>
 			<Panel title={t.rideShare.color} subtitle={''}>
 				<label for="specifyColor" class="flex items-center gap-2">
-					<Checkbox name="specifyColor" bind:checked={hasColor} />
+					<Checkbox name="specifyColor" id="specifyColor" bind:checked={hasColor} />
 					{t.rideShare.specifyColor}
 				</label>
 				{#if hasColor}
@@ -105,7 +111,7 @@
 		<div>
 			<Panel title={t.rideShare.model} subtitle={''}>
 				<label for="specifyModel" class="flex items-center gap-2">
-					<Checkbox name="specifyModel" bind:checked={hasModel} />
+					<Checkbox name="specifyModel" id="specifyModel" bind:checked={hasModel} />
 					{t.rideShare.specifyModel}
 				</label>
 				{#if hasModel}
@@ -130,7 +136,11 @@
 			name="smokingAllowed"
 			value={smokingAllowed === smokingOptions[0] ? '0' : '1'}
 		/>
-		<UploadPhoto name="vehiclePicture" defaultPicture={defaultCarPicture} />
+		<Panel title={t.rideShare.vehiclePhoto} subtitle={''}>
+			<UploadPhoto name="vehiclePicture" defaultPicture={defaultCarPicture} />
+		</Panel>
+		<Message msg={form?.msg} class="mb-4" />
+
 		<Button type="submit" variant="outline" data-testid="create-vehicle">
 			{v == undefined ? t.rideShare.createVehicle : t.rideShare.saveChanges}
 		</Button>

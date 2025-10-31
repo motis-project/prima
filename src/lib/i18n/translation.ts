@@ -313,11 +313,13 @@ export type Translations = {
 		maxPassengers: string;
 		passengers: string;
 		smokingInVehicle: string;
+		vehiclePhoto: string;
 		color: string;
 		model: string;
 		specifyColor: string;
 		specifyModel: string;
 		luggage: string;
+		luggageExplanation: string;
 		licensePlate: string;
 		createNewVehicle: string;
 		createVehicle: string;
