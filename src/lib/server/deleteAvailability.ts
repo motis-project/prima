@@ -1,10 +1,7 @@
-import { db, type Database } from '$lib/server/db';
 import { Interval } from '$lib/util/interval';
-import { json } from '@sveltejs/kit';
-import { type Insertable, type Selectable } from 'kysely';
-import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
-import { addAvailability } from '$lib/server/addAvailability';
 import { retry } from '$lib/server/db/retryQuery';
+import { db, type Database } from '$lib/server/db';
+import { type Insertable, type Selectable } from 'kysely';
 
 type Availability = Selectable<Database['availability']>;
 type NewAvailability = Insertable<Database['availability']>;
@@ -26,23 +23,10 @@ const toNewAvailability = (interval: Interval, vehicle: number): NewAvailability
 	};
 };
 
-export const DELETE = async ({ locals, request }) => {
-	const companyId = locals.session?.companyId;
-	if (!companyId) {
-		throw 'not allowed';
-	}
-
-	const { vehicleId, from, to } = await request.json();
-	if (typeof vehicleId !== 'number' || typeof from !== 'number' || typeof to !== 'number') {
-		console.log('remove availability invalid params: ', { vehicleId, from, to });
-		throw 'invalid params';
-	}
-
-	const toRemove = new Interval(from, to).intersect(getAlterableTimeframe());
-	if (toRemove === undefined) {
-		return json({});
-	}
+export async function deleteAvailability(toRemove: Interval, vehicleId: number, companyId: number) {
 	console.log('remove availability vehicle=', vehicleId, 'toRemove=', toRemove);
+	const from = toRemove.startTime;
+	const to = toRemove.endTime;
 	await retry(() =>
 		db
 			.transaction()
@@ -106,24 +90,4 @@ export const DELETE = async ({ locals, request }) => {
 				await Promise.all(promises);
 			})
 	);
-	return json({});
-};
-
-export const POST = async ({ locals, request }) => {
-	const companyId = locals.session?.companyId;
-	if (!companyId) {
-		throw 'no company';
-	}
-	const { vehicleId, from, to } = await request.json();
-	if (typeof vehicleId !== 'number' || typeof from !== 'number' || typeof to !== 'number') {
-		console.log('add availability invalid params: ', { vehicleId, from, to });
-		throw 'invalid params';
-	}
-
-	const interval = new Interval(from, to).intersect(getAlterableTimeframe());
-	if (interval === undefined) {
-		return json({});
-	}
-	await addAvailability(interval, companyId, vehicleId);
-	return json({});
-};
+}
