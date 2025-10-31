@@ -12,5 +12,9 @@ export default defineConfig({
 				minThreads: 1
 			}
 		} // Disable parallel threads
+	},
+	server: {
+		host: '0.0.0.0',
+		port: 7777
 	}
 });
