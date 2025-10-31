@@ -351,21 +351,24 @@ const translations: Translations = {
 	},
 
 	rideShare: {
-		maxPassengers: 'Maximum Carpoolers',
-		passengers: 'Carpoolers',
+		maxPassengers: 'Maximum Number of Ride Share Passengers',
+		passengers: 'Ride Share Passengers',
 		smokingInVehicle: 'Smoking in the vehicle',
+		vehiclePhoto: 'Photo',
 		color: 'Color',
 		model: 'Car Model',
 		specifyColor: 'Specify Color',
 		specifyModel: 'Specify Model',
 		luggage: 'Luggage',
+		luggageExplanation:
+			'Approximate number of transportable items in handluggage size. A big suitcase corresponds to about three handluggage items.',
 		licensePlate: 'License Plate',
 		createNewVehicle: 'Create new Vehicle',
 		createVehicle: 'Create Vehicle',
 		saveChanges: 'Save changes',
 		preview: 'preview',
 		feedbackPrompt: 'Please rate your journey with',
-		feedbackPromptProvider: 'Please rate your recent carpooler',
+		feedbackPromptProvider: 'Please rate your recent ride share passenger',
 		howHasItBeen: 'You can rate your last ride share experience here'
 	}
 };

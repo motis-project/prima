@@ -152,6 +152,7 @@
 			</div>
 		</form>
 	</Panel>
+	<Message msg={form?.msg} class="mb-4" />
 
 	<Panel title={t.account.logout} subtitle={''}>
 		<form method="post" action="/account/settings?/logout" class="mt-8">

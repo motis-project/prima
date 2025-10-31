@@ -359,14 +359,17 @@ const translations: Translations = {
 	},
 
 	rideShare: {
-		maxPassengers: 'maximale Anzahl Mitfahrer',
+		maxPassengers: 'Maximale Anzahl Mitfahrer',
 		passengers: 'Mitfahrer',
 		smokingInVehicle: 'Rauchen im Fahrzeug',
+		vehiclePhoto: 'Foto',
 		color: 'Farbe',
 		model: 'Fahrzeugmodell',
 		specifyColor: 'Farbe angeben',
 		specifyModel: 'Fahrzeugmodell angeben',
 		luggage: 'Gepäckstücke',
+		luggageExplanation:
+			'Ungefähre Anzahl von transportierbaren Gepäckstücken in Handgepäckgröße. Ein großer Koffer entspricht etwa drei Handgepäckstücken.',
 		licensePlate: 'Nummernschild',
 		createNewVehicle: 'Neues Fahrzeug anlegen',
 		createVehicle: 'Fahrzeug anlegen',

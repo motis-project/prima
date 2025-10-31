@@ -236,14 +236,14 @@
 			</Button>
 			{#if page.state.selectedItinerary.legs.some(isOdmLeg)}
 				{#if data.isLoggedIn}
-					{@const isRideShare = page.state.selectedItinerary.legs.some(isRideShareLeg)}
+					{@const rideShareLeg = page.state.selectedItinerary.legs.find(isRideShareLeg)}
 					<Dialog.Root>
 						<Dialog.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
-							{isRideShare ? t.ride.negotiateHeader : t.booking.header}
+							{rideShareLeg ? t.ride.negotiateHeader : t.booking.header}
 							<ChevronRight />
 						</Dialog.Trigger>
 						<Dialog.Content class="max-h-[100vh] w-[90%] flex-col overflow-y-auto md:w-96">
-							{#if isRideShare}
+							{#if rideShareLeg}
 								<Dialog.Header>
 									<Dialog.Title>{t.ride.negotiateHeader}</Dialog.Title>
 								</Dialog.Header>
@@ -295,11 +295,7 @@
 										<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
 										<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
 										<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
-										<input
-											type="hidden"
-											name="tourId"
-											value={page.state.selectedItinerary.legs.find(isRideShareLeg)?.tripId}
-										/>
+										<input type="hidden" name="tourId" value={rideShareLeg?.tripId} />
 										<input
 											type="hidden"
 											name="startFixed"

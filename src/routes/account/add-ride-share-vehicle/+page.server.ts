@@ -74,22 +74,30 @@ export const actions: Actions = {
 				vehiclePicturePath = uploadResult;
 			}
 		}
-		console.log(
-			'created ride share vehicle',
-			await createRideShareVehicle(
-				user,
-				luggage,
-				passengers,
-				hasColor ? color : null,
-				hasModel ? model : null,
-				smokingAllowed,
-				licensePlate,
-				vehiclePicturePath
-			)
-		);
-		return {
-			success: true,
-			msg: msg('vehicleAddedSuccessfully', 'success')
-		};
+		try {
+			console.log(
+				'created ride share vehicle',
+				await createRideShareVehicle(
+					user,
+					luggage,
+					passengers,
+					hasColor ? color : null,
+					hasModel ? model : null,
+					smokingAllowed,
+					licensePlate,
+					vehiclePicturePath
+				)
+			);
+
+			return {
+				success: true,
+				msg: msg('vehicleAddedSuccessfully', 'success')
+			};
+		} catch (e) {
+			return fail(400, {
+				/* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
+				msg: msg((<any>e).constraint ? 'duplicateLicensePlate' : 'unknownError')
+			});
+		}
 	}
 };
