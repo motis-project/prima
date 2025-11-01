@@ -413,7 +413,7 @@ const getRideShareTours = async (selectCancelled: boolean) => {
 			jsonArrayFrom(
 				eb
 					.selectFrom('request')
-					.where('request.tour', 'is not', null)
+					.where('request.rideShareTour', 'is not', null)
 					.whereRef('rideShareTour.id', '=', 'request.rideShareTour')
 					.$if(!selectCancelled, (qb) => qb.where('request.cancelled', '=', false))
 					.select((eb) => [

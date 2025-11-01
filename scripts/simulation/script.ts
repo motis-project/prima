@@ -15,6 +15,7 @@ import * as fs from 'fs';
 import * as readline from 'readline';
 import { DAY } from '../../src/lib/util/time';
 import { healthCheck } from '../../src/lib/server/util/healthCheck';
+import { healthCheck as healthCheckRideShare } from '../../src/lib/server/util/healthCheckRideShare';
 import { logHelp } from './logHelp';
 import { exec } from 'child_process';
 import path from 'path';
@@ -24,8 +25,12 @@ import { MAX_MATCHING_DISTANCE } from '../../src/lib/constants';
 import { PlanData } from '../../src/lib/openapi';
 import { planAndSign } from '../../src/lib/planAndSign';
 import { lngLatToStr } from '../../src/lib/util/lngLatToStr';
-import { expectedConnectionFromLeg } from '../../src/lib/server/booking/expectedConnection';
+import {
+	ExpectedConnection,
+	expectedConnectionFromLeg
+} from '../../src/lib/server/booking/expectedConnection';
 import { rediscoverWhitelistRequestTimes } from '../../src/lib/server/util/rediscoverWhitelistRequestTimes';
+import { addRideShareTour } from '../../src/lib/server/booking/index';
 
 const BACKUP_DIR = './scripts/simulation/backups/';
 
@@ -41,7 +46,9 @@ enum Action {
 	BOOKING,
 	CANCEL_REQUEST,
 	CANCEL_TOUR,
-	MOVE_TOUR
+	MOVE_TOUR,
+	ADD_RIDE_SHARE_TOUR,
+	BOOK_RIDE_SHARE
 }
 
 type ActionType = {
@@ -51,10 +58,12 @@ type ActionType = {
 };
 
 const actionProbabilities: ActionType[] = [
-	{ action: Action.BOOKING, probability: 0.9, text: 'booking' },
+	{ action: Action.BOOKING, probability: 0.6, text: 'booking' },
 	{ action: Action.CANCEL_REQUEST, probability: 0.025, text: 'cancel request' },
 	{ action: Action.CANCEL_TOUR, probability: 0.025, text: 'cancel tour' },
-	{ action: Action.MOVE_TOUR, probability: 0.05, text: 'move tour' }
+	{ action: Action.MOVE_TOUR, probability: 0.05, text: 'move tour' },
+	{ action: Action.ADD_RIDE_SHARE_TOUR, probability: 0.1, text: 'add ride share tour' },
+	{ action: Action.BOOK_RIDE_SHARE, probability: 0.2, text: 'book ride share' }
 ];
 
 async function readCoordinates(): Promise<Coordinates[]> {
@@ -121,6 +130,32 @@ const getAction = (r: number) => {
 	}
 	return undefined;
 };
+
+async function addRideShareTourLocal(
+	coordinates: Coordinates[],
+	restricted: Coordinates[] | undefined
+) {
+	const parameters: BookingParameters = await generateBookingParameters(coordinates, restricted);
+	const connection: ExpectedConnection = parameters.connection1!;
+	const capacities = parameters.capacities;
+	const request = await addRideShareTour(
+		connection.startFixed ? connection.startTime : connection.targetTime,
+		connection.startFixed,
+		capacities.passengers,
+		capacities.luggage,
+		1,
+		1,
+		connection.start,
+		connection.target,
+		connection.start.address,
+		connection.target.address
+	);
+	console.log(`Adding a ride share tour was ${request === undefined ? 'not ' : ''} succesful.`);
+}
+
+async function bookRideShare(coordinates: Coordinates[], restricted: Coordinates[] | undefined) {
+	const parameters = await generateBookingParameters(coordinates, restricted);
+}
 
 async function bookingFull(
 	coordinates: Coordinates[],
@@ -508,6 +543,12 @@ export async function simulation(params: {
 				case Action.MOVE_TOUR:
 					await moveTourLocal();
 					break;
+				case Action.ADD_RIDE_SHARE_TOUR:
+					await addRideShareTourLocal(coordinates, restrictedCoordinates);
+					break;
+				case Action.BOOK_RIDE_SHARE:
+					await bookRideShare(coordinates, restrictedCoordinates);
+					break;
 			}
 		} catch (e) {
 			errors.push(JSON.stringify(e, null, 2));
@@ -530,7 +571,7 @@ export async function simulation(params: {
 			});
 		}
 		console.log('');
-		if (params.healthChecks && (await healthCheck())) {
+		if (params.healthChecks && lastActionWasRideShare(actionIdx) ? await healthCheckRideShare() : await healthCheck()) {
 			return true;
 		}
 	}
@@ -596,6 +637,10 @@ export async function simulation(params: {
 	);
 	console.log('RANDOM API END');
 	return false;
+}
+
+function lastActionWasRideShare(idx: number) {
+	return actionProbabilities[idx].action === Action.ADD_RIDE_SHARE_TOUR || actionProbabilities[idx].action === Action.BOOK_RIDE_SHARE;
 }
 
 async function main() {
