@@ -2,7 +2,6 @@
 	import * as Table from '$lib/shadcn/table/index';
 	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button } from '$lib/shadcn/button';
-
 	let {
 		rows = $bindable(),
 		cols,
@@ -84,9 +83,9 @@
 				>
 					{#each cols as col}
 						{#if !col.hidden}
-							<Table.Cell class={col.toColumnStyle ? col.toColumnStyle(row) : ''}
-								>{col.toTableEntry(row)}</Table.Cell
-							>
+							<Table.Cell class={col.toColumnStyle ? col.toColumnStyle(row) : ''}>
+								{col.toTableEntry(row)}
+							</Table.Cell>
 						{/if}
 					{/each}
 				</Table.Row>
