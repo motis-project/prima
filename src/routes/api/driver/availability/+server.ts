@@ -24,6 +24,10 @@ const availabilitySchema = {
 		vehicleId: { type: 'integer' },
 		from: { $ref: '/schemaDefinitions#/definitions/times' },
 		to: { $ref: '/schemaDefinitions#/definitions/times' },
+		add: {
+			type: 'array',
+			items: { type: 'boolean' }
+		},
 		offset: { type: 'integer' },
 		date: { type: 'string' }
 	},
@@ -34,6 +38,7 @@ type AvailabilityRequest = {
 	vehicleId: number;
 	from: number[];
 	to: number[];
+	add: boolean[];
 	offset: number;
 	date: string;
 };
@@ -53,7 +58,7 @@ export const POST = async ({ locals, request }) => {
 		return json({ message: result.errors }, { status: 400 });
 	}
 
-	const { vehicleId, from, to, date, offset } = body;
+	const { vehicleId, from, to, add, date, offset } = body;
 
 	if (from.length != to.length) {
 		error(400, { message: 'Invalid parameters' });
@@ -63,7 +68,11 @@ export const POST = async ({ locals, request }) => {
 	while (i < from.length) {
 		const interval = new Interval(from[i], to[i]).intersect(getAlterableTimeframe());
 		if (interval !== undefined) {
-			await addAvailability(interval, companyId, vehicleId);
+			if (add[i]) {
+				await addAvailability(interval, companyId, vehicleId);
+			} else {
+				await deleteAvailability(interval, companyId, vehicleId);
+			}
 		}
 		i++;
 	}
