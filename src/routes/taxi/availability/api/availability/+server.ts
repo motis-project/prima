@@ -5,8 +5,9 @@ import { type Insertable, type Selectable } from 'kysely';
 import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
 import { addAvailability } from '$lib/server/addAvailability';
 import { retry } from '$lib/server/db/retryQuery';
+import { deleteAvailability } from '$lib/server/deleteAvailability.js';
 
-type Availability = Selectable<Database['availability']>;
+/*type Availability = Selectable<Database['availability']>;
 type NewAvailability = Insertable<Database['availability']>;
 
 const toAvailability = (interval: Interval, id: number, vehicle: number): Availability => {
@@ -24,7 +25,7 @@ const toNewAvailability = (interval: Interval, vehicle: number): NewAvailability
 		endTime: interval.endTime,
 		vehicle: vehicle
 	};
-};
+};*/
 
 export const DELETE = async ({ locals, request }) => {
 	const companyId = locals.session?.companyId;
@@ -42,7 +43,10 @@ export const DELETE = async ({ locals, request }) => {
 	if (toRemove === undefined) {
 		return json({});
 	}
-	console.log('remove availability vehicle=', vehicleId, 'toRemove=', toRemove);
+
+	await deleteAvailability(toRemove, vehicleId, companyId);
+
+	/*console.log('remove availability vehicle=', vehicleId, 'toRemove=', toRemove);
 	await retry(() =>
 		db
 			.transaction()
@@ -105,7 +109,7 @@ export const DELETE = async ({ locals, request }) => {
 				}
 				await Promise.all(promises);
 			})
-	);
+	);*/
 	return json({});
 };
 

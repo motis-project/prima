@@ -60,7 +60,7 @@ export const POST = async ({ locals, request }) => {
 
 	const { vehicleId, from, to, add, date, offset } = body;
 
-	if (from.length != to.length) {
+	if (from.length != to.length && to.length != add.length) {
 		error(400, { message: 'Invalid parameters' });
 	}
 
@@ -100,60 +100,4 @@ export const POST = async ({ locals, request }) => {
 		};
 	});
 	return json(res);
-};
-
-export const DELETE = async ({ locals, request }) => {
-	const companyId = locals.session?.companyId;
-	if (!companyId) {
-		throw 'not allowed';
-	}
-
-	const body: AvailabilityRequest = await request.json();
-
-	const validator = new Validator();
-	validator.addSchema(schemaDefinitions, '/schemaDefinitions');
-	const result = validator.validate(body, availabilitySchema);
-	if (!result.valid) {
-		return json({ message: result.errors }, { status: 400 });
-	}
-
-	const { vehicleId, from, to, date, offset } = body;
-
-	if (from.length != to.length) {
-		error(400, { message: 'Invalid parameters' });
-	}
-
-	let i = 0;
-	while (i < from.length) {
-		const interval = new Interval(from[i], to[i]).intersect(getAlterableTimeframe());
-		if (interval !== undefined) {
-			await deleteAvailability(interval, companyId, vehicleId);
-		}
-		i++;
-	}
-
-	const time = new Date(date).getTime();
-	if (isNaN(time)) {
-		error(400, { message: 'Invalid date parameter' });
-	}
-
-	const utcDate = new Date(time + offset * MINUTE);
-	const {
-		companyDataComplete: _a,
-		companyCoordinates: _b,
-		utcDate: _c,
-		...res
-	} = await getAvailability(utcDate, companyId);
-	res.vehicles = res.vehicles.map((v) => {
-		return {
-			...v,
-			availability: Interval.merge(
-				v.availability.map((av) => new Interval(av.startTime, av.endTime))
-			).map((av) => {
-				return { ...av, id: 0 };
-			})
-		};
-	});
-
-	return json({});
 };
