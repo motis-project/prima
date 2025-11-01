@@ -1,10 +1,16 @@
 import { EARLIEST_SHIFT_START, LATEST_SHIFT_END } from '$lib/constants';
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
-import type { Interval } from '$lib/util/interval';
+import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
+import { Interval } from '$lib/util/interval';
 import { HOUR } from '$lib/util/time';
 import { db } from './db';
 
-export async function addAvailability(interval: Interval, companyId: number, vehicleId: number) {
+export async function addAvailability(from: number, to: number, companyId: number, vehicleId: number): Promise<boolean> {
+	const interval = new Interval(from, to).intersect(getAlterableTimeframe());
+	if (interval === undefined) {
+		return false;
+	}
+	console.log('add availability vehicle=', vehicleId, 'toRemove=', interval);
 	await Promise.all(
 		getAllowedTimes(
 			interval.startTime,
@@ -32,4 +38,5 @@ export async function addAvailability(interval: Interval, companyId: number, veh
 					.execute()
 			)
 	);
+	return true;
 }

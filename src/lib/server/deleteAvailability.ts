@@ -2,6 +2,7 @@ import { Interval } from '$lib/util/interval';
 import { retry } from '$lib/server/db/retryQuery';
 import { db, type Database } from '$lib/server/db';
 import { type Insertable, type Selectable } from 'kysely';
+import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
 
 type Availability = Selectable<Database['availability']>;
 type NewAvailability = Insertable<Database['availability']>;
@@ -23,10 +24,12 @@ const toNewAvailability = (interval: Interval, vehicle: number): NewAvailability
 	};
 };
 
-export async function deleteAvailability(toRemove: Interval, vehicleId: number, companyId: number) {
+export async function deleteAvailability(from: number, to: number, vehicleId: number, companyId: number): Promise<boolean> {
+	const toRemove = new Interval(from, to).intersect(getAlterableTimeframe());
+	if (toRemove === undefined) {
+		return false;
+	}
 	console.log('remove availability vehicle=', vehicleId, 'toRemove=', toRemove);
-	const from = toRemove.startTime;
-	const to = toRemove.endTime;
 	await retry(() =>
 		db
 			.transaction()
@@ -90,4 +93,5 @@ export async function deleteAvailability(toRemove: Interval, vehicleId: number, 
 				await Promise.all(promises);
 			})
 	);
+	return true;
 }

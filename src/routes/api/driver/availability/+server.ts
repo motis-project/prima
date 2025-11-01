@@ -66,13 +66,10 @@ export const POST = async ({ locals, request }) => {
 
 	let i = 0;
 	while (i < from.length) {
-		const interval = new Interval(from[i], to[i]).intersect(getAlterableTimeframe());
-		if (interval !== undefined) {
-			if (add[i]) {
-				await addAvailability(interval, companyId, vehicleId);
-			} else {
-				await deleteAvailability(interval, companyId, vehicleId);
-			}
+		if (add[i]) {
+			await addAvailability(from[i], to[i], companyId, vehicleId);
+		} else {
+			await deleteAvailability(from[i], to[i], companyId, vehicleId);
 		}
 		i++;
 	}
