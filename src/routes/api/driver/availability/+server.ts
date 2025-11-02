@@ -96,5 +96,5 @@ export const POST = async ({ locals, request }) => {
 			})
 		};
 	});
-	return json({ ...res, from });
+	return json({ ...res, from, to });
 };
