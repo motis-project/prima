@@ -25,6 +25,7 @@
 		"sim:all": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/simulation/script.ts -- --ongoing --cost --wl --restrict --bu --health",
 		"sim:full": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/simulation/script.ts -- --ongoing --cost --restrict --bu --full --health",
 		"health": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/healthScript.ts",
+		"healthrs": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/healthScriptRideShare.ts",
 		"restore": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/reproduce/restore.ts",
 		"reset": "scripts/reproduce/reset-db.sh",
 		"book": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/reproduce/callBookingApi.ts",

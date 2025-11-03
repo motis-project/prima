@@ -153,20 +153,12 @@ async function addRideShareTourLocal(
 	console.log(`Adding a ride share tour was ${request === undefined ? 'not ' : ''} succesful.`);
 }
 
-async function bookRideShare(coordinates: Coordinates[], restricted: Coordinates[] | undefined) {
-	const parameters = await generateBookingParameters(coordinates, restricted);
-}
-
-async function bookingFull(
+async function getItineraryList(
 	coordinates: Coordinates[],
 	restricted: Coordinates[] | undefined,
-	compareCosts?: boolean
+	mode: string
 ) {
 	const parameters = await generateBookingParameters(coordinates, restricted);
-	const potentialKids = parameters.capacities.passengers - 1;
-	const kidsZeroToTwo = randomInt(0, potentialKids);
-	const kidsThreeToFour = randomInt(0, potentialKids - kidsZeroToTwo);
-	const kidsFiveToSix = randomInt(0, potentialKids - kidsThreeToFour);
 	console.log(
 		'SimLOGS',
 		{ fromPlace: lngLatToStr(parameters.connection1.start) },
@@ -182,9 +174,9 @@ async function bookingFull(
 			arriveBy: !parameters.connection1.startFixed,
 			fromPlace: lngLatToStr(parameters.connection1.start),
 			toPlace: lngLatToStr(parameters.connection1.target),
-			preTransitModes: ['WALK', 'ODM'],
-			postTransitModes: ['WALK', 'ODM'],
-			directModes: ['WALK', 'ODM'],
+			preTransitModes: ['WALK', mode],
+			postTransitModes: ['WALK', mode],
+			directModes: ['WALK', mode],
 			luggage: parameters.capacities.luggage,
 			fastestDirectFactor: 1.6,
 			maxMatchingDistance: MAX_MATCHING_DISTANCE,
@@ -195,11 +187,33 @@ async function bookingFull(
 	const planResponse = await planAndSign(q.query, 'http://localhost:5173');
 	if (planResponse === undefined) {
 		console.log('PlanResponse was undefined.');
+		return undefined;
+	}
+	return {
+		parameters,
+		odmItineraries: planResponse.itineraries.filter((i) => i.legs.some((l) => l.mode === mode))
+	};
+}
+
+async function bookRideShare(coordinates: Coordinates[], restricted: Coordinates[] | undefined) {
+	const itineraries = await getItineraryList(coordinates, restricted, 'RIDE_SHARING');
+	//const parameters = await generateBookingParameters(coordinates, restricted);
+}
+
+async function bookingFull(
+	coordinates: Coordinates[],
+	restricted: Coordinates[] | undefined,
+	compareCosts?: boolean
+) {
+	const itineraries = await getItineraryList(coordinates, restricted, 'ODM');
+	if (itineraries === undefined) {
 		return true;
 	}
-	const odmItineraries = planResponse.itineraries.filter((i) =>
-		i.legs.some((l) => l.mode === 'ODM')
-	);
+	const { parameters, odmItineraries } = itineraries;
+	const potentialKids = parameters.capacities.passengers - 1;
+	const kidsZeroToTwo = randomInt(0, potentialKids);
+	const kidsThreeToFour = randomInt(0, potentialKids - kidsZeroToTwo);
+	const kidsFiveToSix = randomInt(0, potentialKids - kidsThreeToFour);
 	if (odmItineraries.length === 0) {
 		console.log('There were no ODM-itineraries.');
 		return false;
@@ -571,7 +585,11 @@ export async function simulation(params: {
 			});
 		}
 		console.log('');
-		if (params.healthChecks && lastActionWasRideShare(actionIdx) ? await healthCheckRideShare() : await healthCheck()) {
+		if (
+			params.healthChecks && lastActionWasRideShare(actionIdx)
+				? await healthCheckRideShare()
+				: await healthCheck()
+		) {
 			return true;
 		}
 	}
@@ -640,7 +658,10 @@ export async function simulation(params: {
 }
 
 function lastActionWasRideShare(idx: number) {
-	return actionProbabilities[idx].action === Action.ADD_RIDE_SHARE_TOUR || actionProbabilities[idx].action === Action.BOOK_RIDE_SHARE;
+	return (
+		actionProbabilities[idx].action === Action.ADD_RIDE_SHARE_TOUR ||
+		actionProbabilities[idx].action === Action.BOOK_RIDE_SHARE
+	);
 }
 
 async function main() {

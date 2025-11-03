@@ -108,26 +108,13 @@ function validateEventParameters(tours: RideShareToursWithRequests): boolean {
 	for (const tour of tours) {
 		for (const request of tour.requests) {
 			const passengers = request.passengers || 0;
-			const wheelchairs = request.wheelchairs || 0;
-			const bikes = request.bikes || 0;
 			const luggage = request.luggage || 0;
-
+			if (request.isInitial) {
+				continue;
+			}
 			if (passengers <= 0) {
 				console.log(
 					`Invalid passengers value for requestId ${request.requestId}: ${passengers}. It should be positive.`
-				);
-				fail = true;
-			}
-
-			if (wheelchairs < 0) {
-				console.log(
-					`Invalid wheelchairs value for requestId ${request.requestId}: ${wheelchairs}. It should be non-negative.`
-				);
-				fail = true;
-			}
-			if (bikes < 0) {
-				console.log(
-					`Invalid bikes value for requestId ${request.requestId}: ${bikes}. It should be non-negative.`
 				);
 				fail = true;
 			}
@@ -317,15 +304,19 @@ async function validateLegDurations(tours: RideShareToursWithRequests): Promise<
 			const expectedDuration2 = expectedDurations2[i];
 			if (
 				expectedDuration !== null &&
-				(isSamePlace(earlierEvent, laterEvent) ? 0 : expectedDuration + 60) >
+				(isSamePlace(earlierEvent, laterEvent)
+					? 0
+					: expectedDuration + (earlierEvent.isInitial ? 0 : 60)) >
 					earlierEvent.nextLegDuration / 1000 &&
 				expectedDuration2 !== null &&
-				(isSamePlace(earlierEvent, laterEvent) ? 0 : expectedDuration2 + 60) >
+				(isSamePlace(earlierEvent, laterEvent)
+					? 0
+					: expectedDuration2 + (earlierEvent.isInitial ? 0 : 60)) >
 					earlierEvent.nextLegDuration / 1000
 			) {
 				console.log(
-					`Direct duration mismatch for events ${earlierEvent.id} -> ${laterEvent.id}: \
-              Expected ${expectedDuration + 60} or ${expectedDuration2 + 60} seconds, Found ${earlierEvent.nextLegDuration / 1000} and ${laterEvent.prevLegDuration / 1000} seconds`,
+					`Earlier event is ${earlierEvent.isInitial ? '' : 'not '}initial. Direct duration mismatch for events ${earlierEvent.id} -> ${laterEvent.id}: \
+              Expected ${expectedDuration + (earlierEvent.isInitial ? 0 : 60)} or ${expectedDuration2 + (earlierEvent.isInitial ? 0 : 60)} seconds, Found ${earlierEvent.nextLegDuration / 1000} and ${laterEvent.prevLegDuration / 1000} seconds`,
 					{
 						startTimes: events.map(
 							(e) => `id: ${e.id} ${new Date(e.scheduledTimeStart).toISOString()}`
@@ -350,12 +341,18 @@ async function validateLegDurations(tours: RideShareToursWithRequests): Promise<
 				: (laterEventStart - earlierEventEnd) / 1000;
 			if (
 				expectedDuration !== null &&
-				timeDiff < (isSamePlace(earlierEvent, laterEvent) ? 0 : expectedDuration + 60) &&
+				timeDiff <
+					(isSamePlace(earlierEvent, laterEvent)
+						? 0
+						: expectedDuration + (earlierEvent.isInitial ? 0 : 60)) &&
 				expectedDuration2 !== null &&
-				timeDiff < (isSamePlace(earlierEvent, laterEvent) ? 0 : expectedDuration2 + 60)
+				timeDiff <
+					(isSamePlace(earlierEvent, laterEvent)
+						? 0
+						: expectedDuration2 + (earlierEvent.isInitial ? 0 : 60))
 			) {
 				console.log(
-					`Time difference expected duration ${expectedDuration + 60} seconds exceeds difference in event times ${timeDiff} seconds for event_id ${earlierEvent.id} and event_id ${laterEvent.id} ${new Date(earlierEvent.scheduledTimeEnd).toISOString()} to ${new Date(laterEvent.scheduledTimeStart).toISOString()}`
+					`ealier event is ${earlierEvent.isInitial ? '' : 'not '}initial. Time difference expected duration ${expectedDuration + (earlierEvent.isInitial ? 0 : 60)} seconds exceeds difference in event times ${timeDiff} seconds for event_id ${earlierEvent.id} and event_id ${laterEvent.id} ${new Date(earlierEvent.scheduledTimeEnd).toISOString()} to ${new Date(laterEvent.scheduledTimeStart).toISOString()}`
 				);
 				fail = true;
 			}
@@ -380,6 +377,7 @@ export async function healthCheck() {
 	const uncancelledTours: RideShareToursWithRequests = await getRideShareTours(false);
 	let fail = false;
 	if (allTours) {
+		console.log('Starting ride share health check');
 		console.log('Validating ride share tours...');
 		fail = validateRequestHas2Events(uncancelledTours) ? true : fail;
 		fail = validateToursWithNoEvents(uncancelledTours) ? true : fail;
@@ -391,6 +389,7 @@ export async function healthCheck() {
 		fail = validateScheduledIntervalSize(uncancelledTours) ? true : fail;
 		fail = (await validateLegDurations(uncancelledTours)) ? true : fail;
 		fail = (await validateAddressCoordinatesMatch(allTours)) ? true : fail;
+		console.log('Finished ride share health chcek');
 	} else {
 		console.log('No tours found or there was an error fetching the data.');
 	}
@@ -428,6 +427,7 @@ const getRideShareTours = async (selectCancelled: boolean) => {
 						'request.ticketPrice',
 						'request.id as requestId',
 						'request.cancelled',
+						eb('request.startFixed', 'is', null).as('isInitial'),
 						jsonArrayFrom(
 							eb
 								.selectFrom('event')
@@ -435,7 +435,7 @@ const getRideShareTours = async (selectCancelled: boolean) => {
 								.innerJoin('user', 'user.id', 'request.customer')
 								.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 								.$if(!selectCancelled, (qb) => qb.where('event.cancelled', '=', false))
-								.select([
+								.select((eb) => [
 									'rideShareTour.id as tour',
 									'user.name as customerName',
 									'user.phone as customerPhone',
@@ -459,7 +459,9 @@ const getRideShareTours = async (selectCancelled: boolean) => {
 									'request.ticketChecked',
 									'request.ticketPrice',
 									'request.wheelchairs',
-									'request.id as requestId'
+									'request.id as requestId',
+									'request.pending',
+									eb('request.startFixed', 'is', null).as('isInitial')
 								])
 								.select(sql<string>`md5(request.ticket_code)`.as('ticketHash'))
 								.orderBy('eventGroup.scheduledTimeStart')
