@@ -4,9 +4,11 @@ import { SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import { sortEventsByTime } from '$lib/testHelpers';
 import { reverseGeo } from '$lib/server/util/reverseGeocode';
 import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
-import { db } from '../db';
-import { sql } from 'kysely';
-import { jsonArrayFrom } from 'kysely/helpers/postgres';
+import {
+	getRideShareTours,
+	type RideShareToursWithRequests,
+	type RideShareTourWithRequestsEvent
+} from './getRideShareTours';
 
 function validateRequestHas2Events(tours: RideShareToursWithRequests): boolean {
 	let fail = false;
@@ -395,85 +397,3 @@ export async function healthCheck() {
 	}
 	return fail;
 }
-
-const getRideShareTours = async (selectCancelled: boolean) => {
-	return await db
-		.selectFrom('rideShareTour')
-		.innerJoin('rideShareVehicle', 'rideShareVehicle.id', 'rideShareTour.vehicle')
-		.innerJoin('user as provider', 'provider.id', 'rideShareVehicle.owner')
-		.$if(!selectCancelled, (qb) => qb.where('rideShareTour.cancelled', '=', false))
-		.select((eb) => [
-			'rideShareTour.earliestStart as startTime',
-			'rideShareTour.latestEnd as endTime',
-			'rideShareTour.id as tourId',
-			'rideShareVehicle.id as vehicleId',
-			'rideShareVehicle.licensePlate',
-			'rideShareTour.cancelled',
-			jsonArrayFrom(
-				eb
-					.selectFrom('request')
-					.where('request.rideShareTour', 'is not', null)
-					.whereRef('rideShareTour.id', '=', 'request.rideShareTour')
-					.$if(!selectCancelled, (qb) => qb.where('request.cancelled', '=', false))
-					.select((eb) => [
-						'request.luggage',
-						'request.passengers',
-						'request.wheelchairs',
-						'request.bikes',
-						'request.kidsZeroToTwo',
-						'request.kidsThreeToFour',
-						'request.kidsFiveToSix',
-						'request.ticketChecked',
-						'request.ticketPrice',
-						'request.id as requestId',
-						'request.cancelled',
-						eb('request.startFixed', 'is', null).as('isInitial'),
-						jsonArrayFrom(
-							eb
-								.selectFrom('event')
-								.whereRef('event.request', '=', 'request.id')
-								.innerJoin('user', 'user.id', 'request.customer')
-								.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-								.$if(!selectCancelled, (qb) => qb.where('event.cancelled', '=', false))
-								.select((eb) => [
-									'rideShareTour.id as tour',
-									'user.name as customerName',
-									'user.phone as customerPhone',
-									'event.id',
-									'event.communicatedTime',
-									'eventGroup.address',
-									'event.isPickup',
-									'eventGroup.lat',
-									'eventGroup.lng',
-									'eventGroup.nextLegDuration',
-									'eventGroup.prevLegDuration',
-									'eventGroup.scheduledTimeStart',
-									'eventGroup.scheduledTimeEnd',
-									'event.eventGroupId',
-									'event.cancelled',
-									'request.cancelled as requestCancelled',
-									'request.bikes',
-									'request.customer',
-									'request.luggage',
-									'request.passengers',
-									'request.ticketChecked',
-									'request.ticketPrice',
-									'request.wheelchairs',
-									'request.id as requestId',
-									'request.pending',
-									eb('request.startFixed', 'is', null).as('isInitial')
-								])
-								.select(sql<string>`md5(request.ticket_code)`.as('ticketHash'))
-								.orderBy('eventGroup.scheduledTimeStart')
-						).as('events')
-					])
-			).as('requests')
-		])
-		.execute();
-};
-
-type RideShareToursWithRequests = Awaited<ReturnType<typeof getRideShareTours>>;
-type RideShareTourWithRequests = RideShareToursWithRequests[0];
-type RideShareTourRequest = RideShareTourWithRequests['requests'][0];
-type RideShareTourWithRequestsEvents = RideShareTourRequest['events'];
-type RideShareTourWithRequestsEvent = RideShareTourWithRequestsEvents[0];
