@@ -1,7 +1,15 @@
 import { test, expect } from '@playwright/test';
-import { TAXI_OWNER, in6Days, execSQL, login } from './utils';
 import { sql } from 'kysely';
-import { DAY, SECOND } from '../src/lib/util/time';
+import { DAY, HOUR, MINUTE, SECOND } from '../src/lib/util/time';
+import {
+	login,
+	in6Days,
+	execSQL,
+	TAXI_OWNER,
+	offset,
+	dayString,
+	logout
+} from './utils';
 
 const fromTime = in6Days.getTime();
 const toTime = in6Days.getTime() + DAY - SECOND;
@@ -102,4 +110,67 @@ test('Set tour fare', async ({ page }) => {
 
 	const response3 = await page.context().request.put(`/api/driver/fare?tourId=${tourId}&fare=NaN`);
 	expect(response3.status()).toBe(400);
+});
+
+
+test('Update availability', async ({ page }) => {
+	await login(page, TAXI_OWNER);
+
+	// FETCH
+	const payload1 = {
+		vehicleId: 1,
+		from: [],
+		to: [],
+		add: [],
+		offset: offset,
+		date: dayString
+	}
+
+	const response1 = await page
+		.context()
+		.request.post(`api/driver/availability`, { data: payload1 });
+	expect(response1.status()).toBe(200);
+
+	const responseBody1 = await response1.json();
+	expect(responseBody1).toHaveProperty('tours');
+	expect(responseBody1).toHaveProperty('vehicles');
+	expect(responseBody1).not.toHaveProperty('companyDataComplete');
+	expect(responseBody1).not.toHaveProperty('companyCoordinates');
+	expect(responseBody1).not.toHaveProperty('utcDate');
+
+	const vehicles1 = responseBody1['vehicles'];
+	expect(vehicles1).toHaveLength(2);
+	expect(vehicles1[0].availability).toHaveLength(1);
+
+	// UPDATE
+	const fromTime = in6Days.getTime() + HOUR * 11;
+	const toTime = fromTime + MINUTE * 75;
+	const payload2 = {
+		vehicleId: vehicles1[0].id,
+		from: [fromTime],
+		to: [toTime],
+		add: [true],
+		offset: offset,
+		date: dayString
+	}
+
+	const response2 = await page
+		.context()
+		.request.post(`api/driver/availability`, { data: payload2 });
+	expect(response2.status()).toBe(200);
+
+	const responseBody2 = await response2.json();
+	const vehicles2 = responseBody2['vehicles'];
+	expect(vehicles2).toHaveLength(2);
+	expect(vehicles2[0].availability).toHaveLength(2);
+
+	const availability = vehicles2[0].availability
+	const av1 = availability[0]
+	const av2 = availability[1]
+	expect(av1.startTime).toBe(1762758000000)
+	expect(av1.endTime).toBe(1762768800000)
+	expect(av2.startTime).toBe(fromTime)
+	expect(av2.endTime).toBe(toTime)
+
+	await logout(page);
 });

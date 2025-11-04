@@ -90,35 +90,3 @@ test('Request ride', async ({ page }) => {
 	);
 	await logout(page);
 });
-
-test('Get availability', async ({ page }) => {
-	await login(page, TAXI_OWNER);
-
-	const response = await page
-		.context()
-		.request.get(`/taxi/availability/api/availability?offset=${offset}&date=${dayString}`);
-	expect(response.status()).toBe(200);
-
-	const responseBody = await response.json();
-	expect(responseBody).toHaveProperty('tours');
-	expect(responseBody).toHaveProperty('vehicles');
-	expect(responseBody).not.toHaveProperty('companyDataComplete');
-	expect(responseBody).not.toHaveProperty('companyCoordinates');
-	expect(responseBody).not.toHaveProperty('utcDate');
-
-	const vehicles = responseBody['vehicles'];
-	expect(vehicles).toHaveLength(1);
-	expect(vehicles[0].availability).not.toHaveLength(0);
-
-	const response2 = await page
-		.context()
-		.request.get(`/taxi/availability/api/availability?offset=NaN&date=${dayString}`);
-	expect(response2.status()).toBe(400);
-
-	const response3 = await page
-		.context()
-		.request.get(`/taxi/availability/api/availability?offset=${offset}&date=noDate`);
-	expect(response3.status()).toBe(400);
-
-	await logout(page);
-});
