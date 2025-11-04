@@ -1,15 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { sql } from 'kysely';
 import { DAY, HOUR, MINUTE, SECOND } from '../src/lib/util/time';
-import {
-	login,
-	in6Days,
-	execSQL,
-	TAXI_OWNER,
-	offset,
-	dayString,
-	logout
-} from './utils';
+import { login, in6Days, execSQL, TAXI_OWNER, offset, dayString, logout } from './utils';
 
 const fromTime = in6Days.getTime();
 const toTime = in6Days.getTime() + DAY - SECOND;
@@ -112,7 +104,6 @@ test('Set tour fare', async ({ page }) => {
 	expect(response3.status()).toBe(400);
 });
 
-
 test('Update availability', async ({ page }) => {
 	await login(page, TAXI_OWNER);
 
@@ -124,7 +115,7 @@ test('Update availability', async ({ page }) => {
 		add: [],
 		offset: offset,
 		date: dayString
-	}
+	};
 
 	const response1 = await page
 		.context()
@@ -152,7 +143,7 @@ test('Update availability', async ({ page }) => {
 		add: [true],
 		offset: offset,
 		date: dayString
-	}
+	};
 
 	const response2 = await page
 		.context()
@@ -164,13 +155,13 @@ test('Update availability', async ({ page }) => {
 	expect(vehicles2).toHaveLength(2);
 	expect(vehicles2[0].availability).toHaveLength(2);
 
-	const availability = vehicles2[0].availability
-	const av1 = availability[0]
-	const av2 = availability[1]
-	expect(av1.startTime).toBe(1762758000000)
-	expect(av1.endTime).toBe(1762768800000)
-	expect(av2.startTime).toBe(fromTime)
-	expect(av2.endTime).toBe(toTime)
+	const availability = vehicles2[0].availability;
+	const av1 = availability[0];
+	const av2 = availability[1];
+	expect(av1.startTime).toBe(1762758000000);
+	expect(av1.endTime).toBe(1762768800000);
+	expect(av2.startTime).toBe(fromTime);
+	expect(av2.endTime).toBe(toTime);
 
 	await logout(page);
 });
