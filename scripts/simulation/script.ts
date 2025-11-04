@@ -8,7 +8,6 @@ import { addAvailability } from '../../src/lib/server/addAvailability';
 import { getToursWithRequests } from '../../src/lib/server/db/getTours';
 import { cancelTour } from '../../src/lib/server/cancelTour';
 import { type Coordinates } from '../../src/lib/util/Coordinates';
-import { Interval } from '../../src/lib/util/interval';
 import { generateBookingParameters } from './generateBookingParameters';
 import { randomInt } from './randomInt';
 import * as fs from 'fs';
