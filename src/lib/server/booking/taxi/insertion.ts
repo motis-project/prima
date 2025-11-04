@@ -352,6 +352,13 @@ export function evaluateBothInsertion(
 		);
 		return undefined;
 	}
+	if(promisedTimes) {
+		if(insertionCase.direction === InsertDirection.BUS_STOP_PICKUP) {
+			arrivalWindow.startTime = promisedTimes.pickup;
+		} else {
+			arrivalWindow.endTime = promisedTimes.dropoff;
+		}
+	}
 	const taxiDurationDelta =
 		prevLegDuration +
 		nextLegDuration +
@@ -1143,13 +1150,12 @@ const keepsPromises = (
 	const pickupWindow = expandToFullMinutes(
 		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP
 			? arrivalWindow
-			: w.shift(-SCHEDULED_TIME_BUFFER_PICKUP)
+			: w
 	);
-
 	const dropoffWindow = expandToFullMinutes(
 		insertionCase.direction == InsertDirection.BUS_STOP_DROPOFF
 			? arrivalWindow
-			: w.shift(getScheduledTimeBufferDropoff(directDuration))
+			: w
 	);
 
 	let checkPickup = false;
@@ -1359,46 +1365,6 @@ function getFullyPayedDurationDelta(
 	return newFullyPayedDuration - oldFullyPayedDuration;
 }
 
-function clampTimestamps(
-	scheduledPickupTimeStart: number,
-	scheduledPickupTimeEnd: number,
-	scheduledDropoffTimeStart: number,
-	scheduledDropoffTimeEnd: number,
-	promisedTimes: PromisedTimes | undefined,
-	direction: InsertDirection
-): {
-	communicatedPickupTime: number;
-	scheduledPickupTimeStart: number;
-	scheduledPickupTimeEnd: number;
-	communicatedDropoffTime: number;
-	scheduledDropoffTimeStart: number;
-	scheduledDropoffTimeEnd: number;
-} {
-	if (direction == InsertDirection.BUS_STOP_PICKUP) {
-		return {
-			communicatedPickupTime: promisedTimes?.pickup ?? scheduledPickupTimeStart,
-			scheduledPickupTimeStart,
-			scheduledPickupTimeEnd,
-			communicatedDropoffTime:
-				promisedTimes?.dropoff ??
-				scheduledDropoffTimeStart +
-					getScheduledTimeBufferDropoff(scheduledDropoffTimeStart - scheduledPickupTimeEnd),
-			scheduledDropoffTimeStart,
-			scheduledDropoffTimeEnd
-		};
-	}
-
-	return {
-		communicatedPickupTime:
-			promisedTimes?.pickup ?? scheduledPickupTimeEnd - SCHEDULED_TIME_BUFFER_PICKUP,
-		scheduledPickupTimeStart,
-		scheduledPickupTimeEnd,
-		communicatedDropoffTime: promisedTimes?.dropoff ?? scheduledDropoffTimeEnd,
-		scheduledDropoffTimeStart,
-		scheduledDropoffTimeEnd
-	};
-}
-
 function getTimestamps(
 	insertionCase: InsertionType,
 	window: Interval,
@@ -1439,73 +1405,67 @@ function getTimestamps(
 				)
 			));
 	if (prevIsSameEventGroup) {
-		const scheduledPickupTimeStart = Math.max(
+		const scheduledPickupTimeStart = promisedTimes?.pickup ?? Math.max(
 			prev.scheduledTimeStart,
-			promisedTimes?.pickup ?? -1,
 			window.startTime
 		);
 		const scheduledPickupTimeEnd = scheduledPickupTimeStart + pickupLeeway;
 		const scheduledDropoffTimeStart = scheduledPickupTimeEnd + passengerDuration;
-		const scheduledDropoffTimeEnd = scheduledDropoffTimeStart + dropoffLeeway;
-		return clampTimestamps(
-			scheduledPickupTimeStart,
-			scheduledPickupTimeEnd,
-			scheduledDropoffTimeStart,
-			scheduledDropoffTimeEnd,
-			promisedTimes,
-			insertionCase.direction
-		);
+		const scheduledDropoffTimeEnd = promisedTimes?.dropoff ?? scheduledDropoffTimeStart + dropoffLeeway;
+		return {
+		communicatedPickupTime: scheduledPickupTimeStart,
+		scheduledPickupTimeStart,
+		scheduledPickupTimeEnd,
+		communicatedDropoffTime: scheduledDropoffTimeEnd,
+		scheduledDropoffTimeStart,
+		scheduledDropoffTimeEnd
+	};
 	}
 	if (nextIsSameEventGroup) {
-		const scheduledDropoffTimeEnd = Math.min(
+		const scheduledDropoffTimeEnd = promisedTimes?.dropoff ?? Math.min(
 			next.scheduledTimeStart,
-			promisedTimes?.dropoff ?? Number.MAX_VALUE,
 			window.endTime
 		);
 		const scheduledDropoffTimeStart = scheduledDropoffTimeEnd - dropoffLeeway;
 		const scheduledPickupTimeEnd = scheduledDropoffTimeStart - passengerDuration;
-		const scheduledPickupTimeStart = scheduledPickupTimeEnd - pickupLeeway;
-		return clampTimestamps(
-			scheduledPickupTimeStart,
-			scheduledPickupTimeEnd,
-			scheduledDropoffTimeStart,
-			scheduledDropoffTimeEnd,
-			promisedTimes,
-			insertionCase.direction
-		);
+		const scheduledPickupTimeStart = promisedTimes?.pickup ?? scheduledPickupTimeEnd - pickupLeeway;
+		return {
+		communicatedPickupTime: scheduledPickupTimeStart,
+		scheduledPickupTimeStart,
+		scheduledPickupTimeEnd,
+		communicatedDropoffTime: scheduledDropoffTimeEnd,
+		scheduledDropoffTimeStart,
+		scheduledDropoffTimeEnd
+	};
 	}
 	if (insertionCase.direction == InsertDirection.BUS_STOP_PICKUP) {
 		const scheduledPickupTimeStart =
-			promisedTimes === undefined || !window.covers(promisedTimes.pickup)
-				? window.startTime
-				: promisedTimes.pickup;
+			promisedTimes?.pickup ?? window.startTime;
 		const scheduledPickupTimeEnd = scheduledPickupTimeStart + pickupLeeway;
 		const scheduledDropoffTimeStart = scheduledPickupTimeEnd + passengerDuration;
-		const scheduledDropoffTimeEnd = scheduledDropoffTimeStart + dropoffLeeway;
-		return clampTimestamps(
-			scheduledPickupTimeStart,
-			scheduledPickupTimeEnd,
-			scheduledDropoffTimeStart,
-			scheduledDropoffTimeEnd,
-			promisedTimes,
-			insertionCase.direction
-		);
-	}
-	const scheduledDropoffTimeEnd =
-		promisedTimes === undefined || !window.covers(promisedTimes.dropoff)
-			? window.endTime
-			: promisedTimes.dropoff;
-	const scheduledDropoffTimeStart = scheduledDropoffTimeEnd - dropoffLeeway;
-	const scheduledPickupTimeEnd = scheduledDropoffTimeStart - passengerDuration;
-	const scheduledPickupTimeStart = scheduledPickupTimeEnd - pickupLeeway;
-	return clampTimestamps(
+		const scheduledDropoffTimeEnd = promisedTimes?.dropoff ?? scheduledDropoffTimeStart + dropoffLeeway;
+		return {
+		communicatedPickupTime: scheduledPickupTimeStart,
 		scheduledPickupTimeStart,
 		scheduledPickupTimeEnd,
+		communicatedDropoffTime: scheduledDropoffTimeEnd,
 		scheduledDropoffTimeStart,
-		scheduledDropoffTimeEnd,
-		promisedTimes,
-		insertionCase.direction
-	);
+		scheduledDropoffTimeEnd
+	};
+	}
+	const scheduledDropoffTimeEnd =
+		promisedTimes?.dropoff ?? window.endTime;
+	const scheduledDropoffTimeStart = scheduledDropoffTimeEnd - dropoffLeeway;
+	const scheduledPickupTimeEnd = scheduledDropoffTimeStart - passengerDuration;
+	const scheduledPickupTimeStart = promisedTimes?.pickup ?? scheduledPickupTimeEnd - pickupLeeway;
+		return {
+		communicatedPickupTime: scheduledPickupTimeStart,
+		scheduledPickupTimeStart,
+		scheduledPickupTimeEnd,
+		communicatedDropoffTime: scheduledDropoffTimeEnd,
+		scheduledDropoffTimeStart,
+		scheduledDropoffTimeEnd
+	};
 }
 
 function waitsTooLong(waitingTime: number) {
