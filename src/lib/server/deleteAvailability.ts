@@ -24,7 +24,12 @@ const toNewAvailability = (interval: Interval, vehicle: number): NewAvailability
 	};
 };
 
-export async function deleteAvailability(from: number, to: number, vehicleId: number, companyId: number): Promise<boolean> {
+export async function deleteAvailability(
+	from: number,
+	to: number,
+	vehicleId: number,
+	companyId: number
+): Promise<boolean> {
 	const toRemove = new Interval(from, to).intersect(getAlterableTimeframe());
 	if (toRemove === undefined) {
 		return false;

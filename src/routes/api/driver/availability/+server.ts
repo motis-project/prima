@@ -1,6 +1,5 @@
 import { Interval } from '$lib/util/interval';
 import { error, json } from '@sveltejs/kit';
-import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
 import { addAvailability } from '$lib/server/addAvailability';
 import { getAvailability } from '$lib/server/getAvailability.js';
 import { Validator } from 'jsonschema';
