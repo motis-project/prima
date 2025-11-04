@@ -369,7 +369,7 @@ async function bookingApiCall(
 		if (
 			Math.abs(
 				newCost.approachPlusReturnDuration -
-				(oldCost.approachPlusReturnDuration + (response.approachPlusReturnDurationDelta ?? 0))
+					(oldCost.approachPlusReturnDuration + (response.approachPlusReturnDurationDelta ?? 0))
 			) > 2
 		) {
 			console.log(
@@ -383,7 +383,7 @@ async function bookingApiCall(
 		if (
 			Math.abs(
 				newCost.fullyPayedDuration -
-				(oldCost.fullyPayedDuration + (response.fullyPayedDurationDelta ?? 0))
+					(oldCost.fullyPayedDuration + (response.fullyPayedDurationDelta ?? 0))
 			) > 2
 		) {
 			console.log(
@@ -406,7 +406,7 @@ async function bookingApiCall(
 		if (
 			Math.abs(
 				newCost.weightedPassengerDuration -
-				(oldCost.weightedPassengerDuration + (response.passengerDuration ?? 0))
+					(oldCost.weightedPassengerDuration + (response.passengerDuration ?? 0))
 			) > 2
 		) {
 			console.log(
@@ -550,8 +550,8 @@ export async function simulation(params: {
 	const minLng = 14.511228293715078;
 	const restrictedCoordinates = params.restrict
 		? coordinates.filter(
-			(c) => c.lat <= maxLat && c.lat >= minLat && c.lng <= maxLng && c.lng >= minLng
-		)
+				(c) => c.lat <= maxLat && c.lat >= minLat && c.lng <= maxLng && c.lng >= minLng
+			)
 		: undefined;
 	await addInitialAvailabilities(1, 1);
 	await addInitialAvailabilities(1, 2);
