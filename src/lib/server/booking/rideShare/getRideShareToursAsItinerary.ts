@@ -1,10 +1,13 @@
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { db } from '$lib/server/db';
-import type { Itinerary, Leg, Mode } from '$lib/openapi';
+import { reverseGeocode, type Itinerary, type Leg, type Mode } from '$lib/openapi';
+import { env } from '$env/dynamic/public';
+import type { QuerySerializerOptions } from '@hey-api/client-fetch';
 
 export async function getRideshareToursAsItinerary(
 	providerId: number,
-	tourId: number | undefined
+	tourId: number | undefined,
+	blurredAddresses?: boolean
 ): Promise<{
 	journeys: {
 		journey: Itinerary;
@@ -82,7 +85,25 @@ export async function getRideshareToursAsItinerary(
 	if (tourId != undefined) {
 		query = query.where('rideShareTour.id', '=', tourId);
 	}
-	const journeys = await query.execute();
+	let journeys = await query.execute();
+	if (blurredAddresses) {
+		journeys = await Promise.all(
+			journeys.map(async (j) => ({
+				...j,
+				requests: await Promise.all(
+					j.requests.map(async (r) => ({
+						...r,
+						events: r.customerId === providerId ? r.events : await Promise.all(
+							r.events.map(async (e) => ({
+								...e,
+								address: await getBlurredAddress(e)
+							}))
+						)
+					}))
+				)
+			}))
+		);
+	}
 	return {
 		journeys: journeys.map((journey) => {
 			type Evt = (typeof journeys)[0]['requests'][0]['events'][0];
@@ -170,4 +191,38 @@ export async function getRideshareToursAsItinerary(
 			};
 		})
 	};
+}
+
+type NullableCoordinates = { lat: number | null; lng: number | null };
+
+async function getBlurredAddress(place: NullableCoordinates) {
+	if (place.lat === null || place.lng === null) {
+		throw new Error();
+	}
+	const result = await reverseGeocode({
+		baseUrl: env.PUBLIC_MOTIS_URL,
+		querySerializer: { array: { explode: false } } as QuerySerializerOptions,
+		query: {
+			place: `${place.lat},${place.lng}`
+		}
+	});
+	const areas = result?.data ? result.data[0].areas : undefined;
+	if (areas === undefined) {
+		throw new Error();
+	}
+	const usedAreas = areas.filter((a) => a.adminLevel < 8);
+	if (usedAreas.length === 0) {
+		throw new Error();
+	}
+	return (
+		usedAreas.reduce(
+			(min, curr) => (min = curr.adminLevel < min.adminLevel ? curr : min),
+			usedAreas[0]
+		).name +
+		' ' +
+		usedAreas.reduce(
+			(max, curr) => (max = curr.adminLevel > max.adminLevel ? curr : max),
+			usedAreas[0]
+		).name
+	);
 }
