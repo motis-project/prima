@@ -163,7 +163,9 @@ const translations: Translations = {
 		profilePictureSubtitle: 'Change your profile picture here',
 		personalInfo: 'Personal Information',
 		adjustPersonalInfo: 'Change your personal information here',
-		updatePersonalInfo: 'Update personal info'
+		updatePersonalInfo: 'Update personal info',
+		vehicleListRideShare: 'List of vehicles for ride sharing',
+		vehicleListSubtitle: 'You can edit a vehicle by clicking on it in the list below.'
 	},
 	rating: {
 		thanksForUsing: 'Thank you for using the public transport taxi.',

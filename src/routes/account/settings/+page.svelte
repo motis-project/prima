@@ -121,14 +121,18 @@
 			<Plus class="mr-2 size-4" />
 			{t.buttons.addVehicle}
 		</Button>
-		<SortableTable
-			rows={vehicleRows}
-			cols={vehicleCols}
-			bind:selectedRow={selectedVehicle}
-			bindSelectedRow={true}
-			getRowStyle={(_) => 'cursor-pointer '}
-		></SortableTable>
 	</Panel>
+	{#if vehicleRows.length !== 0}
+		<Panel title={t.account.vehicleListRideShare} subtitle={t.account.vehicleListSubtitle}>
+			<SortableTable
+				rows={vehicleRows}
+				cols={vehicleCols}
+				bind:selectedRow={selectedVehicle}
+				bindSelectedRow={true}
+				getRowStyle={(_) => 'cursor-pointer '}
+			></SortableTable>
+		</Panel>
+	{/if}
 
 	<Panel title={t.account.profilePicture} subtitle={t.account.profilePictureSubtitle}>
 		<form

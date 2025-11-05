@@ -159,6 +159,8 @@ export type Translations = {
 		personalInfo: string;
 		adjustPersonalInfo: string;
 		updatePersonalInfo: string;
+		vehicleListRideShare: string;
+		vehicleListSubtitle: string;
 	};
 	rating: {
 		thanksForUsing: string;
