@@ -15,23 +15,51 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { enhance } from '$app/forms';
+	import type { Msg } from '$lib/msg';
 
-	const { form } = $props();
-	let v = $derived(undefined);
-	let color: string = $state('#FFFFFF');
-	let hasColor = $state(false);
-	let model: string = $state('');
-	let hasModel = $state(false);
+	const {
+		form,
+		luggage,
+		passengers,
+		licensePlate,
+		model,
+		color,
+		vehiclePicturePath,
+		smokingAllowed,
+		vehicleId
+	}: {
+		form: { msg?: Msg } | null;
+		luggage?: number;
+		passengers?: number;
+		color?: string | null;
+		model?: string | null;
+		smokingAllowed?: boolean;
+		licensePlate?: string;
+		vehiclePicturePath?: string | null;
+		vehicleId?: number;
+	} = $props();
+	const isEditMode = luggage !== undefined;
+	const action = !isEditMode ? '?/addVehicle' : '?/editVehicle';
+	let newColor: string = $state(color ?? '#FFFFFF');
+	let hasColor = $state(color !== undefined && color !== null);
+	let newModel: string = $state(model ?? '');
+	let hasModel = $state(model !== undefined && model !== null);
 	let smokingOptions = t.buttons.smokingOptions;
-	let smokingAllowed = $state(smokingOptions[0]);
-	let lastSmokingAllowed = smokingOptions[0];
+	const smokingAllowedString: string | undefined =
+		smokingAllowed === undefined
+			? undefined
+			: smokingAllowed
+				? smokingOptions[1]
+				: smokingOptions[0];
+	let newSmokingAllowed = $state(smokingAllowedString ?? smokingOptions[0]);
+	let lastSmokingAllowed = smokingAllowedString ?? smokingOptions[0];
 	$effect(() => {
-		if (smokingAllowed === null || smokingAllowed === '') {
-			smokingAllowed = lastSmokingAllowed;
+		if (newSmokingAllowed === null || newSmokingAllowed === '') {
+			newSmokingAllowed = lastSmokingAllowed;
 			return;
 		}
-		if (smokingAllowed !== lastSmokingAllowed) {
-			lastSmokingAllowed = smokingAllowed;
+		if (newSmokingAllowed !== lastSmokingAllowed) {
+			lastSmokingAllowed = newSmokingAllowed;
 		}
 	});
 	let fromUrl: string | null = null;
@@ -55,7 +83,7 @@
 	<form
 		enctype="multipart/form-data"
 		method="post"
-		action={'?/addVehicle'}
+		{action}
 		use:enhance={() => {
 			return async ({ update }) => {
 				update({ reset: false });
@@ -64,18 +92,18 @@
 		class="flex flex-col gap-4"
 	>
 		<h2 class="font-semibold">
-			{v == undefined ? t.rideShare.createNewVehicle : 'Fahrzeug anpassen'}
+			{!isEditMode ? t.rideShare.createNewVehicle : t.rideShare.editVehicle}
 		</h2>
 		<Panel title={t.rideShare.licensePlate} subtitle={''}>
 			<Input
 				name="licensePlate"
 				type="string"
 				placeholder={LICENSE_PLATE_PLACEHOLDER}
-				value={undefined}
+				value={licensePlate}
 			/>
 		</Panel>
 		<Panel title={t.rideShare.maxPassengers} subtitle={''}>
-			<RadioGroup.Root name="passengers" value={'3'}>
+			<RadioGroup.Root name="passengers" value={passengers?.toString() ?? '3'}>
 				<div class="flex items-center gap-2">
 					<RadioGroup.Item value="1" id="r1" />
 					<Label for="r1">1 {t.rideShare.passengers}</Label>
@@ -95,7 +123,7 @@
 			</RadioGroup.Root>
 		</Panel>
 		<Panel title={t.rideShare.luggage} subtitle={t.rideShare.luggageExplanation}>
-			<Input name="luggage" type="number" placeholder="4" value={'4'} />
+			<Input name="luggage" type="number" placeholder="4" value={luggage ?? '4'} />
 		</Panel>
 		<div>
 			<Panel title={t.rideShare.color} subtitle={''}>
@@ -104,7 +132,7 @@
 					{t.rideShare.specifyColor}
 				</label>
 				{#if hasColor}
-					<Input type="color" bind:value={color} />
+					<Input type="color" bind:value={newColor} />
 				{/if}
 			</Panel>
 		</div>
@@ -115,34 +143,35 @@
 					{t.rideShare.specifyModel}
 				</label>
 				{#if hasModel}
-					<Input type="string" bind:value={model} />
+					<Input type="string" bind:value={newModel} />
 				{/if}
 			</Panel>
 		</div>
 		<Panel title={t.rideShare.smokingInVehicle} subtitle={''}>
-			<ToggleGroup.Root type="single" bind:value={smokingAllowed}>
+			<ToggleGroup.Root type="single" bind:value={newSmokingAllowed}>
 				{#each smokingOptions as smokingOption}
 					<ToggleGroup.Item value={smokingOption}>{smokingOption}</ToggleGroup.Item>
 				{/each}
 			</ToggleGroup.Root>
 		</Panel>
 		<input type="hidden" name="id" value={undefined} />
-		<input type="hidden" name="color" value={color} />
-		<input type="hidden" name="model" value={model} />
+		<input type="hidden" name="color" value={newColor} />
+		<input type="hidden" name="model" value={newModel} />
 		<input type="hidden" name="hasModelString" value={hasModel ? '1' : '0'} />
 		<input type="hidden" name="hasColorString" value={hasColor ? '1' : '0'} />
 		<input
 			type="hidden"
 			name="smokingAllowed"
-			value={smokingAllowed === smokingOptions[0] ? '0' : '1'}
+			value={newSmokingAllowed === smokingOptions[0] ? '0' : '1'}
 		/>
+		<input type="hidden" name="vehicleId" value={vehicleId} />
 		<Panel title={t.rideShare.vehiclePhoto} subtitle={''}>
-			<UploadPhoto name="vehiclePicture" defaultPicture={defaultCarPicture} />
+			<UploadPhoto name="vehiclePicture" defaultPicture={vehiclePicturePath ?? defaultCarPicture} />
 		</Panel>
 		<Message msg={form?.msg} class="mb-4" />
 
 		<Button type="submit" variant="outline" data-testid="create-vehicle">
-			{v == undefined ? t.rideShare.createVehicle : t.rideShare.saveChanges}
+			{!isEditMode ? t.rideShare.createVehicle : t.rideShare.saveChanges}
 		</Button>
 	</form>
 </div>

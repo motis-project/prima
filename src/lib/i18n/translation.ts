@@ -103,6 +103,9 @@ export type Translations = {
 		noFileUploaded: string;
 		invalidFileType: string;
 		fileTooLarge: string;
+
+		//Ride Sharing
+		vehicleEditedSuccessfully: string;
 	};
 	admin: {
 		completedToursSubtitle: string;
@@ -328,6 +331,7 @@ export type Translations = {
 		feedbackPrompt: string;
 		feedbackPromptProvider: string;
 		howHasItBeen: string;
+		editVehicle: string;
 	};
 };
 

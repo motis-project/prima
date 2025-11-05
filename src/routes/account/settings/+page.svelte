@@ -14,10 +14,51 @@
 	import { getCountryData, getCountryDataList, type TCountryCode } from 'countries-list';
 	import { defaultProfilePicture } from '$lib/constants.js';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
+	import SortableTable from '$lib/ui/SortableTable.svelte';
 
 	const { data, form } = $props();
 	let showTooltip = $state(false);
 	let region: TCountryCode | undefined = $state(data.region ? (data.region as TCountryCode) : 'DE');
+	type Vehicle = {
+		luggage: number;
+		passengers: number;
+		color: string | null;
+		model: string | null;
+		licensePlate: string;
+	};
+	const vehicleRows = data.vehicles;
+	const vehicleCols = [
+		{
+			text: [t.rideShare.luggage],
+			sort: (a: Vehicle, b: Vehicle) => a.luggage - b.luggage,
+			toTableEntry: (r: Vehicle) => r.luggage
+		},
+		{
+			text: [t.rideShare.passengers],
+			sort: (a: Vehicle, b: Vehicle) => a.passengers - b.passengers,
+			toTableEntry: (r: Vehicle) => r.passengers
+		},
+		{
+			text: [t.rideShare.licensePlate],
+			sort: (a: Vehicle, b: Vehicle) => (a.licensePlate < b.licensePlate ? -1 : 1),
+			toTableEntry: (r: Vehicle) => r.licensePlate
+		},
+		{
+			text: [t.rideShare.model],
+			sort: (a: Vehicle, b: Vehicle) =>
+				a.model === null ? -1 : b.model === null ? 1 : a.model < b.model ? 1 : -1,
+			toTableEntry: (r: Vehicle) => r.model ?? ''
+		}
+	];
+	let selectedVehicle: Vehicle[] | undefined = $state(undefined);
+	$effect(() => {
+		if (selectedVehicle !== undefined && selectedVehicle.length !== 0) {
+			const selectedVehicleId = data.vehicles.find(
+				(v) => v.licensePlate === selectedVehicle![0].licensePlate
+			)!.id;
+			storeLastPageAndGoto(`/account/add-or-edit-ride-share-vehicle/${selectedVehicleId}`);
+		}
+	});
 </script>
 
 <Meta title="Account | {PUBLIC_PROVIDER}" />
@@ -75,11 +116,18 @@
 	<Panel title={t.buttons.addVehicleTitle} subtitle={''}>
 		<Button
 			variant="outline"
-			onclick={() => storeLastPageAndGoto('/account/add-ride-share-vehicle')}
+			onclick={() => storeLastPageAndGoto('/account/add-or-edit-ride-share-vehicle')}
 		>
 			<Plus class="mr-2 size-4" />
 			{t.buttons.addVehicle}
 		</Button>
+		<SortableTable
+			rows={vehicleRows}
+			cols={vehicleCols}
+			bind:selectedRow={selectedVehicle}
+			bindSelectedRow={true}
+			getRowStyle={(_) => 'cursor-pointer '}
+		></SortableTable>
 	</Panel>
 
 	<Panel title={t.account.profilePicture} subtitle={t.account.profilePictureSubtitle}>

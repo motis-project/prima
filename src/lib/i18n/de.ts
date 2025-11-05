@@ -105,7 +105,10 @@ const translations: Translations = {
 		// Picture Upload
 		noFileUploaded: 'kein Bild hochgeladen',
 		invalidFileType: 'ungültiger Dateityp',
-		fileTooLarge: 'Datei ist zu groß'
+		fileTooLarge: 'Datei ist zu groß',
+
+		//Ride Sharing
+		vehicleEditedSuccessfully: 'Fahrzeug erfolgreich geändert'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',
@@ -377,7 +380,8 @@ const translations: Translations = {
 		preview: 'Voransicht',
 		feedbackPrompt: 'Bitte bewerten Sie Ihre Reise mit',
 		feedbackPromptProvider: 'Bitte bewerten Sie Ihren Mitfahrer',
-		howHasItBeen: 'Sie können Ihre letzte Mitfahrerfahrung hier bewerten'
+		howHasItBeen: 'Sie können Ihre letzte Mitfahrerfahrung hier bewerten',
+		editVehicle: 'Fahrzeug ändern'
 	}
 };
 

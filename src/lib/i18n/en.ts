@@ -101,7 +101,10 @@ const translations: Translations = {
 		// Picture Upload
 		noFileUploaded: 'no file uploaded',
 		invalidFileType: 'invalid file type',
-		fileTooLarge: 'file too large'
+		fileTooLarge: 'file too large',
+
+		//Ride Sharing
+		vehicleEditedSuccessfully: 'Vehicle edited successfully'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',
@@ -369,7 +372,8 @@ const translations: Translations = {
 		preview: 'preview',
 		feedbackPrompt: 'Please rate your journey with',
 		feedbackPromptProvider: 'Please rate your recent ride share passenger',
-		howHasItBeen: 'You can rate your last ride share experience here'
+		howHasItBeen: 'You can rate your last ride share experience here',
+		editVehicle: 'Edit Vehicle'
 	}
 };
 
