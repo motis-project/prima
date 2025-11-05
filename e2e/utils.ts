@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { Kysely, PostgresDialect, RawBuilder, sql } from 'kysely';
+import { Kysely, PostgresDialect, QueryResult, RawBuilder, sql } from 'kysely';
 import { dbConfig } from './config';
 import pg from 'pg';
 import { DAY, HOUR, MINUTE } from '../src/lib/util/time';
@@ -65,14 +65,15 @@ export const COMPANY2: Company = {
 	phone: '777888'
 };
 
-export async function execSQL(sql: RawBuilder<unknown>) {
+export async function execSQL<T>(sql: RawBuilder<T>): Promise<QueryResult<T>> {
 	const db = new Kysely<unknown>({
 		dialect: new PostgresDialect({
 			pool: new pg.Pool({ ...dbConfig, database: 'prima' })
 		})
 	});
-	await sql.execute(db);
+	const res = await sql.execute(db);
 	db.destroy();
+	return res;
 }
 
 export async function login(page: Page, credentials: UserCredentials) {

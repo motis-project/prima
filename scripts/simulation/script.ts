@@ -8,7 +8,6 @@ import { addAvailability } from '../../src/lib/server/addAvailability';
 import { getToursWithRequests } from '../../src/lib/server/db/getTours';
 import { cancelTour } from '../../src/lib/server/cancelTour';
 import { type Coordinates } from '../../src/lib/util/Coordinates';
-import { Interval } from '../../src/lib/util/interval';
 import { generateBookingParameters } from './generateBookingParameters';
 import { randomInt } from './randomInt';
 import * as fs from 'fs';
@@ -100,8 +99,7 @@ async function readCoordinates(): Promise<Coordinates[]> {
 }
 
 async function addInitialAvailabilities(company: number, vehicle: number) {
-	const interval = new Interval(Date.now(), Date.now() + DAY * 14);
-	await addAvailability(interval, company, vehicle);
+	await addAvailability(Date.now(), Date.now() + DAY * 14, company, vehicle);
 }
 
 const isActionChosen = (r: number, a: ActionType) => {
