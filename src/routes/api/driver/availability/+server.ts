@@ -66,7 +66,7 @@ export const POST = async ({ locals, request }) => {
 	let i = 0;
 	while (i < from.length) {
 		if (add[i]) {
-			await addAvailability(from[i], to[i], companyId, vehicleId);
+			await addAvailability(from[i], to[i], vehicleId, companyId);
 		} else {
 			await deleteAvailability(from[i], to[i], vehicleId, companyId);
 		}
@@ -95,5 +95,5 @@ export const POST = async ({ locals, request }) => {
 			})
 		};
 	});
-	return json({ ...res, from, to });
+	return json({ ...res, from, to, add });
 };

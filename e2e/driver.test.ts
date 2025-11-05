@@ -105,11 +105,18 @@ test('Set tour fare', async ({ page }) => {
 });
 
 type Availability = {
-	from: number,
-	to: number
-}
+	from: number;
+	to: number;
+};
 
-async function updateAvailability(from: number, to: number, add: boolean, vehicleId: number, expected: Availability[], page: Page) {
+async function updateAvailability(
+	from: number,
+	to: number,
+	add: boolean,
+	vehicleId: number,
+	expected: Availability[],
+	page: Page
+) {
 	const payload = {
 		vehicleId,
 		from: [from],
@@ -118,9 +125,7 @@ async function updateAvailability(from: number, to: number, add: boolean, vehicl
 		offset: offset,
 		date: dayString
 	};
-	const response = await page
-		.context()
-		.request.post(`api/driver/availability`, { data: payload });
+	const response = await page.context().request.post(`api/driver/availability`, { data: payload });
 	expect(response.status()).toBe(200);
 
 	const responseBody = await response.json();
@@ -128,6 +133,7 @@ async function updateAvailability(from: number, to: number, add: boolean, vehicl
 	expect(responseBody).toHaveProperty('vehicles');
 	expect(responseBody).toHaveProperty('from');
 	expect(responseBody).toHaveProperty('to');
+	expect(responseBody).toHaveProperty('add');
 	expect(responseBody).not.toHaveProperty('companyDataComplete');
 	expect(responseBody).not.toHaveProperty('companyCoordinates');
 	expect(responseBody).not.toHaveProperty('utcDate');
@@ -135,14 +141,18 @@ async function updateAvailability(from: number, to: number, add: boolean, vehicl
 	const vehicles = responseBody['vehicles'];
 	expect(vehicles).toHaveLength(2);
 
+	expect(responseBody['from'][0]).toBe(from);
+	expect(responseBody['to'][0]).toBe(to);
+	expect(responseBody['add'][0]).toBe(add);
+
 	const availability = vehicles[0].availability;
 	expect(availability).toHaveLength(expected.length);
 
 	let i = 0;
 	while (i < availability.length) {
-		expect(availability[i].startTime).toBe(expected[i].from)
-		expect(availability[i].endTime).toBe(expected[i].to)
-		i++
+		expect(availability[i].startTime).toBe(expected[i].from);
+		expect(availability[i].endTime).toBe(expected[i].to);
+		i++;
 	}
 }
 
@@ -164,9 +174,7 @@ test('Update availability', async ({ page }) => {
 		offset: offset,
 		date: dayString
 	};
-	const response = await page
-		.context()
-		.request.post(`api/driver/availability`, { data: payload });
+	const response = await page.context().request.post(`api/driver/availability`, { data: payload });
 	expect(response.status()).toBe(200);
 
 	const responseBody = await response.json();
@@ -181,17 +189,24 @@ test('Update availability', async ({ page }) => {
 	const fromTime = in6Days.getTime() + HOUR * 11;
 	const toTime = fromTime + MINUTE * 90;
 
-	const expected1: Availability = { from: av1.startTime, to: av1.endTime }
-	const expected2: Availability = { from: fromTime, to: toTime }
+	const expected1: Availability = { from: av1.startTime, to: av1.endTime };
+	const expected2: Availability = { from: fromTime, to: toTime };
 	await updateAvailability(fromTime, toTime, true, vehicleId, [expected1, expected2], page);
 
 	// UPDATE 2, remove availabilty
 	const fromTime2 = fromTime + MINUTE * 30;
 	const toTime2 = fromTime + HOUR;
 
-	const expected3: Availability = { from: fromTime, to: fromTime2 }
-	const expected4: Availability = { from: toTime2, to: toTime }
-	await updateAvailability(fromTime2, toTime2, false, vehicleId, [expected1, expected3, expected4], page);
+	const expected3: Availability = { from: fromTime, to: fromTime2 };
+	const expected4: Availability = { from: toTime2, to: toTime };
+	await updateAvailability(
+		fromTime2,
+		toTime2,
+		false,
+		vehicleId,
+		[expected1, expected3, expected4],
+		page
+	);
 
 	await logout(page);
 });

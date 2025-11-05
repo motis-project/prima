@@ -26,6 +26,6 @@ export const POST = async ({ locals, request }) => {
 		console.log('add availability invalid params: ', { vehicleId, from, to });
 		throw 'invalid params';
 	}
-	await addAvailability(from, to, companyId, vehicleId);
+	await addAvailability(from, to, vehicleId, companyId);
 	return json({});
 };

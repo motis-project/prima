@@ -8,8 +8,8 @@ import { db } from './db';
 export async function addAvailability(
 	from: number,
 	to: number,
-	companyId: number,
-	vehicleId: number
+	vehicleId: number,
+	companyId: number
 ): Promise<boolean> {
 	const interval = new Interval(from, to).intersect(getAlterableTimeframe());
 	if (interval === undefined) {
