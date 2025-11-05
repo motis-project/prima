@@ -110,18 +110,18 @@ type Availability = {
 };
 
 async function updateAvailability(
-	from: number,
-	to: number,
-	add: boolean,
+	from: number[],
+	to: number[],
+	add: boolean[],
 	vehicleId: number,
 	expected: Availability[],
 	page: Page
 ) {
 	const payload = {
 		vehicleId,
-		from: [from],
-		to: [to],
-		add: [add],
+		from,
+		to,
+		add,
 		offset: offset,
 		date: dayString
 	};
@@ -141,19 +141,21 @@ async function updateAvailability(
 	const vehicles = responseBody['vehicles'];
 	expect(vehicles).toHaveLength(2);
 
-	expect(responseBody['from'][0]).toBe(from);
-	expect(responseBody['to'][0]).toBe(to);
-	expect(responseBody['add'][0]).toBe(add);
+	expect(responseBody['from']).toEqual(from);
+	expect(responseBody['to']).toEqual(to);
+	expect(responseBody['add']).toEqual(add);
 
 	const availability = vehicles[0].availability;
 	expect(availability).toHaveLength(expected.length);
 
 	let i = 0;
 	while (i < availability.length) {
-		expect(availability[i].startTime).toBe(expected[i].from);
-		expect(availability[i].endTime).toBe(expected[i].to);
+		expect(availability[i].startTime).toEqual(expected[i].from);
+		expect(availability[i].endTime).toEqual(expected[i].to);
 		i++;
 	}
+
+	return availability;
 }
 
 test('Update availability', async ({ page }) => {
@@ -164,34 +166,28 @@ test('Update availability', async ({ page }) => {
 		sql<{ id: number }>`SELECT id FROM vehicle WHERE license_plate = ${licensePlate}`
 	);
 	const vehicleId = queryRes.rows[0].id;
+	const in6Days8am = in6Days.getTime() + HOUR * 7;
 
 	// FETCH
-	const payload = {
-		vehicleId: vehicleId,
-		from: [],
-		to: [],
-		add: [],
-		offset: offset,
-		date: dayString
-	};
-	const response = await page.context().request.post(`api/driver/availability`, { data: payload });
-	expect(response.status()).toBe(200);
-
-	const responseBody = await response.json();
-
-	const vehicles = responseBody['vehicles'];
-	expect(vehicles).toHaveLength(2);
-	expect(vehicles[0].availability).toHaveLength(1);
-
-	const av1 = vehicles[0].availability[0];
+	const availability = await updateAvailability(
+		[],
+		[],
+		[],
+		vehicleId,
+		[{ from: in6Days8am, to: in6Days8am + HOUR * 3 }],
+		page
+	);
+	const av1 = availability[0];
+	expect(av1.startTime).not.toBeFalsy();
+	expect(av1.endTime).not.toBeFalsy();
 
 	// UPDATE 1, add availabilty
-	const fromTime = in6Days.getTime() + HOUR * 11;
+	const fromTime = in6Days8am + HOUR * 4;
 	const toTime = fromTime + MINUTE * 90;
 
 	const expected1: Availability = { from: av1.startTime, to: av1.endTime };
 	const expected2: Availability = { from: fromTime, to: toTime };
-	await updateAvailability(fromTime, toTime, true, vehicleId, [expected1, expected2], page);
+	await updateAvailability([fromTime], [toTime], [true], vehicleId, [expected1, expected2], page);
 
 	// UPDATE 2, remove availabilty
 	const fromTime2 = fromTime + MINUTE * 30;
@@ -200,9 +196,9 @@ test('Update availability', async ({ page }) => {
 	const expected3: Availability = { from: fromTime, to: fromTime2 };
 	const expected4: Availability = { from: toTime2, to: toTime };
 	await updateAvailability(
-		fromTime2,
-		toTime2,
-		false,
+		[fromTime2],
+		[toTime2],
+		[false],
 		vehicleId,
 		[expected1, expected3, expected4],
 		page
