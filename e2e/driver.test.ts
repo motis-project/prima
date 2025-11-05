@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import { sql } from 'kysely';
 import { DAY, HOUR, MINUTE, SECOND } from '../src/lib/util/time';
 import { login, in6Days, execSQL, TAXI_OWNER, offset, dayString, logout } from './utils';
@@ -104,64 +104,94 @@ test('Set tour fare', async ({ page }) => {
 	expect(response3.status()).toBe(400);
 });
 
+type Availability = {
+	from: number,
+	to: number
+}
+
+async function updateAvailability(from: number, to: number, add: boolean, vehicleId: number, expected: Availability[], page: Page) {
+	const payload = {
+		vehicleId,
+		from: [from],
+		to: [to],
+		add: [add],
+		offset: offset,
+		date: dayString
+	};
+	const response = await page
+		.context()
+		.request.post(`api/driver/availability`, { data: payload });
+	expect(response.status()).toBe(200);
+
+	const responseBody = await response.json();
+	expect(responseBody).toHaveProperty('tours');
+	expect(responseBody).toHaveProperty('vehicles');
+	expect(responseBody).toHaveProperty('from');
+	expect(responseBody).toHaveProperty('to');
+	expect(responseBody).not.toHaveProperty('companyDataComplete');
+	expect(responseBody).not.toHaveProperty('companyCoordinates');
+	expect(responseBody).not.toHaveProperty('utcDate');
+
+	const vehicles = responseBody['vehicles'];
+	expect(vehicles).toHaveLength(2);
+
+	const availability = vehicles[0].availability;
+	expect(availability).toHaveLength(expected.length);
+
+	let i = 0;
+	while (i < availability.length) {
+		expect(availability[i].startTime).toBe(expected[i].from)
+		expect(availability[i].endTime).toBe(expected[i].to)
+		i++
+	}
+}
+
 test('Update availability', async ({ page }) => {
 	await login(page, TAXI_OWNER);
 
+	const licensePlate = 'GR-TU-11';
+	const queryRes = await execSQL(
+		sql<{ id: number }>`SELECT id FROM vehicle WHERE license_plate = ${licensePlate}`
+	);
+	const vehicleId = queryRes.rows[0].id;
+
 	// FETCH
-	const payload1 = {
-		vehicleId: 1,
+	const payload = {
+		vehicleId: vehicleId,
 		from: [],
 		to: [],
 		add: [],
 		offset: offset,
 		date: dayString
 	};
-
-	const response1 = await page
+	const response = await page
 		.context()
-		.request.post(`api/driver/availability`, { data: payload1 });
-	expect(response1.status()).toBe(200);
+		.request.post(`api/driver/availability`, { data: payload });
+	expect(response.status()).toBe(200);
 
-	const responseBody1 = await response1.json();
-	expect(responseBody1).toHaveProperty('tours');
-	expect(responseBody1).toHaveProperty('vehicles');
-	expect(responseBody1).not.toHaveProperty('companyDataComplete');
-	expect(responseBody1).not.toHaveProperty('companyCoordinates');
-	expect(responseBody1).not.toHaveProperty('utcDate');
+	const responseBody = await response.json();
 
-	const vehicles1 = responseBody1['vehicles'];
-	expect(vehicles1).toHaveLength(2);
-	expect(vehicles1[0].availability).toHaveLength(1);
+	const vehicles = responseBody['vehicles'];
+	expect(vehicles).toHaveLength(2);
+	expect(vehicles[0].availability).toHaveLength(1);
 
-	// UPDATE
+	const av1 = vehicles[0].availability[0];
+
+	// UPDATE 1, add availabilty
 	const fromTime = in6Days.getTime() + HOUR * 11;
-	const toTime = fromTime + MINUTE * 75;
-	const payload2 = {
-		vehicleId: vehicles1[0].id,
-		from: [fromTime],
-		to: [toTime],
-		add: [true],
-		offset: offset,
-		date: dayString
-	};
+	const toTime = fromTime + MINUTE * 90;
 
-	const response2 = await page
-		.context()
-		.request.post(`api/driver/availability`, { data: payload2 });
-	expect(response2.status()).toBe(200);
+	const expected1: Availability = { from: av1.startTime, to: av1.endTime }
+	const expected2: Availability = { from: fromTime, to: toTime }
+	await updateAvailability(fromTime, toTime, true, vehicleId, [expected1, expected2], page);
 
-	const responseBody2 = await response2.json();
-	const vehicles2 = responseBody2['vehicles'];
-	expect(vehicles2).toHaveLength(2);
-	expect(vehicles2[0].availability).toHaveLength(2);
+	// UPDATE 2, remove availabilty
+	const fromTime2 = fromTime + MINUTE * 30;
+	const toTime2 = fromTime + HOUR;
 
-	const availability = vehicles2[0].availability;
-	const av1 = availability[0];
-	const av2 = availability[1];
-	expect(av1.startTime).toBe(1762758000000);
-	expect(av1.endTime).toBe(1762768800000);
-	expect(av2.startTime).toBe(fromTime);
-	expect(av2.endTime).toBe(toTime);
+	const expected3: Availability = { from: fromTime, to: fromTime2 }
+	const expected4: Availability = { from: toTime2, to: toTime }
+	await updateAvailability(fromTime2, toTime2, false, vehicleId, [expected1, expected3, expected4], page);
 
 	await logout(page);
 });
