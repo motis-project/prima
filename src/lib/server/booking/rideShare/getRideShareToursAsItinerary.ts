@@ -3,6 +3,7 @@ import { db } from '$lib/server/db';
 import { reverseGeocode, type Itinerary, type Leg, type Mode } from '$lib/openapi';
 import { env } from '$env/dynamic/public';
 import type { QuerySerializerOptions } from '@hey-api/client-fetch';
+import type { Coordinates } from '$lib/util/Coordinates';
 
 export async function getRideshareToursAsItinerary(
 	providerId: number,
@@ -59,7 +60,7 @@ export async function getRideshareToursAsItinerary(
 							eb
 								.selectFrom('event')
 								.whereRef('event.request', '=', 'request.id')
-								.leftJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+								.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 								.orderBy('event.communicatedTime')
 								.select([
 									'event.isPickup',
@@ -93,12 +94,15 @@ export async function getRideshareToursAsItinerary(
 				requests: await Promise.all(
 					j.requests.map(async (r) => ({
 						...r,
-						events: r.customerId === providerId ? r.events : await Promise.all(
-							r.events.map(async (e) => ({
-								...e,
-								address: await getBlurredAddress(e)
-							}))
-						)
+						events:
+							r.customerId === providerId
+								? r.events
+								: await Promise.all(
+										r.events.map(async (e) => ({
+											...e,
+											address: await getBlurredAddress(e)
+										}))
+									)
 					}))
 				)
 			}))
@@ -193,12 +197,7 @@ export async function getRideshareToursAsItinerary(
 	};
 }
 
-type NullableCoordinates = { lat: number | null; lng: number | null };
-
-async function getBlurredAddress(place: NullableCoordinates) {
-	if (place.lat === null || place.lng === null) {
-		throw new Error();
-	}
+async function getBlurredAddress(place: Coordinates) {
 	const result = await reverseGeocode({
 		baseUrl: env.PUBLIC_MOTIS_URL,
 		querySerializer: { array: { explode: false } } as QuerySerializerOptions,
@@ -208,21 +207,19 @@ async function getBlurredAddress(place: NullableCoordinates) {
 	});
 	const areas = result?.data ? result.data[0].areas : undefined;
 	if (areas === undefined) {
-		throw new Error();
+		return place.address ?? '';
 	}
-	const usedAreas = areas.filter((a) => a.adminLevel < 8);
+	const usedAreas = areas.filter((a) => a.adminLevel <= 8);
 	if (usedAreas.length === 0) {
-		throw new Error();
+		return place.address ?? '';
 	}
-	return (
-		usedAreas.reduce(
-			(min, curr) => (min = curr.adminLevel < min.adminLevel ? curr : min),
-			usedAreas[0]
-		).name +
-		' ' +
-		usedAreas.reduce(
-			(max, curr) => (max = curr.adminLevel > max.adminLevel ? curr : max),
-			usedAreas[0]
-		).name
+	const area1 = areas.reduce(
+		(max, curr) => (max = curr.adminLevel > max.adminLevel ? curr : max),
+		areas[0]
 	);
+	const area2 = usedAreas.reduce(
+		(max, curr) => (max = curr.adminLevel > max.adminLevel ? curr : max),
+		usedAreas[0]
+	);
+	return area1.name + (area1.adminLevel === area2.adminLevel ? '' : ' ' + area2.name);
 }
