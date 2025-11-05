@@ -38,7 +38,7 @@ export async function prepareVehicleUAddOrpdate(formData: FormData, userId: numb
 	const smokingAllowed = smokingAllowedString === '1';
 	const hasColor = hasColorString === '1';
 	const hasModel = hasModelString === '1';
-	if (isNaN(luggage) || luggage <= 0 || luggage >= 11) {
+	if (isNaN(luggage) || luggage < 0 || luggage >= 11) {
 		return fail(400, { msg: msg('invalidStorage') });
 	}
 	let vehiclePicturePath: string | null = null;

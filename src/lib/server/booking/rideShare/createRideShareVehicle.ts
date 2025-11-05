@@ -27,30 +27,3 @@ export async function createRideShareVehicle(
 			.executeTakeFirstOrThrow()
 	).id;
 }
-
-export async function editRideShareVehicle(
-	owner: number,
-	luggage: number,
-	passengers: number,
-	color: string | null,
-	model: string | null,
-	smokingAllowed: boolean,
-	licensePlate: string,
-	picture: string | null,
-	vehicleId: number
-) {
-	return await db
-		.updateTable('rideShareVehicle')
-		.set({
-			passengers,
-			luggage,
-			owner,
-			smokingAllowed,
-			color,
-			model,
-			licensePlate,
-			picture
-		})
-		.where('rideShareVehicle.id', '=', vehicleId)
-		.executeTakeFirstOrThrow();
-}

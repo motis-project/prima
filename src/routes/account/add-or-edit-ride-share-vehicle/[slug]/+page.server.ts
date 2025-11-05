@@ -1,9 +1,8 @@
-import { msg } from '$lib/msg';
-import { editRideShareVehicle } from '$lib/server/booking/rideShare/createRideShareVehicle';
 import { fail } from '@sveltejs/kit';
 import { prepareVehicleUAddOrpdate as prepareVehicleAddOrpdate } from '../prepareVehicleData';
 import { db } from '$lib/server/db';
 import type { Actions, RequestEvent } from './$types';
+import { msg } from '$lib/msg';
 
 export async function load({ params, locals }) {
 	const vehicle = await db
@@ -49,20 +48,27 @@ export const actions: Actions = {
 			return data;
 		}
 		try {
+			const updateData: Record<string, string | number | boolean | null> = {
+				passengers: data.passengers,
+				luggage: data.luggage,
+				owner: user,
+				smokingAllowed: data.smokingAllowed,
+				color: data.color,
+				model: data.model,
+				licensePlate: data.licensePlate
+			};
+
+			if (data.vehiclePicturePath !== null) {
+				updateData.picture = data.vehiclePicturePath;
+			}
 			console.log(
 				'edited ride share vehicle with id: ',
 				vehicle!.id,
-				await editRideShareVehicle(
-					user,
-					data.luggage,
-					data.passengers,
-					data.color,
-					data.model,
-					data.smokingAllowed,
-					data.licensePlate,
-					data.vehiclePicturePath,
-					vehicleId
-				)
+				await db
+					.updateTable('rideShareVehicle')
+					.set(updateData)
+					.where('rideShareVehicle.id', '=', vehicleId)
+					.executeTakeFirstOrThrow()
 			);
 
 			return {
