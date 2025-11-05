@@ -68,7 +68,7 @@ export const POST = async ({ locals, request }) => {
 		if (add[i]) {
 			await addAvailability(from[i], to[i], companyId, vehicleId);
 		} else {
-			await deleteAvailability(from[i], to[i], companyId, vehicleId);
+			await deleteAvailability(from[i], to[i], vehicleId, companyId);
 		}
 		i++;
 	}
