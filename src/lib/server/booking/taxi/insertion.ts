@@ -1405,8 +1405,7 @@ function getTimestamps(
 			promisedTimes?.pickup ?? Math.max(prev.scheduledTimeStart, window.startTime);
 		const scheduledPickupTimeEnd = scheduledPickupTimeStart + pickupLeeway;
 		const scheduledDropoffTimeStart = scheduledPickupTimeEnd + passengerDuration;
-		const scheduledDropoffTimeEnd =
-			scheduledDropoffTimeStart + dropoffLeeway;
+		const scheduledDropoffTimeEnd = scheduledDropoffTimeStart + dropoffLeeway;
 		return {
 			communicatedPickupTime: scheduledPickupTimeStart,
 			scheduledPickupTimeStart,
@@ -1435,8 +1434,7 @@ function getTimestamps(
 		const scheduledPickupTimeStart = promisedTimes?.pickup ?? window.startTime;
 		const scheduledPickupTimeEnd = scheduledPickupTimeStart + pickupLeeway;
 		const scheduledDropoffTimeStart = scheduledPickupTimeEnd + passengerDuration;
-		const scheduledDropoffTimeEnd =
-			scheduledDropoffTimeStart + dropoffLeeway;
+		const scheduledDropoffTimeEnd = scheduledDropoffTimeStart + dropoffLeeway;
 		return {
 			communicatedPickupTime: scheduledPickupTimeStart,
 			scheduledPickupTimeStart,
