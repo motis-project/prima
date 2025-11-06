@@ -1,7 +1,6 @@
 package de.motis.prima.ui
 
 import PreviewDayTimeline
-import TimeBlock
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -37,39 +36,276 @@ import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.R
 import de.motis.prima.data.DataRepository
+import de.motis.prima.services.ApiService
+import de.motis.prima.services.AvailabilityRequest
+import de.motis.prima.services.AvailabilityResponse
+import de.motis.prima.services.Tour
 import de.motis.prima.ui.theme.LocalExtendedColors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
+import retrofit2.Response
+import java.sql.Time
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
+data class TimeBlock(
+    val date: LocalDate,
+    val startMinutes: Int, // minutes since start of day
+    val endMinutes: Int,
+    var color: Color = Color.White,
+    var modified: Boolean = false
+)
+
 @HiltViewModel
 class AvailabilityViewModel @Inject constructor(
-    private val repository: DataRepository
+    private val repository: DataRepository,
+    private val apiService: ApiService,
 ) : ViewModel() {
     private val _displayDate = MutableStateFlow(LocalDate.now())
     val displayDate = _displayDate.asStateFlow()
-
-    val availability = repository.availability
-
     var currentHour = 0
+    val shiftStart = 3
+    val slotMinutes = 15
+
+    private val _passedSlots = MutableStateFlow(0)
+    val passedSlots = _passedSlots.asStateFlow()
+
+    private val _dayBlocks = MutableStateFlow<List<TimeBlock>>(emptyList())
+    val dayBlocks = _dayBlocks.asStateFlow()
+
+    private val dayMap = mutableMapOf<String, List<TimeBlock>>()
+
+    private val _networkError = MutableStateFlow(false)
+    val networkError = _networkError.asStateFlow()
+
+    private val colorAvailable = Color(254, 249, 195)
+    private val colorTour = Color(251 ,146, 60)
+    private val colorPassed = Color.LightGray
+    private val colorUnmodified = Color.White
 
     init {
-        currentHour = hoursSinceStartOfDay(displayDate.value) + 1
-        getAvailability(_displayDate.value)
+        currentHour = hoursSinceStartOfDay(_displayDate.value)
+        setDayBlocks(_displayDate.value, _displayDate.value)
+        val passedHours = if ( _displayDate.value == LocalDate.now() ) currentHour else shiftStart
+        _passedSlots.value = passedHours * 60 / slotMinutes
     }
 
-    private fun getAvailability(date: LocalDate) {
-        repository.getAvailability(date)
+    private fun getSlotIndex(startMinutes: Int): Int {
+        if (startMinutes == 0) {
+            return 0
+        }
+        return (startMinutes / 15)
     }
 
-    fun setAvailability(start: Int, end: Int) {
-        // {vehicleId: 1, from: 1760104800000, to: 1760106600000}
+    private fun minutesSinceStartOfDay(epochMillis: Long, zoneId: ZoneId = ZoneId.systemDefault()): Long {
+        val time = Instant.ofEpochMilli(epochMillis).atZone(zoneId)
+        val startOfDay = time.toLocalDate().atStartOfDay(zoneId)
+        val duration = Duration.between(startOfDay, time)
+        return duration.toMinutes()
+    }
 
+    private fun minutesSinceStartOfDay(date: LocalDate): Int {
+        val startOfDay = date.atStartOfDay(ZoneId.systemDefault())
+        val now = ZonedDateTime.now(ZoneId.systemDefault())
+
+        val displayFuture = LocalDate.now().atStartOfDay() < date.atStartOfDay()
+        if (displayFuture) {
+            return 0
+        }
+
+        return Duration.between(startOfDay, now).toMinutes().toInt()
+    }
+
+    private fun roundDownToQuarterHour(minutes: Int): Int {
+        return (minutes / 15) * 15
+    }
+
+    private fun roundUpToQuarterHour(minutes: Int): Int {
+        return (minutes / 15) * 15 + 15
+    }
+
+    private suspend fun getTimeBlocks(availability: AvailabilityResponse): MutableList<TimeBlock> {
+        val blocks: MutableList<TimeBlock> = emptyList<TimeBlock>().toMutableList()
+        for (vehicle in availability.vehicles) {
+            if (vehicle.id != repository.selectedVehicle.first().id) {
+                continue
+            }
+            for (av in vehicle.availability) {
+                val startTime = minutesSinceStartOfDay(av.startTime).toInt()
+                var endTime = minutesSinceStartOfDay(av.endTime).toInt()
+                if (endTime == 0) endTime = 1439 // 23:59
+                var a = startTime
+                while (a < endTime) {
+                    val b = a + 15
+                    val date = repository.localDateFromEpochMillis(av.startTime)
+                    val timeBlock = TimeBlock(date, a, b, colorAvailable, false)
+                    blocks += timeBlock
+                    a = b
+                }
+            }
+        }
+        for (tour in availability.tours) {
+            if (tour.vehicleId != repository.selectedVehicle.first().id) {
+                continue
+            }
+            val startTime = roundDownToQuarterHour(minutesSinceStartOfDay(tour.startTime).toInt())
+            val endTime = roundUpToQuarterHour(minutesSinceStartOfDay(tour.endTime).toInt())
+            var a = startTime
+            while (a < endTime) {
+                val b = a + 15
+                val date = repository.localDateFromEpochMillis(tour.startTime)
+                val timeBlock = TimeBlock(date, a, b, colorTour, false)
+                blocks += timeBlock
+                a = b
+            }
+        }
+        return blocks
+    }
+
+    private fun mergeModifications(date: LocalDate): List<List<TimeBlock>> {
+        val blocks = dayMap[date.toString()] ?: return emptyList()
+        val intervals = mutableListOf<List<TimeBlock>>()
+        var i = 0
+        while (i < blocks.size) {
+            val current = blocks[i]
+            if (current.modified.not()) {
+                i++
+                continue
+            }
+            val interval = mutableListOf(current)
+            var j = i + 1
+            while (j < blocks.size && blocks[j].modified && blocks[j].color == current.color) {
+                interval += blocks[j]
+                j++
+            }
+            intervals += interval
+            i = j
+        }
+        return intervals
+    }
+
+    private fun refresh(): Flow<Response<AvailabilityResponse>> = flow {
+        val today = LocalDate.now()
+        val offsetMinutes = repository.utcOffset / 60
+        val request = AvailabilityRequest(
+            repository.selectedVehicle.first().id,
+            from = emptyList(),
+            to = emptyList(),
+            add = emptyList(),
+            offset = offsetMinutes * -1,
+            date = today.toString()
+        )
+        while (true) {
+            if (today == displayDate.value) {
+                try {
+                    emit(apiService.getAvailability(request))
+                } catch (e: Exception) {
+                    _networkError.value = true
+                }
+                delay(10000) // 10 sec
+            }
+        }
+    }.flowOn(Dispatchers.IO)
+
+    private fun findInterval(minute: Int, intervals: List<List<TimeBlock>>): List<TimeBlock>? {
+        return try {
+            intervals.first { i -> i.first().startMinutes <= minute && i.last().endMinutes >= minute }
+        } catch (e: NoSuchElementException) {
+            null
+        }
+    }
+
+    private fun setDayBlocks(saveDate: LocalDate, fetchDate: LocalDate) {
+        val totalMinutes = 24 * 60
+        val slotMinutes = 15
+        var i = 0
+        val tmpDayBlocks = mutableListOf<TimeBlock>()
+        while (i < totalMinutes) {
+            val next = i + slotMinutes
+            val color = if (fetchDate == LocalDate.now() && i <= minutesSinceStartOfDay(fetchDate) + 60) colorPassed else colorUnmodified
+            tmpDayBlocks += TimeBlock(fetchDate, i, next, color, false)
+            i = next
+        }
+
+        val offsetMinutes = repository.utcOffset / 60
+        val epochMillisSTOD = saveDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+        val intervals = mergeModifications(fetchDate)
+        Log.d("update", "$intervals") //TODO: check merging
+        val from = mutableListOf<Long>()
+        val to = mutableListOf<Long>()
+        val add = mutableListOf<Boolean>()
+        for (interval in intervals) {
+            val firstStart = interval.first().startMinutes
+            val lastEnd = interval.last().endMinutes
+            from += epochMillisSTOD + firstStart * 60000
+            to += epochMillisSTOD + lastEnd * 60000
+            add += interval.first().color == colorAvailable
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val request = AvailabilityRequest(
+                repository.selectedVehicle.first().id,
+                from,
+                to,
+                add,
+                offset = offsetMinutes * -1,
+                date = fetchDate.toString()
+            )
+
+            try {
+                val response = apiService.getAvailability(request)
+                if (response.isSuccessful) {
+                    _networkError.value = false
+                    val resBody = response.body() ?: AvailabilityResponse()
+                    val timeBlocks = getTimeBlocks(resBody)
+                    val update = dayMap.containsKey(fetchDate.toString())
+
+                    timeBlocks.forEach { block ->
+                        var wasSent = false
+                        var unmodified = true
+                        var alterable = true
+                        val index = getSlotIndex(block.startMinutes)
+
+                        if (update) {
+                            val oldState = dayMap[fetchDate.toString()]!![index]
+                            unmodified = oldState.modified.not()
+                            alterable = oldState.color != colorPassed
+
+                            val containingInterval = findInterval(oldState.startMinutes, intervals)
+                            containingInterval?.let { interval ->
+                                val startContained = resBody.from.contains(epochMillisSTOD + interval.first().startMinutes * 60000)
+                                val endContained = resBody.to.contains(epochMillisSTOD + interval.last().endMinutes * 60000)
+                                wasSent = startContained && endContained
+                            }
+                        }
+
+                        if (alterable && (wasSent || unmodified)) {
+                            tmpDayBlocks[index].color = block.color
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _networkError.value = true
+                Log.e("error", "${e.message}")
+            }
+
+            dayMap[fetchDate.toString()] = tmpDayBlocks
+            _dayBlocks.value = tmpDayBlocks
+        }
     }
 
     private fun hoursSinceStartOfDay(date: LocalDate): Int {
@@ -85,20 +321,50 @@ class AvailabilityViewModel @Inject constructor(
     }
 
     fun incrementDate() {
-        _displayDate.value = _displayDate.value.plusDays(1)
-        repository.getAvailability(_displayDate.value)
+        val saveDate = _displayDate.value
+        val fetchDate = _displayDate.value.plusDays(1)
+
+        val passedHours = if ( fetchDate == LocalDate.now() ) currentHour else shiftStart
+        _passedSlots.value = passedHours * 60 / slotMinutes
+
+        setDayBlocks(saveDate, fetchDate)
+        _displayDate.value = fetchDate
     }
 
     fun decrementDate() {
-        val nextDate = _displayDate.value.minusDays(1)
-        if (nextDate >= LocalDate.now()) {
-            _displayDate.value = nextDate
-            repository.getAvailability(_displayDate.value)
+        val saveDate = _displayDate.value
+
+        if (_displayDate.value > LocalDate.now()) {
+            val fetchDate = _displayDate.value.minusDays(1)
+            val passedHours = if ( fetchDate == LocalDate.now() ) currentHour else shiftStart
+            _passedSlots.value = passedHours * 60 / slotMinutes
+            setDayBlocks(saveDate, fetchDate)
+            _displayDate.value = fetchDate
         }
     }
 
-    fun setBlocks(newBlocks: List<TimeBlock>) {
-        repository.updateAvailability(newBlocks)
+    fun updateDayBlocks(start: Int, end: Int, dragStart: Int) {
+        val blocks = dayMap[_displayDate.value.toString()] ?: emptyList()
+        val startBlock = blocks[getSlotIndex(dragStart)]
+        val remove = startBlock.color == colorAvailable
+        var a = getSlotIndex(start)
+        val b = getSlotIndex(end)
+        while ( a < b ) {
+            if (blocks[a].color == colorPassed || blocks[a].color == colorTour) {
+                a++
+                continue
+            }
+            if (remove) {
+                blocks[a].color = colorUnmodified
+            } else {
+                blocks[a].color = colorAvailable
+            }
+            blocks[a].modified = blocks[a].modified.not()
+            a++
+        }
+        _dayBlocks.value = blocks
+        dayMap[_displayDate.value.toString()] = blocks
+        setDayBlocks(_displayDate.value, _displayDate.value)
     }
 }
 

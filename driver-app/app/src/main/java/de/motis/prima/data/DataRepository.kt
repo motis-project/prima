@@ -1,16 +1,13 @@
 package de.motis.prima.data
 
-import TimeBlock
 import android.content.Context
 import android.content.res.Configuration
 import android.util.Log
-import colorAvailable
-import colorTour
 import com.google.firebase.messaging.FirebaseMessaging
 import de.motis.prima.services.ApiService
-import de.motis.prima.services.AvailabilityResponse
 import de.motis.prima.services.Tour
 import de.motis.prima.services.Vehicle
+import de.motis.prima.ui.TimeBlock
 import io.realm.kotlin.query.RealmResults
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -84,6 +81,8 @@ class DataRepository @Inject constructor(
     private val _availability = MutableStateFlow<List<TimeBlock>>(emptyList())
     val availability = _availability.asStateFlow()
 
+    val utcOffset = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).offset.totalSeconds
+
     fun toggleTheme() {
         _darkTheme.value = !_darkTheme.value
         CoroutineScope(Dispatchers.IO).launch {
@@ -111,61 +110,6 @@ class DataRepository @Inject constructor(
         fetchFirebaseToken()
         startRefreshingTours()
         startReporting()
-    }
-
-    private fun minutesSinceStartOfDay(epochMillis: Long, zoneId: ZoneId = ZoneId.systemDefault()): Long {
-        val time = Instant.ofEpochMilli(epochMillis).atZone(zoneId)
-        val startOfDay = time.toLocalDate().atStartOfDay(zoneId)
-        val duration = java.time.Duration.between(startOfDay, time)
-        return duration.toMinutes()
-    }
-
-    private fun getTimeBlocks(availability: AvailabilityResponse): MutableList<TimeBlock> {
-        val blocks: MutableList<TimeBlock> = emptyList<TimeBlock>().toMutableList()
-        for (vehicle in availability.vehicles) {
-            if (vehicle.id != _vehicleId) {
-                continue
-            }
-            for (av in vehicle.availability) {
-                val startTime = minutesSinceStartOfDay(av.startTime)
-                val endTime = minutesSinceStartOfDay(av.endTime)
-                var a = startTime
-                while (a < endTime) {
-                    val b = a + 15
-                    val date = localDateFromEpochMillis(av.startTime)
-                    val timeBlock = TimeBlock(date, a.toInt(), b.toInt(), colorAvailable)
-                    blocks += timeBlock
-                    a = b
-                }
-            }
-        }
-        for (tour in availability.tours) {
-            if (tour.vehicleId != _vehicleId) {
-                continue
-            }
-            val startTime = minutesSinceStartOfDay(tour.startTime)
-            val endTime = minutesSinceStartOfDay(tour.endTime)
-            val date = localDateFromEpochMillis(tour.startTime)
-            val timeBlock = TimeBlock(date, startTime.toInt(), endTime.toInt(), colorTour)
-            blocks += timeBlock
-        }
-        return blocks
-    }
-
-    fun getAvailability(date: LocalDate) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val response = apiService.getAvailability(offset = "-120", date = "${date}")
-                if (response.isSuccessful) {
-                    _networkError.value = false
-                    val fetchedBlocks = response.body() ?: AvailabilityResponse()
-                    _availability.value = getTimeBlocks(fetchedBlocks)
-                }
-            } catch (e: Exception) {
-                _networkError.value = true
-                Log.e("error", "${e.message}")
-            }
-        }
     }
 
     fun updateAvailability(blocks: List<TimeBlock>) {
@@ -266,7 +210,7 @@ class DataRepository @Inject constructor(
         fetchTours = false
     }
 
-    private fun localDateFromEpochMillis(epochMillis: Long): LocalDate {
+    fun localDateFromEpochMillis(epochMillis: Long): LocalDate {
         return Instant.ofEpochMilli(epochMillis)
             .atZone(ZoneId.systemDefault())
             .toLocalDate()
