@@ -374,13 +374,25 @@ export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 			db
 		);
 	};
+	const userId = event.locals.session?.userId;
+	const ownRideShareOfferIds =
+		userId === undefined
+			? undefined
+			: await db
+					.selectFrom('rideShareTour')
+					.select('rideShareTour.id')
+					.innerJoin('rideShareVehicle', 'rideShareVehicle.id', 'rideShareTour.vehicle')
+					.where('rideShareVehicle.owner', '=', userId)
+					.execute();
 
 	return {
 		areas: (await areasGeoJSON()).rows[0],
 		user: {
 			name: event.locals.session?.name,
 			email: event.locals.session?.email,
-			phone: event.locals.session?.phone
+			phone: event.locals.session?.phone,
+			id: event.locals.session?.id,
+			ownRideShareOfferIds
 		}
 	};
 };

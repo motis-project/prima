@@ -237,90 +237,25 @@
 			{#if page.state.selectedItinerary.legs.some(isOdmLeg)}
 				{#if data.isLoggedIn}
 					{@const rideShareLeg = page.state.selectedItinerary.legs.find(isRideShareLeg)}
-					<Dialog.Root>
-						<Dialog.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
-							{rideShareLeg ? t.ride.negotiateHeader : t.booking.header}
-							<ChevronRight />
-						</Dialog.Trigger>
-						<Dialog.Content class="max-h-[100vh] w-[90%] flex-col overflow-y-auto md:w-96">
-							{#if rideShareLeg}
-								<Dialog.Header>
-									<Dialog.Title>{t.ride.negotiateHeader}</Dialog.Title>
-								</Dialog.Header>
+					{#if !(rideShareLeg && data.user.ownRideShareOfferIds?.some((offer) => offer.id === parseInt(rideShareLeg.tripId!)))}
+						<Dialog.Root>
+							<Dialog.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
+								{rideShareLeg ? t.ride.negotiateHeader : t.booking.header}
+								<ChevronRight />
+							</Dialog.Trigger>
+							<Dialog.Content class="max-h-[100vh] w-[90%] flex-col overflow-y-auto md:w-96">
+								{#if rideShareLeg}
+									<Dialog.Header>
+										<Dialog.Title>{t.ride.negotiateHeader}</Dialog.Title>
+									</Dialog.Header>
 
-								<BookingSummary
-									{passengers}
-									{wheelchair}
-									luggage={luggageToInt(luggage)}
-									price={undefined}
-								/>
+									<BookingSummary
+										{passengers}
+										{wheelchair}
+										luggage={luggageToInt(luggage)}
+										price={undefined}
+									/>
 
-								<form
-									method="post"
-									action="?/bookItineraryWithOdm"
-									use:enhance={() => {
-										loading = true;
-										return async ({ update }) => {
-											await update();
-											window.setTimeout(() => {
-												loading = false;
-											}, 5000);
-										};
-									}}
-								>
-									<p class="my-2 text-sm">{t.ride.negotiatePrivacy}</p>
-									<ul class="flex list-inside list-disc flex-col gap-2">
-										<li>{t.ride.startAndEnd}</li>
-										<li>{t.ride.profile}</li>
-										<li>{t.ride.email}: {data.user.email}</li>
-										{#if data.user.phone}
-											<li>{t.ride.phone}: {data.user.phone}</li>
-										{/if}
-									</ul>
-									<p class="my-2 text-sm">
-										{t.ride.negotiateExplanation}
-										{#if !data.user.phone}
-											{t.ride.noPhone}
-										{/if}
-									</p>
-									<Dialog.Footer>
-										<input
-											type="hidden"
-											name="json"
-											value={JSON.stringify(page.state.selectedItinerary)}
-										/>
-										<input type="hidden" name="passengers" value={passengers} />
-										<input type="hidden" name="kidsZeroToTwo" value={kidsZeroToTwo} />
-										<input type="hidden" name="kidsThreeToFour" value={kidsThreeToFour} />
-										<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
-										<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
-										<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
-										<input type="hidden" name="tourId" value={rideShareLeg?.tripId} />
-										<input
-											type="hidden"
-											name="startFixed"
-											value={timeType === 'departure' ? '1' : '0'}
-										/>
-										<Button type="submit" variant="outline" disabled={loading}
-											>{t.ride.sendNegotiationRequest}</Button
-										>
-									</Dialog.Footer>
-								</form>
-							{:else}
-								<Dialog.Header>
-									<Dialog.Title>{t.booking.header}</Dialog.Title>
-								</Dialog.Header>
-
-								<BookingSummary
-									{passengers}
-									{wheelchair}
-									luggage={luggageToInt(luggage)}
-									price={odmPrice(page.state.selectedItinerary, passengers, kids)}
-								/>
-
-								<p class="my-2 text-sm">{t.booking.disclaimer}</p>
-
-								<Dialog.Footer>
 									<form
 										method="post"
 										action="?/bookItineraryWithOdm"
@@ -334,30 +269,97 @@
 											};
 										}}
 									>
-										<input
-											type="hidden"
-											name="json"
-											value={JSON.stringify(page.state.selectedItinerary)}
-										/>
-										<input type="hidden" name="passengers" value={passengers} />
-										<input type="hidden" name="kidsZeroToTwo" value={kidsZeroToTwo} />
-										<input type="hidden" name="kidsThreeToFour" value={kidsThreeToFour} />
-										<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
-										<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
-										<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
-										<input
-											type="hidden"
-											name="startFixed"
-											value={timeType === 'departure' ? '1' : '0'}
-										/>
-										<Button type="submit" variant="outline" disabled={loading}
-											>{t.booking.header}</Button
-										>
+										<p class="my-2 text-sm">{t.ride.negotiatePrivacy}</p>
+										<ul class="flex list-inside list-disc flex-col gap-2">
+											<li>{t.ride.startAndEnd}</li>
+											<li>{t.ride.profile}</li>
+											<li>{t.ride.email}: {data.user.email}</li>
+											{#if data.user.phone}
+												<li>{t.ride.phone}: {data.user.phone}</li>
+											{/if}
+										</ul>
+										<p class="my-2 text-sm">
+											{t.ride.negotiateExplanation}
+											{#if !data.user.phone}
+												{t.ride.noPhone}
+											{/if}
+										</p>
+										<Dialog.Footer>
+											<input
+												type="hidden"
+												name="json"
+												value={JSON.stringify(page.state.selectedItinerary)}
+											/>
+											<input type="hidden" name="passengers" value={passengers} />
+											<input type="hidden" name="kidsZeroToTwo" value={kidsZeroToTwo} />
+											<input type="hidden" name="kidsThreeToFour" value={kidsThreeToFour} />
+											<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
+											<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
+											<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
+											<input type="hidden" name="tourId" value={rideShareLeg?.tripId} />
+											<input
+												type="hidden"
+												name="startFixed"
+												value={timeType === 'departure' ? '1' : '0'}
+											/>
+											<Button type="submit" variant="outline" disabled={loading}
+												>{t.ride.sendNegotiationRequest}</Button
+											>
+										</Dialog.Footer>
 									</form>
-								</Dialog.Footer>
-							{/if}
-						</Dialog.Content>
-					</Dialog.Root>
+								{:else}
+									<Dialog.Header>
+										<Dialog.Title>{t.booking.header}</Dialog.Title>
+									</Dialog.Header>
+
+									<BookingSummary
+										{passengers}
+										{wheelchair}
+										luggage={luggageToInt(luggage)}
+										price={odmPrice(page.state.selectedItinerary, passengers, kids)}
+									/>
+
+									<p class="my-2 text-sm">{t.booking.disclaimer}</p>
+
+									<Dialog.Footer>
+										<form
+											method="post"
+											action="?/bookItineraryWithOdm"
+											use:enhance={() => {
+												loading = true;
+												return async ({ update }) => {
+													await update();
+													window.setTimeout(() => {
+														loading = false;
+													}, 5000);
+												};
+											}}
+										>
+											<input
+												type="hidden"
+												name="json"
+												value={JSON.stringify(page.state.selectedItinerary)}
+											/>
+											<input type="hidden" name="passengers" value={passengers} />
+											<input type="hidden" name="kidsZeroToTwo" value={kidsZeroToTwo} />
+											<input type="hidden" name="kidsThreeToFour" value={kidsThreeToFour} />
+											<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
+											<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
+											<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
+											<input
+												type="hidden"
+												name="startFixed"
+												value={timeType === 'departure' ? '1' : '0'}
+											/>
+											<Button type="submit" variant="outline" disabled={loading}
+												>{t.booking.header}</Button
+											>
+										</form>
+									</Dialog.Footer>
+								{/if}
+							</Dialog.Content>
+						</Dialog.Root>
+					{/if}
 				{:else}
 					<Button href="/account" variant="outline">{t.booking.loginToBook}</Button>
 				{/if}
