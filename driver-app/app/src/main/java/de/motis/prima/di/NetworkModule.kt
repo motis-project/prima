@@ -28,7 +28,7 @@ object NetworkModule {
                 val original: Request = chain.request()
 
                 val newRequest = original.newBuilder()
-                    .header("x-sveltekit-action", "false") //TODO: true
+                    .header("x-sveltekit-action", "false")
                     .header("Origin", BuildConfig.BASE_URL)
                     .build()
 
