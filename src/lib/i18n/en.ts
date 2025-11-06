@@ -101,7 +101,10 @@ const translations: Translations = {
 		// Picture Upload
 		noFileUploaded: 'no file uploaded',
 		invalidFileType: 'invalid file type',
-		fileTooLarge: 'file too large'
+		fileTooLarge: 'file too large',
+
+		//Ride Sharing
+		vehicleEditedSuccessfully: 'Vehicle edited successfully'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',
@@ -160,7 +163,9 @@ const translations: Translations = {
 		profilePictureSubtitle: 'Change your profile picture here',
 		personalInfo: 'Personal Information',
 		adjustPersonalInfo: 'Change your personal information here',
-		updatePersonalInfo: 'Update personal info'
+		updatePersonalInfo: 'Update personal info',
+		vehicleListRideShare: 'List of vehicles for ride sharing',
+		vehicleListSubtitle: 'You can edit a vehicle by clicking on it in the list below.'
 	},
 	rating: {
 		thanksForUsing: 'Thank you for using the public transport taxi.',
@@ -351,22 +356,26 @@ const translations: Translations = {
 	},
 
 	rideShare: {
-		maxPassengers: 'Maximum Carpoolers',
-		passengers: 'Carpoolers',
+		maxPassengers: 'Maximum Number of Ride Share Passengers',
+		passengers: 'Ride Share Passengers',
 		smokingInVehicle: 'Smoking in the vehicle',
+		vehiclePhoto: 'Photo',
 		color: 'Color',
 		model: 'Car Model',
 		specifyColor: 'Specify Color',
 		specifyModel: 'Specify Model',
 		luggage: 'Luggage',
+		luggageExplanation:
+			'Approximate number of transportable items in handluggage size. A big suitcase corresponds to about three handluggage items.',
 		licensePlate: 'License Plate',
 		createNewVehicle: 'Create new Vehicle',
 		createVehicle: 'Create Vehicle',
 		saveChanges: 'Save changes',
 		preview: 'preview',
 		feedbackPrompt: 'Please rate your journey with',
-		feedbackPromptProvider: 'Please rate your recent carpooler',
-		howHasItBeen: 'You can rate your last ride share experience here'
+		feedbackPromptProvider: 'Please rate your recent ride share passenger',
+		howHasItBeen: 'You can rate your last ride share experience here',
+		editVehicle: 'Edit Vehicle'
 	}
 };
 

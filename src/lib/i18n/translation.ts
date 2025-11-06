@@ -103,6 +103,9 @@ export type Translations = {
 		noFileUploaded: string;
 		invalidFileType: string;
 		fileTooLarge: string;
+
+		//Ride Sharing
+		vehicleEditedSuccessfully: string;
 	};
 	admin: {
 		completedToursSubtitle: string;
@@ -156,6 +159,8 @@ export type Translations = {
 		personalInfo: string;
 		adjustPersonalInfo: string;
 		updatePersonalInfo: string;
+		vehicleListRideShare: string;
+		vehicleListSubtitle: string;
 	};
 	rating: {
 		thanksForUsing: string;
@@ -313,11 +318,13 @@ export type Translations = {
 		maxPassengers: string;
 		passengers: string;
 		smokingInVehicle: string;
+		vehiclePhoto: string;
 		color: string;
 		model: string;
 		specifyColor: string;
 		specifyModel: string;
 		luggage: string;
+		luggageExplanation: string;
 		licensePlate: string;
 		createNewVehicle: string;
 		createVehicle: string;
@@ -326,6 +333,7 @@ export type Translations = {
 		feedbackPrompt: string;
 		feedbackPromptProvider: string;
 		howHasItBeen: string;
+		editVehicle: string;
 	};
 };
 

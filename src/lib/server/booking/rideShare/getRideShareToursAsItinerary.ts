@@ -1,10 +1,14 @@
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { db } from '$lib/server/db';
-import type { Itinerary, Leg, Mode } from '$lib/openapi';
+import { reverseGeocode, type Itinerary, type Leg, type Mode } from '$lib/openapi';
+import { env } from '$env/dynamic/public';
+import type { QuerySerializerOptions } from '@hey-api/client-fetch';
+import type { Coordinates } from '$lib/util/Coordinates';
 
 export async function getRideshareToursAsItinerary(
 	providerId: number,
-	tourId: number | undefined
+	tourId: number | undefined,
+	blurredAddresses?: boolean
 ): Promise<{
 	journeys: {
 		journey: Itinerary;
@@ -56,7 +60,7 @@ export async function getRideshareToursAsItinerary(
 							eb
 								.selectFrom('event')
 								.whereRef('event.request', '=', 'request.id')
-								.leftJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+								.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 								.orderBy('event.communicatedTime')
 								.select([
 									'event.isPickup',
@@ -82,7 +86,28 @@ export async function getRideshareToursAsItinerary(
 	if (tourId != undefined) {
 		query = query.where('rideShareTour.id', '=', tourId);
 	}
-	const journeys = await query.execute();
+	let journeys = await query.execute();
+	if (blurredAddresses) {
+		journeys = await Promise.all(
+			journeys.map(async (j) => ({
+				...j,
+				requests: await Promise.all(
+					j.requests.map(async (r) => ({
+						...r,
+						events:
+							r.customerId === providerId
+								? r.events
+								: await Promise.all(
+										r.events.map(async (e) => ({
+											...e,
+											address: await getBlurredAddress(e)
+										}))
+									)
+					}))
+				)
+			}))
+		);
+	}
 	return {
 		journeys: journeys.map((journey) => {
 			type Evt = (typeof journeys)[0]['requests'][0]['events'][0];
@@ -170,4 +195,31 @@ export async function getRideshareToursAsItinerary(
 			};
 		})
 	};
+}
+
+async function getBlurredAddress(place: Coordinates) {
+	const result = await reverseGeocode({
+		baseUrl: env.PUBLIC_MOTIS_URL,
+		querySerializer: { array: { explode: false } } as QuerySerializerOptions,
+		query: {
+			place: `${place.lat},${place.lng}`
+		}
+	});
+	const areas = result?.data ? result.data[0].areas : undefined;
+	if (areas === undefined) {
+		return place.address ?? '';
+	}
+	const usedAreas = areas.filter((a) => a.adminLevel <= 8);
+	if (usedAreas.length === 0) {
+		return place.address ?? '';
+	}
+	const area1 = areas.reduce(
+		(max, curr) => (max = curr.adminLevel > max.adminLevel ? curr : max),
+		areas[0]
+	);
+	const area2 = usedAreas.reduce(
+		(max, curr) => (max = curr.adminLevel > max.adminLevel ? curr : max),
+		usedAreas[0]
+	);
+	return area1.name + (area1.adminLevel === area2.adminLevel ? '' : ' ' + area2.name);
 }

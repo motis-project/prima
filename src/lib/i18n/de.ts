@@ -105,7 +105,10 @@ const translations: Translations = {
 		// Picture Upload
 		noFileUploaded: 'kein Bild hochgeladen',
 		invalidFileType: 'ungültiger Dateityp',
-		fileTooLarge: 'Datei ist zu groß'
+		fileTooLarge: 'Datei ist zu groß',
+
+		//Ride Sharing
+		vehicleEditedSuccessfully: 'Fahrzeug erfolgreich geändert'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',
@@ -166,7 +169,10 @@ const translations: Translations = {
 		profilePictureSubtitle: 'Hier können Sie Ihr Profilbild ändern',
 		personalInfo: 'Personenbezogene Informationen',
 		adjustPersonalInfo: 'Ändern Sie Ihre persönlichen Informationen',
-		updatePersonalInfo: 'Persönliche Informationen ändern'
+		updatePersonalInfo: 'Persönliche Informationen ändern',
+		vehicleListRideShare: 'Fahrzeugliste für Mitfahrangebote',
+		vehicleListSubtitle:
+			'Sie können ein Fahrzeug anpassen indem Sie es in der Liste unten anklicken.'
 	},
 	rating: {
 		thanksForUsing: 'Vielen Dank, dass Sie das ÖPNV Taxi benutzt haben.',
@@ -359,14 +365,17 @@ const translations: Translations = {
 	},
 
 	rideShare: {
-		maxPassengers: 'maximale Anzahl Mitfahrer',
+		maxPassengers: 'Maximale Anzahl Mitfahrer',
 		passengers: 'Mitfahrer',
 		smokingInVehicle: 'Rauchen im Fahrzeug',
+		vehiclePhoto: 'Foto',
 		color: 'Farbe',
 		model: 'Fahrzeugmodell',
 		specifyColor: 'Farbe angeben',
 		specifyModel: 'Fahrzeugmodell angeben',
 		luggage: 'Gepäckstücke',
+		luggageExplanation:
+			'Ungefähre Anzahl von transportierbaren Gepäckstücken in Handgepäckgröße. Ein großer Koffer entspricht etwa drei Handgepäckstücken.',
 		licensePlate: 'Nummernschild',
 		createNewVehicle: 'Neues Fahrzeug anlegen',
 		createVehicle: 'Fahrzeug anlegen',
@@ -374,7 +383,8 @@ const translations: Translations = {
 		preview: 'Voransicht',
 		feedbackPrompt: 'Bitte bewerten Sie Ihre Reise mit',
 		feedbackPromptProvider: 'Bitte bewerten Sie Ihren Mitfahrer',
-		howHasItBeen: 'Sie können Ihre letzte Mitfahrerfahrung hier bewerten'
+		howHasItBeen: 'Sie können Ihre letzte Mitfahrerfahrung hier bewerten',
+		editVehicle: 'Fahrzeug ändern'
 	}
 };
 

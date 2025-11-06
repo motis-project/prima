@@ -15,6 +15,7 @@
 	import type { SignedItinerary } from '$lib/planAndSign';
 	import ProfileBadge from '$lib/ui/ProfileBadge.svelte';
 	import { defaultCarPicture } from '$lib/constants';
+	import * as Dialog from '$lib/shadcn/dialog';
 
 	const {
 		itinerary,
@@ -136,12 +137,24 @@
 					/>
 
 					{#if tourInfo.picture || tourInfo.color}
-						<div class="flex flex-row gap-4">
-							<img
-								src={tourInfo.picture || defaultCarPicture}
-								alt="vehicle"
-								class="mt-2 h-20 w-20 overflow-hidden border border-gray-200"
-							/>
+						<div class="mt-2 flex flex-row gap-4">
+							<Dialog.Root>
+								<Dialog.Trigger>
+									<img
+										src={tourInfo.picture || defaultCarPicture}
+										alt="vehicle"
+										class="h-20 w-20 overflow-hidden border border-gray-200"
+									/>
+								</Dialog.Trigger>
+								<Dialog.Content class="max-h-[100vh] w-[90%] flex-col overflow-y-auto md:w-96">
+									<img
+										src={tourInfo.picture || defaultCarPicture}
+										alt="vehicle"
+										class="mt-2 w-full"
+									/>
+								</Dialog.Content>
+							</Dialog.Root>
+
 							<div>
 								<span>
 									{tourInfo.model}
@@ -229,7 +242,8 @@
 						l.scheduledStartTime,
 						l.realTime,
 						l.from.name,
-						l.from.stopId
+						l.from.stopId,
+						isRideShareLeg(l)
 					)}
 				</div>
 				{#if l.headsign}

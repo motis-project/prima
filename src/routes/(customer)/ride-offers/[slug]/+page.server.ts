@@ -6,7 +6,11 @@ import { acceptRideShareRequest, getRideshareToursAsItinerary } from '$lib/serve
 import { cancelRideShareTour } from '$lib/server/booking/rideShare/cancelRideShareTour';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const result = await getRideshareToursAsItinerary(locals.session!.userId!, parseInt(params.slug));
+	const result = await getRideshareToursAsItinerary(
+		locals.session!.userId!,
+		parseInt(params.slug),
+		true
+	);
 
 	if (result.journeys.length != 1) {
 		error(404, 'Not found');
