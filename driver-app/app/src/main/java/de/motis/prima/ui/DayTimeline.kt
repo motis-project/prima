@@ -1,3 +1,4 @@
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -32,37 +33,26 @@ import androidx.compose.ui.unit.sp
 import de.motis.prima.ui.AvailabilityViewModel
 import java.time.LocalDate
 
-data class TimeBlock(
-    val date: LocalDate,
-    val startMinutes: Int, // minutes since start of day
-    val endMinutes: Int,
-    val color: Color = Color.White
-)
-
-val colorAvailable = Color(254, 249, 195)
-val colorTour = Color(251 ,146, 60)
-val colorPassed = Color.LightGray
-
 @Composable
 fun DayTimeline(
-    blocks: List<TimeBlock> = emptyList(),
-    fetchedBlocks: List<TimeBlock> = emptyList(),
-    onRangeSelected: (startMinutes: Int, endMinutes: Int, dragStart: Int, color: Color) -> Unit = { _, _, _, _ -> },
     viewModel: AvailabilityViewModel
 ) {
-    val totalMinutes = 24 * 60
+    val shiftStart = 3
+    val shiftEnd = 24
+    val trailingMinutes = (24 - shiftEnd) * 60
+    val totalMinutes = 24  * 60
     val slotMinutes = 15
-    val slots = totalMinutes / slotMinutes
-
-    val passedHours = viewModel.currentHour
-    val passedSlots = passedHours * 60 / slotMinutes
+    val slots = (totalMinutes - trailingMinutes) / slotMinutes
 
     var dragStart by remember { mutableStateOf<Int?>(null) }
     var dragEnd by remember { mutableStateOf<Int?>(null) }
 
     val scrollState = rememberScrollState()
+    val dayBlocks by viewModel.dayBlocks.collectAsState()
 
-    val displayDate by viewModel.displayDate.collectAsState()
+    val date by viewModel.displayDate.collectAsState()
+    val passedHours = if ( date == LocalDate.now() ) viewModel.currentHour else shiftStart
+    val passedSlots = passedHours * 60 / slotMinutes
 
     Row (modifier = Modifier.padding(top = 65.dp)) {
         val heightPerSlotDp = 120.dp / (60 / slotMinutes)
@@ -87,7 +77,7 @@ fun DayTimeline(
                     horizontalAlignment = Alignment.End
                 ) {
                     val heightPerHourDp = heightPerSlotDp * 4
-                    for (hour in passedHours..24) {
+                    for (hour in passedHours..shiftEnd) {
                         Box(
                             modifier = Modifier
                                 .height(heightPerHourDp)
@@ -106,6 +96,7 @@ fun DayTimeline(
                 // Timeline drawing area
                 Box(modifier = Modifier.weight(1f)) {
                     val visibleHeight = heightPerSlotDp * slots - heightPerSlotDp * passedSlots
+                    val passedSlotsLocal by viewModel.passedSlots.collectAsState()
                     Canvas(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -113,31 +104,30 @@ fun DayTimeline(
                             .padding(top = 12.dp, start = 6.dp, end = 12.dp)
                             .pointerInput(Unit) {
                                 detectTapGestures { offset ->
-                                    val slot = (offset.y / heightPerSlotDp.toPx()).toInt() + passedSlots
+                                    val slot = (offset.y / heightPerSlotDp.toPx()).toInt() + passedSlotsLocal
                                     val start = slot * slotMinutes
                                     val end = start + slotMinutes
-
-                                    if (end > start) {
-                                        onRangeSelected(start, end, start, colorAvailable)
-                                    }
+                                    dragStart = start
+                                    viewModel.updateDayBlocks(start, end, dragStart!!)
+                                    dragStart = null
                                 }
                             }
                             .pointerInput(Unit) {
                                 detectDragGestures(
                                     onDragStart = { offset ->
-                                        val slot = (offset.y / heightPerSlotDp.toPx()).toInt() + passedSlots
+                                        val slot = (offset.y / heightPerSlotDp.toPx()).toInt() + passedSlotsLocal
                                         dragStart = slot * slotMinutes
                                         dragEnd = slot * slotMinutes
                                     },
                                     onDrag = { change, _ ->
-                                        val slot = (change.position.y / heightPerSlotDp.toPx()).toInt() + passedSlots
+                                        val slot = (change.position.y / heightPerSlotDp.toPx()).toInt() + passedSlotsLocal
                                         dragEnd = slot * slotMinutes
                                     },
                                     onDragEnd = {
                                         val start = minOf(dragStart ?: 0, dragEnd ?: 0)
                                         val end = maxOf(dragStart ?: 0, dragEnd ?: 0) + slotMinutes
                                         if (end > start) {
-                                            onRangeSelected(start, end, dragStart!!, colorAvailable)
+                                            viewModel.updateDayBlocks(start, end, dragStart!!)
                                         }
                                         dragStart = null
                                         dragEnd = null
@@ -177,15 +167,15 @@ fun DayTimeline(
                         }
 
                         // Draw blocks
-                        val allBlocks = fetchedBlocks + blocks
-                        allBlocks.filter { b -> b.date == displayDate }.forEach { block ->
+                        dayBlocks.forEach { block ->
+                            val blockColor = block.color.copy(alpha = 0.6f)
                             val topSlot = block.startMinutes / slotMinutes
                             val bottomSlot = block.endMinutes / slotMinutes
                             val topY = topSlot * heightPerSlotDp.toPx() - passedSlots * heightPerSlotDp.toPx()
                             val bottomY = bottomSlot * heightPerSlotDp.toPx() - passedSlots * heightPerSlotDp.toPx()
 
                             drawRect(
-                                color = block.color.copy(alpha = 0.6f),
+                                color = blockColor,
                                 topLeft = Offset(0f, topY),
                                 size = androidx.compose.ui.geometry.Size(size.width, bottomY - topY)
                             )
@@ -258,36 +248,5 @@ fun DayTimeline(
 fun PreviewDayTimeline(
     viewModel: AvailabilityViewModel
 ) {
-    var blocks by remember { mutableStateOf(listOf<TimeBlock>()) }
-    val fetchedBlocks by viewModel.availability.collectAsState()
-
-    DayTimeline(
-        blocks = blocks,
-        fetchedBlocks = fetchedBlocks,
-        onRangeSelected = { start, end, dragStart, color ->
-            val removeFetched = fetchedBlocks.contains(TimeBlock(viewModel.displayDate.value, dragStart, dragStart + 15, color))
-            val removeInput = blocks.contains(TimeBlock(viewModel.displayDate.value, dragStart, dragStart + 15, color))
-            val tmpFetched = fetchedBlocks.toMutableList()
-            val tmpInput = blocks.toMutableList()
-            var a = start
-            while ( a < end ) {
-                val b = a + 15
-                val newBlock = TimeBlock(viewModel.displayDate.value, a, b, color)
-                if (removeFetched || removeInput) {
-                    tmpFetched.remove(newBlock)
-                    tmpInput.remove(newBlock)
-                    blocks = tmpInput
-                } else {
-                    if (blocks.contains(newBlock).not()) {
-                        blocks = blocks + newBlock
-                    }
-                }
-                a = b
-            }
-            if (removeFetched || removeInput) {
-                viewModel.setBlocks(tmpFetched)
-            }
-        },
-        viewModel
-    )
+    DayTimeline(viewModel)
 }

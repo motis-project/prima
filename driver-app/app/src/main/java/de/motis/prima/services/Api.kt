@@ -2,6 +2,8 @@ package de.motis.prima.services
 
 import retrofit2.Call
 import retrofit2.Response
+import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -44,10 +46,14 @@ interface ApiService {
         @Query("token") token: String
     ): Response<Void>
 
-    @GET("/taxi/availability/api/availability")
+    @POST("api/driver/availability")
     suspend fun getAvailability(
-        @Query("offset") offset: String, // -120
-        @Query("date") date: String // 2025-10-10
+        @Body request: AvailabilityRequest
+    ): Response<AvailabilityResponse>
+
+    @DELETE("api/driver/availability")
+    suspend fun deleteAvailability(
+        @Body request: AvailabilityRequest
     ): Response<AvailabilityResponse>
 
     @PUT("/taxi/availability")
@@ -59,10 +65,21 @@ interface ApiService {
     ): Response<Void>
 }
 
+data class AvailabilityRequest(
+    val vehicleId: Int,
+    val from: List<Long>,
+    val to: List<Long>,
+    val add: List<Boolean>,
+    val offset: Int,
+    val date: String
+)
+
 data class AvailabilityResponse(
     val tours: List<Tour> = emptyList(),
-    val vehicles: List<Vehicle>  = emptyList(),
-    val utcDate: String = ""
+    val vehicles: List<Vehicle> = emptyList(),
+    val from: List<Long> = emptyList(),
+    val to: List<Long> = emptyList(),
+    val add: List<Boolean> = emptyList()
 )
 
 data class Availability(
