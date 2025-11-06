@@ -68,7 +68,7 @@ fun Nav(intent: Intent?, viewModel: NavViewModel = hiltViewModel()) {
             else if (selectedVehicle.id == 0) {
                 "vehicles"
             } else {
-                "availability"//"tours"
+                "tours"
             }
         }
 
