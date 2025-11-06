@@ -47,9 +47,9 @@ export async function getAvailability(utcDate: Date, companyId: number) {
 		companyDataComplete,
 		companyCoordinates: companyDataComplete
 			? {
-				lat: company.lat!,
-				lng: company.lng!
-			}
+					lat: company.lat!,
+					lng: company.lng!
+				}
 			: null
 	};
 }
