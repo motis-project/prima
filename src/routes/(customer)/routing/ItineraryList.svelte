@@ -49,7 +49,7 @@
 		</div>
 	{:then r}
 		{#if r == undefined}
-			{t.noItinerariesFound}
+			Error
 		{:else if r.itineraries.length === 0 && r.direct.length === 0}
 			<div>{t.noItinerariesFound}</div>
 		{:else}
