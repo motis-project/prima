@@ -40,7 +40,7 @@ object RealmModule {
     @Provides
     @Singleton
     fun provideRealm(realmConfiguration: RealmConfiguration, @ApplicationContext context: Context): Realm {
-        //Realm.deleteRealm(realmConfiguration) //TODO: revise
+        Realm.deleteRealm(realmConfiguration) //TODO: revise
         return try {
             Realm.open(realmConfiguration)
         } catch (e: Exception) {
