@@ -11,12 +11,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,13 +35,17 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import de.motis.prima.R
 import de.motis.prima.ui.AvailabilityViewModel
 import java.time.LocalDate
 
 @Composable
 fun DayTimeline(
+    navController: NavController,
     viewModel: AvailabilityViewModel
 ) {
     val shiftStart = 3
@@ -52,7 +63,40 @@ fun DayTimeline(
 
     val date by viewModel.displayDate.collectAsState()
     val passedHours = if ( date == LocalDate.now() ) viewModel.currentHour else shiftStart
-    val passedSlots = passedHours * 60 / slotMinutes
+    val passedSlots by viewModel.passedSlots.collectAsState()
+
+    var showDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = viewModel) {
+        viewModel.networkError.collect { networkError ->
+            showDialog = networkError
+        }
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(text = stringResource(id = R.string.availabilityNetErrorTitle), fontSize = 16.sp) },
+            text = { Text(text = stringResource(id = R.string.availabilityNetErrorText), fontSize = 12.sp) },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Clear,
+                    contentDescription = "Localized description",
+                    tint = Color.Red,
+                    modifier = Modifier.size(32.dp)
+
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showDialog = false
+                    navController.popBackStack()
+                }) {
+                    Text("Ok")
+                }
+            }
+        )
+    }
 
     Row (modifier = Modifier.padding(top = 65.dp)) {
         val heightPerSlotDp = 120.dp / (60 / slotMinutes)
@@ -125,8 +169,9 @@ fun DayTimeline(
                                     },
                                     onDragEnd = {
                                         val start = minOf(dragStart ?: 0, dragEnd ?: 0)
-                                        val end = maxOf(dragStart ?: 0, dragEnd ?: 0) + slotMinutes
+                                        var end = maxOf(dragStart ?: 0, dragEnd ?: 0) + slotMinutes
                                         if (end > start) {
+                                            end = minOf(end, 1440)
                                             viewModel.updateDayBlocks(start, end, dragStart!!)
                                         }
                                         dragStart = null
@@ -187,7 +232,6 @@ fun DayTimeline(
                             val bottomSlot = (maxOf(dragStart!!, dragEnd!!)) / slotMinutes + 1
                             val topY = topSlot * heightPerSlotDp.toPx() - passedSlots * heightPerSlotDp.toPx()
                             val bottomY = bottomSlot * heightPerSlotDp.toPx() - passedSlots * heightPerSlotDp.toPx()
-
                             drawRect(
                                 color = Color.LightGray.copy(alpha = 0.3f),
                                 topLeft = Offset(0f, topY),
@@ -209,7 +253,6 @@ fun DayTimeline(
 
         // scroll bar
         val visibleHours = 6
-        val visibleMinutes = visibleHours * 60
         val proportionVisible = 1/4 //visibleMinutes / totalMinutes.toFloat()
         val scrollProportion = scrollState.value / scrollState.maxValue.toFloat().coerceAtLeast(1f)
         val indicatorHeight = 30.dp
@@ -246,7 +289,8 @@ fun DayTimeline(
 
 @Composable
 fun PreviewDayTimeline(
+    navController: NavController,
     viewModel: AvailabilityViewModel
 ) {
-    DayTimeline(viewModel)
+    DayTimeline(navController,viewModel)
 }

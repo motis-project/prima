@@ -78,9 +78,6 @@ class DataRepository @Inject constructor(
     private val _darkTheme = MutableStateFlow(false)
     val darkTheme: StateFlow<Boolean> = _darkTheme.asStateFlow()
 
-    private val _availability = MutableStateFlow<List<TimeBlock>>(emptyList())
-    val availability = _availability.asStateFlow()
-
     val utcOffset = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).offset.totalSeconds
 
     fun toggleTheme() {
@@ -110,10 +107,6 @@ class DataRepository @Inject constructor(
         fetchFirebaseToken()
         startRefreshingTours()
         startReporting()
-    }
-
-    fun updateAvailability(blocks: List<TimeBlock>) {
-        _availability.value = blocks
     }
 
     fun removeFirebaseToken() {

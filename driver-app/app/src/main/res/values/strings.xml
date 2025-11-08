@@ -31,4 +31,6 @@
     <string name="invalidated_tickets">Es wurden nicht alle Tickets validiert. Fahrt trotzdem fortsetzen?</string>
     <string name="tickets_validated">Tickets validiert</string>
     <string name="availability">Verfügbarkeit</string>
+    <string name="availabilityNetErrorTitle">Keine Internetverbindung</string>
+    <string name="availabilityNetErrorText">Bitte überprüfen Sie Ihr Netzwerk und versuchen Sie es ggf. zu einem späteren Zeitpunkt erneut.</string>
 </resources>

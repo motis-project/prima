@@ -39,7 +39,6 @@ import de.motis.prima.data.DataRepository
 import de.motis.prima.services.ApiService
 import de.motis.prima.services.AvailabilityRequest
 import de.motis.prima.services.AvailabilityResponse
-import de.motis.prima.services.Tour
 import de.motis.prima.ui.theme.LocalExtendedColors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -52,7 +51,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import retrofit2.Response
-import java.sql.Time
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -77,8 +75,8 @@ class AvailabilityViewModel @Inject constructor(
     private val _displayDate = MutableStateFlow(LocalDate.now())
     val displayDate = _displayDate.asStateFlow()
     var currentHour = 0
-    val shiftStart = 3
-    val slotMinutes = 15
+    private val shiftStart = 3
+    private val slotMinutes = 15
 
     private val _passedSlots = MutableStateFlow(0)
     val passedSlots = _passedSlots.asStateFlow()
@@ -231,6 +229,9 @@ class AvailabilityViewModel @Inject constructor(
     private fun setDayBlocks(saveDate: LocalDate, fetchDate: LocalDate) {
         val totalMinutes = 24 * 60
         val slotMinutes = 15
+        val offsetMinutes = repository.utcOffset / 60
+        val epochMillisSTOD = saveDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
         var i = 0
         val tmpDayBlocks = mutableListOf<TimeBlock>()
         while (i < totalMinutes) {
@@ -240,11 +241,8 @@ class AvailabilityViewModel @Inject constructor(
             i = next
         }
 
-        val offsetMinutes = repository.utcOffset / 60
-        val epochMillisSTOD = saveDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-
         val intervals = mergeModifications(fetchDate)
-        Log.d("update", "$intervals") //TODO: check merging
+        Log.d("merge", "merged: $intervals") //TODO: fix merging
         val from = mutableListOf<Long>()
         val to = mutableListOf<Long>()
         val add = mutableListOf<Boolean>()
@@ -262,7 +260,7 @@ class AvailabilityViewModel @Inject constructor(
                 from,
                 to,
                 add,
-                offset = offsetMinutes * -1,
+                offset = offsetMinutes,
                 date = fetchDate.toString()
             )
 
@@ -277,13 +275,12 @@ class AvailabilityViewModel @Inject constructor(
                     timeBlocks.forEach { block ->
                         var wasSent = false
                         var unmodified = true
-                        var alterable = true
                         val index = getSlotIndex(block.startMinutes)
+                        val alterable = tmpDayBlocks[index].color != colorPassed
 
                         if (update) {
                             val oldState = dayMap[fetchDate.toString()]!![index]
                             unmodified = oldState.modified.not()
-                            alterable = oldState.color != colorPassed
 
                             val containingInterval = findInterval(oldState.startMinutes, intervals)
                             containingInterval?.let { interval ->
@@ -297,14 +294,14 @@ class AvailabilityViewModel @Inject constructor(
                             tmpDayBlocks[index].color = block.color
                         }
                     }
+
+                    dayMap[fetchDate.toString()] = tmpDayBlocks
+                    _dayBlocks.value = tmpDayBlocks
                 }
             } catch (e: Exception) {
                 _networkError.value = true
                 Log.e("error", "${e.message}")
             }
-
-            dayMap[fetchDate.toString()] = tmpDayBlocks
-            _dayBlocks.value = tmpDayBlocks
         }
     }
 
@@ -464,7 +461,7 @@ fun Availability(
     ) { contentPadding ->
         Box(modifier = Modifier.padding(contentPadding)) {
             DateSelect(viewModel)
-            PreviewDayTimeline(viewModel)
+            PreviewDayTimeline(navController, viewModel)
         }
     }
 }

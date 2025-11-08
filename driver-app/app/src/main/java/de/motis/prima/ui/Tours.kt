@@ -342,7 +342,7 @@ fun ToursList(
                         split[1]
                     }
                 } catch (e: Exception) {
-                    city = dstAddress
+                    city = address
                 }
 
                 try {
