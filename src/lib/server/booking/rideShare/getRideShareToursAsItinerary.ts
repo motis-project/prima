@@ -205,7 +205,7 @@ async function getBlurredAddress(place: Coordinates) {
 			place: `${place.lat},${place.lng}`
 		}
 	});
-	const areas = result?.data ? result.data[0].areas : undefined;
+	const areas = result?.data?.length ? result.data[0].areas : undefined;
 	if (areas === undefined) {
 		return place.address ?? '';
 	}
