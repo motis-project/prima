@@ -86,8 +86,7 @@ async function util(
 			'eventGroup.id as grp'
 		])
 		.execute();
-
-	const splitTime = allowedArrivalsAtStart.startTime + duration;
+	const splitTime = allowedArrivalsAtStart.startTime + duration / 2;
 	const earlierEvents = otherTourEvents.filter((e) => e.scheduledTimeStart < splitTime);
 	const lastEventBefore =
 		earlierEvents.length === 0
@@ -104,28 +103,38 @@ async function util(
 				);
 	let allowedIntervals = [fullTravelInterval];
 	if (lastEventBefore !== null) {
-		const prevLegDurationResult = (await carRouting(lastEventBefore, start)).direct;
+		const sameTourEvents = otherTourEvents
+			.filter((e) => e.tourId === lastEventBefore.tourId)
+			.sort((e1, e2) => e1.scheduledTimeStart - e2.scheduledTimeStart);
+		const firstTourEvent = sameTourEvents[0];
+		const lastTourEvent = sameTourEvents[sameTourEvents.length - 1];
+		const prevLegDurationResult = (await carRouting(lastTourEvent, start)).direct;
 		if (prevLegDurationResult.length === 0) {
 			console.log('adding tour: previous leg conflict', prevLegDurationResult, lastEventBefore);
 			return undefined;
 		}
 		allowedIntervals = Interval.subtract(allowedIntervals, [
-			new Interval(lastEventBefore.scheduledTimeStart, lastEventBefore.scheduledTimeEnd).expand(
-				prevLegDurationResult[0].duration,
-				0
+			new Interval(firstTourEvent.scheduledTimeStart, lastTourEvent.scheduledTimeEnd).expand(
+				0,
+				prevLegDurationResult[0].duration * 1000
 			)
 		]);
 	}
 	if (firstEventAfter !== null) {
-		const nextLegDurationResult = (await carRouting(target, firstEventAfter)).direct;
+		const sameTourEvents = otherTourEvents
+			.filter((e) => e.tourId === firstEventAfter.tourId)
+			.sort((e1, e2) => e1.scheduledTimeStart - e2.scheduledTimeStart);
+		const firstTourEvent = sameTourEvents[0];
+		const lastTourEvent = sameTourEvents[sameTourEvents.length - 1];
+		const nextLegDurationResult = (await carRouting(target, firstTourEvent)).direct;
 		if (nextLegDurationResult.length === 0) {
 			console.log('adding tour: next leg conflict', nextLegDurationResult, firstEventAfter);
 			return undefined;
 		}
 		allowedIntervals = Interval.subtract(allowedIntervals, [
-			new Interval(firstEventAfter.scheduledTimeStart, firstEventAfter.scheduledTimeEnd).expand(
-				0,
-				nextLegDurationResult[0].duration
+			new Interval(firstTourEvent.scheduledTimeStart, lastTourEvent.scheduledTimeEnd).expand(
+				nextLegDurationResult[0].duration * 1000,
+				0
 			)
 		]);
 	}
