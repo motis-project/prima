@@ -19,6 +19,26 @@
 				if (l.steps) {
 					const color = isIndividualTransport(l.mode) ? '#42a5f5' : `${getColor(l)[0]}`;
 					const outlineColor = colord(color).darken(0.2).toHex();
+					if (l.mode === 'RIDE_SHARING') {
+						return [
+							{
+								type: 'Feature',
+								properties: {
+									color,
+									outlineColor,
+									level: 0,
+									way: 0
+								},
+								geometry: {
+									type: 'LineString',
+									coordinates: [
+										[l.from.lon, l.from.lat],
+										[l.to.lon, l.to.lat]
+									]
+								}
+							}
+						];
+					}
 					return l.steps.map((p) => {
 						return {
 							type: 'Feature',
