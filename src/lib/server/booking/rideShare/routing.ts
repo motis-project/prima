@@ -17,7 +17,8 @@ export async function routing(
 	rideShareTours: RideShareTour[],
 	userChosen: Coordinates,
 	busStops: BusStop[],
-	insertionRanges: Map<VehicleId, Range[]>
+	insertionRanges: Map<VehicleId, Range[]>,
+	maxTourTime: number
 ): Promise<RoutingResults> {
 	const setZeroDistanceForMatchingPlaces = (
 		coordinatesOne: Coordinates,
@@ -50,18 +51,8 @@ export async function routing(
 		);
 		backward.push(info.idxInEvents === 0 ? undefined : info.events[info.idxInEvents - 1]);
 	});
-	let fromUserChosen = await batchOneToManyCarRouting(
-		userChosen,
-		forward,
-		false,
-		MAX_RIDE_SHARE_TOUR_TIME
-	);
-	let toUserChosen = await batchOneToManyCarRouting(
-		userChosen,
-		backward,
-		true,
-		MAX_RIDE_SHARE_TOUR_TIME
-	);
+	let fromUserChosen = await batchOneToManyCarRouting(userChosen, forward, false, maxTourTime);
+	let toUserChosen = await batchOneToManyCarRouting(userChosen, backward, true, maxTourTime);
 	fromUserChosen = setZeroDistanceForMatchingPlaces(userChosen, forward, fromUserChosen);
 	toUserChosen = setZeroDistanceForMatchingPlaces(userChosen, backward, toUserChosen);
 
@@ -69,14 +60,14 @@ export async function routing(
 		forward.map((b) =>
 			b === undefined
 				? new Array<undefined>(busStops.length)
-				: batchOneToManyCarRouting(b, busStops, false, MAX_RIDE_SHARE_TOUR_TIME)
+				: batchOneToManyCarRouting(b, busStops, false, maxTourTime)
 		)
 	);
 	const toBusStop: (number | undefined)[][] = await Promise.all(
 		backward.map((b) =>
 			b === undefined
 				? new Array<undefined>(busStops.length)
-				: batchOneToManyCarRouting(b, busStops, true, MAX_RIDE_SHARE_TOUR_TIME)
+				: batchOneToManyCarRouting(b, busStops, true, maxTourTime)
 		)
 	);
 	return {
