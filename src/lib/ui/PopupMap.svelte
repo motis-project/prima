@@ -142,7 +142,7 @@
 				layout={{}}
 				filter={['literal', true]}
 				paint={{
-					'line-color': '#000',
+					'line-color': getColor({ mode: 'ODM' })[0],
 					'line-width': 2
 				}}
 			/>
@@ -180,7 +180,7 @@
 				layout={{}}
 				filter={['literal', true]}
 				paint={{
-					'line-color': '#000',
+					'line-color': getColor({ mode: 'RIDE_SHARING' })[0],
 					'line-width': 2
 				}}
 			/>
