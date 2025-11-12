@@ -33,14 +33,18 @@ async function util(
 	  }
 	| undefined
 > {
-	const routingResult = (
-		await carRouting(start, target, false, new Date().toISOString(), MAX_RIDE_SHARE_TOUR_TIME)
-	).direct;
-	if (routingResult.length === 0) {
+	const routingResult = await carRouting(
+		start,
+		target,
+		false,
+		new Date().toISOString(),
+		MAX_RIDE_SHARE_TOUR_TIME
+	);
+	if (!routingResult) {
 		console.log('adding tour: routing failed');
 		return undefined;
 	}
-	const duration = routingResult[0].duration * 1000;
+	const duration = routingResult.duration;
 	const allowedArrivalsAtFixed = new Interval(
 		startFixed ? time : time - 10 * MINUTE,
 		startFixed ? time + 10 * MINUTE : time
@@ -108,15 +112,15 @@ async function util(
 			.sort((e1, e2) => e1.scheduledTimeStart - e2.scheduledTimeStart);
 		const firstTourEvent = sameTourEvents[0];
 		const lastTourEvent = sameTourEvents[sameTourEvents.length - 1];
-		const prevLegDurationResult = (await carRouting(lastTourEvent, start)).direct;
-		if (prevLegDurationResult.length === 0) {
+		const prevLegDurationResult = await carRouting(lastTourEvent, start);
+		if (!prevLegDurationResult) {
 			console.log('adding tour: previous leg conflict', prevLegDurationResult, lastEventBefore);
 			return undefined;
 		}
 		allowedIntervals = Interval.subtract(allowedIntervals, [
 			new Interval(firstTourEvent.scheduledTimeStart, lastTourEvent.scheduledTimeEnd).expand(
 				0,
-				prevLegDurationResult[0].duration * 1000
+				prevLegDurationResult.duration
 			)
 		]);
 	}
@@ -126,14 +130,14 @@ async function util(
 			.sort((e1, e2) => e1.scheduledTimeStart - e2.scheduledTimeStart);
 		const firstTourEvent = sameTourEvents[0];
 		const lastTourEvent = sameTourEvents[sameTourEvents.length - 1];
-		const nextLegDurationResult = (await carRouting(target, firstTourEvent)).direct;
-		if (nextLegDurationResult.length === 0) {
+		const nextLegDurationResult = await carRouting(target, firstTourEvent);
+		if (!nextLegDurationResult) {
 			console.log('adding tour: next leg conflict', nextLegDurationResult, firstEventAfter);
 			return undefined;
 		}
 		allowedIntervals = Interval.subtract(allowedIntervals, [
 			new Interval(firstTourEvent.scheduledTimeStart, lastTourEvent.scheduledTimeEnd).expand(
-				nextLegDurationResult[0].duration * 1000,
+				nextLegDurationResult.duration,
 				0
 			)
 		]);
