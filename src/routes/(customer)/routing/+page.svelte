@@ -228,7 +228,13 @@
 			onValueChange={() => pushState('', {})}
 		/>
 	{:else if page.state.showMap}
-		<PopupMap bind:from bind:to itinerary={page.state.selectedItinerary} areas={data.areas} rideSharingBounds={data.rideSharingBounds} />
+		<PopupMap
+			bind:from
+			bind:to
+			itinerary={page.state.selectedItinerary}
+			areas={data.areas}
+			rideSharingBounds={data.rideSharingBounds}
+		/>
 	{:else if page.state.selectedItinerary}
 		<div class="flex items-center justify-between gap-4">
 			<Button variant="outline" size="icon" onclick={() => window.history.back()}>

@@ -131,7 +131,7 @@
 				layout={{}}
 				filter={['literal', true]}
 				paint={{
-					'fill-color': getColor({mode: 'ODM'})[0],
+					'fill-color': getColor({ mode: 'ODM' })[0],
 					'fill-opacity': 0.15,
 					'fill-outline-color': '#000'
 				}}
@@ -169,8 +169,8 @@
 				layout={{}}
 				filter={['literal', true]}
 				paint={{
-					'fill-color': getColor({mode: 'RIDE_SHARING'})[0],
-					'fill-opacity': .15,
+					'fill-color': getColor({ mode: 'RIDE_SHARING' })[0],
+					'fill-opacity': 0.15,
 					'fill-outline-color': '#000'
 				}}
 			/>
