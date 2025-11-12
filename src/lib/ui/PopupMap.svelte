@@ -15,18 +15,21 @@
 	import Layer from '$lib/map/Layer.svelte';
 	import { t } from '$lib/i18n/translation';
 	import type { SignedItinerary } from '$lib/planAndSign';
+	import { getColor } from '$lib/ui/modeStyle';
 
 	let {
 		from = $bindable(),
 		to = $bindable(),
 		itinerary,
 		areas = $bindable(),
+		rideSharingBounds = $bindable(),
 		intermediateStops = $bindable()
 	}: {
 		from?: Location | undefined;
 		to?: Location | undefined;
 		itinerary?: SignedItinerary | undefined;
 		areas?: unknown;
+		rideSharingBounds?: unknown;
 		intermediateStops?: boolean;
 	} = $props();
 
@@ -128,8 +131,8 @@
 				layout={{}}
 				filter={['literal', true]}
 				paint={{
-					'fill-color': '#088',
-					'fill-opacity': 0.1,
+					'fill-color': getColor({mode: 'ODM'})[0],
+					'fill-opacity': 0.15,
 					'fill-outline-color': '#000'
 				}}
 			/>
@@ -148,7 +151,45 @@
 				type="symbol"
 				layout={{
 					'symbol-placement': 'point',
-					'text-field': ['concat', t.serviceArea + ' ', ['get', 'name']],
+					'text-field': ['concat', t.taxi + ' ' + t.serviceArea + ' ', ['get', 'name']],
+					'text-font': ['Noto Sans Display Regular'],
+					'text-size': 16
+				}}
+				filter={['literal', true]}
+				paint={{
+					'text-color': '#000'
+				}}
+			/>
+		</GeoJSON>
+
+		<GeoJSON id="rideSharingBounds" data={rideSharingBounds as GeoJSON.GeoJSON}>
+			<Layer
+				id="ride-sharing-areas"
+				type="fill"
+				layout={{}}
+				filter={['literal', true]}
+				paint={{
+					'fill-color': getColor({mode: 'RIDE_SHARING'})[0],
+					'fill-opacity': .15,
+					'fill-outline-color': '#000'
+				}}
+			/>
+			<Layer
+				id="ride-sharing-areas-outline"
+				type="line"
+				layout={{}}
+				filter={['literal', true]}
+				paint={{
+					'line-color': '#000',
+					'line-width': 2
+				}}
+			/>
+			<Layer
+				id="ride-sharing-areas-labels"
+				type="symbol"
+				layout={{
+					'symbol-placement': 'point',
+					'text-field': ['concat', t.rideSharing + ' ', ['get', 'name']],
 					'text-font': ['Noto Sans Display Regular'],
 					'text-size': 16
 				}}

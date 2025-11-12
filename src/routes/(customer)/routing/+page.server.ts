@@ -374,6 +374,16 @@ export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 			db
 		);
 	};
+	const rideShareGeoJSON = async () => {
+		return await sql`
+		SELECT 'FeatureCollection' AS TYPE,
+			array_to_json(array_agg(f)) AS features
+		FROM
+			(SELECT 'Feature' AS TYPE,
+				ST_AsGeoJSON(lg.area, 15, 0)::json As geometry,
+				json_build_object('id', id, 'name', name) AS properties
+			FROM ride_share_zone AS lg) AS f`.execute(db);
+	};
 	const userId = event.locals.session?.userId;
 	const ownRideShareOfferIds =
 		userId === undefined
@@ -387,6 +397,7 @@ export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 
 	return {
 		areas: (await areasGeoJSON()).rows[0],
+		rideSharingBounds: (await rideShareGeoJSON()).rows[0],
 		user: {
 			name: event.locals.session?.name,
 			email: event.locals.session?.email,
