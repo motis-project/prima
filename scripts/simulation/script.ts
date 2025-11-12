@@ -440,7 +440,10 @@ async function cancelRequestLocal() {
 	}
 	const r = randomInt(0, requests.length);
 	await cancelRequest(requests[r].requestId, requests[r].companyId);
-	return { vehicleId: requests[r].vehicleId, dayStart: (requests[r].startTime / DAY) * DAY };
+	return {
+		vehicleId: requests[r].vehicleId,
+		dayStart: Math.floor(requests[r].startTime / DAY) * DAY
+	};
 }
 
 async function cancelTourLocal() {
@@ -450,7 +453,7 @@ async function cancelTourLocal() {
 	}
 	const r = randomInt(0, tours.length);
 	await cancelTour(tours[r].tourId, 'message', tours[r].companyId);
-	return { vehicleId: tours[r].vehicleId, dayStart: (tours[r].startTime / DAY) * DAY };
+	return { vehicleId: tours[r].vehicleId, dayStart: Math.floor(tours[r].startTime / DAY) * DAY };
 }
 
 async function moveTourLocal() {
@@ -461,7 +464,7 @@ async function moveTourLocal() {
 	const r = randomInt(0, tours.length);
 	const tour = tours[r];
 	await moveTour(tour.tourId, tour.vehicleId, tour.companyId);
-	return { vehicleId: tour.vehicleId, dayStart: (tour.startTime / DAY) * DAY };
+	return { vehicleId: tour.vehicleId, dayStart: Math.floor(tour.startTime / DAY) * DAY };
 }
 
 export async function simulation(params: {
