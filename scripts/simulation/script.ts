@@ -334,18 +334,18 @@ async function bookingApiCall(
 		kidsFiveToSix,
 		!(doWhitelist ?? false)
 	);
+	const requestId = response.request1Id ?? response.request2Id;
+	const toursAfter = await getToursWithRequests(false);
+	const t = toursAfter.filter((t) => t.requests.some((r) => r.requestId === requestId));
+	if (t.length !== 1) {
+		console.log(`Found ${t.length} tours containing the new request.`);
+		if (doWhitelist) {
+			return true;
+		}
+	}
+	const newTour = t[0];
 	if (compareCosts) {
 		let fail = false;
-		const toursAfter = await getToursWithRequests(false);
-		const requestId = response.request1Id ?? response.request2Id;
-		const t = toursAfter.filter((t) => t.requests.some((r) => r.requestId === requestId));
-		if (t.length !== 1) {
-			console.log(`Found ${t.length} tours containing the new request.`);
-			if (doWhitelist) {
-				return true;
-			}
-		}
-		const newTour = t[0];
 		const oldTours = toursBefore.filter((t) =>
 			t.requests.some((r1) => newTour.requests.some((r2) => r2.requestId === r1.requestId))
 		);
@@ -426,7 +426,7 @@ async function bookingApiCall(
 	if (doWhitelist && response.status !== 200) {
 		return true;
 	}
-	return false;
+	return { vehicleId: newTour.vehicleId, dayStart: Math.floor(newTour.startTime / DAY) * DAY };
 }
 
 async function cancelRequestLocal() {
@@ -436,29 +436,32 @@ async function cancelRequestLocal() {
 		})
 	);
 	if (requests.length === 0) {
-		return;
+		return false;
 	}
 	const r = randomInt(0, requests.length);
 	await cancelRequest(requests[r].requestId, requests[r].companyId);
+	return { vehicleId: requests[r].vehicleId, dayStart: (requests[r].startTime / DAY) * DAY };
 }
 
 async function cancelTourLocal() {
 	const tours = await getToursWithRequests(false);
 	if (tours.length === 0) {
-		return;
+		return false;
 	}
 	const r = randomInt(0, tours.length);
 	await cancelTour(tours[r].tourId, 'message', tours[r].companyId);
+	return { vehicleId: tours[r].vehicleId, dayStart: (tours[r].startTime / DAY) * DAY };
 }
 
 async function moveTourLocal() {
 	const tours = await getToursWithRequests(false);
 	if (tours.length === 0) {
-		return;
+		return false;
 	}
 	const r = randomInt(0, tours.length);
 	const tour = tours[r];
 	await moveTour(tour.tourId, tour.vehicleId, tour.companyId);
+	return { vehicleId: tour.vehicleId, dayStart: (tour.startTime / DAY) * DAY };
 }
 
 export async function simulation(params: {
@@ -484,27 +487,39 @@ export async function simulation(params: {
 		const action = actionProbabilities[actionIdx];
 		chosen[actionIdx] += 1;
 		console.log('Chose:', action.text);
+		let lastActionSpecifics: { vehicleId: number; dayStart: number } | boolean = false;
 		try {
 			switch (action.action) {
 				case Action.BOOKING:
 					if (params.full) {
-						if (await bookingFull(coordinates, restrictedCoordinates, params.cost)) {
+						lastActionSpecifics = await bookingFull(
+							coordinates,
+							restrictedCoordinates,
+							params.cost
+						);
+						if (lastActionSpecifics === true) {
 							return true;
 						}
 					} else {
-						if (await booking(coordinates, restrictedCoordinates, params.whitelist, params.cost)) {
+						lastActionSpecifics = await booking(
+							coordinates,
+							restrictedCoordinates,
+							params.whitelist,
+							params.cost
+						);
+						if (lastActionSpecifics === true) {
 							return true;
 						}
 					}
 					break;
 				case Action.CANCEL_REQUEST:
-					await cancelRequestLocal();
+					lastActionSpecifics = await cancelRequestLocal();
 					break;
 				case Action.CANCEL_TOUR:
-					await cancelTourLocal();
+					lastActionSpecifics = await cancelTourLocal();
 					break;
 				case Action.MOVE_TOUR:
-					await moveTourLocal();
+					lastActionSpecifics = await moveTourLocal();
 					break;
 			}
 		} catch (e) {
@@ -528,7 +543,11 @@ export async function simulation(params: {
 			});
 		}
 		console.log('');
-		if (params.healthChecks && (await healthCheck())) {
+		if (
+			params.healthChecks &&
+			typeof lastActionSpecifics !== 'boolean' &&
+			(await healthCheck(lastActionSpecifics.vehicleId, lastActionSpecifics.dayStart))
+		) {
 			return true;
 		}
 	}

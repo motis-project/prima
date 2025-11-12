@@ -2,7 +2,7 @@ import { getToursWithRequests } from '../db/getTours';
 import type { ToursWithRequests, TourWithRequestsEvent } from '$lib/util/getToursTypes';
 import { groupBy } from '../../util/groupBy';
 import { Interval } from '../../util/interval';
-import { HOUR } from '../../util/time';
+import { DAY, HOUR } from '../../util/time';
 import { isSamePlace } from '../booking/isSamePlace';
 import { SCHEDULED_TIME_BUFFER_PICKUP, PASSENGER_CHANGE_DURATION } from '$lib/constants';
 import { sortEventsByTime } from '$lib/testHelpers';
@@ -513,9 +513,19 @@ async function validateAddressCoordinatesMatch(tours: ToursWithRequests) {
 	return false;
 }
 
-export async function healthCheck() {
-	const allTours = await getToursWithRequests(true);
-	const uncancelledTours = await getToursWithRequests(false);
+export async function healthCheck(vehicleId?: number, dayStart?: number) {
+	const allTours = await getToursWithRequests(
+		true,
+		undefined,
+		dayStart ? [dayStart, dayStart + DAY] : undefined,
+		vehicleId
+	);
+	const uncancelledTours = await getToursWithRequests(
+		false,
+		undefined,
+		dayStart ? [dayStart, dayStart + DAY] : undefined,
+		vehicleId
+	);
 	let fail = false;
 	if (allTours) {
 		console.log('Validating tours...');
