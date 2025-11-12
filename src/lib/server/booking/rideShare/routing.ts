@@ -1,7 +1,7 @@
 import type { Coordinates } from '$lib/util/Coordinates';
 import { batchOneToManyCarRouting } from '$lib/server/util/batchOneToManyCarRouting';
 import type { Range } from '$lib/util/booking/getPossibleInsertions';
-import { MAX_RIDE_SHARE_TOUR_TIME, PASSENGER_CHANGE_DURATION } from '$lib/constants';
+import { PASSENGER_CHANGE_DURATION } from '$lib/constants';
 import { isSamePlace } from '../isSamePlace';
 import type { BusStop } from '../taxi/BusStop';
 import type { VehicleId } from '../taxi/VehicleId';
@@ -56,14 +56,14 @@ export async function routing(
 	fromUserChosen = setZeroDistanceForMatchingPlaces(userChosen, forward, fromUserChosen);
 	toUserChosen = setZeroDistanceForMatchingPlaces(userChosen, backward, toUserChosen);
 
-	const fromBusStop: (number | undefined)[][] = await Promise.all(
+	const fromBusStop: Promise<(number | undefined)[][]> = Promise.all(
 		forward.map((b) =>
 			b === undefined
 				? new Array<undefined>(busStops.length)
 				: batchOneToManyCarRouting(b, busStops, false, maxTourTime)
 		)
 	);
-	const toBusStop: (number | undefined)[][] = await Promise.all(
+	const toBusStop: Promise<(number | undefined)[][]> = Promise.all(
 		backward.map((b) =>
 			b === undefined
 				? new Array<undefined>(busStops.length)
@@ -76,10 +76,10 @@ export async function routing(
 			toUserChosen
 		},
 		busStops: {
-			fromBusStop: transpose(fromBusStop).map((b, busStopIdx) =>
+			fromBusStop: transpose(await fromBusStop).map((b, busStopIdx) =>
 				setZeroDistanceForMatchingPlaces(busStops[busStopIdx], forward, b)
 			),
-			toBusStop: transpose(toBusStop).map((b, busStopIdx) =>
+			toBusStop: transpose(await toBusStop).map((b, busStopIdx) =>
 				setZeroDistanceForMatchingPlaces(busStops[busStopIdx], backward, b)
 			)
 		}
