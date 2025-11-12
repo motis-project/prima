@@ -4,7 +4,7 @@ import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
 export const batchOneToManyCarRouting = async (
 	one: Coordinates,
 	many: (Coordinates | undefined)[],
-	startFixed: boolean,
+	arriveBy: boolean,
 	maxDuration?: number
 ) => {
 	const batches = [];
@@ -19,7 +19,7 @@ export const batchOneToManyCarRouting = async (
 			oneToManyCarRouting(
 				one,
 				definedMany.slice(currentPos, Math.min(currentPos + batchSize, definedMany.length)),
-				startFixed,
+				arriveBy,
 				maxDuration
 			)
 		);
