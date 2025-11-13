@@ -56,7 +56,6 @@ export async function rideShareApi(
 	kidsZeroToTwo: number,
 	kidsThreeToFour: number,
 	kidsFiveToSix: number,
-	tourId: number,
 	skipPromiseCheck?: boolean
 ): Promise<{
 	message?: string;
@@ -129,7 +128,6 @@ export async function rideShareApi(
 						firstConnection = await bookSharedRide(
 							p.connection1,
 							p.capacities,
-							tourId,
 							trx,
 							skipPromiseCheck
 						);
@@ -146,7 +144,6 @@ export async function rideShareApi(
 						secondConnection = await bookSharedRide(
 							p.connection2,
 							p.capacities,
-							tourId,
 							trx,
 							skipPromiseCheck,
 							blockedProviderId

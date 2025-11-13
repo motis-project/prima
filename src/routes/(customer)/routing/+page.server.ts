@@ -51,7 +51,6 @@ export const actions = {
 		const kidsThreeToFourString = formData.get('kidsThreeToFour');
 		const kidsFiveToSixString = formData.get('kidsFiveToSix');
 		const startFixedString = formData.get('startFixed');
-		const tourIdString = formData.get('tourId');
 		const json = formData.get('json');
 
 		if (
@@ -173,13 +172,7 @@ export const actions = {
 		);
 
 		const mode = connection1 !== null ? connection1.mode : connection2?.mode;
-		let tourId = -1;
-		if (mode === Mode.RIDE_SHARE) {
-			if (typeof tourIdString !== 'string') {
-				throw `invalid booking params, tourIdString: ${tourIdString} is not a string. `;
-			}
-			tourId = readInt(tourIdString);
-		}
+
 		const bookingResult =
 			mode === Mode.TAXI
 				? await bookingApi(
@@ -197,8 +190,7 @@ export const actions = {
 						locals.session?.isService ?? false,
 						kidsZeroToTwo,
 						kidsThreeToFour,
-						kidsFiveToSix,
-						tourId
+						kidsFiveToSix
 					);
 		if (bookingResult.status !== 200) {
 			console.log(

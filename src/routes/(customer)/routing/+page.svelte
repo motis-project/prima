@@ -302,7 +302,6 @@
 											<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
 											<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
 											<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
-											<input type="hidden" name="tourId" value={rideShareLeg?.tripId} />
 											<input
 												type="hidden"
 												name="startFixed"
