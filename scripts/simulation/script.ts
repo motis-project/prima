@@ -695,6 +695,11 @@ export async function simulation(params: {
 				case Action.MOVE_TOUR:
 					lastActionSpecifics = await moveTourLocal();
 					break;
+				
+				case Action.ADD_RIDE_SHARE_TOUR:
+					await addRideShareTourLocal(coordinates, restrictedCoordinates);
+					lastActionSpecifics = false;
+					break;
 			}
 		} catch (e) {
 			errors.push(JSON.stringify(e, null, 2));
