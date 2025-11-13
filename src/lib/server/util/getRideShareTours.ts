@@ -1,13 +1,27 @@
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { db } from '../db';
 import { sql } from 'kysely';
+import { DAY } from '$lib/util/time';
 
-export async function getRideShareTours(selectCancelled: boolean) {
+export async function getRideShareTours(
+	selectCancelled: boolean,
+	vehicleId?: number,
+	dayStart?: number
+) {
 	return await db
 		.selectFrom('rideShareTour')
 		.innerJoin('rideShareVehicle', 'rideShareVehicle.id', 'rideShareTour.vehicle')
 		.innerJoin('user as provider', 'provider.id', 'rideShareVehicle.owner')
 		.$if(!selectCancelled, (qb) => qb.where('rideShareTour.cancelled', '=', false))
+		.$if(vehicleId !== undefined, (qb) => qb.where('rideShareVehicle.id', '=', vehicleId!))
+		.$if(dayStart !== undefined, (qb) =>
+			qb.where((eb) =>
+				eb.and([
+					eb('rideShareTour.earliestStart', '<', dayStart! + DAY),
+					eb('rideShareTour.earliestStart', '>', dayStart!)
+				])
+			)
+		)
 		.select((eb) => [
 			'rideShareTour.earliestStart as startTime',
 			'rideShareTour.latestEnd as endTime',

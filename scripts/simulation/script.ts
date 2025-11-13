@@ -660,7 +660,7 @@ export async function simulation(params: {
 		const action = actionProbabilities[actionIdx];
 		chosen[actionIdx] += 1;
 		console.log('Chose:', action.text);
-		let lastActionSpecifics: { vehicleId: number; dayStart: number } | boolean = false;
+		let lastActionSpecifics: { vehicleId: number; dayStart: number } | boolean | undefined = false;
 		try {
 			switch (action.action) {
 				case Action.BOOKING:
@@ -695,10 +695,14 @@ export async function simulation(params: {
 				case Action.MOVE_TOUR:
 					lastActionSpecifics = await moveTourLocal();
 					break;
-				
+
 				case Action.ADD_RIDE_SHARE_TOUR:
 					await addRideShareTourLocal(coordinates, restrictedCoordinates);
-					lastActionSpecifics = false;
+					lastActionSpecifics = undefined;
+					break;
+				case Action.BOOK_RIDE_SHARE:
+					lastActionSpecifics = await bookFull(coordinates, restrictedCoordinates, 'RIDE_SHARING');
+					console.log('blabla', JSON.stringify(lastActionSpecifics, null, 2));
 					break;
 			}
 		} catch (e) {
@@ -726,8 +730,8 @@ export async function simulation(params: {
 			params.healthChecks &&
 			typeof lastActionSpecifics !== 'boolean' &&
 			(lastActionWasRideShare(actionIdx)
-				? await healthCheckRideShare()
-				: await healthCheck(lastActionSpecifics.vehicleId, lastActionSpecifics.dayStart))
+				? await healthCheckRideShare(lastActionSpecifics?.vehicleId, lastActionSpecifics?.dayStart)
+				: await healthCheck(lastActionSpecifics?.vehicleId, lastActionSpecifics?.dayStart))
 		) {
 			return true;
 		}

@@ -374,9 +374,13 @@ async function validateAddressCoordinatesMatch(tours: RideShareToursWithRequests
 	return false;
 }
 
-export async function healthCheck() {
-	const allTours: RideShareToursWithRequests = await getRideShareTours(true);
-	const uncancelledTours: RideShareToursWithRequests = await getRideShareTours(false);
+export async function healthCheck(vehicleId?: number, dayStart?: number) {
+	const allTours: RideShareToursWithRequests = await getRideShareTours(true, vehicleId, dayStart);
+	const uncancelledTours: RideShareToursWithRequests = await getRideShareTours(
+		false,
+		vehicleId,
+		dayStart
+	);
 	let fail = false;
 	if (allTours) {
 		console.log('Starting ride share health check');
