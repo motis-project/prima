@@ -665,9 +665,10 @@ export async function simulation(params: {
 			switch (action.action) {
 				case Action.BOOKING:
 					if (params.full) {
-						lastActionSpecifics = await bookingFull(
+						lastActionSpecifics = await bookFull(
 							coordinates,
 							restrictedCoordinates,
+							'ODM',
 							params.cost
 						);
 						if (lastActionSpecifics === true) {
@@ -719,7 +720,9 @@ export async function simulation(params: {
 		if (
 			params.healthChecks &&
 			typeof lastActionSpecifics !== 'boolean' &&
-			(await healthCheck(lastActionSpecifics.vehicleId, lastActionSpecifics.dayStart))
+			(lastActionWasRideShare(actionIdx)
+				? await healthCheckRideShare()
+				: await healthCheck(lastActionSpecifics.vehicleId, lastActionSpecifics.dayStart))
 		) {
 			return true;
 		}
