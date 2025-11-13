@@ -14,6 +14,7 @@ import * as fs from 'fs';
 import * as readline from 'readline';
 import { DAY } from '../../src/lib/util/time';
 import { healthCheck } from '../../src/lib/server/util/healthCheck';
+import { healthCheck as healthCheckRideShare } from '../../src/lib/server/util/healthCheckRideShare';
 import { logHelp } from './logHelp';
 import { exec } from 'child_process';
 import path from 'path';
@@ -23,8 +24,16 @@ import { MAX_MATCHING_DISTANCE } from '../../src/lib/constants';
 import { PlanData } from '../../src/lib/openapi';
 import { planAndSign } from '../../src/lib/planAndSign';
 import { lngLatToStr } from '../../src/lib/util/lngLatToStr';
-import { expectedConnectionFromLeg } from '../../src/lib/server/booking/expectedConnection';
+import {
+	ExpectedConnection,
+	expectedConnectionFromLeg
+} from '../../src/lib/server/booking/expectedConnection';
 import { rediscoverWhitelistRequestTimes } from '../../src/lib/server/util/rediscoverWhitelistRequestTimes';
+import { addRideShareTour, rideShareApi } from '../../src/lib/server/booking/index';
+import {
+	getRideShareTours,
+	RideShareToursWithRequests
+} from '../../src/lib/server/util/getRideShareTours';
 
 const BACKUP_DIR = './scripts/simulation/backups/';
 
@@ -40,7 +49,9 @@ enum Action {
 	BOOKING,
 	CANCEL_REQUEST,
 	CANCEL_TOUR,
-	MOVE_TOUR
+	MOVE_TOUR,
+	ADD_RIDE_SHARE_TOUR,
+	BOOK_RIDE_SHARE
 }
 
 type ActionType = {
@@ -50,10 +61,12 @@ type ActionType = {
 };
 
 const actionProbabilities: ActionType[] = [
-	{ action: Action.BOOKING, probability: 0.9, text: 'booking' },
+	{ action: Action.BOOKING, probability: 0.6, text: 'booking' },
 	{ action: Action.CANCEL_REQUEST, probability: 0.025, text: 'cancel request' },
 	{ action: Action.CANCEL_TOUR, probability: 0.025, text: 'cancel tour' },
-	{ action: Action.MOVE_TOUR, probability: 0.05, text: 'move tour' }
+	{ action: Action.MOVE_TOUR, probability: 0.05, text: 'move tour' },
+	{ action: Action.ADD_RIDE_SHARE_TOUR, probability: 0.1, text: 'add ride share tour' },
+	{ action: Action.BOOK_RIDE_SHARE, probability: 0.2, text: 'book ride share' }
 ];
 
 async function readCoordinates(): Promise<Coordinates[]> {
@@ -120,9 +133,32 @@ const getAction = (r: number) => {
 	return undefined;
 };
 
-async function bookingFull(
+async function addRideShareTourLocal(
+	coordinates: Coordinates[],
+	restricted: Coordinates[] | undefined
+) {
+	const parameters: BookingParameters = await generateBookingParameters(coordinates, restricted);
+	const connection: ExpectedConnection = parameters.connection1!;
+	const capacities = parameters.capacities;
+	const request = await addRideShareTour(
+		connection.startFixed ? connection.startTime : connection.targetTime,
+		connection.startFixed,
+		capacities.passengers,
+		capacities.luggage,
+		1,
+		1,
+		connection.start,
+		connection.target,
+		connection.start.address,
+		connection.target.address
+	);
+	console.log(`Adding a ride share tour was ${request === undefined ? 'not ' : ''} succesful.`);
+}
+
+async function bookFull(
 	coordinates: Coordinates[],
 	restricted: Coordinates[] | undefined,
+	mode: string,
 	compareCosts?: boolean
 ) {
 	const parameters = await generateBookingParameters(coordinates, restricted);
@@ -145,9 +181,9 @@ async function bookingFull(
 			arriveBy: !parameters.connection1.startFixed,
 			fromPlace: lngLatToStr(parameters.connection1.start),
 			toPlace: lngLatToStr(parameters.connection1.target),
-			preTransitModes: ['WALK', 'ODM'],
-			postTransitModes: ['WALK', 'ODM'],
-			directModes: ['WALK', 'ODM'],
+			preTransitModes: ['WALK', mode],
+			postTransitModes: ['WALK', mode],
+			directModes: ['WALK', mode],
 			luggage: parameters.capacities.luggage,
 			fastestDirectFactor: 1.6,
 			maxMatchingDistance: MAX_MATCHING_DISTANCE,
@@ -157,16 +193,13 @@ async function bookingFull(
 	} as PlanData;
 	const planResponse = await planAndSign(q.query, 'http://localhost:5173');
 	if (planResponse === undefined) {
-		console.log('PlanResponse was undefined.');
-		return true;
+		const e = new Error('PlanResponse was undefined.');
+		console.log(e);
+		throw e;
 	}
 	const odmItineraries = planResponse.itineraries.filter((i) =>
-		i.legs.some((l) => l.mode === 'ODM')
+		i.legs.some((l) => l.mode === mode)
 	);
-	if (odmItineraries.length === 0) {
-		console.log('There were no ODM-itineraries.');
-		return false;
-	}
 	for (const itinerary of odmItineraries) {
 		let monotonicTime = 0;
 		for (const leg of itinerary.legs) {
@@ -207,8 +240,8 @@ async function bookingFull(
 			2
 		)
 	);
-	const firstOdmIndex = chosenItinerary.legs.findIndex((l) => l.mode === 'ODM');
-	const lastOdmIndex = findLastIndex(chosenItinerary.legs, (l) => l.mode === 'ODM');
+	const firstOdmIndex = chosenItinerary.legs.findIndex((l) => l.mode === mode);
+	const lastOdmIndex = findLastIndex(chosenItinerary.legs, (l) => l.mode === mode);
 	if (firstOdmIndex === -1) {
 		console.log('OdmLeg was undefined.');
 		return true;
@@ -262,14 +295,37 @@ async function bookingFull(
 		firstOdmIndex === lastOdmIndex
 			? null
 			: expectedConnectionFromLeg(lastOdm, chosenItinerary.signature2, true, requestedTime2);
-	return await bookingApiCall(
-		{ capacities: parameters.capacities, connection1, connection2 },
-		kidsZeroToTwo,
-		kidsThreeToFour,
-		kidsFiveToSix,
-		true,
-		compareCosts
-	);
+	if (mode === 'ODM') {
+		return await bookingApiCall(
+			{ capacities: parameters.capacities, connection1, connection2 },
+			kidsZeroToTwo,
+			kidsThreeToFour,
+			kidsFiveToSix,
+			true,
+			compareCosts
+		);
+	} else if (mode === 'RIDE_SHARING') {
+		const tripId = firstOdm.tripId;
+		if (tripId === undefined || typeof tripId !== 'string') {
+			console.log('trip id was undefined or not a string.', JSON.stringify(firstOdm, null, 2));
+			return true;
+		}
+		const tourId = parseInt(tripId);
+		if (Number.isNaN(tourId)) {
+			console.log('trip id was translated to NaN.', JSON.stringify(firstOdm, null, 2));
+			return true;
+		}
+		return await rideShareApiCall(
+			{ capacities: parameters.capacities, connection1, connection2 },
+			kidsZeroToTwo,
+			kidsThreeToFour,
+			kidsFiveToSix,
+			tourId
+		);
+	} else {
+		console.log('internal simulation script error, unexpected mode.', mode);
+		return true;
+	}
 }
 
 async function booking(
@@ -313,6 +369,120 @@ async function booking(
 		doWhitelist,
 		compareCosts
 	);
+}
+
+async function rideShareApiCall(
+	parameters: BookingParameters,
+	kidsZeroToTwo: number,
+	kidsThreeToFour: number,
+	kidsFiveToSix: number,
+	tourId: number,
+	doWhitelist?: boolean,
+	compareCosts?: boolean
+) {
+	const toursBefore = await getRideShareTours(false);
+	const response = await rideShareApi(
+		parameters,
+		1,
+		true,
+		kidsZeroToTwo,
+		kidsThreeToFour,
+		kidsFiveToSix,
+		tourId
+	);
+	const toursAfter: RideShareToursWithRequests = await getRideShareTours(false);
+	const requestId = response.request1Id ?? response.request2Id;
+	const t = toursAfter.filter((t) => t.requests.some((r) => r.requestId === requestId));
+	if (t.length !== 1) {
+		console.log(`Found ${t.length} tours containing the new request.`);
+		if (doWhitelist) {
+			return true;
+		}
+	}
+	const newTour = t[0];
+	if (compareCosts) {
+		let fail = false;
+		const oldTours = toursBefore.filter((t) =>
+			t.requests.some((r1) => newTour.requests.some((r2) => r2.requestId === r1.requestId))
+		);
+		const newCost = getCost(newTour);
+		const oldCost = oldTours.reduce(
+			(acc, curr) => {
+				const cost = getCost(curr);
+				acc.approachPlusReturnDuration += cost.approachPlusReturnDuration;
+				acc.fullyPayedDuration += cost.fullyPayedDuration;
+				acc.waitingTime += cost.waitingTime;
+				acc.weightedPassengerDuration += cost.weightedPassengerDuration;
+				return acc;
+			},
+			{
+				approachPlusReturnDuration: 0,
+				fullyPayedDuration: 0,
+				waitingTime: 0,
+				weightedPassengerDuration: 0
+			}
+		);
+		if (
+			Math.abs(
+				newCost.approachPlusReturnDuration -
+					(oldCost.approachPlusReturnDuration + (response.approachPlusReturnDurationDelta ?? 0))
+			) > 2
+		) {
+			console.log(
+				`approachPlusReturnDuration times do not match old: ${oldCost.approachPlusReturnDuration}, relative: ${response.approachPlusReturnDurationDelta}, combined: ${oldCost.approachPlusReturnDuration + (response.approachPlusReturnDurationDelta ?? 0)} and new: ${newCost.approachPlusReturnDuration}`
+			);
+			console.log(
+				`For new tour: ${newTour.tourId} and old tours: ${oldTours.map((t) => t.tourId)}`
+			);
+			fail = true;
+		}
+		if (
+			Math.abs(
+				newCost.fullyPayedDuration -
+					(oldCost.fullyPayedDuration + (response.fullyPayedDurationDelta ?? 0))
+			) > 2
+		) {
+			console.log(
+				`fullyPayedDuration times do not match old: ${oldCost.fullyPayedDuration}, relative: ${response.fullyPayedDurationDelta}, combined: ${oldCost.fullyPayedDuration + (response.fullyPayedDurationDelta ?? 0)} and new: ${newCost.fullyPayedDuration}`
+			);
+			console.log(
+				`For new tour: ${newTour.tourId} and old tours: ${oldTours.map((t) => t.tourId)}`
+			);
+			fail = true;
+		}
+		if (Math.abs(newCost.waitingTime - (oldCost.waitingTime + (response.waitingTime ?? 0))) > 2) {
+			console.log(
+				`Waiting times do not match old: ${oldCost.waitingTime}, relative: ${response.waitingTime}, combined: ${oldCost.waitingTime + (response.waitingTime ?? 0)} and new: ${newCost.waitingTime}`
+			);
+			console.log(
+				`For new tour: ${newTour.tourId} and old tours: ${oldTours.map((t) => t.tourId)}`
+			);
+			fail = true;
+		}
+		if (
+			Math.abs(
+				newCost.weightedPassengerDuration -
+					(oldCost.weightedPassengerDuration + (response.passengerDuration ?? 0))
+			) > 2
+		) {
+			console.log(
+				`Passenger times do not match old: ${oldCost.weightedPassengerDuration}, relative: ${response.passengerDuration}, combined: ${oldCost.weightedPassengerDuration + (response.passengerDuration ?? 0)} and new: ${newCost.weightedPassengerDuration}`
+			);
+			console.log(
+				`For new tour: ${newTour.tourId} and old tours: ${oldTours.map((t) => t.tourId)}`
+			);
+			fail = true;
+		}
+		if (fail) {
+			return true;
+		}
+		console.log('costs do match');
+	}
+	console.log(response.status === 200 ? 'succesful booking' : 'failed to book');
+	if (doWhitelist && response.status !== 200) {
+		return true;
+	}
+	return { vehicleId: newTour.vehicleId, dayStart: Math.floor(newTour.startTime / DAY) * DAY };
 }
 
 async function bookingApiCall(
@@ -490,14 +660,15 @@ export async function simulation(params: {
 		const action = actionProbabilities[actionIdx];
 		chosen[actionIdx] += 1;
 		console.log('Chose:', action.text);
-		let lastActionSpecifics: { vehicleId: number; dayStart: number } | boolean = false;
+		let lastActionSpecifics: { vehicleId: number; dayStart: number } | boolean | undefined = false;
 		try {
 			switch (action.action) {
 				case Action.BOOKING:
 					if (params.full) {
-						lastActionSpecifics = await bookingFull(
+						lastActionSpecifics = await bookFull(
 							coordinates,
 							restrictedCoordinates,
+							'ODM',
 							params.cost
 						);
 						if (lastActionSpecifics === true) {
@@ -524,6 +695,17 @@ export async function simulation(params: {
 				case Action.MOVE_TOUR:
 					lastActionSpecifics = await moveTourLocal();
 					break;
+
+				case Action.ADD_RIDE_SHARE_TOUR:
+					await addRideShareTourLocal(coordinates, restrictedCoordinates);
+					lastActionSpecifics = undefined;
+					break;
+				case Action.BOOK_RIDE_SHARE:
+					lastActionSpecifics = await bookFull(coordinates, restrictedCoordinates, 'RIDE_SHARING');
+					if (lastActionSpecifics === true) {
+						return true;
+					}
+					break;
 			}
 		} catch (e) {
 			errors.push(JSON.stringify(e, null, 2));
@@ -549,7 +731,9 @@ export async function simulation(params: {
 		if (
 			params.healthChecks &&
 			typeof lastActionSpecifics !== 'boolean' &&
-			(await healthCheck(lastActionSpecifics.vehicleId, lastActionSpecifics.dayStart))
+			(lastActionWasRideShare(actionIdx)
+				? await healthCheckRideShare(lastActionSpecifics?.vehicleId, lastActionSpecifics?.dayStart)
+				: await healthCheck(lastActionSpecifics?.vehicleId, lastActionSpecifics?.dayStart))
 		) {
 			return true;
 		}
@@ -618,6 +802,13 @@ export async function simulation(params: {
 	return false;
 }
 
+function lastActionWasRideShare(idx: number) {
+	return (
+		actionProbabilities[idx].action === Action.ADD_RIDE_SHARE_TOUR ||
+		actionProbabilities[idx].action === Action.BOOK_RIDE_SHARE
+	);
+}
+
 async function main() {
 	let healthChecks = false;
 	let runs: number | undefined = undefined;
@@ -647,6 +838,13 @@ async function main() {
 		}
 		if (arg === '--restrict') {
 			restrict = true;
+		}
+		if (arg.startsWith('--mode')) {
+			const value = arg.split('=')[1];
+			if (!(value === 'rs' || value === 'taxi' || value === 'all')) {
+				throw new Error(`Invalid mode: ${value}. Allowed values are rs, taxi, all`);
+			}
+			adjustProbabilities(value);
 		}
 		if (arg.startsWith('--runs=')) {
 			const value = parseInt(arg.split('=')[1], 10);
@@ -688,4 +886,39 @@ function findLastIndex<T>(
 		if (predicate(arr[i], i, arr)) return i;
 	}
 	return -1;
+}
+
+type ProbabilityMode = 'rs' | 'all' | 'taxi';
+
+function adjustProbabilities(mode: ProbabilityMode) {
+	for (const action of actionProbabilities) {
+		action.probability = 0;
+	}
+	function setProbability(action: Action, value: number) {
+		actionProbabilities[actionProbabilities.findIndex((a) => a.action === action)].probability =
+			value;
+	}
+	switch (mode) {
+		case 'rs': {
+			setProbability(Action.ADD_RIDE_SHARE_TOUR, 0.5);
+			setProbability(Action.BOOK_RIDE_SHARE, 0.5);
+			break;
+		}
+		case 'taxi': {
+			setProbability(Action.BOOKING, 0.9);
+			setProbability(Action.CANCEL_REQUEST, 0.025);
+			setProbability(Action.CANCEL_TOUR, 0.025);
+			setProbability(Action.MOVE_TOUR, 0.05);
+			break;
+		}
+		case 'all': {
+			setProbability(Action.BOOKING, 0.6);
+			setProbability(Action.CANCEL_REQUEST, 0.025);
+			setProbability(Action.CANCEL_TOUR, 0.025);
+			setProbability(Action.MOVE_TOUR, 0.05);
+			setProbability(Action.ADD_RIDE_SHARE_TOUR, 0.1);
+			setProbability(Action.BOOK_RIDE_SHARE, 0.2);
+			break;
+		}
+	}
 }
