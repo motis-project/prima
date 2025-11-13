@@ -47,7 +47,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Integration Tests
-        if: github.ref != 'refs/heads/deploy'
         run: |
           docker compose down
           docker compose pull motis-server pg
@@ -58,7 +57,6 @@ jobs:
           npx playwright test
 
       - name: Unit Tests
-        if: github.ref != 'refs/heads/deploy'
         run: |
           docker compose up -d pg
           sleep 5
