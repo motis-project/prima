@@ -189,7 +189,10 @@ function validateEventsAreInsideTours(tours: RideShareToursWithRequests): boolea
 		const tourInterval = new Interval(tour.startTime, tour.endTime);
 		for (const event of tour.requests.flatMap((r) => r.events)) {
 			const eventInterval = new Interval(event.scheduledTimeStart, event.scheduledTimeEnd);
-			if (!tourInterval.overlaps(eventInterval)) {
+			if (
+				!tourInterval.covers(eventInterval.startTime) ||
+				!tourInterval.covers(eventInterval.endTime)
+			) {
 				console.log(
 					`event with id: ${event.id} is outside of its' tour. tourInterval: ${tourInterval.toString()}, eventScheduledInterval: ${eventInterval.toString()}`
 				);
