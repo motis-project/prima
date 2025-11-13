@@ -76,6 +76,7 @@ export const cancelRideShareRequest = async (requestId: number, userId: number) 
 						'rideShareTour.vehicle',
 						'rideShareTour.id',
 						'user.name',
+						'user.firstName',
 						'user.email',
 						'cancelled_request.pending',
 						jsonArrayFrom(
@@ -126,7 +127,7 @@ export const cancelRideShareRequest = async (requestId: number, userId: number) 
 				try {
 					await sendMail(CancelNotificationCompany, 'Stornierte Buchung', tourInfo.email, {
 						events: tourInfo.events,
-						name: tourInfo.name
+						name: tourInfo.firstName + ' ' + tourInfo.name
 					});
 				} catch {
 					console.log(

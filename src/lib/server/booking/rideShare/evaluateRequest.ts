@@ -35,15 +35,22 @@ export async function evaluateRequest(
 	if (rideShareTours.length == 0) {
 		return busStops.map((bs) => bs.times.map((_) => new Array<Insertion>()));
 	}
-	const directDurations = (await batchOneToManyCarRouting(userChosen, busStops, startFixed)).map(
-		(duration) => (duration === undefined ? undefined : duration + PASSENGER_CHANGE_DURATION)
-	);
+	const maxTourTime = Math.max(...rideShareTours.map((r) => r.arrival - r.departure));
+	const directDurations = (
+		await batchOneToManyCarRouting(userChosen, busStops, startFixed, maxTourTime)
+	).map((duration) => (duration === undefined ? undefined : duration + PASSENGER_CHANGE_DURATION));
 	const insertionRanges = new Map<number, Range[]>();
 	rideShareTours.forEach((tour) =>
 		insertionRanges.set(tour.rideShareTour, getPossibleInsertions(tour, required, tour.events))
 	);
 
-	const routingResults = await routing(rideShareTours, userChosen, busStops, insertionRanges);
+	const routingResults = await routing(
+		rideShareTours,
+		userChosen,
+		busStops,
+		insertionRanges,
+		maxTourTime
+	);
 
 	const busStopTimes = busStops.map((bs) =>
 		bs.times.map(

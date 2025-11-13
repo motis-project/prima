@@ -261,7 +261,7 @@ export function evaluateBothInsertion(
 		nextLegDuration == undefined ||
 		passengerDuration == undefined
 	) {
-		console.log('duration undefined: ', prevLegDuration, nextLegDuration, passengerDuration);
+		//console.log('duration undefined: ', prevLegDuration, nextLegDuration, passengerDuration);
 		return undefined;
 	}
 	const arrivalWindow = getArrivalWindow(
@@ -273,7 +273,7 @@ export function evaluateBothInsertion(
 		nextLegDuration
 	);
 	if (arrivalWindow == undefined) {
-		console.log(
+		/*console.log(
 			promisedTimes === undefined ? 'WHITELIST' : 'BOOKING API',
 			'arrival window undefined',
 			printInsertionType(insertionCase),
@@ -284,7 +284,7 @@ export function evaluateBothInsertion(
 			{ nextLegDuration: nextLegDuration.toString() },
 			{ prev: prev.eventId },
 			{ next: next.eventId }
-		);
+		);*/
 		return undefined;
 	}
 	if (
@@ -763,15 +763,11 @@ const keepsPromises = (
 		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? shift : -shift
 	);
 	const pickupWindow = expandToFullMinutes(
-		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP
-			? arrivalWindow
-			: w.shift(-SCHEDULED_TIME_BUFFER_PICKUP)
+		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? arrivalWindow : w
 	);
 
 	const dropoffWindow = expandToFullMinutes(
-		insertionCase.direction == InsertDirection.BUS_STOP_DROPOFF
-			? arrivalWindow
-			: w.shift(getScheduledTimeBufferDropoff(directDuration))
+		insertionCase.direction == InsertDirection.BUS_STOP_DROPOFF ? arrivalWindow : w
 	);
 
 	let checkPickup = false;

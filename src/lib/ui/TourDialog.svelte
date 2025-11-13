@@ -18,7 +18,7 @@
 	import Layer from '$lib/map/Layer.svelte';
 
 	import type { TourWithRequests } from '$lib/util/getToursTypes';
-	import type { PlanResponse } from '$lib/openapi';
+	import type { Itinerary } from '$lib/openapi';
 	import { LOCALE, MIN_PREP } from '$lib/constants';
 	import { carRouting } from '$lib/util/carRouting';
 	import { polylineToGeoJSON } from '$lib/util/polylineToGeoJSON';
@@ -69,8 +69,8 @@
 	);
 	let company = $derived(tour && { lat: tour.companyLat!, lng: tour.companyLng! });
 
-	const getRoutes = (): Promise<PlanResponse>[] => {
-		let routes: Array<Promise<PlanResponse>> = [];
+	const getRoutes = (): Promise<Itinerary | undefined>[] => {
+		let routes: Array<Promise<Itinerary | undefined>> = [];
 		if (tour == null || company == null || events!.length == 0) {
 			return routes;
 		}
@@ -196,15 +196,15 @@
 {/snippet}
 
 {#snippet drawRoutes(
-	routes: Array<Promise<PlanResponse>>,
+	routes: Array<Promise<Itinerary | undefined>>,
 	name: string,
 	color: string,
 	outlineColor: string
 )}
 	{#each routes as segment, i}
 		{#await segment then r}
-			{#if r.direct.length != 0 && r.direct[0] != undefined}
-				{#each r.direct[0].legs as leg}
+			{#if r != undefined}
+				{#each r.legs as leg}
 					<GeoJSON id={name + '-r_ ' + i} data={polylineToGeoJSON(leg.legGeometry.points)}>
 						<Layer
 							id={name + '-path-outline_' + i}

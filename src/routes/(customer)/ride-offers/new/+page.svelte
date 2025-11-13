@@ -153,7 +153,7 @@
 				<Button
 					variant="outline"
 					onclick={() => {
-						storeLastPageAndGoto('/account/add-ride-share-vehicle');
+						storeLastPageAndGoto('/account/add-or-edit-ride-share-vehicle');
 					}}
 				>
 					<Plus class="mr-2 size-4" />

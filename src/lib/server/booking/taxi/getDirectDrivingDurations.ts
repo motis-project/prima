@@ -1,5 +1,5 @@
 import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
-import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
+import { carRouting } from '$lib/util/carRouting';
 import type { Insertion } from './insertion';
 import { type Event, type VehicleWithInterval } from './getBookingAvailability';
 import { InsertHow } from '$lib/util/booking/insertionTypes';
@@ -33,7 +33,7 @@ export const getDirectDurations = async (
 		(best.pickupCase.how == InsertHow.PREPEND || best.pickupCase.how == InsertHow.NEW_TOUR) &&
 		pickupPredEvent != undefined
 	) {
-		const routing = (await oneToManyCarRouting(pickupPredEvent, [c.start], false))[0];
+		const routing = (await carRouting(pickupPredEvent, c.start))?.duration;
 		direct.thisTour = {
 			directDrivingDuration: routing === undefined ? null : routing + PASSENGER_CHANGE_DURATION,
 			tourId: tourIdPickup ?? null
@@ -44,7 +44,7 @@ export const getDirectDurations = async (
 		(best.dropoffCase.how == InsertHow.APPEND || best.dropoffCase.how == InsertHow.NEW_TOUR) &&
 		dropOffSuccEvent != undefined
 	) {
-		const routing = (await oneToManyCarRouting(c.target, [dropOffSuccEvent], false))[0];
+		const routing = (await carRouting(c.target, dropOffSuccEvent))?.duration;
 		direct.nextTour = {
 			directDrivingDuration: routing === undefined ? null : routing + PASSENGER_CHANGE_DURATION,
 			tourId: dropOffSuccEvent.tourId
@@ -63,18 +63,15 @@ export const getDirectDurations = async (
 			(e) => getScheduledEventTime(e) < arrival
 		);
 		if (best.pickupCase.how !== InsertHow.PREPEND && lastEventBeforeDeparture !== undefined) {
-			const routing = (
-				await oneToManyCarRouting(lastEventBeforeDeparture, [firstEventAfterDeparture!], false)
-			)[0];
+			const routing = (await carRouting(lastEventBeforeDeparture, firstEventAfterDeparture!))
+				?.duration;
 			direct.thisTour = {
 				directDrivingDuration: routing === undefined ? null : routing + PASSENGER_CHANGE_DURATION,
 				tourId: tourIdPickup ?? null
 			};
 		}
 		if (best.dropoffCase.how !== InsertHow.APPEND && firstEventAfterArrival !== undefined) {
-			const routing = (
-				await oneToManyCarRouting(lastEventBeforeArrival!, [firstEventAfterArrival], false)
-			)[0];
+			const routing = (await carRouting(lastEventBeforeArrival!, firstEventAfterArrival))?.duration;
 			direct.nextTour = {
 				directDrivingDuration: routing === undefined ? null : routing + PASSENGER_CHANGE_DURATION,
 				tourId: firstEventAfterArrival.tourId ?? null

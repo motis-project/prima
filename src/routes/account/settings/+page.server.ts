@@ -12,12 +12,13 @@ import { deleteSessionTokenCookie, invalidateSession } from '$lib/server/auth/se
 import { verifyPhone } from '$lib/server/verifyPhone';
 import { getUserPasswordHash } from '$lib/server/auth/user';
 import { replacePhoto } from '$lib/server/util/uploadPhoto';
+import { jsonArrayFrom } from 'kysely/helpers/postgres';
 
 export async function load(event: PageServerLoadEvent) {
 	const user = await db
 		.selectFrom('user')
 		.where('user.id', '=', event.locals.session!.userId)
-		.select([
+		.select((eb) => [
 			'user.email',
 			'user.phone',
 			'user.profilePicture',
@@ -26,7 +27,21 @@ export async function load(event: PageServerLoadEvent) {
 			'user.gender',
 			'user.zipCode',
 			'user.city',
-			'user.region'
+			'user.region',
+			jsonArrayFrom(
+				eb
+					.selectFrom('rideShareVehicle')
+					.whereRef('rideShareVehicle.owner', '=', 'user.id')
+					.select([
+						'rideShareVehicle.color',
+						'rideShareVehicle.passengers',
+						'rideShareVehicle.luggage',
+						'rideShareVehicle.licensePlate',
+						'rideShareVehicle.model',
+						'rideShareVehicle.smokingAllowed',
+						'rideShareVehicle.id'
+					])
+			).as('vehicles')
 		])
 		.executeTakeFirst();
 	if (user === undefined) {
@@ -41,7 +56,8 @@ export async function load(event: PageServerLoadEvent) {
 		firstName: user.firstName,
 		city: user.city,
 		region: user.region,
-		zipCode: user.zipCode
+		zipCode: user.zipCode,
+		vehicles: user.vehicles
 	};
 }
 

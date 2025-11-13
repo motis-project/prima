@@ -14,7 +14,7 @@ export const POST = async (event: RequestEvent) => {
 		query: q
 	});
 	const response = r.data;
-	console.log(r.request);
+	console.log('Plan Request', r.request);
 	if (response === undefined) {
 		return fail(500);
 	}
