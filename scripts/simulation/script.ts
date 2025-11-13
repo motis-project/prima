@@ -240,8 +240,8 @@ async function bookFull(
 			2
 		)
 	);
-	const firstOdmIndex = chosenItinerary.legs.findIndex((l) => l.mode === 'ODM');
-	const lastOdmIndex = findLastIndex(chosenItinerary.legs, (l) => l.mode === 'ODM');
+	const firstOdmIndex = chosenItinerary.legs.findIndex((l) => l.mode === mode);
+	const lastOdmIndex = findLastIndex(chosenItinerary.legs, (l) => l.mode === mode);
 	if (firstOdmIndex === -1) {
 		console.log('OdmLeg was undefined.');
 		return true;
@@ -702,7 +702,9 @@ export async function simulation(params: {
 					break;
 				case Action.BOOK_RIDE_SHARE:
 					lastActionSpecifics = await bookFull(coordinates, restrictedCoordinates, 'RIDE_SHARING');
-					console.log('blabla', JSON.stringify(lastActionSpecifics, null, 2));
+					if (lastActionSpecifics === true) {
+						return true;
+					}
 					break;
 			}
 		} catch (e) {
@@ -837,6 +839,13 @@ async function main() {
 		if (arg === '--restrict') {
 			restrict = true;
 		}
+		if (arg.startsWith('--mode')) {
+			const value = arg.split('=')[1];
+			if (!(value === 'rs' || value === 'taxi' || value === 'all')) {
+				throw new Error(`Invalid mode: ${value}. Allowed values are rs, taxi, all`);
+			}
+			adjustProbabilities(value);
+		}
 		if (arg.startsWith('--runs=')) {
 			const value = parseInt(arg.split('=')[1], 10);
 			if (isNaN(value) || value <= 0) {
@@ -877,4 +886,39 @@ function findLastIndex<T>(
 		if (predicate(arr[i], i, arr)) return i;
 	}
 	return -1;
+}
+
+type ProbabilityMode = 'rs' | 'all' | 'taxi';
+
+function adjustProbabilities(mode: ProbabilityMode) {
+	for (const action of actionProbabilities) {
+		action.probability = 0;
+	}
+	function setProbability(action: Action, value: number) {
+		actionProbabilities[actionProbabilities.findIndex((a) => a.action === action)].probability =
+			value;
+	}
+	switch (mode) {
+		case 'rs': {
+			setProbability(Action.ADD_RIDE_SHARE_TOUR, 0.5);
+			setProbability(Action.BOOK_RIDE_SHARE, 0.5);
+			break;
+		}
+		case 'taxi': {
+			setProbability(Action.BOOKING, 0.9);
+			setProbability(Action.CANCEL_REQUEST, 0.025);
+			setProbability(Action.CANCEL_TOUR, 0.025);
+			setProbability(Action.MOVE_TOUR, 0.05);
+			break;
+		}
+		case 'all': {
+			setProbability(Action.BOOKING, 0.6);
+			setProbability(Action.CANCEL_REQUEST, 0.025);
+			setProbability(Action.CANCEL_TOUR, 0.025);
+			setProbability(Action.MOVE_TOUR, 0.05);
+			setProbability(Action.ADD_RIDE_SHARE_TOUR, 0.1);
+			setProbability(Action.BOOK_RIDE_SHARE, 0.2);
+			break;
+		}
+	}
 }
