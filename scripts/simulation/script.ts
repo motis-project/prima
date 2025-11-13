@@ -390,8 +390,8 @@ async function rideShareApiCall(
 		kidsFiveToSix,
 		tourId
 	);
+	const toursAfter: RideShareToursWithRequests = await getRideShareTours(false);
 	const requestId = response.request1Id ?? response.request2Id;
-	const toursAfter = await getToursWithRequests(false);
 	const t = toursAfter.filter((t) => t.requests.some((r) => r.requestId === requestId));
 	if (t.length !== 1) {
 		console.log(`Found ${t.length} tours containing the new request.`);
