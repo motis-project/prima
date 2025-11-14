@@ -322,8 +322,6 @@ function belongToSameEventGroup(
 	return (
 		event !== undefined &&
 		isSamePlace(event, otherEventCoordinates) &&
-		(otherEventInterval.overlaps(event.time) ||
-			otherEventInterval.touches(event.time) ||
-			otherEventInterval.equals(event.time))
+		otherEventInterval.noDistanceBetween(event.time)
 	);
 }
