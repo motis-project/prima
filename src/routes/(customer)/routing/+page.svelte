@@ -243,7 +243,7 @@
 			{#if page.state.selectedItinerary.legs.some(isOdmLeg)}
 				{#if data.isLoggedIn}
 					{@const rideShareLeg = page.state.selectedItinerary.legs.find(isRideShareLeg)}
-					{#if !(rideShareLeg && data.user.ownRideShareOfferIds?.some((offer) => offer.id === parseInt(rideShareLeg.tripId!)))}
+					{#if !(rideShareLeg && data.user.ownRideShareOfferIds?.some((offer) => offer.id === JSON.parse(rideShareLeg.tripId!)?.tour))}
 						<Dialog.Root>
 							<Dialog.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
 								{rideShareLeg ? t.ride.negotiateHeader : t.booking.header}
@@ -302,7 +302,6 @@
 											<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
 											<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
 											<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
-											<input type="hidden" name="tourId" value={rideShareLeg?.tripId} />
 											<input
 												type="hidden"
 												name="startFixed"

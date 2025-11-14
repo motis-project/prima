@@ -59,6 +59,7 @@ export type Insertion = InsertionEvaluation & {
 	nextDropoffId: number | undefined;
 	pickupIdxInEvents: number | undefined;
 	dropoffIdxInEvents: number | undefined;
+	tripId?: string;
 };
 
 type SingleInsertionEvaluation = {

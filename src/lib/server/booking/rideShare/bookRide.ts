@@ -35,7 +35,6 @@ export function toExpectedConnectionWithISOStrings(
 export async function bookSharedRide(
 	c: ExpectedConnection,
 	required: Capacities,
-	tourId: number,
 	trx?: Transaction<Database>,
 	skipPromiseCheck?: boolean,
 	blockedProviderId?: number
@@ -63,7 +62,7 @@ export async function bookSharedRide(
 				: {
 						pickup: c.startTime,
 						dropoff: c.targetTime,
-						tourId
+						tourId: c.tourId!
 					}
 		)
 	)[0][0];
