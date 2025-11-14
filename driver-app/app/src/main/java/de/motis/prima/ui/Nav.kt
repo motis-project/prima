@@ -114,6 +114,10 @@ fun Nav(intent: Intent?, viewModel: NavViewModel = hiltViewModel()) {
                 val tourId = it.arguments?.getString("tourId")?.toInt()
                 Fare(navController, tourId!!)
             }
+
+            composable(route = "availability") {
+                Availability(navController)
+            }
         }
     }
 }
