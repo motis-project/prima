@@ -23,7 +23,15 @@ function isSignatureInvalid(c: ExpectedConnection | null) {
 			c.target.lng,
 			c.startTime,
 			c.targetTime,
-			false
+			false,
+			c.tourId
+				? JSON.stringify({
+						tour: c.tourId,
+						rT: c.requestedTime,
+						pT: c.pickupTime,
+						dT: c.dropoffTime
+					})
+				: undefined
 		) !== c.signature
 	);
 }

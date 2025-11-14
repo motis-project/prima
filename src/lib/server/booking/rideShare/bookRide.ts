@@ -62,7 +62,7 @@ export async function bookSharedRide(
 				: {
 						pickup: c.startTime,
 						dropoff: c.targetTime,
-						tourId: c.tourId
+						tourId: c.tourId!
 					}
 		)
 	)[0][0];

@@ -12,9 +12,9 @@ export type ExpectedConnection = {
 	signature: string;
 	startFixed: boolean;
 	requestedTime: UnixtimeMs;
-	pickupTime: UnixtimeMs;
-	dropoffTime: UnixtimeMs;
-	tourId: number;
+	pickupTime?: UnixtimeMs;
+	dropoffTime?: UnixtimeMs;
+	tourId?: number;
 	mode: Mode;
 };
 

@@ -122,7 +122,7 @@
 
 		{#if isRideShareLeg(l)}
 			{@const tourInfo = itinerary.rideShareTourInfos?.find(
-				(i) => i?.tourId == parseInt(l.tripId || '')
+				(i) => i?.tourId == JSON.parse(l.tripId || '{}')?.tour
 			)}
 			{#if tourInfo}
 				<span class="ml-6">

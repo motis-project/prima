@@ -102,10 +102,14 @@ describe('add ride share request', () => {
 				inPechern.lng,
 				whiteResponse.direct[0][0].pickupTime,
 				whiteResponse.direct[0][0].dropoffTime,
-				false
+				false,
+				whiteResponse.direct[0][0].tripId
 			),
 			startFixed: true,
 			requestedTime: inXMinutes(70),
+			tourId,
+			pickupTime: whiteResponse.direct[0][0].pickupTime,
+			dropoffTime: whiteResponse.direct[0][0].dropoffTime,
 			mode: Mode.RIDE_SHARE
 		};
 		const bookingBody = {
@@ -114,7 +118,7 @@ describe('add ride share request', () => {
 			capacities
 		};
 
-		const bookingResponse = await rideShareApi(bookingBody, mockUserId, false, 0, 0, 0, tourId!);
+		const bookingResponse = await rideShareApi(bookingBody, mockUserId, false, 0, 0, 0);
 		const tours = await getRSTours();
 		expect(tours.length).toBe(1);
 		expect(tours[0].requests.length).toBe(2);
@@ -241,10 +245,14 @@ describe('add ride share request', () => {
 				inPechern.lng,
 				whiteResponse.direct[0][0].pickupTime,
 				whiteResponse.direct[0][0].dropoffTime,
-				false
+				false,
+				whiteResponse.direct[0][0].tripId
 			),
 			startFixed: true,
 			requestedTime: inXMinutes(50),
+			tourId,
+			pickupTime: whiteResponse.direct[0][0].pickupTime,
+			dropoffTime: whiteResponse.direct[0][0].dropoffTime,
 			mode: Mode.RIDE_SHARE
 		};
 		const bookingBody = {
@@ -252,7 +260,7 @@ describe('add ride share request', () => {
 			connection2: null,
 			capacities
 		};
-		const bookingResponse = await rideShareApi(bookingBody, mockUserId, false, 0, 0, 0, tourId!);
+		const bookingResponse = await rideShareApi(bookingBody, mockUserId, false, 0, 0, 0);
 		expect(bookingResponse.status).toBe(200);
 		const tours = await getRSTours();
 		expect(tours.length).toBe(1);
