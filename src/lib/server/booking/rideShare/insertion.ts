@@ -880,7 +880,7 @@ function getTimestamps(
 				prev.scheduledTimeEnd
 			);
 		}
-		scheduledDropoffTimeStart = Math.max(scheduledPickupTimeEnd + passengerDuration);
+		scheduledDropoffTimeStart = scheduledPickupTimeEnd + passengerDuration;
 		scheduledDropoffTimeEnd = Math.min(
 			scheduledDropoffTimeStart + getScheduledTimeBufferDropoff(passengerDuration),
 			window.endTime + passengerDuration
@@ -918,7 +918,7 @@ function getTimestamps(
 				next.scheduledTimeStart
 			);
 		}
-		scheduledPickupTimeEnd = Math.min(scheduledDropoffTimeStart - passengerDuration);
+		scheduledPickupTimeEnd = scheduledDropoffTimeStart - passengerDuration;
 		scheduledPickupTimeStart = Math.max(
 			window.startTime - passengerDuration,
 			scheduledPickupTimeEnd - SCHEDULED_TIME_BUFFER_PICKUP
