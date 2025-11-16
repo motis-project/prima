@@ -78,6 +78,10 @@ export const POST = async (event: RequestEvent) => {
 		startResponse = startResponse.slice(0, startResponse.length - 1);
 	}
 
-	console.log('BLACKLIST RESPONSE: ', { startResponse: startResponse.toString(), targetResponse: targetResponse.toString(), directResponse: directResponse.toString() });
+	console.log('BLACKLIST RESPONSE: ', {
+		startResponse: startResponse.toString(),
+		targetResponse: targetResponse.toString(),
+		directResponse: directResponse.toString()
+	});
 	return json({ start: startResponse, target: targetResponse, direct: directResponse });
 };
