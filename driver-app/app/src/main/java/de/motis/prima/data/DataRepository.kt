@@ -27,6 +27,7 @@ import java.security.MessageDigest
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.util.Calendar
 import javax.inject.Inject
 
 data class TourSpecialInfo(
@@ -79,6 +80,8 @@ class DataRepository @Inject constructor(
     val darkTheme: StateFlow<Boolean> = _darkTheme.asStateFlow()
 
     val utcOffset = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).offset.totalSeconds
+
+    val calendar: Calendar = Calendar.getInstance()
 
     fun toggleTheme() {
         _darkTheme.value = !_darkTheme.value
@@ -309,6 +312,11 @@ class DataRepository @Inject constructor(
 
     fun decrementDate() {
         _displayDate.value = _displayDate.value.minusDays(1)
+        fetchTours()
+    }
+
+    fun setDate(date: LocalDate) {
+        _displayDate.value = date
         fetchTours()
     }
 

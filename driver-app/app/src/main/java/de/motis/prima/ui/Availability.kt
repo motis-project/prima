@@ -1,21 +1,27 @@
 package de.motis.prima.ui
 
-import PreviewDayTimeline
+import DayTimeline
+import android.app.DatePickerDialog
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -23,8 +29,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -32,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.R
@@ -45,10 +54,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import retrofit2.Response
 import java.time.Duration
@@ -56,7 +67,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
+import java.util.Calendar
 import javax.inject.Inject
 
 data class TimeBlock(
@@ -74,12 +85,15 @@ class AvailabilityViewModel @Inject constructor(
 ) : ViewModel() {
     private val _displayDate = MutableStateFlow(LocalDate.now())
     val displayDate = _displayDate.asStateFlow()
-    var currentHour = 0
     private val shiftStart = 3
+    val shiftEnd = 24
     private val slotMinutes = 15
 
     private val _passedSlots = MutableStateFlow(0)
     val passedSlots = _passedSlots.asStateFlow()
+
+    private val _passedHours = MutableStateFlow(0)
+    val passedHours = _passedHours.asStateFlow()
 
     private val _dayBlocks = MutableStateFlow<List<TimeBlock>>(emptyList())
     val dayBlocks = _dayBlocks.asStateFlow()
@@ -94,11 +108,22 @@ class AvailabilityViewModel @Inject constructor(
     private val colorPassed = Color.LightGray
     private val colorUnmodified = Color.White
 
+    val selectedVehicle = repository.selectedVehicle
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    val calendar: Calendar = repository.calendar
+    private val _maxDateReached = MutableStateFlow(false)
+    val maxDateReached = _maxDateReached.asStateFlow()
+
+    private val _minDateReached = MutableStateFlow(false)
+    val minDateReached = _minDateReached.asStateFlow()
+
     init {
-        currentHour = hoursSinceStartOfDay(_displayDate.value)
         setDayBlocks(_displayDate.value, _displayDate.value)
-        val passedHours = if ( _displayDate.value == LocalDate.now() ) currentHour else shiftStart
-        _passedSlots.value = passedHours * 60 / slotMinutes
+        setPassedSlots(_displayDate.value)
+
+        _minDateReached.value = _displayDate.value <= LocalDate.now()
+        _maxDateReached.value = _displayDate.value >= LocalDate.now().plusDays(14)
     }
 
     private fun getSlotIndex(startMinutes: Int): Int {
@@ -317,27 +342,56 @@ class AvailabilityViewModel @Inject constructor(
         return Duration.between(startOfDay, now).toHours().toInt()
     }
 
+    private fun setPassedSlots(date: LocalDate) {
+        val currentHour = hoursSinceStartOfDay(date)
+        val passedHours = if ( date == LocalDate.now() ) currentHour + 1 else shiftStart
+        _passedHours.value = passedHours
+        _passedSlots.value = passedHours * 60 / slotMinutes
+    }
+
     fun incrementDate() {
+        if (maxDateReached.value) {
+            return
+        }
+
         val saveDate = _displayDate.value
         val fetchDate = _displayDate.value.plusDays(1)
-
-        val passedHours = if ( fetchDate == LocalDate.now() ) currentHour else shiftStart
-        _passedSlots.value = passedHours * 60 / slotMinutes
-
+        setPassedSlots(fetchDate)
         setDayBlocks(saveDate, fetchDate)
+
         _displayDate.value = fetchDate
+        _minDateReached.value = fetchDate <= LocalDate.now()
+        _maxDateReached.value = fetchDate >= LocalDate.now().plusDays(14)
     }
 
     fun decrementDate() {
+        if (minDateReached.value) {
+            return
+        }
+
+        val saveDate = _displayDate.value
+        val fetchDate = _displayDate.value.minusDays(1)
+        setPassedSlots(fetchDate)
+        setDayBlocks(saveDate, fetchDate)
+
+        _displayDate.value = fetchDate
+        _minDateReached.value = fetchDate <= LocalDate.now()
+        _maxDateReached.value = fetchDate >= LocalDate.now().plusDays(14)
+    }
+
+    fun setDate(date: LocalDate) {
         val saveDate = _displayDate.value
 
-        if (_displayDate.value > LocalDate.now()) {
-            val fetchDate = _displayDate.value.minusDays(1)
-            val passedHours = if ( fetchDate == LocalDate.now() ) currentHour else shiftStart
-            _passedSlots.value = passedHours * 60 / slotMinutes
-            setDayBlocks(saveDate, fetchDate)
-            _displayDate.value = fetchDate
+        if (saveDate < LocalDate.now() || saveDate > LocalDate.now().plusDays(14)) {
+            return
         }
+
+        setPassedSlots(date)
+        setDayBlocks(saveDate, date)
+
+        _displayDate.value = date
+        _minDateReached.value = date <= LocalDate.now()
+        _maxDateReached.value = date >= LocalDate.now().plusDays(14)
     }
 
     fun updateDayBlocks(start: Int, end: Int, dragStart: Int) {
@@ -370,60 +424,108 @@ fun DateSelect(
     viewModel: AvailabilityViewModel
 ) {
     val displayDate by viewModel.displayDate.collectAsState()
+    val minDateReached by viewModel.minDateReached.collectAsState()
+    val maxDateReached by viewModel.maxDateReached.collectAsState()
+
+    val context = LocalContext.current
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _, year, month, dayOfMonth ->
+            viewModel.setDate(LocalDate.parse("$year-${month + 1}-$dayOfMonth"))
+        },
+        viewModel.calendar.get(Calendar.YEAR),
+        viewModel.calendar.get(Calendar.MONTH),
+        viewModel.calendar.get(Calendar.DAY_OF_MONTH)
+    )
+    datePickerDialog.datePicker.minDate = System.currentTimeMillis()
+    datePickerDialog.datePicker.maxDate = System.currentTimeMillis() + 1209600000 // 2 weeks
+    datePickerDialog.datePicker.firstDayOfWeek = Calendar.MONDAY
 
     Row(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp)
-            .height(100.dp),
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.Center
     ) {
+        // decrement date arrow button
         Box(
             modifier = Modifier
-                .padding(all = 6.dp),
+                .padding(all = 6.dp)
+                .width(50.dp),
         ) {
-            IconButton(
-                onClick = { viewModel.decrementDate() },
-                Modifier
-                    .size(width = 48.dp, height = 24.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Localized description",
-                    modifier = Modifier
+            if (minDateReached.not()) {
+                IconButton(
+                    onClick = { viewModel.decrementDate() },
+                    Modifier
                         .size(width = 48.dp, height = 24.dp)
-                        .background(LocalExtendedColors.current.secondaryButton)
-                        .border(
-                            border = BorderStroke(2.dp, LocalExtendedColors.current.secondaryButton),
-                            shape = RoundedCornerShape(6.dp)
-                        ),
-                    tint = LocalExtendedColors.current.textColor
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Localized description",
+                        modifier = Modifier
+                            .size(width = 48.dp, height = 24.dp)
+                            .background(LocalExtendedColors.current.secondaryButton)
+                            .border(
+                                border = BorderStroke(2.dp, LocalExtendedColors.current.secondaryButton),
+                                shape = RoundedCornerShape(6.dp)
+                            ),
+                        tint = LocalExtendedColors.current.textColor
+                    )
+                }
+            }
+        }
+        // date picker
+        Box(
+            modifier = Modifier.padding(all = 6.dp),
+        ) {
+            Button(
+                modifier = Modifier.height(24.dp).width(120.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
+                onClick = { datePickerDialog.show() }) {
+                Text(
+                    text= "$displayDate",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
                 )
             }
         }
+        // increment date arrow button
         Box(
             modifier = Modifier
-                .padding(all = 6.dp),
-        ) {
-            Text(
-                text = displayDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-        }
-        Box(
-            modifier = Modifier
-                .padding(all = 6.dp),
-
+                .padding(all = 6.dp)
+                .width(50.dp),
             ) {
+            if (maxDateReached.not()) {
+                IconButton(
+                    onClick = { viewModel.incrementDate() },
+                    Modifier
+                        .size(width = 48.dp, height = 24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "Localized description",
+                        modifier = Modifier
+                            .size(width = 48.dp, height = 24.dp)
+                            .background(LocalExtendedColors.current.secondaryButton)
+                            .border(
+                                border = BorderStroke(2.dp, LocalExtendedColors.current.secondaryButton),
+                                shape = RoundedCornerShape(6.dp)
+                            ),
+                        tint = LocalExtendedColors.current.textColor
+                    )
+                }
+            }
+        }
+        // refresh button
+        Box(
+            modifier = Modifier.padding(all = 6.dp),
+        ) {
             IconButton(
-                onClick = { viewModel.incrementDate() },
+                onClick = { viewModel.setDate(displayDate) },
                 Modifier
                     .size(width = 48.dp, height = 24.dp)
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    imageVector = Icons.Default.Refresh,
                     contentDescription = "Localized description",
                     modifier = Modifier
                         .size(width = 48.dp, height = 24.dp)
@@ -459,9 +561,24 @@ fun Availability(
             )
         }
     ) { contentPadding ->
-        Box(modifier = Modifier.padding(contentPadding)) {
+        Column(modifier = Modifier.padding(contentPadding)) {
+            val vehicle by viewModel.selectedVehicle.collectAsState()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                vehicle?.let {
+                    Text(
+                        text = it.licensePlate,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
             DateSelect(viewModel)
-            PreviewDayTimeline(navController, viewModel)
+            DayTimeline(navController, viewModel)
         }
     }
 }

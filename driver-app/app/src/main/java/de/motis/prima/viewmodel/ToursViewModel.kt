@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
@@ -42,6 +44,8 @@ class ToursViewModel @Inject constructor(
 
     val markedTour: StateFlow<Int> = repository.markedTour
 
+    val calendar: Calendar = repository.calendar
+
     init {
         resetDate()
     }
@@ -56,6 +60,10 @@ class ToursViewModel @Inject constructor(
 
     fun decrementDate() {
         repository.decrementDate()
+    }
+
+    fun setDate(date: LocalDate) {
+        repository.setDate(date)
     }
 
     fun updateEventGroups(tourId: Int) {

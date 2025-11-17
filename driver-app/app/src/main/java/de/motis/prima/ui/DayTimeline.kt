@@ -48,8 +48,7 @@ fun DayTimeline(
     navController: NavController,
     viewModel: AvailabilityViewModel
 ) {
-    val shiftStart = 3
-    val shiftEnd = 24
+    val shiftEnd = viewModel.shiftEnd
     val trailingMinutes = (24 - shiftEnd) * 60
     val totalMinutes = 24  * 60
     val slotMinutes = 15
@@ -61,8 +60,7 @@ fun DayTimeline(
     val scrollState = rememberScrollState()
     val dayBlocks by viewModel.dayBlocks.collectAsState()
 
-    val date by viewModel.displayDate.collectAsState()
-    val passedHours = if ( date == LocalDate.now() ) viewModel.currentHour else shiftStart
+    val passedHours by viewModel.passedHours.collectAsState()
     val passedSlots by viewModel.passedSlots.collectAsState()
 
     var showDialog by remember { mutableStateOf(false) }
@@ -98,7 +96,7 @@ fun DayTimeline(
         )
     }
 
-    Row (modifier = Modifier.padding(top = 65.dp)) {
+    Row (modifier = Modifier.padding(top = 24.dp)) {
         val heightPerSlotDp = 120.dp / (60 / slotMinutes)
         val totalHeight = heightPerSlotDp * (slots + 1 - passedSlots)
 
@@ -287,10 +285,10 @@ fun DayTimeline(
     }
 }
 
-@Composable
+/*@Composable
 fun PreviewDayTimeline(
     navController: NavController,
     viewModel: AvailabilityViewModel
 ) {
     DayTimeline(navController,viewModel)
-}
+}*/

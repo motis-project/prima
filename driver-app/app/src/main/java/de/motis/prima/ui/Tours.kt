@@ -1,5 +1,6 @@
 package de.motis.prima.ui
 
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
@@ -9,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,6 +44,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -59,6 +62,7 @@ import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
@@ -183,6 +187,19 @@ fun DateSelect(
     val date by viewModel.displayDate.collectAsState()
     val showAll by viewModel.showAll.collectAsState()
 
+    val context = LocalContext.current
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _, year, month, dayOfMonth ->
+            viewModel.setDate(LocalDate.parse("$year-${month + 1}-$dayOfMonth"))
+        },
+        viewModel.calendar.get(Calendar.YEAR),
+        viewModel.calendar.get(Calendar.MONTH),
+        viewModel.calendar.get(Calendar.DAY_OF_MONTH)
+    )
+    datePickerDialog.datePicker.maxDate = System.currentTimeMillis() + 1209600000 // 2 weeks
+    datePickerDialog.datePicker.firstDayOfWeek = Calendar.MONDAY
+
     Row(
         modifier = Modifier
             .fillMaxWidth(),
@@ -215,12 +232,16 @@ fun DateSelect(
             modifier = Modifier
                 .padding(all = 6.dp),
             ) {
-            Text(
-                text = date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
+            Button(
+                modifier = Modifier.height(24.dp).width(120.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
+                onClick = { datePickerDialog.show() }) {
+                Text(
+                    text= "$date",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            }
         }
         Box(
             modifier = Modifier
