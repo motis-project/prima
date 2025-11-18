@@ -11,11 +11,17 @@
 	import { getModeName } from './getModeName';
 	import Route from './Route.svelte';
 	import { routeBorderColor, routeColor } from '$lib/ui/modeStyle';
-	import { isOdmLeg, isRideShareLeg, isTaxiLeg } from '$lib/util/booking/checkLegType';
+	import {
+		isOdmLeg,
+		isPoolingLeg,
+		isRideShareLeg,
+		isTaxiLeg
+	} from '$lib/util/booking/checkLegType';
 	import type { SignedItinerary } from '$lib/planAndSign';
 	import ProfileBadge from '$lib/ui/ProfileBadge.svelte';
 	import { defaultCarPicture } from '$lib/constants';
 	import * as Dialog from '$lib/shadcn/dialog';
+	import PoolingBadge from './PoolingBadge.svelte';
 
 	const {
 		itinerary,
@@ -111,6 +117,9 @@
 					<a href="tel:{companyPhone}"
 						><div class="flex items-center"><Phone class="mr-1" />{companyPhone}</div></a
 					>
+				{/if}
+				{#if isPoolingLeg(l)}
+					<PoolingBadge />
 				{/if}
 			</div>
 		{/if}

@@ -9,6 +9,7 @@ export type Colorable = {
 export type TripInfo = {
 	tripId?: string;
 	routeShortName?: string;
+	displayName?: string;
 };
 
 export type RentalInfo = {
