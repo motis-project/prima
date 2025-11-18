@@ -10,6 +10,7 @@ import { Interval } from '$lib/util/interval';
 import { isSamePlace } from '../isSamePlace';
 
 export async function acceptRideShareRequest(requestId: number, provider: number) {
+	console.log('ACCPECT RIDE SHARE REQUEST PARAMS:', { requestId, provider });
 	let message = 'success';
 	let status = 200;
 	await retry(() =>
