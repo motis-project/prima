@@ -8,6 +8,7 @@ import { getScheduledTimes } from './getScheduledTimes';
 import type { Coordinates } from '$lib/util/Coordinates';
 import { Interval } from '$lib/util/interval';
 import { isSamePlace } from '../isSamePlace';
+import { printInsertionType } from '../insertionTypes';
 
 export async function acceptRideShareRequest(requestId: number, provider: number) {
 	console.log('ACCPECT RIDE SHARE REQUEST PARAMS:', { requestId, provider });
@@ -58,12 +59,18 @@ export async function acceptRideShareRequest(requestId: number, provider: number
 					message = 'The ride share tour is no longer valid';
 					return;
 				}
+				console.log(
+					'best: ',
+					JSON.stringify(best, null, 2),
+					printInsertionType(best.pickupCase),
+					printInsertionType(best.dropoffCase)
+				);
 				const durationUpdates = getDurationUpdates(best);
 				const events = tour.events;
-				const prevPickupEvent = events.find((e) => e.requestId === best.prevPickupId);
-				const nextPickupEvent = events.find((e) => e.requestId === best.nextPickupId);
-				const prevDropoffEvent = events.find((e) => e.requestId === best.prevDropoffId);
-				const nextDropoffEvent = events.find((e) => e.requestId === best.nextDropoffId);
+				const prevPickupEvent = events.find((e) => e.eventId === best.prevPickupId);
+				const nextPickupEvent = events.find((e) => e.eventId === best.nextPickupId);
+				const prevDropoffEvent = events.find((e) => e.eventId === best.prevDropoffId);
+				const nextDropoffEvent = events.find((e) => e.eventId === best.nextDropoffId);
 				let pickupEventGroup = undefined;
 				let dropoffEventGroup = undefined;
 				const pickupInterval = new Interval(
