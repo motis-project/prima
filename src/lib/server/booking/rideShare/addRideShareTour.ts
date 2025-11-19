@@ -207,6 +207,21 @@ export const addRideShareTour = async (
 	startAddress = '',
 	targetAddress = ''
 ): Promise<number | undefined> => {
+	console.log(
+		'ADD RIDE SHARE TOUR PARAMS: ',
+		JSON.stringify({
+			time,
+			startFixed,
+			passengers,
+			luggage,
+			provider,
+			vehicle,
+			start,
+			target,
+			startAddress,
+			targetAddress
+		})
+	);
 	const timesResult = await util(time, startFixed, vehicle, start, target);
 	if (timesResult === undefined) {
 		return undefined;
