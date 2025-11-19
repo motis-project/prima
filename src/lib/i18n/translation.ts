@@ -178,6 +178,7 @@ export type Translations = {
 		good: string;
 		bad: string;
 		sendFeedback: string;
+		backToHome: string;
 	};
 
 	atDateTime: (timeType: TimeType, time: Date, isToday: boolean) => string;
@@ -311,6 +312,7 @@ export type Translations = {
 		addVehicle: string;
 		uploadPhoto: string;
 		savePhoto: string;
+		photoSaved: string;
 		smokingOptions: string[];
 	};
 

@@ -21,6 +21,7 @@
 	<h3 class="text-xl">{t.rating.howHasItBeen}</h3>
 	{#if form?.msg}
 		<Message msg={form.msg} class="mb-4" />
+		<a href="/" class="link">{t.rating.backToHome}</a>
 	{:else if !data.rated}
 		<form class="my-4 flex flex-col gap-4" method="post" use:enhance>
 			<Select.Root type="single" bind:value={reason} required={true} name="reason">

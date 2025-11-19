@@ -6,10 +6,8 @@
 		journeyTime,
 		journeyFirst,
 		journeyLast,
-		firstAddress,
-		lastAddress,
-		firstTime,
-		lastTime,
+		firstEvent,
+		lastEvent,
 		tourId,
 		passengerName,
 		passengerMail,
@@ -27,13 +25,13 @@
 		nach {journeyLast}:
 	</p>
 	<ul>
-		<li>Von: {firstAddress}</li>
-		<li>Nach: {lastAddress}</li>
+		<li>Von: {firstEvent.address}</li>
+		<li>Nach: {lastEvent.address}</li>
 		<li>
-			Geplanter Start: ~{formatTime(firstTime)}
+			Geplanter Start: ~{formatTime(firstEvent.time)}
 		</li>
 		<li>
-			Geplante Ankunft: ~{formatTime(lastTime)}
+			Geplante Ankunft: ~{formatTime(lastEvent.time)}
 		</li>
 	</ul>
 

@@ -15,6 +15,7 @@
 	import { defaultProfilePicture } from '$lib/constants.js';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
 	import SortableTable from '$lib/ui/SortableTable.svelte';
+	import { enhance } from '$app/forms';
 
 	const { data, form } = $props();
 	let showTooltip = $state(false);
@@ -59,6 +60,8 @@
 			storeLastPageAndGoto(`/account/add-or-edit-ride-share-vehicle/${selectedVehicleId}`);
 		}
 	});
+	let loading = $state(false);
+	let uploaded = $state(false);
 </script>
 
 <Meta title="Account | {PUBLIC_PROVIDER}" />
@@ -140,12 +143,22 @@
 			action={'/account/settings?/uploadProfilePicture'}
 			enctype="multipart/form-data"
 			class="mt-8"
+			use:enhance={() => {
+				loading = true;
+				return async ({ update }) => {
+					await update();
+					loading = false;
+					uploaded = true;
+				};
+			}}
 		>
 			<UploadPhoto
 				name="profilePicture"
 				displaySaveButton={true}
 				currentUrl={data.profilePicture ?? undefined}
 				defaultPicture={defaultProfilePicture}
+				bind:loading
+				bind:uploaded
 			/>
 		</form>
 	</Panel>
