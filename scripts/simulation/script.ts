@@ -228,8 +228,7 @@ async function bookFull(
 	} as PlanData;
 	const planResponse = await planAndSign(q.query, 'http://localhost:5173');
 	if (planResponse === undefined) {
-		const e = new Error('PlanResponse was undefined.');
-		console.log(e);
+		console.log('PlanResponse was undefined.');
 		return true;
 	}
 	const relevantItineraries = mode
