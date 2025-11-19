@@ -60,15 +60,10 @@ export async function acceptRideShareRequest(requestId: number, provider: number
 				}
 				const durationUpdates = getDurationUpdates(best);
 				const events = tour.events;
-				const prevPickupEvent =
-					events[events.findIndex((e) => e.requestId === requestId && e.isPickup) - 1];
-				const nextPickupEvent =
-					events[events.findIndex((e) => e.requestId === requestId && e.isPickup) + 1];
-				const prevDropoffEvent =
-					events[events.findIndex((e) => e.requestId === requestId && e.isPickup) - 1];
-				const nextDropoffEvent =
-					events[events.findIndex((e) => e.requestId === requestId && e.isPickup) + 1];
-
+				const prevPickupEvent = events[events.findIndex((e) => e.requestId === requestId) - 1];
+				const nextPickupEvent = events[events.findLastIndex((e) => e.requestId === requestId) + 1];
+				const prevDropoffEvent = events[events.findIndex((e) => e.requestId === requestId) - 1];
+				const nextDropoffEvent = events[events.findLastIndex((e) => e.requestId === requestId) + 1];
 				let pickupEventGroup = undefined;
 				let dropoffEventGroup = undefined;
 				const pickupInterval = new Interval(
