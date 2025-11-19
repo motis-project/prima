@@ -1,12 +1,12 @@
 import { acceptRideShareRequest } from '../../src/lib/server/booking';
 
 const params = {
-	request: 12,
+	requestId: 12,
 	provider: 1
 };
 
 async function main() {
-	const response = await acceptRideShareRequest(params.request, params.provider);
+	const response = await acceptRideShareRequest(params.requestId, params.provider);
 
 	if (response.status === 200) {
 		console.log('Accepting ride share request succeeded');
