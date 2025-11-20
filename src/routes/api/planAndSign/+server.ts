@@ -18,6 +18,12 @@ export const POST = async (event: RequestEvent) => {
 	if (response === undefined) {
 		return fail(500);
 	}
+
+	// whitelist
+	// add direct
+
+	// mixer
+
 	return json({
 		...response!,
 		itineraries: await Promise.all(
