@@ -31,13 +31,13 @@ const parameters = {
 const kidsThreeToFour = 0;
 const kidsZeroToTwo = 0;
 const kidsFiveToSix = 0;
-const finalFlag = false;
+const finalFlag = undefined;
 
 async function main() {
 	const response = await rideShareApi(
 		parameters,
 		1,
-		false,
+		true,
 		kidsThreeToFour,
 		kidsFiveToSix,
 		kidsZeroToTwo,

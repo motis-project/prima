@@ -234,6 +234,10 @@ async function bookFull(
 	const relevantItineraries = mode
 		? planResponse.itineraries.filter((i) => i.legs.some((l) => l.mode === mode))
 		: planResponse.itineraries;
+	if (relevantItineraries.length === 0) {
+		console.log('Found no itinerary with the selected mode.');
+		return false;
+	}
 	for (const itinerary of relevantItineraries) {
 		let monotonicTime = 0;
 		for (const leg of itinerary.legs) {
