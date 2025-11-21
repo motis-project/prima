@@ -775,10 +775,10 @@ export async function simulation(params: {
 						}
 					}
 					break;
-				case Action.ADD_RIDE_SHARE_TOUR:
+				case Action.CANCEL_REQUEST_RS:
 					lastActionSpecifics = await cancelRequestRsLocal();
 					break;
-				case Action.ADD_RIDE_SHARE_TOUR:
+				case Action.CANCEL_TOUR_RS:
 					lastActionSpecifics = await cancelTourRsLocal();
 					break;
 				case Action.PUBLIC_TRANSPORT:
