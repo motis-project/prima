@@ -9,6 +9,7 @@ import type { BusStop } from '$lib/server/booking/taxi/BusStop';
 import { whitelist } from '../whitelist/whitelist';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import type { Coordinates } from '$lib/util/Coordinates';
+import type { Insertion } from '$lib/server/booking/taxi/insertion';
 
 export const POST = async (event: RequestEvent) => {
 	const q: PlanData['query'] = await event.request.json();
@@ -105,7 +106,7 @@ function extractTaxiEvents(itineraries: Array<Itinerary>) {
 			bs.times.push(new Date(firstMileTaxi.endTime).getTime());
 		}
 		if (lastMileTaxi !== undefined) {
-			let bs = firstMileStops.find(
+			let bs = lastMileStops.find(
 				(x) => x.lat == lastMileTaxi.from.lat && x.lng == lastMileTaxi.from.lon
 			);
 			if (bs == undefined) {
@@ -122,4 +123,72 @@ function extractTaxiEvents(itineraries: Array<Itinerary>) {
 		}
 	});
 	return [firstMileStops, lastMileStops];
+}
+
+function adjustTaxiEvents(
+	itineraries: Array<Itinerary>,
+	firstMileIn: Array<BusStop>,
+	lastMileIn: Array<BusStop>,
+	firstMileOut: Array<(Insertion | undefined)[]>,
+	lastMileOut: Array<(Insertion | undefined)[]>
+) {
+	let toRemove = new Array<number>();
+	for (const [index, i] of itineraries.entries()) {
+		const firstMileTaxi = i.legs.length > 1 && isTaxiLeg(i.legs[0]) ? i.legs[0] : undefined;
+		const lastMileTaxi =
+			i.legs.length > 1 && isTaxiLeg(i.legs[i.legs.length - 1])
+				? i.legs[i.legs.length - 1]
+				: undefined;
+		if (firstMileTaxi !== undefined) {
+			const bsIndex = firstMileIn.findIndex(
+				(x) => x.lat == firstMileTaxi.to.lat && x.lng == firstMileTaxi.to.lon
+			);
+
+			if (firstMileOut[bsIndex] == undefined) {
+				toRemove.push(index);
+				continue;
+			}
+
+			const timeIndex = firstMileIn[bsIndex].times.findIndex(
+				(x) => x == new Date(firstMileTaxi.endTime).getTime()
+			);
+			const insertion = firstMileOut[bsIndex][timeIndex];
+
+			if (insertion == undefined) {
+				toRemove.push(index);
+				continue;
+			}
+
+			firstMileTaxi.startTime = new Date(insertion.pickupTime).toISOString();
+			firstMileTaxi.endTime = new Date(insertion.dropoffTime).toISOString();
+			firstMileTaxi.duration = insertion.dropoffTime - insertion.pickupTime;
+		}
+		if (lastMileTaxi !== undefined) {
+			const bsIndex = lastMileIn.findIndex(
+				(x) => x.lat == lastMileTaxi.to.lat && x.lng == lastMileTaxi.to.lon
+			);
+
+			if (lastMileOut[bsIndex] == undefined) {
+				toRemove.push(index);
+				continue;
+			}
+
+			const timeIndex = lastMileIn[bsIndex].times.findIndex(
+				(x) => x == new Date(lastMileTaxi.startTime).getTime()
+			);
+			const insertion = lastMileOut[bsIndex][timeIndex];
+
+			if (insertion == undefined) {
+				toRemove.push(index);
+				continue;
+			}
+
+			lastMileTaxi.startTime = new Date(insertion.pickupTime).toISOString();
+			lastMileTaxi.endTime = new Date(insertion.dropoffTime).toISOString();
+			lastMileTaxi.duration = insertion.dropoffTime - insertion.pickupTime;
+		}
+	}
+	toRemove.forEach((i) => {
+		itineraries.splice(i, 1);
+	});
 }
