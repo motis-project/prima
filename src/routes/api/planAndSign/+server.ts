@@ -4,7 +4,11 @@ import { signEntry } from '$lib/server/booking/signEntry';
 import type { QuerySerializerOptions } from '@hey-api/client-fetch';
 import { fail, json, type RequestEvent } from '@sveltejs/kit';
 import { getRideShareInfos } from '$lib/server/booking/rideShare/getRideShareInfo';
-import { isOdmLeg } from '$lib/util/booking/checkLegType';
+import { isOdmLeg, isTaxiLeg } from '$lib/util/booking/checkLegType';
+import type { BusStop } from '$lib/server/booking/taxi/BusStop';
+import { whitelist } from '../whitelist/whitelist';
+import type { Capacities } from '$lib/util/booking/Capacities';
+import type { Coordinates } from '$lib/util/Coordinates';
 
 export const POST = async (event: RequestEvent) => {
 	const q: PlanData['query'] = await event.request.json();
@@ -19,7 +23,20 @@ export const POST = async (event: RequestEvent) => {
 		return fail(500);
 	}
 
-	// whitelist
+	const from: Coordinates = { lat: response.from.lat, lng: response.from.lon };
+	const to: Coordinates = { lat: response.to.lat, lng: response.to.lon };
+	const c: Capacities = {
+		wheelchairs: q.pedestrianProfile == 'WHEELCHAIR' ? 1 : 0,
+		bikes: q.requireBikeTransport ? 1 : 0,
+		passengers: q.passengers ?? 1,
+		luggage: q.luggage ?? 0
+	};
+	const [firstMileIn, lastMileIn] = extractTaxiEvents(response.itineraries);
+	const [firstMileOut, lastMileOut] = await Promise.all([
+		whitelist(from, firstMileIn, c, false),
+		whitelist(to, lastMileIn, c, true)
+	]);
+
 	// add direct
 
 	// mixer
@@ -65,3 +82,44 @@ export const POST = async (event: RequestEvent) => {
 		)
 	});
 };
+
+function extractTaxiEvents(itineraries: Array<Itinerary>) {
+	let firstMileStops = new Array<BusStop>();
+	let lastMileStops = new Array<BusStop>();
+	itineraries.forEach((i) => {
+		const firstMileTaxi = i.legs.length > 1 && isTaxiLeg(i.legs[0]) ? i.legs[0] : undefined;
+		const lastMileTaxi =
+			i.legs.length > 1 && isTaxiLeg(i.legs[i.legs.length - 1])
+				? i.legs[i.legs.length - 1]
+				: undefined;
+		if (firstMileTaxi !== undefined) {
+			let bs = firstMileStops.find(
+				(x) => x.lat == firstMileTaxi.to.lat && x.lng == firstMileTaxi.to.lon
+			);
+			if (bs == undefined) {
+				bs =
+					firstMileStops[
+						firstMileStops.push({ lat: firstMileTaxi.to.lat, lng: firstMileTaxi.to.lon, times: [] })
+					];
+			}
+			bs.times.push(new Date(firstMileTaxi.endTime).getTime());
+		}
+		if (lastMileTaxi !== undefined) {
+			let bs = firstMileStops.find(
+				(x) => x.lat == lastMileTaxi.from.lat && x.lng == lastMileTaxi.from.lon
+			);
+			if (bs == undefined) {
+				bs =
+					lastMileStops[
+						lastMileStops.push({
+							lat: lastMileTaxi.from.lat,
+							lng: lastMileTaxi.from.lon,
+							times: []
+						})
+					];
+			}
+			bs.times.push(new Date(lastMileTaxi.startTime).getTime());
+		}
+	});
+	return [firstMileStops, lastMileStops];
+}
