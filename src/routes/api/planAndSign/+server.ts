@@ -37,6 +37,7 @@ export const POST = async (event: RequestEvent) => {
 		whitelist(from, firstMileIn, c, false),
 		whitelist(to, lastMileIn, c, true)
 	]);
+	adjustTaxiEvents(response.itineraries, firstMileIn, lastMileIn, firstMileOut, lastMileOut);
 
 	// add direct
 
@@ -100,7 +101,11 @@ function extractTaxiEvents(itineraries: Array<Itinerary>) {
 			if (bs == undefined) {
 				bs =
 					firstMileStops[
-						firstMileStops.push({ lat: firstMileTaxi.to.lat, lng: firstMileTaxi.to.lon, times: [] })
+						firstMileStops.push({
+							lat: firstMileTaxi.to.lat,
+							lng: firstMileTaxi.to.lon,
+							times: new Array<number>()
+						}) - 1
 					];
 			}
 			bs.times.push(new Date(firstMileTaxi.endTime).getTime());
@@ -115,8 +120,8 @@ function extractTaxiEvents(itineraries: Array<Itinerary>) {
 						lastMileStops.push({
 							lat: lastMileTaxi.from.lat,
 							lng: lastMileTaxi.from.lon,
-							times: []
-						})
+							times: new Array<number>()
+						}) - 1
 					];
 			}
 			bs.times.push(new Date(lastMileTaxi.startTime).getTime());
