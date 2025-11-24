@@ -79,8 +79,8 @@ const actionProbabilities: ActionType[] = [
 	{ action: Action.ADD_RIDE_SHARE_TOUR, probability: 0.05, text: 'add ride share tour' },
 	{ action: Action.BOOK_RIDE_SHARE, probability: 0.125, text: 'book ride share' },
 	{ action: Action.ACCPEPT_RIDE_SHARE_TOUR, probability: 0.75, text: 'accept ride share' },
-	{ action: Action.CANCEL_REQUEST_RS, probability: 0.025, text: 'cancel request' },
-	{ action: Action.CANCEL_TOUR_RS, probability: 0.025, text: 'cancel tour' },
+	{ action: Action.CANCEL_REQUEST_RS, probability: 0.025, text: 'cancel request rs' },
+	{ action: Action.CANCEL_TOUR_RS, probability: 0.025, text: 'cancel tour rs' },
 	{ action: Action.PUBLIC_TRANSPORT, probability: 0, text: 'public transport' }
 ];
 
@@ -672,7 +672,7 @@ async function moveTourLocal() {
 }
 
 async function cancelRequestRsLocal() {
-	const requests = (await getRideShareTours(false, true)).flatMap((t) =>
+	const requests = (await getRideShareTours(false, undefined, false)).flatMap((t) =>
 		t.requests.map((r) => {
 			return { ...t, ...r };
 		})
