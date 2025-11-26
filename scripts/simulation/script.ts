@@ -39,6 +39,8 @@ import {
 	getRideShareTourByRequest,
 	type RideShareTourDb
 } from '../../src/lib/server/booking/rideShare/getRideShareTours';
+import { cancelRideShareRequest } from '../../src/lib/server/booking/rideShare/cancelRideShareRequest';
+import { cancelRideShareTour } from '../../src/lib/server/booking/rideShare/cancelRideShareTour';
 
 const BACKUP_DIR = './scripts/simulation/backups/';
 
@@ -58,6 +60,8 @@ enum Action {
 	ADD_RIDE_SHARE_TOUR,
 	BOOK_RIDE_SHARE,
 	ACCPEPT_RIDE_SHARE_TOUR,
+	CANCEL_REQUEST_RS,
+	CANCEL_TOUR_RS,
 	PUBLIC_TRANSPORT
 }
 
@@ -73,8 +77,10 @@ const actionProbabilities: ActionType[] = [
 	{ action: Action.CANCEL_TOUR, probability: 0.025, text: 'cancel tour' },
 	{ action: Action.MOVE_TOUR, probability: 0.05, text: 'move tour' },
 	{ action: Action.ADD_RIDE_SHARE_TOUR, probability: 0.05, text: 'add ride share tour' },
-	{ action: Action.BOOK_RIDE_SHARE, probability: 0.1, text: 'book ride share' },
-	{ action: Action.ACCPEPT_RIDE_SHARE_TOUR, probability: 0.15, text: 'accept ride share' },
+	{ action: Action.BOOK_RIDE_SHARE, probability: 0.125, text: 'book ride share' },
+	{ action: Action.ACCPEPT_RIDE_SHARE_TOUR, probability: 0.75, text: 'accept ride share' },
+	{ action: Action.CANCEL_REQUEST_RS, probability: 0.025, text: 'cancel request rs' },
+	{ action: Action.CANCEL_TOUR_RS, probability: 0.025, text: 'cancel tour rs' },
 	{ action: Action.PUBLIC_TRANSPORT, probability: 0, text: 'public transport' }
 ];
 
@@ -161,7 +167,7 @@ async function addRideShareTourLocal(
 		connection.start.address,
 		connection.target.address
 	);
-	console.log(`Adding a ride share tour was ${request === undefined ? 'not ' : ''} succesful.`);
+	console.log(`Adding a ride share tour was ${request === undefined ? 'not' : ''} succesful.`);
 	if (request === undefined) {
 		return false;
 	}
@@ -665,6 +671,33 @@ async function moveTourLocal() {
 	return { vehicleId: tour.vehicleId, dayStart: Math.floor(tour.startTime / DAY) * DAY };
 }
 
+async function cancelRequestRsLocal() {
+	const requests = (await getRideShareTours(false, undefined, false)).flatMap((t) =>
+		t.requests.map((r) => {
+			return { ...t, ...r };
+		})
+	);
+	if (requests.length === 0) {
+		return false;
+	}
+	const r = randomInt(0, requests.length);
+	await cancelRideShareRequest(requests[r].requestId, 1);
+	return {
+		vehicleId: requests[r].vehicleId,
+		dayStart: Math.floor(requests[r].startTime / DAY) * DAY
+	};
+}
+
+async function cancelTourRsLocal() {
+	const tours = await getRideShareTours(false, false);
+	if (tours.length === 0) {
+		return false;
+	}
+	const r = randomInt(0, tours.length);
+	await cancelRideShareTour(tours[r].tourId, 1);
+	return { vehicleId: tours[r].vehicleId, dayStart: Math.floor(tours[r].startTime / DAY) * DAY };
+}
+
 export async function simulation(params: {
 	backups?: boolean;
 	healthChecks?: boolean;
@@ -741,6 +774,12 @@ export async function simulation(params: {
 							return true;
 						}
 					}
+					break;
+				case Action.CANCEL_REQUEST_RS:
+					lastActionSpecifics = await cancelRequestRsLocal();
+					break;
+				case Action.CANCEL_TOUR_RS:
+					lastActionSpecifics = await cancelTourRsLocal();
 					break;
 				case Action.PUBLIC_TRANSPORT:
 					lastActionSpecifics = await bookFull(coordinates, restrictedCoordinates);
@@ -958,9 +997,11 @@ function setActionProbabilities(mode: string) {
 	}
 	switch (mode) {
 		case 'rs':
-			setActionProbability(0.4, Action.ACCPEPT_RIDE_SHARE_TOUR);
+			setActionProbability(0.2, Action.ACCPEPT_RIDE_SHARE_TOUR);
 			setActionProbability(0.2, Action.ADD_RIDE_SHARE_TOUR);
-			setActionProbability(0.4, Action.BOOK_RIDE_SHARE);
+			setActionProbability(0.5, Action.BOOK_RIDE_SHARE);
+			setActionProbability(0.05, Action.CANCEL_REQUEST_RS);
+			setActionProbability(0.05, Action.CANCEL_TOUR_RS);
 			break;
 		case 'taxi':
 			setActionProbability(0.9, Action.BOOKING);

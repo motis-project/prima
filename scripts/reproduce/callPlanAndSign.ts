@@ -20,11 +20,7 @@ const query = {
 const baseUrl = 'http://localhost:5173';
 
 async function main() {
-	const response = await planAndSign(query.query, baseUrl);
-
-	if (response !== undefined) {
-		console.log('Adding ride share tour succeeded');
-	}
+	await planAndSign(query.query, baseUrl);
 }
 
 main().catch((err) => {
