@@ -45,7 +45,7 @@ async function main() {
 	);
 
 	if (response !== undefined) {
-		console.log('Adding ride share tour succeeded');
+		console.log('Adding ride share request succeeded');
 	}
 }
 
