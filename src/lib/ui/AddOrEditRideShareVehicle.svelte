@@ -68,6 +68,8 @@
 		fromUrl = sessionStorage.getItem('lastPage') ?? '/default';
 		console.log('Came from:', fromUrl);
 	});
+
+	let loading = $state(false);
 </script>
 
 <div>
@@ -85,8 +87,10 @@
 		method="post"
 		{action}
 		use:enhance={() => {
+			loading = true;
 			return async ({ update }) => {
-				update({ reset: false });
+				await update();
+				loading = false;
 			};
 		}}
 		class="flex flex-col gap-4"
@@ -170,7 +174,7 @@
 		</Panel>
 		<Message msg={form?.msg} class="mb-4" />
 
-		<Button type="submit" variant="outline" data-testid="create-vehicle">
+		<Button type="submit" variant="outline" data-testid="create-vehicle" disabled={loading}>
 			{!isEditMode ? t.rideShare.createVehicle : t.rideShare.saveChanges}
 		</Button>
 	</form>

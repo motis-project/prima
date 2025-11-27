@@ -197,7 +197,7 @@ export async function getRideshareToursAsItinerary(
 	};
 }
 
-async function getBlurredAddress(place: Coordinates) {
+export async function getBlurredAddress(place: Coordinates) {
 	const result = await reverseGeocode({
 		baseUrl: env.PUBLIC_MOTIS_URL,
 		querySerializer: { array: { explode: false } } as QuerySerializerOptions,

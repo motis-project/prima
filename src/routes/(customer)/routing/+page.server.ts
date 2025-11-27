@@ -17,6 +17,8 @@ import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhit
 import { rideShareApi } from '$lib/server/booking/index';
 import { expectedConnectionFromLeg } from '$lib/server/booking/expectedConnection';
 import { isOdmLeg } from '$lib/util/booking/checkLegType';
+import { getBlurredAddress } from '$lib/server/booking/rideShare/getRideShareToursAsItinerary';
+import { jsonObjectFrom } from 'kysely/helpers/postgres';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;
@@ -223,38 +225,29 @@ export const actions = {
 
 		try {
 			const getEvents = (eb: ExpressionBuilder<Database, 'request'>, outer: boolean) => [
-				eb
-					.selectFrom('event')
-					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-					.where('event.request', '=', request1)
-					.orderBy('eventGroup.scheduledTimeStart', 'asc')
-					.limit(1)
-					.select('address')
-					.as('firstAddress'),
-				eb
-					.selectFrom('event')
-					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-					.where('event.request', '=', request1)
-					.orderBy('eventGroup.scheduledTimeStart', 'asc')
-					.limit(1)
-					.select('eventGroup.scheduledTimeStart')
-					.as('firstTime'),
-				eb
-					.selectFrom('event')
-					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-					.where('event.request', '=', request1)
-					.orderBy('eventGroup.scheduledTimeStart', 'desc')
-					.limit(1)
-					.select('address')
-					.as('lastAddress'),
-				eb
-					.selectFrom('event')
-					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-					.where('event.request', '=', request1)
-					.orderBy('eventGroup.scheduledTimeStart', 'desc')
-					.limit(1)
-					.select(outer ? 'eventGroup.scheduledTimeEnd' : 'eventGroup.scheduledTimeStart')
-					.as('lastTime')
+				jsonObjectFrom(
+					eb
+						.selectFrom('event')
+						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+						.where('event.request', '=', request1)
+						.orderBy('eventGroup.scheduledTimeStart', 'asc')
+						.limit(1)
+						.select(['scheduledTimeStart as time', 'address', 'lat', 'lng'])
+				).as('firstEvent'),
+				jsonObjectFrom(
+					eb
+						.selectFrom('event')
+						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+						.where('event.request', '=', request1)
+						.orderBy('eventGroup.scheduledTimeStart', 'desc')
+						.limit(1)
+						.select([
+							outer ? 'scheduledTimeEnd as time' : 'scheduledTimeStart as time',
+							'address',
+							'lat',
+							'lng'
+						])
+				).as('lastEvent')
 			];
 
 			if (mode == Mode.TAXI) {
@@ -308,9 +301,11 @@ export const actions = {
 					.where('request.id', '=', request1)
 					.execute();
 				await Promise.all(
-					rideInfo.map((r) =>
-						sendMail(NewRideSharingRequest, 'Neue Mitfahr-Anfrage', r.providerMail, r)
-					)
+					rideInfo.map(async (r) => {
+						r.firstEvent!.address = await getBlurredAddress(r.firstEvent!);
+						r.lastEvent!.address = await getBlurredAddress(r.lastEvent!);
+						sendMail(NewRideSharingRequest, 'Neue Mitfahr-Anfrage', r.providerMail, r);
+					})
 				);
 			}
 		} catch {

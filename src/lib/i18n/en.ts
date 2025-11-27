@@ -182,7 +182,8 @@ const translations: Translations = {
 		yourFeedback: 'Your feedback',
 		good: 'yes',
 		bad: 'no',
-		sendFeedback: 'Send feedback'
+		sendFeedback: 'Send feedback',
+		backToHome: 'Back to the homepage'
 	},
 
 	atDateTime: (timeType, t: Date, isToday: boolean) =>
@@ -352,6 +353,7 @@ const translations: Translations = {
 		addVehicle: 'Add vehicle',
 		uploadPhoto: 'Select photo',
 		savePhoto: 'Save photo',
+		photoSaved: 'Photo saved',
 		smokingOptions: ['not allowed', 'allowed']
 	},
 
