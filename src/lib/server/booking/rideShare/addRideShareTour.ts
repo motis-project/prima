@@ -4,7 +4,7 @@ import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer'
 import { MAX_RIDE_SHARE_TOUR_TIME, SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
 import { carRouting } from '$lib/util/carRouting';
-import { HOUR, MINUTE } from '$lib/util/time';
+import { MINUTE } from '$lib/util/time';
 
 export async function getRideShareTourCommunicatedTimes(
 	time: number,
