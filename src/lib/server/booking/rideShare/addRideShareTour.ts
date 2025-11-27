@@ -4,7 +4,7 @@ import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer'
 import { MAX_RIDE_SHARE_TOUR_TIME, SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
 import { carRouting } from '$lib/util/carRouting';
-import { MINUTE } from '$lib/util/time';
+import { HOUR, MINUTE } from '$lib/util/time';
 
 export async function getRideShareTourCommunicatedTimes(
 	time: number,
@@ -72,8 +72,8 @@ async function util(
 		.innerJoin('request', 'rideShareTour.id', 'request.rideShareTour')
 		.innerJoin('event', 'event.request', 'request.id')
 		.innerJoin('eventGroup', 'event.eventGroupId', 'eventGroup.id')
-		.where('eventGroup.scheduledTimeStart', '>', dayStart.getTime())
-		.where('eventGroup.scheduledTimeStart', '<', dayEnd.getTime())
+		.where('eventGroup.scheduledTimeStart', '>', dayStart.getTime() - 2 * MAX_RIDE_SHARE_TOUR_TIME)
+		.where('eventGroup.scheduledTimeStart', '<', dayEnd.getTime() + 2 * MAX_RIDE_SHARE_TOUR_TIME)
 		.where('rideShareTour.vehicle', '=', vehicle)
 		.where('rideShareTour.cancelled', '=', false)
 		.where('event.cancelled', '=', false)
