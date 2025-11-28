@@ -134,7 +134,7 @@
 
 			<Message class="mb-6" msg={form?.msg || msg} />
 
-			<div class="flex flex-row gap-2">
+			<div class="flex flex-row flex-wrap gap-2">
 				<Select.Root type="single" name="vehicle" bind:value={vehicle}>
 					<Select.Trigger class="overflow-hidden" aria-label={t.ride.vehicle}>
 						{data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate ??
@@ -155,20 +155,20 @@
 				<Button
 					variant="outline"
 					onclick={() => {
-						storeLastPageAndGoto('/account/add-or-edit-ride-share-vehicle');
+						storeLastPageAndGoto(`/account/add-or-edit-ride-share-vehicle/${vehicle}`);
 					}}
 				>
-					<Plus class="mr-2 size-4" />
-					{t.buttons.addVehicle}
+					{t.buttons.editVehicle}
 				</Button>
 
 				<Button
 					variant="outline"
 					onclick={() => {
-						storeLastPageAndGoto(`/account/add-or-edit-ride-share-vehicle/${vehicle}`);
+						storeLastPageAndGoto('/account/add-or-edit-ride-share-vehicle');
 					}}
 				>
-					{t.buttons.editVehicle}
+					<Plus class="mr-2 size-4" />
+					{t.buttons.addVehicle}
 				</Button>
 			</div>
 
