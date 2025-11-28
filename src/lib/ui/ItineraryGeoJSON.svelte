@@ -112,7 +112,7 @@
 		paint={{
 			'line-color': ['get', 'color'],
 			'line-width': 7.5,
-			'line-opacity': 0.8,
+			'line-opacity': 0.8
 		}}
 	/>
 
@@ -126,7 +126,7 @@
 		}}
 		filter={['all', ['any', ['!has', 'level'], ['==', 'level', level]], ['has', 'dashed']]}
 		paint={{
-			'line-dasharray': ['literal', [1,2]],
+			'line-dasharray': ['literal', [1, 2]],
 			'line-color': ['get', 'outlineColor'],
 			'line-width': 7.5,
 			'line-opacity': 0.8,
@@ -142,7 +142,7 @@
 		}}
 		filter={['all', ['any', ['!has', 'level'], ['==', 'level', level]], ['has', 'dashed']]}
 		paint={{
-			'line-dasharray': ['literal', [1,2]],
+			'line-dasharray': ['literal', [1, 2]],
 			'line-color': ['get', 'outlineColor'],
 			'line-width': 7.5,
 			'line-opacity': 0.8,
@@ -158,10 +158,10 @@
 		}}
 		filter={['all', ['any', ['!has', 'level'], ['==', 'level', level]], ['has', 'dashed']]}
 		paint={{
-			'line-dasharray': ['literal', [1,2]],
+			'line-dasharray': ['literal', [1, 2]],
 			'line-color': ['get', 'color'],
 			'line-width': 7.5,
-			'line-opacity': 0.8,
+			'line-opacity': 0.8
 		}}
 	/>
 </GeoJSON>
