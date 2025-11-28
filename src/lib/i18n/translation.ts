@@ -336,6 +336,7 @@ export type Translations = {
 		feedbackPromptProvider: string;
 		howHasItBeen: string;
 		editVehicle: string;
+		defaultLicensePlate: string;
 	};
 };
 

@@ -386,7 +386,8 @@ const translations: Translations = {
 		feedbackPrompt: 'Bitte bewerten Sie Ihre Reise mit',
 		feedbackPromptProvider: 'Bitte bewerten Sie Ihren Mitfahrer',
 		howHasItBeen: 'Sie können Ihre letzte Mitfahrerfahrung hier bewerten',
-		editVehicle: 'Fahrzeug ändern'
+		editVehicle: 'Fahrzeug ändern',
+		defaultLicensePlate: 'Standardfahrzeug'
 	}
 };
 

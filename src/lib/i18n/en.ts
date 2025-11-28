@@ -377,7 +377,8 @@ const translations: Translations = {
 		feedbackPrompt: 'Please rate your journey with',
 		feedbackPromptProvider: 'Please rate your recent ride share passenger',
 		howHasItBeen: 'You can rate your last ride share experience here',
-		editVehicle: 'Edit Vehicle'
+		editVehicle: 'Edit Vehicle',
+		defaultLicensePlate: 'Default vehicle'
 	}
 };
 

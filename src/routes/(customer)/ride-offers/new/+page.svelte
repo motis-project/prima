@@ -139,12 +139,16 @@
 			<div class="flex flex-row gap-2">
 				<Select.Root type="single" name="vehicle" bind:value={vehicle}>
 					<Select.Trigger class="overflow-hidden" aria-label={t.ride.vehicle}>
-						{data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate}
+						{data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate ??
+							t.rideShare.defaultLicensePlate}
 					</Select.Trigger>
 					<Select.Content>
 						{#each data.vehicles as v}
-							<Select.Item value={v.id.toString()} label={v.licensePlate}>
-								{v.licensePlate}
+							<Select.Item
+								value={v.id.toString()}
+								label={v.licensePlate ?? t.rideShare.defaultLicensePlate}
+							>
+								{v.licensePlate ?? t.rideShare.defaultLicensePlate}
 							</Select.Item>
 						{/each}
 					</Select.Content>

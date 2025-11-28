@@ -86,7 +86,9 @@
 				day: 'numeric'
 			})}
 			{t.booking.withVehicle}
-			{data.licensePlate}
+			{#if data.licensePlate !== null}
+				{data.licensePlate}
+			{/if}
 		</p>
 
 		{#each data.requests as n}
