@@ -25,7 +25,7 @@
 	)}
 	style={routeColor(l)}
 	onclick={() => {
-		if (l.tripId) {
+		if (l.tripId && !isOdmLeg(l)) {
 			onClickTrip(l.tripId);
 		} else {
 			console.log('tripId missing', l);
