@@ -3,7 +3,8 @@ import type { Translations } from './translation';
 const translations: Translations = {
 	menu: {
 		connections: 'Verbindungen',
-		bookings: 'Meine Fahrten',
+		bookings: 'Buchungen',
+		rideOffers: 'Mitfahrangebote',
 		account: 'Konto',
 		availability: 'Verfügbarkeit',
 		company: 'Unternehmen',
@@ -207,6 +208,7 @@ const translations: Translations = {
 	bookingsHeader: 'Meine gebuchten und gespeicherten Fahrten',
 	cancelledJourneys: 'Vergangene und stornierte Fahrten',
 	noBookings: 'Sie haben bisher keine gebuchten oder gespeicherten Fahrten.',
+	noRideOffers: 'Sie haben bisher noch keine Mitfahrgelegenheit angeboten.',
 	journeyDetails: 'Verbindungsdetails',
 	transfer: 'Umstieg',
 	transfers: 'Umstiege',

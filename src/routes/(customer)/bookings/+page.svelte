@@ -3,8 +3,6 @@
 	import ItinerarySummary from '../routing/ItinerarySummary.svelte';
 	import { t } from '$lib/i18n/translation';
 	import type { Itinerary } from '$lib/openapi';
-	import { Button } from '$lib/shadcn/button';
-	import { Car } from 'lucide-svelte';
 
 	const { data } = $props();
 	const pastJourneys = data.journeys.filter(
@@ -47,14 +45,6 @@
 {/snippet}
 
 <div class="flex h-full flex-col gap-4 md:min-h-[70dvh] md:w-96">
-	<div class="flex items-center justify-between gap-4">
-		<a href="/ride-offers" class="w-full">
-			<Button class="w-full">
-				<Car class="mr-1 size-4" />
-				{t.ride.myRideOffers}
-			</Button>
-		</a>
-	</div>
 	<h2 class="text-xl">{t.bookingsHeader}</h2>
 	{#if plannedJourneys.length === 0 && pastJourneys.length === 0}
 		<p>{t.noBookings}</p>

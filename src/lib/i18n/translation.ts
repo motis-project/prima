@@ -7,6 +7,7 @@ export type Translations = {
 	menu: {
 		connections: string;
 		bookings: string;
+		rideOffers: string;
 		account: string;
 		availability: string;
 		company: string;
@@ -186,6 +187,7 @@ export type Translations = {
 	bookingsHeader: string;
 	cancelledJourneys: string;
 	noBookings: string;
+	noRideOffers: string;
 	journeyDetails: string;
 	transfer: string;
 	transfers: string;

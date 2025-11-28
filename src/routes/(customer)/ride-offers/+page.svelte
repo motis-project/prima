@@ -57,7 +57,7 @@
 		</a>
 	</div>
 	{#if plannedJourneys.length === 0 && pastJourneys.length === 0}
-		{t.noBookings}
+		{t.noRideOffers}
 	{/if}
 	{@render journeyList(plannedJourneys)}
 	{#if pastJourneys.length !== 0}
