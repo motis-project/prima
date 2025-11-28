@@ -360,6 +360,7 @@ const translations: Translations = {
 	buttons: {
 		addVehicleTitle: 'Fahrzeug für Mitfahrangebote hinzufügen',
 		addVehicle: 'Fahrzeug hinzufügen',
+		editVehicle: 'ausgewähltes Fahrzeug bearbeiten',
 		uploadPhoto: 'Foto auswählen',
 		savePhoto: 'Foto speichern',
 		photoSaved: 'Foto gespeichert',
@@ -386,7 +387,8 @@ const translations: Translations = {
 		feedbackPrompt: 'Bitte bewerten Sie Ihre Reise mit',
 		feedbackPromptProvider: 'Bitte bewerten Sie Ihren Mitfahrer',
 		howHasItBeen: 'Sie können Ihre letzte Mitfahrerfahrung hier bewerten',
-		editVehicle: 'Fahrzeug ändern'
+		editVehicle: 'Fahrzeug ändern',
+		defaultLicensePlate: 'Standardfahrzeug'
 	}
 };
 

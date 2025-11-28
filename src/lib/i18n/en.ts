@@ -351,6 +351,7 @@ const translations: Translations = {
 	buttons: {
 		addVehicleTitle: 'Add vehicle for ride offers',
 		addVehicle: 'Add vehicle',
+		editVehicle: 'edit selected vehicle',
 		uploadPhoto: 'Select photo',
 		savePhoto: 'Save photo',
 		photoSaved: 'Photo saved',
@@ -377,7 +378,8 @@ const translations: Translations = {
 		feedbackPrompt: 'Please rate your journey with',
 		feedbackPromptProvider: 'Please rate your recent ride share passenger',
 		howHasItBeen: 'You can rate your last ride share experience here',
-		editVehicle: 'Edit Vehicle'
+		editVehicle: 'Edit Vehicle',
+		defaultLicensePlate: 'Default vehicle'
 	}
 };
 

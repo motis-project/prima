@@ -146,7 +146,7 @@ export interface Database {
 		color: string | null;
 		model: string | null;
 		smokingAllowed: boolean;
-		licensePlate: string;
+		licensePlate: string | null;
 		picture: string | null;
 	};
 	rideShareRating: {

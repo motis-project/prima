@@ -28,7 +28,7 @@ export async function getRideshareToursAsItinerary(
 			averageRatingCustomer: string | number | null;
 			requestCancelled: boolean;
 		}[];
-		licensePlate: string | undefined;
+		licensePlate: string | undefined | null;
 	}[];
 }> {
 	let query = db
