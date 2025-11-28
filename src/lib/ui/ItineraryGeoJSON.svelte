@@ -27,7 +27,8 @@
 									color,
 									outlineColor,
 									level: 0,
-									way: 0
+									way: 0,
+									dashed: 1
 								},
 								geometry: {
 									type: 'LineString',
@@ -85,6 +86,7 @@
 </script>
 
 <GeoJSON id="route" data={geojson}>
+	<!-- solid -->
 	<Layer
 		id="path-outline"
 		type="line"
@@ -92,7 +94,7 @@
 			'line-join': 'round',
 			'line-cap': 'round'
 		}}
-		filter={['any', ['!has', 'level'], ['==', 'level', level]]}
+		filter={['all', ['any', ['!has', 'level'], ['==', 'level', level]], ['!has', 'dashed']]}
 		paint={{
 			'line-color': ['get', 'outlineColor'],
 			'line-width': 10,
@@ -106,11 +108,60 @@
 			'line-join': 'round',
 			'line-cap': 'round'
 		}}
-		filter={['any', ['!has', 'level'], ['==', 'level', level]]}
+		filter={['all', ['any', ['!has', 'level'], ['==', 'level', level]], ['!has', 'dashed']]}
 		paint={{
 			'line-color': ['get', 'color'],
 			'line-width': 7.5,
-			'line-opacity': 0.8
+			'line-opacity': 0.8,
+		}}
+	/>
+
+	<!-- dashed -->
+	<Layer
+		id="path-outline-dashed-left"
+		type="line"
+		layout={{
+			'line-join': 'round',
+			'line-cap': 'round'
+		}}
+		filter={['all', ['any', ['!has', 'level'], ['==', 'level', level]], ['has', 'dashed']]}
+		paint={{
+			'line-dasharray': ['literal', [1,2]],
+			'line-color': ['get', 'outlineColor'],
+			'line-width': 7.5,
+			'line-opacity': 0.8,
+			'line-offset': -1.25
+		}}
+	/>
+	<Layer
+		id="path-outline-dashed-right"
+		type="line"
+		layout={{
+			'line-join': 'round',
+			'line-cap': 'round'
+		}}
+		filter={['all', ['any', ['!has', 'level'], ['==', 'level', level]], ['has', 'dashed']]}
+		paint={{
+			'line-dasharray': ['literal', [1,2]],
+			'line-color': ['get', 'outlineColor'],
+			'line-width': 7.5,
+			'line-opacity': 0.8,
+			'line-offset': 1.25
+		}}
+	/>
+	<Layer
+		id="path-dashed"
+		type="line"
+		layout={{
+			'line-join': 'round',
+			'line-cap': 'round'
+		}}
+		filter={['all', ['any', ['!has', 'level'], ['==', 'level', level]], ['has', 'dashed']]}
+		paint={{
+			'line-dasharray': ['literal', [1,2]],
+			'line-color': ['get', 'color'],
+			'line-width': 7.5,
+			'line-opacity': 0.8,
 		}}
 	/>
 </GeoJSON>
