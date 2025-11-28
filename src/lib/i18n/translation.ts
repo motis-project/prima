@@ -7,6 +7,7 @@ export type Translations = {
 	menu: {
 		connections: string;
 		bookings: string;
+		rideOffers: string;
 		account: string;
 		availability: string;
 		company: string;
@@ -93,6 +94,7 @@ export type Translations = {
 		// Journey
 		cancelled: string;
 		stillNegotiating: string;
+		accepted: string;
 		openRequest: string;
 
 		// Feedback
@@ -106,6 +108,7 @@ export type Translations = {
 
 		//Ride Sharing
 		vehicleEditedSuccessfully: string;
+		rideShareAcceptError: string;
 	};
 	admin: {
 		completedToursSubtitle: string;
@@ -186,6 +189,7 @@ export type Translations = {
 	bookingsHeader: string;
 	cancelledJourneys: string;
 	noBookings: string;
+	noRideOffers: string;
 	journeyDetails: string;
 	transfer: string;
 	transfers: string;
@@ -337,6 +341,7 @@ export type Translations = {
 		feedbackPromptProvider: string;
 		howHasItBeen: string;
 		editVehicle: string;
+		closeTo: string;
 		defaultLicensePlate: string;
 	};
 };

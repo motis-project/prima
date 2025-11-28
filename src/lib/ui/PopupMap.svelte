@@ -78,7 +78,7 @@
 
 {#snippet contextMenu(e: maplibregl.MapMouseEvent, close: () => void)}
 	<Button
-		variant="outline"
+		variant="default"
 		onclick={() => {
 			from = posToLocation(e.lngLat, level);
 			fromMarker?.setLngLat(from.value.match!);
@@ -88,7 +88,7 @@
 		From
 	</Button>
 	<Button
-		variant="outline"
+		variant="default"
 		onclick={() => {
 			to = posToLocation(e.lngLat, level);
 			toMarker?.setLngLat(to.value.match!);

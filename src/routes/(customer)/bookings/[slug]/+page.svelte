@@ -20,7 +20,7 @@
 	import { MapIcon } from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
-	import { isOdmLeg, isTaxiLeg } from '$lib/util/booking/checkLegType';
+	import { isOdmLeg, isRideShareLeg, isTaxiLeg } from '$lib/util/booking/checkLegType';
 
 	const { data } = $props();
 
@@ -139,7 +139,10 @@
 		</p>
 		{#if data.pending}
 			<Message msg={msg('stillNegotiating', 'warning')} />
+		{:else if data.journey.legs.some(isRideShareLeg) && !data.pending}
+			<Message msg={msg('accepted', 'success')} />
 		{/if}
+
 		<ConnectionDetail
 			itinerary={data.journey}
 			onClickStop={(_name: string, stopId: string, time: Date) =>
