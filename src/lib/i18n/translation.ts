@@ -314,6 +314,7 @@ export type Translations = {
 	buttons: {
 		addVehicleTitle: string;
 		addVehicle: string;
+		editVehicle: string;
 		uploadPhoto: string;
 		savePhoto: string;
 		photoSaved: string;
@@ -341,6 +342,7 @@ export type Translations = {
 		howHasItBeen: string;
 		editVehicle: string;
 		closeTo: string;
+		defaultLicensePlate: string;
 	};
 };
 

@@ -19,6 +19,9 @@
 
 	const { data, form } = $props();
 	let showTooltip = $state(false);
+	const vehicles = data.vehicles.map((v) => {
+		return { ...v, licensePlate: v.licensePlate ?? t.rideShare.defaultLicensePlate };
+	});
 	let region: TCountryCode | undefined = $state(data.region ? (data.region as TCountryCode) : 'DE');
 	type Vehicle = {
 		luggage: number;
@@ -27,7 +30,7 @@
 		model: string | null;
 		licensePlate: string;
 	};
-	const vehicleRows = data.vehicles;
+	const vehicleRows = vehicles;
 	const vehicleCols = [
 		{
 			text: [t.rideShare.luggage],
@@ -54,7 +57,7 @@
 	let selectedVehicle: Vehicle[] | undefined = $state(undefined);
 	$effect(() => {
 		if (selectedVehicle !== undefined && selectedVehicle.length !== 0) {
-			const selectedVehicleId = data.vehicles.find(
+			const selectedVehicleId = vehicles.find(
 				(v) => v.licensePlate === selectedVehicle![0].licensePlate
 			)!.id;
 			storeLastPageAndGoto(`/account/add-or-edit-ride-share-vehicle/${selectedVehicleId}`);

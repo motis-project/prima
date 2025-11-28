@@ -33,7 +33,7 @@
 		color?: string | null;
 		model?: string | null;
 		smokingAllowed?: boolean;
-		licensePlate?: string;
+		licensePlate?: string | null;
 		vehiclePicturePath?: string | null;
 		vehicleId?: number;
 	} = $props();
@@ -98,7 +98,7 @@
 				name="licensePlate"
 				type="string"
 				placeholder={LICENSE_PLATE_PLACEHOLDER}
-				value={licensePlate}
+				value={licensePlate ?? undefined}
 			/>
 		</Panel>
 		<Panel title={t.rideShare.maxPassengers} subtitle={''}>

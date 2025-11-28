@@ -86,7 +86,7 @@
 				day: 'numeric'
 			})}
 			{t.booking.withVehicle}
-			{data.licensePlate}
+			{data.licensePlate ?? t.rideShare.defaultLicensePlate}
 		</p>
 
 		{#each data.requests as n}
