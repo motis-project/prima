@@ -93,6 +93,7 @@ const translations: Translations = {
 		// Journey
 		cancelled: 'This trip has been cancelled.',
 		stillNegotiating: 'The request has been sent. This ride is still being negotiated.',
+		accepted: 'This ride has been agreed upon.',
 		openRequest: 'This ride offer has open requests.',
 
 		// Feedback
@@ -105,7 +106,8 @@ const translations: Translations = {
 		fileTooLarge: 'file too large',
 
 		//Ride Sharing
-		vehicleEditedSuccessfully: 'Vehicle edited successfully'
+		vehicleEditedSuccessfully: 'Vehicle edited successfully',
+		rideShareAcceptError: 'Error. Possibly conflict with another accepted ride.'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',

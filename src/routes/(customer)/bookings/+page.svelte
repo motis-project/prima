@@ -14,11 +14,11 @@
 </script>
 
 {#snippet cancelled()}
-	<Alert class="size-4" />
+	<Alert class="size-4 shrink-0" />
 	{t.msg.cancelled}
 {/snippet}
 {#snippet negotiating()}
-	<Alert class="size-4" />
+	<Alert class="size-4 shrink-0" />
 	{t.msg.stillNegotiating}
 {/snippet}
 

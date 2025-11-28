@@ -94,6 +94,7 @@ export type Translations = {
 		// Journey
 		cancelled: string;
 		stillNegotiating: string;
+		accepted: string;
 		openRequest: string;
 
 		// Feedback
@@ -107,6 +108,7 @@ export type Translations = {
 
 		//Ride Sharing
 		vehicleEditedSuccessfully: string;
+		rideShareAcceptError: string;
 	};
 	admin: {
 		completedToursSubtitle: string;

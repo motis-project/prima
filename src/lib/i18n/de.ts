@@ -97,6 +97,7 @@ const translations: Translations = {
 		cancelled: 'Diese Fahrt wurde storniert.',
 		stillNegotiating:
 			'Die Anfrage wurde gesendet. Die Mitfahrgelegenheit ist noch nicht fest vereinbart.',
+		accepted: 'Die Fahrt ist fest vereinbart.',
 		openRequest: 'Dieses Mitfahrangebot hat offene Anfragen.',
 
 		// Feedback
@@ -109,7 +110,8 @@ const translations: Translations = {
 		fileTooLarge: 'Datei ist zu groß',
 
 		//Ride Sharing
-		vehicleEditedSuccessfully: 'Fahrzeug erfolgreich geändert'
+		vehicleEditedSuccessfully: 'Fahrzeug erfolgreich geändert',
+		rideShareAcceptError: 'Fehler. Möglicherweise Konflikt mit anderer Mitfahrt.'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',
