@@ -360,6 +360,7 @@ const translations: Translations = {
 	buttons: {
 		addVehicleTitle: 'Fahrzeug für Mitfahrangebote hinzufügen',
 		addVehicle: 'Fahrzeug hinzufügen',
+		editVehicle: 'ausgewähltes Fahrzeug bearbeiten',
 		uploadPhoto: 'Foto auswählen',
 		savePhoto: 'Foto speichern',
 		photoSaved: 'Foto gespeichert',

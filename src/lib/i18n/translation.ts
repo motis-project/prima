@@ -310,6 +310,7 @@ export type Translations = {
 	buttons: {
 		addVehicleTitle: string;
 		addVehicle: string;
+		editVehicle: string;
 		uploadPhoto: string;
 		savePhoto: string;
 		photoSaved: string;

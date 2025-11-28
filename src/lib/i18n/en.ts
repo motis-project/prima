@@ -351,6 +351,7 @@ const translations: Translations = {
 	buttons: {
 		addVehicleTitle: 'Add vehicle for ride offers',
 		addVehicle: 'Add vehicle',
+		editVehicle: 'edit selected vehicle',
 		uploadPhoto: 'Select photo',
 		savePhoto: 'Save photo',
 		photoSaved: 'Photo saved',

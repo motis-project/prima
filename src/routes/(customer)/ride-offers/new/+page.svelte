@@ -50,9 +50,7 @@
 	let time = $state<Date>(new Date(Date.now() + HOUR * 2));
 	let timeType = $state<TimeType>('departure');
 
-	let vehicle = $state<string | undefined>(
-		data.vehicles.length ? data.vehicles[0].id.toString() : undefined
-	);
+	let vehicle = $state<string>(data.vehicles[0].id.toString());
 
 	const getLocation = () => {
 		if (navigator && navigator.geolocation) {
@@ -162,6 +160,15 @@
 				>
 					<Plus class="mr-2 size-4" />
 					{t.buttons.addVehicle}
+				</Button>
+
+				<Button
+					variant="outline"
+					onclick={() => {
+						storeLastPageAndGoto(`/account/add-or-edit-ride-share-vehicle/${vehicle}`);
+					}}
+				>
+					{t.buttons.editVehicle}
 				</Button>
 			</div>
 
