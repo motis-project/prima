@@ -340,6 +340,7 @@ export type Translations = {
 		feedbackPromptProvider: string;
 		howHasItBeen: string;
 		editVehicle: string;
+		closeTo: string;
 	};
 };
 

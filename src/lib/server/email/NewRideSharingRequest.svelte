@@ -25,8 +25,8 @@
 		nach {journeyLast}:
 	</p>
 	<ul>
-		<li>Von: {firstEvent.address}</li>
-		<li>Nach: {lastEvent.address}</li>
+		<li>Von: in der Nähe von {firstEvent.address}</li>
+		<li>Nach: in der Nähe von {lastEvent.address}</li>
 		<li>
 			Geplanter Start: ~{formatTime(firstEvent.time)}
 		</li>

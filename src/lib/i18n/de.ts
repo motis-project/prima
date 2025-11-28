@@ -77,7 +77,7 @@ const translations: Translations = {
 		requestCancelled: 'Fahrt storniert',
 
 		// Booking
-		noRouteFound: 'Keine Route gefunden. Die maximale Fahrtzeit beträgt eine Stunde.',
+		noRouteFound: 'Keine Route gefunden. Die maximale Fahrtzeit beträgt zwei Stunden.',
 		distanceTooLong: 'Distanz zu lang.',
 		startDestTooClose: 'Distanz zu kurz.',
 		maxTravelTimeExceeded: 'Fahrstrecke zu lang.',
@@ -390,7 +390,8 @@ const translations: Translations = {
 		feedbackPrompt: 'Bitte bewerten Sie Ihre Reise mit',
 		feedbackPromptProvider: 'Bitte bewerten Sie Ihren Mitfahrer',
 		howHasItBeen: 'Sie können Ihre letzte Mitfahrerfahrung hier bewerten',
-		editVehicle: 'Fahrzeug ändern'
+		editVehicle: 'Fahrzeug ändern',
+		closeTo: 'in der Nähe von'
 	}
 };
 

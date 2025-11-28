@@ -74,7 +74,7 @@ const translations: Translations = {
 		requestCancelled: 'Ride cancelled',
 
 		// Booking
-		noRouteFound: 'No route found. The maximum travel duration is one hour.',
+		noRouteFound: 'No route found. The maximum travel duration is two hours.',
 		distanceTooLong: 'Distance too long.',
 		startDestTooClose: 'Distance too short.',
 		maxTravelTimeExceeded: 'Maximum travel time exceeded.',
@@ -381,7 +381,8 @@ const translations: Translations = {
 		feedbackPrompt: 'Please rate your journey with',
 		feedbackPromptProvider: 'Please rate your recent ride share passenger',
 		howHasItBeen: 'You can rate your last ride share experience here',
-		editVehicle: 'Edit Vehicle'
+		editVehicle: 'Edit Vehicle',
+		closeTo: 'close to'
 	}
 };
 
