@@ -14,7 +14,6 @@
 	import { defaultCarPicture } from '$lib/constants.js';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { enhance } from '$app/forms';
 	import type { Msg } from '$lib/msg';
 
 	const {
@@ -86,14 +85,10 @@
 		enctype="multipart/form-data"
 		method="post"
 		{action}
-		use:enhance={() => {
-			loading = true;
-			return async ({ update }) => {
-				await update();
-				loading = false;
-			};
-		}}
 		class="flex flex-col gap-4"
+		onsubmit={() => {
+			loading = true;
+		}}
 	>
 		<h2 class="font-semibold">
 			{!isEditMode ? t.rideShare.createNewVehicle : t.rideShare.editVehicle}
