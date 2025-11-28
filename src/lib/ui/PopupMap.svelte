@@ -188,7 +188,7 @@
 				id="ride-sharing-areas-labels"
 				type="symbol"
 				layout={{
-					'symbol-placement': 'point',
+					'symbol-placement': 'line',
 					'text-field': ['concat', t.rideSharing + ' ', ['get', 'name']],
 					'text-font': ['Noto Sans Display Regular'],
 					'text-size': 16
