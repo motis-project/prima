@@ -2,6 +2,8 @@ package de.motis.prima.services
 
 import retrofit2.Call
 import retrofit2.Response
+import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -43,11 +45,53 @@ interface ApiService {
         @Query("deviceId") deviceId: String,
         @Query("token") token: String
     ): Response<Void>
+
+    @POST("api/driver/availability")
+    suspend fun getAvailability(
+        @Body request: AvailabilityRequest
+    ): Response<AvailabilityResponse>
+
+    @DELETE("api/driver/availability")
+    suspend fun deleteAvailability(
+        @Body request: AvailabilityRequest
+    ): Response<AvailabilityResponse>
+
+    @PUT("/taxi/availability")
+    suspend fun setAvailability(
+        // {vehicleId: 1, from: 1760104800000, to: 1760106600000}
+        @Query("vehicleId") vehicleId: String,
+        @Query("from") from: String,
+        @Query("to") to: String
+    ): Response<Void>
 }
+
+data class AvailabilityRequest(
+    val vehicleId: Int,
+    val from: List<Long>,
+    val to: List<Long>,
+    val add: List<Boolean>,
+    val offset: Int,
+    val date: String
+)
+
+data class AvailabilityResponse(
+    val tours: List<Tour> = emptyList(),
+    val vehicles: List<Vehicle> = emptyList(),
+    val from: List<Long> = emptyList(),
+    val to: List<Long> = emptyList(),
+    val add: List<Boolean> = emptyList()
+)
+
+data class Availability(
+    val id: Int,
+    val startTime: Long,
+    val endTime: Long,
+)
 
 data class Vehicle(
     val id: Int,
-    val licensePlate: String
+    val licensePlate: String,
+    val availability: List<Availability> = emptyList()
 )
 
 data class Event(
@@ -82,8 +126,6 @@ data class Tour(
     val fare: Int,
     val startTime: Long,
     val endTime: Long,
-    val companyName: String,
-    val companyAddress: String,
     val vehicleId: Int,
     val licensePlate: String,
     val events: List<Event>
