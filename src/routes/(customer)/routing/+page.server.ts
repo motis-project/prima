@@ -140,6 +140,7 @@ export const actions = {
 				{ kidsThreeToFour },
 				{ kidsFiveToSix }
 			);
+			booking_errors?.inc();
 			return { msg: msg('unknownError') };
 		}
 		const isDirect = legs.length === 1;
@@ -202,6 +203,7 @@ export const actions = {
 				{ connection1 },
 				{ connection2 }
 			);
+			booking_errors?.inc();
 			return { msg: msg('bookingError') };
 		}
 		const request1: number | null = bookingResult.request1Id ?? null;
