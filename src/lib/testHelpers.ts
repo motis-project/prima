@@ -73,12 +73,42 @@ export const setTour = async (
 		.executeTakeFirst();
 };
 
+export const setRideshareVehicle = async (owner: number) => {
+	return await db
+		.insertInto('rideShareVehicle')
+		.values({ owner, smokingAllowed: false, passengers: 1, luggage: 0 })
+		.returning('rideShareVehicle.id')
+		.executeTakeFirst();
+};
+
+export const setRideshareTour = async (
+	vehicle: number,
+	departure: UnixtimeMs,
+	arrival: UnixtimeMs
+) => {
+	return await db
+		.insertInto('rideShareTour')
+		.values({
+			vehicle,
+			communicatedStart: departure,
+			communicatedEnd: arrival,
+			cancelled: false,
+			passengers: 1,
+			luggage: 0,
+			earliestStart: departure,
+			latestEnd: arrival
+		})
+		.returning('rideShareTour.id')
+		.executeTakeFirst();
+};
+
 export const setRequest = async (
 	tour: number,
 	customer: number,
 	ticketCode: string,
 	passengers?: number,
-	ticketChecked?: boolean
+	ticketChecked?: boolean,
+	isRideShareTour: boolean = false
 ) => {
 	return await db
 		.insertInto('request')
@@ -87,7 +117,7 @@ export const setRequest = async (
 			bikes: 0,
 			luggage: 0,
 			wheelchairs: 0,
-			tour,
+			tour: isRideShareTour ? null : tour,
 			customer,
 			ticketCode,
 			ticketChecked: ticketChecked == undefined ? false : ticketChecked,
@@ -96,7 +126,8 @@ export const setRequest = async (
 			kidsThreeToFour: 0,
 			kidsZeroToTwo: 0,
 			ticketPrice: (passengers ?? 1) * 300,
-			pending: false
+			pending: false,
+			rideShareTour: isRideShareTour ? tour : null
 		})
 		.returning('id')
 		.executeTakeFirstOrThrow();
@@ -119,7 +150,7 @@ export const setEvent = async (
 				nextLegDuration: 0,
 				lat,
 				lng,
-				address: ''
+				address: lat + ',' + lng
 			})
 			.returning('eventGroup.id')
 			.executeTakeFirstOrThrow()
@@ -144,7 +175,7 @@ export const addTestUser = async (company?: number) => {
 		.insertInto('user')
 		.values({
 			email: company === undefined ? 'test@user.de' : 'company@owner.de',
-			name: '',
+			name: company === undefined ? 'customer' : 'owner',
 			firstName: '',
 			gender: 'o',
 			isTaxiOwner: company !== undefined,
