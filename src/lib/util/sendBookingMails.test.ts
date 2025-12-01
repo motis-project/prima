@@ -16,6 +16,7 @@ import { generateMail } from '$lib/server/sendMail';
 import { sendBookingMails } from './sendBookingEmails';
 import { Mode } from '$lib/server/booking/mode';
 import { db } from '$lib/server/db';
+import { HOUR } from './time';
 
 let sessionToken: string;
 
@@ -33,7 +34,7 @@ describe('tests for sending tour emails', () => {
 		const t = await setTour(v, 0, 0, 1);
 		const r = (await setRequest(t!.id, mockUserId, '')).id;
 		await setEvent(r, 0, true, 1, 1);
-		await setEvent(r, 1000 * 3600 * 5, false, 2, 2);
+		await setEvent(r, 5 * HOUR, false, 2, 2);
 		const r2 = (await setRequest(t!.id, mockUserId, '')).id;
 		await setEvent(r2, 0, true, 1, 1);
 		await setEvent(r2, 0, false, 1, 1);
@@ -51,7 +52,6 @@ describe('tests for sending tour emails', () => {
 				mailSubj = subject;
 				mailAddr = email;
 				mailBody = generateMail(template, props);
-				console.log(mailBody);
 			}
 		);
 		expect(mailSubj).toBe('Neue Beförderung');
@@ -74,10 +74,10 @@ describe('tests for sending tour emails', () => {
 		const t = await setRideshareTour(v!.id, 0, 0);
 		const r = (await setRequest(t!.id, mockOwnerId, '', 1, false, true)).id;
 		await setEvent(r, 0, true, 1, 1);
-		await setEvent(r, 1000 * 3600 * 5, false, 2, 2);
+		await setEvent(r, 5 * HOUR, false, 2, 2);
 		const r2 = (await setRequest(t!.id, mockUserId, '', 1, false, true)).id;
-		await setEvent(r2, 1000 * 3600 * 1, true, 1, 1);
-		await setEvent(r2, 1000 * 3600 * 4, false, 51.29468377345111, 14.833542206420248);
+		await setEvent(r2, 1 * HOUR, true, 1, 1);
+		await setEvent(r2, 4 * HOUR, false, 51.29468377345111, 14.833542206420248);
 
 		let mailSubj = undefined;
 		let mailAddr = undefined;
@@ -92,7 +92,6 @@ describe('tests for sending tour emails', () => {
 				mailSubj = subject;
 				mailAddr = email;
 				mailBody = generateMail(template, props);
-				console.log(mailBody);
 			}
 		);
 		expect(mailSubj).toBe('Neue Mitfahr-Anfrage');
