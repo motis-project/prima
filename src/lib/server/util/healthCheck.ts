@@ -1,9 +1,9 @@
 import { getToursWithRequests } from '../db/getTours';
 import type { ToursWithRequests, TourWithRequestsEvent } from '$lib/util/getToursTypes';
-import { groupBy } from '../../util/groupBy';
-import { Interval } from '../../util/interval';
-import { DAY, HOUR } from '../../util/time';
-import { isSamePlace } from '../booking/isSamePlace';
+import { groupBy } from '$lib/util/groupBy';
+import { Interval } from '$lib/util/interval';
+import { DAY, HOUR } from '$lib/util/time';
+import { isSamePlace } from '$lib/util/booking/isSamePlace';
 import { SCHEDULED_TIME_BUFFER_PICKUP, PASSENGER_CHANGE_DURATION } from '$lib/constants';
 import { sortEventsByTime } from '$lib/testHelpers';
 import { reverseGeo } from '$lib/server/util/reverseGeocode';
