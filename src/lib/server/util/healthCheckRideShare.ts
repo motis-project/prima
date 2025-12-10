@@ -1,5 +1,5 @@
-import { Interval } from '../../util/interval';
-import { isSamePlace } from '../booking/isSamePlace';
+import { Interval } from '$lib/util/interval';
+import { isSamePlace } from '$lib/util/booking/isSamePlace';
 import { SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import { sortEventsByTime } from '$lib/testHelpers';
 import { reverseGeo } from '$lib/server/util/reverseGeocode';

@@ -8,6 +8,8 @@
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import Bell from 'lucide-svelte/icons/bell';
+	import BellRing from 'lucide-svelte/icons/bell-ring';
 	import NoLuggageIcon from 'lucide-svelte/icons/circle-slash-2';
 	import LuggageIcon from 'lucide-svelte/icons/luggage';
 	import WheelchairIcon from 'lucide-svelte/icons/accessibility';
@@ -45,6 +47,7 @@
 	import Footer from '$lib/ui/Footer.svelte';
 	import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
+	import { matchesDesiredTrip } from '$lib/util/booking/matchesDesiredTrip';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -216,6 +219,44 @@
 	const applyPosition = (position: { coords: { latitude: number; longitude: number } }) => {
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
 	};
+
+	let alertId = $derived(
+		fromMatch.match === undefined || toMatch.match === undefined
+			? undefined
+			: data.user.desiredTrips.find((t) =>
+					matchesDesiredTrip(
+						fromMatch.match === undefined
+							? undefined
+							: { lat: fromMatch.match.lat, lng: fromMatch.match.lon },
+						toMatch.match === undefined
+							? undefined
+							: { lat: toMatch.match.lat, lng: toMatch.match.lon },
+						time.getTime(),
+						timeType === 'arrival',
+						luggageToInt(luggage),
+						passengers,
+						t
+					)
+				)?.id
+	);
+
+	async function toggleAlert() {
+		const response = await fetch('/api/addOrRemoveDesiredTrip', {
+			method: 'POST',
+			body: JSON.stringify({
+				from: { lat: from.value.match!.lat, lng: from.value.match!.lon },
+				to: { lat: to.value.match!.lat, lng: to.value.match!.lon },
+				time: time.getTime(),
+				startFixed: timeType === 'arrival',
+				alertId: alertId ?? null,
+				passengers,
+				luggage: luggageToInt(luggage)
+			})
+		});
+		if (response.ok) {
+			data.user.desiredTrips = await response.json();
+		}
+	}
 
 	let loading = $state(false);
 </script>
@@ -442,6 +483,21 @@
 						>
 							<MapIcon class="h-[1.2rem] w-[1.2rem]" />
 						</Button>
+						{#if data.user.name !== undefined}
+							<Button
+								onclick={async () => toggleAlert()}
+								size="icon"
+								variant="outline"
+								class="ml-auto"
+								disabled={from.value.match === undefined || to.value.match === undefined}
+							>
+								{#if alertId !== undefined}
+									<BellRing class="h-[1.2rem] w-[1.2rem]" />
+								{:else}
+									<Bell class="h-[1.2rem] w-[1.2rem]" />
+								{/if}
+							</Button>
+						{/if}
 						<Button
 							size="icon"
 							variant="outline"

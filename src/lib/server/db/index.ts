@@ -156,6 +156,20 @@ export interface Database {
 		request: number;
 		ratedIsCustomer: boolean;
 	};
+	desiredRideShare: {
+		id: Generated<number>;
+		fromLat: number;
+		fromLng: number;
+		toLat: number;
+		toLng: number;
+		fromAddress: string;
+		toAddress: string;
+		startFixed: boolean;
+		time: number;
+		luggage: number;
+		passengers: number;
+		interestedUser: number;
+	};
 }
 
 export const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
