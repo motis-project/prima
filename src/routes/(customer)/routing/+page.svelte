@@ -206,10 +206,11 @@
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
 	};
 
+	let desiredTrips = $state(data.user.desiredTrips);
 	let alertId = $derived(
 		fromMatch.match === undefined || toMatch.match === undefined
 			? undefined
-			: data.user.desiredTrips.find((t) =>
+			: desiredTrips.find((t) =>
 					matchesDesiredTrip(
 						fromMatch.match === undefined
 							? undefined
@@ -225,10 +226,12 @@
 					)
 				)?.id
 	);
-
 	async function toggleAlert() {
 		const response = await fetch('/api/addOrRemoveDesiredTrip', {
 			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
 			body: JSON.stringify({
 				from: { lat: from.value.match!.lat, lng: from.value.match!.lon },
 				to: { lat: to.value.match!.lat, lng: to.value.match!.lon },
@@ -240,7 +243,7 @@
 			})
 		});
 		if (response.ok) {
-			data.user.desiredTrips = await response.json();
+			desiredTrips = await response.json();
 		}
 	}
 
