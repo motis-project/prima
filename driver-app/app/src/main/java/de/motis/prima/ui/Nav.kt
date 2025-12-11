@@ -72,7 +72,7 @@ fun Nav(intent: Intent?, viewModel: NavViewModel = hiltViewModel()) {
             else if (selectedVehicle.id == 0) {
                 "vehicles"
             } else {
-                "tours"
+                "availability"//"tours"
             }
         }
 
@@ -113,6 +113,10 @@ fun Nav(intent: Intent?, viewModel: NavViewModel = hiltViewModel()) {
             composable(route = "fare/{tourId}") {
                 val tourId = it.arguments?.getString("tourId")?.toInt()
                 Fare(navController, tourId!!)
+            }
+
+            composable(route = "availability") {
+                Availability(navController)
             }
         }
     }
