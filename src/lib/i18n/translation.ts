@@ -239,6 +239,7 @@ export type Translations = {
 	bookingDeadlineContent: string;
 	logo: string;
 	toConnectionSearch: string;
+	addAlert: string;
 
 	booking: {
 		bookHere: string;

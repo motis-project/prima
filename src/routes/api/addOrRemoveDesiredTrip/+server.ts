@@ -16,6 +16,7 @@ export const POST = async (event: RequestEvent) => {
 		startFixed,
 		luggage,
 		passengers,
+		url,
 		alertId
 	}: {
 		from: Coordinates;
@@ -24,6 +25,7 @@ export const POST = async (event: RequestEvent) => {
 		startFixed: boolean;
 		luggage: number;
 		passengers: number;
+		url: string;
 		alertId: number | null;
 	} = await event.request.json();
 	if (alertId === null || alertId === undefined) {
@@ -40,7 +42,8 @@ export const POST = async (event: RequestEvent) => {
 				toAddress: '',
 				time,
 				luggage,
-				passengers
+				passengers,
+				url
 			})
 			.execute();
 	} else {

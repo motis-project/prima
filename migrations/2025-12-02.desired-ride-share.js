@@ -13,6 +13,7 @@ export async function up(db) {
         .addColumn('passengers', 'integer', (col) => col.notNull())
 		.addColumn('time', 'bigint', (col) => col.notNull())
         .addColumn('interested_user', 'integer', (col) => col.references('user.id').notNull())
+		.addColumn('url', 'varchar', (col) => col.notNull())
 		.execute();
 }
 

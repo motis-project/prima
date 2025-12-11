@@ -168,6 +168,7 @@ export interface Database {
 		luggage: number;
 		passengers: number;
 		interestedUser: number;
+		url: string;
 	};
 }
 

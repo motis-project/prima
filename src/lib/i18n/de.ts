@@ -273,6 +273,7 @@ const translations: Translations = {
 		'min. 1 Stunde im Voraus, bei Buchungen für das Wochenende bis Freitag 18 Uhr',
 	logo: 'Das PriMa+ÖV Logo. Ikonographische Darstellung eines Autos, Busses, Zuges und Taxis.',
 	toConnectionSearch: 'Zur Verbindungssuche',
+	addAlert: 'Benachrichtung erhalten wenn eine Mitfahrt möglich ist',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
