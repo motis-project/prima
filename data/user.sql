@@ -1,5 +1,6 @@
 INSERT INTO "user" ("email", "is_taxi_owner", "is_admin", "password_hash", "name", "phone", "company_id", "is_email_verified") VALUES
-('foobar@example.com',	'f',	'f',	'$argon2id$v=19$m=19456,t=2,p=1$9fW6tfdNBJHtNC/RgNpMgg$z+hlFH7KXxKbIyt1q4fTK134FYcF8y10ZjSslzyqmFc',	'John',	'0815-1231234',	NULL, 't'),
+('alice@example.com',	'f',	'f',	'$argon2id$v=19$m=19456,t=2,p=1$9fW6tfdNBJHtNC/RgNpMgg$z+hlFH7KXxKbIyt1q4fTK134FYcF8y10ZjSslzyqmFc',	'Alice',	'0815-1231234',	NULL, 't'),
+('bob@example.com',	'f',	'f',	'$argon2id$v=19$m=19456,t=2,p=1$9fW6tfdNBJHtNC/RgNpMgg$z+hlFH7KXxKbIyt1q4fTK134FYcF8y10ZjSslzyqmFc',	'Bob',	NULL,	NULL, 't'),
 ('maintainer@example.com',	'f',	't',	'$argon2id$v=19$m=19456,t=2,p=1$ZtuiFUoQYRyXUQRduYBkfQ$E+aREm5wKl8Ldn5ASP3wZnPf/jRriMIQmR3L3BhDaSA',	'John',	NULL,	NULL, 't'),
 ('weisswasser@example.com',	't',	'f',	'$argon2id$v=19$m=19456,t=2,p=1$BoC0z8dXsKPZmUMvpnRXPw$Hc6rK5wlUNizsw5GQFjJ9oQ9uMhgWln42Ak4J2rO8yc',	'John',	NULL,	1, 't'),
 ('gablenz@example.com',	't',	'f',	'$argon2id$v=19$m=19456,t=2,p=1$3/CML3alHoFB7kYR3Fz9Hw$qQ7MYo7N6NO0SeCKXFs4VrPdiwGAT0FhE5KmwC0fv8U',	'John',	NULL,	2, 't'),

@@ -10,4 +10,5 @@ INSERT INTO "ride_share_vehicle" ("passengers", "luggage", "color", "model", "sm
 (1,	0,	NULL,	NULL,	'0',	NULL,	8,	NULL),
 (1,	0,	NULL,	NULL,	'0',	NULL,	9,	NULL),
 (1,	0,	NULL,	NULL,	'0',	NULL,	10,	NULL),
-(1,	0,	NULL,	NULL,	'0',	NULL,	11,	NULL);
+(1,	0,	NULL,	NULL,	'0',	NULL,	11,	NULL),
+(1,	0,	NULL,	NULL,	'0',	NULL,	12,	NULL);
