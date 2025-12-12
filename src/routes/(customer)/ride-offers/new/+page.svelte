@@ -143,7 +143,12 @@
 			onValueChange={() => pushState('', {})}
 		/>
 	{:else if page.state.showMap}
-		<PopupMap bind:from bind:to itinerary={page.state.selectedItinerary} rideSharingBounds={data.rideSharingBounds} />
+		<PopupMap
+			bind:from
+			bind:to
+			itinerary={page.state.selectedItinerary}
+			rideSharingBounds={data.rideSharingBounds}
+		/>
 	{/if}
 
 	<div class="contents" class:hidden={page.state.selectFrom || page.state.selectTo}>
