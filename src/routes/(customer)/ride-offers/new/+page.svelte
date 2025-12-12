@@ -4,10 +4,13 @@
 	import { pushState, replaceState } from '$app/navigation';
 	import Message from '$lib/ui/Message.svelte';
 	import { type Msg } from '$lib/msg';
-	import { t } from '$lib/i18n/translation';
+	import { t, language} from '$lib/i18n/translation';
+
 	import {
 		ArrowUpDown,
 		Circle,
+		CircleMinus,
+		CirclePlus,
 		EllipsisVertical,
 		ChevronRightIcon,
 		ChevronDown,
@@ -15,7 +18,9 @@
 		LocateFixed,
 		MapIcon,
 		Plus,
-		Car
+		Car,
+		Users,
+		Luggage
 	} from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
@@ -23,6 +28,8 @@
 	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
 	import AddressTypeahead from '$lib/ui/AddressTypeahead.svelte';
 	import { Input } from '$lib/shadcn/input';
+	import * as RadioGroup from '$lib/shadcn/radio-group';
+	import { Label } from '$lib/shadcn/label';
 
 	import DateInput from '../../routing/DateInput.svelte';
 	import * as Dialog from '$lib/shadcn/dialog';
@@ -38,6 +45,7 @@
 	import { HOUR } from '$lib/util/time';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
 	import DialogHeader from '$lib/shadcn/dialog/dialog-header.svelte';
+	import DialogContent from '$lib/shadcn/dialog/dialog-content.svelte';
 
 	const { data, form } = $props();
 
@@ -57,6 +65,14 @@
 	let timeType = $state<TimeType>('departure');
 
 	let vehicle = $state<string>(data.vehicles[0].id.toString());
+	let maxPassengers = $state<number>(
+		data.vehicles.find((v) => v.id.toString() == vehicle)?.passengers ?? 3
+	);
+	let passengers = $state(maxPassengers);
+	let maxLuggage = $state<number>(
+		data.vehicles.find((v) => v.id.toString() == vehicle)?.luggage ?? 3
+	);
+	let luggage = $state(maxLuggage);
 
 	const getLocation = () => {
 		if (navigator && navigator.geolocation) {
@@ -232,9 +248,11 @@
 						<DateInput bind:value={time} />
 					</Dialog.Content>
 				</Dialog.Root>
+			</div>
+			<div class="flex gap-2">
 				<Dialog.Root>
 					<Dialog.Trigger
-						class={buttonVariants({ variant: 'default' })}
+						class={cn(buttonVariants({ variant: 'default' }), 'grow')}
 						aria-label={t.ride.vehicle}
 					>
 						<span class="flex items-center">
@@ -282,11 +300,73 @@
 						</Button>
 					</Dialog.Content>
 				</Dialog.Root>
+				<Dialog.Root>
+					<Dialog.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
+						<span class="flex items-center">
+							<Users class="mr-2 h-5 w-5" />
+							{passengers}
+						</span>
+						<ChevronDown />
+					</Dialog.Trigger>
+					<Dialog.Content class="flex-col sm:max-w-[425px]">
+						<Dialog.Header>
+							<Users />
+						</Dialog.Header>
+						<span class="flex items-center">
+							<Button variant="ghost" onclick={() => (passengers -= passengers > 1 ? 1 : 0)}>
+								<CircleMinus />
+							</Button>
+							{passengers}
+							<Button
+								variant="ghost"
+								onclick={() =>
+									(passengers +=
+										passengers <
+										(data.vehicles.find((v) => v.id.toString() == vehicle)?.passengers ?? 3)
+											? 1
+											: 0)}
+							>
+								<CirclePlus />
+							</Button>
+						</span>
+					</Dialog.Content>
+				</Dialog.Root>
+				<Dialog.Root>
+					<Dialog.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
+						<span class="flex items-center">
+							<Luggage class="mr-2 h-5 w-5" />
+							{luggage}
+						</span>
+						<ChevronDown />
+					</Dialog.Trigger>
+					<Dialog.Content class="flex-col sm:max-w-[425px]">
+						<Dialog.Header>
+							<Luggage />
+						</Dialog.Header>
+						<span class="flex items-center">
+							<Button variant="ghost" onclick={() => (luggage -= luggage > 0 ? 1 : 0)}>
+								<CircleMinus />
+							</Button>
+							{luggage}
+							<Button
+								variant="ghost"
+								onclick={() =>
+									(luggage +=
+										luggage <
+										(data.vehicles.find((v) => v.id.toString() == vehicle)?.luggage ?? 3)
+											? 1
+											: 0)}
+							>
+								<CirclePlus />
+							</Button>
+						</span>
+					</Dialog.Content>
+				</Dialog.Root>
 			</div>
 
 			{#if page.state.selectedItinerary && !loading}
-				<div class="left-4 flex flex-col rounded-md border-2 p-2">
-					<div class="grid grid-cols-[max-content_max-content_auto] items-center gap-y-6">
+				<div class="left-4 rounded-md border-2 p-2">
+					<div class="flex flex-row items-center gap-y-6">
 						<Circle class="mr-4 h-5 w-5" />
 						<Time
 							variant="schedule"
@@ -299,16 +379,16 @@
 						{t.departure}
 					</div>
 					<div
-						class="grid grid-cols-[max-content_max-content_auto] items-center gap-y-6 text-muted-foreground"
+						class="flex flex-row items-center gap-y-6 text-muted-foreground"
 					>
 						<EllipsisVertical class="mr-4 h-5 w-5" />
 						{formatDurationSec(page.state.selectedItinerary?.duration)}
 					</div>
-					<div class="grid grid-cols-[max-content_max-content_auto] items-center gap-y-6">
+					<div class="flex flex-row gap-y-6">
 						<Circle class="mr-4 h-5 w-5" />
 						<Time
 							variant="schedule"
-							class="w-16 font-semibold"
+							class="font-semibold"
 							queriedTime={time.toISOString()}
 							isRealtime={false}
 							scheduledTimestamp={page.state.selectedItinerary?.endTime}
@@ -340,13 +420,9 @@
 			<input
 				type="hidden"
 				name="luggage"
-				value={data.vehicles.find((v) => v.id.toString() == vehicle)?.luggage}
+				value={luggage}
 			/>
-			<input
-				type="hidden"
-				name="passengers"
-				value={data.vehicles.find((v) => v.id.toString() == vehicle)?.passengers}
-			/>
+			<input type="hidden" name="passengers" value={passengers} />
 		</form>
 	</div>
 </div>
