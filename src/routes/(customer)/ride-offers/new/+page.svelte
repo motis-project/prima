@@ -1,25 +1,32 @@
 <script lang="ts">
-	import { Button } from '$lib/shadcn/button';
+	import { Button, buttonVariants } from '$lib/shadcn/button';
+	import { cn } from '$lib/shadcn/utils';
 	import { pushState, replaceState } from '$app/navigation';
 	import Message from '$lib/ui/Message.svelte';
 	import { type Msg } from '$lib/msg';
 	import { t } from '$lib/i18n/translation';
 	import {
 		ArrowUpDown,
+		Circle,
+		EllipsisVertical,
 		ChevronRightIcon,
+		ChevronDown,
 		LoaderCircle,
 		LocateFixed,
 		MapIcon,
-		Plus
+		Plus,
+		Car
 	} from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
 
 	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
 	import AddressTypeahead from '$lib/ui/AddressTypeahead.svelte';
+	import { Input } from '$lib/shadcn/input';
 
 	import DateInput from '../../routing/DateInput.svelte';
 	import * as RadioGroup from '$lib/shadcn/radio-group';
+	import * as Dialog from '$lib/shadcn/dialog';
 
 	import { type TimeType } from '$lib/util/TimeType';
 	import { Label } from '$lib/shadcn/label';
@@ -32,6 +39,8 @@
 	import { enhance } from '$app/forms';
 	import { HOUR } from '$lib/util/time';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
+	import DialogHeader from '$lib/shadcn/dialog/dialog-header.svelte';
+	import ItinerarySummary from '../../routing/ItinerarySummary.svelte';
 
 	const { data, form } = $props();
 
@@ -116,13 +125,31 @@
 	});
 </script>
 
-<div class="flex flex-col">
-	{#if page.state.showMap}
-		<PopupMap bind:from bind:to itinerary={page.state.selectedItinerary} />
-	{:else}
+<div class="md:min-h-[70dvh] md:w-96">
+	{#if page.state.selectFrom}
+		<AddressTypeahead
+			placeholder={t.from}
+			bind:selected={from}
+			items={fromItems}
+			open={true}
+			onValueChange={() => pushState('', {})}
+		/>
+	{:else if page.state.selectTo}
+		<AddressTypeahead
+			placeholder={t.to}
+			bind:selected={to}
+			items={toItems}
+			open={true}
+			onValueChange={() => pushState('', {})}
+		/>
+	{:else if page.state.showMap}
+		<PopupMap bind:from bind:to itinerary={page.state.selectedItinerary} rideSharingBounds={data.rideSharingBounds} />
+	{/if}
+
+	<div class="contents" class:hidden={page.state.selectFrom || page.state.selectTo}>
 		<form
 			method="post"
-			class="flex flex-col gap-6"
+			class="flex flex-col gap-4"
 			use:enhance={() => {
 				return async ({ update }) => {
 					update({ reset: false });
@@ -130,62 +157,31 @@
 			}}
 		>
 			<h3 class="text-xl font-medium">{t.ride.create}</h3>
-			<p>{t.ride.intro}</p>
+			<p class="">{t.ride.intro}</p>
 
-			<Message class="mb-6" msg={form?.msg || msg} />
-
-			<div class="flex flex-row flex-wrap gap-2">
-				<Select.Root type="single" name="vehicle" bind:value={vehicle}>
-					<Select.Trigger class="overflow-hidden" aria-label={t.ride.vehicle}>
-						{data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate ??
-							t.rideShare.defaultLicensePlate}
-					</Select.Trigger>
-					<Select.Content>
-						{#each data.vehicles as v}
-							<Select.Item
-								value={v.id.toString()}
-								label={v.licensePlate ?? t.rideShare.defaultLicensePlate}
-							>
-								{v.licensePlate ?? t.rideShare.defaultLicensePlate}
-							</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
-
+			<div dir="rtl">
 				<Button
+					size="icon"
 					variant="outline"
-					onclick={() => {
-						storeLastPageAndGoto(`/account/add-or-edit-ride-share-vehicle/${vehicle}`);
-					}}
+					onclick={() =>
+						pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
+					class="ml-auto"
 				>
-					{t.buttons.editVehicle}
-				</Button>
-
-				<Button
-					variant="outline"
-					onclick={() => {
-						storeLastPageAndGoto('/account/add-or-edit-ride-share-vehicle');
-					}}
-				>
-					<Plus class="mr-2 size-4" />
-					{t.buttons.addVehicle}
+					<MapIcon class="h-[1.2rem] w-[1.2rem]" />
 				</Button>
 			</div>
-
-			<div class="relative flex flex-col space-y-4 py-4">
-				<AddressTypeahead
-					name="from"
+			<div class="relative flex flex-col gap-4">
+				<Input
 					placeholder={t.from}
-					bind:selected={from}
-					bind:items={fromItems}
-					focus={false}
+					class="text-sm"
+					onfocus={() => pushState('', { selectFrom: true })}
+					value={from.label}
 				/>
-				<AddressTypeahead
-					name="to"
+				<Input
 					placeholder={t.to}
-					bind:selected={to}
-					bind:items={toItems}
-					focus={false}
+					class="text-sm"
+					onfocus={() => pushState('', { selectTo: true })}
+					value={to.label}
 				/>
 				<Button
 					variant="ghost"
@@ -212,68 +208,120 @@
 					<ArrowUpDown class="h-5 w-5" />
 				</Button>
 			</div>
-			<div class="flex flex-row flex-wrap gap-2">
-				<DateInput bind:value={time} />
-				<RadioGroup.Root class="flex" name="timeType" bind:value={timeType}>
-					<Label
-						for="departure"
-						class="flex items-center rounded-md border-2 border-muted bg-popover p-1 px-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
+			<div class="flex gap-2">
+				<Dialog.Root>
+					<Dialog.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
+						{t.atDateTime(
+							timeType,
+							time,
+							time.toLocaleDateString() == new Date().toLocaleDateString()
+						)}
+						<ChevronDown />
+					</Dialog.Trigger>
+					<Dialog.Content class="flex-col sm:max-w-[425px]">
+						<label>
+							<input type="radio" name="timetype" value="departure" bind:group={timeType} />
+							{t.departure}
+						</label>
+						<label>
+							<input type="radio" name="timetype" value="arrival" bind:group={timeType} />
+							{t.arrival}
+						</label>
+						<DateInput bind:value={time} />
+					</Dialog.Content>
+				</Dialog.Root>
+				<Dialog.Root>
+					<Dialog.Trigger
+						class={buttonVariants({ variant: 'default' })}
+						aria-label={t.ride.vehicle}
 					>
-						<RadioGroup.Item
-							value="departure"
-							id="departure"
-							class="sr-only"
-							aria-label={t.departure}
-						/>
-						<span>{t.departure}</span>
-					</Label>
-					<Label
-						for="arrival"
-						class="flex items-center rounded-md border-2 border-muted bg-popover p-1 px-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
-					>
-						<RadioGroup.Item value="arrival" id="arrival" class="sr-only" aria-label={t.arrival} />
-						<span>{t.arrival}</span>
-					</Label>
-				</RadioGroup.Root>
+						<span class="flex items-center">
+							<Car class="mr-2" />
+							{data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate}
+						</span>
+						<ChevronDown />
+					</Dialog.Trigger>
+					<Dialog.Content class="flex-col sm:max-w-[425px]">
+						<DialogHeader><Car /></DialogHeader>
+						<Select.Root type="single" name="vehicle" bind:value={vehicle}>
+							<Select.Trigger class="overflow-hidden" aria-label={t.ride.vehicle}>
+								{data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate ??
+									t.rideShare.defaultLicensePlate}
+							</Select.Trigger>
+							<Select.Content>
+								{#each data.vehicles as v}
+									<Select.Item
+										value={v.id.toString()}
+										label={v.licensePlate ?? t.rideShare.defaultLicensePlate}
+									>
+										{v.licensePlate ?? t.rideShare.defaultLicensePlate}
+									</Select.Item>
+								{/each}
+							</Select.Content>
+						</Select.Root>
+
+						<Button
+							variant="outline"
+							onclick={() => {
+								storeLastPageAndGoto(`/account/add-or-edit-ride-share-vehicle/${vehicle}`);
+							}}
+						>
+							{t.buttons.editVehicle}
+						</Button>
+
+						<Button
+							variant="outline"
+							onclick={() => {
+								storeLastPageAndGoto('/account/add-or-edit-ride-share-vehicle');
+							}}
+						>
+							<Plus class="mr-2 size-4" />
+							{t.buttons.addVehicle}
+						</Button>
+					</Dialog.Content>
+				</Dialog.Root>
 			</div>
 
-			<div class="flex flex-row flex-wrap items-center gap-2">
-				{#if page.state.selectedItinerary && !loading}
-					{t.departure}
-					<Time
-						variant="schedule"
-						class="w-16 font-semibold"
-						queriedTime={time.toISOString()}
-						isRealtime={false}
-						scheduledTimestamp={page.state.selectedItinerary?.startTime}
-						timestamp={page.state.selectedItinerary?.startTime}
-					/>
-					{t.arrival}
-					<Time
-						variant="schedule"
-						class="w-16 font-semibold"
-						queriedTime={time.toISOString()}
-						isRealtime={false}
-						scheduledTimestamp={page.state.selectedItinerary?.endTime}
-						timestamp={page.state.selectedItinerary?.endTime}
-					/>
-					{t.duration}
-					{formatDurationSec(page.state.selectedItinerary?.duration)}
-				{:else if loading}
-					<div class="flex items-center justify-center">
-						<LoaderCircle class="h-6 w-6 animate-spin" />
+			{#if page.state.selectedItinerary && !loading}
+				<div class="left-4 flex flex-col rounded-md border-2 p-2">
+					<div class="grid grid-cols-[max-content_max-content_auto] items-center gap-y-6">
+						<Circle class="mr-4 h-5 w-5" />
+						<Time
+							variant="schedule"
+							class="w-16 font-semibold"
+							queriedTime={time.toISOString()}
+							isRealtime={false}
+							scheduledTimestamp={page.state.selectedItinerary?.startTime}
+							timestamp={page.state.selectedItinerary?.startTime}
+						/>
+						{t.departure}
 					</div>
-				{/if}
-				<Button
-					size="icon"
-					variant="outline"
-					onclick={() =>
-						pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
-					class="ml-auto"
-				>
-					<MapIcon class="h-[1.2rem] w-[1.2rem]" />
-				</Button>
-			</div>
+					<div
+						class="grid grid-cols-[max-content_max-content_auto] items-center gap-y-6 text-muted-foreground"
+					>
+						<EllipsisVertical class="mr-4 h-5 w-5" />
+						{formatDurationSec(page.state.selectedItinerary?.duration)}
+					</div>
+					<div class="grid grid-cols-[max-content_max-content_auto] items-center gap-y-6">
+						<Circle class="mr-4 h-5 w-5" />
+						<Time
+							variant="schedule"
+							class="w-16 font-semibold"
+							queriedTime={time.toISOString()}
+							isRealtime={false}
+							scheduledTimestamp={page.state.selectedItinerary?.endTime}
+							timestamp={page.state.selectedItinerary?.endTime}
+						/>
+						{t.arrival}
+					</div>
+				</div>
+			{:else if loading}
+				<div class="flex items-center justify-center">
+					<LoaderCircle class="h-6 w-6 animate-spin" />
+				</div>
+			{/if}
+
+			<Message class="mb-6" msg={form?.msg || msg} />
 
 			<p>{t.ride.outro}</p>
 			<Button type="submit" class="w-full" disabled={!page.state.selectedItinerary || loading}>
@@ -298,5 +346,5 @@
 				value={data.vehicles.find((v) => v.id.toString() == vehicle)?.passengers}
 			/>
 		</form>
-	{/if}
+	</div>
 </div>
