@@ -1,16 +1,12 @@
 import type { Coordinates } from '$lib/util/Coordinates';
 import { db } from '$lib/server/db';
 import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
-import {
-	MAX_RIDE_SHARE_TOUR_TIME,
-	PASSENGER_CHANGE_DURATION,
-	SCHEDULED_TIME_BUFFER_PICKUP
-} from '$lib/constants';
+import { MAX_RIDE_SHARE_TOUR_TIME, SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
 import { carRouting } from '$lib/util/carRouting';
 import { MINUTE } from '$lib/util/time';
-import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
-import { sql } from 'kysely';
+import { sendMail } from '$lib/server/sendMail';
+import { sendDesiredTripMails } from './sendDesiredTripMails';
 
 export async function getRideShareTourCommunicatedTimes(
 	time: number,
@@ -322,62 +318,8 @@ export const addRideShareTour = async (
 			eventGroupId: eventGroupDropoff
 		})
 		.execute();
-	matchDesiredTrips(start, target, startTimeStart, targetTimeEnd, tourId).catch((err) =>
-		console.error('matchDesiredTrips failed:', err)
+	sendDesiredTripMails(start, target, startTimeStart, targetTimeEnd, sendMail, tourId).catch(
+		(err) => console.error('matchDesiredTrips failed:', err)
 	);
 	return tourId;
 };
-
-async function matchDesiredTrips(
-	start: Coordinates,
-	target: Coordinates,
-	startTime: number,
-	endTime: number,
-	tourId: number
-) {
-	const desiredTrips = await db
-		.selectFrom('desiredRideShare')
-		.where('desiredRideShare.time', '<=', endTime)
-		.where('desiredRideShare.time', '>=', startTime)
-		.where((eb) =>
-			eb.exists(
-				eb
-					.selectFrom('rideShareTour')
-					.whereRef('rideShareTour.passengers', '>=', 'desiredRideShare.passengers')
-					.where('rideShareTour.id', '=', tourId)
-					.where((eb) =>
-						eb(
-							'rideShareTour.luggage',
-							'>=',
-							sql<number>`${eb.ref('desiredRideShare.luggage')} + ${eb.ref('desiredRideShare.passengers')} - ${eb.ref('rideShareTour.passengers')}`
-						)
-					)
-			)
-		)
-		.selectAll()
-		.execute();
-	const approachDurations = await oneToManyCarRouting(
-		start,
-		desiredTrips.map((t) => {
-			return { lat: t.fromLat, lng: t.fromLng };
-		}),
-		false
-	);
-	const returnDurations = await oneToManyCarRouting(
-		target,
-		desiredTrips.map((t) => {
-			return { lat: t.fromLat, lng: t.fromLng };
-		}),
-		true
-	);
-	for (let i = 0; i != desiredTrips.length; ++i) {
-		if (approachDurations[i] === undefined || returnDurations[i] === undefined) {
-			continue;
-		}
-		const duration = approachDurations[i]! + returnDurations[i]! + PASSENGER_CHANGE_DURATION * 2;
-		if (duration > endTime - startTime) {
-			continue;
-		}
-		console.log('now we would send a mail..', JSON.stringify(desiredTrips[i], null, 2));
-	}
-}
