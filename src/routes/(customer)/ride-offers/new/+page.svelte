@@ -25,11 +25,9 @@
 	import { Input } from '$lib/shadcn/input';
 
 	import DateInput from '../../routing/DateInput.svelte';
-	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import * as Dialog from '$lib/shadcn/dialog';
 
 	import { type TimeType } from '$lib/util/TimeType';
-	import { Label } from '$lib/shadcn/label';
 	import * as Select from '$lib/shadcn/select';
 	import { posToLocation } from '$lib/map/Location';
 	import Time from '../../routing/Time.svelte';
@@ -40,7 +38,6 @@
 	import { HOUR } from '$lib/util/time';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
 	import DialogHeader from '$lib/shadcn/dialog/dialog-header.svelte';
-	import ItinerarySummary from '../../routing/ItinerarySummary.svelte';
 
 	const { data, form } = $props();
 
