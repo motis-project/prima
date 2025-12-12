@@ -40,6 +40,7 @@ setup('setup db', async () => {
 	await db.deleteFrom('rideShareVehicle').executeTakeFirstOrThrow();
 	await db.deleteFrom('vehicle').executeTakeFirstOrThrow();
 	await db.deleteFrom('session').executeTakeFirstOrThrow();
+	await db.deleteFrom('desiredRideShare').executeTakeFirstOrThrow();
 	await db.deleteFrom('user').executeTakeFirstOrThrow();
 	await db.deleteFrom('company').executeTakeFirstOrThrow();
 	await db.deleteFrom('zone').executeTakeFirstOrThrow();

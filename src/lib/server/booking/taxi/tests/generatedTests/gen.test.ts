@@ -6,7 +6,7 @@ import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
 import { db } from '$lib/server/db';
 import type { Condition } from '$lib/util/booking/testParams';
 import { tests } from './testJsons';
-import { isSamePlace } from '$lib/server/booking/isSamePlace';
+import { isSamePlace } from '$lib/util/booking/isSamePlace';
 import { Mode } from '$lib/server/booking/mode';
 
 const filterByUuid: string | undefined = undefined;

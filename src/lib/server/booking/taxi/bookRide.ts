@@ -18,7 +18,7 @@ import { getScheduledTimes, type ScheduledTimes } from './getScheduledTimes';
 import { getLegDurationUpdates } from './getLegDurationUpdates';
 import { DAY } from '$lib/util/time';
 import { getFirstAndLastEvents } from './getFirstAndLastEvents';
-import { isSamePlace } from '../isSamePlace';
+import { isSamePlace } from '$lib/util/booking/isSamePlace';
 import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 
 export type ExpectedConnectionWithISoStrings = {
