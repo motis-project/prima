@@ -207,16 +207,16 @@
 
 	let desiredTrips = $state(data.user.desiredTrips);
 	let alertId = $derived(
-		fromMatch.match === undefined || toMatch.match === undefined
+		from?.value?.match === undefined || to?.value?.match === undefined
 			? undefined
 			: desiredTrips.find((t) =>
 					matchesDesiredTrip(
-						fromMatch.match === undefined
+						from?.value?.match === undefined
 							? undefined
-							: { lat: fromMatch.match.lat, lng: fromMatch.match.lon },
-						toMatch.match === undefined
+							: { lat: from.value.match.lat, lng: from.value.match.lon },
+						to.value.match === undefined
 							? undefined
-							: { lat: toMatch.match.lat, lng: toMatch.match.lon },
+							: { lat: to.value.match.lat, lng: to.value.match.lon },
 						time.getTime(),
 						timeType === 'arrival',
 						luggageToInt(luggage),
