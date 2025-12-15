@@ -60,15 +60,15 @@
 	let time = $state<Date>(new Date(Date.now() + HOUR * 2));
 	let timeType = $state<TimeType>('departure');
 
+	let passengers = $state();
+	let luggage = $state();
 	let vehicle = $state<string>(data.vehicles[0].id.toString());
-	let maxPassengers = $state<number>(
-		data.vehicles.find((v) => v.id.toString() == vehicle)?.passengers ?? 3
+	$effect(() => {
+		passengers = data.vehicles.find((v) => v.id.toString() == vehicle)?.passengers ?? 3;
+		luggage = data.vehicles.find((v) => v.id.toString() == vehicle)?.luggage ?? 3;
+	}
 	);
-	let passengers = $state(maxPassengers);
-	let maxLuggage = $state<number>(
-		data.vehicles.find((v) => v.id.toString() == vehicle)?.luggage ?? 3
-	);
-	let luggage = $state(maxLuggage);
+
 
 	const getLocation = () => {
 		if (navigator && navigator.geolocation) {
