@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as RadioGroup from '$lib/shadcn/radio-group';
-	import {Select, SelectTrigger, SelectValue, SelectContent} from '$lib/shadcn/select';
+	import {Select, SelectTrigger, SelectContent} from '$lib/shadcn/select';
 	import { Input } from '$lib/shadcn/input';
 	import Label from '$lib/shadcn/label/label.svelte';
 	import { Button } from '$lib/shadcn/button';
@@ -16,6 +16,8 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import type { Msg } from '$lib/msg';
+	import type {CountryKey} from "@codecorn/euro-plate-validator";
+	import {validatePlate } from "@codecorn/euro-plate-validator";
 
 	const {
 		form,
@@ -45,6 +47,7 @@
 	let newModel: string = $state(model ?? '');
 	let hasModel = $state(model !== undefined && model !== null);
 	let smokingOptions = t.buttons.smokingOptions;
+	let country = $state<CountryKey>('DE');
 	const smokingAllowedString: string | undefined =
 		smokingAllowed === undefined
 			? undefined
@@ -96,9 +99,9 @@
 		</h2>
 		<Panel title={t.rideShare.licensePlate} subtitle={''}>
 			<div>
-				<Select>
+				<Select type="single" name="country" bind:value={country}>
 					<SelectTrigger>
-						<Select.Value placeholder='DE' />
+						{country}
 					</SelectTrigger>
 				</Select>
 				<Input
