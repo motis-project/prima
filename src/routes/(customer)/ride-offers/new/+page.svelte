@@ -5,7 +5,6 @@
 	import Message from '$lib/ui/Message.svelte';
 	import { type Msg } from '$lib/msg';
 	import { t } from '$lib/i18n/translation';
-
 	import {
 		ArrowUpDown,
 		Circle,
@@ -24,14 +23,13 @@
 	} from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
-
 	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
 	import AddressTypeahead from '$lib/ui/AddressTypeahead.svelte';
 	import { Input } from '$lib/shadcn/input';
-
+	import { Label } from '$lib/shadcn/label';
 	import DateInput from '../../routing/DateInput.svelte';
 	import * as Popover from '$lib/shadcn/popover';
-
+	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import { type TimeType } from '$lib/util/TimeType';
 	import * as Select from '$lib/shadcn/select';
 	import { posToLocation } from '$lib/map/Location';
@@ -230,17 +228,30 @@
 							time,
 							time.toLocaleDateString() == new Date().toLocaleDateString()
 						)}
-						<ChevronDown />
 					</Popover.Trigger>
-					<Popover.Content class="flex-col sm:max-w-[425px]">
-						<label>
-							<input type="radio" name="timetype" value="departure" bind:group={timeType} />
-							{t.departure}
-						</label>
-						<label>
-							<input type="radio" name="timetype" value="arrival" bind:group={timeType} />
-							{t.arrival}
-						</label>
+					<Popover.Content class="flex flex-col w-fit gap-4">
+						<RadioGroup.Root class="flex justify-stretch" name="timeType" bind:value={timeType}>
+							<Label
+								for="departure"
+								class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
+							>
+								<RadioGroup.Item
+									value="departure"
+									id="departure"
+									class="sr-only"
+									aria-label={t.departure}
+								/>
+								{t.departure}
+							</Label>
+							<Label
+								for="arrival"
+								class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
+							>
+								<RadioGroup.Item value="arrival" id="arrival" class="sr-only" aria-label={t.arrival} />
+								{t.arrival}
+							</Label>
+						</RadioGroup.Root>
+
 						<DateInput bind:value={time} />
 					</Popover.Content>
 				</Popover.Root>
@@ -255,9 +266,8 @@
 							<Car class="mr-2" />
 							{data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate}
 						</span>
-						<ChevronDown />
 					</Popover.Trigger>
-					<Popover.Content class="flex-col sm:max-w-[425px]">
+					<Popover.Content class="flex flex-col w-fit gap-4">
 						<Select.Root type="single" name="vehicle" bind:value={vehicle}>
 							<Select.Trigger class="overflow-hidden" aria-label={t.ride.vehicle}>
 								{data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate ??
@@ -301,10 +311,8 @@
 							<Users class="mr-2 h-5 w-5" />
 							{passengers}
 						</span>
-						<ChevronDown />
 					</Popover.Trigger>
-					<Popover.Content class="flex-col sm:max-w-[425px]">
-						<span class="flex items-center">
+					<Popover.Content class="w-fit">
 							<Button variant="ghost" onclick={() => (passengers -= passengers > 1 ? 1 : 0)}>
 								<CircleMinus />
 							</Button>
@@ -320,7 +328,6 @@
 							>
 								<CirclePlus />
 							</Button>
-						</span>
 					</Popover.Content>
 				</Popover.Root>
 				<Popover.Root>
@@ -329,10 +336,8 @@
 							<Luggage class="mr-2 h-5 w-5" />
 							{luggage}
 						</span>
-						<ChevronDown />
 					</Popover.Trigger>
-					<Popover.Content class="flex-col sm:max-w-[425px]">
-						<span class="flex items-center">
+					<Popover.Content class="w-fit">
 							<Button variant="ghost" onclick={() => (luggage -= luggage > 0 ? 1 : 0)}>
 								<CircleMinus />
 							</Button>
@@ -348,7 +353,6 @@
 							>
 								<CirclePlus />
 							</Button>
-						</span>
 					</Popover.Content>
 				</Popover.Root>
 			</div>
