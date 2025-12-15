@@ -7,12 +7,12 @@
 	import { t } from '$lib/i18n/translation';
 	import {
 		ArrowUpDown,
-		Circle,
+		MapPin,
+		MapPinCheckInside,
 		CircleMinus,
 		CirclePlus,
 		EllipsisVertical,
 		ChevronRightIcon,
-		ChevronDown,
 		LoaderCircle,
 		LocateFixed,
 		MapIcon,
@@ -31,7 +31,6 @@
 	import * as Popover from '$lib/shadcn/popover';
 	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import { type TimeType } from '$lib/util/TimeType';
-	import * as Select from '$lib/shadcn/select';
 	import { posToLocation } from '$lib/map/Location';
 	import Time from '../../routing/Time.svelte';
 	import { formatDurationSec } from '../../routing/formatDuration';
@@ -64,9 +63,7 @@
 	$effect(() => {
 		passengers = data.vehicles.find((v) => v.id.toString() == vehicle)?.passengers ?? 3;
 		luggage = data.vehicles.find((v) => v.id.toString() == vehicle)?.luggage ?? 3;
-	}
-	);
-
+	});
 
 	const getLocation = () => {
 		if (navigator && navigator.geolocation) {
@@ -161,6 +158,7 @@
 	<div class="contents" class:hidden={page.state.selectFrom || page.state.selectTo}>
 		<form
 			method="post"
+			autocomplete="off"
 			class="flex flex-col gap-4"
 			use:enhance={() => {
 				return async ({ update }) => {
@@ -229,8 +227,8 @@
 							time.toLocaleDateString() == new Date().toLocaleDateString()
 						)}
 					</Popover.Trigger>
-					<Popover.Content class="flex flex-col w-fit gap-4">
-						<RadioGroup.Root class="flex justify-stretch" name="timeType" bind:value={timeType}>
+					<Popover.Content class="flex w-fit flex-col gap-4">
+						<RadioGroup.Root class="flex justify-stretch" bind:value={timeType}>
 							<Label
 								for="departure"
 								class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
@@ -247,7 +245,12 @@
 								for="arrival"
 								class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
 							>
-								<RadioGroup.Item value="arrival" id="arrival" class="sr-only" aria-label={t.arrival} />
+								<RadioGroup.Item
+									value="arrival"
+									id="arrival"
+									class="sr-only"
+									aria-label={t.arrival}
+								/>
 								{t.arrival}
 							</Label>
 						</RadioGroup.Root>
@@ -267,24 +270,26 @@
 							{data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate}
 						</span>
 					</Popover.Trigger>
-					<Popover.Content class="flex flex-col w-fit gap-4">
-						<Select.Root type="single" name="vehicle" bind:value={vehicle}>
-							<Select.Trigger class="overflow-hidden" aria-label={t.ride.vehicle}>
-								{data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate ??
-									t.rideShare.defaultLicensePlate}
-							</Select.Trigger>
-							<Select.Content>
-								{#each data.vehicles as v}
-									<Select.Item
+					<Popover.Content class="flex w-fit flex-col gap-4">
+						<RadioGroup.Root class="flex-rows justify-stretch" bind:value={vehicle}>
+							{#each data.vehicles as v}
+								<Label
+									for={v.id.toString()}
+									class="flex grow items-center justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
+								>
+									<RadioGroup.Item
 										value={v.id.toString()}
-										label={v.licensePlate ?? t.rideShare.defaultLicensePlate}
-									>
-										{v.licensePlate ?? t.rideShare.defaultLicensePlate}
-									</Select.Item>
-								{/each}
-							</Select.Content>
-						</Select.Root>
+										id={v.id.toString()}
+										class="sr-only"
+										aria-label={v.licensePlate ?? t.rideShare.defaultLicensePlate}
+									/>
+									<Car class="mr-2 h-5 w-5" />
+									{v.licensePlate ?? t.rideShare.defaultLicensePlate}
+								</Label>
+							{/each}
+						</RadioGroup.Root>
 
+						<hr />
 						<Button
 							variant="outline"
 							onclick={() => {
@@ -308,96 +313,97 @@
 				<Popover.Root>
 					<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
 						<span class="flex items-center">
-							<Users class="mr-2 h-5 w-5" />
+							<Users class="mr-2" />
 							{passengers}
 						</span>
 					</Popover.Trigger>
 					<Popover.Content class="w-fit">
-							<Button variant="ghost" onclick={() => (passengers -= passengers > 1 ? 1 : 0)}>
-								<CircleMinus />
-							</Button>
-							{passengers}
-							<Button
-								variant="ghost"
-								onclick={() =>
-									(passengers +=
-										passengers <
-										(data.vehicles.find((v) => v.id.toString() == vehicle)?.passengers ?? 3)
-											? 1
-											: 0)}
-							>
-								<CirclePlus />
-							</Button>
+						<Button variant="ghost" onclick={() => (passengers -= passengers > 1 ? 1 : 0)}>
+							<CircleMinus />
+						</Button>
+						{passengers}
+						<Button
+							variant="ghost"
+							onclick={() =>
+								(passengers +=
+									passengers <
+									(data.vehicles.find((v) => v.id.toString() == vehicle)?.passengers ?? 3)
+										? 1
+										: 0)}
+						>
+							<CirclePlus />
+						</Button>
 					</Popover.Content>
 				</Popover.Root>
 				<Popover.Root>
 					<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
 						<span class="flex items-center">
-							<Luggage class="mr-2 h-5 w-5" />
+							<Luggage class="mr-2" />
 							{luggage}
 						</span>
 					</Popover.Trigger>
 					<Popover.Content class="w-fit">
-							<Button variant="ghost" onclick={() => (luggage -= luggage > 0 ? 1 : 0)}>
-								<CircleMinus />
-							</Button>
-							{luggage}
-							<Button
-								variant="ghost"
-								onclick={() =>
-									(luggage +=
-										luggage <
-										(data.vehicles.find((v) => v.id.toString() == vehicle)?.luggage ?? 3)
-											? 1
-											: 0)}
-							>
-								<CirclePlus />
-							</Button>
+						<Button variant="ghost" onclick={() => (luggage -= luggage > 0 ? 1 : 0)}>
+							<CircleMinus />
+						</Button>
+						{luggage}
+						<Button
+							variant="ghost"
+							onclick={() =>
+								(luggage +=
+									luggage < (data.vehicles.find((v) => v.id.toString() == vehicle)?.luggage ?? 3)
+										? 1
+										: 0)}
+						>
+							<CirclePlus />
+						</Button>
 					</Popover.Content>
 				</Popover.Root>
 			</div>
 
-			{#if page.state.selectedItinerary && !loading}
-				<div class="flex-row left-4 rounded-md border-2 p-2">
-					<div class="flex items-center">
-						<Circle class="h-5 w-5 mr-2" />
-						<Time
-							variant="schedule"
-							class="w-auto mr-4 font-semibold "
-							queriedTime={time.toISOString()}
-							isRealtime={false}
-							scheduledTimestamp={page.state.selectedItinerary?.startTime}
-							timestamp={page.state.selectedItinerary?.startTime}
-						/>
-						{t.departure}
-					</div>
-					<div
-						class="flex items-center text-muted-foreground"
+			<div class="flex items-center justify-center">
+				{#if page.state.selectedItinerary && !loading}
+					<Button
+						variant="outline"
+						onclick={() =>
+							pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
+						class="size-fit text-base"
 					>
-						<EllipsisVertical class="h-5 w-5 mr-2" />
-						{formatDurationSec(page.state.selectedItinerary?.duration)}
-					</div>
-					<div class="flex items-center">
-						<Circle class="h-5 w-5 mr-2" />
-						<Time
-							variant="schedule"
-							class="w-auto mr-4 font-semibold"
-							queriedTime={time.toISOString()}
-							isRealtime={false}
-							scheduledTimestamp={page.state.selectedItinerary?.endTime}
-							timestamp={page.state.selectedItinerary?.endTime}
-						/>
-						{t.arrival}
-					</div>
-				</div>
-			{:else if loading}
-				<div class="flex items-center justify-center">
+						<div class="flex-row">
+							<div class="flex items-center">
+								<MapPin class="mr-2 h-5 w-5" />
+								<Time
+									variant="schedule"
+									class="mr-4 w-auto font-semibold "
+									queriedTime={time.toISOString()}
+									isRealtime={false}
+									scheduledTimestamp={page.state.selectedItinerary?.startTime}
+									timestamp={page.state.selectedItinerary?.startTime}
+								/>
+								{t.departure}
+							</div>
+							<div class="flex items-center text-muted-foreground">
+								<EllipsisVertical class="mr-2 h-5 w-5" />
+								{formatDurationSec(page.state.selectedItinerary?.duration)}
+							</div>
+							<div class="flex items-center">
+								<MapPinCheckInside class="mr-2 h-5 w-5" />
+								<Time
+									variant="schedule"
+									class="mr-4 w-auto font-semibold"
+									queriedTime={time.toISOString()}
+									isRealtime={false}
+									scheduledTimestamp={page.state.selectedItinerary?.endTime}
+									timestamp={page.state.selectedItinerary?.endTime}
+								/>
+								{t.arrival}
+							</div>
+						</div>
+					</Button>
+				{:else if loading}
 					<LoaderCircle class="h-6 w-6 animate-spin" />
-				</div>
-			{/if}
-
-			<p class="mt-4 text-lg font-medium">Vehicle ID: {vehicle}, License Plate: {data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate}</p>
-
+				{/if}
+			</div>
 			<Message class="mb-6" msg={form?.msg || msg} />
 
 			<p>{t.ride.outro}</p>
@@ -412,6 +418,8 @@
 			<input type="hidden" name="endLon" value={to.value.match?.lon} />
 			<input type="hidden" name="endLabel" value={to.label} />
 			<input type="hidden" name="time" value={time.getTime()} />
+			<input type="hidden" name="timeType" value={timeType} />
+			<input type="hidden" name="vehicle" value={vehicle} />
 			<input type="hidden" name="luggage" value={luggage} />
 			<input type="hidden" name="passengers" value={passengers} />
 		</form>

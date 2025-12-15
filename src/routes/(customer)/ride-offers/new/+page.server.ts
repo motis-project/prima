@@ -40,6 +40,7 @@ export const actions = {
 		const passengers = readInt(formData.get('passengers'));
 		const luggage = readInt(formData.get('luggage'));
 
+		console.log();
 		const vehicle = readInt(formData.get('vehicle'));
 		const start = parseCoords('start');
 		const end = parseCoords('end');
@@ -54,8 +55,8 @@ export const actions = {
 			typeof startLabel !== 'string' ||
 			typeof endLabel !== 'string'
 		) {
-			console.log(": time: " + time + ", passengers: " + passengers + ", luggage: " + luggage + ", vehicle: " + vehicle + ", startLabel: " + startLabel + ", endLabel: " + endLabel);
-			return fail(400, { msg: msg('unknownError')});
+			console.log(formData);
+			return fail(400, { msg: msg('unknownError') });
 		}
 
 		// TODO transaction
