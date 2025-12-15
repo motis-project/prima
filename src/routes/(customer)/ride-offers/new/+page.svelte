@@ -30,7 +30,7 @@
 	import { Input } from '$lib/shadcn/input';
 
 	import DateInput from '../../routing/DateInput.svelte';
-	import * as Dialog from '$lib/shadcn/dialog';
+	import * as Popover from '$lib/shadcn/popover';
 
 	import { type TimeType } from '$lib/util/TimeType';
 	import * as Select from '$lib/shadcn/select';
@@ -60,8 +60,8 @@
 	let time = $state<Date>(new Date(Date.now() + HOUR * 2));
 	let timeType = $state<TimeType>('departure');
 
-	let passengers = $state();
-	let luggage = $state();
+	let passengers = $state(0);
+	let luggage = $state(0);
 	let vehicle = $state<string>(data.vehicles[0].id.toString());
 	$effect(() => {
 		passengers = data.vehicles.find((v) => v.id.toString() == vehicle)?.passengers ?? 3;
@@ -223,16 +223,16 @@
 				</Button>
 			</div>
 			<div class="flex gap-2">
-				<Dialog.Root>
-					<Dialog.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
+				<Popover.Root>
+					<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
 						{t.atDateTime(
 							timeType,
 							time,
 							time.toLocaleDateString() == new Date().toLocaleDateString()
 						)}
 						<ChevronDown />
-					</Dialog.Trigger>
-					<Dialog.Content class="flex-col sm:max-w-[425px]">
+					</Popover.Trigger>
+					<Popover.Content class="flex-col sm:max-w-[425px]">
 						<label>
 							<input type="radio" name="timetype" value="departure" bind:group={timeType} />
 							{t.departure}
@@ -242,12 +242,12 @@
 							{t.arrival}
 						</label>
 						<DateInput bind:value={time} />
-					</Dialog.Content>
-				</Dialog.Root>
+					</Popover.Content>
+				</Popover.Root>
 			</div>
 			<div class="flex gap-2">
-				<Dialog.Root>
-					<Dialog.Trigger
+				<Popover.Root>
+					<Popover.Trigger
 						class={cn(buttonVariants({ variant: 'default' }), 'grow')}
 						aria-label={t.ride.vehicle}
 					>
@@ -256,9 +256,8 @@
 							{data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate}
 						</span>
 						<ChevronDown />
-					</Dialog.Trigger>
-					<Dialog.Content class="flex-col sm:max-w-[425px]">
-						<Dialog.Header><Car /></Dialog.Header>
+					</Popover.Trigger>
+					<Popover.Content class="flex-col sm:max-w-[425px]">
 						<Select.Root type="single" name="vehicle" bind:value={vehicle}>
 							<Select.Trigger class="overflow-hidden" aria-label={t.ride.vehicle}>
 								{data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate ??
@@ -294,20 +293,17 @@
 							<Plus class="mr-2 size-4" />
 							{t.buttons.addVehicle}
 						</Button>
-					</Dialog.Content>
-				</Dialog.Root>
-				<Dialog.Root>
-					<Dialog.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
+					</Popover.Content>
+				</Popover.Root>
+				<Popover.Root>
+					<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
 						<span class="flex items-center">
 							<Users class="mr-2 h-5 w-5" />
 							{passengers}
 						</span>
 						<ChevronDown />
-					</Dialog.Trigger>
-					<Dialog.Content class="flex-col sm:max-w-[425px]">
-						<Dialog.Header>
-							<Users />
-						</Dialog.Header>
+					</Popover.Trigger>
+					<Popover.Content class="flex-col sm:max-w-[425px]">
 						<span class="flex items-center">
 							<Button variant="ghost" onclick={() => (passengers -= passengers > 1 ? 1 : 0)}>
 								<CircleMinus />
@@ -325,20 +321,17 @@
 								<CirclePlus />
 							</Button>
 						</span>
-					</Dialog.Content>
-				</Dialog.Root>
-				<Dialog.Root>
-					<Dialog.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
+					</Popover.Content>
+				</Popover.Root>
+				<Popover.Root>
+					<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
 						<span class="flex items-center">
 							<Luggage class="mr-2 h-5 w-5" />
 							{luggage}
 						</span>
 						<ChevronDown />
-					</Dialog.Trigger>
-					<Dialog.Content class="flex-col sm:max-w-[425px]">
-						<Dialog.Header>
-							<Luggage />
-						</Dialog.Header>
+					</Popover.Trigger>
+					<Popover.Content class="flex-col sm:max-w-[425px]">
 						<span class="flex items-center">
 							<Button variant="ghost" onclick={() => (luggage -= luggage > 0 ? 1 : 0)}>
 								<CircleMinus />
@@ -356,8 +349,8 @@
 								<CirclePlus />
 							</Button>
 						</span>
-					</Dialog.Content>
-				</Dialog.Root>
+					</Popover.Content>
+				</Popover.Root>
 			</div>
 
 			{#if page.state.selectedItinerary && !loading}
@@ -399,6 +392,8 @@
 				</div>
 			{/if}
 
+			<p class="mt-4 text-lg font-medium">Vehicle ID: {vehicle}, License Plate: {data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate}</p>
+
 			<Message class="mb-6" msg={form?.msg || msg} />
 
 			<p>{t.ride.outro}</p>
@@ -413,11 +408,7 @@
 			<input type="hidden" name="endLon" value={to.value.match?.lon} />
 			<input type="hidden" name="endLabel" value={to.label} />
 			<input type="hidden" name="time" value={time.getTime()} />
-			<input
-				type="hidden"
-				name="luggage"
-				value={luggage}
-			/>
+			<input type="hidden" name="luggage" value={luggage} />
 			<input type="hidden" name="passengers" value={passengers} />
 		</form>
 	</div>

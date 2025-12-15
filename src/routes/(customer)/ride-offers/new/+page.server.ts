@@ -54,7 +54,8 @@ export const actions = {
 			typeof startLabel !== 'string' ||
 			typeof endLabel !== 'string'
 		) {
-			return fail(400, { msg: msg('unknownError') });
+			console.log(": time: " + time + ", passengers: " + passengers + ", luggage: " + luggage + ", vehicle: " + vehicle + ", startLabel: " + startLabel + ", endLabel: " + endLabel);
+			return fail(400, { msg: msg('unknownError')});
 		}
 
 		// TODO transaction
