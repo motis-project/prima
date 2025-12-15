@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as RadioGroup from '$lib/shadcn/radio-group';
+	import {Select, SelectTrigger, SelectValue, SelectContent} from '$lib/shadcn/select';
 	import { Input } from '$lib/shadcn/input';
 	import Label from '$lib/shadcn/label/label.svelte';
 	import { Button } from '$lib/shadcn/button';
@@ -94,12 +95,19 @@
 			{!isEditMode ? t.rideShare.createNewVehicle : t.rideShare.editVehicle}
 		</h2>
 		<Panel title={t.rideShare.licensePlate} subtitle={''}>
-			<Input
-				name="licensePlate"
-				type="string"
-				placeholder={LICENSE_PLATE_PLACEHOLDER}
-				value={licensePlate ?? undefined}
-			/>
+			<div>
+				<Select>
+					<SelectTrigger>
+						<Select.Value placeholder='DE' />
+					</SelectTrigger>
+				</Select>
+				<Input
+					name="licensePlate"
+					type="string"
+					placeholder={LICENSE_PLATE_PLACEHOLDER}
+					value={licensePlate ?? undefined}
+				/>
+			</div>
 		</Panel>
 		<Panel title={t.rideShare.maxPassengers} subtitle={''}>
 			<RadioGroup.Root name="passengers" value={passengers?.toString() ?? '3'}>
