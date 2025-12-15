@@ -4,7 +4,7 @@
 	import { pushState, replaceState } from '$app/navigation';
 	import Message from '$lib/ui/Message.svelte';
 	import { type Msg } from '$lib/msg';
-	import { t, language} from '$lib/i18n/translation';
+	import { t } from '$lib/i18n/translation';
 
 	import {
 		ArrowUpDown,
@@ -28,8 +28,6 @@
 	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
 	import AddressTypeahead from '$lib/ui/AddressTypeahead.svelte';
 	import { Input } from '$lib/shadcn/input';
-	import * as RadioGroup from '$lib/shadcn/radio-group';
-	import { Label } from '$lib/shadcn/label';
 
 	import DateInput from '../../routing/DateInput.svelte';
 	import * as Dialog from '$lib/shadcn/dialog';
@@ -44,8 +42,6 @@
 	import { enhance } from '$app/forms';
 	import { HOUR } from '$lib/util/time';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
-	import DialogHeader from '$lib/shadcn/dialog/dialog-header.svelte';
-	import DialogContent from '$lib/shadcn/dialog/dialog-content.svelte';
 
 	const { data, form } = $props();
 
@@ -262,7 +258,7 @@
 						<ChevronDown />
 					</Dialog.Trigger>
 					<Dialog.Content class="flex-col sm:max-w-[425px]">
-						<DialogHeader><Car /></DialogHeader>
+						<Dialog.Header><Car /></Dialog.Header>
 						<Select.Root type="single" name="vehicle" bind:value={vehicle}>
 							<Select.Trigger class="overflow-hidden" aria-label={t.ride.vehicle}>
 								{data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate ??
@@ -365,12 +361,12 @@
 			</div>
 
 			{#if page.state.selectedItinerary && !loading}
-				<div class="left-4 rounded-md border-2 p-2">
-					<div class="flex flex-row items-center gap-y-6">
-						<Circle class="mr-4 h-5 w-5" />
+				<div class="flex-row left-4 rounded-md border-2 p-2">
+					<div class="flex items-center">
+						<Circle class="h-5 w-5 mr-2" />
 						<Time
 							variant="schedule"
-							class="w-16 font-semibold"
+							class="w-auto mr-4 font-semibold "
 							queriedTime={time.toISOString()}
 							isRealtime={false}
 							scheduledTimestamp={page.state.selectedItinerary?.startTime}
@@ -379,16 +375,16 @@
 						{t.departure}
 					</div>
 					<div
-						class="flex flex-row items-center gap-y-6 text-muted-foreground"
+						class="flex items-center text-muted-foreground"
 					>
-						<EllipsisVertical class="mr-4 h-5 w-5" />
+						<EllipsisVertical class="h-5 w-5 mr-2" />
 						{formatDurationSec(page.state.selectedItinerary?.duration)}
 					</div>
-					<div class="flex flex-row gap-y-6">
-						<Circle class="mr-4 h-5 w-5" />
+					<div class="flex items-center">
+						<Circle class="h-5 w-5 mr-2" />
 						<Time
 							variant="schedule"
-							class="font-semibold"
+							class="w-auto mr-4 font-semibold"
 							queriedTime={time.toISOString()}
 							isRealtime={false}
 							scheduledTimestamp={page.state.selectedItinerary?.endTime}
