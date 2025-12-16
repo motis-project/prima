@@ -17,7 +17,8 @@
 	import { goto } from '$app/navigation';
 	import type { Msg } from '$lib/msg';
 	import type {CountryKey} from "@codecorn/euro-plate-validator";
-	import {validatePlate } from "@codecorn/euro-plate-validator";
+	import {validatePlate, supportedCountries } from "@codecorn/euro-plate-validator";
+	import SelectItem from '$lib/shadcn/select/select-item.svelte';
 
 	const {
 		form,
@@ -98,11 +99,18 @@
 			{!isEditMode ? t.rideShare.createNewVehicle : t.rideShare.editVehicle}
 		</h2>
 		<Panel title={t.rideShare.licensePlate} subtitle={''}>
-			<div>
+			<div class="flex flex-row w-fit">
 				<Select type="single" name="country" bind:value={country}>
 					<SelectTrigger>
 						{country}
 					</SelectTrigger>
+					<SelectContent>
+						{#each supportedCountries as c}
+							<SelectItem value={c}>
+								{c}
+							</SelectItem>
+						{/each}
+					</SelectContent>
 				</Select>
 				<Input
 					name="licensePlate"
