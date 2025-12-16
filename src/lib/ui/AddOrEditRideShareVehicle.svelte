@@ -99,7 +99,7 @@
 			{!isEditMode ? t.rideShare.createNewVehicle : t.rideShare.editVehicle}
 		</h2>
 		<Panel title={t.rideShare.licensePlate} subtitle={''}>
-			<div class="flex flex-row w-fit">
+			<div class="flex flex-row w-fit gap-2">
 				<Select type="single" name="country" bind:value={country}>
 					<SelectTrigger>
 						{country}
