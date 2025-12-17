@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { t } from '$lib/i18n/translation';
 	import { Button } from '$lib/shadcn/button';
-	const {
+	let {
 		currentUrl,
 		maxSizeMB,
 		allowedTypes,
 		name,
 		displaySaveButton,
-		defaultPicture
+		defaultPicture,
+		loading = $bindable(),
+		uploaded = $bindable()
 	}: {
 		currentUrl?: string;
 		maxSizeMB?: number;
@@ -15,12 +17,15 @@
 		name: string;
 		defaultPicture: string;
 		displaySaveButton?: boolean;
+		loading?: boolean;
+		uploaded?: boolean;
 	} = $props();
 
 	let selectedFile: File | null = $state(null);
 	const pictureClass = 'h-32 w-32 overflow-hidden border border-gray-200';
 
 	function handleFileChange(e: Event) {
+		uploaded = false;
 		const target = e.target as HTMLInputElement | null;
 
 		if (target && target.files && target.files.length !== 0) {
@@ -68,6 +73,8 @@
 		</Button>
 	</label>
 	{#if displaySaveButton && selectedFile}
-		<Button type="submit" variant="default">{t.buttons.savePhoto}</Button>
+		<Button type="submit" variant="default" disabled={loading || uploaded}
+			>{uploaded ? t.buttons.photoSaved : t.buttons.savePhoto}</Button
+		>
 	{/if}
 </div>

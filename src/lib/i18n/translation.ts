@@ -7,6 +7,7 @@ export type Translations = {
 	menu: {
 		connections: string;
 		bookings: string;
+		rideOffers: string;
 		account: string;
 		availability: string;
 		company: string;
@@ -93,6 +94,7 @@ export type Translations = {
 		// Journey
 		cancelled: string;
 		stillNegotiating: string;
+		accepted: string;
 		openRequest: string;
 
 		// Feedback
@@ -106,6 +108,7 @@ export type Translations = {
 
 		//Ride Sharing
 		vehicleEditedSuccessfully: string;
+		rideShareAcceptError: string;
 	};
 	admin: {
 		completedToursSubtitle: string;
@@ -178,6 +181,7 @@ export type Translations = {
 		good: string;
 		bad: string;
 		sendFeedback: string;
+		backToHome: string;
 	};
 
 	atDateTime: (timeType: TimeType, time: Date, isToday: boolean) => string;
@@ -185,6 +189,7 @@ export type Translations = {
 	bookingsHeader: string;
 	cancelledJourneys: string;
 	noBookings: string;
+	noRideOffers: string;
 	journeyDetails: string;
 	transfer: string;
 	transfers: string;
@@ -309,8 +314,10 @@ export type Translations = {
 	buttons: {
 		addVehicleTitle: string;
 		addVehicle: string;
+		editVehicle: string;
 		uploadPhoto: string;
 		savePhoto: string;
+		photoSaved: string;
 		smokingOptions: string[];
 	};
 
@@ -334,6 +341,8 @@ export type Translations = {
 		feedbackPromptProvider: string;
 		howHasItBeen: string;
 		editVehicle: string;
+		closeTo: string;
+		defaultLicensePlate: string;
 	};
 };
 

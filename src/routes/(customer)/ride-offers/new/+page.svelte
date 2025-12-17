@@ -50,9 +50,7 @@
 	let time = $state<Date>(new Date(Date.now() + HOUR * 2));
 	let timeType = $state<TimeType>('departure');
 
-	let vehicle = $state<string | undefined>(
-		data.vehicles.length ? data.vehicles[0].id.toString() : undefined
-	);
+	let vehicle = $state<string>(data.vehicles[0].id.toString());
 
 	const getLocation = () => {
 		if (navigator && navigator.geolocation) {
@@ -136,19 +134,32 @@
 
 			<Message class="mb-6" msg={form?.msg || msg} />
 
-			<div class="flex flex-row gap-2">
+			<div class="flex flex-row flex-wrap gap-2">
 				<Select.Root type="single" name="vehicle" bind:value={vehicle}>
 					<Select.Trigger class="overflow-hidden" aria-label={t.ride.vehicle}>
-						{data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate}
+						{data.vehicles.find((v) => v.id.toString() == vehicle)?.licensePlate ??
+							t.rideShare.defaultLicensePlate}
 					</Select.Trigger>
 					<Select.Content>
 						{#each data.vehicles as v}
-							<Select.Item value={v.id.toString()} label={v.licensePlate}>
-								{v.licensePlate}
+							<Select.Item
+								value={v.id.toString()}
+								label={v.licensePlate ?? t.rideShare.defaultLicensePlate}
+							>
+								{v.licensePlate ?? t.rideShare.defaultLicensePlate}
 							</Select.Item>
 						{/each}
 					</Select.Content>
 				</Select.Root>
+
+				<Button
+					variant="outline"
+					onclick={() => {
+						storeLastPageAndGoto(`/account/add-or-edit-ride-share-vehicle/${vehicle}`);
+					}}
+				>
+					{t.buttons.editVehicle}
+				</Button>
 
 				<Button
 					variant="outline"

@@ -78,7 +78,7 @@
 
 {#snippet contextMenu(e: maplibregl.MapMouseEvent, close: () => void)}
 	<Button
-		variant="outline"
+		variant="default"
 		onclick={() => {
 			from = posToLocation(e.lngLat, level);
 			fromMarker?.setLngLat(from.value.match!);
@@ -88,7 +88,7 @@
 		From
 	</Button>
 	<Button
-		variant="outline"
+		variant="default"
 		onclick={() => {
 			to = posToLocation(e.lngLat, level);
 			toMarker?.setLngLat(to.value.match!);
@@ -188,7 +188,7 @@
 				id="ride-sharing-areas-labels"
 				type="symbol"
 				layout={{
-					'symbol-placement': 'point',
+					'symbol-placement': 'line',
 					'text-field': ['concat', t.rideSharing + ' ', ['get', 'name']],
 					'text-font': ['Noto Sans Display Regular'],
 					'text-size': 16

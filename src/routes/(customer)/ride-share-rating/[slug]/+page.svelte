@@ -22,6 +22,7 @@
 <div class="flex h-full flex-col gap-4 md:min-h-[70dvh] md:w-96">
 	{#if form?.msg}
 		<Message msg={form.msg} class="mb-4" />
+		<a href="/" class="link">{t.rating.backToHome}</a>
 	{:else}
 		<form method="post" class="flex flex-col gap-4">
 			<Label

@@ -2,7 +2,11 @@ import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { db } from '../db';
 import { sql } from 'kysely';
 
-export async function getRideShareTours(selectCancelled: boolean, selectPending?: boolean) {
+export async function getRideShareTours(
+	selectCancelled: boolean,
+	selectPending?: boolean,
+	selectInitial?: boolean
+) {
 	return await db
 		.selectFrom('rideShareTour')
 		.innerJoin('rideShareVehicle', 'rideShareVehicle.id', 'rideShareTour.vehicle')
@@ -24,6 +28,8 @@ export async function getRideShareTours(selectCancelled: boolean, selectPending?
 					.$if(selectPending !== undefined, (qb) =>
 						qb.where('request.pending', '=', selectPending!)
 					)
+					.$if(selectInitial === false, (qb) => qb.where('request.startFixed', 'is not', null))
+					.$if(selectInitial === true, (qb) => qb.where('request.startFixed', 'is', null))
 					.select((eb) => [
 						'request.luggage',
 						'request.passengers',

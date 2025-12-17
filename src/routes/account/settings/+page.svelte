@@ -15,9 +15,13 @@
 	import { defaultProfilePicture } from '$lib/constants.js';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
 	import SortableTable from '$lib/ui/SortableTable.svelte';
+	import { enhance } from '$app/forms';
 
 	const { data, form } = $props();
 	let showTooltip = $state(false);
+	const vehicles = data.vehicles.map((v) => {
+		return { ...v, licensePlate: v.licensePlate ?? t.rideShare.defaultLicensePlate };
+	});
 	let region: TCountryCode | undefined = $state(data.region ? (data.region as TCountryCode) : 'DE');
 	type Vehicle = {
 		luggage: number;
@@ -26,7 +30,7 @@
 		model: string | null;
 		licensePlate: string;
 	};
-	const vehicleRows = data.vehicles;
+	const vehicleRows = vehicles;
 	const vehicleCols = [
 		{
 			text: [t.rideShare.luggage],
@@ -53,12 +57,14 @@
 	let selectedVehicle: Vehicle[] | undefined = $state(undefined);
 	$effect(() => {
 		if (selectedVehicle !== undefined && selectedVehicle.length !== 0) {
-			const selectedVehicleId = data.vehicles.find(
+			const selectedVehicleId = vehicles.find(
 				(v) => v.licensePlate === selectedVehicle![0].licensePlate
 			)!.id;
 			storeLastPageAndGoto(`/account/add-or-edit-ride-share-vehicle/${selectedVehicleId}`);
 		}
 	});
+	let loading = $state(false);
+	let uploaded = $state(false);
 </script>
 
 <Meta title="Account | {PUBLIC_PROVIDER}" />
@@ -140,12 +146,22 @@
 			action={'/account/settings?/uploadProfilePicture'}
 			enctype="multipart/form-data"
 			class="mt-8"
+			use:enhance={() => {
+				loading = true;
+				return async ({ update }) => {
+					await update();
+					loading = false;
+					uploaded = true;
+				};
+			}}
 		>
 			<UploadPhoto
 				name="profilePicture"
 				displaySaveButton={true}
 				currentUrl={data.profilePicture ?? undefined}
 				defaultPicture={defaultProfilePicture}
+				bind:loading
+				bind:uploaded
 			/>
 		</form>
 	</Panel>

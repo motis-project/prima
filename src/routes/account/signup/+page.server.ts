@@ -32,7 +32,7 @@ async function createUser(
 	phone: string | null
 ) {
 	const passwordHash = await hashPassword(password);
-	return await db
+	const user = await db
 		.insertInto('user')
 		.values({
 			name,
@@ -55,6 +55,15 @@ async function createUser(
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();
+	db.insertInto('rideShareVehicle')
+		.values({
+			passengers: 1,
+			luggage: 0,
+			owner: user.id,
+			smokingAllowed: false
+		})
+		.executeTakeFirst();
+	return user;
 }
 
 export function load(event: PageServerLoadEvent) {

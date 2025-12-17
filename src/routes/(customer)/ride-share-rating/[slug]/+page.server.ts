@@ -91,19 +91,40 @@ export const actions = {
 				? await db
 						.selectFrom('request')
 						.where('request.customer', '=', user)
+						.where('request.id', '=', requestId)
+						.where((eb) =>
+							eb.not(
+								eb.exists(
+									eb
+										.selectFrom('rideShareRating')
+										.whereRef('rideShareRating.request', '=', 'request.id')
+										.where('rideShareRating.ratedIsCustomer', '=', false)
+								)
+							)
+						)
 						.select('request.id')
 						.executeTakeFirst()
 				: await db
 						.selectFrom('request')
 						.innerJoin('rideShareTour', 'request.rideShareTour', 'rideShareTour.id')
 						.innerJoin('rideShareVehicle', 'rideShareVehicle.id', 'rideShareTour.vehicle')
+						.where((eb) =>
+							eb.not(
+								eb.exists(
+									eb
+										.selectFrom('rideShareRating')
+										.whereRef('rideShareRating.request', '=', 'request.id')
+										.where('rideShareRating.ratedIsCustomer', '=', true)
+								)
+							)
+						)
 						.where('rideShareVehicle.owner', '=', user)
+						.where('request.id', '=', requestId)
 						.select('request.id')
-						.executeTakeFirst()) === undefined;
-		if (rating < 1 || rating > 5 || hasPermissionToRate) {
-			return fail(403);
+						.executeTakeFirst()) !== undefined;
+		if (rating < 1 || rating > 5 || !hasPermissionToRate) {
+			throw error(403, 'Forbidden');
 		}
-
 		await db
 			.insertInto('rideShareRating')
 			.values({

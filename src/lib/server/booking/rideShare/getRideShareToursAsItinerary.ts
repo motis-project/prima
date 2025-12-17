@@ -28,7 +28,7 @@ export async function getRideshareToursAsItinerary(
 			averageRatingCustomer: string | number | null;
 			requestCancelled: boolean;
 		}[];
-		licensePlate: string | undefined;
+		licensePlate: string | undefined | null;
 	}[];
 }> {
 	let query = db
@@ -197,7 +197,7 @@ export async function getRideshareToursAsItinerary(
 	};
 }
 
-async function getBlurredAddress(place: Coordinates) {
+export async function getBlurredAddress(place: Coordinates) {
 	const result = await reverseGeocode({
 		baseUrl: env.PUBLIC_MOTIS_URL,
 		querySerializer: { array: { explode: false } } as QuerySerializerOptions,

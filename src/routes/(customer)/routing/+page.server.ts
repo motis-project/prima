@@ -1,22 +1,21 @@
 import { toExpectedConnectionWithISOStrings } from '$lib/server/booking/taxi/bookRide';
 import { Mode } from '$lib/server/booking/mode';
 import type { Capacities } from '$lib/util/booking/Capacities';
-import { db, type Database } from '$lib/server/db';
+import { db } from '$lib/server/db';
 import { readInt } from '$lib/server/util/readForm';
 import { msg, type Msg } from '$lib/msg';
 import { redirect } from '@sveltejs/kit';
-import { sendMail } from '$lib/server/sendMail';
-import NewRide from '$lib/server/email/NewRide.svelte';
-import NewRideSharingRequest from '$lib/server/email/NewRideSharingRequest.svelte';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
 import type { SignedItinerary } from '$lib/planAndSign';
-import { sql, type ExpressionBuilder } from 'kysely';
+import { sql } from 'kysely';
 import type { PageServerLoad, PageServerLoadEvent } from './$types';
 import Prom from 'prom-client';
 import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhitelistRequestTimes';
 import { rideShareApi } from '$lib/server/booking/index';
 import { expectedConnectionFromLeg } from '$lib/server/booking/expectedConnection';
 import { isOdmLeg } from '$lib/util/booking/checkLegType';
+import { sendMail } from '$lib/server/sendMail';
+import { sendBookingMails } from '$lib/util/sendBookingEmails';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;
@@ -138,6 +137,7 @@ export const actions = {
 				{ kidsThreeToFour },
 				{ kidsFiveToSix }
 			);
+			booking_errors?.inc();
 			return { msg: msg('unknownError') };
 		}
 		const isDirect = legs.length === 1;
@@ -200,6 +200,7 @@ export const actions = {
 				{ connection1 },
 				{ connection2 }
 			);
+			booking_errors?.inc();
 			return { msg: msg('bookingError') };
 		}
 		const request1: number | null = bookingResult.request1Id ?? null;
@@ -220,102 +221,7 @@ export const actions = {
 				.returning('id')
 				.executeTakeFirstOrThrow()
 		).id;
-
-		try {
-			const getEvents = (eb: ExpressionBuilder<Database, 'request'>, outer: boolean) => [
-				eb
-					.selectFrom('event')
-					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-					.where('event.request', '=', request1)
-					.orderBy('eventGroup.scheduledTimeStart', 'asc')
-					.limit(1)
-					.select('address')
-					.as('firstAddress'),
-				eb
-					.selectFrom('event')
-					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-					.where('event.request', '=', request1)
-					.orderBy('eventGroup.scheduledTimeStart', 'asc')
-					.limit(1)
-					.select('eventGroup.scheduledTimeStart')
-					.as('firstTime'),
-				eb
-					.selectFrom('event')
-					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-					.where('event.request', '=', request1)
-					.orderBy('eventGroup.scheduledTimeStart', 'desc')
-					.limit(1)
-					.select('address')
-					.as('lastAddress'),
-				eb
-					.selectFrom('event')
-					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-					.where('event.request', '=', request1)
-					.orderBy('eventGroup.scheduledTimeStart', 'desc')
-					.limit(1)
-					.select(outer ? 'eventGroup.scheduledTimeEnd' : 'eventGroup.scheduledTimeStart')
-					.as('lastTime')
-			];
-
-			if (mode == Mode.TAXI) {
-				console.log('SENDING EMAIL TO TAXI OWNERS');
-				const rideInfo = await db
-					.selectFrom('request')
-					.innerJoin('tour', 'request.tour', 'tour.id')
-					.innerJoin('vehicle', 'tour.vehicle', 'vehicle.id')
-					.innerJoin('user', 'vehicle.company', 'user.companyId')
-					.select((eb) => ['user.email', 'user.name', 'tour.id as tourId', ...getEvents(eb, false)])
-					.where('request.id', '=', request1)
-					.where('user.isTaxiOwner', '=', true)
-					.execute();
-				await Promise.all(rideInfo.map((r) => sendMail(NewRide, 'Neue Beförderung', r.email, r)));
-			} else {
-				console.log('SENDING EMAIL TO RIDE SHARE PROVIDER');
-				const rideInfo = await db
-					.selectFrom('request')
-					.innerJoin('rideShareTour', 'request.rideShareTour', 'rideShareTour.id')
-					.innerJoin('rideShareVehicle', 'rideShareTour.vehicle', 'rideShareVehicle.id')
-					.innerJoin('user as provider', 'rideShareVehicle.owner', 'provider.id')
-					.innerJoin('user as passenger', 'request.customer', 'passenger.id')
-					.select((eb) => [
-						'provider.email as providerMail',
-						'provider.name as providerName',
-						'passenger.email as passengerMail',
-						'passenger.name as passengerName',
-						'passenger.phone as passengerPhone',
-						'rideShareTour.id as tourId',
-						'rideShareTour.communicatedStart as journeyTime',
-						...getEvents(eb, true),
-						eb
-							.selectFrom('event')
-							.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-							.innerJoin('request', 'request.id', 'event.request')
-							.whereRef('request.rideShareTour', '=', 'rideShareTour.id')
-							.orderBy('eventGroup.scheduledTimeStart', 'asc')
-							.limit(1)
-							.select('address')
-							.as('journeyFirst'),
-						eb
-							.selectFrom('event')
-							.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-							.innerJoin('request', 'request.id', 'event.request')
-							.whereRef('request.rideShareTour', '=', 'rideShareTour.id')
-							.orderBy('eventGroup.scheduledTimeStart', 'desc')
-							.limit(1)
-							.select('address')
-							.as('journeyLast')
-					])
-					.where('request.id', '=', request1)
-					.execute();
-				await Promise.all(
-					rideInfo.map((r) =>
-						sendMail(NewRideSharingRequest, 'Neue Mitfahr-Anfrage', r.providerMail, r)
-					)
-				);
-			}
-		} catch {
-			/* nothing we can do about this */
-		}
+		await sendBookingMails(request1, mode, db, sendMail);
 		return redirect(302, `/bookings/${id}`);
 	},
 	storeItineraryWithNoOdm: async ({ request, locals }): Promise<{ msg: Msg }> => {

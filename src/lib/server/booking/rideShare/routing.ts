@@ -43,7 +43,6 @@ export async function routing(
 	};
 
 	const forward: ((Coordinates & { eventId: number }) | undefined)[] = [];
-
 	const backward: ((Coordinates & { eventId: number }) | undefined)[] = [];
 	iterateAllInsertions(rideShareTours, insertionRanges, (info) => {
 		forward.push(
@@ -60,14 +59,14 @@ export async function routing(
 		forward.map((b) =>
 			b === undefined
 				? new Array<undefined>(busStops.length)
-				: batchOneToManyCarRouting(b, busStops, false, maxTourTime)
+				: batchOneToManyCarRouting(b, busStops, true, maxTourTime)
 		)
 	);
 	const toBusStop: Promise<(number | undefined)[][]> = Promise.all(
 		backward.map((b) =>
 			b === undefined
 				? new Array<undefined>(busStops.length)
-				: batchOneToManyCarRouting(b, busStops, true, maxTourTime)
+				: batchOneToManyCarRouting(b, busStops, false, maxTourTime)
 		)
 	);
 	return {

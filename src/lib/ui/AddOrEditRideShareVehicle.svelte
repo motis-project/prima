@@ -14,7 +14,6 @@
 	import { defaultCarPicture } from '$lib/constants.js';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { enhance } from '$app/forms';
 	import type { Msg } from '$lib/msg';
 
 	const {
@@ -34,7 +33,7 @@
 		color?: string | null;
 		model?: string | null;
 		smokingAllowed?: boolean;
-		licensePlate?: string;
+		licensePlate?: string | null;
 		vehiclePicturePath?: string | null;
 		vehicleId?: number;
 	} = $props();
@@ -68,6 +67,8 @@
 		fromUrl = sessionStorage.getItem('lastPage') ?? '/default';
 		console.log('Came from:', fromUrl);
 	});
+
+	let loading = $state(false);
 </script>
 
 <div>
@@ -84,12 +85,10 @@
 		enctype="multipart/form-data"
 		method="post"
 		{action}
-		use:enhance={() => {
-			return async ({ update }) => {
-				update({ reset: false });
-			};
-		}}
 		class="flex flex-col gap-4"
+		onsubmit={() => {
+			loading = true;
+		}}
 	>
 		<h2 class="font-semibold">
 			{!isEditMode ? t.rideShare.createNewVehicle : t.rideShare.editVehicle}
@@ -99,7 +98,7 @@
 				name="licensePlate"
 				type="string"
 				placeholder={LICENSE_PLATE_PLACEHOLDER}
-				value={licensePlate}
+				value={licensePlate ?? undefined}
 			/>
 		</Panel>
 		<Panel title={t.rideShare.maxPassengers} subtitle={''}>
@@ -170,7 +169,7 @@
 		</Panel>
 		<Message msg={form?.msg} class="mb-4" />
 
-		<Button type="submit" variant="outline" data-testid="create-vehicle">
+		<Button type="submit" variant="outline" data-testid="create-vehicle" disabled={loading}>
 			{!isEditMode ? t.rideShare.createVehicle : t.rideShare.saveChanges}
 		</Button>
 	</form>

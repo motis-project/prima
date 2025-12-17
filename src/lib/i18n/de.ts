@@ -3,7 +3,8 @@ import type { Translations } from './translation';
 const translations: Translations = {
 	menu: {
 		connections: 'Verbindungen',
-		bookings: 'Meine Fahrten',
+		bookings: 'Buchungen',
+		rideOffers: 'Mitfahrangebote',
 		account: 'Konto',
 		availability: 'Verfügbarkeit',
 		company: 'Unternehmen',
@@ -76,7 +77,7 @@ const translations: Translations = {
 		requestCancelled: 'Fahrt storniert',
 
 		// Booking
-		noRouteFound: 'Keine Route gefunden. Die maximale Fahrtzeit beträgt eine Stunde.',
+		noRouteFound: 'Keine Route gefunden. Die maximale Fahrtzeit beträgt zwei Stunden.',
 		distanceTooLong: 'Distanz zu lang.',
 		startDestTooClose: 'Distanz zu kurz.',
 		maxTravelTimeExceeded: 'Fahrstrecke zu lang.',
@@ -96,6 +97,7 @@ const translations: Translations = {
 		cancelled: 'Diese Fahrt wurde storniert.',
 		stillNegotiating:
 			'Die Anfrage wurde gesendet. Die Mitfahrgelegenheit ist noch nicht fest vereinbart.',
+		accepted: 'Die Fahrt ist fest vereinbart.',
 		openRequest: 'Dieses Mitfahrangebot hat offene Anfragen.',
 
 		// Feedback
@@ -108,7 +110,8 @@ const translations: Translations = {
 		fileTooLarge: 'Datei ist zu groß',
 
 		//Ride Sharing
-		vehicleEditedSuccessfully: 'Fahrzeug erfolgreich geändert'
+		vehicleEditedSuccessfully: 'Fahrzeug erfolgreich geändert',
+		rideShareAcceptError: 'Fehler. Möglicherweise Konflikt mit anderer Mitfahrt.'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',
@@ -189,7 +192,8 @@ const translations: Translations = {
 		yourFeedback: 'Ihr Feedback',
 		good: 'ja',
 		bad: 'nein',
-		sendFeedback: 'Feedback abschicken'
+		sendFeedback: 'Feedback abschicken',
+		backToHome: 'Zurück zur Startseite'
 	},
 
 	atDateTime: (timeType, t: Date, isToday: boolean) =>
@@ -206,6 +210,7 @@ const translations: Translations = {
 	bookingsHeader: 'Meine gebuchten und gespeicherten Fahrten',
 	cancelledJourneys: 'Vergangene und stornierte Fahrten',
 	noBookings: 'Sie haben bisher keine gebuchten oder gespeicherten Fahrten.',
+	noRideOffers: 'Sie haben bisher noch keine Mitfahrgelegenheit angeboten.',
 	journeyDetails: 'Verbindungsdetails',
 	transfer: 'Umstieg',
 	transfers: 'Umstiege',
@@ -359,8 +364,10 @@ const translations: Translations = {
 	buttons: {
 		addVehicleTitle: 'Fahrzeug für Mitfahrangebote hinzufügen',
 		addVehicle: 'Fahrzeug hinzufügen',
+		editVehicle: 'ausgewähltes Fahrzeug bearbeiten',
 		uploadPhoto: 'Foto auswählen',
 		savePhoto: 'Foto speichern',
+		photoSaved: 'Foto gespeichert',
 		smokingOptions: ['nicht erlaubt', 'erlaubt']
 	},
 
@@ -384,7 +391,9 @@ const translations: Translations = {
 		feedbackPrompt: 'Bitte bewerten Sie Ihre Reise mit',
 		feedbackPromptProvider: 'Bitte bewerten Sie Ihren Mitfahrer',
 		howHasItBeen: 'Sie können Ihre letzte Mitfahrerfahrung hier bewerten',
-		editVehicle: 'Fahrzeug ändern'
+		editVehicle: 'Fahrzeug ändern',
+		closeTo: 'in der Nähe von',
+		defaultLicensePlate: 'Standardfahrzeug'
 	}
 };
 
