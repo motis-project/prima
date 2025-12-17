@@ -1,10 +1,9 @@
-import { LICENSE_PLATE_REGEX } from '$lib/constants';
 import { msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
 import { replacePhoto } from '$lib/server/util/uploadPhoto';
 import { fail } from '@sveltejs/kit';
 import type { CountryKey } from '@codecorn/euro-plate-validator';
-import { validatePlate, supportedCountries, COUNTRY_CODES } from '@codecorn/euro-plate-validator';
+import { validatePlate, supportedCountries } from '@codecorn/euro-plate-validator';
 
 export async function prepareVehicleUAddOrpdate(formData: FormData, userId: number) {
 	const licensePlate = formData.get('licensePlate');
@@ -21,7 +20,6 @@ export async function prepareVehicleUAddOrpdate(formData: FormData, userId: numb
 		return fail(400, { msg: msg('invalidSeats') });
 	}
 	if (typeof country !== 'string' || !supportedCountries.includes(country as any)) {
-		console.log('country: ' + country);
 		return fail(400, { msg: msg('invalidCountry') });
 	}
 	if (

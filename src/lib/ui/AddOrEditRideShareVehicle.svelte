@@ -29,7 +29,8 @@
 		color,
 		vehiclePicturePath,
 		smokingAllowed,
-		vehicleId
+		vehicleId,
+		country
 	}: {
 		form: { msg?: Msg } | null;
 		luggage?: number;
@@ -40,6 +41,7 @@
 		licensePlate?: string | null;
 		vehiclePicturePath?: string | null;
 		vehicleId?: number;
+		country?: CountryKey;
 	} = $props();
 	const isEditMode = luggage !== undefined;
 	const action = !isEditMode ? '?/addVehicle' : '?/editVehicle';
@@ -48,7 +50,7 @@
 	let newModel: string = $state(model ?? '');
 	let hasModel = $state(model !== undefined && model !== null);
 	let smokingOptions = t.buttons.smokingOptions;
-	let country = $state<CountryKey>('DE');
+	let newCountry = $state<CountryKey>(country ?? 'DE');
 	const smokingAllowedString: string | undefined =
 		smokingAllowed === undefined
 			? undefined
@@ -101,9 +103,9 @@
 		<Panel title={t.rideShare.licensePlate} subtitle={''}>
 			<div class="flex flex-row gap-2">
 				<div class="w-fit">
-				<Select type="single" bind:value={country}>
+				<Select type="single" bind:value={newCountry}>
 					<SelectTrigger>
-						{country}
+						{newCountry}
 					</SelectTrigger>
 					<SelectContent>
 						{#each supportedCountries as c}
@@ -117,7 +119,7 @@
 				<Input
 					name="licensePlate"
 					type="string"
-					placeholder={DISPLAY_FORMATS[country]}
+					placeholder={DISPLAY_FORMATS[newCountry]}
 					value={licensePlate ?? undefined}
 				/>
 			</div>
@@ -190,6 +192,6 @@
 		<input type="hidden" name="hasColorString" value={hasColor ? '1' : '0'} />
 		<input type="hidden" name="smokingAllowed" value={newSmokingAllowed === smokingOptions[0] ? '0' : '1'} />
 		<input type="hidden" name="vehicleId" value={vehicleId} />
-		<input type="hidden" name="country" value={country} />
+		<input type="hidden" name="country" value={newCountry} />
 	</form>
 </div>
