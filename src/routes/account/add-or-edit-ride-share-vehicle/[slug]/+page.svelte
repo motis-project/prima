@@ -1,6 +1,6 @@
 <script lang="ts">
 	import AddOrEditRideShareVehicle from '$lib/ui/AddOrEditRideShareVehicle.svelte';
-	import type {CountryKey} from '@codecorn/euro-plate-validator';
+	import type { CountryKey } from '@codecorn/euro-plate-validator';
 
 	const { form, data } = $props();
 </script>
