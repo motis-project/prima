@@ -17,7 +17,7 @@
 	import { goto } from '$app/navigation';
 	import type { Msg } from '$lib/msg';
 	import type {CountryKey} from "@codecorn/euro-plate-validator";
-	import {validatePlate, supportedCountries } from "@codecorn/euro-plate-validator";
+	import {validatePlate, supportedCountries, getInputMask, DISPLAY_FORMATS } from "@codecorn/euro-plate-validator";
 	import SelectItem from '$lib/shadcn/select/select-item.svelte';
 
 	const {
@@ -99,8 +99,9 @@
 			{!isEditMode ? t.rideShare.createNewVehicle : t.rideShare.editVehicle}
 		</h2>
 		<Panel title={t.rideShare.licensePlate} subtitle={''}>
-			<div class="flex flex-row w-fit gap-2">
-				<Select type="single" name="country" bind:value={country}>
+			<div class="flex flex-row gap-2">
+				<div class="w-fit">
+				<Select type="single" bind:value={country}>
 					<SelectTrigger>
 						{country}
 					</SelectTrigger>
@@ -112,10 +113,11 @@
 						{/each}
 					</SelectContent>
 				</Select>
+				</div>
 				<Input
 					name="licensePlate"
 					type="string"
-					placeholder={LICENSE_PLATE_PLACEHOLDER}
+					placeholder={DISPLAY_FORMATS[country]}
 					value={licensePlate ?? undefined}
 				/>
 			</div>
@@ -172,17 +174,6 @@
 				{/each}
 			</ToggleGroup.Root>
 		</Panel>
-		<input type="hidden" name="id" value={undefined} />
-		<input type="hidden" name="color" value={newColor} />
-		<input type="hidden" name="model" value={newModel} />
-		<input type="hidden" name="hasModelString" value={hasModel ? '1' : '0'} />
-		<input type="hidden" name="hasColorString" value={hasColor ? '1' : '0'} />
-		<input
-			type="hidden"
-			name="smokingAllowed"
-			value={newSmokingAllowed === smokingOptions[0] ? '0' : '1'}
-		/>
-		<input type="hidden" name="vehicleId" value={vehicleId} />
 		<Panel title={t.rideShare.vehiclePhoto} subtitle={''}>
 			<UploadPhoto name="vehiclePicture" defaultPicture={vehiclePicturePath ?? defaultCarPicture} />
 		</Panel>
@@ -191,5 +182,14 @@
 		<Button type="submit" variant="outline" data-testid="create-vehicle" disabled={loading}>
 			{!isEditMode ? t.rideShare.createVehicle : t.rideShare.saveChanges}
 		</Button>
+
+		<input type="hidden" name="id" value={undefined} />
+		<input type="hidden" name="color" value={newColor} />
+		<input type="hidden" name="model" value={newModel} />
+		<input type="hidden" name="hasModelString" value={hasModel ? '1' : '0'} />
+		<input type="hidden" name="hasColorString" value={hasColor ? '1' : '0'} />
+		<input type="hidden" name="smokingAllowed" value={newSmokingAllowed === smokingOptions[0] ? '0' : '1'} />
+		<input type="hidden" name="vehicleId" value={vehicleId} />
+		<input type="hidden" name="country" value={country} />
 	</form>
 </div>
