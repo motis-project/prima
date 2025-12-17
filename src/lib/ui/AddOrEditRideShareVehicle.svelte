@@ -11,18 +11,12 @@
 	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
 	import Panel from '$lib/ui/Panel.svelte';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
-	import { LICENSE_PLATE_PLACEHOLDER } from '$lib/constants.js';
 	import { defaultCarPicture } from '$lib/constants.js';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import type { Msg } from '$lib/msg';
 	import type { CountryKey } from '@codecorn/euro-plate-validator';
-	import {
-		validatePlate,
-		supportedCountries,
-		getInputMask,
-		DISPLAY_FORMATS
-	} from '@codecorn/euro-plate-validator';
+	import { supportedCountries, DISPLAY_FORMATS } from '@codecorn/euro-plate-validator';
 	import SelectItem from '$lib/shadcn/select/select-item.svelte';
 
 	const {
