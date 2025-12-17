@@ -37,6 +37,7 @@ export const POST = async (event: RequestEvent) => {
 		whitelist(from, firstMileIn, c, false),
 		whitelist(to, lastMileIn, c, true)
 	]);
+
 	adjustTaxiEvents(response.itineraries, firstMileIn, lastMileIn, firstMileOut, lastMileOut);
 
 	// add direct
@@ -166,7 +167,9 @@ function adjustTaxiEvents(
 
 			firstMileTaxi.startTime = new Date(insertion.pickupTime).toISOString();
 			firstMileTaxi.endTime = new Date(insertion.dropoffTime).toISOString();
-			firstMileTaxi.duration = insertion.dropoffTime - insertion.pickupTime;
+			firstMileTaxi.duration = (insertion.dropoffTime - insertion.pickupTime) / 1000;
+			i.startTime = firstMileTaxi.startTime;
+			i.duration = (new Date(i.endTime).getTime() - insertion.pickupTime) / 1000;
 		}
 		if (lastMileTaxi !== undefined) {
 			const bsIndex = lastMileIn.findIndex(
@@ -190,7 +193,9 @@ function adjustTaxiEvents(
 
 			lastMileTaxi.startTime = new Date(insertion.pickupTime).toISOString();
 			lastMileTaxi.endTime = new Date(insertion.dropoffTime).toISOString();
-			lastMileTaxi.duration = insertion.dropoffTime - insertion.pickupTime;
+			lastMileTaxi.duration = (insertion.dropoffTime - insertion.pickupTime) / 1000;
+			i.endTime = lastMileTaxi.endTime;
+			i.duration = (insertion.dropoffTime - new Date(i.startTime).getTime()) / 1000;
 		}
 	}
 	toRemove.forEach((i) => {
