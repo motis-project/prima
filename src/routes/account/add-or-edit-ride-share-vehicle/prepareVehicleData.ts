@@ -19,7 +19,7 @@ export async function prepareVehicleUAddOrpdate(formData: FormData, userId: numb
 	if (passengers < 1 || 4 < passengers) {
 		return fail(400, { msg: msg('invalidSeats') });
 	}
-	if (typeof country !== 'string' || !supportedCountries.includes(country as any)) {
+	if (typeof country !== 'string' || !supportedCountries.includes(country as CountryKey)) {
 		return fail(400, { msg: msg('invalidCountry') });
 	}
 	if (
