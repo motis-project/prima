@@ -39,6 +39,7 @@
 	import { enhance } from '$app/forms';
 	import { HOUR } from '$lib/util/time';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
+	import PlusMinus from '$lib/ui/PlusMinus.svelte';
 
 	const { data, form } = $props();
 
@@ -318,21 +319,12 @@
 						</span>
 					</Popover.Trigger>
 					<Popover.Content class="w-fit">
-						<Button variant="ghost" onclick={() => (passengers -= passengers > 1 ? 1 : 0)}>
-							<CircleMinus />
-						</Button>
-						{passengers}
-						<Button
-							variant="ghost"
-							onclick={() =>
-								(passengers +=
-									passengers <
-									(data.vehicles.find((v) => v.id.toString() == vehicle)?.passengers ?? 3)
-										? 1
-										: 0)}
-						>
-							<CirclePlus />
-						</Button>
+						<PlusMinus
+							bind:value={passengers}
+							min={1}
+							max={data.vehicles.find((v) => v.id.toString() == vehicle)?.passengers ?? 3}
+							step={1}
+						/>
 					</Popover.Content>
 				</Popover.Root>
 				<Popover.Root>
@@ -343,20 +335,12 @@
 						</span>
 					</Popover.Trigger>
 					<Popover.Content class="w-fit">
-						<Button variant="ghost" onclick={() => (luggage -= luggage > 0 ? 1 : 0)}>
-							<CircleMinus />
-						</Button>
-						{luggage}
-						<Button
-							variant="ghost"
-							onclick={() =>
-								(luggage +=
-									luggage < (data.vehicles.find((v) => v.id.toString() == vehicle)?.luggage ?? 3)
-										? 1
-										: 0)}
-						>
-							<CirclePlus />
-						</Button>
+						<PlusMinus
+							bind:value={luggage}
+							min={0}
+							max={data.vehicles.find((v) => v.id.toString() == vehicle)?.luggage ?? 3}
+							step={1}
+						/>
 					</Popover.Content>
 				</Popover.Root>
 			</div>
