@@ -219,7 +219,7 @@ const translations: Translations = {
 	rideSharing: 'Ride sharing offer',
 	rideSharingBookingRequired: 'Ride sharing offer, negotiation required!',
 	rideSharingInfo:
-		'These are private ride-sharing offers. If you are interested in a private ride-sharing connection, you can send a request to the provider to arrange the details.',
+		'These are private ride-sharing offers. If you are interested in a private ride-sharing connection, you can send a request to the provider to arrange the details. Register to create ride-sharing offers and send requests.',
 	from: 'From',
 	to: 'To',
 	arrival: 'Arrival',

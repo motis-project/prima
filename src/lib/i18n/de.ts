@@ -226,7 +226,7 @@ const translations: Translations = {
 	rideSharing: 'Mitfahrangebot',
 	rideSharingBookingRequired: 'Mitfahrangebot - Vereinbarung erforderlich!',
 	rideSharingInfo:
-		'Es handelt sich um private Mitfahrangebote. Wenn Sie sich für eine Verbindung mit privater Mitnahme interessieren, können Sie dem Anbieter eine Anfrage senden, um die Details zu vereinbaren.',
+		'Es handelt sich um private Mitfahrangebote. Wenn Sie sich für eine Verbindung mit privater Mitnahme interessieren, können Sie dem Anbieter eine Anfrage senden, um die Details zu vereinbaren. Registrieren Sie sich, um Mitfahrangebote zu erstellen und Anfragen zu senden.',
 	from: 'Von',
 	to: 'Nach',
 	arrival: 'Ankunft',
