@@ -165,10 +165,9 @@ function adjustTaxiEvents(
 				continue;
 			}
 
-			firstMileTaxi.startTime = new Date(insertion.pickupTime).toISOString();
-			firstMileTaxi.endTime = new Date(insertion.dropoffTime).toISOString();
+			i.startTime = firstMileTaxi.startTime = firstMileTaxi.scheduledStartTime = new Date(insertion.pickupTime).toISOString();
+			firstMileTaxi.endTime = firstMileTaxi.scheduledEndTime = new Date(insertion.dropoffTime).toISOString();
 			firstMileTaxi.duration = (insertion.dropoffTime - insertion.pickupTime) / 1000;
-			i.startTime = firstMileTaxi.startTime;
 			i.duration = (new Date(i.endTime).getTime() - insertion.pickupTime) / 1000;
 		}
 		if (lastMileTaxi !== undefined) {
@@ -191,10 +190,9 @@ function adjustTaxiEvents(
 				continue;
 			}
 
-			lastMileTaxi.startTime = new Date(insertion.pickupTime).toISOString();
-			lastMileTaxi.endTime = new Date(insertion.dropoffTime).toISOString();
+			lastMileTaxi.startTime = lastMileTaxi.scheduledStartTime = new Date(insertion.pickupTime).toISOString();
+			i.endTime = lastMileTaxi.endTime = lastMileTaxi.scheduledEndTime = new Date(insertion.dropoffTime).toISOString();
 			lastMileTaxi.duration = (insertion.dropoffTime - insertion.pickupTime) / 1000;
-			i.endTime = lastMileTaxi.endTime;
 			i.duration = (insertion.dropoffTime - new Date(i.startTime).getTime()) / 1000;
 		}
 	}
