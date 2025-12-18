@@ -579,29 +579,29 @@
 					updateStartDest={updateStartDest(from, to)}
 				/>
 			</div>
-			<div class="mx-auto w-full p-2 space-y-2 border-2 border-solid border-rounded-md rounded-md">
-				<p class="font-bold text-md">{t.publicTransitTaxi}</p>
+			<div class="border-rounded-md mx-auto w-full space-y-2 rounded-md border-2 border-solid p-2">
+				<p class="text-md font-bold">{t.publicTransitTaxi}</p>
 				<hr />
-				<div class="text-sm space-y-2">
-				<p><strong>{t.fare}</strong><br />3€ {t.perPerson} {t.perRide}</p>
-				<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
-				<p>
-					<button
-						class="link"
-						onclick={() =>
-							pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
-						><strong>{t.serviceArea}</strong></button
-					><br />{t.regionAround} Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife,
-					Trebendorf, Weißkeißel, Weißwasser/O.L.
-				</p>
-				<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
-			</div>
+				<div class="space-y-2 text-sm">
+					<p><strong>{t.fare}</strong><br />3€ {t.perPerson} {t.perRide}</p>
+					<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
+					<p>
+						<button
+							class="link"
+							onclick={() =>
+								pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
+							><strong>{t.serviceArea}</strong></button
+						><br />{t.regionAround} Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife,
+						Trebendorf, Weißkeißel, Weißwasser/O.L.
+					</p>
+					<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
+				</div>
 			</div>
 
-			<div class="mx-auto w-full p-2 space-y-2 border-2 border-solid border-rounded-md rounded-md">
-				<p class="font-bold text-md">{t.rideSharing}</p>
+			<div class="border-rounded-md mx-auto w-full space-y-2 rounded-md border-2 border-solid p-2">
+				<p class="text-md font-bold">{t.rideSharing}</p>
 				<hr />
-				<div class="text-sm space-y-2">
+				<div class="space-y-2 text-sm">
 					{t.rideSharingInfo}
 				</div>
 			</div>
