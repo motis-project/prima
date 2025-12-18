@@ -41,6 +41,7 @@
 	import { MAX_MATCHING_DISTANCE } from '$lib/constants';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { planAndSign, type SignedPlanResponse } from '$lib/planAndSign';
+	import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '$lib/shadcn/card';
 
 	import logo from '$lib/assets/logo-alpha.png';
 	import Footer from '$lib/ui/Footer.svelte';
@@ -578,7 +579,10 @@
 					updateStartDest={updateStartDest(from, to)}
 				/>
 			</div>
-			<div class="mx-auto mt-6 space-y-2 text-sm">
+			<div class="mx-auto w-full p-2 space-y-2 border-2 border-solid border-rounded-md rounded-md">
+				<p class="font-bold text-md">{t.publicTransitTaxi}</p>
+				<hr />
+				<div class="text-sm space-y-2">
 				<p><strong>{t.fare}</strong><br />3€ {t.perPerson} {t.perRide}</p>
 				<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
 				<p>
@@ -592,6 +596,15 @@
 				</p>
 				<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
 			</div>
+			</div>
+
+			<div class="mx-auto w-full p-2 space-y-2 border-2 border-solid border-rounded-md rounded-md">
+				<p class="font-bold text-md">{t.rideSharing}</p>
+				<hr />
+				<div class="text-sm space-y-2">
+				</div>
+			</div>
+
 			<p class="mx-auto mt-6 text-sm">
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html t.introduction}

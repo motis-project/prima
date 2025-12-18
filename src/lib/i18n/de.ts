@@ -259,7 +259,7 @@ const translations: Translations = {
 	storeItinerary: 'Reisekette speichern',
 	removeItinerary: 'Reisekette entfernen',
 	introduction:
-		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und in Zukunft auch Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Mehr über <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a>',
+		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und private Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Mehr über <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a>',
 	publicTransitTaxi: 'ÖPNV-Taxi',
 	serviceArea: 'Bediengebiet',
 	serviceTime: 'Bedienzeit',
