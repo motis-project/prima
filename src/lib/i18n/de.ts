@@ -225,6 +225,8 @@ const translations: Translations = {
 	odm: 'ÖPNV-Taxi - Buchung erforderlich!',
 	rideSharing: 'Mitfahrangebot',
 	rideSharingBookingRequired: 'Mitfahrangebot - Vereinbarung erforderlich!',
+	rideSharingInfo:
+		'Es handelt sich um private Mitfahrangebote. Wenn Sie sich für eine Verbindung mit privater Mitnahme interessieren, können Sie dem Anbieter eine Anfrage senden, um die Details zu vereinbaren.',
 	from: 'Von',
 	to: 'Nach',
 	arrival: 'Ankunft',

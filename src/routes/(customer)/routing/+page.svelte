@@ -602,6 +602,7 @@
 				<p class="font-bold text-md">{t.rideSharing}</p>
 				<hr />
 				<div class="text-sm space-y-2">
+					{t.rideSharingInfo}
 				</div>
 			</div>
 
