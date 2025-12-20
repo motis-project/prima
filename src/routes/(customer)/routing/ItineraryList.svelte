@@ -40,7 +40,9 @@
 	{#if it.legs.some((l) => isRideShareLeg(l))}
 		<Info class="size-4" /> {t.ride.negotiateHere}
 	{:else if it.legs.some((l) => isTaxiLeg(l))}
-		<Info class="size-4" /> {t.booking.bookHere} {getEuroString(odmPrice(it, passengers, freePassengers, reducedPassengers))}
+		<Info class="size-4" />
+		{t.booking.bookHere}
+		{getEuroString(odmPrice(it, passengers, freePassengers, reducedPassengers))}
 	{/if}
 {/snippet}
 

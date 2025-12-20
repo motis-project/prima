@@ -339,11 +339,11 @@
 										{wheelchair}
 										luggage={luggageToInt(luggage)}
 										price={odmPrice(
-									page.state.selectedItinerary,
-									passengers,
-									freeKids,
-									kidsSevenToFourteen
-								)}
+											page.state.selectedItinerary,
+											passengers,
+											freeKids,
+											kidsSevenToFourteen
+										)}
 									/>
 
 									<p class="my-2 text-sm">{t.booking.disclaimer}</p>
