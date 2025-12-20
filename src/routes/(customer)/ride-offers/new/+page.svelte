@@ -9,8 +9,6 @@
 		ArrowUpDown,
 		MapPin,
 		MapPinCheckInside,
-		CircleMinus,
-		CirclePlus,
 		EllipsisVertical,
 		ChevronRightIcon,
 		LoaderCircle,
