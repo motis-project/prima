@@ -4,6 +4,7 @@ const translations: Translations = {
 	menu: {
 		connections: 'Verbindungen',
 		bookings: 'Buchungen',
+		rideOffers: 'Mitfahrangebote',
 		account: 'Konto',
 		availability: 'Verfügbarkeit',
 		company: 'Unternehmen',
@@ -19,6 +20,7 @@ const translations: Translations = {
 		enterEmailAndPassword: 'Bitte geben Sie Ihre E-Mail und Ihr Passwort ein.',
 		invalidEmail: 'Ungültige E-Mail-Adresse.',
 		invalidPhone: 'Ungültige Telefonnummer.',
+		invalidZipCity: 'Ungültige PLZ/Ort/Region.',
 		emailAlreadyRegistered: 'Diese E-Mail-Adresse ist bereits registriert.',
 		weakPassword: 'Bitte wählen Sie ein stärkeres Passwort.',
 		tooManyRequests: 'Zu viele Anfragen.',
@@ -75,7 +77,7 @@ const translations: Translations = {
 		requestCancelled: 'Fahrt storniert',
 
 		// Booking
-		noRouteFound: 'Keine Route gefunden.',
+		noRouteFound: 'Keine Route gefunden. Die maximale Fahrtzeit beträgt zwei Stunden.',
 		distanceTooLong: 'Distanz zu lang.',
 		startDestTooClose: 'Distanz zu kurz.',
 		maxTravelTimeExceeded: 'Fahrstrecke zu lang.',
@@ -83,6 +85,7 @@ const translations: Translations = {
 		startDestNotInSameZone: 'Start und Ziel nicht im selben Pflichtfahrgebiet.',
 		noVehicle: 'Kein Fahrzeug verfügbar.',
 		routingRequestFailed: 'Routinganfrage fehlgeschlagen.',
+		vehicleConflict: 'Das gewählte Fahrzeug ist zum gewählten Zeitpunkt nicht verfügbar.',
 
 		// Booking
 		bookingError: 'Die Fahrt konnte nicht gebucht werden.',
@@ -92,10 +95,23 @@ const translations: Translations = {
 
 		// Journey
 		cancelled: 'Diese Fahrt wurde storniert.',
+		stillNegotiating:
+			'Die Anfrage wurde gesendet. Die Mitfahrgelegenheit ist noch nicht fest vereinbart.',
+		accepted: 'Die Fahrt ist fest vereinbart.',
+		openRequest: 'Dieses Mitfahrangebot hat offene Anfragen.',
 
 		// Feedback
 		feedbackThank: 'Vielen Dank für Ihr Feedback!',
-		feedbackMissing: 'Kein Feedback gegeben'
+		feedbackMissing: 'Kein Feedback gegeben',
+
+		// Picture Upload
+		noFileUploaded: 'kein Bild hochgeladen',
+		invalidFileType: 'ungültiger Dateityp',
+		fileTooLarge: 'Datei ist zu groß',
+
+		//Ride Sharing
+		vehicleEditedSuccessfully: 'Fahrzeug erfolgreich geändert',
+		rideShareAcceptError: 'Fehler. Möglicherweise Konflikt mit anderer Mitfahrt.'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',
@@ -103,16 +119,29 @@ const translations: Translations = {
 	},
 	account: {
 		name: 'Name',
+		lastName: 'Nachname',
+		firstName: 'Vorname',
+		gender: (id: string) => {
+			return { o: 'divers', f: 'Frau', m: 'Herr', n: 'keine Angabe' }[id]!;
+		},
+		genderShort: (id: string) => {
+			return { o: '(divers)', f: '(w)', m: '(m)', n: '' }[id]!;
+		},
+		genderString: 'Geschlecht',
 		email: 'E-Mail',
 		password: 'Passwort',
 		phone: 'Telefonnummer',
+		zipCode: 'PLZ',
+		city: 'Ort',
+		region: 'Region',
 		create: 'Nutzerkonto erstellen',
 		forgotPassword: 'Passwort vergessen?',
 		signupConditions: (tos: string, privacy: string, provider: string) =>
 			`Durch die Anmeldung stimme ich den ${tos} sowie der ${privacy} von ${provider} zu.`,
 		tos: 'Beförderungsbedingungen',
 		imprint: 'Impressum',
-		privacy_short: 'Datenschutz',
+		dataLicenses: 'Fahrplandatenquellen',
+		privacyShort: 'Datenschutz',
 		privacy: 'Datenschutzerklärung',
 		login: 'Login',
 		sentAnEmailTo: 'Wir haben Ihnen einen Code an folgende E-Mail-Adresse geschickt:',
@@ -138,7 +167,15 @@ const translations: Translations = {
 		newPassword: 'Neues Passwort',
 		oldPassword: 'Altes Passwort',
 		resendCode: 'Code erneut senden',
-		verify: 'Verifizieren'
+		verify: 'Verifizieren',
+		profilePicture: 'Profilbild',
+		profilePictureSubtitle: 'Hier können Sie Ihr Profilbild ändern',
+		personalInfo: 'Personenbezogene Informationen',
+		adjustPersonalInfo: 'Ändern Sie Ihre persönlichen Informationen',
+		updatePersonalInfo: 'Persönliche Informationen ändern',
+		vehicleListRideShare: 'Fahrzeugliste für Mitfahrangebote',
+		vehicleListSubtitle:
+			'Sie können ein Fahrzeug anpassen indem Sie es in der Liste unten anklicken.'
 	},
 	rating: {
 		thanksForUsing: 'Vielen Dank, dass Sie das ÖPNV Taxi benutzt haben.',
@@ -155,7 +192,8 @@ const translations: Translations = {
 		yourFeedback: 'Ihr Feedback',
 		good: 'ja',
 		bad: 'nein',
-		sendFeedback: 'Feedback abschicken'
+		sendFeedback: 'Feedback abschicken',
+		backToHome: 'Zurück zur Startseite'
 	},
 
 	atDateTime: (timeType, t: Date, isToday: boolean) =>
@@ -169,8 +207,10 @@ const translations: Translations = {
 			year: isToday ? undefined : '2-digit'
 		}),
 
+	bookingsHeader: 'Meine gebuchten und gespeicherten Fahrten',
 	cancelledJourneys: 'Vergangene und stornierte Fahrten',
 	noBookings: 'Sie haben bisher keine gebuchten oder gespeicherten Fahrten.',
+	noRideOffers: 'Sie haben bisher noch keine Mitfahrgelegenheit angeboten.',
 	journeyDetails: 'Verbindungsdetails',
 	transfer: 'Umstieg',
 	transfers: 'Umstiege',
@@ -183,6 +223,8 @@ const translations: Translations = {
 	taxi: 'Taxi',
 	moped: 'Moped',
 	odm: 'ÖPNV-Taxi - Buchung erforderlich!',
+	rideSharing: 'Mitfahrangebot',
+	rideSharingBookingRequired: 'Mitfahrangebot - Vereinbarung erforderlich!',
 	from: 'Von',
 	to: 'Nach',
 	arrival: 'Ankunft',
@@ -217,7 +259,7 @@ const translations: Translations = {
 	storeItinerary: 'Reisekette speichern',
 	removeItinerary: 'Reisekette entfernen',
 	introduction:
-		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und in Zukunft auch Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten.',
+		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und in Zukunft auch Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Mehr über <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a>',
 	publicTransitTaxi: 'ÖPNV-Taxi',
 	serviceArea: 'Bediengebiet',
 	serviceTime: 'Bedienzeit',
@@ -234,7 +276,7 @@ const translations: Translations = {
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
-		summary: 'Buchungszusammenfassung',
+		summary: 'Zusammenfassung',
 		header: 'Kostenpflichtig buchen',
 		disclaimer:
 			'Stornieren Sie die Fahrt mind. eine Stunde vorher, falls Sie die Fahrt nicht wahrnehmen können. Sollten Sie nicht rechtzeitig stornieren, wird Ihnen die Anfahrt des Taxis voll in Rechnung gestellt.',
@@ -269,7 +311,12 @@ const translations: Translations = {
 		cancelHeadline: 'Möchten Sie wirklich diese Fahrt stornieren?',
 		noCancel: 'Nein, Fahrt nicht stornieren.',
 		cancelDescription:
-			'Die Stornierung der Fahrt kann nicht rückgängig gemacht werden. Eine Stornierung weniger als 24 Stunden vor der Fahrt ist mit Kosten verbunden.'
+			'Die Stornierung der Fahrt kann nicht rückgängig gemacht werden. Eine Stornierung weniger als 24 Stunden vor der Fahrt ist mit Kosten verbunden.',
+		pin: 'PIN:',
+		pinExplainer:
+			'Zur Weitergabe an den Fahrgast. Der Fahrgast muss die PIN beim Einstieg den Taxifahrer:innen mitteilen.',
+		itineraryOnDate: 'Fahrt am',
+		withVehicle: 'mit Fahrzeug'
 	},
 
 	explainer: {
@@ -280,6 +327,75 @@ const translations: Translations = {
 		alt1: 'Ein blauer Kreis, der rechts nicht ganz gefüllt ist. Der nicht gefüllte Teil ist schraffiert.',
 		alt2: 'Ein blauer und ein gelber Kreis, die sich überlappen. Die Überlappung ist blau und gelb schraffiert.',
 		alt3: 'Ein blauer Kreis dessen rechter Teil gelb schraffiert ist.'
+	},
+	ride: {
+		myRideOffers: 'Meine Mitfahrangebote',
+		create: 'Neues Mitfahrangebot anlegen',
+		intro: 'Hinterlegen Sie Ihre Fahrt, um anderen Nutzern die Mitfahrt bei Ihnen anzubieten.',
+		vehicle: 'Fahrzeug',
+		addVehicle: 'Fahrzeug hinzufügen',
+		outro:
+			'Ihr Mitfahrangebot wird öffentlich in der Verbindungsauskunft angezeigt. Über Anfragen werden Sie per E-Mail benachrichtigt.',
+		publish: 'Mitfahrangebot veröffentlichen',
+		cancelTrip: 'Mitfahrangebot stornieren',
+		cancelHeadline: 'Möchten Sie wirklich dieses Mitfahrangebot stornieren?',
+		noCancel: 'Nein, Fahrt nicht stornieren.',
+		cancelDescription:
+			'Sie sollten ggf. vorhandene Mitfahrer persönlich informieren, auch wenn diese per E-Mail über die Stornierung benachrichtigt werden.',
+		negotiateHere: 'Hier vereinbaren',
+		negotiateHeader: 'Mitfahrgelegenheit vereinbaren',
+		negotiatePrivacy:
+			'Die folgenden Daten werden beim Senden der Anfrage mit der Person, die diese Mitfahrgelegenheit anbietet, geteilt:',
+		negotiateExplanation:
+			'Sie müssen den Preis sowie genaue Abfahrtszeit und -ort mit der anbietenden Person vereinbaren.',
+		startAndEnd: 'Start und Ziel der Fahrt',
+		profile: 'Ihr Profil',
+		email: 'Ihre E-Mail',
+		phone: 'Ihre Telefonnummer',
+		noPhone:
+			'Sie haben keine Telefonnummer in Ihrem Account hinterlegt. Der Anbieter wird Sie daher nur per E-Mail kontaktieren können.',
+		negotiateMessage: 'Nachricht an den Anbieter der Mitfahrgelegenheit',
+		sendNegotiationRequest: 'Anfrage senden',
+		requestBy: 'Anfrage von',
+		offerBy: 'Angebot von',
+		acceptRequest: 'Mitfahrt bestätigen',
+		requestAccepted: 'Mitfahrt bestätigt',
+		requestCancelled: 'Mitfahrt abgesagt'
+	},
+
+	buttons: {
+		addVehicleTitle: 'Fahrzeug für Mitfahrangebote hinzufügen',
+		addVehicle: 'Fahrzeug hinzufügen',
+		editVehicle: 'ausgewähltes Fahrzeug bearbeiten',
+		uploadPhoto: 'Foto auswählen',
+		savePhoto: 'Foto speichern',
+		photoSaved: 'Foto gespeichert',
+		smokingOptions: ['nicht erlaubt', 'erlaubt']
+	},
+
+	rideShare: {
+		maxPassengers: 'Maximale Anzahl Mitfahrer',
+		passengers: 'Mitfahrer',
+		smokingInVehicle: 'Rauchen im Fahrzeug',
+		vehiclePhoto: 'Foto',
+		color: 'Farbe',
+		model: 'Fahrzeugmodell',
+		specifyColor: 'Farbe angeben',
+		specifyModel: 'Fahrzeugmodell angeben',
+		luggage: 'Gepäckstücke',
+		luggageExplanation:
+			'Ungefähre Anzahl von transportierbaren Gepäckstücken in Handgepäckgröße. Ein großer Koffer entspricht etwa drei Handgepäckstücken.',
+		licensePlate: 'Nummernschild',
+		createNewVehicle: 'Neues Fahrzeug anlegen',
+		createVehicle: 'Fahrzeug anlegen',
+		saveChanges: 'Änderungen speichern',
+		preview: 'Voransicht',
+		feedbackPrompt: 'Bitte bewerten Sie Ihre Reise mit',
+		feedbackPromptProvider: 'Bitte bewerten Sie Ihren Mitfahrer',
+		howHasItBeen: 'Sie können Ihre letzte Mitfahrerfahrung hier bewerten',
+		editVehicle: 'Fahrzeug ändern',
+		closeTo: 'in der Nähe von',
+		defaultLicensePlate: 'Standardfahrzeug'
 	}
 };
 

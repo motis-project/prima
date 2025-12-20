@@ -4,7 +4,7 @@ import type { Coordinates } from '$lib/util/Coordinates';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
-import type { BusStop } from './server/booking/BusStop';
+import type { BusStop } from './server/booking/taxi/BusStop';
 import type { TourWithRequests } from './util/getToursTypes';
 import { getScheduledEventTime } from './util/getScheduledEventTime';
 
@@ -73,12 +73,42 @@ export const setTour = async (
 		.executeTakeFirst();
 };
 
+export const setRideshareVehicle = async (owner: number) => {
+	return await db
+		.insertInto('rideShareVehicle')
+		.values({ owner, smokingAllowed: false, passengers: 1, luggage: 0 })
+		.returning('rideShareVehicle.id')
+		.executeTakeFirst();
+};
+
+export const setRideshareTour = async (
+	vehicle: number,
+	departure: UnixtimeMs,
+	arrival: UnixtimeMs
+) => {
+	return await db
+		.insertInto('rideShareTour')
+		.values({
+			vehicle,
+			communicatedStart: departure,
+			communicatedEnd: arrival,
+			cancelled: false,
+			passengers: 1,
+			luggage: 0,
+			earliestStart: departure,
+			latestEnd: arrival
+		})
+		.returning('rideShareTour.id')
+		.executeTakeFirst();
+};
+
 export const setRequest = async (
 	tour: number,
 	customer: number,
 	ticketCode: string,
 	passengers?: number,
-	ticketChecked?: boolean
+	ticketChecked?: boolean,
+	isRideShareTour: boolean = false
 ) => {
 	return await db
 		.insertInto('request')
@@ -87,7 +117,7 @@ export const setRequest = async (
 			bikes: 0,
 			luggage: 0,
 			wheelchairs: 0,
-			tour,
+			tour: isRideShareTour ? null : tour,
 			customer,
 			ticketCode,
 			ticketChecked: ticketChecked == undefined ? false : ticketChecked,
@@ -95,7 +125,9 @@ export const setRequest = async (
 			kidsFiveToSix: 0,
 			kidsThreeToFour: 0,
 			kidsZeroToTwo: 0,
-			ticketPrice: (passengers ?? 1) * 300
+			ticketPrice: (passengers ?? 1) * 300,
+			pending: false,
+			rideShareTour: isRideShareTour ? tour : null
 		})
 		.returning('id')
 		.executeTakeFirstOrThrow();
@@ -118,7 +150,7 @@ export const setEvent = async (
 				nextLegDuration: 0,
 				lat,
 				lng,
-				address: ''
+				address: lat + ',' + lng
 			})
 			.returning('eventGroup.id')
 			.executeTakeFirstOrThrow()
@@ -143,13 +175,19 @@ export const addTestUser = async (company?: number) => {
 		.insertInto('user')
 		.values({
 			email: company === undefined ? 'test@user.de' : 'company@owner.de',
-			name: '',
+			name: company === undefined ? 'customer' : 'owner',
+			firstName: '',
+			gender: 'o',
 			isTaxiOwner: company !== undefined,
 			isAdmin: false,
+			isService: false,
 			isEmailVerified: true,
 			passwordHash:
 				'$argon2id$v=19$m=19456,t=2,p=1$4lXilBjWTY+DsYpN0eATrw$imFLatxSsy9WjMny7MusOJeAJE5ZenrOEqD88YsZv8o',
-			companyId: company
+			companyId: company,
+			zipCode: '',
+			city: '',
+			region: ''
 		})
 		.returning('id')
 		.executeTakeFirstOrThrow();
@@ -158,12 +196,14 @@ export const addTestUser = async (company?: number) => {
 export const clearDatabase = async () => {
 	await db.deleteFrom('availability').execute();
 	await db.deleteFrom('event').execute();
+	await db.deleteFrom('journey').execute();
 	await db.deleteFrom('request').execute();
 	await db.deleteFrom('eventGroup').execute();
-	await db.deleteFrom('journey').execute();
 	await db.deleteFrom('tour').execute();
 	await db.deleteFrom('vehicle').execute();
 	await db.deleteFrom('session').execute();
+	await db.deleteFrom('rideShareTour').execute();
+	await db.deleteFrom('rideShareVehicle').execute();
 	await db.deleteFrom('user').execute();
 	await db.deleteFrom('company').execute();
 };
@@ -171,7 +211,9 @@ export const clearDatabase = async () => {
 export const clearTours = async () => {
 	await db.deleteFrom('event').execute();
 	await db.deleteFrom('request').execute();
+	await db.deleteFrom('eventGroup').execute();
 	await db.deleteFrom('tour').execute();
+	await db.deleteFrom('rideShareTour').execute();
 };
 
 export const getTours = async () => {
@@ -183,6 +225,30 @@ export const getTours = async () => {
 				eb
 					.selectFrom('request')
 					.whereRef('request.tour', '=', 'tour.id')
+					.selectAll()
+					.select((eb) => [
+						jsonArrayFrom(
+							eb
+								.selectFrom('event')
+								.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+								.whereRef('event.request', '=', 'request.id')
+								.selectAll()
+						).as('events')
+					])
+			).as('requests')
+		])
+		.execute();
+};
+
+export const getRSTours = async () => {
+	return await db
+		.selectFrom('rideShareTour')
+		.selectAll()
+		.select((eb) => [
+			jsonArrayFrom(
+				eb
+					.selectFrom('request')
+					.whereRef('request.rideShareTour', '=', 'rideShareTour.id')
 					.selectAll()
 					.select((eb) => [
 						jsonArrayFrom(

@@ -7,7 +7,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.leftJoin('request', 'journey.request1', 'request.id')
 		.leftJoin('tour', 'tour.id', 'request.tour')
 		.orderBy('tour.departure asc')
-		.select(['json', 'journey.id as journeyId', 'request.ticketCode', 'request.cancelled'])
+		.select([
+			'json',
+			'journey.id as journeyId',
+			'request.ticketCode',
+			'request.cancelled',
+			'request.pending'
+		])
 		.where('user', '=', locals.session!.userId!)
 		.execute();
 	return {
@@ -16,7 +22,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 				journey: journey.json,
 				id: journey.journeyId,
 				ticketCode: journey.ticketCode,
-				cancelled: journey.cancelled
+				cancelled: journey.cancelled,
+				pending: journey.pending
 			};
 		})
 	};

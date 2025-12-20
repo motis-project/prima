@@ -7,7 +7,8 @@ import {
 	COMPANY1,
 	moveMouse,
 	offset,
-	dayString
+	dayString,
+	logout
 } from './utils';
 
 test.describe.configure({ mode: 'serial' });
@@ -87,4 +88,5 @@ test('Request ride', async ({ page }) => {
 		'background-color',
 		'rgb(251, 146, 60)'
 	);
+	await logout(page);
 });

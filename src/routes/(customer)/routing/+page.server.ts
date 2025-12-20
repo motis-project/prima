@@ -1,19 +1,21 @@
-import { toExpectedConnectionWithISOStrings } from '$lib/server/booking/bookRide';
+import { toExpectedConnectionWithISOStrings } from '$lib/server/booking/taxi/bookRide';
+import { Mode } from '$lib/server/booking/mode';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
 import { readInt } from '$lib/server/util/readForm';
 import { msg, type Msg } from '$lib/msg';
 import { redirect } from '@sveltejs/kit';
-import { sendMail } from '$lib/server/sendMail';
-import NewRide from '$lib/server/email/NewRide.svelte';
-import { bookingApi } from '$lib/server/booking/bookingApi';
-import type { Leg } from '$lib/openapi';
+import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
 import type { SignedItinerary } from '$lib/planAndSign';
 import { sql } from 'kysely';
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad, PageServerLoadEvent } from './$types';
 import Prom from 'prom-client';
-import { expectedConnectionFromLeg } from '$lib/expectedConnectionFromLeg';
 import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhitelistRequestTimes';
+import { rideShareApi } from '$lib/server/booking/index';
+import { expectedConnectionFromLeg } from '$lib/server/booking/expectedConnection';
+import { isOdmLeg } from '$lib/util/booking/checkLegType';
+import { sendMail } from '$lib/server/sendMail';
+import { sendBookingMails } from '$lib/util/sendBookingEmails';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;
@@ -113,7 +115,7 @@ export const actions = {
 		}
 
 		const legs = parsedJson!.legs;
-		const firstOdmIndex = legs.findIndex((l: Leg) => l.mode === 'ODM');
+		const firstOdmIndex = legs.findIndex(isOdmLeg);
 		if (firstOdmIndex === -1) {
 			console.log(
 				'Journey with no ODM in bookItineraryWithOdm action. ',
@@ -129,7 +131,7 @@ export const actions = {
 			return { msg: msg('unknownError') };
 		}
 		const firstOdm = legs[firstOdmIndex];
-		const lastOdmIndex = legs.findLastIndex((l: Leg) => l.mode === 'ODM');
+		const lastOdmIndex = legs.findLastIndex(isOdmLeg);
 		const lastOdm = legs[lastOdmIndex];
 		if (!parsedJson.signature1) {
 			console.log(
@@ -142,6 +144,7 @@ export const actions = {
 				{ kidsFiveToSix },
 				{ kidsSevenToFourteen }
 			);
+			booking_errors?.inc();
 			return { msg: msg('unknownError') };
 		}
 		const isDirect = legs.length === 1;
@@ -175,15 +178,28 @@ export const actions = {
 			JSON.stringify(toExpectedConnectionWithISOStrings(connection2), null, '\t')
 		);
 
-		const bookingResult = await bookingApi(
-			{ connection1, connection2, capacities },
-			user,
-			false,
-			kidsZeroToTwo,
-			kidsThreeToFour,
-			kidsFiveToSix,
-			kidsSevenToFourteen
-		);
+		const mode = connection1 !== null ? connection1.mode : connection2?.mode;
+
+		const bookingResult =
+			mode === Mode.TAXI
+				? await bookingApi(
+						{ connection1, connection2, capacities },
+						user,
+						locals.session?.isService ?? false,
+						false,
+						kidsZeroToTwo,
+						kidsThreeToFour,
+						kidsFiveToSix,
+						kidsSevenToFourteen
+					)
+				: await rideShareApi(
+						{ connection1, connection2, capacities },
+						user,
+						locals.session?.isService ?? false,
+						kidsZeroToTwo,
+						kidsThreeToFour,
+						kidsFiveToSix
+					);
 		if (bookingResult.status !== 200) {
 			console.log(
 				'Booking failed: ',
@@ -192,6 +208,7 @@ export const actions = {
 				{ connection1 },
 				{ connection2 }
 			);
+			booking_errors?.inc();
 			return { msg: msg('bookingError') };
 		}
 		const request1: number | null = bookingResult.request1Id ?? null;
@@ -199,6 +216,7 @@ export const actions = {
 		console.log('INSERTION DONE - REQUESTS:', { request1, request2 });
 
 		console.log('SAVING JOURNEY');
+		delete parsedJson.rideShareTourInfos;
 		const id = (
 			await db
 				.insertInto('journey')
@@ -211,58 +229,7 @@ export const actions = {
 				.returning('id')
 				.executeTakeFirstOrThrow()
 		).id;
-
-		console.log('SENDING EMAIL TO TAXI OWNERS');
-		try {
-			const rideInfo = await db
-				.selectFrom('request')
-				.innerJoin('tour', 'request.tour', 'tour.id')
-				.innerJoin('vehicle', 'tour.vehicle', 'vehicle.id')
-				.innerJoin('user', 'vehicle.company', 'user.companyId')
-				.select((eb) => [
-					'user.email',
-					'user.name',
-					'tour.id as tourId',
-					eb
-						.selectFrom('event')
-						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-						.where('event.request', '=', request1)
-						.orderBy('eventGroup.scheduledTimeStart', 'asc')
-						.limit(1)
-						.select('address')
-						.as('firstAddress'),
-					eb
-						.selectFrom('event')
-						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-						.where('event.request', '=', request1)
-						.orderBy('eventGroup.scheduledTimeStart', 'asc')
-						.limit(1)
-						.select('eventGroup.scheduledTimeStart')
-						.as('firstTime'),
-					eb
-						.selectFrom('event')
-						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-						.where('event.request', '=', request1)
-						.orderBy('eventGroup.scheduledTimeStart', 'desc')
-						.limit(1)
-						.select('address')
-						.as('lastAddress'),
-					eb
-						.selectFrom('event')
-						.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-						.where('event.request', '=', request1)
-						.orderBy('eventGroup.scheduledTimeStart', 'desc')
-						.limit(1)
-						.select('eventGroup.scheduledTimeStart')
-						.as('lastTime')
-				])
-				.where('request.id', '=', request1)
-				.where('user.isTaxiOwner', '=', true)
-				.execute();
-			await Promise.all(rideInfo.map((r) => sendMail(NewRide, 'Neue Beförderung', r.email, r)));
-		} catch {
-			/* nothing we can do about this */
-		}
+		await sendBookingMails(request1, mode, db, sendMail);
 		return redirect(302, `/bookings/${id}`);
 	},
 	storeItineraryWithNoOdm: async ({ request, locals }): Promise<{ msg: Msg }> => {
@@ -300,7 +267,7 @@ export const actions = {
 	}
 };
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 	const areasGeoJSON = async () => {
 		return await sql`
 		SELECT 'FeatureCollection' AS TYPE,
@@ -313,8 +280,36 @@ export const load: PageServerLoad = async () => {
 			db
 		);
 	};
+	const rideShareGeoJSON = async () => {
+		return await sql`
+		SELECT 'FeatureCollection' AS TYPE,
+			array_to_json(array_agg(f)) AS features
+		FROM
+			(SELECT 'Feature' AS TYPE,
+				ST_AsGeoJSON(lg.area, 15, 0)::json As geometry,
+				json_build_object('id', id, 'name', name) AS properties
+			FROM ride_share_zone AS lg) AS f`.execute(db);
+	};
+	const userId = event.locals.session?.userId;
+	const ownRideShareOfferIds =
+		userId === undefined
+			? undefined
+			: await db
+					.selectFrom('rideShareTour')
+					.select('rideShareTour.id')
+					.innerJoin('rideShareVehicle', 'rideShareVehicle.id', 'rideShareTour.vehicle')
+					.where('rideShareVehicle.owner', '=', userId)
+					.execute();
 
 	return {
-		areas: (await areasGeoJSON()).rows[0]
+		areas: (await areasGeoJSON()).rows[0],
+		rideSharingBounds: (await rideShareGeoJSON()).rows[0],
+		user: {
+			name: event.locals.session?.name,
+			email: event.locals.session?.email,
+			phone: event.locals.session?.phone,
+			id: event.locals.session?.id,
+			ownRideShareOfferIds
+		}
 	};
 };

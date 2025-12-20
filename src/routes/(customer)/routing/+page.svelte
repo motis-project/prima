@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PUBLIC_PROVIDER, PUBLIC_IMPRINT_URL, PUBLIC_PRIVACY_URL } from '$env/static/public';
+	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import { browser } from '$app/environment';
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
@@ -16,7 +16,7 @@
 	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import { Input } from '$lib/shadcn/input';
 	import { Label } from '$lib/shadcn/label';
-	import { trip, type Leg, type Match, type PlanData } from '$lib/openapi';
+	import { trip, type Match, type PlanData } from '$lib/openapi';
 	import { t } from '$lib/i18n/translation';
 	import { lngLatToStr } from '$lib/util/lngLatToStr';
 	import Meta from '$lib/ui/Meta.svelte';
@@ -43,6 +43,8 @@
 	import { planAndSign, type SignedPlanResponse } from '$lib/planAndSign';
 
 	import logo from '$lib/assets/logo-alpha.png';
+	import Footer from '$lib/ui/Footer.svelte';
+	import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -127,21 +129,19 @@
 	let baseQuery = $derived(
 		from.value.match && to.value.match
 			? ({
-					query: {
-						time: time.toISOString(),
-						arriveBy: timeType === 'arrival',
-						fromPlace: toPlaceString(from),
-						toPlace: toPlaceString(to),
-						preTransitModes: ['WALK', 'ODM'],
-						postTransitModes: ['WALK', 'ODM'],
-						directModes: ['WALK', 'ODM'],
-						luggage: luggageToInt(luggage),
-						fastestDirectFactor: 1.6,
-						maxMatchingDistance: MAX_MATCHING_DISTANCE,
-						maxTravelTime: 1440,
-						passengers
-					}
-				} as PlanData)
+					time: time.toISOString(),
+					arriveBy: timeType === 'arrival',
+					fromPlace: toPlaceString(from),
+					toPlace: toPlaceString(to),
+					preTransitModes: ['WALK', 'ODM', 'RIDE_SHARING'],
+					postTransitModes: ['WALK', 'ODM', 'RIDE_SHARING'],
+					directModes: ['WALK', 'ODM', 'RIDE_SHARING'],
+					luggage: luggageToInt(luggage),
+					fastestDirectFactor: 1.6,
+					maxMatchingDistance: MAX_MATCHING_DISTANCE,
+					maxTravelTime: 1440,
+					passengers
+				} as PlanData['query'])
 			: undefined
 	);
 
@@ -245,76 +245,149 @@
 			onValueChange={() => pushState('', {})}
 		/>
 	{:else if page.state.showMap}
-		<PopupMap bind:from bind:to itinerary={page.state.selectedItinerary} areas={data.areas} />
+		<PopupMap
+			bind:from
+			bind:to
+			itinerary={page.state.selectedItinerary}
+			areas={data.areas}
+			rideSharingBounds={data.rideSharingBounds}
+		/>
 	{:else if page.state.selectedItinerary}
 		<div class="flex items-center justify-between gap-4">
 			<Button variant="outline" size="icon" onclick={() => window.history.back()}>
 				<ChevronLeft />
 			</Button>
-			{#if page.state.selectedItinerary.legs.some((l: Leg) => l.mode === 'ODM')}
+			{#if page.state.selectedItinerary.legs.some(isOdmLeg)}
 				{#if data.isLoggedIn}
-					<Dialog.Root>
-						<Dialog.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
-							{t.booking.header}
-							<ChevronRight />
-						</Dialog.Trigger>
-						<Dialog.Content class="w-[90%] flex-col md:w-96">
-							<Dialog.Header>
-								<Dialog.Title>{t.booking.header}</Dialog.Title>
-							</Dialog.Header>
+					{@const rideShareLeg = page.state.selectedItinerary.legs.find(isRideShareLeg)}
+					{#if !(rideShareLeg && data.user.ownRideShareOfferIds?.some((offer) => offer.id === JSON.parse(rideShareLeg.tripId!)?.tour))}
+						<Dialog.Root>
+							<Dialog.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
+								{rideShareLeg ? t.ride.negotiateHeader : t.booking.header}
+								<ChevronRight />
+							</Dialog.Trigger>
+							<Dialog.Content class="max-h-[100vh] w-[90%] flex-col overflow-y-auto md:w-96">
+								{#if rideShareLeg}
+									<Dialog.Header>
+										<Dialog.Title>{t.ride.negotiateHeader}</Dialog.Title>
+									</Dialog.Header>
 
-							<BookingSummary
-								{passengers}
-								{wheelchair}
-								luggage={luggageToInt(luggage)}
-								price={odmPrice(
+									<BookingSummary
+										{passengers}
+										{wheelchair}
+										luggage={luggageToInt(luggage)}
+										price={undefined}
+									/>
+
+									<form
+										method="post"
+										action="?/bookItineraryWithOdm"
+										use:enhance={() => {
+											loading = true;
+											return async ({ update }) => {
+												await update();
+												window.setTimeout(() => {
+													loading = false;
+												}, 5000);
+											};
+										}}
+									>
+										<p class="my-2 text-sm">{t.ride.negotiatePrivacy}</p>
+										<ul class="flex list-inside list-disc flex-col gap-2">
+											<li>{t.ride.startAndEnd}</li>
+											<li>{t.ride.profile}</li>
+											<li>{t.ride.email}: {data.user.email}</li>
+											{#if data.user.phone}
+												<li>{t.ride.phone}: {data.user.phone}</li>
+											{/if}
+										</ul>
+										<p class="my-2 text-sm">
+											{t.ride.negotiateExplanation}
+											{#if !data.user.phone}
+												{t.ride.noPhone}
+											{/if}
+										</p>
+										<Dialog.Footer>
+											<input
+												type="hidden"
+												name="json"
+												value={JSON.stringify(page.state.selectedItinerary)}
+											/>
+											<input type="hidden" name="passengers" value={passengers} />
+											<input type="hidden" name="kidsZeroToTwo" value={kidsZeroToTwo} />
+											<input type="hidden" name="kidsThreeToFour" value={kidsThreeToFour} />
+											<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
+											<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
+											<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
+											<input
+												type="hidden"
+												name="startFixed"
+												value={timeType === 'departure' ? '1' : '0'}
+											/>
+											<Button type="submit" variant="outline" disabled={loading}
+												>{t.ride.sendNegotiationRequest}</Button
+											>
+										</Dialog.Footer>
+									</form>
+								{:else}
+									<Dialog.Header>
+										<Dialog.Title>{t.booking.header}</Dialog.Title>
+									</Dialog.Header>
+
+									<BookingSummary
+										{passengers}
+										{wheelchair}
+										luggage={luggageToInt(luggage)}
+										price={odmPrice(
 									page.state.selectedItinerary,
 									passengers,
 									freeKids,
 									kidsSevenToFourteen
 								)}
-							/>
-
-							<p class="my-2 text-sm">{t.booking.disclaimer}</p>
-
-							<Dialog.Footer>
-								<form
-									method="post"
-									action="?/bookItineraryWithOdm"
-									use:enhance={() => {
-										loading = true;
-										return async ({ update }) => {
-											await update();
-											window.setTimeout(() => {
-												loading = false;
-											}, 5000);
-										};
-									}}
-								>
-									<input
-										type="hidden"
-										name="json"
-										value={JSON.stringify(page.state.selectedItinerary)}
 									/>
-									<input type="hidden" name="passengers" value={passengers} />
-									<input type="hidden" name="kidsZeroToTwo" value={kidsZeroToTwo} />
-									<input type="hidden" name="kidsThreeToFour" value={kidsThreeToFour} />
-									<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
-									<input type="hidden" name="kidsSevenToFourteen" value={kidsSevenToFourteen} />
-									<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
-									<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
-									<input
-										type="hidden"
-										name="startFixed"
-										value={timeType === 'departure' ? '1' : '0'}
-									/>
-									<Button type="submit" variant="outline" disabled={loading}
-										>{t.booking.header}</Button
-									>
-								</form>
-							</Dialog.Footer>
-						</Dialog.Content>
-					</Dialog.Root>
+
+									<p class="my-2 text-sm">{t.booking.disclaimer}</p>
+
+									<Dialog.Footer>
+										<form
+											method="post"
+											action="?/bookItineraryWithOdm"
+											use:enhance={() => {
+												loading = true;
+												return async ({ update }) => {
+													await update();
+													window.setTimeout(() => {
+														loading = false;
+													}, 5000);
+												};
+											}}
+										>
+											<input
+												type="hidden"
+												name="json"
+												value={JSON.stringify(page.state.selectedItinerary)}
+											/>
+											<input type="hidden" name="passengers" value={passengers} />
+											<input type="hidden" name="kidsZeroToTwo" value={kidsZeroToTwo} />
+											<input type="hidden" name="kidsThreeToFour" value={kidsThreeToFour} />
+											<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
+											<input type="hidden" name="kidsSevenToFourteen" value={kidsSevenToFourteen} />
+											<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
+											<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
+											<input
+												type="hidden"
+												name="startFixed"
+												value={timeType === 'departure' ? '1' : '0'}
+											/>
+											<Button type="submit" variant="outline" disabled={loading}
+												>{t.booking.header}</Button
+											>
+										</form>
+									</Dialog.Footer>
+								{/if}
+							</Dialog.Content>
+						</Dialog.Root>
+					{/if}
 				{:else}
 					<Button href="/account" variant="outline">{t.booking.loginToBook}</Button>
 				{/if}
@@ -585,16 +658,6 @@
 				{@html t.introduction}
 			</p>
 		</div>
-		<p class="mx-auto mt-6 max-w-72 text-center text-xs text-input">
-			<a
-				href={PUBLIC_IMPRINT_URL}
-				target="_blank"
-				class="whitespace-nowrap border-b border-dotted border-input">{t.account.imprint}</a
-			>
-			|
-			<a href={PUBLIC_PRIVACY_URL} class="whitespace-nowrap border-b border-dotted border-input"
-				>{t.account.privacy_short}</a
-			>
-		</p>
+		<Footer />
 	</div>
 </div>

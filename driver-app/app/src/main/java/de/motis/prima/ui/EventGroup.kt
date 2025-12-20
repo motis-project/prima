@@ -59,6 +59,7 @@ import de.motis.prima.R
 import de.motis.prima.data.DataRepository
 import de.motis.prima.data.EventObject
 import de.motis.prima.data.EventObjectGroup
+import de.motis.prima.data.Ticket
 import de.motis.prima.data.ValidationStatus
 import de.motis.prima.ui.theme.LocalExtendedColors
 import java.util.Date
@@ -77,6 +78,10 @@ class EventGroupViewModel @Inject constructor(
                     t.validationStatus == ValidationStatus.CHECKED_IN.name
         }
         return tickets.size
+    }
+
+    fun updateTicket(requestId: Int, ticketHash: String) {
+        repository.updateTicketStore(Ticket(requestId, ticketHash, "", ValidationStatus.DONE))
     }
 }
 
@@ -191,7 +196,9 @@ fun EventGroup(
                 modifier = Modifier
                     .weight(1f)
             ) {
-                val validEvents = eventGroup.events.filter { e -> e.cancelled.not() }
+                val validEvents = eventGroup.events
+                    .filter { e -> e.cancelled.not() }
+                    .sortedBy { it.scheduledTimeStart }
                 items(items = validEvents, itemContent = { event ->
                     ShowCustomerDetails(event, viewModel)
                 })
@@ -290,7 +297,7 @@ fun EventGroup(
 @Composable
 fun ShowCustomerDetails(
     event: EventObject,
-    viewModel: EventGroupViewModel// = hiltViewModel()
+    viewModel: EventGroupViewModel
 ) {
     val context = LocalContext.current
     val storedTickets = viewModel.storedTickets.collectAsState()
@@ -474,12 +481,17 @@ fun ShowCustomerDetails(
                     }
 
                     var ticketStatus: ValidationStatus = ValidationStatus.OPEN
+
                     val ticketObject = storedTickets.value
                         .find { t -> t.ticketHash == event.ticketHash }
 
+                    ticketObject?.let { ticket ->
+                        ticketStatus = ValidationStatus.valueOf(ticket.validationStatus)
+                    }
 
-                    if (ticketObject != null) {
-                        ticketStatus = ValidationStatus.valueOf(ticketObject.validationStatus)
+                    if(event.ticketChecked) {
+                        ticketStatus = ValidationStatus.DONE
+                        viewModel.updateTicket(event.requestId, event.ticketHash)
                     }
 
                     Text(

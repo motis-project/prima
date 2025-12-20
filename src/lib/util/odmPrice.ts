@@ -1,7 +1,7 @@
 import { LOCALE } from '$lib/constants';
 import { env } from '$env/dynamic/public';
-
 import type { Itinerary, Leg } from '$lib/openapi';
+import { isTaxiLeg } from './booking/checkLegType';
 
 export const legOdmPrice = (
 	totalPassengers: number,
@@ -21,8 +21,7 @@ export const odmPrice = (
 ) =>
 	it.legs.reduce(
 		(acc: number, l: Leg) =>
-			acc +
-			(l.mode === 'ODM' ? legOdmPrice(totalPassengers, freePassengers, reducedPassengers) : 0),
+			acc + (isTaxiLeg(l) ? legOdmPrice(totalPassengers, freePassengers, reducedPassengers) : 0),
 		0
 	);
 

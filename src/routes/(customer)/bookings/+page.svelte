@@ -14,8 +14,12 @@
 </script>
 
 {#snippet cancelled()}
-	<Alert class="size-4" />
+	<Alert class="size-4 shrink-0" />
 	{t.msg.cancelled}
+{/snippet}
+{#snippet negotiating()}
+	<Alert class="size-4 shrink-0" />
+	{t.msg.stillNegotiating}
 {/snippet}
 
 {#snippet journeyList(
@@ -24,6 +28,7 @@
 		id: number;
 		ticketCode: string | null;
 		cancelled: boolean | null;
+		pending: boolean | null;
 	}[]
 )}
 	<div class="flex flex-col gap-4">
@@ -31,7 +36,7 @@
 			<a href="/bookings/{it.id}">
 				<ItinerarySummary
 					it={it.journey}
-					info={it.cancelled ? cancelled : undefined}
+					info={it.cancelled ? cancelled : it.pending ? negotiating : undefined}
 					showAddress={true}
 				/>
 			</a>
@@ -39,9 +44,10 @@
 	</div>
 {/snippet}
 
-<div class="flex flex-col gap-4">
+<div class="flex h-full flex-col gap-4 md:min-h-[70dvh] md:w-96">
+	<h2 class="text-xl">{t.bookingsHeader}</h2>
 	{#if plannedJourneys.length === 0 && pastJourneys.length === 0}
-		{t.noBookings}
+		<p>{t.noBookings}</p>
 	{/if}
 	{@render journeyList(plannedJourneys)}
 	{#if pastJourneys.length !== 0}

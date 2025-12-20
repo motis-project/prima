@@ -48,7 +48,8 @@
 		onValueChange,
 		placeholder,
 		name,
-		open = $bindable(false)
+		open = $bindable(false),
+		focus = true
 	}: {
 		items?: Array<Location>;
 		selected?: Location;
@@ -56,6 +57,7 @@
 		placeholder?: string;
 		name?: string;
 		open?: boolean;
+		focus?: boolean;
 	} = $props();
 
 	let inputValue = $state('');
@@ -158,7 +160,11 @@
 		}
 	});
 
-	onMount(() => ref?.focus());
+	onMount(() => {
+		if (focus) {
+			ref?.focus();
+		}
+	});
 </script>
 
 <Combobox.Root

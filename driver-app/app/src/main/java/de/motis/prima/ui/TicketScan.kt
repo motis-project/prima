@@ -23,13 +23,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Done
@@ -38,11 +38,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -50,8 +49,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,7 +64,6 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import de.motis.prima.data.EventObject
 import de.motis.prima.viewmodel.ScanViewModel
-import kotlinx.coroutines.delay
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -89,7 +87,10 @@ fun TicketScan(
         var isScanning by remember { mutableStateOf(true) }
         var ticketValid by remember { mutableStateOf(false) }
         var showDialog by remember { mutableStateOf(false) }
+        var pinEntry by remember { mutableStateOf(false) }
         var event: EventObject by remember { mutableStateOf(EventObject()) }
+
+        val eventGroup = viewModel.getEventGroup(eventGroupId) // reading access
 
         Column(
             modifier = Modifier
@@ -100,15 +101,14 @@ fun TicketScan(
         ) {
             Box(
                 modifier = Modifier
-                    .width(300.dp)
-                    .height(300.dp)
+                    .width(250.dp)
+                    .height(250.dp)
                     .padding(top = 200.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (isScanning) {
                     QRCodeScanner(
                         onQRCodeScanned = { result ->
-                            val eventGroup = viewModel.getEventGroup(eventGroupId)
                             val activeHash = viewModel.getActiveHash(result)
 
                             // eventGroup contains the ticketHash?
@@ -189,18 +189,61 @@ fun TicketScan(
                 }
             }
 
-            if (showDialog) {
+            if (pinEntry) {
+                var text by remember { mutableStateOf("") }
+
+                AlertDialog(
+                    onDismissRequest = { pinEntry = false },
+                    title = {
+                        Text(text = "PIN Eingabe")
+                    },
+                    text = {
+                        TextField(
+                            value = text,
+                            onValueChange = { text = it },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        )
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                val activeHash = viewModel.getActiveHash(text)
+
+                                // eventGroup contains the ticketHash?
+                                if (eventGroup != null) {
+                                    val tmpEevent =
+                                        eventGroup.events.find { e -> e.ticketHash == activeHash }
+                                    if (tmpEevent != null) {
+                                        event = tmpEevent
+                                        ticketValid = true
+                                        viewModel.reportTicketScan(event.requestId, event.ticketHash, text)
+                                    }
+                                }
+
+                                showDialog = false
+                                pinEntry = false
+                            }
+                        ) {
+                            Text("OK")
+                        }
+                    }
+                )
+            }
+
+            if (pinEntry.not() && showDialog) {
                 AlertDialog(
                     onDismissRequest = { showDialog = false },
                     title = { Text("Ticket ungültig") },
                     text = { Text("Beförderung zum normalen Taxi-Tarif") },
-                    icon = {Icon(
-                        imageVector = Icons.Default.Clear,
-                        contentDescription = "Localized description",
-                        tint = Color.Red,
-                        modifier = Modifier.size(64.dp)
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "Localized description",
+                            tint = Color.Red,
+                            modifier = Modifier.size(64.dp)
 
-                    )},
+                        )
+                    },
                     confirmButton = {
                         Button(onClick = {
                             showDialog = false
@@ -220,11 +263,12 @@ fun TicketScan(
                 if (ticketValid.not()) {
                     Button(
                         onClick = {
-                            navController.popBackStack()
+                            isScanning = false
+                            pinEntry = true
                         }
                     ) {
                         Text(
-                            text = "Abbrechen",
+                            text = "PIN",
                             fontSize = 24.sp,
                             textAlign = TextAlign.Center
                         )

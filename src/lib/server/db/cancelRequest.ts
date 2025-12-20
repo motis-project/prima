@@ -5,7 +5,7 @@ import CancelNotificationCompany from '$lib/server/email/CancelNotificationCompa
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 import { sendNotifications } from '../firebase/notifications';
 import { TourChange } from '$lib/server/firebase/firebase';
-import { updateDirectDurations } from '$lib/server/booking/updateDirectDuration';
+import { updateDirectDurations } from '$lib/server/booking/taxi/updateDirectDuration';
 import { db, type Database } from '$lib/server/db';
 import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
 import { retry } from './retryQuery';
@@ -80,7 +80,6 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 					'tour.vehicle',
 					'tour.id',
 					'tour.departure',
-					'tour.vehicle',
 					jsonArrayFrom(
 						eb
 							.selectFrom('request as cancelled_request')
@@ -152,8 +151,7 @@ export const cancelRequest = async (requestId: number, userId: number) => {
 				try {
 					await sendMail(CancelNotificationCompany, 'Stornierte Buchung', companyOwner.email, {
 						events: tourInfo.events,
-						name: companyOwner.name,
-						departure: tourInfo.departure
+						name: companyOwner.name
 					});
 				} catch {
 					console.log(

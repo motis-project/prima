@@ -6,18 +6,16 @@
 
 	const {
 		name,
-		events,
-		departure
+		events
 	}: {
 		name: string;
 		events: TourEvent[];
-		departure: number;
 	} = $props();
 
 	events.sort(
 		(e1: TourEvent, e2: TourEvent) => getScheduledEventTime(e1) - getScheduledEventTime(e2)
 	);
-	console.log('sending cancelation notice mail to company: ', { name }, { events }, { departure });
+	console.log('sending cancelation notice mail to company: ', { name }, { events });
 	const plannedEvents = events.filter((e) => !e.cancelled);
 </script>
 
@@ -41,7 +39,7 @@
 			{/each}
 		</ul>
 	{/if}
-	<p>Die stornierten Buchungen tauchen immer noch auf, sind nun aber als storniert markiert.</p>
+	<p>Die stornierten Buchungen werden weiterhin angezeigt, sind nun aber als storniert markiert.</p>
 	{#if plannedEvents.length < 2}
 		<p>
 			Die Fahrt wurde vollständig storniert. Sie finden diese immer noch unter Abrechnung, sie ist

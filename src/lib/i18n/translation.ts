@@ -7,6 +7,7 @@ export type Translations = {
 	menu: {
 		connections: string;
 		bookings: string;
+		rideOffers: string;
 		account: string;
 		availability: string;
 		company: string;
@@ -22,6 +23,7 @@ export type Translations = {
 		enterEmailAndPassword: string;
 		invalidEmail: string;
 		invalidPhone: string;
+		invalidZipCity: string;
 		emailAlreadyRegistered: string;
 		weakPassword: string;
 		tooManyRequests: string;
@@ -81,6 +83,7 @@ export type Translations = {
 		startDestNotInSameZone: string;
 		noVehicle: string;
 		routingRequestFailed: string;
+		vehicleConflict: string;
 
 		// Booking
 		bookingError: string;
@@ -90,10 +93,22 @@ export type Translations = {
 
 		// Journey
 		cancelled: string;
+		stillNegotiating: string;
+		accepted: string;
+		openRequest: string;
 
 		// Feedback
 		feedbackThank: string;
 		feedbackMissing: string;
+
+		// Picture Upload
+		noFileUploaded: string;
+		invalidFileType: string;
+		fileTooLarge: string;
+
+		//Ride Sharing
+		vehicleEditedSuccessfully: string;
+		rideShareAcceptError: string;
 	};
 	admin: {
 		completedToursSubtitle: string;
@@ -101,15 +116,24 @@ export type Translations = {
 	};
 	account: {
 		name: string;
+		lastName: string;
+		firstName: string;
+		gender: (id: string) => string;
+		genderShort: (id: string) => string;
+		genderString: string;
 		email: string;
 		password: string;
 		phone: string;
+		zipCode: string;
+		city: string;
+		region: string;
 		create: string;
 		forgotPassword: string;
 		signupConditions: (tos: string, privacy: string, provider: string) => string;
 		tos: string;
 		imprint: string;
-		privacy_short: string;
+		dataLicenses: string;
+		privacyShort: string;
 		privacy: string;
 		login: string;
 		sentAnEmailTo: string;
@@ -133,6 +157,13 @@ export type Translations = {
 		oldPassword: string;
 		resendCode: string;
 		verify: string;
+		profilePicture: string;
+		profilePictureSubtitle: string;
+		personalInfo: string;
+		adjustPersonalInfo: string;
+		updatePersonalInfo: string;
+		vehicleListRideShare: string;
+		vehicleListSubtitle: string;
 	};
 	rating: {
 		thanksForUsing: string;
@@ -150,12 +181,15 @@ export type Translations = {
 		good: string;
 		bad: string;
 		sendFeedback: string;
+		backToHome: string;
 	};
 
 	atDateTime: (timeType: TimeType, time: Date, isToday: boolean) => string;
 
+	bookingsHeader: string;
 	cancelledJourneys: string;
 	noBookings: string;
+	noRideOffers: string;
 	journeyDetails: string;
 	transfer: string;
 	transfers: string;
@@ -168,6 +202,8 @@ export type Translations = {
 	taxi: string;
 	moped: string;
 	odm: string;
+	rideSharing: string;
+	rideSharingBookingRequired: string;
 	from: string;
 	to: string;
 	arrival: string;
@@ -232,6 +268,10 @@ export type Translations = {
 		cancelDescription: string;
 		cancelTrip: string;
 		noCancel: string;
+		pin: string;
+		pinExplainer: string;
+		itineraryOnDate: string;
+		withVehicle: string;
 	};
 
 	explainer: {
@@ -242,6 +282,69 @@ export type Translations = {
 		alt1: string;
 		alt2: string;
 		alt3: string;
+	};
+	ride: {
+		myRideOffers: string;
+		create: string;
+		intro: string;
+		vehicle: string;
+		addVehicle: string;
+		outro: string;
+		publish: string;
+		cancelTrip: string;
+		cancelHeadline: string;
+		noCancel: string;
+		cancelDescription: string;
+		negotiateHere: string;
+		negotiateHeader: string;
+		negotiatePrivacy: string;
+		negotiateExplanation: string;
+		startAndEnd: string;
+		profile: string;
+		email: string;
+		phone: string;
+		noPhone: string;
+		negotiateMessage: string;
+		sendNegotiationRequest: string;
+		requestBy: string;
+		offerBy: string;
+		acceptRequest: string;
+		requestAccepted: string;
+		requestCancelled: string;
+	};
+
+	buttons: {
+		addVehicleTitle: string;
+		addVehicle: string;
+		editVehicle: string;
+		uploadPhoto: string;
+		savePhoto: string;
+		photoSaved: string;
+		smokingOptions: string[];
+	};
+
+	rideShare: {
+		maxPassengers: string;
+		passengers: string;
+		smokingInVehicle: string;
+		vehiclePhoto: string;
+		color: string;
+		model: string;
+		specifyColor: string;
+		specifyModel: string;
+		luggage: string;
+		luggageExplanation: string;
+		licensePlate: string;
+		createNewVehicle: string;
+		createVehicle: string;
+		saveChanges: string;
+		preview: string;
+		feedbackPrompt: string;
+		feedbackPromptProvider: string;
+		howHasItBeen: string;
+		editVehicle: string;
+		closeTo: string;
+		defaultLicensePlate: string;
 	};
 };
 

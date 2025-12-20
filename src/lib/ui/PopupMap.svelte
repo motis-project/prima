@@ -15,17 +15,22 @@
 	import Layer from '$lib/map/Layer.svelte';
 	import { t } from '$lib/i18n/translation';
 	import type { SignedItinerary } from '$lib/planAndSign';
+	import { getColor } from '$lib/ui/modeStyle';
 
 	let {
 		from = $bindable(),
 		to = $bindable(),
 		itinerary,
-		areas = $bindable()
+		areas = $bindable(),
+		rideSharingBounds = $bindable(),
+		intermediateStops = $bindable()
 	}: {
 		from?: Location | undefined;
 		to?: Location | undefined;
 		itinerary?: SignedItinerary | undefined;
 		areas?: unknown;
+		rideSharingBounds?: unknown;
+		intermediateStops?: boolean;
 	} = $props();
 
 	let fromMarker = $state<maplibregl.Marker>();
@@ -73,7 +78,7 @@
 
 {#snippet contextMenu(e: maplibregl.MapMouseEvent, close: () => void)}
 	<Button
-		variant="outline"
+		variant="default"
 		onclick={() => {
 			from = posToLocation(e.lngLat, level);
 			fromMarker?.setLngLat(from.value.match!);
@@ -83,7 +88,7 @@
 		From
 	</Button>
 	<Button
-		variant="outline"
+		variant="default"
 		onclick={() => {
 			to = posToLocation(e.lngLat, level);
 			toMarker?.setLngLat(to.value.match!);
@@ -126,8 +131,8 @@
 				layout={{}}
 				filter={['literal', true]}
 				paint={{
-					'fill-color': '#088',
-					'fill-opacity': 0.1,
+					'fill-color': getColor({ mode: 'ODM' })[0],
+					'fill-opacity': 0.15,
 					'fill-outline-color': '#000'
 				}}
 			/>
@@ -137,7 +142,7 @@
 				layout={{}}
 				filter={['literal', true]}
 				paint={{
-					'line-color': '#000',
+					'line-color': getColor({ mode: 'ODM' })[0],
 					'line-width': 2
 				}}
 			/>
@@ -146,7 +151,45 @@
 				type="symbol"
 				layout={{
 					'symbol-placement': 'point',
-					'text-field': ['concat', t.serviceArea + ' ', ['get', 'name']],
+					'text-field': ['concat', t.taxi + ' ' + t.serviceArea + ' ', ['get', 'name']],
+					'text-font': ['Noto Sans Display Regular'],
+					'text-size': 16
+				}}
+				filter={['literal', true]}
+				paint={{
+					'text-color': '#000'
+				}}
+			/>
+		</GeoJSON>
+
+		<GeoJSON id="rideSharingBounds" data={rideSharingBounds as GeoJSON.GeoJSON}>
+			<Layer
+				id="ride-sharing-areas"
+				type="fill"
+				layout={{}}
+				filter={['literal', true]}
+				paint={{
+					'fill-color': getColor({ mode: 'RIDE_SHARING' })[0],
+					'fill-opacity': 0.15,
+					'fill-outline-color': '#000'
+				}}
+			/>
+			<Layer
+				id="ride-sharing-areas-outline"
+				type="line"
+				layout={{}}
+				filter={['literal', true]}
+				paint={{
+					'line-color': getColor({ mode: 'RIDE_SHARING' })[0],
+					'line-width': 2
+				}}
+			/>
+			<Layer
+				id="ride-sharing-areas-labels"
+				type="symbol"
+				layout={{
+					'symbol-placement': 'line',
+					'text-field': ['concat', t.rideSharing + ' ', ['get', 'name']],
 					'text-font': ['Noto Sans Display Regular'],
 					'text-size': 16
 				}}
@@ -163,6 +206,18 @@
 
 		{#if itinerary}
 			<ItineraryGeoJson {itinerary} {level} />
+		{/if}
+
+		{#if intermediateStops && itinerary}
+			{#each itinerary.legs.flatMap((l) => l.intermediateStops || []) as e}
+				<Marker
+					color="black"
+					draggable={false}
+					{level}
+					location={posToLocation(e, 0)}
+					popup={e.name}
+				/>
+			{/each}
 		{/if}
 
 		{#if from}

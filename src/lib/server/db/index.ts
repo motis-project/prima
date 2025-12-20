@@ -16,8 +16,15 @@ export interface Database {
 		passwordResetExpiresAt: number | null;
 		isTaxiOwner: boolean;
 		isAdmin: boolean;
+		isService: boolean;
 		phone: string | null;
 		companyId: number | null;
+		firstName: string;
+		gender: string;
+		zipCode: string;
+		city: string;
+		region: string;
+		profilePicture: string | null;
 	};
 	session: {
 		id: string;
@@ -91,12 +98,18 @@ export interface Database {
 		wheelchairs: number;
 		bikes: number;
 		luggage: number;
-		tour: number;
+		tour: number | null;
+		rideShareTour: number | null;
 		customer: number;
 		ticketCode: string;
 		ticketChecked: boolean;
 		ticketPrice: number;
 		cancelled: boolean;
+		licensePlateUpdatedAt: number | null;
+		pending: boolean;
+		startFixed: boolean | null;
+		busStopTime: number | null;
+		requestedTime: number | null;
 	};
 	journey: {
 		id: Generated<number>;
@@ -113,6 +126,34 @@ export interface Database {
 		deviceId: string;
 		company: number;
 		fcmToken: string;
+	};
+	rideShareTour: {
+		id: Generated<number>;
+		passengers: number;
+		luggage: number;
+		cancelled: boolean;
+		vehicle: number;
+		communicatedStart: number;
+		communicatedEnd: number;
+		earliestStart: number;
+		latestEnd: number;
+	};
+	rideShareVehicle: {
+		id: Generated<number>;
+		passengers: number;
+		luggage: number;
+		owner: number;
+		color: string | null;
+		model: string | null;
+		smokingAllowed: boolean;
+		licensePlate: string | null;
+		picture: string | null;
+	};
+	rideShareRating: {
+		id: Generated<number>;
+		rating: number;
+		request: number;
+		ratedIsCustomer: boolean;
 	};
 }
 

@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { PUBLIC_IMPRINT_URL } from '$env/static/public';
-	import { t } from '$lib/i18n/translation';
+	import Footer from '$lib/ui/Footer.svelte';
 </script>
 
 <div class="fine-print mx-auto max-w-[800px]">
@@ -63,33 +62,54 @@
 		<li>Für Funktionen rund um den Nutzer-Account.</li>
 	</ol>
 
-	<h2>Rechtsgrundlage</h2>
-
+	<p>
+		Allgemein zielt die Verarbeitung von Mobilitätsdaten im Projekt auf die Verbesserung des
+		ÖPNV-Angebots. Die hierzu erhobenen Daten und deren Verarbeitung im wissenschaftlichen Kontext
+		werden durch geeignete Maßnahmen von ihrem Personenbezug bereinigt und fallen damit nicht unter
+		die Vorgaben der DSGVO.
+	</p>
 	<p>
 		Die personenbezogenen Daten werden im Einklang mit den Bestimmungen der
 		Datenschutzgrundverordnung (DSGVO) und des Bundesdatenschutzgesetzes (BDSG) verarbeitet.
-		Rechtsgrundlage der Datenverarbeitung ist:
 	</p>
+	<p>Rechtsgrundlage der Datenverarbeitung ist:</p>
 	<ul class="list-outside list-disc pl-[revert]">
 		<li>
 			Einwilligung (Art. 6 Abs. 1 lit. a) DSGVO) - Die betroffene Person hat ihre Einwilligung in
 			die Verarbeitung der sie betreffenden personenbezogenen Daten für einen spezifischen Zweck
 			oder mehrere bestimmte Zwecke gegeben.
+			<ul class="list-outside list-disc pl-[revert]">
+				<li>Standortdaten</li>
+				<li>Vertragsinhalte</li>
+			</ul>
 		</li>
 		<li>
-			Vertragserfüllung und vorvertragliche Anfragen (Art. 6 Abs. 1 lit. b) DSGVO) - Die
+			Vertragserfüllung und vorvertragliche Anfragen (Art. 6 Abs. 1 lit. b), c) DSGVO) - Die
 			Verarbeitung ist für die Erfüllung eines Vertrags, dessen Vertragspartei die betroffene Person
 			ist, oder zur Durchführung vorvertraglicher Maßnahmen erforderlich, die auf Anfrage der
 			betroffenen Person erfolgen.
+			<ul class="list-outside list-disc pl-[revert]">
+				<li>Transaktionsdaten</li>
+				<li>Kommunikationsdaten</li>
+				<li>Buchhaltung</li>
+			</ul>
 		</li>
 		<li>
 			Wahrnehmung einer Aufgabe im öffentlichen Interesse oder öffentlicher Gewalt (Art. 6 Abs. 1
 			lit. e) DSGVO) - die Verarbeitung ist zur Wahrung der berechtigten Interessen oder in Ausübung
 			öffentlicher Gewalt erforderlich, die dem Verantwortlichen übertragen wurden.
+			<ul class="list-outside list-disc pl-[revert]">
+				<li>Nutzungsdaten</li>
+			</ul>
 		</li>
 		<li>
 			Wahrung berechtigter Interessen (Art. 6 Abs. 1 lit. f) DSGVO im Projekt für die oben genannten
 			Zwecke.
+			<ul class="list-outside list-disc pl-[revert]">
+				<li>Missbrauchserkennung</li>
+				<li>IT-Sicherheit</li>
+				<li>Optimierung von Diensten</li>
+			</ul>
 		</li>
 	</ul>
 
@@ -111,14 +131,23 @@
 	<h3>Daten, die von Nutzer:nnen bereitgestellt werden. Dazu gehören:</h3>
 	<p>Benutzerkonto: Wir erheben Daten, wenn Nutzer:innen ihre Konten erstellen.</p>
 	<p>
-		Dazu gehören Name, E-Mail-Adresse, Telefonnummer, Benutzereinstellungen und Informationen zu
-		Buchungsdetails und gebuchten Zusatzangeboten.
+		Dazu gehören Name, E-Mail-Adresse, Telefonnummer, PLZ/Ort, Benutzereinstellungen und
+		Informationen zu Buchungsdetails und gebuchten Zusatzangeboten.
 	</p>
 	<h3>Daten, die während der Nutzung unserer Services generiert werden. Dazu gehören:</h3>
 	<h4>1. Zur Durchführung der Fahrten</h4>
 	<p>
 		Das jeweilige Taxiunternehmen erhält grundsätzlich Zugriff auf die folgenden Daten der
 		Nutzer:innen: Name, Telefonnummer, Abhol- und Absetzpunkt.
+	</p>
+	<p>
+		Bei privaten Beförderungsangeboten und der Durchführung von Beförderungsfahrten, welche über die
+		APP als Begegnungs- und Organisationsplattform kostenlos zur Verfügung gestellt zustande kommen,
+		versichern die Fahrer:innen und Nutzer:innen, dass veröffentlichte und erhaltene Daten nicht
+		missbräuchlich verwendet werden und damit die Persönlichkeitsrechte Dritter zu achten. In diesem
+		Zusammenhang sind Haftungsansprüche für Schäden, welche durch das Verwenden der in der APP
+		freigegebenen Informationen hervorgerufen werden vom Grundsatz her ausgeschlossen, insofern es
+		keinen Nachweis für ein vorsätzliches oder grob fahrlässiges Verschulden gibt.
 	</p>
 	<p>
 		Standortdaten (Fahrgäste): Wir erfassen genaue und ungefähre Standortinformationen von den
@@ -261,15 +290,21 @@
 		oder Versicherungspolicen zu erfüllen, oder gemäß Gerichtsverfahren oder behördlichen Anfragen,
 		einschließlich Anfragen von Strafverfolgungsbehörden.
 	</p>
+	<p>
+		Um die Funktionalität der Plattform zu ermöglichen, findet elektronische Kommunikation zwischen
+		dem Browser der Nutzenden, insb. Fahrgäste (der „App“), den Servern sowie den Geräten der
+		Fahrer:innen statt. Alle Komponenten der Plattform sind Open Source – die Datenverarbeitung und
+		Funktionsweise sind dadurch transparent und nachvollziehbar gestaltet.
+	</p>
 	<h2>Wie lange werden die Daten gespeichert?</h2>
 	<p>
 		Ihre personenbezogenen Daten werden gemäß dem Datenschutzgesetz und weiteren z. B.
 		steuerrechtlichen Rechtsvorschriften zulässig nicht länger aufbewahrt als es für die Zwecke der
 		Erhebung gerechtfertigt ist. Die erhobenen Daten werden grundsätzlich nach der Verarbeitung
 		gelöscht. In der Regel handelt es sich um eine Speicherung von 8 Wochen bzw. werden die Daten
-		nur solange gespeichert bis der Zweck der Erhebung erfüllt ist. Für die Dauer des
+		nur so lange gespeichert bis der Zweck der Erhebung erfüllt ist. Für die Dauer des
 		Forschungsprojekts ist die Speicherung vereinzelter Daten zu wissenschaftlichen Zwecken nicht
-		ausgeschlossen diese werden jedoch anonymisiert und sind damit von den Vorgaben der DSGVO
+		ausgeschlossen, diese werden jedoch anonymisiert und sind damit von den Vorgaben der DSGVO
 		ausgeschlossen (siehe Punkt Einschränkungen).
 	</p>
 	<p>
@@ -307,16 +342,6 @@
 		Technische Universität Darmstadt, Karolinenplatz 5, 64289 Darmstadt
 	</p>
 
-	<h3>Externe an der Forschung beteiligte Stellen</h3>
-	<p>
-		Zur Erreichung der geplanten Forschungsergebnisse kann es erforderlich werden, dass Ihre
-		personenbezogenen Daten an andere an der Forschung beteiligte Stellen übermitteln. Diese sind
-		zur Verschwiegenheit und Vertraulichkeit im Umgang mit Ihren personenbezogenen Daten
-		verpflichtet. Liegt im Rahmen dieser Auslagerung der Forschung an Externe eine
-		Auftragsverarbeitung vor, wird ein den Anforderungen des Art. 28 DSGVO entsprechender Vertrag
-		geschlossen und damit ein angemessenes Datenschutzniveau garantiert.
-	</p>
-
 	<h2>Speicherort</h2>
 	<p>
 		Während des Projektes werden die zum Betrieb der App und Durchführung der Dienstleistung
@@ -331,12 +356,16 @@
 	<h2>Ihre Rechte in Bezug auf Ihre personenbezogenen Daten</h2>
 	<p>Im Zusammenhang mit der Verarbeitung Ihrer Daten haben Sie gemäß DSGVO folgende Rechte:</p>
 	<ul class="list-outside list-disc pl-[revert]">
+		<li>Recht auf Auskunft (Art. 15 DSGVO)</li>
 		<li>
 			Recht auf Löschung für den Verarbeitungszweck nicht mehr notwendiger oder unrechtmäßig
 			verarbeiteter Daten (Art. 17 DSGVO)
 		</li>
+		<li>Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO)</li>
+		<li>Widerspruch gegen die Verarbeitung (Art. 21 DSGVO)</li>
+		<li>Datenübertragbarkeit (Art. 20 DSGVO)</li>
 		<li>Recht auf Beschwerde bei einer Aufsichtsbehörde (Art. 77 DSGVO)</li>
-		<li>Datenminimierung (Art. 89 Abs. 1 DSGVO)</li>
+		<li>Recht auf Widerruf der Einwilligung (Art. 7 Abs. 3 DSGVO)</li>
 		<li>
 			Sorge- und Vertretungsberechtigte dürfen diese Rechte für ihre minderjährigen Kinder bzw. die
 			Personen, die sie vertreten, wahrnehmen.
@@ -348,7 +377,7 @@
 		einige der in der DSGVO und dem BDSG enthaltenen Rechte insoweit beschränkt, als diese Rechte
 		die Verwirklichung der Forschungszwecke unmöglich machen oder ernsthaft beinträchtigen und die
 		Beschränkung für die Erfüllung der Forschungszwecke notwendig ist (Ausnahme nach 89 Abs. 2 DSGVO
-		in Verbindung mit § 27 Abs. 2 BDSG). Beschränkt sind folgende Rechte:
+		in Verbindung mit § 27 Abs. 2 BDSG).
 	</p>
 	<ul class="list-outside list-disc pl-[revert]">
 		<li>
@@ -404,13 +433,7 @@
 		Prüfungen der Inhalte seitens des DSGVO vorgesehen.
 	</p>
 
-	<p>Stand Mai 2025</p>
+	<p>Stand Juli 2025</p>
 
-	<p class="mt-6 text-center text-xs text-input">
-		<a
-			href={PUBLIC_IMPRINT_URL}
-			target="_blank"
-			class="whitespace-nowrap border-b border-dotted border-input">{t.account.imprint}</a
-		>
-	</p>
+	<Footer />
 </div>

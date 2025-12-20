@@ -6,9 +6,65 @@
 	import Meta from '$lib/ui/Meta.svelte';
 	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import { t } from '$lib/i18n/translation';
+	import UploadPhoto from '$lib/ui/UploadPhoto.svelte';
+	import { Plus } from 'lucide-svelte';
+	import { Label } from '$lib/shadcn/label';
+	import * as RadioGroup from '$lib/shadcn/radio-group/index.js';
+	import * as Select from '$lib/shadcn/select';
+	import { getCountryData, getCountryDataList, type TCountryCode } from 'countries-list';
+	import { defaultProfilePicture } from '$lib/constants.js';
+	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
+	import SortableTable from '$lib/ui/SortableTable.svelte';
+	import { enhance } from '$app/forms';
 
 	const { data, form } = $props();
 	let showTooltip = $state(false);
+	const vehicles = data.vehicles.map((v) => {
+		return { ...v, licensePlate: v.licensePlate ?? t.rideShare.defaultLicensePlate };
+	});
+	let region: TCountryCode | undefined = $state(data.region ? (data.region as TCountryCode) : 'DE');
+	type Vehicle = {
+		luggage: number;
+		passengers: number;
+		color: string | null;
+		model: string | null;
+		licensePlate: string;
+	};
+	const vehicleRows = vehicles;
+	const vehicleCols = [
+		{
+			text: [t.rideShare.luggage],
+			sort: (a: Vehicle, b: Vehicle) => a.luggage - b.luggage,
+			toTableEntry: (r: Vehicle) => r.luggage
+		},
+		{
+			text: [t.rideShare.passengers],
+			sort: (a: Vehicle, b: Vehicle) => a.passengers - b.passengers,
+			toTableEntry: (r: Vehicle) => r.passengers
+		},
+		{
+			text: [t.rideShare.licensePlate],
+			sort: (a: Vehicle, b: Vehicle) => (a.licensePlate < b.licensePlate ? -1 : 1),
+			toTableEntry: (r: Vehicle) => r.licensePlate
+		},
+		{
+			text: [t.rideShare.model],
+			sort: (a: Vehicle, b: Vehicle) =>
+				a.model === null ? -1 : b.model === null ? 1 : a.model < b.model ? 1 : -1,
+			toTableEntry: (r: Vehicle) => r.model ?? ''
+		}
+	];
+	let selectedVehicle: Vehicle[] | undefined = $state(undefined);
+	$effect(() => {
+		if (selectedVehicle !== undefined && selectedVehicle.length !== 0) {
+			const selectedVehicleId = vehicles.find(
+				(v) => v.licensePlate === selectedVehicle![0].licensePlate
+			)!.id;
+			storeLastPageAndGoto(`/account/add-or-edit-ride-share-vehicle/${selectedVehicleId}`);
+		}
+	});
+	let loading = $state(false);
+	let uploaded = $state(false);
 </script>
 
 <Meta title="Account | {PUBLIC_PROVIDER}" />
@@ -62,6 +118,109 @@
 			</div>
 		</form>
 	</Panel>
+
+	<Panel title={t.buttons.addVehicleTitle} subtitle={''}>
+		<Button
+			variant="outline"
+			onclick={() => storeLastPageAndGoto('/account/add-or-edit-ride-share-vehicle')}
+		>
+			<Plus class="mr-2 size-4" />
+			{t.buttons.addVehicle}
+		</Button>
+	</Panel>
+	{#if vehicleRows.length !== 0}
+		<Panel title={t.account.vehicleListRideShare} subtitle={t.account.vehicleListSubtitle}>
+			<SortableTable
+				rows={vehicleRows}
+				cols={vehicleCols}
+				bind:selectedRow={selectedVehicle}
+				bindSelectedRow={true}
+				getRowStyle={(_) => 'cursor-pointer '}
+			></SortableTable>
+		</Panel>
+	{/if}
+
+	<Panel title={t.account.profilePicture} subtitle={t.account.profilePictureSubtitle}>
+		<form
+			method="post"
+			action={'/account/settings?/uploadProfilePicture'}
+			enctype="multipart/form-data"
+			class="mt-8"
+			use:enhance={() => {
+				loading = true;
+				return async ({ update }) => {
+					await update();
+					loading = false;
+					uploaded = true;
+				};
+			}}
+		>
+			<UploadPhoto
+				name="profilePicture"
+				displaySaveButton={true}
+				currentUrl={data.profilePicture ?? undefined}
+				defaultPicture={defaultProfilePicture}
+				bind:loading
+				bind:uploaded
+			/>
+		</form>
+	</Panel>
+
+	<Panel title={t.account.personalInfo} subtitle={t.account.adjustPersonalInfo}>
+		<form method="post" action="/account/settings?/personalInfo" class="mt-8 flex flex-col gap-2">
+			<Label for="lastname">{t.account.genderString}</Label>
+			<RadioGroup.Root value={data.gender ?? 'n'} name="gender" class="grid-cols-4">
+				<div class="flex items-center space-x-2">
+					<RadioGroup.Item value="m" id="m" />
+					<Label for="m">{t.account.gender('m')}</Label>
+				</div>
+				<div class="flex items-center space-x-2">
+					<RadioGroup.Item value="f" id="f" />
+					<Label for="f">{t.account.gender('f')}</Label>
+				</div>
+				<div class="flex items-center space-x-2">
+					<RadioGroup.Item value="o" id="o" />
+					<Label for="o">{t.account.gender('o')}</Label>
+				</div>
+				<div class="flex items-center space-x-2">
+					<RadioGroup.Item value="n" id="n" />
+					<Label for="n">{t.account.gender('n')}</Label>
+				</div>
+			</RadioGroup.Root>
+			<Label for="lastname">{t.account.name}</Label>
+			<div class="grid grid-cols-2 gap-x-1">
+				<Input
+					name="firstname"
+					type="text"
+					value={data.firstName}
+					placeholder={t.account.firstName}
+				/>
+				<Input name="lastname" type="text" value={data.name} placeholder={t.account.lastName} />
+			</div>
+			<Label for="zipcode">{t.account.zipCode}/{t.account.city}/{t.account.region}</Label>
+			<div class="grid grid-cols-2 gap-x-1">
+				<Input name="zipcode" type="text" value={data.zipCode} placeholder={t.account.zipCode} />
+				<Input name="city" type="text" value={data.city} placeholder={t.account.city} />
+			</div>
+			<Select.Root type="single" bind:value={region} name="region">
+				<Select.Trigger class="overflow-hidden" aria-label={t.account.region}>
+					{region ? getCountryData(region).native : t.account.region}
+				</Select.Trigger>
+				<Select.Content>
+					{#each getCountryDataList() as r}
+						<Select.Item value={r.iso2} label={r.native}>
+							{r.native}
+						</Select.Item>
+					{/each}
+				</Select.Content>
+			</Select.Root>
+
+			<div class="mt-2 flex justify-end">
+				<Button type="submit" variant="outline">{t.account.updatePersonalInfo}</Button>
+			</div>
+		</form>
+	</Panel>
+	<Message msg={form?.msg} class="mb-4" />
 
 	<Panel title={t.account.logout} subtitle={''}>
 		<form method="post" action="/account/settings?/logout" class="mt-8">

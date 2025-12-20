@@ -30,6 +30,9 @@ export const getModeName = (l: Leg) => {
 			return t.car;
 		case 'ODM':
 			return t.odm;
+		case 'RIDE_SHARING':
+			return t.rideSharingBookingRequired;
+
 		default:
 			return `${l.mode}`;
 	}

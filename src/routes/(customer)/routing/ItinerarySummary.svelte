@@ -8,17 +8,20 @@
 	import { t } from '$lib/i18n/translation';
 	import type { Snippet } from 'svelte';
 	import DisplayAddresses from '$lib/ui/DisplayAddresses.svelte';
+	import { isRideShareLeg } from '$lib/util/booking/checkLegType';
 
 	const {
 		it,
 		baseQuery,
 		info,
-		showAddress
+		showAddress,
+		infoVariant
 	}: {
 		showAddress?: boolean;
 		it: Itinerary;
-		baseQuery?: PlanData | undefined;
+		baseQuery?: PlanData['query'] | undefined;
 		info?: Snippet<[Itinerary]> | undefined;
+		infoVariant?: string;
 	} = $props();
 </script>
 
@@ -42,9 +45,11 @@
 	<Card.Content class="flex flex-col gap-4 p-4">
 		<div class="flex gap-4">
 			<span>{formatDurationSec(it.duration)}</span>
-			<Separator orientation="vertical" />
-			{it.transfers}
-			{t.transfers}
+			{#if !it.legs.every(isRideShareLeg)}
+				<Separator orientation="vertical" />
+				{it.transfers}
+				{t.transfers}
+			{/if}
 		</div>
 		{#if showAddress}
 			<span class="break-words text-left">
@@ -61,7 +66,7 @@
 				timestamp={it.startTime}
 				scheduledTimestamp={it.legs[0].scheduledStartTime}
 				variant={'realtime-show-always'}
-				queriedTime={baseQuery?.query.time}
+				queriedTime={baseQuery?.time}
 			/> - <Time
 				class="inline"
 				isRealtime={it.legs[it.legs.length - 1].realTime}
@@ -79,7 +84,7 @@
 	</Card.Content>
 	{#if info}
 		<div
-			class="flex items-center justify-end gap-1 rounded-b-lg border-t border-input bg-accent px-4 py-1.5 text-sm text-destructive"
+			class={`flex items-center justify-end gap-1 rounded-b-lg border-t border-input bg-accent px-4 py-1.5 text-sm text-${infoVariant ?? 'destructive'}`}
 		>
 			{@render info(it)}
 		</div>

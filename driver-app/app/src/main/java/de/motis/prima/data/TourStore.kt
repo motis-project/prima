@@ -15,7 +15,7 @@ import javax.inject.Inject
 class TourObject : RealmObject {
     @PrimaryKey
     var tourId: Int = 0
-    var ticketValidated: Boolean = false // TODO
+    var ticketValidated: Boolean = false
     var fare: Int = 0
     var fareReported: Boolean = false
     var startTime: Long = 0
@@ -63,8 +63,7 @@ data class EventObjectGroup(
 )
 
 class TourStore @Inject constructor(
-    private var realm: Realm,
-    private var ticketStore: TicketStore
+    private var realm: Realm
 ) {
 
     private val _storedTours = MutableStateFlow(getAll())
@@ -104,14 +103,6 @@ class TourStore @Inject constructor(
                 }
             }
 
-            // store a ticket for each pickup event, if not exists
-            for (event in tour.events) {
-                if (event.isPickup.not()) continue
-                ticketStore.update( //TODO: revise
-                    Ticket(event.requestId, event.ticketHash, "",  ValidationStatus.OPEN)
-                )
-            }
-
             // update TourObjects
             try {
                 val existingTour = realm.query<TourObject>("tourId == $0", tour.tourId).find().first()
@@ -122,6 +113,7 @@ class TourStore @Inject constructor(
                             this.endTime = tour.endTime
                             this.vehicleId = tour.vehicleId
                             this.fare = tour.fare
+                            this.ticketValidated = tour.events.any { e -> e.isPickup && e.ticketChecked }
                         }
                     }
                 }
@@ -134,6 +126,7 @@ class TourStore @Inject constructor(
                         this.endTime = tour.endTime
                         this.vehicleId = tour.vehicleId
                         this.fare = tour.fare
+                        this.ticketValidated = tour.events.any { e -> e.isPickup && e.ticketChecked }
                     }, updatePolicy = io.realm.kotlin.UpdatePolicy.ALL)
                 }
             }
@@ -218,10 +211,6 @@ class TourStore @Inject constructor(
 
     fun getEventsForTour(tourId: Int): List<EventObject> {
         return realm.query<EventObject>("tour == $0", tourId).find()
-    }
-
-    fun getEventsForRequest(requestId: Int): List<EventObject> {
-        return realm.query<EventObject>("requestId == $0", requestId).find()
     }
 
     fun getEventGroupsForTour(tourId: Int): List<EventObjectGroup> {

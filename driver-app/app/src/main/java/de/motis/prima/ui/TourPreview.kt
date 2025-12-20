@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -84,12 +85,18 @@ class TourViewModel @Inject constructor(
         return res
     }
 
-    fun hasPendingValidations(tourId: Int): Boolean {
-        return repository.hasPendingValidations(tourId)
-    }
+    /*fun hasPendingValidations(tourId: Int): Boolean {
+        //return repository.hasPendingValidations(tourId)
+        val tour = repository.getTour(tourId)
+        tour?.let { return tour.ticketValidated }
+        return false
+    }*/
 
     fun hasInvalidatedTickets(tourId: Int): Boolean {
-        return repository.hasInvalidatedTickets(tourId)
+        val tour = repository.getTour(tourId)
+        tour?.let {
+            return tour.ticketValidated.not() }
+        return true
     }
 
     fun isCancelled(tourId: Int): Boolean {
@@ -119,8 +126,11 @@ fun TourPreview(
     tourId: Int,
     viewModel: TourViewModel = hiltViewModel()
 ) {
-    val isCancelled = viewModel.isCancelled(tourId)
-    viewModel.updateEventGroups(tourId)
+    var isCancelled = false
+    LaunchedEffect(Unit) {
+        viewModel.updateEventGroups(tourId)
+        isCancelled = viewModel.isCancelled(tourId)
+    }
 
     Scaffold(
         topBar = {
@@ -349,7 +359,7 @@ fun WayPointsView(viewModel: TourViewModel, tourId: Int, navController: NavContr
 
 @Composable
 fun RetroView(viewModel: TourViewModel, tourId: Int, navController: NavController) {
-    val pendingValidationTickets by viewModel.pendingValidationTickets.collectAsState()
+    //val pendingValidationTickets by viewModel.pendingValidationTickets.collectAsState()
 
     Column(
         modifier = Modifier.fillMaxSize().padding(30.dp),
@@ -370,9 +380,7 @@ fun RetroView(viewModel: TourViewModel, tourId: Int, navController: NavControlle
             )
         }
 
-        if (viewModel.hasPendingValidations(tourId).not()
-            && viewModel.hasInvalidatedTickets(tourId)) {
-
+        if (viewModel.hasInvalidatedTickets(tourId)) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
                 horizontalArrangement = Arrangement.Center,
@@ -403,7 +411,7 @@ fun RetroView(viewModel: TourViewModel, tourId: Int, navController: NavControlle
             }
         }
 
-        Row(
+        /*Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -415,7 +423,7 @@ fun RetroView(viewModel: TourViewModel, tourId: Int, navController: NavControlle
                     textAlign = TextAlign.Center
                 )
             }
-        }
+        }*/
     }
 }
 
@@ -432,36 +440,39 @@ fun WayPointPreview(
         return
     }
 
-    Card(
-        modifier = Modifier
-            .padding(10.dp),
-        colors = CardDefaults.cardColors(containerColor = LocalExtendedColors.current.containerColor)
-    ) {
-        Column(
-            verticalArrangement = Arrangement.Center
+    val cancelled = eventGroup.events.find { e -> e.cancelled.not() } == null
+    if (cancelled.not()) {
+        Card(
+            modifier = Modifier
+                .padding(10.dp),
+            colors = CardDefaults.cardColors(containerColor = LocalExtendedColors.current.containerColor)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-                horizontalArrangement = Arrangement.Center
+            Column(
+                verticalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = scheduledTime,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp, bottom = 6.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = eventGroup.address,
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = scheduledTime,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 6.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = eventGroup.address,
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }

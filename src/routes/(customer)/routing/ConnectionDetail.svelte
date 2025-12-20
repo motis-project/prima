@@ -3,7 +3,7 @@
 	import Building2 from 'lucide-svelte/icons/building-2';
 	import Phone from 'lucide-svelte/icons/phone';
 	import CarTaxiFront from 'lucide-svelte/icons/car-taxi-front';
-	import type { Itinerary, Leg } from '$lib/openapi';
+	import type { Leg } from '$lib/openapi';
 	import { Button } from '$lib/shadcn/button';
 	import { t } from '$lib/i18n/translation';
 	import Time from './Time.svelte';
@@ -11,6 +11,11 @@
 	import { getModeName } from './getModeName';
 	import Route from './Route.svelte';
 	import { routeBorderColor, routeColor } from '$lib/ui/modeStyle';
+	import { isOdmLeg, isRideShareLeg, isTaxiLeg } from '$lib/util/booking/checkLegType';
+	import type { SignedItinerary } from '$lib/planAndSign';
+	import ProfileBadge from '$lib/ui/ProfileBadge.svelte';
+	import { defaultCarPicture } from '$lib/constants';
+	import * as Dialog from '$lib/shadcn/dialog';
 
 	const {
 		itinerary,
@@ -20,7 +25,7 @@
 		companyName,
 		companyPhone
 	}: {
-		itinerary: Itinerary;
+		itinerary: SignedItinerary;
 		onClickStop: (name: string, stopId: string, time: Date) => void;
 		onClickTrip: (tripId: string) => void;
 		licensePlate?: string;
@@ -36,7 +41,8 @@
 	scheduledTimestamp: string,
 	isRealtime: boolean,
 	name: string,
-	stopId?: string
+	stopId?: string,
+	fuzzy?: boolean
 )}
 	<Time
 		variant="schedule"
@@ -45,6 +51,7 @@
 		{isRealtime}
 		{timestamp}
 		{scheduledTimestamp}
+		{fuzzy}
 	/>
 	<Time
 		variant="realtime"
@@ -71,23 +78,21 @@
 
 {#snippet streetLeg(l: Leg)}
 	<div class="flex flex-col gap-y-4 py-8 pl-8 text-muted-foreground">
-		{#if l.mode === 'ODM'}
+		{#if isTaxiLeg(l)}
 			<div class="ml-6 flex w-fit flex-col gap-y-2">
-				<Button
-					onclick={() =>
-						window.open(
-							`https://www.google.com/maps/dir/?api=1&destination=${l.from.lat},${l.from.lon}&travelmode=walking`
-						)}
-					class="w-fit"
-				>
-					{t.meetingPointNavigation}
-				</Button>
 				{#if licensePlate != undefined}
+					<Button
+						onclick={() =>
+							window.open(
+								`https://www.google.com/maps/dir/?api=1&destination=${l.from.lat},${l.from.lon}&travelmode=walking`
+							)}
+						class="w-fit"
+					>
+						{t.meetingPointNavigation}
+					</Button>
 					<div class="flex items-center">
 						<CarTaxiFront class="relative  mr-1" />
-						<div
-							class="flex w-fit rounded-md border-4 border-double border-double border-black bg-white"
-						>
+						<div class="flex w-fit rounded-md border-4 border-double border-black bg-white">
 							<div class="flex h-8 min-w-5 items-center justify-center bg-blue-700 p-1 text-white">
 								<div class="text-sm font-bold">D</div>
 							</div>
@@ -112,8 +117,74 @@
 		<span class="ml-6">
 			{formatDurationSec(l.duration)}
 			{getModeName(l)}
-			{formatDistanceMeters(Math.round(l.distance!))}
+			{l.distance ? formatDistanceMeters(Math.round(l.distance!)) : ''}
 		</span>
+
+		{#if isRideShareLeg(l)}
+			{@const tourInfo = itinerary.rideShareTourInfos?.find(
+				(i) => i?.tourId == JSON.parse(l.tripId || '{}')?.tour
+			)}
+			{#if tourInfo}
+				<span class="ml-6">
+					<ProfileBadge
+						isCustomer={false}
+						firstName={tourInfo.firstName}
+						name={tourInfo.name}
+						gender={tourInfo.gender}
+						profilePicture={tourInfo.profilePicture}
+						smokingAllowed={tourInfo.smokingAllowed}
+						averageRating={tourInfo.averageRatingProvider}
+					/>
+
+					{#if tourInfo.picture || tourInfo.color}
+						<div class="mt-2 flex flex-row gap-4">
+							<Dialog.Root>
+								<Dialog.Trigger>
+									<img
+										src={tourInfo.picture || defaultCarPicture}
+										alt="vehicle"
+										class="h-20 w-20 overflow-hidden border border-gray-200"
+									/>
+								</Dialog.Trigger>
+								<Dialog.Content class="max-h-[100vh] w-[90%] flex-col overflow-y-auto md:w-96">
+									<img
+										src={tourInfo.picture || defaultCarPicture}
+										alt="vehicle"
+										class="mt-2 w-full"
+									/>
+								</Dialog.Content>
+							</Dialog.Root>
+
+							<div>
+								<span>
+									{tourInfo.model}
+								</span>
+								{#if tourInfo.color !== null}
+									<div class="flex flex-row items-center gap-1">
+										<div
+											class="h-4 w-4 border border-gray-200"
+											style="background-color: {tourInfo.color}"
+										></div>
+									</div>
+								{/if}
+							</div>
+						</div>
+					{/if}
+					{#if tourInfo.licensePlate}
+						<div class="my-2 flex w-fit rounded-md border-4 border-double border-black bg-white">
+							<div class="flex h-8 min-w-5 items-center justify-center bg-blue-700 p-1 text-white">
+								<div class="text-sm font-bold">D</div>
+							</div>
+							<div
+								class="flex h-8 items-center px-1 text-2xl font-bold uppercase tracking-wider text-black"
+							>
+								{tourInfo.licensePlate}
+							</div>
+						</div>
+					{/if}
+				</span>
+			{/if}
+		{/if}
 		{#if l.rental && l.rental.systemName}
 			<span class="ml-6">
 				{t.sharingProvider}: <a href={l.rental.url} target="_blank">{l.rental.systemName}</a>
@@ -135,7 +206,7 @@
 		{@const predpred = i <= 1 ? undefined : itinerary.legs[i - 2]}
 		{@const next = isLast ? undefined : itinerary.legs[i + 1]}
 
-		{#if l.routeShortName}
+		{#if l.routeShortName || l.intermediateStops}
 			<div class="flex w-full items-center justify-between space-x-1">
 				<Route {onClickTrip} {l} />
 				{#if pred && (pred.from.track || pred.duration !== 0) && (i != 1 || pred.routeShortName)}
@@ -147,7 +218,7 @@
 						{#if pred.duration}
 							<span class="text-nowrap"
 								>{formatDurationSec(pred.duration)}
-								{#if predpred?.mode === 'ODM'}{t.transfer}{:else}{t.walk}{/if}</span
+								{#if predpred && isOdmLeg(predpred)}{t.transfer}{:else}{t.walk}{/if}</span
 							>
 						{/if}
 						{#if pred.distance}
@@ -171,7 +242,8 @@
 						l.scheduledStartTime,
 						l.realTime,
 						l.from.name,
-						l.from.stopId
+						l.from.stopId,
+						isRideShareLeg(l)
 					)}
 				</div>
 				{#if l.headsign}
@@ -230,10 +302,10 @@
 					<div class="pb-8"></div>
 				{/if}
 			</div>
-		{:else if !(isLast && l.duration === 0) && ((i == 0 && l.duration !== 0) || !next || !next.routeShortName || l.mode != 'WALK' || (pred && (pred.mode == 'BIKE' || pred.mode == 'RENTAL'))) && !(isLastPred && l.mode === 'WALK' && next && next.mode === 'ODM')}
+		{:else if !(isLast && l.duration === 0) && ((i == 0 && l.duration !== 0) || !next || !next.routeShortName || l.mode != 'WALK' || (pred && (pred.mode == 'BIKE' || pred.mode == 'RENTAL'))) && !(isLastPred && l.mode === 'WALK' && next && isOdmLeg(next))}
 			<div class="flex w-full items-center justify-between space-x-1">
 				<Route {onClickTrip} {l} />
-				{#if l.mode === 'ODM' && pred}
+				{#if isOdmLeg(l) && pred}
 					<div class="h-0 shrink grow border-t"></div>
 					<div class="content-center px-2 text-sm leading-none text-muted-foreground">
 						{#if pred.mode === 'WALK' && pred.duration}
@@ -253,13 +325,21 @@
 						l.scheduledStartTime,
 						l.realTime,
 						l.from.name,
-						l.from.stopId
+						l.from.stopId,
+						isRideShareLeg(l)
 					)}
 				</div>
 				{@render streetLeg(l)}
 				{#if !isLast}
 					<div class="grid grid-cols-[max-content_max-content_auto] items-center gap-y-6 pb-2">
-						{@render stopTimes(l.endTime, l.scheduledEndTime, l.realTime, l.to.name, l.to.stopId)}
+						{@render stopTimes(
+							l.endTime,
+							l.scheduledEndTime,
+							l.realTime,
+							l.to.name,
+							l.to.stopId,
+							isRideShareLeg(l)
+						)}
 					</div>
 				{/if}
 				{#if isLast || (isLastPred && next!.duration === 0)}
@@ -282,7 +362,8 @@
 				lastLeg!.scheduledEndTime,
 				lastLeg!.realTime,
 				lastLeg!.to.name,
-				lastLeg!.to.stopId
+				lastLeg!.to.stopId,
+				isRideShareLeg(lastLeg!)
 			)}
 		</div>
 	</div>

@@ -28,6 +28,7 @@ export async function validateSessionToken(token: string | undefined) {
 			'user.emailVerificationExpiresAt',
 			'user.isAdmin',
 			'user.isTaxiOwner',
+			'user.isService',
 			'user.companyId'
 		])
 		.where('session.id', '=', sessionId)

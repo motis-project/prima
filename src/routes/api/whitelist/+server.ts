@@ -7,8 +7,8 @@ import {
 	toWhitelistRequestWithISOStrings,
 	whitelistSchema,
 	type WhitelistRequest
-} from './WhitelistRequest';
-import { toInsertionWithISOStrings, type Insertion } from '$lib/server/booking/insertion';
+} from '$lib/server/util/whitelistRequest';
+import { toInsertionWithISOStrings, type Insertion } from '$lib/server/booking/taxi/insertion';
 import { assertArraySizes } from '$lib/testHelpers';
 import { MINUTE } from '$lib/util/time';
 import { InsertHow } from '$lib/util/booking/insertionTypes';

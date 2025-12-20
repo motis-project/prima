@@ -52,6 +52,7 @@ export const getTours = async (
 						'event.id',
 						'eventGroup.address',
 						'event.isPickup',
+						'event.communicatedTime',
 						'eventGroup.lat',
 						'eventGroup.lng',
 						'eventGroup.nextLegDuration',
@@ -81,7 +82,8 @@ export const getTours = async (
 export const getToursWithRequests = async (
 	selectCancelled: boolean,
 	companyId?: number,
-	timeRange?: [UnixtimeMs, UnixtimeMs]
+	timeRange?: [UnixtimeMs, UnixtimeMs],
+	vehicleId?: number
 ) => {
 	return await db
 		.selectFrom('tour')
@@ -89,6 +91,7 @@ export const getToursWithRequests = async (
 		.innerJoin('company', 'company.id', 'vehicle.company')
 		.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
 		.$if(companyId != undefined, (qb) => qb.where('company.id', '=', companyId!))
+		.$if(vehicleId != undefined, (qb) => qb.where('vehicle.id', '=', vehicleId!))
 		.$if(!!timeRange, (qb) =>
 			qb.where('tour.departure', '<', timeRange![1]).where('tour.arrival', '>', timeRange![0])
 		)
@@ -109,6 +112,7 @@ export const getToursWithRequests = async (
 			jsonArrayFrom(
 				eb
 					.selectFrom('request')
+					.where('request.tour', 'is not', null)
 					.whereRef('tour.id', '=', 'request.tour')
 					.$if(!selectCancelled, (qb) => qb.where('request.cancelled', '=', false))
 					.select((eb) => [

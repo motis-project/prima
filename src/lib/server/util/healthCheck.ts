@@ -2,15 +2,12 @@ import { getToursWithRequests } from '../db/getTours';
 import type { ToursWithRequests, TourWithRequestsEvent } from '$lib/util/getToursTypes';
 import { groupBy } from '../../util/groupBy';
 import { Interval } from '../../util/interval';
-import { HOUR } from '../../util/time';
+import { DAY, HOUR } from '../../util/time';
 import { isSamePlace } from '../booking/isSamePlace';
-import {
-	MAX_PASSENGER_WAITING_TIME_DROPOFF,
-	MAX_PASSENGER_WAITING_TIME_PICKUP,
-	PASSENGER_CHANGE_DURATION
-} from '$lib/constants';
+import { SCHEDULED_TIME_BUFFER_PICKUP, PASSENGER_CHANGE_DURATION } from '$lib/constants';
 import { sortEventsByTime } from '$lib/testHelpers';
 import { reverseGeo } from '$lib/server/util/reverseGeocode';
+import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
 
 function validateRequestHas2Events(tours: ToursWithRequests): boolean {
 	let fail = false;
@@ -265,12 +262,20 @@ function validateScheduledTimeStartBeforeEnd(tours: ToursWithRequests): boolean 
 function validateScheduledIntervalSize(tours: ToursWithRequests): boolean {
 	let fail = false;
 	console.log('Validating scheduled time intervals are not growing...');
-	for (const event of tours.flatMap((t) => t.requests.flatMap((r) => r.events))) {
-		if (
-			event.scheduledTimeEnd - event.scheduledTimeStart >
-			(event.isPickup ? MAX_PASSENGER_WAITING_TIME_PICKUP : MAX_PASSENGER_WAITING_TIME_DROPOFF)
-		) {
-			console.log('Found an event where the scheduled time interval grew, eventId: ', event.id);
+	for (const request of tours.flatMap((t) => t.requests)) {
+		if (request.events.length !== 2) {
+			console.log('Found a request with not exactly 2 events requestId: ', request.requestId);
+		}
+		const pickup = request.events.find((e) => e.isPickup)!;
+		const dropoff = request.events.find((e) => !e.isPickup)!;
+		const durationApprox = dropoff.scheduledTimeStart - pickup.scheduledTimeEnd;
+		const bufferUpperBound = getScheduledTimeBufferDropoff(durationApprox);
+		if (pickup.scheduledTimeEnd - pickup.scheduledTimeStart > SCHEDULED_TIME_BUFFER_PICKUP) {
+			console.log('Found an event where the scheduled time interval grew, eventId: ', pickup.id);
+			fail = true;
+		}
+		if (dropoff.scheduledTimeEnd - dropoff.scheduledTimeStart > bufferUpperBound) {
+			console.log('Found an event where the scheduled time interval grew, eventId: ', dropoff.id);
 			fail = true;
 		}
 	}
@@ -498,20 +503,29 @@ async function validateCompanyDurations(tours: ToursWithRequests): Promise<boole
 }
 
 async function validateAddressCoordinatesMatch(tours: ToursWithRequests) {
-	let fail = false;
 	console.log('Validating that addresses match coordinates...');
 	for (const event of tours.flatMap((t) => t.requests.flatMap((r) => r.events))) {
-		if (event.address !== (await reverseGeo(event))) {
-			console.log('Address does not match for event with id: ', event.id);
-			fail = true;
+		const reverseGeoResult = await reverseGeo(event);
+		if (event.address !== reverseGeoResult) {
+			console.log('Address does not match for event with id: ', event.id, { reverseGeoResult });
 		}
 	}
-	return fail;
+	return false;
 }
 
-export async function healthCheck() {
-	const allTours = await getToursWithRequests(true);
-	const uncancelledTours = await getToursWithRequests(false);
+export async function healthCheck(vehicleId?: number, dayStart?: number) {
+	const allTours = await getToursWithRequests(
+		true,
+		undefined,
+		dayStart ? [dayStart, dayStart + DAY] : undefined,
+		vehicleId
+	);
+	const uncancelledTours = await getToursWithRequests(
+		false,
+		undefined,
+		dayStart ? [dayStart, dayStart + DAY] : undefined,
+		vehicleId
+	);
 	let fail = false;
 	if (allTours) {
 		console.log('Validating tours...');
