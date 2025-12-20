@@ -55,3 +55,4 @@ export const defaultProfilePicture = '/user-default.jpg';
 export const defaultCarPicture = '/car-default.jpg';
 export const MAX_RIDE_SHARE_TOUR_TIME = 2 * HOUR;
 export const LICENSE_PLATE_PLACEHOLDER = 'WSW-AB-1234';
+export const BOOKING_MAX_PASSENGERS = 6;

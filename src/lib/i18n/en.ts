@@ -280,6 +280,7 @@ const translations: Translations = {
 		kidsThreeToFour: '3 - 4 years',
 		kidsFiveToSix: '5 - 6 years',
 		kidsSevenToFourteen: '7 - 14 years',
+		fourTeenPlus: 'over 14 years',
 		foldableWheelchair: 'Foldable wheelchair',
 		withFoldableWheelchair: 'With foldable wheelchair',
 		passengerNumber: 'Number of people',
