@@ -204,6 +204,10 @@
 	};
 
 	let loading = $state(false);
+
+	function limitToRange(max: number, min: number, value: number) {
+		return Math.max(Math.min(max, value), min);
+	}
 </script>
 
 <Meta title={PUBLIC_PROVIDER} />
@@ -517,14 +521,46 @@
 
 						<div class="md-4 grid grid-cols-2 grid-rows-2 items-center gap-4">
 							<Label>{t.booking.passengerNumber}</Label>
-							<Input type="number" bind:value={passengers} min={minimumPassengers} max="6" />
+							<Input
+								type="number"
+								bind:value={passengers}
+								min={minimumPassengers}
+								max="6"
+								oninput={() => {
+									passengers = limitToRange(100, minimumPassengers, passengers);
+								}}
+							/>
 							<Label class="col-span-2">{t.booking.kidsDescription}</Label>
 							<Label>{t.booking.kidsZeroToTwo}</Label>
-							<Input type="number" bind:value={kidsZeroToTwo} min="0" max={maxKidsZeroToTwo} />
+							<Input
+								type="number"
+								bind:value={kidsZeroToTwo}
+								min="0"
+								max={maxKidsZeroToTwo}
+								oninput={() => {
+									kidsZeroToTwo = limitToRange(maxKidsZeroToTwo, 0, kidsZeroToTwo);
+								}}
+							/>
 							<Label>{t.booking.kidsThreeToFour}</Label>
-							<Input type="number" bind:value={kidsThreeToFour} min="0" max={maxKidsThreeToFour} />
+							<Input
+								type="number"
+								bind:value={kidsThreeToFour}
+								min="0"
+								max={maxKidsThreeToFour}
+								oninput={() => {
+									kidsThreeToFour = limitToRange(maxKidsThreeToFour, 0, kidsThreeToFour);
+								}}
+							/>
 							<Label>{t.booking.kidsFiveToSix}</Label>
-							<Input type="number" bind:value={kidsFiveToSix} min="0" max={maxKidsFiveToSix} />
+							<Input
+								type="number"
+								bind:value={kidsFiveToSix}
+								min="0"
+								max={maxKidsFiveToSix}
+								oninput={() => {
+									kidsFiveToSix = limitToRange(maxKidsFiveToSix, 0, kidsFiveToSix);
+								}}
+							/>
 
 							<Label class="flex items-center gap-2">
 								<WheelchairIcon class="size-5 shrink-0" />
