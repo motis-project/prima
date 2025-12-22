@@ -45,7 +45,6 @@
 	import Footer from '$lib/ui/Footer.svelte';
 	import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
-	import { ValueListNode } from 'kysely';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -216,11 +215,6 @@
 
 	const applyPosition = (position: { coords: { latitude: number; longitude: number } }) => {
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
-	};
-
-	/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-	const reportValidity = (e: any) => {
-		e.target.reportValidity();
 	};
 
 	let loading = $state(false);
