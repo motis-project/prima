@@ -53,22 +53,27 @@
 
 	const urlParams = browser ? new URLSearchParams(window.location.search) : undefined;
 
-	
 	let kidsZeroToTwo = $state(0);
 	let kidsThreeToFour = $state(0);
 	let kidsFiveToSix = $state(0);
 	let kidsSevenToFourteen = $state(0);
-	let fourteenPlus = $state(1);	
-	let passengers = $derived(fourteenPlus + kidsSevenToFourteen + kidsFiveToSix + kidsThreeToFour + kidsZeroToTwo);
-	let remainingPassengers = $derived(BOOKING_MAX_PASSENGERS - passengers);	
-	let fourteenPlusMin = $derived((kidsZeroToTwo > 0 || kidsThreeToFour > 0 || kidsFiveToSix > 0 || kidsSevenToFourteen == 0) ? 1 : 0);
+	let fourteenPlus = $state(1);
+	let passengers = $derived(
+		fourteenPlus + kidsSevenToFourteen + kidsFiveToSix + kidsThreeToFour + kidsZeroToTwo
+	);
+	let remainingPassengers = $derived(BOOKING_MAX_PASSENGERS - passengers);
+	let fourteenPlusMin = $derived(
+		kidsZeroToTwo > 0 || kidsThreeToFour > 0 || kidsFiveToSix > 0 || kidsSevenToFourteen == 0
+			? 1
+			: 0
+	);
 	let kidsSevenToFourteenMin = $derived(fourteenPlus == 0 ? 1 : 0);
-	function max(value:number) {
+	function max(value: number) {
 		return remainingPassengers + value;
-	};
-	function underSevenMax(value:number) {
+	}
+	function underSevenMax(value: number) {
 		return fourteenPlus < 1 ? 0 : max(value);
-	};
+	}
 
 	let freeKids = $derived(kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix);
 	let wheelchair = $state(false);
@@ -540,17 +545,49 @@
 
 						<div class="grid grid-cols-2 items-center gap-4">
 							<Label class="justify-self-end">{t.booking.passengerNumber}</Label>
-							<span class="flex items-center justify-self-center">{passengers}<PersonIcon class="size-5 shrink-0" /></span>
+							<span class="flex items-center justify-self-center"
+								>{passengers}<PersonIcon class="size-5 shrink-0" /></span
+							>
 							<Label class="justify-self-end">{t.booking.fourTeenPlus}</Label>
-							<PlusMinus classes="justify-self-center" bind:value={fourteenPlus} min={fourteenPlusMin} max={max(fourteenPlus)} step={1} />
+							<PlusMinus
+								classes="justify-self-center"
+								bind:value={fourteenPlus}
+								min={fourteenPlusMin}
+								max={max(fourteenPlus)}
+								step={1}
+							/>
 							<Label class="justify-self-end">{t.booking.kidsSevenToFourteen}</Label>
-							<PlusMinus classes="justify-self-center" bind:value={kidsSevenToFourteen} min={kidsSevenToFourteenMin} max={max(kidsSevenToFourteen)} step={1} />
+							<PlusMinus
+								classes="justify-self-center"
+								bind:value={kidsSevenToFourteen}
+								min={kidsSevenToFourteenMin}
+								max={max(kidsSevenToFourteen)}
+								step={1}
+							/>
 							<Label class="justify-self-end">{t.booking.kidsFiveToSix}</Label>
-							<PlusMinus classes="justify-self-center" bind:value={kidsFiveToSix} min={0} max={underSevenMax(kidsFiveToSix)} step={1} />
+							<PlusMinus
+								classes="justify-self-center"
+								bind:value={kidsFiveToSix}
+								min={0}
+								max={underSevenMax(kidsFiveToSix)}
+								step={1}
+							/>
 							<Label class="justify-self-end">{t.booking.kidsThreeToFour}</Label>
-							<PlusMinus classes="justify-self-center" bind:value={kidsThreeToFour} min={0} max={underSevenMax(kidsThreeToFour)} step={1} />
+							<PlusMinus
+								classes="justify-self-center"
+								bind:value={kidsThreeToFour}
+								min={0}
+								max={underSevenMax(kidsThreeToFour)}
+								step={1}
+							/>
 							<Label class="justify-self-end">{t.booking.kidsZeroToTwo}</Label>
-							<PlusMinus classes="justify-self-center" bind:value={kidsZeroToTwo} min={0} max={underSevenMax(kidsZeroToTwo)} step={1} />						
+							<PlusMinus
+								classes="justify-self-center"
+								bind:value={kidsZeroToTwo}
+								min={0}
+								max={underSevenMax(kidsZeroToTwo)}
+								step={1}
+							/>
 							<Label class="flex items-center justify-self-end">
 								<WheelchairIcon class="size-5 shrink-0" />
 								{t.booking.foldableWheelchair}
@@ -605,11 +642,17 @@
 				/>
 			</div>
 			<div class="mx-auto mt-6 space-y-2 text-sm">
-				<p>
-					<strong>{t.fare}</strong><br />{getEuroString(legOdmPrice(1, 0, 0))}
-					{t.perPerson}
-					{t.perRide}
-				</p>
+				<strong>{t.fare}</strong>
+				<div class="grid grid-cols-2">
+					<div>{t.booking.fourTeenPlus}</div>
+					<div>{getEuroString(legOdmPrice(1, 0, 0))}</div>
+					<div>{t.booking.kidsSevenToFourteen}</div>
+					<div>{getEuroString(legOdmPrice(1, 0, 1))}</div>
+					<div>{t.booking.underSeven}</div>
+					<div>{getEuroString(legOdmPrice(1, 1, 0))}</div>
+					<div></div>
+					<div>{t.perPerson} {t.perRide}</div>
+				</div>
 				<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
 				<p>
 					<button
