@@ -5,7 +5,6 @@ import { type Database } from '$lib/server/db';
 import { sql, Transaction } from 'kysely';
 import { sendNotifications } from '$lib/server/firebase/notifications';
 import { TourChange } from '$lib/server/firebase/firebase';
-import { env } from '$env/dynamic/public';
 import crypto from 'crypto';
 import { legOdmPrice } from '$lib/util/odmPrice';
 
