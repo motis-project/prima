@@ -6,22 +6,22 @@
 		min,
 		max,
 		step,
-        classes
+		classes
 	}: {
 		value: number;
 		min: number;
 		max: number;
 		step: number;
-        classes: string;
+		classes: string;
 	} = $props();
 </script>
 
 <div class={classes}>
-<Button variant="ghost" onclick={() => (value = Math.max(value - step, min))}>
-	<CircleMinus />
-</Button>
-{value}
-<Button variant="ghost" onclick={() => (value = Math.min(value + step, max))}>
-	<CirclePlus />
-</Button>
+	<Button variant="ghost" onclick={() => (value = Math.max(value - step, min))}>
+		<CircleMinus />
+	</Button>
+	{value}
+	<Button variant="ghost" onclick={() => (value = Math.min(value + step, max))}>
+		<CirclePlus />
+	</Button>
 </div>
