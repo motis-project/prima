@@ -76,7 +76,7 @@ export const setTour = async (
 export const setRideshareVehicle = async (owner: number) => {
 	return await db
 		.insertInto('rideShareVehicle')
-		.values({ owner, smokingAllowed: false, passengers: 1, luggage: 0 })
+		.values({ owner, smokingAllowed: false, passengers: 1, luggage: 0, country: 'DE' })
 		.returning('rideShareVehicle.id')
 		.executeTakeFirst();
 };

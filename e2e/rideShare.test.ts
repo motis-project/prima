@@ -16,7 +16,7 @@ test.describe.configure({ mode: 'serial' });
 test('add ride share tour', async ({ page }) => {
 	await signup(page, RIDE_SHARE_PROVIDER, true);
 	await page.goto('/account/add-or-edit-ride-share-vehicle');
-	await page.getByPlaceholder(LICENSE_PLATE_PLACEHOLDER).fill(LICENSE_PLATE_PLACEHOLDER);
+	await page.getByRole('textbox', { name: 'B-AA' }).fill(LICENSE_PLATE_PLACEHOLDER);
 	await page.getByRole('button', { name: 'Fahrzeug anlegen' }).click();
 	await page.waitForTimeout(1000);
 	await page.goto('/ride-offers/new');

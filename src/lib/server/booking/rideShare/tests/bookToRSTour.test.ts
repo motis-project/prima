@@ -46,7 +46,17 @@ beforeEach(async () => {
 
 describe('add ride share request', () => {
 	it('getRideShareTourCommunicatedTimes', async () => {
-		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test', null);
+		const vehicle = await createRideShareVehicle(
+			mockUserId,
+			0,
+			3,
+			'',
+			'',
+			false,
+			'test',
+			null,
+			'DE'
+		);
 		const communicatedTimesStartFixed = await getRideShareTourCommunicatedTimes(
 			inXMinutes(40),
 			true,
@@ -65,7 +75,17 @@ describe('add ride share request', () => {
 		expect(communicatedTimesStartNotFixed?.end).toBe(inXMinutes(40));
 	});
 	it('simple success case', async () => {
-		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test', null);
+		const vehicle = await createRideShareVehicle(
+			mockUserId,
+			0,
+			3,
+			'',
+			'',
+			false,
+			'test',
+			null,
+			'DE'
+		);
 		const tourId = await addRideShareTour(
 			inXMinutes(40),
 			true,
@@ -155,7 +175,17 @@ describe('add ride share request', () => {
 	}, 30000);
 
 	it('request accpepted, sufficient profit', async () => {
-		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test', null);
+		const vehicle = await createRideShareVehicle(
+			mockUserId,
+			0,
+			3,
+			'',
+			'',
+			false,
+			'test',
+			null,
+			'DE'
+		);
 		const tourId = await addRideShareTour(
 			inXMinutes(40),
 			true,
@@ -182,7 +212,17 @@ describe('add ride share request', () => {
 	}, 30000);
 
 	it('request denied, insufficient profit', async () => {
-		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test', null);
+		const vehicle = await createRideShareVehicle(
+			mockUserId,
+			0,
+			3,
+			'',
+			'',
+			false,
+			'test',
+			null,
+			'DE'
+		);
 		const tourId = await addRideShareTour(
 			inXMinutes(40),
 			true,
@@ -209,7 +249,17 @@ describe('add ride share request', () => {
 	}, 30000);
 
 	it('tour with cancelled request is handled correctly', async () => {
-		const vehicle = await createRideShareVehicle(mockUserId, 0, 1, '', '', false, 'test', null);
+		const vehicle = await createRideShareVehicle(
+			mockUserId,
+			0,
+			1,
+			'',
+			'',
+			false,
+			'test',
+			null,
+			'DE'
+		);
 		const tourId = await addRideShareTour(
 			inXMinutes(40),
 			true,

@@ -94,6 +94,7 @@
 		"vitest": "^3.0.4"
 	},
 	"dependencies": {
+		"@codecorn/euro-plate-validator": "^1.0.15",
 		"@hey-api/client-fetch": "^0.7.1",
 		"@jaames/iro": "^5.5.2",
 		"@mapbox/polyline": "^1.2.1",

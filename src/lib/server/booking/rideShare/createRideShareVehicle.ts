@@ -8,7 +8,8 @@ export async function createRideShareVehicle(
 	model: string | null,
 	smokingAllowed: boolean,
 	licensePlate: string,
-	picture: string | null
+	picture: string | null,
+	country: string
 ) {
 	return (
 		await db
@@ -21,7 +22,8 @@ export async function createRideShareVehicle(
 				color,
 				model,
 				licensePlate,
-				picture
+				picture,
+				country
 			})
 			.returning('id')
 			.executeTakeFirstOrThrow()
