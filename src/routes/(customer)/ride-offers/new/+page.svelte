@@ -258,7 +258,7 @@
 					variant="outline"
 					onclick={() =>
 						pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
-					class="w-full flex justify-center"
+					class="flex w-full justify-center"
 				>
 					<MapIcon class="h-[1.2rem] w-[1.2rem]" />
 					{t.ride.showMap}
@@ -343,7 +343,7 @@
 					</Popover.Content>
 				</Popover.Root>
 			</div>
-			
+
 			<div class="flex items-center justify-center">
 				{#if page.state.selectedItinerary && !loading}
 					<Button
