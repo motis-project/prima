@@ -12,7 +12,7 @@
 		min: number;
 		max: number;
 		step: number;
-		classes: string;
+		classes?: string;
 	} = $props();
 </script>
 
