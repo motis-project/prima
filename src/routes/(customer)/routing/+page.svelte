@@ -635,8 +635,11 @@
 					updateStartDest={updateStartDest(from, to)}
 				/>
 			</div>
-			<div class="mx-auto mt-6 space-y-2 text-sm">
-				<strong>{t.fare}</strong>
+			<div class="border-rounded-md mx-auto w-full space-y-2 rounded-md border-2 border-solid p-2">
+				<p class="text-md font-bold">{t.publicTransitTaxi}</p>
+				<hr />
+				<div class="space-y-2 text-sm">
+					<strong>{t.fare}</strong>
 				<div class="grid grid-cols-2">
 					<div>{t.booking.fifteenPlus}</div>
 					<div>{getEuroString(legOdmPrice(1, 0, 0))}</div>
@@ -647,18 +650,28 @@
 					<div></div>
 					<div>{t.perPerson} {t.perRide}</div>
 				</div>
-				<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
-				<p>
-					<button
-						class="link"
-						onclick={() =>
-							pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
-						><strong>{t.serviceArea}</strong></button
-					><br />{t.regionAround} Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife,
-					Trebendorf, Weißkeißel, Weißwasser/O.L.
-				</p>
-				<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
+					<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
+					<p>
+						<button
+							class="link"
+							onclick={() =>
+								pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
+							><strong>{t.serviceArea}</strong></button
+						><br />{t.regionAround} Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife,
+						Trebendorf, Weißkeißel, Weißwasser/O.L.
+					</p>
+					<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
+				</div>
 			</div>
+
+			<div class="border-rounded-md mx-auto w-full space-y-2 rounded-md border-2 border-solid p-2">
+				<p class="text-md font-bold">{t.rideSharing}</p>
+				<hr />
+				<div class="space-y-2 text-sm">
+					{t.rideSharingInfo}
+				</div>
+			</div>
+
 			<p class="mx-auto mt-6 text-sm">
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html t.introduction}

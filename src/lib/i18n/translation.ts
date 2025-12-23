@@ -204,6 +204,7 @@ export type Translations = {
 	odm: string;
 	rideSharing: string;
 	rideSharingBookingRequired: string;
+	rideSharingInfo: string;
 	from: string;
 	to: string;
 	arrival: string;
@@ -313,6 +314,7 @@ export type Translations = {
 		acceptRequest: string;
 		requestAccepted: string;
 		requestCancelled: string;
+		showMap: string;
 	};
 
 	buttons: {

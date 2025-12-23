@@ -218,6 +218,8 @@ const translations: Translations = {
 	odm: 'Public Transport Taxi, booking required!',
 	rideSharing: 'Ride sharing offer',
 	rideSharingBookingRequired: 'Ride sharing offer, negotiation required!',
+	rideSharingInfo:
+		'These are private ride-sharing offers. If you are interested in a private ride-sharing connection, you can send a request to the provider to arrange the details. Register to create ride-sharing offers and send requests.',
 	from: 'From',
 	to: 'To',
 	arrival: 'Arrival',
@@ -251,7 +253,7 @@ const translations: Translations = {
 	storeItinerary: 'Save Itinerary',
 	removeItinerary: 'Remove Itinerary',
 	introduction:
-		'The <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> project augments public transport with on-demand taxis and, later, ride-sharing options. The goal is to ensure a service at least every two hours, even in rural areas and at off-peak times. More about <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a>',
+		'The <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> project augments public transport with on-demand taxis and private ride-sharing options. The goal is to ensure a service at least every two hours, even in rural areas and at off-peak times. More about <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a>',
 	publicTransitTaxi: 'Public-transit Taxi',
 	serviceArea: 'Service area',
 	serviceTime: 'Service time',
@@ -353,7 +355,8 @@ const translations: Translations = {
 		offerBy: 'Offered by',
 		acceptRequest: 'Confirm ride',
 		requestAccepted: 'Ride confirmed',
-		requestCancelled: 'Ride cancelled'
+		requestCancelled: 'Ride cancelled',
+		showMap: 'Show map'
 	},
 
 	buttons: {
