@@ -24,9 +24,9 @@ test('add ride share tour', async ({ page }) => {
 	await chooseFromTypeAhead(page, 'Von', 'schleife', 'Schleife ');
 	await chooseFromTypeAhead(page, 'Nach', 'klein prie', 'Klein Priebus Krauschwitz');
 	await page.getByRole('button', { name: 'Los um' }).click();
-	await page.waitForTimeout(500);
+	await page.waitForTimeout(1000);
 	await page.locator('input[type="datetime-local"]').fill('2035-12-12T03:15');
-	await page.waitForTimeout(500);
+	await page.waitForTimeout(1000);
 	await page.getByRole('button', { name: 'Mitfahrangebot veröffentlichen' }).click();
 	await page.waitForTimeout(1000);
 	await page.screenshot({ path: 'screenshots/afterCreateRideShareTour.png', fullPage: true });
