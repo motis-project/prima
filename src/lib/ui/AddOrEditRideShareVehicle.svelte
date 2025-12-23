@@ -121,7 +121,7 @@
 				</div>
 			</RadioGroup.Root>
 		</Panel>
-		<Panel title={t.rideShare.luggage} subtitle={t.rideShare.luggageExplanation}>
+		<Panel title={t.rideShare.luggage} subtitle={t.luggageExplanation}>
 			<Input name="luggage" type="number" placeholder="4" value={luggage ?? '4'} />
 		</Panel>
 		<div>
