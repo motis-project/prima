@@ -640,16 +640,16 @@
 				<hr />
 				<div class="space-y-2 text-sm">
 					<strong>{t.fare}</strong>
-				<div class="grid grid-cols-2">
-					<div>{t.booking.fifteenPlus}</div>
-					<div>{getEuroString(legOdmPrice(1, 0, 0))}</div>
-					<div>{t.booking.kidsSevenToFourteen}</div>
-					<div>{getEuroString(legOdmPrice(1, 0, 1))}</div>
-					<div>{t.booking.underSeven}</div>
-					<div>{getEuroString(legOdmPrice(1, 1, 0))}</div>
-					<div></div>
-					<div>{t.perPerson} {t.perRide}</div>
-				</div>
+					<div class="grid grid-cols-2">
+						<div>{t.booking.fifteenPlus}</div>
+						<div>{getEuroString(legOdmPrice(1, 0, 0))}</div>
+						<div>{t.booking.kidsSevenToFourteen}</div>
+						<div>{getEuroString(legOdmPrice(1, 0, 1))}</div>
+						<div>{t.booking.underSeven}</div>
+						<div>{getEuroString(legOdmPrice(1, 1, 0))}</div>
+						<div></div>
+						<div>{t.perPerson} {t.perRide}</div>
+					</div>
 					<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
 					<p>
 						<button
