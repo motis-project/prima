@@ -358,7 +358,8 @@ const translations: Translations = {
 		offerBy: 'Angebot von',
 		acceptRequest: 'Mitfahrt bestätigen',
 		requestAccepted: 'Mitfahrt bestätigt',
-		requestCancelled: 'Mitfahrt abgesagt'
+		requestCancelled: 'Mitfahrt abgesagt',
+		showMap: 'Karte anzeigen'
 	},
 
 	buttons: {
