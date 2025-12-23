@@ -349,7 +349,8 @@ const translations: Translations = {
 		offerBy: 'Offered by',
 		acceptRequest: 'Confirm ride',
 		requestAccepted: 'Ride confirmed',
-		requestCancelled: 'Ride cancelled'
+		requestCancelled: 'Ride cancelled',
+		showMap: 'Show map'
 	},
 
 	buttons: {

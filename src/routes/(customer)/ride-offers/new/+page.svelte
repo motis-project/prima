@@ -168,96 +168,6 @@
 			<h3 class="text-xl font-medium">{t.ride.create}</h3>
 			<p class="">{t.ride.intro}</p>
 
-			<div dir="rtl">
-				<Button
-					size="icon"
-					variant="outline"
-					onclick={() =>
-						pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
-					class="ml-auto"
-				>
-					<MapIcon class="h-[1.2rem] w-[1.2rem]" />
-				</Button>
-			</div>
-			<div class="relative flex flex-col gap-4">
-				<Input
-					placeholder={t.from}
-					class="text-sm"
-					onfocus={() => pushState('', { selectFrom: true })}
-					value={from.label}
-				/>
-				<Input
-					placeholder={t.to}
-					class="text-sm"
-					onfocus={() => pushState('', { selectTo: true })}
-					value={to.label}
-				/>
-				<Button
-					variant="ghost"
-					class="absolute right-0 top-0 z-10"
-					size="icon"
-					onclick={() => getLocation()}
-				>
-					<LocateFixed class="h-5 w-5" />
-				</Button>
-				<Button
-					class="absolute right-10 top-6 z-10"
-					variant="outline"
-					size="icon"
-					onclick={() => {
-						const tmp = to;
-						to = from;
-						from = tmp;
-
-						const tmpItems = toItems;
-						toItems = fromItems;
-						fromItems = tmpItems;
-					}}
-				>
-					<ArrowUpDown class="h-5 w-5" />
-				</Button>
-			</div>
-			<div class="flex gap-2">
-				<Popover.Root>
-					<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
-						{t.atDateTime(
-							timeType,
-							time,
-							time.toLocaleDateString() == new Date().toLocaleDateString()
-						)}
-					</Popover.Trigger>
-					<Popover.Content class="flex w-fit flex-col gap-4">
-						<RadioGroup.Root class="flex justify-stretch" bind:value={timeType}>
-							<Label
-								for="departure"
-								class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
-							>
-								<RadioGroup.Item
-									value="departure"
-									id="departure"
-									class="sr-only"
-									aria-label={t.departure}
-								/>
-								{t.departure}
-							</Label>
-							<Label
-								for="arrival"
-								class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
-							>
-								<RadioGroup.Item
-									value="arrival"
-									id="arrival"
-									class="sr-only"
-									aria-label={t.arrival}
-								/>
-								{t.arrival}
-							</Label>
-						</RadioGroup.Root>
-
-						<DateInput bind:value={time} />
-					</Popover.Content>
-				</Popover.Root>
-			</div>
 			<div class="flex gap-2">
 				<Popover.Root>
 					<Popover.Trigger
@@ -343,6 +253,97 @@
 				</Popover.Root>
 			</div>
 
+			<div class="w-full justify-self-center">
+				<Button
+					variant="outline"
+					onclick={() =>
+						pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
+					class="w-full flex justify-center"
+				>
+					<MapIcon class="h-[1.2rem] w-[1.2rem]" />
+					{t.ride.showMap}
+				</Button>
+			</div>
+			<div class="relative flex flex-col gap-4">
+				<Input
+					placeholder={t.from}
+					class="text-sm"
+					onfocus={() => pushState('', { selectFrom: true })}
+					value={from.label}
+				/>
+				<Input
+					placeholder={t.to}
+					class="text-sm"
+					onfocus={() => pushState('', { selectTo: true })}
+					value={to.label}
+				/>
+				<Button
+					variant="ghost"
+					class="absolute right-0 top-0 z-10"
+					size="icon"
+					onclick={() => getLocation()}
+				>
+					<LocateFixed class="h-5 w-5" />
+				</Button>
+				<Button
+					class="absolute right-10 top-6 z-10"
+					variant="outline"
+					size="icon"
+					onclick={() => {
+						const tmp = to;
+						to = from;
+						from = tmp;
+
+						const tmpItems = toItems;
+						toItems = fromItems;
+						fromItems = tmpItems;
+					}}
+				>
+					<ArrowUpDown class="h-5 w-5" />
+				</Button>
+			</div>
+			<div class="flex gap-2">
+				<Popover.Root>
+					<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
+						{t.atDateTime(
+							timeType,
+							time,
+							time.toLocaleDateString() == new Date().toLocaleDateString()
+						)}
+					</Popover.Trigger>
+					<Popover.Content class="flex w-fit flex-col gap-4">
+						<RadioGroup.Root class="flex justify-stretch" bind:value={timeType}>
+							<Label
+								for="departure"
+								class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
+							>
+								<RadioGroup.Item
+									value="departure"
+									id="departure"
+									class="sr-only"
+									aria-label={t.departure}
+								/>
+								{t.departure}
+							</Label>
+							<Label
+								for="arrival"
+								class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
+							>
+								<RadioGroup.Item
+									value="arrival"
+									id="arrival"
+									class="sr-only"
+									aria-label={t.arrival}
+								/>
+								{t.arrival}
+							</Label>
+						</RadioGroup.Root>
+
+						<DateInput bind:value={time} />
+					</Popover.Content>
+				</Popover.Root>
+			</div>
+			
 			<div class="flex items-center justify-center">
 				{#if page.state.selectedItinerary && !loading}
 					<Button

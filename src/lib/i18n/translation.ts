@@ -309,6 +309,7 @@ export type Translations = {
 		acceptRequest: string;
 		requestAccepted: string;
 		requestCancelled: string;
+		showMap: string;
 	};
 
 	buttons: {
