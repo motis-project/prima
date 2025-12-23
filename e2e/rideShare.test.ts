@@ -23,6 +23,7 @@ test('add ride share tour', async ({ page }) => {
 	await page.waitForTimeout(1000);
 	await chooseFromTypeAhead(page, 'Von', 'schleife', 'Schleife ');
 	await chooseFromTypeAhead(page, 'Nach', 'klein prie', 'Klein Priebus Krauschwitz');
+	await page.getByRole('button', { name: 'Los um' }).click();
 	await page.locator('input[type="datetime-local"]').fill('2035-12-12T03:15');
 	await page.getByRole('button', { name: 'Mitfahrangebot veröffentlichen' }).click();
 	await page.waitForTimeout(1000);
