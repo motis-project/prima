@@ -8,6 +8,7 @@
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import { enhance } from '$app/forms';
 	import { LICENSE_PLATE_PLACEHOLDER } from '$lib/constants';
+	import { t } from '$lib/i18n/translation';
 
 	const {
 		text,
@@ -105,6 +106,7 @@
 			<div class="field">
 				<Label for="luggage">Gepäckstücke:</Label>
 				<Input name="luggage" type="number" placeholder="4" value={v?.luggage?.toString() ?? '4'} />
+				<div class="text-sm tracking-tight text-muted-foreground">{t.luggageExplanation}</div>
 			</div>
 			<input type="hidden" name="id" value={v?.id} />
 			<Button type="submit" variant="outline" data-testid="create-vehicle">

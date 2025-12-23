@@ -253,7 +253,7 @@ const translations: Translations = {
 	storeItinerary: 'Save Itinerary',
 	removeItinerary: 'Remove Itinerary',
 	introduction:
-		'The <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> project augments public transport with on-demand taxis and private ride-sharing options. The goal is to ensure a service at least every two hours, even in rural areas and at off-peak times. More about <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a>',
+		'The PriMa+ÖV project augments public transport with on-demand taxis and private ride-sharing options. The goal is to ensure a service at least every two hours, even in rural areas and at off-peak times. More about ',
 	publicTransitTaxi: 'Public-transit Taxi',
 	serviceArea: 'Service area',
 	serviceTime: 'Service time',
@@ -266,6 +266,8 @@ const translations: Translations = {
 	bookingDeadlineContent: 'at least 1 hour in advance, weekend bookings until Friday 6 p.m.',
 	logo: 'The PriMa+ÖV logo. Iconographic representation of a car, bus, train and cab.',
 	toConnectionSearch: 'Go to connection search',
+	luggageExplanation:
+		'Approximate number of transportable items in handluggage size. A big suitcase corresponds to about three handluggage items.',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
@@ -375,8 +377,6 @@ const translations: Translations = {
 		specifyColor: 'Specify Color',
 		specifyModel: 'Specify Model',
 		luggage: 'Luggage',
-		luggageExplanation:
-			'Approximate number of transportable items in handluggage size. A big suitcase corresponds to about three handluggage items.',
 		licensePlate: 'License Plate',
 		createNewVehicle: 'Create new Vehicle',
 		createVehicle: 'Create Vehicle',
