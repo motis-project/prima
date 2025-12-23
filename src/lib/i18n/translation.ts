@@ -253,7 +253,7 @@ export type Translations = {
 		kidsThreeToFour: string;
 		kidsFiveToSix: string;
 		kidsSevenToFourteen: string;
-		fourTeenPlus: string;
+		fifteenPlus: string;
 		underSeven: string;
 		totalPrice: string;
 		cashOnly: string;

@@ -542,7 +542,7 @@
 							<span class="flex items-center justify-self-center"
 								>{passengers}<PersonIcon class="size-5 shrink-0" /></span
 							>
-							<Label class="justify-self-end">{t.booking.fourTeenPlus}</Label>
+							<Label class="justify-self-end">{t.booking.fifteenPlus}</Label>
 							<PlusMinus
 								classes="justify-self-center"
 								bind:value={fourteenPlus}
@@ -638,7 +638,7 @@
 			<div class="mx-auto mt-6 space-y-2 text-sm">
 				<strong>{t.fare}</strong>
 				<div class="grid grid-cols-2">
-					<div>{t.booking.fourTeenPlus}</div>
+					<div>{t.booking.fifteenPlus}</div>
 					<div>{getEuroString(legOdmPrice(1, 0, 0))}</div>
 					<div>{t.booking.kidsSevenToFourteen}</div>
 					<div>{getEuroString(legOdmPrice(1, 0, 1))}</div>

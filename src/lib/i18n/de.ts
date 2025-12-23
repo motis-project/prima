@@ -289,7 +289,7 @@ const translations: Translations = {
 		kidsThreeToFour: '3 - 4 Jahre',
 		kidsFiveToSix: '5 - 6 Jahre',
 		kidsSevenToFourteen: '7 - 14 Jahre',
-		fourTeenPlus: 'über 14 Jahre',
+		fifteenPlus: 'ab 15 Jahre',
 		underSeven: 'unter 7 Jahre',
 		foldableWheelchair: 'Faltbarer Rollstuhl',
 		withFoldableWheelchair: 'Mit faltbarem Rollstuhl',
