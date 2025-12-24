@@ -100,6 +100,7 @@ async function chooseFromTypeAhead(
 	expectedOption: string
 ) {
 	await page.getByRole('textbox', { name: placeholder }).click();
+	await expect(page.getByRole('combobox', { name: placeholder })).toBeVisible();
 	await page.getByRole('combobox', { name: placeholder }).fill(search);
 	await page
 		.getByRole('option', { name: new RegExp(`^\\s*${expectedOption}`, 'i') })
