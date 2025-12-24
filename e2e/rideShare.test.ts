@@ -18,17 +18,14 @@ test('add ride share tour', async ({ page }) => {
 	await page.goto('/account/add-or-edit-ride-share-vehicle');
 	await page.getByPlaceholder(LICENSE_PLATE_PLACEHOLDER).fill(LICENSE_PLATE_PLACEHOLDER);
 	await page.getByRole('button', { name: 'Fahrzeug anlegen' }).click();
-	await page.waitForTimeout(1000);
 	await page.goto('/ride-offers/new');
-	await page.waitForTimeout(1000);
+	await expect(page.getByRole('heading', { name: 'Neues Mitfahrangebot' })).toBeVisible();
 	await chooseFromTypeAhead(page, 'Von', 'schleife', 'Schleife ');
 	await chooseFromTypeAhead(page, 'Nach', 'klein prie', 'Klein Priebus Krauschwitz');
 	await page.getByRole('button', { name: 'Los um' }).click();
 	await page.locator('input[type="datetime-local"]').fill('2035-12-12T03:15');
 	await page.keyboard.press('Escape');
-	await page.waitForTimeout(5000);
 	await page.getByRole('button', { name: 'Mitfahrangebot veröffentlichen' }).click();
-	await page.waitForTimeout(1000);
 	await page.screenshot({ path: 'screenshots/afterCreateRideShareTour.png', fullPage: true });
 	await logout(page);
 });
@@ -102,10 +99,12 @@ async function chooseFromTypeAhead(
 	search: string,
 	expectedOption: string
 ) {
-	await page.getByPlaceholder(placeholder).pressSequentially(search, { delay: 10 });
-	const suggestion = page.getByText(new RegExp(`^\\s*${expectedOption}`, 'i')).first();
-	await suggestion.waitFor({ state: 'visible', timeout: 5000 });
-	await suggestion.click();
+	await page.getByRole('textbox', { name: placeholder }).click();
+	await page.getByRole('combobox', { name: placeholder }).fill(search);
+	await page
+		.getByRole('option', { name: new RegExp(`^\\s*${expectedOption}`, 'i') })
+		.first()
+		.click();
 }
 
 async function isFeedbackBannerVisible(page: Page, user: UserCredentials, xpct: boolean) {
