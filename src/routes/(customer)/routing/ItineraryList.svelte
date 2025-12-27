@@ -17,7 +17,8 @@
 		selectItinerary,
 		updateStartDest,
 		passengers,
-		kids
+		freePassengers,
+		reducedPassengers
 	}: {
 		routingResponses: Array<Promise<SignedPlanResponse | undefined>>;
 		baseResponse: Promise<SignedPlanResponse | undefined> | undefined;
@@ -25,7 +26,8 @@
 		selectItinerary: (it: SignedItinerary) => void;
 		updateStartDest: (r: SignedPlanResponse | undefined) => SignedPlanResponse | undefined;
 		passengers: number;
-		kids: number;
+		freePassengers: number;
+		reducedPassengers: number;
 	} = $props();
 
 	const localDate = (timestamp: string) => {
@@ -38,7 +40,9 @@
 	{#if it.legs.some((l) => isRideShareLeg(l))}
 		<Info class="size-4" /> {t.ride.negotiateHere}
 	{:else if it.legs.some((l) => isTaxiLeg(l))}
-		<Info class="size-4" /> {t.booking.bookHere} {getEuroString(odmPrice(it, passengers, kids))}
+		<Info class="size-4" />
+		{t.booking.bookHere}
+		{getEuroString(odmPrice(it, passengers, freePassengers, reducedPassengers))}
 	{/if}
 {/snippet}
 

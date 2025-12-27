@@ -66,6 +66,7 @@ export async function bookingApi(
 	kidsZeroToTwo: number,
 	kidsThreeToFour: number,
 	kidsFiveToSix: number,
+	kidsSevenToFourteen: number,
 	skipPromiseCheck?: boolean
 ): Promise<{
 	message?: string;
@@ -86,6 +87,7 @@ export async function bookingApi(
 		JSON.stringify(kidsZeroToTwo, null, 2),
 		JSON.stringify(kidsThreeToFour, null, 2),
 		JSON.stringify(kidsFiveToSix, null, 2),
+		JSON.stringify(kidsSevenToFourteen, null, 2),
 		JSON.stringify(skipPromiseCheck, null, 2)
 	);
 	if (p.connection1 == null && p.connection2 == null) {
@@ -199,6 +201,7 @@ export async function bookingApi(
 								kidsZeroToTwo,
 								kidsThreeToFour,
 								kidsFiveToSix,
+								kidsSevenToFourteen,
 								trx
 							)) ?? null;
 					}
@@ -213,6 +216,7 @@ export async function bookingApi(
 								kidsZeroToTwo,
 								kidsThreeToFour,
 								kidsFiveToSix,
+								kidsSevenToFourteen,
 								trx
 							)) ?? null;
 					}
