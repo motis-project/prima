@@ -105,7 +105,7 @@ describe('Whitelist and Booking API Tests', () => {
 			capacities
 		};
 
-		await bookingApi(bookingBody, mockUserId, false, false, 0, 0, 0);
+		await bookingApi(bookingBody, mockUserId, false, false, 0, 0, 0, 0, false);
 		const tours = await getTours();
 		expect(tours.length).toBe(1);
 		expect(tours[0].requests.length).toBe(1);

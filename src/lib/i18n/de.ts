@@ -225,6 +225,8 @@ const translations: Translations = {
 	odm: 'ÖPNV-Taxi - Buchung erforderlich!',
 	rideSharing: 'Mitfahrangebot',
 	rideSharingBookingRequired: 'Mitfahrangebot - Vereinbarung erforderlich!',
+	rideSharingInfo:
+		'Es handelt sich um private Mitfahrangebote. Wenn Sie sich für eine Verbindung mit privater Mitnahme interessieren, können Sie dem Anbieter eine Anfrage senden, um die Details zu vereinbaren. Registrieren Sie sich, um Mitfahrangebote zu erstellen und Anfragen zu senden.',
 	from: 'Von',
 	to: 'Nach',
 	arrival: 'Ankunft',
@@ -259,7 +261,7 @@ const translations: Translations = {
 	storeItinerary: 'Reisekette speichern',
 	removeItinerary: 'Reisekette entfernen',
 	introduction:
-		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und in Zukunft auch Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Mehr über <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a>',
+		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und private Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Mehr über <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a>',
 	publicTransitTaxi: 'ÖPNV-Taxi',
 	serviceArea: 'Bediengebiet',
 	serviceTime: 'Bedienzeit',
@@ -289,6 +291,9 @@ const translations: Translations = {
 		kidsZeroToTwo: '0 - 2 Jahre',
 		kidsThreeToFour: '3 - 4 Jahre',
 		kidsFiveToSix: '5 - 6 Jahre',
+		kidsSevenToFourteen: '7 - 14 Jahre',
+		fifteenPlus: 'ab 15 Jahre',
+		underSeven: 'unter 7 Jahre',
 		foldableWheelchair: 'Faltbarer Rollstuhl',
 		withFoldableWheelchair: 'Mit faltbarem Rollstuhl',
 		passengerNumber: 'Anzahl Personen',
@@ -302,6 +307,7 @@ const translations: Translations = {
 		},
 		totalPrice: 'Gesamtpreis',
 		cashOnly: 'Nur Barzahlung im Taxi',
+		ptTicketNeeded: 'Zusätzlich ist ein entsprechendes ÖPNV-Ticket erforderlich.',
 		cancel: 'Stornieren',
 		loginToBook: 'Einloggen zum Buchen',
 		connection: 'Verbindung',
@@ -359,7 +365,8 @@ const translations: Translations = {
 		offerBy: 'Angebot von',
 		acceptRequest: 'Mitfahrt bestätigen',
 		requestAccepted: 'Mitfahrt bestätigt',
-		requestCancelled: 'Mitfahrt abgesagt'
+		requestCancelled: 'Mitfahrt abgesagt',
+		showMap: 'Karte anzeigen'
 	},
 
 	buttons: {
