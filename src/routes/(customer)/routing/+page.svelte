@@ -246,8 +246,12 @@
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
-				from: { lat: from.value.match!.lat, lng: from.value.match!.lon },
-				to: { lat: to.value.match!.lat, lng: to.value.match!.lon },
+				from: {
+					lat: from.value.match!.lat,
+					lng: from.value.match!.lon,
+					address: from.value.match!.name
+				},
+				to: { lat: to.value.match!.lat, lng: to.value.match!.lon, address: to.value.match!.name },
 				time: time.getTime(),
 				startFixed: timeType === 'arrival',
 				alertId: alertId ?? null,
