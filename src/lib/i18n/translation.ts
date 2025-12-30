@@ -207,6 +207,7 @@ export type Translations = {
 	rideSharingInfo: string;
 	from: string;
 	to: string;
+	when: string;
 	arrival: string;
 	departure: string;
 	duration: string;
@@ -240,6 +241,8 @@ export type Translations = {
 	bookingDeadlineContent: string;
 	logo: string;
 	toConnectionSearch: string;
+	addAlert: string;
+	notificationsList: string;
 
 	booking: {
 		bookHere: string;

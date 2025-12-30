@@ -222,6 +222,7 @@ const translations: Translations = {
 		'These are private ride-sharing offers. If you are interested in a private ride-sharing connection, you can send a request to the provider to arrange the details. Register to create ride-sharing offers and send requests.',
 	from: 'From',
 	to: 'To',
+	when: 'When',
 	arrival: 'Arrival',
 	departure: 'Departure',
 	duration: 'Duration',
@@ -266,6 +267,8 @@ const translations: Translations = {
 	bookingDeadlineContent: 'at least 1 hour in advance, weekend bookings until Friday 6 p.m.',
 	logo: 'The PriMa+ÖV logo. Iconographic representation of a car, bus, train and cab.',
 	toConnectionSearch: 'Go to connection search',
+	addAlert: 'Receive a notification if a ride sharing offer matching this search is published',
+	notificationsList: 'List of activated notifications',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
