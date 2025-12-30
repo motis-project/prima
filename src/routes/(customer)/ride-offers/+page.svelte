@@ -5,6 +5,7 @@
 	import type { Itinerary } from '$lib/openapi';
 	import Button from '$lib/shadcn/button/button.svelte';
 	import { Plus } from 'lucide-svelte';
+	import RoutingNotifications from '$lib/ui/RoutingNotifications.svelte';
 
 	const { data } = $props();
 	const pastJourneys = data.journeys.filter(
@@ -58,6 +59,7 @@
 	</div>
 	{#if plannedJourneys.length === 0 && pastJourneys.length === 0}
 		{t.noRideOffers}
+		<RoutingNotifications rows={data.notifications}></RoutingNotifications>
 	{/if}
 	{@render journeyList(plannedJourneys)}
 	{#if pastJourneys.length !== 0}
