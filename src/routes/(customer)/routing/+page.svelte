@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PUBLIC_PROVIDER } from '$env/static/public';
+	import { PUBLIC_INFO_URL, PUBLIC_PROVIDER } from '$env/static/public';
 	import { browser } from '$app/environment';
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
@@ -674,7 +674,8 @@
 
 			<p class="mx-auto mt-6 text-sm">
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-				{@html t.introduction}
+				{t.introduction}
+				<a href={PUBLIC_INFO_URL} class="link" target="_blank">{PUBLIC_PROVIDER}</a>
 			</p>
 		</div>
 		<Footer />

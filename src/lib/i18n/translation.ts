@@ -240,6 +240,7 @@ export type Translations = {
 	bookingDeadlineContent: string;
 	logo: string;
 	toConnectionSearch: string;
+	luggageExplanation: string;
 
 	booking: {
 		bookHere: string;
@@ -337,7 +338,6 @@ export type Translations = {
 		specifyColor: string;
 		specifyModel: string;
 		luggage: string;
-		luggageExplanation: string;
 		licensePlate: string;
 		createNewVehicle: string;
 		createVehicle: string;
