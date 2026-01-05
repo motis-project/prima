@@ -15,7 +15,7 @@ function rideShareDominates(a: Itinerary, b: Itinerary): boolean {
 }
 
 function publicTransitOnly(i: Itinerary): boolean {
-	for (let l of i.legs) {
+	for (const l of i.legs) {
 		if (isOdmLeg(l)) {
 			return false;
 		}
@@ -24,7 +24,7 @@ function publicTransitOnly(i: Itinerary): boolean {
 }
 
 function usesRideSharing(i: Itinerary): boolean {
-	for (let l of i.legs) {
+	for (const l of i.legs) {
 		if (isRideShareLeg(l)) {
 			return true;
 		}
@@ -33,15 +33,15 @@ function usesRideSharing(i: Itinerary): boolean {
 }
 
 function usesSameTour(a: Itinerary, b: Itinerary): boolean {
-	for (let x of a.legs) {
+	for (const x of a.legs) {
 		if (isRideShareLeg(x) && 'tripId' in x && typeof x.tripId === 'string') {
-			let xProperties = JSON.parse(x.tripId);
+			const xProperties = JSON.parse(x.tripId);
 			if (!('tour' in xProperties) || typeof xProperties.tour !== 'number') {
 				continue;
 			}
-			for (let y of b.legs) {
+			for (const y of b.legs) {
 				if (isRideShareLeg(y) && 'tripId' in y && typeof y.tripId === 'string') {
-					let yProperties = JSON.parse(y.tripId);
+					const yProperties = JSON.parse(y.tripId);
 					if (!('tour' in yProperties) || typeof yProperties.tour !== 'number') {
 						continue;
 					}

@@ -12,7 +12,7 @@ function isDominated(
 	itineraries: Array<Itinerary>,
 	dominates: (a: Itinerary, b: Itinerary) => boolean
 ): boolean {
-	for (let x of itineraries) {
+	for (const x of itineraries) {
 		if (dominates(x, i)) {
 			return true;
 		}
