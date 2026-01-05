@@ -2,10 +2,10 @@ import {
 	COST_PER_DRIVING_TIME,
 	COST_PER_WAITING_TIME,
 	PROFIT_PER_TIME,
-	MIN_PREP,
 	MINIMUM_PROFIT,
 	SCHEDULED_TIME_BUFFER_PICKUP,
-	BASE_PROFIT
+	BASE_PROFIT,
+	MIN_PREP_BOOKING
 } from '$lib/constants';
 import { InsertHow, InsertWhat } from '$lib/util/booking/insertionTypes';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
@@ -435,7 +435,7 @@ export function evaluateSingleInsertions(
 			}
 		}
 	}
-	const prepTime = Date.now() + MIN_PREP;
+	const prepTime = promisedTimes === undefined ? Date.now() + MIN_PREP_BOOKING : 0;
 	const direction = startFixed ? InsertDirection.BUS_STOP_PICKUP : InsertDirection.BUS_STOP_DROPOFF;
 	iterateAllInsertions(rideShareTours, insertionRanges, (insertionInfo: InsertionInfo) => {
 		const events = insertionInfo.events;
