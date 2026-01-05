@@ -5,8 +5,8 @@ import { type Database } from '$lib/server/db';
 import { sql, Transaction } from 'kysely';
 import { sendNotifications } from '$lib/server/firebase/notifications';
 import { TourChange } from '$lib/server/firebase/firebase';
-import { env } from '$env/dynamic/public';
 import crypto from 'crypto';
+import { legOdmPrice } from '$lib/util/odmPrice';
 
 export async function insertRequest(
 	r: BookRideResponse,
@@ -17,6 +17,7 @@ export async function insertRequest(
 	kidsZeroToTwo: number,
 	kidsThreeToFour: number,
 	kidsFiveToSix: number,
+	kidsSevenToFourteen: number,
 	trx: Transaction<Database>
 ): Promise<number> {
 	r.mergeTourList = r.mergeTourList.filter((id) => id != r.best.tour);
@@ -30,9 +31,11 @@ export async function insertRequest(
 	const ticketCode = withoutQr
 		? crypto.randomInt(10000, 100000)
 		: crypto.createHash('md5').update(crypto.randomUUID()).digest('hex');
-	const ticketPrice =
-		(capacities.passengers - kidsZeroToTwo - kidsThreeToFour - kidsFiveToSix) *
-		parseInt(env.PUBLIC_FIXED_PRICE);
+	const ticketPrice = legOdmPrice(
+		capacities.passengers,
+		kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix,
+		kidsSevenToFourteen
+	);
 	const requestId = (
 		await sql<{ request: number }>`
         SELECT create_and_merge_tours(

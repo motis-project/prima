@@ -262,7 +262,7 @@ const translations: Translations = {
 	storeItinerary: 'Reisekette speichern',
 	removeItinerary: 'Reisekette entfernen',
 	introduction:
-		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und private Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Mehr über <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a>',
+		'Ziel des Projekts PriMa+ÖV ist es, den ÖPNV durch Ruftaxis und private Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Mehr über ',
 	publicTransitTaxi: 'ÖPNV-Taxi',
 	serviceArea: 'Bediengebiet',
 	serviceTime: 'Bedienzeit',
@@ -276,6 +276,8 @@ const translations: Translations = {
 		'min. 1 Stunde im Voraus, bei Buchungen für das Wochenende bis Freitag 18 Uhr',
 	logo: 'Das PriMa+ÖV Logo. Ikonographische Darstellung eines Autos, Busses, Zuges und Taxis.',
 	toConnectionSearch: 'Zur Verbindungssuche',
+	luggageExplanation:
+		'Ungefähre Anzahl von transportierbaren Gepäckstücken in Handgepäckgröße. Ein großer Koffer entspricht etwa drei Handgepäckstücken.',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
@@ -291,6 +293,9 @@ const translations: Translations = {
 		kidsZeroToTwo: '0 - 2 Jahre',
 		kidsThreeToFour: '3 - 4 Jahre',
 		kidsFiveToSix: '5 - 6 Jahre',
+		kidsSevenToFourteen: '7 - 14 Jahre',
+		fifteenPlus: 'ab 15 Jahre',
+		underSeven: 'unter 7 Jahre',
 		foldableWheelchair: 'Faltbarer Rollstuhl',
 		withFoldableWheelchair: 'Mit faltbarem Rollstuhl',
 		passengerNumber: 'Anzahl Personen',
@@ -304,6 +309,7 @@ const translations: Translations = {
 		},
 		totalPrice: 'Gesamtpreis',
 		cashOnly: 'Nur Barzahlung im Taxi',
+		ptTicketNeeded: 'Zusätzlich ist ein entsprechendes ÖPNV-Ticket erforderlich.',
 		cancel: 'Stornieren',
 		loginToBook: 'Einloggen zum Buchen',
 		connection: 'Verbindung',
@@ -385,8 +391,6 @@ const translations: Translations = {
 		specifyColor: 'Farbe angeben',
 		specifyModel: 'Fahrzeugmodell angeben',
 		luggage: 'Gepäckstücke',
-		luggageExplanation:
-			'Ungefähre Anzahl von transportierbaren Gepäckstücken in Handgepäckgröße. Ein großer Koffer entspricht etwa drei Handgepäckstücken.',
 		licensePlate: 'Nummernschild',
 		createNewVehicle: 'Neues Fahrzeug anlegen',
 		createVehicle: 'Fahrzeug anlegen',
