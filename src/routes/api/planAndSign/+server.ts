@@ -21,6 +21,8 @@ export const POST = async (event: RequestEvent) => {
 
 	// mixer
 
+	// remove journeys added for mixing context
+
 	return json({
 		...response!,
 		itineraries: await Promise.all(
