@@ -204,6 +204,7 @@ export type Translations = {
 	odm: string;
 	rideSharing: string;
 	rideSharingBookingRequired: string;
+	rideSharingInfo: string;
 	from: string;
 	to: string;
 	arrival: string;
@@ -239,6 +240,7 @@ export type Translations = {
 	bookingDeadlineContent: string;
 	logo: string;
 	toConnectionSearch: string;
+	luggageExplanation: string;
 
 	booking: {
 		bookHere: string;
@@ -252,8 +254,12 @@ export type Translations = {
 		kidsZeroToTwo: string;
 		kidsThreeToFour: string;
 		kidsFiveToSix: string;
+		kidsSevenToFourteen: string;
+		fifteenPlus: string;
+		underSeven: string;
 		totalPrice: string;
 		cashOnly: string;
+		ptTicketNeeded: string;
 		foldableWheelchair: string;
 		withFoldableWheelchair: string;
 		passengerNumber: string;
@@ -309,6 +315,7 @@ export type Translations = {
 		acceptRequest: string;
 		requestAccepted: string;
 		requestCancelled: string;
+		showMap: string;
 	};
 
 	buttons: {
@@ -331,7 +338,6 @@ export type Translations = {
 		specifyColor: string;
 		specifyModel: string;
 		luggage: string;
-		luggageExplanation: string;
 		licensePlate: string;
 		createNewVehicle: string;
 		createVehicle: string;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PUBLIC_PROVIDER } from '$env/static/public';
+	import { PUBLIC_INFO_URL, PUBLIC_PROVIDER } from '$env/static/public';
 	import { browser } from '$app/environment';
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
@@ -34,17 +34,17 @@
 	import Switch from '$lib/shadcn/switch/switch.svelte';
 	import { cn } from '$lib/shadcn/utils';
 	import { updateStartDest } from '$lib/util/updateStartDest';
-	import { odmPrice } from '$lib/util/odmPrice';
+	import { getEuroString, legOdmPrice, odmPrice } from '$lib/util/odmPrice';
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { HelpCircleIcon, LocateFixed, MapIcon } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
-	import { MAX_MATCHING_DISTANCE } from '$lib/constants';
+	import { BOOKING_MAX_PASSENGERS, MAX_MATCHING_DISTANCE } from '$lib/constants';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { planAndSign, type SignedPlanResponse } from '$lib/planAndSign';
-
 	import logo from '$lib/assets/logo-alpha.png';
 	import Footer from '$lib/ui/Footer.svelte';
 	import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
+	import PlusMinus from '$lib/ui/PlusMinus.svelte';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -52,15 +52,29 @@
 
 	const urlParams = browser ? new URLSearchParams(window.location.search) : undefined;
 
-	let passengers = $state(1);
 	let kidsZeroToTwo = $state(0);
 	let kidsThreeToFour = $state(0);
 	let kidsFiveToSix = $state(0);
-	let maxKidsZeroToTwo = $derived(passengers - 1 - kidsThreeToFour - kidsFiveToSix);
-	let maxKidsThreeToFour = $derived(passengers - 1 - kidsZeroToTwo - kidsFiveToSix);
-	let maxKidsFiveToSix = $derived(passengers - 1 - kidsZeroToTwo - kidsThreeToFour);
-	let minimumPassengers = $derived(1 + kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix);
-	let kids = $derived(kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix);
+	let kidsSevenToFourteen = $state(0);
+	let fourteenPlus = $state(1);
+	let passengers = $derived(
+		fourteenPlus + kidsSevenToFourteen + kidsFiveToSix + kidsThreeToFour + kidsZeroToTwo
+	);
+	let remainingPassengers = $derived(BOOKING_MAX_PASSENGERS - passengers);
+	let fourteenPlusMin = $derived(
+		kidsZeroToTwo > 0 || kidsThreeToFour > 0 || kidsFiveToSix > 0 || kidsSevenToFourteen == 0
+			? 1
+			: 0
+	);
+	let kidsSevenToFourteenMin = $derived(fourteenPlus == 0 ? 1 : 0);
+	function max(value: number) {
+		return remainingPassengers + value;
+	}
+	function underSevenMax(value: number) {
+		return fourteenPlus < 1 ? 0 : max(value);
+	}
+
+	let freeKids = $derived(kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix);
 	let wheelchair = $state(false);
 	let luggage = $state<LuggageType>('none');
 	let time = $state<Date>(new Date(urlParams?.get('time') || Date.now()));
@@ -297,6 +311,7 @@
 												value={JSON.stringify(page.state.selectedItinerary)}
 											/>
 											<input type="hidden" name="passengers" value={passengers} />
+											<input type="hidden" name="fourTeenPlus" value={fourteenPlus} />
 											<input type="hidden" name="kidsZeroToTwo" value={kidsZeroToTwo} />
 											<input type="hidden" name="kidsThreeToFour" value={kidsThreeToFour} />
 											<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
@@ -321,7 +336,12 @@
 										{passengers}
 										{wheelchair}
 										luggage={luggageToInt(luggage)}
-										price={odmPrice(page.state.selectedItinerary, passengers, kids)}
+										price={odmPrice(
+											page.state.selectedItinerary,
+											passengers,
+											freeKids,
+											kidsSevenToFourteen
+										)}
 									/>
 
 									<p class="my-2 text-sm">{t.booking.disclaimer}</p>
@@ -346,9 +366,11 @@
 												value={JSON.stringify(page.state.selectedItinerary)}
 											/>
 											<input type="hidden" name="passengers" value={passengers} />
+											<input type="hidden" name="fourTeenPlus" value={fourteenPlus} />
 											<input type="hidden" name="kidsZeroToTwo" value={kidsZeroToTwo} />
 											<input type="hidden" name="kidsThreeToFour" value={kidsThreeToFour} />
 											<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
+											<input type="hidden" name="kidsSevenToFourteen" value={kidsSevenToFourteen} />
 											<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
 											<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
 											<input
@@ -515,22 +537,56 @@
 							</Dialog.Description>
 						</Dialog.Header>
 
-						<div class="md-4 grid grid-cols-2 grid-rows-2 items-center gap-4">
-							<Label>{t.booking.passengerNumber}</Label>
-							<Input type="number" bind:value={passengers} min={minimumPassengers} max="6" />
-							<Label class="col-span-2">{t.booking.kidsDescription}</Label>
-							<Label>{t.booking.kidsZeroToTwo}</Label>
-							<Input type="number" bind:value={kidsZeroToTwo} min="0" max={maxKidsZeroToTwo} />
-							<Label>{t.booking.kidsThreeToFour}</Label>
-							<Input type="number" bind:value={kidsThreeToFour} min="0" max={maxKidsThreeToFour} />
-							<Label>{t.booking.kidsFiveToSix}</Label>
-							<Input type="number" bind:value={kidsFiveToSix} min="0" max={maxKidsFiveToSix} />
-
-							<Label class="flex items-center gap-2">
+						<div class="grid grid-cols-2 items-center gap-4">
+							<Label class="justify-self-end">{t.booking.passengerNumber}</Label>
+							<span class="flex items-center justify-self-center"
+								>{passengers}<PersonIcon class="size-5 shrink-0" /></span
+							>
+							<Label class="justify-self-end">{t.booking.fifteenPlus}</Label>
+							<PlusMinus
+								classes="justify-self-center"
+								bind:value={fourteenPlus}
+								min={fourteenPlusMin}
+								max={max(fourteenPlus)}
+								step={1}
+							/>
+							<Label class="justify-self-end">{t.booking.kidsSevenToFourteen}</Label>
+							<PlusMinus
+								classes="justify-self-center"
+								bind:value={kidsSevenToFourteen}
+								min={kidsSevenToFourteenMin}
+								max={max(kidsSevenToFourteen)}
+								step={1}
+							/>
+							<Label class="justify-self-end">{t.booking.kidsFiveToSix}</Label>
+							<PlusMinus
+								classes="justify-self-center"
+								bind:value={kidsFiveToSix}
+								min={0}
+								max={underSevenMax(kidsFiveToSix)}
+								step={1}
+							/>
+							<Label class="justify-self-end">{t.booking.kidsThreeToFour}</Label>
+							<PlusMinus
+								classes="justify-self-center"
+								bind:value={kidsThreeToFour}
+								min={0}
+								max={underSevenMax(kidsThreeToFour)}
+								step={1}
+							/>
+							<Label class="justify-self-end">{t.booking.kidsZeroToTwo}</Label>
+							<PlusMinus
+								classes="justify-self-center"
+								bind:value={kidsZeroToTwo}
+								min={0}
+								max={underSevenMax(kidsZeroToTwo)}
+								step={1}
+							/>
+							<Label class="flex items-center justify-self-end">
 								<WheelchairIcon class="size-5 shrink-0" />
 								{t.booking.foldableWheelchair}
 							</Label>
-							<Switch class="justify-self-end" bind:checked={wheelchair} />
+							<Switch class="ml-4 justify-self-center" bind:checked={wheelchair} />
 						</div>
 
 						<RadioGroup.Root bind:value={luggage} class="grid grid-cols-3 gap-4">
@@ -571,30 +627,55 @@
 					{baseResponse}
 					{routingResponses}
 					{passengers}
-					{kids}
+					freePassengers={freeKids}
+					reducedPassengers={kidsSevenToFourteen}
 					selectItinerary={(selectedItinerary) => {
 						goto('?detail', { state: { selectedItinerary } });
 					}}
 					updateStartDest={updateStartDest(from, to)}
 				/>
 			</div>
-			<div class="mx-auto mt-6 space-y-2 text-sm">
-				<p><strong>{t.fare}</strong><br />3€ {t.perPerson} {t.perRide}</p>
-				<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
-				<p>
-					<button
-						class="link"
-						onclick={() =>
-							pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
-						><strong>{t.serviceArea}</strong></button
-					><br />{t.regionAround} Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife,
-					Trebendorf, Weißkeißel, Weißwasser/O.L.
-				</p>
-				<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
+			<div class="border-rounded-md mx-auto w-full space-y-2 rounded-md border-2 border-solid p-2">
+				<p class="text-md font-bold">{t.publicTransitTaxi}</p>
+				<hr />
+				<div class="space-y-2 text-sm">
+					<strong>{t.fare}</strong>
+					<div class="grid grid-cols-2">
+						<div>{t.booking.fifteenPlus}</div>
+						<div>{getEuroString(legOdmPrice(1, 0, 0))}</div>
+						<div>{t.booking.kidsSevenToFourteen}</div>
+						<div>{getEuroString(legOdmPrice(1, 0, 1))}</div>
+						<div>{t.booking.underSeven}</div>
+						<div>{getEuroString(legOdmPrice(1, 1, 0))}</div>
+						<div></div>
+						<div>{t.perPerson} {t.perRide}</div>
+					</div>
+					<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
+					<p>
+						<button
+							class="link"
+							onclick={() =>
+								pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
+							><strong>{t.serviceArea}</strong></button
+						><br />{t.regionAround} Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife,
+						Trebendorf, Weißkeißel, Weißwasser/O.L.
+					</p>
+					<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
+				</div>
 			</div>
+
+			<div class="border-rounded-md mx-auto w-full space-y-2 rounded-md border-2 border-solid p-2">
+				<p class="text-md font-bold">{t.rideSharing}</p>
+				<hr />
+				<div class="space-y-2 text-sm">
+					{t.rideSharingInfo}
+				</div>
+			</div>
+
 			<p class="mx-auto mt-6 text-sm">
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-				{@html t.introduction}
+				{t.introduction}
+				<a href={PUBLIC_INFO_URL} class="link" target="_blank">{PUBLIC_PROVIDER}</a>
 			</p>
 		</div>
 		<Footer />

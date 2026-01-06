@@ -7,6 +7,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import de.motis.prima.services.ApiService
 import de.motis.prima.services.Tour
 import de.motis.prima.services.Vehicle
+import de.motis.prima.ui.TimeBlock
 import io.realm.kotlin.query.RealmResults
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +27,7 @@ import java.security.MessageDigest
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.util.Calendar
 import javax.inject.Inject
 
 data class TourSpecialInfo(
@@ -76,6 +78,10 @@ class DataRepository @Inject constructor(
 
     private val _darkTheme = MutableStateFlow(false)
     val darkTheme: StateFlow<Boolean> = _darkTheme.asStateFlow()
+
+    val utcOffset = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).offset.totalSeconds
+
+    val calendar: Calendar = Calendar.getInstance()
 
     fun toggleTheme() {
         _darkTheme.value = !_darkTheme.value
@@ -200,7 +206,7 @@ class DataRepository @Inject constructor(
         fetchTours = false
     }
 
-    private fun localDateFromEpochMillis(epochMillis: Long): LocalDate {
+    fun localDateFromEpochMillis(epochMillis: Long): LocalDate {
         return Instant.ofEpochMilli(epochMillis)
             .atZone(ZoneId.systemDefault())
             .toLocalDate()
@@ -306,6 +312,11 @@ class DataRepository @Inject constructor(
 
     fun decrementDate() {
         _displayDate.value = _displayDate.value.minusDays(1)
+        fetchTours()
+    }
+
+    fun setDate(date: LocalDate) {
+        _displayDate.value = date
         fetchTours()
     }
 

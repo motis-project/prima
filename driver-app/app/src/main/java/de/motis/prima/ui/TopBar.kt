@@ -98,6 +98,13 @@ fun TopBar(
                         },
                         text = { Text(text = stringResource(id = R.string.tours_header)) }
                     )
+                    DropdownMenuItem(
+                        onClick = {
+                            navController.navigate("availability")
+
+                        },
+                        text = { Text(text = "Verfügbarkeit") }
+                    )
                     for (item in navItems) {
                         DropdownMenuItem(
                             onClick = {
