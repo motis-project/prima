@@ -155,6 +155,17 @@ export interface Database {
 		request: number;
 		ratedIsCustomer: boolean;
 	};
+	taxiFilter: {
+		id: Generated<number>;
+		settingName: string;
+		isActive: boolean;
+		perTransfer: number;
+		taxiBase: number;
+		taxiPerMinute: number;
+		taxiDirectPenalty: number;
+		ptSlope: number;
+		taxiSlope: number;
+	};
 }
 
 export const pool = new pg.Pool({ connectionString: env.DATABASE_URL });

@@ -5,6 +5,8 @@ import type { QuerySerializerOptions } from '@hey-api/client-fetch';
 import { fail, json, type RequestEvent } from '@sveltejs/kit';
 import { getRideShareInfos } from '$lib/server/booking/rideShare/getRideShareInfo';
 import { isOdmLeg } from '$lib/util/booking/checkLegType';
+import { db } from '$lib/server/db';
+import { filterTaxis } from '$lib/util/filterTaxis';
 
 export const POST = async (event: RequestEvent) => {
 	const q: PlanData['query'] = await event.request.json();
@@ -19,14 +21,31 @@ export const POST = async (event: RequestEvent) => {
 		return fail(500);
 	}
 
-	// mixer
+	const filterSettings = await db
+		.selectFrom('taxiFilter')
+		.selectAll()
+		.where('isActive', '=', true)
+		.executeTakeFirst();
+	if (filterSettings === undefined) {
+		return fail(500);
+	}
+
+	let [filteredItineraries, ptThreshold, taxiThreshold] = filterTaxis(
+		response.itineraries,
+		filterSettings.perTransfer,
+		filterSettings.taxiBase,
+		filterSettings.taxiPerMinute,
+		filterSettings.taxiDirectPenalty,
+		filterSettings.ptSlope,
+		filterSettings.taxiSlope
+	);
 
 	// remove journeys added for mixing context
 
 	return json({
 		...response!,
 		itineraries: await Promise.all(
-			response!.itineraries.map(async (i: Itinerary) => {
+			filteredItineraries.map(async (i: Itinerary) => {
 				const odmLeg1 = i.legs.find(isOdmLeg);
 				const odmLeg2 = i.legs.findLast(isOdmLeg);
 				const rideShareTourInfos = await getRideShareInfos(i);

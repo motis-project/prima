@@ -2,12 +2,12 @@ import { type Itinerary } from '$lib/openapi';
 import { isTaxiLeg } from './booking/checkLegType';
 import { isDirectTaxi, publicTransitOnly, usesTaxi } from './itineraryHelpers';
 
-export function mix(
+export function filterTaxis(
 	itineraries: Array<Itinerary>,
-	baseTaxi: number,
-	perTaxiMinute: number,
 	perTransfer: number,
-	directTaxiPenalty: number,
+	taxiBase: number,
+	taxiPerMinute: number,
+	taxiDirectPenalty: number,
 	ptSlope: number,
 	taxiSlope: number
 ): [Array<Itinerary>, Array<number>, Array<number>] {
@@ -20,12 +20,12 @@ export function mix(
 			i.legs
 				.map((l) =>
 					isTaxiLeg(l)
-						? baseTaxi + Math.round(l.duration / 60) * perTaxiMinute
+						? taxiBase + Math.round(l.duration / 60) * taxiPerMinute
 						: Math.round(l.duration / 60)
 				)
 				.reduce((acc, val) => acc + val, 0) +
 			i.transfers * perTransfer +
-			(isDirectTaxi(i) ? directTaxiPenalty : 0)
+			(isDirectTaxi(i) ? taxiDirectPenalty : 0)
 		);
 	};
 
