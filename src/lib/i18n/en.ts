@@ -11,7 +11,8 @@ const translations: Translations = {
 		completedTours: 'Tours',
 		accounting: 'Accounting',
 		employees: 'Employees',
-		companies: 'Companies'
+		companies: 'Companies',
+		calibration: 'Calibration'
 	},
 	msg: {
 		// Unknown error
