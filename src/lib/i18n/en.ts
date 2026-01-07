@@ -393,6 +393,15 @@ const translations: Translations = {
 		editVehicle: 'Edit Vehicle',
 		closeTo: 'close to',
 		defaultLicensePlate: 'Default vehicle'
+	},
+
+	calibration: {
+		perTransfer: 'per transfer',
+		taxiBase: 'taxi base',
+		taxiPerMinute: 'taxi per minute',
+		taxiDirectPenalty: 'taxi direct penalty',
+		ptSlope: 'public transit slope',
+		taxiSlope: 'taxi slope'
 	}
 };
 

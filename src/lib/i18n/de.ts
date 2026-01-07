@@ -402,6 +402,15 @@ const translations: Translations = {
 		editVehicle: 'Fahrzeug ändern',
 		closeTo: 'in der Nähe von',
 		defaultLicensePlate: 'Standardfahrzeug'
+	},
+
+	calibration: {
+		perTransfer: 'pro Umstieg',
+		taxiBase: 'Taxi Basis',
+		taxiPerMinute: 'Taxi pro Minute',
+		taxiDirectPenalty: 'Taxi Direkt Strafe',
+		ptSlope: 'Öffentlicher Verkehr Steigung',
+		taxiSlope: 'Taxi Steigung'
 	}
 };
 

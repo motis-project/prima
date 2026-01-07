@@ -21,11 +21,7 @@ export const POST = async (event: RequestEvent) => {
 		return fail(500);
 	}
 
-	const filterSettings = await db
-		.selectFrom('taxiFilter')
-		.selectAll()
-		.where('isActive', '=', true)
-		.executeTakeFirst();
+	const filterSettings = await db.selectFrom('taxiFilter').selectAll().executeTakeFirst();
 	if (filterSettings === undefined) {
 		return fail(500);
 	}

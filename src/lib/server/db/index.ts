@@ -157,8 +157,6 @@ export interface Database {
 	};
 	taxiFilter: {
 		id: Generated<number>;
-		settingName: string;
-		isActive: boolean;
 		perTransfer: number;
 		taxiBase: number;
 		taxiPerMinute: number;

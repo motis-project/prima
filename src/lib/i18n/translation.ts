@@ -351,6 +351,15 @@ export type Translations = {
 		closeTo: string;
 		defaultLicensePlate: string;
 	};
+
+	calibration: {
+		perTransfer: string;
+		taxiBase: string;
+		taxiPerMinute: string;
+		taxiDirectPenalty: string;
+		ptSlope: string;
+		taxiSlope: string;
+	};
 };
 
 const translations: Map<string, Translations> = new Map(Object.entries({ en, de }));
