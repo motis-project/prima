@@ -32,14 +32,8 @@ export function mix(
 	const start = Math.floor(new Date(itineraries[0].startTime).getTime() / 60000);
 	const end = Math.ceil(new Date(itineraries[itineraries.length - 1].endTime).getTime() / 60000);
 
-	const getIndex = (t: Date) => {
-		return Math.round(t.getTime() / 60000) - start;
-	};
-
-	const getCenter = (i: Itinerary): Date => {
-		return new Date(
-			Math.round((new Date(i.startTime).getTime() + (i.duration * 1000) / 2) / 60000) * 60000
-		);
+	const getCenter = (i: Itinerary): number => {
+		return Math.round((new Date(i.startTime).getTime() + (i.duration * 1000) / 2) / 60000) - start;
 	};
 
 	const getThreshold = (is: Array<Itinerary>, slope: number): Array<number> => {
@@ -49,18 +43,33 @@ export function mix(
 		for (const i of is) {
 			const cost = getCost(i);
 			const center = getCenter(i);
-			const localThreshold = (t: Date): number => {
-				return slope * Math.abs(Math.round((center.getTime() - t.getTime()) / 60000)) + cost;
+			const localThreshold = (t: number): number => {
+				return slope * Math.abs(center - t) + cost;
 			};
+			threshold.forEach((value, index) => {
+				threshold[index] = Math.min(value, localThreshold(index));
+			});
 		}
+
+		// TODO average damping
 
 		return threshold;
 	};
 
-	const ptItineraries = itineraries.filter((i) => publicTransitOnly(i));
-	const ptThreshold = getThreshold(ptItineraries, ptSlope);
-	const taxiItineraries = itineraries.filter((i) => usesTaxi(i));
-	const taxiThreshold = getThreshold(taxiItineraries, taxiSlope);
+	const ptThreshold = getThreshold(
+		itineraries.filter((i) => publicTransitOnly(i)),
+		ptSlope
+	);
+	const taxiThreshold = getThreshold(
+		itineraries.filter((i) => usesTaxi(i)),
+		taxiSlope
+	);
 
-	return [itineraries, ptThreshold, taxiThreshold];
+	const filteredItineraries = itineraries.filter(
+		(i) =>
+			!usesTaxi(i) ||
+			(getCost(i) <= ptThreshold[getCenter(i)] && getCost(i) <= taxiThreshold[getCenter(i)])
+	);
+
+	return [filteredItineraries, ptThreshold, taxiThreshold];
 }
