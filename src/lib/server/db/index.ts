@@ -2,6 +2,7 @@ import { type Generated, CamelCasePlugin, PostgresDialect, Kysely } from 'kysely
 import { env } from '$env/dynamic/private';
 import pg from 'pg';
 import type { SignedItinerary } from '$lib/planAndSign';
+import type { CalibrationItinerary } from '$lib/calibration';
 
 export interface Database {
 	user: {
@@ -156,13 +157,17 @@ export interface Database {
 		ratedIsCustomer: boolean;
 	};
 	taxiFilter: {
-		id: Generated<number>;
 		perTransfer: number;
 		taxiBase: number;
 		taxiPerMinute: number;
 		taxiDirectPenalty: number;
 		ptSlope: number;
 		taxiSlope: number;
+	};
+	calibrationItineraries: {
+		id: Generated<number>;
+		name: string;
+		itineraries: CalibrationItinerary[];
 	};
 }
 

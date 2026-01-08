@@ -8,6 +8,13 @@ export async function up(db) {
 		.addColumn('pt_slope', 'real', (col) => col.notNull())
 		.addColumn('taxi_slope', 'real', (col) => col.notNull())
 		.execute();
+
+	await db.schema
+		.createTable('calibration_itineraries')
+		.addColumn('id', 'serial', (col) => col.primaryKey())
+		.addColumn('name', 'varchar', (col) => col.NotNull())
+		.addColumn('itineraries', 'varchar', (col) => col.NotNull())		
+		.execute();
 }
 
 export async function down() { }
