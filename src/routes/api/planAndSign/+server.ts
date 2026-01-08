@@ -7,6 +7,7 @@ import { getRideShareInfos } from '$lib/server/booking/rideShare/getRideShareInf
 import { isOdmLeg } from '$lib/util/booking/checkLegType';
 import { db } from '$lib/server/db';
 import { filterTaxis } from '$lib/util/filterTaxis';
+import { readTimeFromPageCursor } from '$lib/util/time';
 
 export const POST = async (event: RequestEvent) => {
 	const q: PlanData['query'] = await event.request.json();
@@ -36,7 +37,12 @@ export const POST = async (event: RequestEvent) => {
 		filterSettings.taxiSlope
 	);
 
-	// remove journeys added for mixing context
+	const intvl_start = readTimeFromPageCursor(response.previousPageCursor);
+	const intvl_end = readTimeFromPageCursor(response.nextPageCursor);
+	filteredItineraries = filteredItineraries.filter((i) => {
+		const t = new Date(q.arriveBy ? i.endTime : i.startTime);
+		return intvl_start <= t && t <= intvl_end;
+	});
 
 	return json({
 		...response!,

@@ -14,3 +14,7 @@ export function secondToMilli(second: number): number {
 export function roundToUnit(n: number, unit: number, roundFn: (n: number) => number) {
 	return roundFn(n / unit) * unit;
 }
+
+export function readTimeFromPageCursor(c: string): Date {
+	return new Date(parseInt(c.split('|')[1]) * 1000);
+}
