@@ -65,6 +65,7 @@ const translations: Translations = {
 
 		// AddVehicle
 		invalidSeats: 'Ungültige Sitzzahl.',
+		invalidCountry: 'Ungültiges Land.',
 		invalidLicensePlate: 'Ungültiges Kennzeichen.',
 		invalidStorage: 'Ungültiger Stauraum.',
 		insufficientCapacities:

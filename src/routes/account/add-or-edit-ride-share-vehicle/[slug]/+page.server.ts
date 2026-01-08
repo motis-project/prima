@@ -55,7 +55,8 @@ export const actions: Actions = {
 				smokingAllowed: data.smokingAllowed,
 				color: data.color,
 				model: data.model,
-				licensePlate: data.licensePlate
+				licensePlate: data.licensePlate,
+				country: data.country
 			};
 
 			if (data.vehiclePicturePath !== null) {

@@ -63,6 +63,7 @@ const translations: Translations = {
 
 		// AddVehicle
 		invalidSeats: 'Invalid number of passengers',
+		invalidCountry: 'Invalid country',
 		invalidLicensePlate: 'Invalid license plate.',
 		invalidStorage: 'Invalid storage space.',
 		insufficientCapacities: 'Updated capacities are insufficient for planned tour on this vehicle.',

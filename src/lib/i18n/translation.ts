@@ -64,6 +64,7 @@ export type Translations = {
 
 		// AddVehicle
 		invalidSeats: string;
+		invalidCountry: string;
 		invalidLicensePlate: string;
 		invalidStorage: string;
 		insufficientCapacities: string;
