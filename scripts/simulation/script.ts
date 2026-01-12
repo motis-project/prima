@@ -72,13 +72,13 @@ type ActionType = {
 };
 
 const actionProbabilities: ActionType[] = [
-	{ action: Action.BOOKING, probability: 0.6, text: 'booking' },
+	{ action: Action.BOOKING, probability: 0.375, text: 'booking' },
 	{ action: Action.CANCEL_REQUEST, probability: 0.025, text: 'cancel request' },
 	{ action: Action.CANCEL_TOUR, probability: 0.025, text: 'cancel tour' },
 	{ action: Action.MOVE_TOUR, probability: 0.05, text: 'move tour' },
 	{ action: Action.ADD_RIDE_SHARE_TOUR, probability: 0.05, text: 'add ride share tour' },
 	{ action: Action.BOOK_RIDE_SHARE, probability: 0.125, text: 'book ride share' },
-	{ action: Action.ACCPEPT_RIDE_SHARE_TOUR, probability: 0.75, text: 'accept ride share' },
+	{ action: Action.ACCPEPT_RIDE_SHARE_TOUR, probability: 0.3, text: 'accept ride share' },
 	{ action: Action.CANCEL_REQUEST_RS, probability: 0.025, text: 'cancel request rs' },
 	{ action: Action.CANCEL_TOUR_RS, probability: 0.025, text: 'cancel tour rs' },
 	{ action: Action.PUBLIC_TRANSPORT, probability: 0, text: 'public transport' }
@@ -536,6 +536,7 @@ async function bookingApiCall(
 		kidsZeroToTwo,
 		kidsThreeToFour,
 		kidsFiveToSix,
+		0,
 		!(doWhitelist ?? false)
 	);
 	const requestId = response.request1Id ?? response.request2Id;
@@ -990,6 +991,9 @@ function setActionProbabilities(mode: string) {
 		Action.CANCEL_REQUEST,
 		Action.CANCEL_TOUR,
 		Action.MOVE_TOUR,
+		Action.PUBLIC_TRANSPORT,
+		Action.CANCEL_REQUEST_RS,
+		Action.CANCEL_TOUR_RS,
 		Action.PUBLIC_TRANSPORT
 	];
 	for (const action of actions) {
