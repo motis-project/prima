@@ -23,8 +23,7 @@ export async function prepareVehicleUAddOrpdate(formData: FormData, userId: numb
 		return fail(400, { msg: msg('invalidCountry') });
 	}
 	if (
-		typeof licensePlate !== 'string' ||
-		!validatePlate(licensePlate, [country as CountryKey], { vehicleType: 'car' }).isValid
+		typeof licensePlate !== 'string'
 	) {
 		return fail(400, { msg: msg('invalidLicensePlate') });
 	}
