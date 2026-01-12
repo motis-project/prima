@@ -1,6 +1,6 @@
 import type { Leg } from '$lib/openapi';
 import { Mode } from '$lib/server/booking/mode';
-import { isOdmLeg, isTaxiLeg } from '$lib/util/booking/checkLegType';
+import { isOdmLeg, isRideShareLeg, isTaxiLeg } from '$lib/util/booking/checkLegType';
 import type { Coordinates } from '$lib/util/Coordinates';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
@@ -29,7 +29,8 @@ export function expectedConnectionFromLeg(
 		throw new Error();
 	}
 	const mode = isTaxiLeg(leg) ? Mode.TAXI : Mode.RIDE_SHARE;
-	const context = leg.tripId ? JSON.parse(leg.tripId) : undefined;
+	const context = leg.tripId && isRideShareLeg(leg) ? JSON.parse(leg.tripId) : undefined;
+	const reqTime = leg.tripId && isTaxiLeg(leg) ? parseInt(leg.tripId) * 1000 : undefined;
 	return signature
 		? {
 				start: { lat: leg.from.lat, lng: leg.from.lon, address: leg.from.name },
@@ -38,7 +39,7 @@ export function expectedConnectionFromLeg(
 				targetTime: new Date(leg.endTime).getTime(),
 				signature,
 				startFixed,
-				requestedTime: context?.rT ?? requestedTime,
+				requestedTime: context?.rT ?? reqTime ?? requestedTime,
 				pickupTime: context?.pT,
 				dropoffTime: context?.dT,
 				tourId: context?.tour,
