@@ -31,7 +31,7 @@ export function getScheduledTimes(
 		newStartTime: number,
 		newEndTime: number,
 		eventGroup: number | undefined,
-		isPickup: boolean
+		newEventIsEarlier: boolean
 	) {
 		if (event === undefined) {
 			return;
@@ -49,31 +49,23 @@ export function getScheduledTimes(
 			});
 			return;
 		}
-		const newTime = isPickup ? newStartTime : newEndTime;
-		if (!event.time.shift(!isPickup ? -duration : duration).covers(newTime)) {
+		const newTime = !newEventIsEarlier ? newStartTime : newEndTime;
+		if (!event.time.shift(!newEventIsEarlier ? -duration : duration).covers(newTime)) {
 			return;
 		}
-		const oldTime = isPickup ? event.scheduledTimeStart : event.scheduledTimeEnd;
-		const leeway = (isPickup ? newTime - oldTime : oldTime - newTime) - duration;
-		const newShiftedTime = newTime + (isPickup ? -duration : duration);
-		if (leeway < 0) {
-			console.log(
-				'leeway was less than zero in getScheduledTimes',
-				{ event },
-				{ duration },
-				{ newTime: newTime },
-				{ eventGroup },
-				{ isPickup }
-			);
-			throw new Error('leeway was less than zero in getScheduledTimes');
+		const newShiftedTime = newTime + (newEventIsEarlier ? duration : -duration);
+		if (
+			newEventIsEarlier
+				? event.scheduledTimeEnd < newShiftedTime
+				: event.scheduledTimeStart > newShiftedTime
+		) {
+			throw new Error(`Impossible update for event with id ${event.id} was requested.`);
 		}
-		if (leeway < event.time.size()) {
-			scheduledTimes.updates.push({
-				event_id: event.id,
-				start: !isPickup,
-				time: newShiftedTime
-			});
-		}
+		scheduledTimes.updates.push({
+			event_id: event.id,
+			start: newEventIsEarlier,
+			time: newShiftedTime
+		});
 	}
 
 	const scheduledTimes: ScheduledTimes = {
@@ -103,7 +95,7 @@ export function getScheduledTimes(
 		insertion.scheduledPickupTimeStart,
 		insertion.scheduledPickupTimeEnd,
 		pickupEventGroup,
-		true
+		false
 	);
 	if (insertion.pickupCase.what !== InsertWhat.BOTH) {
 		addUpdates(
@@ -112,7 +104,7 @@ export function getScheduledTimes(
 			insertion.scheduledPickupTimeStart,
 			insertion.scheduledPickupTimeEnd,
 			pickupEventGroup,
-			false
+			true
 		);
 		addUpdates(
 			prevDropoffEvent,
@@ -120,7 +112,7 @@ export function getScheduledTimes(
 			insertion.scheduledDropoffTimeStart,
 			insertion.scheduledDropoffTimeEnd,
 			dropoffEventGroup,
-			true
+			false
 		);
 	}
 	addUpdates(
@@ -129,7 +121,7 @@ export function getScheduledTimes(
 		insertion.scheduledDropoffTimeStart,
 		insertion.scheduledDropoffTimeEnd,
 		dropoffEventGroup,
-		false
+		true
 	);
 	for (let i = 0; i != firstEvents.length; ++i) {
 		const earlierEvent = lastEvents[i];
