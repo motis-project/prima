@@ -264,7 +264,7 @@ const translations: Translations = {
 	perRide: 'per ride',
 	fare: 'Fare',
 	bookingDeadline: 'Booking deadline',
-	bookingDeadlineContent: 'at least 1 hour in advance, weekend bookings until Friday 6 p.m.',
+	bookingDeadlineContent: 'at least 1 hour in advance.',
 	logo: 'The PriMa+ÖV logo. Iconographic representation of a car, bus, train and cab.',
 	toConnectionSearch: 'Go to connection search',
 	luggageExplanation:

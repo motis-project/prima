@@ -274,8 +274,7 @@ const translations: Translations = {
 	perRide: 'pro Fahrt',
 	fare: 'Fahrpreis',
 	bookingDeadline: 'Buchungsschluss',
-	bookingDeadlineContent:
-		'min. 1 Stunde im Voraus, bei Buchungen für das Wochenende bis Freitag 18 Uhr',
+	bookingDeadlineContent: 'min. 1 Stunde im Voraus',
 	logo: 'Das PriMa+ÖV Logo. Ikonographische Darstellung eines Autos, Busses, Zuges und Taxis.',
 	toConnectionSearch: 'Zur Verbindungssuche',
 	luggageExplanation:

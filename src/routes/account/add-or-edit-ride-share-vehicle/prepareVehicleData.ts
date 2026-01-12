@@ -3,7 +3,7 @@ import { readInt } from '$lib/server/util/readForm';
 import { replacePhoto } from '$lib/server/util/uploadPhoto';
 import { fail } from '@sveltejs/kit';
 import type { CountryKey } from '@codecorn/euro-plate-validator';
-import { validatePlate, supportedCountries } from '@codecorn/euro-plate-validator';
+import { supportedCountries } from '@codecorn/euro-plate-validator';
 
 export async function prepareVehicleUAddOrpdate(formData: FormData, userId: number) {
 	const licensePlate = formData.get('licensePlate');
@@ -22,10 +22,7 @@ export async function prepareVehicleUAddOrpdate(formData: FormData, userId: numb
 	if (typeof country !== 'string' || !supportedCountries.includes(country as CountryKey)) {
 		return fail(400, { msg: msg('invalidCountry') });
 	}
-	if (
-		typeof licensePlate !== 'string' ||
-		!validatePlate(licensePlate, [country as CountryKey], { vehicleType: 'car' }).isValid
-	) {
+	if (typeof licensePlate !== 'string') {
 		return fail(400, { msg: msg('invalidLicensePlate') });
 	}
 	if (typeof color !== 'string') {

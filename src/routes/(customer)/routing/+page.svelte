@@ -657,8 +657,7 @@
 							onclick={() =>
 								pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
 							><strong>{t.serviceArea}</strong></button
-						><br />{t.regionAround} Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife,
-						Trebendorf, Weißkeißel, Weißwasser/O.L.
+						><br />{t.regionAround} Görlitz, Niesky, Weißwasser/O.L., Zittau.
 					</p>
 					<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
 				</div>
