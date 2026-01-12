@@ -2,8 +2,10 @@ import { HOUR, MINUTE } from '$lib/util/time';
 
 export const TZ = 'Europe/Berlin';
 export const LOCALE = 'de-DE';
-export const MIN_PREP = HOUR + 5 * MINUTE;
-export const MIN_PREP_BOOKING = MIN_PREP - 5 * MINUTE;
+const BOOKING_BUFFER_TIME = 5 * MINUTE;
+const TAXI_PREP_TIME = HOUR;
+export const MIN_PREP = TAXI_PREP_TIME + BOOKING_BUFFER_TIME;
+export const MIN_PREP_BOOKING = TAXI_PREP_TIME;
 export const MAX_TRAVEL = HOUR;
 export const SCHEDULED_TIME_BUFFER_PICKUP = 1 * MINUTE;
 export const SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE = 0.35;
