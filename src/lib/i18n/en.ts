@@ -86,9 +86,9 @@ const translations: Translations = {
 		vehicleConflict: 'The selected vehicle is not available at the selected time.',
 
 		// Booking
-		bookingError: 'The ride could not be booked.',
-		bookingError1: 'First section could not be booked.',
-		bookingError2: 'Last section could not be booked.',
+		bookingError: 'The ride could not be booked. Please start a new search.',
+		bookingError1: 'First section could not be booked. Please start a new search.',
+		bookingError2: 'Last section could not be booked. Please start a new search.',
 		bookingSuccess: 'Booking successful.',
 
 		// Journey
