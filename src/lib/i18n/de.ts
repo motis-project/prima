@@ -88,9 +88,11 @@ const translations: Translations = {
 		vehicleConflict: 'Das gewählte Fahrzeug ist zum gewählten Zeitpunkt nicht verfügbar.',
 
 		// Booking
-		bookingError: 'Die Fahrt konnte nicht gebucht werden.',
-		bookingError1: 'Erster Abschnitt konnte nicht gebucht werden.',
-		bookingError2: 'Zweiter Abschnitt konnte nicht gebucht werden.',
+		bookingError: 'Die Fahrt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
+		bookingError1:
+			'Erster Abschnitt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
+		bookingError2:
+			'Zweiter Abschnitt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
 		bookingSuccess: 'Buchung erfolgreich.',
 
 		// Journey
