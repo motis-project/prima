@@ -60,7 +60,8 @@ async function createUser(
 			passengers: 1,
 			luggage: 0,
 			owner: user.id,
-			smokingAllowed: false
+			smokingAllowed: false,
+			country: 'DE'
 		})
 		.executeTakeFirst();
 	return user;
