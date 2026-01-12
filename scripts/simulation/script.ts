@@ -993,8 +993,7 @@ function setActionProbabilities(mode: string) {
 		Action.MOVE_TOUR,
 		Action.PUBLIC_TRANSPORT,
 		Action.CANCEL_REQUEST_RS,
-		Action.CANCEL_TOUR_RS,
-		Action.PUBLIC_TRANSPORT
+		Action.CANCEL_TOUR_RS
 	];
 	for (const action of actions) {
 		setActionProbability(0, action);
