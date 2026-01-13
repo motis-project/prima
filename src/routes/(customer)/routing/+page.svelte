@@ -315,6 +315,7 @@
 											<input type="hidden" name="kidsZeroToTwo" value={kidsZeroToTwo} />
 											<input type="hidden" name="kidsThreeToFour" value={kidsThreeToFour} />
 											<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
+											<input type="hidden" name="kidsSevenToFourteen" value={kidsSevenToFourteen} />
 											<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
 											<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
 											<input

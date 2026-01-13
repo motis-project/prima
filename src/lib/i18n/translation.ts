@@ -21,6 +21,7 @@ export type Translations = {
 
 		// Account
 		enterEmailAndPassword: string;
+		enterFirstLastName: string;
 		invalidEmail: string;
 		invalidPhone: string;
 		invalidZipCity: string;

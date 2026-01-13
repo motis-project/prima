@@ -18,6 +18,7 @@ const translations: Translations = {
 
 		// Account
 		enterEmailAndPassword: 'Bitte geben Sie Ihre E-Mail und Ihr Passwort ein.',
+		enterFirstLastName: 'Bitte geben Sie Vor- und Nachname ein.',
 		invalidEmail: 'Ungültige E-Mail-Adresse.',
 		invalidPhone: 'Ungültige Telefonnummer.',
 		invalidZipCity: 'Ungültige PLZ/Ort/Region.',
