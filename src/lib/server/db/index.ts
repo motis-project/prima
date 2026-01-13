@@ -149,6 +149,7 @@ export interface Database {
 		smokingAllowed: boolean;
 		licensePlate: string | null;
 		picture: string | null;
+		country: string;
 	};
 	rideShareRating: {
 		id: Generated<number>;
