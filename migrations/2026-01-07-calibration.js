@@ -12,8 +12,8 @@ export async function up(db) {
 	await db.schema
 		.createTable('calibration_itineraries')
 		.addColumn('id', 'serial', (col) => col.primaryKey())
-		.addColumn('name', 'varchar', (col) => col.NotNull())
-		.addColumn('itineraries', 'varchar', (col) => col.NotNull())		
+		.addColumn('name', 'varchar', (col) => col.notNull())
+		.addColumn('itineraries', 'varchar', (col) => col.notNull())		
 		.execute();
 }
 
