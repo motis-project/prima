@@ -264,6 +264,11 @@ export const actions = {
 				.executeTakeFirstOrThrow()
 		).id;
 		return redirect(302, `/bookings/${id}`);
+	},
+	useForCalibration: async ({ request, locals }): Promise<{ msg: Msg }> => {
+		if (!locals.session?.isAdmin) {
+			return { msg: msg('requiresAdminPriviliges') };
+		}
 	}
 };
 

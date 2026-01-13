@@ -51,6 +51,7 @@ const translations: Translations = {
 		userDoesNotExist: 'User does not exist.',
 		activationSuccess: 'User already activated.',
 		userAlreadyActivated: 'User has already been activated.',
+		requiresAdminPrivileges: 'Admin privileges required.',
 
 		// Taxi Members
 		driverAddedSuccessfully: 'Driver added successfully.',
@@ -403,7 +404,10 @@ const translations: Translations = {
 		taxiPerMinute: 'taxi per minute',
 		taxiDirectPenalty: 'taxi direct penalty',
 		ptSlope: 'public transit slope',
-		taxiSlope: 'taxi slope'
+		taxiSlope: 'taxi slope',
+		useForCalibration: 'Use for calibration',
+		addCalibrationSet: 'Add calibration set',
+		greeter: 'Adjust the parameters of the taxi filter:'
 	}
 };
 

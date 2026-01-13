@@ -45,6 +45,7 @@
 	import Footer from '$lib/ui/Footer.svelte';
 	import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
+	import SlidersVertical from 'lucide-svelte/icons/sliders-vertical';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -635,6 +636,12 @@
 					}}
 					updateStartDest={updateStartDest(from, to)}
 				/>
+				{#if data.isAdmin}
+					isAdmin
+					<Button variant="default" size="default" onclick={() => window.history.back()}>
+						<SlidersVertical /> {t.calibration.useForCalibration}
+					</Button>
+				{/if}
 			</div>
 			<div class="border-rounded-md mx-auto w-full space-y-2 rounded-md border-2 border-solid p-2">
 				<p class="text-md font-bold">{t.publicTransitTaxi}</p>

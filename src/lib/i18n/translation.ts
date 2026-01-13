@@ -52,6 +52,7 @@ export type Translations = {
 		userDoesNotExist: string;
 		activationSuccess: string;
 		userAlreadyActivated: string;
+		requiresAdminPrivileges: string;
 
 		// Taxi Members
 		driverAddedSuccessfully: string;
@@ -361,6 +362,9 @@ export type Translations = {
 		taxiDirectPenalty: string;
 		ptSlope: string;
 		taxiSlope: string;
+		useForCalibration: string;
+		addCalibrationSet: string;
+		greeter: string;
 	};
 };
 
