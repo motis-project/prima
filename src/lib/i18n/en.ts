@@ -19,6 +19,7 @@ const translations: Translations = {
 
 		// Account
 		enterEmailAndPassword: 'Please enter your email and password.',
+		enterFirstLastName: 'Please enter your first and last name.',
 		invalidEmail: 'Invalid email address.',
 		invalidPhone: 'Invalid phone number.',
 		invalidZipCity: 'Invalid ZIP code/city/region.',
