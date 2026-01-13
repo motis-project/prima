@@ -8,8 +8,6 @@
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
-	import Bell from 'lucide-svelte/icons/bell';
-	import BellRing from 'lucide-svelte/icons/bell-ring';
 	import NoLuggageIcon from 'lucide-svelte/icons/circle-slash-2';
 	import LuggageIcon from 'lucide-svelte/icons/luggage';
 	import WheelchairIcon from 'lucide-svelte/icons/accessibility';
@@ -48,6 +46,7 @@
 	import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
 	import { matchesDesiredTrip } from '$lib/util/booking/matchesDesiredTrip';
+	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -220,17 +219,18 @@
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
 	};
 
+	let desiredTrips = $state(data.user.desiredTrips);
 	let alertId = $derived(
-		fromMatch.match === undefined || toMatch.match === undefined
+		from?.value?.match === undefined || to?.value?.match === undefined
 			? undefined
-			: data.user.desiredTrips.find((t) =>
+			: desiredTrips.find((t) =>
 					matchesDesiredTrip(
-						fromMatch.match === undefined
+						from?.value?.match === undefined
 							? undefined
-							: { lat: fromMatch.match.lat, lng: fromMatch.match.lon },
-						toMatch.match === undefined
+							: { lat: from.value.match.lat, lng: from.value.match.lon },
+						to.value.match === undefined
 							? undefined
-							: { lat: toMatch.match.lat, lng: toMatch.match.lon },
+							: { lat: to.value.match.lat, lng: to.value.match.lon },
 						time.getTime(),
 						timeType === 'arrival',
 						luggageToInt(luggage),
@@ -239,10 +239,12 @@
 					)
 				)?.id
 	);
-
 	async function toggleAlert() {
 		const response = await fetch('/api/addOrRemoveDesiredTrip', {
 			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
 			body: JSON.stringify({
 				from: { lat: from.value.match!.lat, lng: from.value.match!.lon },
 				to: { lat: to.value.match!.lat, lng: to.value.match!.lon },
@@ -250,11 +252,12 @@
 				startFixed: timeType === 'arrival',
 				alertId: alertId ?? null,
 				passengers,
-				luggage: luggageToInt(luggage)
+				luggage: luggageToInt(luggage),
+				url: window.location.href
 			})
 		});
 		if (response.ok) {
-			data.user.desiredTrips = await response.json();
+			desiredTrips = await response.json();
 		}
 	}
 
@@ -483,21 +486,6 @@
 						>
 							<MapIcon class="h-[1.2rem] w-[1.2rem]" />
 						</Button>
-						{#if data.user.name !== undefined}
-							<Button
-								onclick={async () => toggleAlert()}
-								size="icon"
-								variant="outline"
-								class="ml-auto"
-								disabled={from.value.match === undefined || to.value.match === undefined}
-							>
-								{#if alertId !== undefined}
-									<BellRing class="h-[1.2rem] w-[1.2rem]" />
-								{:else}
-									<Bell class="h-[1.2rem] w-[1.2rem]" />
-								{/if}
-							</Button>
-						{/if}
 						<Button
 							size="icon"
 							variant="outline"
@@ -678,6 +666,18 @@
 					</Dialog.Content>
 				</Dialog.Root>
 			</div>
+			{#if data.user.name !== undefined}
+				<div class="flex items-center space-x-2">
+					<Checkbox
+						onclick={async () => toggleAlert()}
+						checked={alertId !== undefined}
+						id="alert"
+						class="ml-auto"
+						disabled={from.value.match === undefined || to.value.match === undefined}
+					/>
+					<Label for="alert">{t.addAlert}</Label>
+				</div>
+			{/if}
 			<div class="flex grow flex-col gap-4">
 				<ItineraryList
 					{baseQuery}

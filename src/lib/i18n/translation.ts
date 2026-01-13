@@ -243,6 +243,7 @@ export type Translations = {
 	logo: string;
 	toConnectionSearch: string;
 	luggageExplanation: string;
+	addAlert: string;
 
 	booking: {
 		bookHere: string;

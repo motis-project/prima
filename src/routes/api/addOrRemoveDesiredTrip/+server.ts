@@ -1,5 +1,5 @@
 import type { RequestEvent } from './$types';
-import { error } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 import type { Coordinates } from '$lib/util/Coordinates';
 import { db } from '$lib/server/db';
 import { selectDesiredTrips } from '$lib/server/booking/rideShare/selectDesiredTrips';
@@ -16,6 +16,7 @@ export const POST = async (event: RequestEvent) => {
 		startFixed,
 		luggage,
 		passengers,
+		url,
 		alertId
 	}: {
 		from: Coordinates;
@@ -24,9 +25,10 @@ export const POST = async (event: RequestEvent) => {
 		startFixed: boolean;
 		luggage: number;
 		passengers: number;
-		alertId?: number;
+		url: string;
+		alertId: number | null;
 	} = await event.request.json();
-	if (alertId === undefined) {
+	if (alertId === null || alertId === undefined) {
 		await db
 			.insertInto('desiredRideShare')
 			.values({
@@ -40,7 +42,8 @@ export const POST = async (event: RequestEvent) => {
 				toAddress: '',
 				time,
 				luggage,
-				passengers
+				passengers,
+				url
 			})
 			.execute();
 	} else {
@@ -50,5 +53,5 @@ export const POST = async (event: RequestEvent) => {
 			.where('desiredRideShare.interestedUser', '=', userId)
 			.execute();
 	}
-	return selectDesiredTrips(userId);
+	return json(await selectDesiredTrips(userId));
 };
