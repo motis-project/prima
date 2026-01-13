@@ -5,6 +5,7 @@ import type { Coordinates } from '$lib/util/Coordinates';
 import { sql } from 'kysely';
 import MatchingRideOffer from '$lib/server/email/MatchingRideOffer.svelte';
 import { carRouting } from '$lib/util/carRouting';
+import { DAY } from '$lib/util/time';
 
 export async function sendDesiredTripMails(
 	start: Coordinates,
@@ -18,8 +19,8 @@ export async function sendDesiredTripMails(
 	const desiredTrips = await db
 		.selectFrom('desiredRideShare')
 		.innerJoin('user', 'user.id', 'desiredRideShare.interestedUser')
-		//.where('desiredRideShare.time', '<=', endTime)
-		//.where('desiredRideShare.time', '>=', startTime)
+		.where('desiredRideShare.time', '<=', endTime + DAY)
+		.where('desiredRideShare.time', '>=', startTime - DAY)
 		.$if(tourId !== undefined, (qb) =>
 			qb.where((eb) =>
 				eb.exists(
@@ -39,15 +40,6 @@ export async function sendDesiredTripMails(
 		)
 		.selectAll()
 		.execute();
-	console.log(
-		'abcd',
-		desiredTrips.length,
-		{ start },
-		{ target },
-		{ startTime },
-		{ endTime },
-		JSON.stringify(await db.selectFrom('desiredRideShare').selectAll().execute())
-	);
 	const approachDurations = await oneToManyCarRouting(
 		start,
 		desiredTrips.map((t) => {
