@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { isSamePlace } from '$lib/server/booking/isSamePlace';
+import { isSamePlace } from '$lib/util/booking/isSamePlace';
 import { getTours } from '$lib/server/db/getTours';
 import { readInt } from '$lib/server/util/readForm.js';
 import type { TourEvent, Tour, Tours } from '$lib/util/getToursTypes';

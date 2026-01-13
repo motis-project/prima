@@ -270,6 +270,7 @@ const translations: Translations = {
 	toConnectionSearch: 'Go to connection search',
 	luggageExplanation:
 		'Approximate number of transportable items in handluggage size. A big suitcase corresponds to about three handluggage items.',
+	addAlert: 'Receive a notification if a ride sharing offer matching this search is published',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',

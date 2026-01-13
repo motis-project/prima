@@ -1,7 +1,7 @@
 import type { Coordinates } from '$lib/util/Coordinates';
 import type { BusStop } from './BusStop';
 import type { Company } from './getBookingAvailability';
-import { isSamePlace } from '../isSamePlace';
+import { isSamePlace } from '$lib/util/booking/isSamePlace';
 import { batchOneToManyCarRouting } from '$lib/server/util/batchOneToManyCarRouting';
 import type { VehicleId } from './VehicleId';
 import type { Range } from '$lib/util/booking/getPossibleInsertions';
