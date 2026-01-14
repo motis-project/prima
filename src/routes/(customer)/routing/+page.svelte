@@ -636,11 +636,12 @@
 					}}
 					updateStartDest={updateStartDest(from, to)}
 				/>
-				{#if data.isAdmin}
+				{#if data.isAdmin && baseResponse &&}
 					isAdmin
-					<Button variant="default" size="default" onclick={() => window.history.back()}>
-						<SlidersVertical /> {t.calibration.useForCalibration}
-					</Button>
+					<form method="post" action="?/useForCalibration" class="flex grow">
+					<input type="hidden" name="json" value={JSON.stringify()} />
+					<Button type="submit" class="grow"><SlidersVertical /> {t.calibration.useForCalibration}</Button>
+				</form>
 				{/if}
 			</div>
 			<div class="border-rounded-md mx-auto w-full space-y-2 rounded-md border-2 border-solid p-2">

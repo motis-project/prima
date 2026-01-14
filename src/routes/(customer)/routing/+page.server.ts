@@ -267,7 +267,7 @@ export const actions = {
 	},
 	useForCalibration: async ({ request, locals }): Promise<{ msg: Msg }> => {
 		if (!locals.session?.isAdmin) {
-			return { msg: msg('requiresAdminPriviliges') };
+			return { msg: msg('requiresAdminPrivileges') };
 		}
 	}
 };
