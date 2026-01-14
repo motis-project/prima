@@ -45,6 +45,8 @@
 	import Footer from '$lib/ui/Footer.svelte';
 	import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
+	import { matchesDesiredTrip } from '$lib/util/booking/matchesDesiredTrip';
+	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -216,6 +218,52 @@
 	const applyPosition = (position: { coords: { latitude: number; longitude: number } }) => {
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
 	};
+
+	let desiredTrips = $state(data.user.desiredTrips);
+	let alertId = $derived(
+		from?.value?.match === undefined || to?.value?.match === undefined
+			? undefined
+			: desiredTrips.find((t) =>
+					matchesDesiredTrip(
+						from?.value?.match === undefined
+							? undefined
+							: { lat: from.value.match.lat, lng: from.value.match.lon },
+						to.value.match === undefined
+							? undefined
+							: { lat: to.value.match.lat, lng: to.value.match.lon },
+						time.getTime(),
+						timeType === 'arrival',
+						luggageToInt(luggage),
+						passengers,
+						t
+					)
+				)?.id
+	);
+	async function toggleAlert() {
+		const response = await fetch('/api/addOrRemoveDesiredTrip', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				from: {
+					lat: from.value.match!.lat,
+					lng: from.value.match!.lon,
+					address: from.value.match!.name
+				},
+				to: { lat: to.value.match!.lat, lng: to.value.match!.lon, address: to.value.match!.name },
+				time: time.getTime(),
+				startFixed: timeType === 'arrival',
+				alertId: alertId ?? null,
+				passengers,
+				luggage: luggageToInt(luggage),
+				url: window.location.href
+			})
+		});
+		if (response.ok) {
+			desiredTrips = await response.json();
+		}
+	}
 
 	let loading = $state(false);
 </script>
@@ -622,6 +670,18 @@
 					</Dialog.Content>
 				</Dialog.Root>
 			</div>
+			{#if data.user.name !== undefined}
+				<div class="flex items-center space-x-2">
+					<Checkbox
+						onclick={async () => toggleAlert()}
+						checked={alertId !== undefined}
+						id="alert"
+						class="ml-auto"
+						disabled={from.value.match === undefined || to.value.match === undefined}
+					/>
+					<Label for="alert">{t.addAlert}</Label>
+				</div>
+			{/if}
 			<div class="flex grow flex-col gap-4">
 				<ItineraryList
 					{baseQuery}
@@ -658,7 +718,8 @@
 							onclick={() =>
 								pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
 							><strong>{t.serviceArea}</strong></button
-						><br />{t.regionAround} Görlitz, Niesky, Weißwasser/O.L., Zittau.
+						><br />{t.regionAround} Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife,
+						Trebendorf, Weißkeißel, Weißwasser/O.L.
 					</p>
 					<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
 				</div>

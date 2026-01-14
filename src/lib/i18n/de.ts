@@ -233,6 +233,7 @@ const translations: Translations = {
 		'Es handelt sich um private Mitfahrangebote. Wenn Sie sich für eine Verbindung mit privater Mitnahme interessieren, können Sie dem Anbieter eine Anfrage senden, um die Details zu vereinbaren. Registrieren Sie sich, um Mitfahrangebote zu erstellen und Anfragen zu senden.',
 	from: 'Von',
 	to: 'Nach',
+	when: 'Wann',
 	arrival: 'Ankunft',
 	departure: 'Abfahrt',
 	duration: 'Dauer',
@@ -280,6 +281,8 @@ const translations: Translations = {
 	toConnectionSearch: 'Zur Verbindungssuche',
 	luggageExplanation:
 		'Ungefähre Anzahl von transportierbaren Gepäckstücken in Handgepäckgröße. Ein großer Koffer entspricht etwa drei Handgepäckstücken.',
+	addAlert: 'Benachrichtung erhalten wenn eine Mitfahrt möglich ist',
+	notificationsList: 'Liste von aktivierten Benachrichtungen',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',

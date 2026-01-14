@@ -16,6 +16,7 @@ import { expectedConnectionFromLeg } from '$lib/server/booking/expectedConnectio
 import { isOdmLeg } from '$lib/util/booking/checkLegType';
 import { sendMail } from '$lib/server/sendMail';
 import { sendBookingMails } from '$lib/util/sendBookingEmails';
+import { selectDesiredTrips } from '$lib/server/booking/rideShare/selectDesiredTrips';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;
@@ -300,7 +301,7 @@ export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 					.innerJoin('rideShareVehicle', 'rideShareVehicle.id', 'rideShareTour.vehicle')
 					.where('rideShareVehicle.owner', '=', userId)
 					.execute();
-
+	const desiredTrips = userId === undefined ? [] : await selectDesiredTrips(userId);
 	return {
 		areas: (await areasGeoJSON()).rows[0],
 		rideSharingBounds: (await rideShareGeoJSON()).rows[0],
@@ -309,7 +310,8 @@ export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 			email: event.locals.session?.email,
 			phone: event.locals.session?.phone,
 			id: event.locals.session?.id,
-			ownRideShareOfferIds
+			ownRideShareOfferIds,
+			desiredTrips
 		}
 	};
 };

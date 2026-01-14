@@ -3,7 +3,7 @@ import { addCompany, addTaxi, getTours, setAvailability, Zone } from '$lib/testH
 import { describe, it, expect } from 'vitest';
 import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
-import { isSamePlace } from '$lib/server/booking/isSamePlace';
+import { isSamePlace } from '$lib/util/booking/isSamePlace';
 import { Mode } from '$lib/server/booking/mode';
 
 const inWW1 = { lng: 14.643847884365528, lat: 51.507181621441845 };
