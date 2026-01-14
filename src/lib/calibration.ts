@@ -6,24 +6,17 @@ export type CalibrationItinerary = SignedItinerary & {
 };
 
 export function collectItineraries(
-	baseResponse: SignedPlanResponse | undefined,
 	routingResponses: Array<SignedPlanResponse | undefined>
 ): Array<CalibrationItinerary> {
 	let itineraries = new Array<CalibrationItinerary>();
 
-	if (baseResponse) {
-		baseResponse.itineraries.forEach((i) => {
-			itineraries.push({ ...i, required: true, forbidden: false } as CalibrationItinerary);
-		});
-	}
-
-	routingResponses.forEach((value) => {
-		if (value !== undefined) {
-			value.itineraries.forEach((i) => {
+	for (let r of routingResponses) {
+		if (r != undefined) {
+			for (let i of r.itineraries) {
 				itineraries.push({ ...i, required: false, forbidden: false } as CalibrationItinerary);
-			});
+			}
 		}
-	});
+	}
 
 	return itineraries;
 }

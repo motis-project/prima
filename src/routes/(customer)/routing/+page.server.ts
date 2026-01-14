@@ -16,6 +16,7 @@ import { expectedConnectionFromLeg } from '$lib/server/booking/expectedConnectio
 import { isOdmLeg } from '$lib/util/booking/checkLegType';
 import { sendMail } from '$lib/server/sendMail';
 import { sendBookingMails } from '$lib/util/sendBookingEmails';
+import type { CalibrationItinerary } from '$lib/calibration';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;
@@ -269,6 +270,23 @@ export const actions = {
 		if (!locals.session?.isAdmin) {
 			return { msg: msg('requiresAdminPrivileges') };
 		}
+
+		const formData = await request.formData();
+		const name = formData.get('name');
+		const json = formData.get('json');
+
+		if (typeof name != 'string' || typeof json != 'string') {
+			return { msg: msg('unknownError') };
+		}
+		let itineraries: undefined | Array<CalibrationItinerary>;
+		try {
+			itineraries = JSON.parse(json) as Array<CalibrationItinerary>;
+		} catch (_) {
+			console.log('Unable to parse calibration itineraries: ', json);
+			return { msg: msg('unknownError') };
+		}
+		await db.insertInto('calibrationItineraries').values({ name, itineraries });
+		return redirect(303, '/admin/calibration');
 	}
 };
 

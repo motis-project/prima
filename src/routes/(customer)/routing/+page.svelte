@@ -46,6 +46,7 @@
 	import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
 	import SlidersVertical from 'lucide-svelte/icons/sliders-vertical';
+	import { collectItineraries } from '$lib/calibration';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -636,12 +637,20 @@
 					}}
 					updateStartDest={updateStartDest(from, to)}
 				/>
-				{#if data.isAdmin && baseResponse &&}
-					isAdmin
-					<form method="post" action="?/useForCalibration" class="flex grow">
-					<input type="hidden" name="json" value={JSON.stringify()} />
-					<Button type="submit" class="grow"><SlidersVertical /> {t.calibration.useForCalibration}</Button>
-				</form>
+				{#if data.isAdmin && baseResponse}
+					{#await Promise.all(routingResponses) then r}
+						<form method="post" action="?/useForCalibration" class="flex flex-col grow rounded-md border-2 border-solid p-2">
+							<Input type="text" name="name" placeholder="Name" />
+							<input
+								type="hidden"
+								name="json"
+								value={JSON.stringify(collectItineraries(r))}
+							/>
+							<Button type="submit" class="grow"
+								><SlidersVertical /> {t.calibration.useForCalibration}</Button
+							>
+						</form>
+					{/await}
 				{/if}
 			</div>
 			<div class="border-rounded-md mx-auto w-full space-y-2 rounded-md border-2 border-solid p-2">

@@ -168,7 +168,7 @@ export interface Database {
 	calibrationItineraries: {
 		id: Generated<number>;
 		name: string;
-		itineraries: CalibrationItinerary[];
+		itineraries: Array<CalibrationItinerary>;
 	};
 }
 
