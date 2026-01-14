@@ -10,7 +10,7 @@ export async function up(db) {
 		.execute();
 
 	await db.schema
-		.createTable('calibration_itineraries')
+		.createTable('calibration_sets')
 		.addColumn('id', 'serial', (col) => col.primaryKey())
 		.addColumn('name', 'varchar', (col) => col.notNull())
 		.addColumn('itineraries', 'varchar', (col) => col.notNull())		

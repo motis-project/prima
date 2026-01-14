@@ -7,6 +7,7 @@
 	import Save from 'lucide-svelte/icons/save';
 	import ListPlus from 'lucide-svelte/icons/list-plus';
 	import { goto } from '$app/navigation';
+	import CalibrationSetView from './CalibrationSetView.svelte';
 
 	const { data } = $props();
 	let perTransfer = $state(data.filterSettings?.perTransfer);
@@ -46,6 +47,11 @@
 			<Save />
 		</Button>
 	</form>
+
+	{#each data.calibrationSets as c}
+		<CalibrationSetView id={c.id} name={c.name} itineraries={c.itineraries} />
+		{c.itineraries}
+	{/each}
 
 	<Button variant="default" size="default" onclick={() => goto('/routing')}>
 		<ListPlus />

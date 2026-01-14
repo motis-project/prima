@@ -165,7 +165,7 @@ export interface Database {
 		ptSlope: number;
 		taxiSlope: number;
 	};
-	calibrationItineraries: {
+	calibrationSets: {
 		id: Generated<number>;
 		name: string;
 		itineraries: Array<CalibrationItinerary>;

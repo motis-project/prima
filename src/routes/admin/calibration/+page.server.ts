@@ -4,13 +4,10 @@ import { readFloat } from '$lib/server/util/readForm';
 
 export const load: PageServerLoad = async (event: RequestEvent) => {
 	const filterSettings = await db.selectFrom('taxiFilter').selectAll().executeTakeFirst();
-	const calibrationItineraries = await db
-		.selectFrom('calibrationItineraries')
-		.selectAll()
-		.execute();
+	const calibrationSets = await db.selectFrom('calibrationSets').selectAll().execute();
 	return {
 		filterSettings,
-		calibrationItineraries
+		calibrationSets
 	};
 };
 
