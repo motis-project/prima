@@ -1,4 +1,4 @@
-import { PASSENGER_CHANGE_DURATION } from '$lib/constants';
+import { MAX_PASSENGER_WAITING_TIME_PICKUP, PASSENGER_CHANGE_DURATION } from '$lib/constants';
 import { db } from '$lib/server/db';
 import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
 import type { Coordinates } from '$lib/util/Coordinates';
@@ -6,6 +6,12 @@ import { sql } from 'kysely';
 import MatchingRideOffer from '$lib/server/email/MatchingRideOffer.svelte';
 import { carRouting } from '$lib/util/carRouting';
 import { DAY } from '$lib/util/time';
+import { evaluateSingleInsertions } from './insertion';
+import { getRideShareTours } from './getRideShareTours';
+import type { Range } from '$lib/util/booking/getPossibleInsertions';
+import { Interval } from '$lib/util/interval';
+import type { RoutingResults } from './routing';
+import { isSamePlace } from '$lib/util/booking/isSamePlace';
 
 export async function sendDesiredTripMails(
 	start: Coordinates,
@@ -14,6 +20,7 @@ export async function sendDesiredTripMails(
 	endTime: number,
 	/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 	sendMail: (template: any, subject: string, email: string, props: any) => Promise<void>,
+	startFixed: boolean,
 	tourId?: number
 ) {
 	const desiredTrips = await db
@@ -40,6 +47,15 @@ export async function sendDesiredTripMails(
 		)
 		.selectAll()
 		.execute();
+
+	const rideShareTour = (
+		await getRideShareTours(
+			{ wheelchairs: 0, bikes: 0, passengers: 0, luggage: 0 },
+			new Interval(startTime - DAY, endTime + DAY),
+			undefined,
+			tourId
+		)
+	)[0];
 	const approachDurations = await oneToManyCarRouting(
 		start,
 		desiredTrips.map((t) => {
@@ -60,14 +76,78 @@ export async function sendDesiredTripMails(
 	}
 	const mails = [];
 	for (let i = 0; i != desiredTrips.length; ++i) {
-		if (approachDurations[i] === undefined || returnDurations[i] === undefined) {
+		const insertionRanges = new Map<number, Range[]>();
+		insertionRanges.set(rideShareTour.rideShareTour, [{ earliestPickup: 1, latestDropoff: 1 }]);
+		const times = [
+			[
+				new Interval(
+					startFixed ? startTime : endTime - MAX_PASSENGER_WAITING_TIME_PICKUP,
+					startFixed ? startTime + MAX_PASSENGER_WAITING_TIME_PICKUP : endTime
+				)
+			]
+		];
+		const startChangeDuration = isSamePlace(
+			{ lat: desiredTrips[i].fromLat, lng: desiredTrips[i].fromLng },
+			start
+		)
+			? PASSENGER_CHANGE_DURATION
+			: 0;
+		const targetChangeDuration = isSamePlace(
+			{ lat: desiredTrips[i].toLat, lng: desiredTrips[i].toLng },
+			target
+		)
+			? PASSENGER_CHANGE_DURATION
+			: 0;
+		const routingResults: RoutingResults = {
+			busStops: {
+				fromBusStop: [
+					[
+						startFixed
+							? undefined
+							: approachDurations[i]
+								? approachDurations[i]! + startChangeDuration
+								: undefined
+					]
+				],
+				toBusStop: [
+					[
+						startFixed
+							? returnDurations[i]
+								? returnDurations[i]! + startChangeDuration
+								: undefined
+							: undefined
+					]
+				]
+			},
+			userChosen: {
+				fromUserChosen: [
+					startFixed
+						? approachDurations[i]
+							? approachDurations[i]! + targetChangeDuration
+							: undefined
+						: undefined
+				],
+				toUserChosen: [
+					startFixed
+						? undefined
+						: returnDurations[i]
+							? returnDurations[i]! + targetChangeDuration
+							: undefined
+				]
+			}
+		};
+		const result = evaluateSingleInsertions(
+			[rideShareTour],
+			startFixed,
+			insertionRanges,
+			times,
+			routingResults,
+			[directDuration]
+		);
+		if (result.bothEvaluations[0][0].length === 0) {
 			continue;
 		}
-		const duration =
-			directDuration + approachDurations[i]! + returnDurations[i]! + PASSENGER_CHANGE_DURATION * 2;
-		if (duration > endTime - startTime) {
-			continue;
-		}
+		console.log('sending mail', JSON.stringify(desiredTrips[i]));
 		mails.push(
 			sendMail(
 				MatchingRideOffer,

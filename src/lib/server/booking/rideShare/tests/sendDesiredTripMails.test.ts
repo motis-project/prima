@@ -35,7 +35,8 @@ describe('tests for sending desired trip emails', () => {
 				mailSubj = subject;
 				mailAddr = email;
 				mailBody = generateMail(template, props);
-			}
+			},
+			true
 		);
 		expect(mailSubj).toBe('Passendes Mitfahrangebot');
 		expect(mailAddr).toBe('company@owner.de');

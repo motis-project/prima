@@ -318,8 +318,14 @@ export const addRideShareTour = async (
 			eventGroupId: eventGroupDropoff
 		})
 		.execute();
-	sendDesiredTripMails(start, target, startTimeStart, targetTimeEnd, sendMail, tourId).catch(
-		(err) => console.error('matchDesiredTrips failed:', err)
-	);
+	sendDesiredTripMails(
+		start,
+		target,
+		startTimeStart,
+		targetTimeEnd,
+		sendMail,
+		startFixed,
+		tourId
+	).catch((err) => console.error('matchDesiredTrips failed:', err));
 	return tourId;
 };
