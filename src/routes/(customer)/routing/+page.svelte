@@ -639,7 +639,7 @@
 				/>
 				{#if data.isAdmin && baseResponse}
 					{#await Promise.all(routingResponses) then r}
-						<form method="post" action="?/useForCalibration" class="flex flex-col grow rounded-md border-2 border-solid p-2">
+						<form method="post" action="?/useForCalibration" class="flex flex-col grow rounded-md border-2 border-solid p-2 gap-2">
 							<Input type="text" name="name" placeholder="Name" />
 							<input
 								type="hidden"

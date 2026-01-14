@@ -285,7 +285,7 @@ export const actions = {
 			console.log('Unable to parse calibration itineraries: ', json);
 			return { msg: msg('unknownError') };
 		}
-		await db.insertInto('calibrationItineraries').values({ name, itineraries });
+		await db.insertInto('calibrationItineraries').values({ name, itineraries }).execute();
 		return redirect(303, '/admin/calibration');
 	}
 };
