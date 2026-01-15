@@ -1,3 +1,4 @@
+import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, RequestEvent } from './$types.js';
 import { db } from '$lib/server/db';
 import { readFloat, readInt } from '$lib/server/util/readForm';
@@ -22,7 +23,7 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
 export const actions = {
 	applyParams: async ({ request, locals }) => {
 		if (!locals.session?.isAdmin) {
-			return;
+			return fail(403);
 		}
 
 		const formData = await request.formData();
@@ -40,12 +41,30 @@ export const actions = {
 	},
 	deleteCalibrationSet: async ({ request, locals }) => {
 		if (!locals.session?.isAdmin) {
-			return;
+			return fail(403);
 		}
 
 		const formData = await request.formData();
 		const id = readInt(formData.get('id'));
 
 		await db.deleteFrom('calibrationSets').where('calibrationSets.id', '=', id).execute();
+	},
+	saveLabels: async ({ request, locals }) => {
+		if (!locals.session?.isAdmin) {
+			return fail(403);
+		}
+
+		const formData = await request.formData();
+		const id = readInt(formData.get('id'));
+		const updateJson = formData.get('itineraries');
+		if (typeof updateJson !== 'string') {
+			return fail(400);
+		}
+
+		await db
+			.updateTable('calibrationSets')
+			.set({ itinerariesJson: updateJson })
+			.where('id', '=', id)
+			.execute();
 	}
 };

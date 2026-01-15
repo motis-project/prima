@@ -9,7 +9,6 @@
 	import Trash from 'lucide-svelte/icons/trash';
 	import { goto } from '$app/navigation';
 	import ItinerarySummary from '../../(customer)/routing/ItinerarySummary.svelte';
-	import type { CalibrationItinerary } from '$lib/calibration';
 
 	const { data } = $props();
 	let perTransfer = $state(data.filterSettings?.perTransfer);
@@ -105,7 +104,7 @@
 					}}
 				>
 					<input type="hidden" name="id" value={c.id} />
-					<input type="hidden" name="itineraries" value={c.itineraries} />
+					<input type="hidden" name="itineraries" value={JSON.stringify(c.itineraries)} />
 					<Button class="w-full" type="submit" variant="default">
 						<Save />
 						{t.calibration.saveLabels}
