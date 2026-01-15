@@ -407,7 +407,11 @@ const translations: Translations = {
 		taxiSlope: 'taxi slope',
 		useForCalibration: 'Use for calibration',
 		addCalibrationSet: 'Add calibration set',
-		greeter: 'Adjust the parameters of the taxi filter:'
+		greeter: 'Adjust the parameters of the taxi filter:',
+		required: 'required',
+		forbidden: 'forbidden',
+		deleteCalibrationSet: 'Delete calibration set',
+		saveLabels: 'Save labels'
 	}
 };
 

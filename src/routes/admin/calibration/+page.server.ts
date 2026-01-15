@@ -1,10 +1,18 @@
 import type { PageServerLoad, RequestEvent } from './$types.js';
 import { db } from '$lib/server/db';
 import { readFloat, readInt } from '$lib/server/util/readForm';
+import type { CalibrationItinerary } from '$lib/calibration.js';
 
 export const load: PageServerLoad = async (event: RequestEvent) => {
 	const filterSettings = await db.selectFrom('taxiFilter').selectAll().executeTakeFirst();
-	const calibrationSets = await db.selectFrom('calibrationSets').selectAll().execute();
+	const calibrationSetsJson = await db.selectFrom('calibrationSets').selectAll().execute();
+	const calibrationSets = calibrationSetsJson
+		.map((set) => ({
+			...set,
+			itineraries: JSON.parse(set.itinerariesJson) as Array<CalibrationItinerary>,
+			itinerariesJson: undefined
+		}))
+		.map(({ itinerariesJson, ...rest }) => rest);
 	return {
 		filterSettings,
 		calibrationSets

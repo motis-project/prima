@@ -7,8 +7,9 @@
 	import Save from 'lucide-svelte/icons/save';
 	import ListPlus from 'lucide-svelte/icons/list-plus';
 	import Trash from 'lucide-svelte/icons/trash';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import ItinerarySummary from '../../(customer)/routing/ItinerarySummary.svelte';
+	import type { CalibrationItinerary } from '$lib/calibration';
 
 	const { data } = $props();
 	let perTransfer = $state(data.filterSettings?.perTransfer);
@@ -17,6 +18,7 @@
 	let taxiDirectPenalty = $state(data.filterSettings?.taxiDirectPenalty);
 	let ptSlope = $state(data.filterSettings?.ptSlope);
 	let taxiSlope = $state(data.filterSettings?.taxiSlope);
+	let calibrationSets = $state(data.calibrationSets);
 </script>
 
 <div class="flex flex-col gap-4">
@@ -50,24 +52,51 @@
 		</Button>
 	</form>
 
-	{#each data.calibrationSets as c, cI}
-		<div class="flex flex-row rounded-md border-2 border-solid p-2">
-			<div class="flex flex-col gap-4">
+	{#each calibrationSets as c, cI}
+		<div class="flex h-[1000px] rounded-lg border-2 border-solid">
+			<div class="flex flex-col gap-2 p-1">
 				id: {c.id}, name: {c.name}, #itineraries: {c.itineraries.length}
-				<!-- {#each c.itineraries as it}
-					<ItinerarySummary it={it} />
-					<label>
-						<input type="checkbox" name="required" bind:value={it.required} />
-						required
-					</label>
-					<label>
-						<input type="checkbox" name="forbidden" bind:value={it.forbidden} />
-						forbidden
-					</label>
-				{/each} -->
+				<div class="overflow-auto rounded-lg border-2 border-solid">
+					{#each c.itineraries as it, itI}
+						<div class="flex flex-col p-1">
+							<ItinerarySummary {it} />
+							<div
+								class="flex items-center justify-end gap-2 rounded-lg border-x-2 border-b-2 px-2 text-sm"
+							>
+								<label>
+									<input
+										type="checkbox"
+										name="required"
+										bind:checked={it.required}
+										onchange={() => {
+											if (it.required && it.forbidden) {
+												it.forbidden = false;
+											}
+										}}
+									/>
+									{t.calibration.required}
+								</label>
+								<label>
+									<input
+										type="checkbox"
+										name="forbidden"
+										bind:checked={it.forbidden}
+										onchange={() => {
+											if (it.required && it.forbidden) {
+												it.required = false;
+											}
+										}}
+									/>
+									{t.calibration.forbidden}
+								</label>
+							</div>
+						</div>
+					{/each}
+				</div>
 				<form
+					class="w-full"
 					method="post"
-					action="?/deleteCalibrationSet"
+					action="?/saveLabels"
 					autocomplete="off"
 					use:enhance={() => {
 						return async ({ update }) => {
@@ -76,10 +105,35 @@
 					}}
 				>
 					<input type="hidden" name="id" value={c.id} />
-					<Button type="submit" variant="default" size="icon">
-						<Trash />
+					<input type="hidden" name="itineraries" value={c.itineraries} />
+					<Button class="w-full" type="submit" variant="default">
+						<Save />
+						{t.calibration.saveLabels}
 					</Button>
 				</form>
+			</div>
+			<div class="flex grow flex-col gap-2 p-1">
+				<div class="flex grow flex-row border-2 border-solid items-center justify-center">
+					TODO Visualization
+				</div>
+				<div class="flex flex-row justify-end">
+					<form
+						method="post"
+						action="?/deleteCalibrationSet"
+						autocomplete="off"
+						use:enhance={() => {
+							return async ({ update }) => {
+								update({ reset: false, invalidateAll: true });
+							};
+						}}
+					>
+						<input type="hidden" name="id" value={c.id} />
+						<Button type="submit" variant="default" size="default">
+							<Trash />
+							{t.calibration.deleteCalibrationSet}
+						</Button>
+					</form>
+				</div>
 			</div>
 		</div>
 	{/each}

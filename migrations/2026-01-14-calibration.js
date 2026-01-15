@@ -13,7 +13,7 @@ export async function up(db) {
 		.createTable('calibration_sets')
 		.addColumn('id', 'serial', (col) => col.primaryKey())
 		.addColumn('name', 'varchar', (col) => col.notNull())
-		.addColumn('itineraries', 'varchar', (col) => col.notNull())		
+		.addColumn('itineraries_json', 'varchar', (col) => col.notNull())		
 		.execute();
 }
 
