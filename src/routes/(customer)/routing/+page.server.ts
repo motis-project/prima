@@ -275,6 +275,8 @@ export const actions = {
 		const name = formData.get('name');
 		const json = formData.get('json');
 
+		console.log('Received JSON form data for calibration: ', json);
+
 		if (typeof name != 'string' || typeof json != 'string') {
 			return { msg: msg('unknownError') };
 		}
@@ -285,6 +287,10 @@ export const actions = {
 			console.log('Unable to parse calibration itineraries: ', json);
 			return { msg: msg('unknownError') };
 		}
+
+		console.log('parsed from form data: ', itineraries);
+		console.log('and stringified again: ', JSON.stringify(itineraries));
+
 		await db.insertInto('calibrationSets').values({ name, itineraries }).execute();
 		return redirect(303, '/admin/calibration');
 	}

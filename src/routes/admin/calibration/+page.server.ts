@@ -1,6 +1,6 @@
 import type { PageServerLoad, RequestEvent } from './$types.js';
 import { db } from '$lib/server/db';
-import { readFloat } from '$lib/server/util/readForm';
+import { readFloat, readInt } from '$lib/server/util/readForm';
 
 export const load: PageServerLoad = async (event: RequestEvent) => {
 	const filterSettings = await db.selectFrom('taxiFilter').selectAll().executeTakeFirst();
@@ -12,7 +12,11 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
 };
 
 export const actions = {
-	default: async ({ request }) => {
+	applyParams: async ({ request, locals }) => {
+		if (!locals.session?.isAdmin) {
+			return;
+		}
+
 		const formData = await request.formData();
 
 		const updateData: Record<string, number> = {
@@ -25,5 +29,15 @@ export const actions = {
 		};
 
 		await db.updateTable('taxiFilter').set(updateData).execute();
+	},
+	deleteCalibrationSet: async ({ request, locals }) => {
+		if (!locals.session?.isAdmin) {
+			return;
+		}
+
+		const formData = await request.formData();
+		const id = readInt(formData.get('id'));
+
+		await db.deleteFrom('calibrationSets').where('calibrationSets.id', '=', id).execute();
 	}
 };

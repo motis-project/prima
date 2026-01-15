@@ -6,8 +6,9 @@
 	import { Button } from '$lib/shadcn/button';
 	import Save from 'lucide-svelte/icons/save';
 	import ListPlus from 'lucide-svelte/icons/list-plus';
-	import { goto } from '$app/navigation';
-	import CalibrationSetView from './CalibrationSetView.svelte';
+	import Trash from 'lucide-svelte/icons/trash';
+	import { goto, invalidateAll } from '$app/navigation';
+	import ItinerarySummary from '../../(customer)/routing/ItinerarySummary.svelte';
 
 	const { data } = $props();
 	let perTransfer = $state(data.filterSettings?.perTransfer);
@@ -22,6 +23,7 @@
 	<p class="ml-4">{t.calibration.greeter}</p>
 	<form
 		method="post"
+		action="?/applyParams"
 		autocomplete="off"
 		class="flex flex-row gap-4 rounded-md border-2 border-solid p-2"
 		use:enhance={() => {
@@ -48,9 +50,38 @@
 		</Button>
 	</form>
 
-	{#each data.calibrationSets as c}
-		<CalibrationSetView id={c.id} name={c.name} itineraries={c.itineraries} />
-		{c.itineraries}
+	{#each data.calibrationSets as c, cI}
+		<div class="flex flex-row rounded-md border-2 border-solid p-2">
+			<div class="flex flex-col gap-4">
+				id: {c.id}, name: {c.name}, #itineraries: {c.itineraries.length}
+				<!-- {#each c.itineraries as it}
+					<ItinerarySummary it={it} />
+					<label>
+						<input type="checkbox" name="required" bind:value={it.required} />
+						required
+					</label>
+					<label>
+						<input type="checkbox" name="forbidden" bind:value={it.forbidden} />
+						forbidden
+					</label>
+				{/each} -->
+				<form
+					method="post"
+					action="?/deleteCalibrationSet"
+					autocomplete="off"
+					use:enhance={() => {
+						return async ({ update }) => {
+							update({ reset: false, invalidateAll: true });
+						};
+					}}
+				>
+					<input type="hidden" name="id" value={c.id} />
+					<Button type="submit" variant="default" size="icon">
+						<Trash />
+					</Button>
+				</form>
+			</div>
+		</div>
 	{/each}
 
 	<Button variant="default" size="default" onclick={() => goto('/routing')}>
