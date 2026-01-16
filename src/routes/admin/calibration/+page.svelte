@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import { enhance } from '$app/forms';
-	import { goto, pushState } from '$app/navigation';
+	import { goto, pushState, replaceState } from '$app/navigation';
 	import { t } from '$lib/i18n/translation';
 	import { Input } from '$lib/shadcn/input';
 	import Label from '$lib/shadcn/label/label.svelte';
@@ -22,8 +22,13 @@
 	import { filterTaxis } from '$lib/util/filterTaxis';
 	import { page } from '$app/state';
 	import ConnectionDetail from '../../(customer)/routing/ConnectionDetail.svelte';
+	import { onClickStop, onClickTrip } from '$lib/util/onClick';
+	import StopTimes from '../../(customer)/routing/StopTimes.svelte';
+	import type { SignedItinerary } from '$lib/planAndSign';
+	import { onMount, tick } from 'svelte';
 
 	const { data } = $props();
+
 	let perTransfer = $state(data.filterSettings?.perTransfer ?? 8.0);
 	let taxiBase = $state(data.filterSettings?.taxiBase ?? 20.6);
 	let taxiPerMinute = $state(data.filterSettings?.taxiPerMinute ?? 4.9);
@@ -61,6 +66,14 @@
 			}
 		}
 	});
+
+	onMount(async () => {
+		await tick();
+	});
+
+	const selectItinerary = async (selectedItinerary: SignedItinerary) => {
+		goto('', { state: {selectedItinerary} });
+	};
 </script>
 
 <Meta title={PUBLIC_PROVIDER} />
@@ -86,109 +99,103 @@
 	</div>
 	<Separator class="my-4" />
 	<ConnectionDetail itinerary={page.state.selectedItinerary} {onClickStop} {onClickTrip} />
+{:else if page.state.stop}
+	<Button variant="outline" size="icon" onclick={() => window.history.back()}>
+		<ChevronLeft />
+	</Button>
+	<StopTimes
+		arriveBy={false}
+		time={page.state.stop.time}
+		stopId={page.state.stop.stopId}
+		{onClickTrip}
+	/>
 {/if}
 
-<div class="flex flex-col gap-4">
-	<p class="ml-4">{t.calibration.greeter}</p>
-	<form
-		method="post"
-		action="?/apply"
-		autocomplete="off"
-		class="flex flex-row gap-4 rounded-md border-2 border-solid p-2"
-		use:enhance={() => {
-			return async ({ update }) => {
-				update({ reset: false });
-			};
-		}}
-	>
-		<Label for="perTransfer">{t.calibration.perTransfer}</Label>
-		<Input name="perTransfer" type="string" bind:value={perTransfer} />
-		<Label for="taxiBase">{t.calibration.taxiBase}</Label>
-		<Input name="taxiBase" type="string" bind:value={taxiBase} />
-		<Label for="taxiPerMinute">{t.calibration.taxiPerMinute}</Label>
-		<Input name="taxiPerMinute" type="string" bind:value={taxiPerMinute} />
-		<Label for="taxiDirectPenalty">{t.calibration.taxiDirectPenalty}</Label>
-		<Input name="taxiDirectPenalty" type="string" bind:value={taxiDirectPenalty} />
-		<Label for="ptSlope">{t.calibration.ptSlope}</Label>
-		<Input name="ptSlope" type="string" bind:value={ptSlope} />
-		<Label for="taxiSlope">{t.calibration.taxiSlope}</Label>
-		<Input name="taxiSlope" type="string" bind:value={taxiSlope} />
+<div class="contents" class:hidden={page.state.stop || page.state.selectedItinerary}>
+	<div class="flex flex-col gap-4">
+		<p class="ml-4">{t.calibration.greeter}</p>
+		<form
+			method="post"
+			action="?/apply"
+			autocomplete="off"
+			class="flex flex-row gap-4 rounded-md border-2 border-solid p-2"
+			use:enhance={() => {
+				return async ({ update }) => {
+					update({ reset: false });
+				};
+			}}
+		>
+			<Label for="perTransfer">{t.calibration.perTransfer}</Label>
+			<Input name="perTransfer" type="string" bind:value={perTransfer} />
+			<Label for="taxiBase">{t.calibration.taxiBase}</Label>
+			<Input name="taxiBase" type="string" bind:value={taxiBase} />
+			<Label for="taxiPerMinute">{t.calibration.taxiPerMinute}</Label>
+			<Input name="taxiPerMinute" type="string" bind:value={taxiPerMinute} />
+			<Label for="taxiDirectPenalty">{t.calibration.taxiDirectPenalty}</Label>
+			<Input name="taxiDirectPenalty" type="string" bind:value={taxiDirectPenalty} />
+			<Label for="ptSlope">{t.calibration.ptSlope}</Label>
+			<Input name="ptSlope" type="string" bind:value={ptSlope} />
+			<Label for="taxiSlope">{t.calibration.taxiSlope}</Label>
+			<Input name="taxiSlope" type="string" bind:value={taxiSlope} />
 
-		<Button type="submit">
-			<ArrowDownToLine />
-		</Button>
-	</form>
+			<Button type="submit">
+				<ArrowDownToLine />
+			</Button>
+		</form>
 
-	{#each calibrationSets as c, cI}
-		<div class="flex h-[80vh] rounded-lg border-2 border-solid">
-			<div class="flex flex-col gap-2 p-1">
-				<Input class="font-bold" type="text" name="name" bind:value={c.name} />
-				<div class="overflow-auto rounded-lg border-2 border-solid">
-					{#each c.itineraries as it, itI}
-						<div class="flex flex-col p-1">
-							<ItinerarySummary {it} />
-							<div class="flex gap-2 rounded-lg border-x-2 border-b-2 px-2 pt-1 text-sm">
-								<label>
-									<input
-										type="checkbox"
-										name="required"
-										bind:checked={it.keep}
-										onchange={() => {
-											if (it.keep && it.remove) {
-												it.remove = false;
-											}
-										}}
-									/>
-									{t.calibration.keep}
-								</label>
-								<label>
-									<input
-										type="checkbox"
-										name="forbidden"
-										bind:checked={it.remove}
-										onchange={() => {
-											if (it.keep && it.remove) {
-												it.keep = false;
-											}
-										}}
-									/>
-									{t.calibration.remove}
-								</label>
-								{#if it.fulfilled}
-									<CircleCheck class="h-5 w-5 text-green-500" />
-								{:else}
-									<CircleX class="h-5 w-5 text-red-500" />
-								{/if}
+		{#each calibrationSets as c, cI}
+			<div class="flex h-[80vh] rounded-lg border-2 border-solid">
+				<div class="flex flex-col gap-2 p-1">
+					<Input class="font-bold" type="text" name="name" bind:value={c.name} />
+					<div class="overflow-auto rounded-lg border-2 border-solid">
+						{#each c.itineraries as it}
+							<div class="flex flex-col p-1">
+								<button
+									onclick={() => {
+										goto('?detail', { state: {selectedItinerary: it} });
+									}}
+								>
+									<ItinerarySummary {it} />
+								</button>
+								<div class="flex gap-2 rounded-lg border-x-2 border-b-2 px-2 pt-1 text-sm">
+									<label>
+										<input
+											type="checkbox"
+											name="required"
+											bind:checked={it.keep}
+											onchange={() => {
+												if (it.keep && it.remove) {
+													it.remove = false;
+												}
+											}}
+										/>
+										{t.calibration.keep}
+									</label>
+									<label>
+										<input
+											type="checkbox"
+											name="forbidden"
+											bind:checked={it.remove}
+											onchange={() => {
+												if (it.keep && it.remove) {
+													it.keep = false;
+												}
+											}}
+										/>
+										{t.calibration.remove}
+									</label>
+									{#if it.fulfilled}
+										<CircleCheck class="h-5 w-5 text-green-500" />
+									{:else}
+										<CircleX class="h-5 w-5 text-red-500" />
+									{/if}
+								</div>
 							</div>
-						</div>
-					{/each}
-				</div>
-				<form
-					method="post"
-					action="?/save"
-					autocomplete="off"
-					use:enhance={() => {
-						return async ({ update }) => {
-							update({ reset: false, invalidateAll: true });
-						};
-					}}
-				>
-					<input type="hidden" name="id" value={c.id} />
-					<input type="hidden" name="name" value={c.name} />
-					<input type="hidden" name="itineraries" value={JSON.stringify(c.itineraries)} />
-					<Button class="w-full" type="submit" variant="default">
-						<Save />
-					</Button>
-				</form>
-			</div>
-			<div class="flex grow flex-col gap-2 p-1">
-				<div class="flex grow flex-row items-center justify-center border-2 border-solid">
-					TODO Visualization
-				</div>
-				<div class="flex flex-row justify-end">
+						{/each}
+					</div>
 					<form
 						method="post"
-						action="?/delete"
+						action="?/save"
 						autocomplete="off"
 						use:enhance={() => {
 							return async ({ update }) => {
@@ -197,17 +204,41 @@
 						}}
 					>
 						<input type="hidden" name="id" value={c.id} />
-						<Button type="submit" variant="default" size="default">
-							<Trash />
+						<input type="hidden" name="name" value={c.name} />
+						<input type="hidden" name="itineraries" value={JSON.stringify(c.itineraries)} />
+						<Button class="w-full" type="submit" variant="default">
+							<Save />
 						</Button>
 					</form>
 				</div>
+				<div class="flex grow flex-col gap-2 p-1">
+					<div class="flex grow flex-row items-center justify-center border-2 border-solid">
+						TODO Visualization
+					</div>
+					<div class="flex flex-row justify-end">
+						<form
+							method="post"
+							action="?/delete"
+							autocomplete="off"
+							use:enhance={() => {
+								return async ({ update }) => {
+									update({ reset: false, invalidateAll: true });
+								};
+							}}
+						>
+							<input type="hidden" name="id" value={c.id} />
+							<Button type="submit" variant="default" size="default">
+								<Trash />
+							</Button>
+						</form>
+					</div>
+				</div>
 			</div>
-		</div>
-	{/each}
+		{/each}
 
-	<Button variant="default" size="default" onclick={() => goto('/routing')}>
-		<ListPlus />
-		{t.calibration.addCalibrationSet}
-	</Button>
+		<Button variant="default" size="default" onclick={() => goto('/routing')}>
+			<ListPlus />
+			{t.calibration.addCalibrationSet}
+		</Button>
+	</div>
 </div>

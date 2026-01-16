@@ -7,7 +7,6 @@ import { msg, type Msg } from '$lib/msg';
 import { redirect } from '@sveltejs/kit';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
 import type { SignedItinerary } from '$lib/planAndSign';
-import { sql } from 'kysely';
 import type { PageServerLoad, PageServerLoadEvent } from './$types';
 import Prom from 'prom-client';
 import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhitelistRequestTimes';
