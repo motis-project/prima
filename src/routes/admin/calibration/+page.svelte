@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import { enhance } from '$app/forms';
-	import { goto, pushState, replaceState } from '$app/navigation';
+	import { goto, pushState } from '$app/navigation';
 	import { t } from '$lib/i18n/translation';
 	import { Input } from '$lib/shadcn/input';
 	import Label from '$lib/shadcn/label/label.svelte';
@@ -66,18 +66,11 @@
 			}
 		}
 	});
-
-	onMount(async () => {
-		await tick();
-	});
-
-	const selectItinerary = async (selectedItinerary: SignedItinerary) => {
-		goto('', { state: {selectedItinerary} });
-	};
 </script>
 
 <Meta title={PUBLIC_PROVIDER} />
 
+<div>
 {#if page.state.showMap}
 	<PopupMap
 		itinerary={page.state.selectedItinerary}
@@ -85,20 +78,21 @@
 		rideSharingBounds={data.rideSharingBounds}
 	/>
 {:else if page.state.selectedItinerary}
-	<div class="flex items-center justify-between gap-4">
-		<Button variant="outline" size="icon" onclick={() => window.history.back()}>
-			<ChevronLeft />
-		</Button><Button
-			size="icon"
-			variant="outline"
-			onclick={() =>
-				pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
-		>
-			<MapIcon class="h-[1.2rem] w-[1.2rem]" />
-		</Button>
-	</div>
-	<Separator class="my-4" />
-	<ConnectionDetail itinerary={page.state.selectedItinerary} {onClickStop} {onClickTrip} />
+		<div class="flex items-center justify-between gap-4">
+			<Button variant="outline" size="icon" onclick={() => window.history.back()}>
+				<ChevronLeft />
+			</Button>
+			<Button
+				size="icon"
+				variant="outline"
+				onclick={() =>
+					pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
+			>
+				<MapIcon class="h-[1.2rem] w-[1.2rem]" />
+			</Button>
+		</div>
+		<Separator class="my-4" />
+		<ConnectionDetail itinerary={page.state.selectedItinerary} {onClickStop} {onClickTrip} />	
 {:else if page.state.stop}
 	<Button variant="outline" size="icon" onclick={() => window.history.back()}>
 		<ChevronLeft />
@@ -110,6 +104,7 @@
 		{onClickTrip}
 	/>
 {/if}
+</div>
 
 <div class="contents" class:hidden={page.state.stop || page.state.selectedItinerary}>
 	<div class="flex flex-col gap-4">
@@ -143,7 +138,7 @@
 			</Button>
 		</form>
 
-		{#each calibrationSets as c, cI}
+		{#each calibrationSets as c}
 			<div class="flex h-[80vh] rounded-lg border-2 border-solid">
 				<div class="flex flex-col gap-2 p-1">
 					<Input class="font-bold" type="text" name="name" bind:value={c.name} />
@@ -152,7 +147,7 @@
 							<div class="flex flex-col p-1">
 								<button
 									onclick={() => {
-										goto('?detail', { state: {selectedItinerary: it} });
+										pushState('', { selectedItinerary: $state.snapshot(it) } );
 									}}
 								>
 									<ItinerarySummary {it} />
