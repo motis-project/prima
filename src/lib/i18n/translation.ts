@@ -365,10 +365,8 @@ export type Translations = {
 		useForCalibration: string;
 		addCalibrationSet: string;
 		greeter: string;
-		required: string;
-		forbidden: string;
-		deleteCalibrationSet: string;
-		saveLabels: string;
+		keep: string;
+		remove: string;
 	};
 };
 

@@ -418,10 +418,8 @@ const translations: Translations = {
 		useForCalibration: 'Zur Kalibrierung verwenden',
 		addCalibrationSet: 'Kalibrierungsmenge hinzufügen',
 		greeter: 'Passen Sie die Parameter des Taxifilters an:',
-		required: 'erforderlich',
-		forbidden: 'verboten',
-		deleteCalibrationSet: 'Kalibrierungsmenge entfernen',
-		saveLabels: 'Labels speichern'
+		keep: 'behalten',
+		remove: 'entfernen'
 	}
 };
 

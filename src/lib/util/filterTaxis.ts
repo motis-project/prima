@@ -2,20 +2,20 @@ import { type Itinerary } from '$lib/openapi';
 import { isTaxiLeg } from './booking/checkLegType';
 import { isDirectTaxi, publicTransitOnly, usesTaxi } from './itineraryHelpers';
 
-export function filterTaxis(
-	itineraries: Array<Itinerary>,
+export function filterTaxis<T extends Itinerary>(
+	itineraries: Array<T>,
 	perTransfer: number,
 	taxiBase: number,
 	taxiPerMinute: number,
 	taxiDirectPenalty: number,
 	ptSlope: number,
 	taxiSlope: number
-): [Array<Itinerary>, Array<number>, Array<number>] {
+): [Array<T>, Array<number>, Array<number>] {
 	if (itineraries.length == 0) {
 		return [itineraries, [], []];
 	}
 
-	const getCost = (i: Itinerary): number => {
+	const getCost = (i: T): number => {
 		return (
 			i.legs
 				.map((l) =>
@@ -32,11 +32,11 @@ export function filterTaxis(
 	const start = Math.floor(new Date(itineraries[0].startTime).getTime() / 60000);
 	const end = Math.ceil(new Date(itineraries[itineraries.length - 1].endTime).getTime() / 60000);
 
-	const getCenter = (i: Itinerary): number => {
+	const getCenter = (i: T): number => {
 		return Math.round((new Date(i.startTime).getTime() + (i.duration * 1000) / 2) / 60000) - start;
 	};
 
-	const getThreshold = (is: Array<Itinerary>, slope: number): Array<number> => {
+	const getThreshold = (is: Array<T>, slope: number): Array<number> => {
 		let threshold = new Array<number>(end - start);
 		threshold.fill(Number.POSITIVE_INFINITY);
 

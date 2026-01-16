@@ -1,8 +1,9 @@
 import type { SignedItinerary, SignedPlanResponse } from './planAndSign';
 
 export type CalibrationItinerary = SignedItinerary & {
-	required: boolean;
-	forbidden: boolean;
+	keep: boolean;
+	remove: boolean;
+	fulfilled: boolean;
 };
 
 export function collectItineraries(
@@ -13,7 +14,7 @@ export function collectItineraries(
 	for (let r of routingResponses) {
 		if (r != undefined) {
 			for (let i of r.itineraries) {
-				itineraries.push({ ...i, required: false, forbidden: false } as CalibrationItinerary);
+				itineraries.push({ ...i, keep: false, remove: false } as CalibrationItinerary);
 			}
 		}
 	}
