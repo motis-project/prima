@@ -17,6 +17,7 @@ import { isOdmLeg } from '$lib/util/booking/checkLegType';
 import { sendMail } from '$lib/server/sendMail';
 import { sendBookingMails } from '$lib/util/sendBookingEmails';
 import type { CalibrationItinerary } from '$lib/calibration';
+import { areasGeoJSON, rideshareGeoJSON } from '$lib/util/geoJSON';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;
@@ -293,28 +294,6 @@ export const actions = {
 };
 
 export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
-	const areasGeoJSON = async () => {
-		return await sql`
-		SELECT 'FeatureCollection' AS TYPE,
-			array_to_json(array_agg(f)) AS features
-		FROM
-			(SELECT 'Feature' AS TYPE,
-				ST_AsGeoJSON(lg.area, 15, 0)::json As geometry,
-				json_build_object('id', lg.id, 'name', lg.name) AS properties
-			FROM zone AS lg WHERE EXISTS (SELECT company.id FROM company WHERE lg.id = company.zone )) AS f`.execute(
-			db
-		);
-	};
-	const rideShareGeoJSON = async () => {
-		return await sql`
-		SELECT 'FeatureCollection' AS TYPE,
-			array_to_json(array_agg(f)) AS features
-		FROM
-			(SELECT 'Feature' AS TYPE,
-				ST_AsGeoJSON(lg.area, 15, 0)::json As geometry,
-				json_build_object('id', id, 'name', name) AS properties
-			FROM ride_share_zone AS lg) AS f`.execute(db);
-	};
 	const userId = event.locals.session?.userId;
 	const ownRideShareOfferIds =
 		userId === undefined
@@ -328,7 +307,7 @@ export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 
 	return {
 		areas: (await areasGeoJSON()).rows[0],
-		rideSharingBounds: (await rideShareGeoJSON()).rows[0],
+		rideSharingBounds: (await rideshareGeoJSON()).rows[0],
 		user: {
 			name: event.locals.session?.name,
 			email: event.locals.session?.email,

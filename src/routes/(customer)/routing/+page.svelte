@@ -47,6 +47,7 @@
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
 	import SlidersVertical from 'lucide-svelte/icons/sliders-vertical';
 	import { collectItineraries } from '$lib/calibration';
+	import { onClickStop, onClickTrip } from '$lib/util/onClick';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -190,21 +191,6 @@
 				onClickStop('', urlParams.get('stopId')!, time, true);
 			}
 		}
-	};
-
-	const onClickTrip = async (tripId: string, replace = false) => {
-		const { data: itinerary, error } = await trip({ query: { tripId } });
-		if (error) {
-			alert(error);
-			return;
-		}
-		const updateState = replace ? replaceState : pushState;
-		updateState('', { selectedItinerary: itinerary });
-	};
-
-	const onClickStop = (name: string, stopId: string, time: Date, replace = false) => {
-		const updateState = replace ? replaceState : pushState;
-		updateState('', { stop: { name, stopId, time } });
 	};
 
 	const getLocation = () => {
@@ -639,13 +625,13 @@
 				/>
 				{#if data.isAdmin && baseResponse}
 					{#await Promise.all(routingResponses) then r}
-						<form method="post" action="?/useForCalibration" class="flex flex-col grow rounded-md border-2 border-solid p-2 gap-2">
+						<form
+							method="post"
+							action="?/useForCalibration"
+							class="flex grow flex-col gap-2 rounded-md border-2 border-solid p-2"
+						>
 							<Input type="text" name="name" placeholder="Name" />
-							<input
-								type="hidden"
-								name="json"
-								value={JSON.stringify(collectItineraries(r))}
-							/>
+							<input type="hidden" name="json" value={JSON.stringify(collectItineraries(r))} />
 							<Button type="submit" class="grow"
 								><SlidersVertical /> {t.calibration.useForCalibration}</Button
 							>

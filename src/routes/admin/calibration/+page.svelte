@@ -1,20 +1,27 @@
 <script lang="ts">
+	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import { enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
+	import { goto, pushState } from '$app/navigation';
 	import { t } from '$lib/i18n/translation';
 	import { Input } from '$lib/shadcn/input';
 	import Label from '$lib/shadcn/label/label.svelte';
 	import { Button } from '$lib/shadcn/button';
+	import Separator from '$lib/shadcn/separator/separator.svelte';
+	import Meta from '$lib/ui/Meta.svelte';
 	import ArrowDownToLine from 'lucide-svelte/icons/arrow-down-to-line';
 	import Save from 'lucide-svelte/icons/save';
 	import ListPlus from 'lucide-svelte/icons/list-plus';
 	import Trash from 'lucide-svelte/icons/trash';
 	import CircleCheck from 'lucide-svelte/icons/circle-check';
 	import CircleX from 'lucide-svelte/icons/circle-x';
-
+	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
+	import { MapIcon } from 'lucide-svelte';
+	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import ItinerarySummary from '../../(customer)/routing/ItinerarySummary.svelte';
 	import type { CalibrationItinerary } from '$lib/calibration';
 	import { filterTaxis } from '$lib/util/filterTaxis';
+	import { page } from '$app/state';
+	import ConnectionDetail from '../../(customer)/routing/ConnectionDetail.svelte';
 
 	const { data } = $props();
 	let perTransfer = $state(data.filterSettings?.perTransfer ?? 8.0);
@@ -28,7 +35,7 @@
 	let filterResults = new Array<[Array<CalibrationItinerary>, Array<number>, Array<number>]>();
 	$effect(() => {
 		filterResults = [];
-		for (const [cI, c] of calibrationSets.entries()) {
+		for (const c of calibrationSets) {
 			filterResults.push(
 				filterTaxis(
 					c.itineraries,
@@ -40,7 +47,7 @@
 					taxiSlope
 				)
 			);
-			for (const [itI, it] of c.itineraries.entries()) {
+			for (const it of c.itineraries) {
 				if (it.keep || it.remove) {
 					const found =
 						filterResults
@@ -55,6 +62,31 @@
 		}
 	});
 </script>
+
+<Meta title={PUBLIC_PROVIDER} />
+
+{#if page.state.showMap}
+	<PopupMap
+		itinerary={page.state.selectedItinerary}
+		areas={data.areas}
+		rideSharingBounds={data.rideSharingBounds}
+	/>
+{:else if page.state.selectedItinerary}
+	<div class="flex items-center justify-between gap-4">
+		<Button variant="outline" size="icon" onclick={() => window.history.back()}>
+			<ChevronLeft />
+		</Button><Button
+			size="icon"
+			variant="outline"
+			onclick={() =>
+				pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
+		>
+			<MapIcon class="h-[1.2rem] w-[1.2rem]" />
+		</Button>
+	</div>
+	<Separator class="my-4" />
+	<ConnectionDetail itinerary={page.state.selectedItinerary} {onClickStop} {onClickTrip} />
+{/if}
 
 <div class="flex flex-col gap-4">
 	<p class="ml-4">{t.calibration.greeter}</p>
@@ -95,9 +127,7 @@
 					{#each c.itineraries as it, itI}
 						<div class="flex flex-col p-1">
 							<ItinerarySummary {it} />
-							<div
-								class="flex gap-2 rounded-lg border-x-2 border-b-2 px-2 pt-1 text-sm"
-							>
+							<div class="flex gap-2 rounded-lg border-x-2 border-b-2 px-2 pt-1 text-sm">
 								<label>
 									<input
 										type="checkbox"

@@ -3,6 +3,7 @@ import type { PageServerLoad, RequestEvent } from './$types.js';
 import { db } from '$lib/server/db';
 import { readFloat, readInt } from '$lib/server/util/readForm';
 import type { CalibrationItinerary } from '$lib/calibration.js';
+import { areasGeoJSON, rideshareGeoJSON } from '$lib/util/geoJSON.js';
 
 export const load: PageServerLoad = async (event: RequestEvent) => {
 	const filterSettings = await db.selectFrom('taxiFilter').selectAll().executeTakeFirst();
@@ -16,7 +17,9 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
 		.map(({ itinerariesJson, ...rest }) => rest);
 	return {
 		filterSettings,
-		calibrationSets
+		calibrationSets,
+		areas: (await areasGeoJSON()).rows[0],
+		rideSharingBounds: (await rideshareGeoJSON()).rows[0]
 	};
 };
 

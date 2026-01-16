@@ -5,6 +5,7 @@ import type { Translations } from '$lib/i18n/translation';
 import fs from 'fs';
 import path from 'path';
 import type { Actions, RequestEvent } from './$types';
+import { areasGeoJSON } from '$lib/util/geoJSON';
 
 export type BookingError = { msg: keyof Translations['msg'] };
 
@@ -110,15 +111,4 @@ export const actions: Actions = {
 
 		return { success: true };
 	}
-};
-
-const areasGeoJSON = async () => {
-	return await sql`
-        SELECT 'FeatureCollection' AS TYPE,
-            array_to_json(array_agg(f)) AS features
-        FROM
-            (SELECT 'Feature' AS TYPE,
-                ST_AsGeoJSON(lg.area, 15, 0)::json As geometry,
-                json_build_object('id', id, 'name', name) AS properties
-            FROM zone AS lg) AS f`.execute(db);
 };
