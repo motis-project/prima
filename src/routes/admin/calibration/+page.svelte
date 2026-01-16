@@ -112,7 +112,7 @@
 				</form>
 			</div>
 			<div class="flex grow flex-col gap-2 p-1">
-				<div class="flex grow flex-row border-2 border-solid items-center justify-center">
+				<div class="flex grow flex-row items-center justify-center border-2 border-solid">
 					TODO Visualization
 				</div>
 				<div class="flex flex-row justify-end">
