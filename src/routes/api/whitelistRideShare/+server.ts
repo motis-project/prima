@@ -11,6 +11,8 @@ import { type Insertion } from '$lib/server/booking/rideShare/insertion';
 import { assertArraySizes } from '$lib/testHelpers';
 import { whitelistRideShare } from './whitelist';
 import { groupBy } from '$lib/util/groupBy';
+import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
+import { type BusStop } from '$lib/server/booking/taxi/BusStop';
 
 export type WhitelistResponse = {
 	start: Insertion[][][];
@@ -87,6 +89,26 @@ export async function POST(event: RequestEvent) {
 		target,
 		direct: directResponse
 	};
+	enrichContext(p, response);
 	console.log('RIDESHARE WHITELIST RESPONSE: ', JSON.stringify(response, null, '\t'));
 	return json(response);
+}
+
+function enrichContext(p: WhitelistRequest, r: WhitelistResponse) {
+	const enrichContextForInsertion = (i: Insertion, time: UnixtimeMs) => {
+		i.tripId = JSON.stringify({ tour: i.tour, rT: time, pT: i.pickupTime, dT: i.dropoffTime });
+	};
+	const enrichContextForTimes = (times: UnixtimeMs[], insertions: Insertion[][]) => {
+		for (let timeIdx = 0; timeIdx != times.length; ++timeIdx) {
+			insertions[timeIdx].forEach((t) => enrichContextForInsertion(t, times[timeIdx]));
+		}
+	};
+	const enrichContextForBusStops = (busStops: BusStop[], insertions: Insertion[][][]) => {
+		for (let busStopIdx = 0; busStopIdx != insertions.length; ++busStopIdx) {
+			enrichContextForTimes(busStops[busStopIdx].times, insertions[busStopIdx]);
+		}
+	};
+	enrichContextForBusStops(p.startBusStops, r.start);
+	enrichContextForBusStops(p.targetBusStops, r.target);
+	enrichContextForTimes(p.directTimes, r.direct);
 }

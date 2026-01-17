@@ -15,6 +15,7 @@ export async function planAndSign(
 	q: PlanData['query'],
 	baseUrl?: string
 ): Promise<undefined | SignedPlanResponse> {
+	console.log('PLAN AND SIGN PARAMS:', JSON.stringify(q, null, 2), baseUrl);
 	const result = await fetch(`${baseUrl ? baseUrl : ''}/api/planAndSign`, {
 		method: 'POST',
 		headers: {

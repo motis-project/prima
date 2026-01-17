@@ -31,7 +31,7 @@ export const actions = {
 		const requestId = readInt(formData.get('requestId'));
 		const result = await acceptRideShareRequest(requestId, locals.session!.userId!);
 		if (result.status != 200) {
-			return fail(result.status, { msg: msg('unknownError') });
+			return fail(result.status, { msg: msg('rideShareAcceptError') });
 		}
 	}
 };

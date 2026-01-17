@@ -41,7 +41,6 @@ const offset = getOffset(noonBaseDate);
 const baseDate = new Date(baseDateUtc.getTime() - offset);
 const BASE_DATE = getNextWednesday(baseDate, baseDate);
 
-export const dateInXMinutes = (x: number) => new Date(BASE_DATE + x * MINUTE);
 export const inXMinutes = (x: number) => BASE_DATE + x * MINUTE;
 
 export const black = async (body: string) => {

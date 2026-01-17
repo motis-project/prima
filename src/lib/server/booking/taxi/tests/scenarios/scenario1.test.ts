@@ -43,7 +43,7 @@ async function whiteAndBook(
 		connection2: null,
 		capacities
 	};
-	await bookingApi(bookingBody, user, false, true, 0, 0, 0, false);
+	await bookingApi(bookingBody, user, false, true, 0, 0, 0, 0, false);
 }
 
 // 1

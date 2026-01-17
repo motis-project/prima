@@ -7,6 +7,7 @@ export type Translations = {
 	menu: {
 		connections: string;
 		bookings: string;
+		rideOffers: string;
 		account: string;
 		availability: string;
 		company: string;
@@ -20,6 +21,7 @@ export type Translations = {
 
 		// Account
 		enterEmailAndPassword: string;
+		enterFirstLastName: string;
 		invalidEmail: string;
 		invalidPhone: string;
 		invalidZipCity: string;
@@ -63,6 +65,7 @@ export type Translations = {
 
 		// AddVehicle
 		invalidSeats: string;
+		invalidCountry: string;
 		invalidLicensePlate: string;
 		invalidStorage: string;
 		insufficientCapacities: string;
@@ -93,6 +96,7 @@ export type Translations = {
 		// Journey
 		cancelled: string;
 		stillNegotiating: string;
+		accepted: string;
 		openRequest: string;
 
 		// Feedback
@@ -106,6 +110,7 @@ export type Translations = {
 
 		//Ride Sharing
 		vehicleEditedSuccessfully: string;
+		rideShareAcceptError: string;
 	};
 	admin: {
 		completedToursSubtitle: string;
@@ -178,6 +183,7 @@ export type Translations = {
 		good: string;
 		bad: string;
 		sendFeedback: string;
+		backToHome: string;
 	};
 
 	atDateTime: (timeType: TimeType, time: Date, isToday: boolean) => string;
@@ -185,6 +191,7 @@ export type Translations = {
 	bookingsHeader: string;
 	cancelledJourneys: string;
 	noBookings: string;
+	noRideOffers: string;
 	journeyDetails: string;
 	transfer: string;
 	transfers: string;
@@ -199,6 +206,7 @@ export type Translations = {
 	odm: string;
 	rideSharing: string;
 	rideSharingBookingRequired: string;
+	rideSharingInfo: string;
 	from: string;
 	to: string;
 	arrival: string;
@@ -234,6 +242,7 @@ export type Translations = {
 	bookingDeadlineContent: string;
 	logo: string;
 	toConnectionSearch: string;
+	luggageExplanation: string;
 
 	booking: {
 		bookHere: string;
@@ -247,8 +256,12 @@ export type Translations = {
 		kidsZeroToTwo: string;
 		kidsThreeToFour: string;
 		kidsFiveToSix: string;
+		kidsSevenToFourteen: string;
+		fifteenPlus: string;
+		underSeven: string;
 		totalPrice: string;
 		cashOnly: string;
+		ptTicketNeeded: string;
 		foldableWheelchair: string;
 		withFoldableWheelchair: string;
 		passengerNumber: string;
@@ -304,13 +317,16 @@ export type Translations = {
 		acceptRequest: string;
 		requestAccepted: string;
 		requestCancelled: string;
+		showMap: string;
 	};
 
 	buttons: {
 		addVehicleTitle: string;
 		addVehicle: string;
+		editVehicle: string;
 		uploadPhoto: string;
 		savePhoto: string;
+		photoSaved: string;
 		smokingOptions: string[];
 	};
 
@@ -324,7 +340,6 @@ export type Translations = {
 		specifyColor: string;
 		specifyModel: string;
 		luggage: string;
-		luggageExplanation: string;
 		licensePlate: string;
 		createNewVehicle: string;
 		createVehicle: string;
@@ -334,6 +349,8 @@ export type Translations = {
 		feedbackPromptProvider: string;
 		howHasItBeen: string;
 		editVehicle: string;
+		closeTo: string;
+		defaultLicensePlate: string;
 	};
 };
 

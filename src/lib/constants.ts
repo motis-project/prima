@@ -2,7 +2,10 @@ import { HOUR, MINUTE } from '$lib/util/time';
 
 export const TZ = 'Europe/Berlin';
 export const LOCALE = 'de-DE';
-export const MIN_PREP = HOUR;
+const BOOKING_BUFFER_TIME = 5 * MINUTE;
+const TAXI_PREP_TIME = HOUR;
+export const MIN_PREP = TAXI_PREP_TIME + BOOKING_BUFFER_TIME;
+export const MIN_PREP_BOOKING = TAXI_PREP_TIME;
 export const MAX_TRAVEL = HOUR;
 export const SCHEDULED_TIME_BUFFER_PICKUP = 1 * MINUTE;
 export const SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE = 0.35;
@@ -53,5 +56,6 @@ function centsToCentsPerMs(cents: number) {
 export const LICENSE_PLATE_REGEX = /^([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})$/;
 export const defaultProfilePicture = '/user-default.jpg';
 export const defaultCarPicture = '/car-default.jpg';
-export const MAX_RIDE_SHARE_TOUR_TIME = HOUR;
+export const MAX_RIDE_SHARE_TOUR_TIME = 2 * HOUR;
 export const LICENSE_PLATE_PLACEHOLDER = 'WSW-AB-1234';
+export const BOOKING_MAX_PASSENGERS = 9;

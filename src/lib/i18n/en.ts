@@ -3,7 +3,8 @@ import type { Translations } from './translation';
 const translations: Translations = {
 	menu: {
 		connections: 'Connections',
-		bookings: 'My Journeys',
+		bookings: 'Bookings',
+		rideOffers: 'Ride offers',
 		account: 'Account',
 		availability: 'Availability',
 		company: 'Company',
@@ -18,6 +19,7 @@ const translations: Translations = {
 
 		// Account
 		enterEmailAndPassword: 'Please enter your email and password.',
+		enterFirstLastName: 'Please enter your first and last name.',
 		invalidEmail: 'Invalid email address.',
 		invalidPhone: 'Invalid phone number.',
 		invalidZipCity: 'Invalid ZIP code/city/region.',
@@ -62,6 +64,7 @@ const translations: Translations = {
 
 		// AddVehicle
 		invalidSeats: 'Invalid number of passengers',
+		invalidCountry: 'Invalid country',
 		invalidLicensePlate: 'Invalid license plate.',
 		invalidStorage: 'Invalid storage space.',
 		insufficientCapacities: 'Updated capacities are insufficient for planned tour on this vehicle.',
@@ -73,7 +76,7 @@ const translations: Translations = {
 		requestCancelled: 'Ride cancelled',
 
 		// Booking
-		noRouteFound: 'No route found. The maximum travel duration is one hour.',
+		noRouteFound: 'No route found. The maximum travel duration is two hours.',
 		distanceTooLong: 'Distance too long.',
 		startDestTooClose: 'Distance too short.',
 		maxTravelTimeExceeded: 'Maximum travel time exceeded.',
@@ -84,14 +87,15 @@ const translations: Translations = {
 		vehicleConflict: 'The selected vehicle is not available at the selected time.',
 
 		// Booking
-		bookingError: 'The ride could not be booked.',
-		bookingError1: 'First section could not be booked.',
-		bookingError2: 'Last section could not be booked.',
+		bookingError: 'The ride could not be booked. Please start a new search.',
+		bookingError1: 'First section could not be booked. Please start a new search.',
+		bookingError2: 'Last section could not be booked. Please start a new search.',
 		bookingSuccess: 'Booking successful.',
 
 		// Journey
 		cancelled: 'This trip has been cancelled.',
 		stillNegotiating: 'The request has been sent. This ride is still being negotiated.',
+		accepted: 'This ride has been agreed upon.',
 		openRequest: 'This ride offer has open requests.',
 
 		// Feedback
@@ -104,7 +108,8 @@ const translations: Translations = {
 		fileTooLarge: 'file too large',
 
 		//Ride Sharing
-		vehicleEditedSuccessfully: 'Vehicle edited successfully'
+		vehicleEditedSuccessfully: 'Vehicle edited successfully',
+		rideShareAcceptError: 'Error. Possibly conflict with another accepted ride.'
 	},
 	admin: {
 		completedToursSubtitle: 'Completed Tours',
@@ -182,7 +187,8 @@ const translations: Translations = {
 		yourFeedback: 'Your feedback',
 		good: 'yes',
 		bad: 'no',
-		sendFeedback: 'Send feedback'
+		sendFeedback: 'Send feedback',
+		backToHome: 'Back to the homepage'
 	},
 
 	atDateTime: (timeType, t: Date, isToday: boolean) =>
@@ -199,6 +205,7 @@ const translations: Translations = {
 	bookingsHeader: 'My booked and saved journeys',
 	cancelledJourneys: 'Past and Cancelled Journeys',
 	noBookings: 'There are no bookings or stored itineraries yet.',
+	noRideOffers: 'You have not yet offered any rides.',
 	journeyDetails: 'Journey Details',
 	transfer: 'transfer',
 	transfers: 'transfers',
@@ -213,6 +220,8 @@ const translations: Translations = {
 	odm: 'Public Transport Taxi, booking required!',
 	rideSharing: 'Ride sharing offer',
 	rideSharingBookingRequired: 'Ride sharing offer, negotiation required!',
+	rideSharingInfo:
+		'These are private ride-sharing offers. If you are interested in a private ride-sharing connection, you can send a request to the provider to arrange the details. Register to create ride-sharing offers and send requests.',
 	from: 'From',
 	to: 'To',
 	arrival: 'Arrival',
@@ -246,7 +255,7 @@ const translations: Translations = {
 	storeItinerary: 'Save Itinerary',
 	removeItinerary: 'Remove Itinerary',
 	introduction:
-		'The <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> project augments public transport with on-demand taxis and, later, ride-sharing options. The goal is to ensure a service at least every two hours, even in rural areas and at off-peak times. More about <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a>',
+		'The PriMa+ÖV project augments public transport with on-demand taxis and private ride-sharing options. The goal is to ensure a service at least every two hours, even in rural areas and at off-peak times. More about ',
 	publicTransitTaxi: 'Public-transit Taxi',
 	serviceArea: 'Service area',
 	serviceTime: 'Service time',
@@ -256,9 +265,11 @@ const translations: Translations = {
 	perRide: 'per ride',
 	fare: 'Fare',
 	bookingDeadline: 'Booking deadline',
-	bookingDeadlineContent: 'at least 1 hour in advance, weekend bookings until Friday 6 p.m.',
+	bookingDeadlineContent: 'at least 1 hour in advance.',
 	logo: 'The PriMa+ÖV logo. Iconographic representation of a car, bus, train and cab.',
 	toConnectionSearch: 'Go to connection search',
+	luggageExplanation:
+		'Approximate number of transportable items in handluggage size. A big suitcase corresponds to about three handluggage items.',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
@@ -274,6 +285,9 @@ const translations: Translations = {
 		kidsZeroToTwo: '0 - 2 years',
 		kidsThreeToFour: '3 - 4 years',
 		kidsFiveToSix: '5 - 6 years',
+		kidsSevenToFourteen: '7 - 14 years',
+		fifteenPlus: '15 years and older',
+		underSeven: 'under 7 years',
 		foldableWheelchair: 'Foldable wheelchair',
 		withFoldableWheelchair: 'With foldable wheelchair',
 		passengerNumber: 'Number of people',
@@ -287,6 +301,7 @@ const translations: Translations = {
 		},
 		totalPrice: 'Total price',
 		cashOnly: 'Cash payment only',
+		ptTicketNeeded: 'In addition, a valid public transport ticket is required.',
 		cancel: 'Cancel',
 		loginToBook: 'Login to book',
 		connection: 'Connection',
@@ -344,14 +359,17 @@ const translations: Translations = {
 		offerBy: 'Offered by',
 		acceptRequest: 'Confirm ride',
 		requestAccepted: 'Ride confirmed',
-		requestCancelled: 'Ride cancelled'
+		requestCancelled: 'Ride cancelled',
+		showMap: 'Show map'
 	},
 
 	buttons: {
 		addVehicleTitle: 'Add vehicle for ride offers',
 		addVehicle: 'Add vehicle',
+		editVehicle: 'edit selected vehicle',
 		uploadPhoto: 'Select photo',
 		savePhoto: 'Save photo',
+		photoSaved: 'Photo saved',
 		smokingOptions: ['not allowed', 'allowed']
 	},
 
@@ -365,8 +383,6 @@ const translations: Translations = {
 		specifyColor: 'Specify Color',
 		specifyModel: 'Specify Model',
 		luggage: 'Luggage',
-		luggageExplanation:
-			'Approximate number of transportable items in handluggage size. A big suitcase corresponds to about three handluggage items.',
 		licensePlate: 'License Plate',
 		createNewVehicle: 'Create new Vehicle',
 		createVehicle: 'Create Vehicle',
@@ -375,7 +391,9 @@ const translations: Translations = {
 		feedbackPrompt: 'Please rate your journey with',
 		feedbackPromptProvider: 'Please rate your recent ride share passenger',
 		howHasItBeen: 'You can rate your last ride share experience here',
-		editVehicle: 'Edit Vehicle'
+		editVehicle: 'Edit Vehicle',
+		closeTo: 'close to',
+		defaultLicensePlate: 'Default vehicle'
 	}
 };
 

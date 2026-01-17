@@ -49,8 +49,25 @@ describe('Whitelist and Booking API Tests', () => {
 	it('vehicle busy', async () => {
 		const company = await addCompany(Zone.WEIßWASSER, inSchleife1);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
-		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));
-		const body = JSON.stringify({
+		await setAvailability(taxi, inXMinutes(0), inXMinutes(200));
+
+		const blackBody = JSON.stringify({
+			start: inSchleife2,
+			target: inPriebus,
+			startBusStops: [],
+			targetBusStops: [],
+			earliest: inXMinutes(0),
+			latest: inXMinutes(70),
+			startFixed: true,
+			capacities
+		});
+
+		const blackResponse = await black(blackBody).then((r) => r.json());
+		expect(blackResponse.direct.length).toBe(1);
+		expect(blackResponse.direct[0].startTime).toBe(inXMinutes(0));
+		expect(blackResponse.direct[0].endTime).toBe(inXMinutes(70));
+
+		const whiteBody = JSON.stringify({
 			start: inSchleife2,
 			target: inPriebus,
 			startBusStops: [],
@@ -60,11 +77,7 @@ describe('Whitelist and Booking API Tests', () => {
 			capacities
 		});
 
-		const blackResponse = await black(body).then((r) => r.json());
-		expect(blackResponse.direct.length).toBe(1);
-		expect(blackResponse.direct[0]).toBe(true);
-
-		const whiteResponse = await white(body).then((r) => r.json());
+		const whiteResponse = await white(whiteBody).then((r) => r.json());
 		expect(whiteResponse.direct.length).toBe(1);
 		expect(whiteResponse.direct[0]).not.toBe(null);
 
@@ -92,16 +105,17 @@ describe('Whitelist and Booking API Tests', () => {
 			capacities
 		};
 
-		await bookingApi(bookingBody, mockUserId, false, false, 0, 0, 0);
+		await bookingApi(bookingBody, mockUserId, false, false, 0, 0, 0, 0, false);
 		const tours = await getTours();
 		expect(tours.length).toBe(1);
 		expect(tours[0].requests.length).toBe(1);
 
-		const blackResponse2 = await black(body).then((r) => r.json());
+		const blackResponse2 = await black(blackBody).then((r) => r.json());
 		expect(blackResponse2.direct.length).toBe(1);
-		expect(blackResponse2.direct[0]).toBe(true);
+		expect(blackResponse2.direct[0].startTime).toBe(inXMinutes(0));
+		expect(blackResponse2.direct[0].endTime).toBe(inXMinutes(70));
 
-		const whiteResponse2 = await white(body).then((r) => r.json());
+		const whiteResponse2 = await white(whiteBody).then((r) => r.json());
 		expect(whiteResponse2.direct.length).toBe(1);
 		expect(whiteResponse2.direct[0]).toBe(null);
 	});

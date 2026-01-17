@@ -86,7 +86,7 @@
 				day: 'numeric'
 			})}
 			{t.booking.withVehicle}
-			{data.licensePlate}
+			{data.licensePlate ?? t.rideShare.defaultLicensePlate}
 		</p>
 
 		{#each data.requests as n}
@@ -118,7 +118,7 @@
 							timestamp={n.journey.startTime}
 							fuzzy={true}
 						/>
-						<span>{n.journey.legs[0].from.name}</span>
+						<span>{t.rideShare.closeTo} {n.journey.legs[0].from.name}</span>
 						<span>{t.to}</span>
 						<Time
 							variant="schedule"
@@ -129,7 +129,7 @@
 							timestamp={n.journey.endTime}
 							fuzzy={true}
 						/>
-						<span>{n.journey.legs[0].to.name}</span>
+						<span>{t.rideShare.closeTo} {n.journey.legs[0].to.name}</span>
 					</div>
 					{#if n.requestCancelled}
 						<Button type="submit" class="w-full" disabled={true}>

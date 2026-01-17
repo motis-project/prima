@@ -25,6 +25,8 @@
 		</li>
 	{/if}
 
+	<li>{t.booking.ptTicketNeeded}</li>
+
 	<li>{t.booking.bookingFor(passengers)}</li>
 
 	{#if wheelchair}

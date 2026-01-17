@@ -14,7 +14,7 @@ import { MINUTE, roundToUnit } from '$lib/util/time';
 import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 import { signEntry } from '$lib/server/booking/signEntry';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
-import { black, dateInXMinutes, inXMinutes, white } from '$lib/server/booking/testUtils';
+import { black, inXMinutes, white } from '$lib/server/booking/testUtils';
 import { Mode } from '$lib/server/booking/mode';
 
 let sessionToken: string;
@@ -46,29 +46,37 @@ beforeEach(async () => {
 
 describe('Whitelist and Booking API Tests', () => {
 	it('no company', async () => {
-		const body = JSON.stringify({
+		const blackBody = JSON.stringify({
+			start: inNiesky1,
+			target: inNiesky2,
+			startBusStops: [],
+			targetBusStops: [inNiesky3],
+			earliest: inXMinutes(0),
+			latest: inXMinutes(550),
+			startFixed: true,
+			capacities
+		});
+		const blackResponse = await black(blackBody).then((r) => r.json());
+		expect(blackResponse.start.length).toBe(0);
+		expect(blackResponse.target.length).toBe(1);
+		expect(blackResponse.direct.length).toBe(0);
+		expect(blackResponse.target[0].length).toBe(0);
+
+		const whiteBody = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: [
 				{
 					...inNiesky3,
-					times: [dateInXMinutes(580).getTime()]
+					times: [inXMinutes(580)]
 				}
 			],
-			directTimes: [dateInXMinutes(550).getTime()],
+			directTimes: [inXMinutes(550)],
 			startFixed: true,
 			capacities
 		});
-		const blackResponse = await black(body).then((r) => r.json());
-
-		expect(blackResponse.start.length).toBe(0);
-		expect(blackResponse.target.length).toBe(1);
-		expect(blackResponse.direct.length).toBe(1);
-		expect(blackResponse.target[0][0]).toBe(false);
-		expect(blackResponse.direct[0]).toBe(false);
-
-		const whiteResponse = await white(body).then((r) => r.json());
+		const whiteResponse = await white(whiteBody).then((r) => r.json());
 		expect(whiteResponse.start.length).toBe(0);
 		expect(whiteResponse.target.length).toBe(1);
 		for (let i = 0; i != whiteResponse.target.length; ++i) {
@@ -83,7 +91,23 @@ describe('Whitelist and Booking API Tests', () => {
 		const company = await addCompany(Zone.GÖRLITZ, inNiesky3);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(999999));
-		const body = JSON.stringify({
+		const blackBody = JSON.stringify({
+			start: inNiesky1,
+			target: inNiesky2,
+			startBusStops: [],
+			targetBusStops: [inNiesky3],
+			earliest: inXMinutes(0),
+			latest: inXMinutes(550),
+			startFixed: true,
+			capacities
+		});
+		const blackResponse = await black(blackBody).then((r) => r.json());
+		expect(blackResponse.start.length).toBe(0);
+		expect(blackResponse.target.length).toBe(1);
+		expect(blackResponse.direct.length).toBe(0);
+		expect(blackResponse.target[0].length).toBe(0);
+
+		const whiteBody = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,
 			startBusStops: [],
@@ -97,14 +121,7 @@ describe('Whitelist and Booking API Tests', () => {
 			startFixed: true,
 			capacities
 		});
-		const blackResponse = await black(body).then((r) => r.json());
-		expect(blackResponse.start.length).toBe(0);
-		expect(blackResponse.target.length).toBe(1);
-		expect(blackResponse.direct.length).toBe(1);
-		expect(blackResponse.target[0][0]).toBe(false);
-		expect(blackResponse.direct[0]).toBe(false);
-
-		const whiteResponse = await white(body).then((r) => r.json());
+		const whiteResponse = await white(whiteBody).then((r) => r.json());
 		expect(whiteResponse.start.length).toBe(0);
 		expect(whiteResponse.target.length).toBe(1);
 		for (let i = 0; i != whiteResponse.target.length; ++i) {
@@ -117,7 +134,23 @@ describe('Whitelist and Booking API Tests', () => {
 
 	it('no vehicle', async () => {
 		await addCompany(Zone.NIESKY, inNiesky3);
-		const body = JSON.stringify({
+		const blackBody = JSON.stringify({
+			start: inNiesky1,
+			target: inNiesky2,
+			startBusStops: [],
+			targetBusStops: [inNiesky3],
+			earliest: inXMinutes(0),
+			latest: inXMinutes(500),
+			startFixed: true,
+			capacities
+		});
+		const blackResponse = await black(blackBody).then((r) => r.json());
+		expect(blackResponse.start.length).toBe(0);
+		expect(blackResponse.target.length).toBe(1);
+		expect(blackResponse.direct.length).toBe(0);
+		expect(blackResponse.target[0].length).toBe(0);
+
+		const whiteBody = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,
 			startBusStops: [],
@@ -131,14 +164,7 @@ describe('Whitelist and Booking API Tests', () => {
 			startFixed: true,
 			capacities
 		});
-		const blackResponse = await black(body).then((r) => r.json());
-		expect(blackResponse.start.length).toBe(0);
-		expect(blackResponse.target.length).toBe(1);
-		expect(blackResponse.direct.length).toBe(1);
-		expect(blackResponse.target[0][0]).toBe(false);
-		expect(blackResponse.direct[0]).toBe(false);
-
-		const whiteResponse = await white(body).then((r) => r.json());
+		const whiteResponse = await white(whiteBody).then((r) => r.json());
 		expect(whiteResponse.start.length).toBe(0);
 		expect(whiteResponse.target.length).toBe(1);
 		for (let i = 0; i != whiteResponse.target.length; ++i) {
@@ -152,7 +178,23 @@ describe('Whitelist and Booking API Tests', () => {
 	it('no availability', async () => {
 		const company = await addCompany(Zone.NIESKY, inNiesky3);
 		await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
-		const body = JSON.stringify({
+		const blackBody = JSON.stringify({
+			start: inNiesky1,
+			target: inNiesky2,
+			startBusStops: [],
+			targetBusStops: [inNiesky3],
+			earliest: inXMinutes(530),
+			latest: inXMinutes(570),
+			startFixed: true,
+			capacities
+		});
+		const blackResponse = await black(blackBody).then((r) => r.json());
+		expect(blackResponse.start.length).toBe(0);
+		expect(blackResponse.target.length).toBe(1);
+		expect(blackResponse.direct.length).toBe(0);
+		expect(blackResponse.target[0].length).toBe(0);
+
+		const whiteBody = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,
 			startBusStops: [],
@@ -166,14 +208,7 @@ describe('Whitelist and Booking API Tests', () => {
 			startFixed: true,
 			capacities
 		});
-		const blackResponse = await black(body).then((r) => r.json());
-		expect(blackResponse.start.length).toBe(0);
-		expect(blackResponse.target.length).toBe(1);
-		expect(blackResponse.direct.length).toBe(1);
-		expect(blackResponse.target[0][0]).toBe(false);
-		expect(blackResponse.direct[0]).toBe(false);
-
-		const whiteResponse = await white(body).then((r) => r.json());
+		const whiteResponse = await white(whiteBody).then((r) => r.json());
 		expect(whiteResponse.start.length).toBe(0);
 		expect(whiteResponse.target.length).toBe(1);
 		for (let i = 0; i != whiteResponse.target.length; ++i) {
@@ -193,22 +228,40 @@ describe('Whitelist and Booking API Tests', () => {
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(600)],
+			earliest: inXMinutes(601),
+			latest: inXMinutes(700),
 			startFixed: true,
 			capacities
 		});
 		const blackResponse = await black(body).then((r) => r.json());
 		expect(blackResponse.start.length).toBe(0);
 		expect(blackResponse.target.length).toBe(0);
-		expect(blackResponse.direct.length).toBe(1);
-		expect(blackResponse.direct[0]).toBe(false);
+		expect(blackResponse.direct.length).toBe(0);
 	});
 
 	it('whitelist fail because request would require taxi to operate outside of defined shift (4:00-23:00)', async () => {
 		const company = await addCompany(Zone.NIESKY, inNiesky3);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(1600));
-		const body = JSON.stringify({
+		const blackBody = JSON.stringify({
+			start: inNiesky1,
+			target: inNiesky2,
+			startBusStops: [],
+			targetBusStops: [],
+			earliest: inXMinutes(598),
+			latest: inXMinutes(700),
+			startFixed: true,
+			capacities
+		});
+
+		const blackResponse = await black(blackBody).then((r) => r.json());
+		expect(blackResponse.start.length).toBe(0);
+		expect(blackResponse.target.length).toBe(0);
+		expect(blackResponse.direct.length).toBe(1);
+		expect(blackResponse.direct[0].startTime).toBe(inXMinutes(598));
+		expect(blackResponse.direct[0].endTime).toBe(inXMinutes(600));
+
+		const whiteBody = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,
 			startBusStops: [],
@@ -218,13 +271,7 @@ describe('Whitelist and Booking API Tests', () => {
 			capacities
 		});
 
-		const blackResponse = await black(body).then((r) => r.json());
-		expect(blackResponse.start.length).toBe(0);
-		expect(blackResponse.target.length).toBe(0);
-		expect(blackResponse.direct.length).toBe(1);
-		expect(blackResponse.direct[0]).toBe(true);
-
-		const whiteResponse = await white(body).then((r) => r.json());
+		const whiteResponse = await white(whiteBody).then((r) => r.json());
 		expect(whiteResponse.start.length).toBe(0);
 		expect(whiteResponse.target.length).toBe(0);
 		expect(whiteResponse.direct.length).toBe(1);
@@ -234,13 +281,33 @@ describe('Whitelist and Booking API Tests', () => {
 	it('simple success case', async () => {
 		const company = await addCompany(Zone.NIESKY, inNiesky3);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
-		await setAvailability(taxi, inXMinutes(0), inXMinutes(600));
+		await setAvailability(taxi, inXMinutes(0), inXMinutes(300));
 		const busStops = [];
 		busStops.push({
 			...inNiesky3,
 			times: [inXMinutes(100)]
 		});
-		const body = JSON.stringify({
+		const blackBody = JSON.stringify({
+			start: inNiesky1,
+			target: inNiesky2,
+			startBusStops: [],
+			targetBusStops: busStops,
+			earliest: inXMinutes(50),
+			latest: inXMinutes(90),
+			startFixed: true,
+			capacities
+		});
+
+		const blackResponse = await black(blackBody).then((r) => r.json());
+		expect(blackResponse.start.length).toBe(0);
+		expect(blackResponse.target.length).toBe(1);
+		expect(blackResponse.direct.length).toBe(1);
+		expect(blackResponse.target[0][0].startTime).toBe(inXMinutes(50));
+		expect(blackResponse.target[0][0].endTime).toBe(inXMinutes(90));
+		expect(blackResponse.direct[0].startTime).toBe(inXMinutes(50));
+		expect(blackResponse.direct[0].endTime).toBe(inXMinutes(90));
+
+		const whiteBody = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,
 			startBusStops: [],
@@ -250,14 +317,7 @@ describe('Whitelist and Booking API Tests', () => {
 			capacities
 		});
 
-		const blackResponse = await black(body).then((r) => r.json());
-		expect(blackResponse.start.length).toBe(0);
-		expect(blackResponse.target.length).toBe(1);
-		expect(blackResponse.direct.length).toBe(1);
-		expect(blackResponse.target[0][0]).toBe(true);
-		expect(blackResponse.direct[0]).toBe(true);
-
-		const whiteResponse = await white(body).then((r) => r.json());
+		const whiteResponse = await white(whiteBody).then((r) => r.json());
 		expect(whiteResponse.start.length).toBe(0);
 		expect(whiteResponse.target.length).toBe(1);
 		for (let i = 0; i != whiteResponse.target.length; ++i) {
@@ -291,7 +351,7 @@ describe('Whitelist and Booking API Tests', () => {
 			capacities
 		};
 
-		const bookingResponse = await bookingApi(bookingBody, mockUserId, false, false, 0, 0, 0);
+		const bookingResponse = await bookingApi(bookingBody, mockUserId, false, false, 0, 0, 0, 0);
 		const tours = await getTours();
 		expect(tours.length).toBe(1);
 		expect(tours[0].requests.length).toBe(1);
@@ -307,7 +367,7 @@ describe('Whitelist and Booking API Tests', () => {
 		expect(
 			Math.abs(inNiesky1.lat - pickup.lat) + Math.abs(inNiesky1.lng - pickup.lng)
 		).toBeLessThan(COORDINATE_ROUNDING_ERROR_THRESHOLD);
-		expect(new Date(pickup.communicatedTime).toISOString()).toBe(dateInXMinutes(70).toISOString());
+		expect(pickup.communicatedTime).toBe(inXMinutes(70));
 		expect(dropoff.address).toBe('target address');
 		expect(
 			Math.abs(inNiesky2.lat - dropoff.lat) + Math.abs(inNiesky2.lng - dropoff.lng)
@@ -361,7 +421,7 @@ describe('Whitelist and Booking API Tests', () => {
 			capacities
 		};
 
-		await bookingApi(bookingBody, mockUserId, false, false, 0, 0, 0);
+		await bookingApi(bookingBody, mockUserId, false, false, 0, 0, 0, 0);
 		const tours = await getTours();
 		expect(tours.length).toBe(1);
 	}, 30000);
@@ -409,7 +469,7 @@ describe('Whitelist and Booking API Tests', () => {
 			connection2: null,
 			capacities
 		};
-		const response = await bookingApi(bookingBody, mockUserId, false, false, 0, 0, 0);
+		const response = await bookingApi(bookingBody, mockUserId, false, false, 0, 0, 0, 0);
 		const tours = await getTours();
 		expect(response.status === 403);
 		expect(tours.length).toBe(0);

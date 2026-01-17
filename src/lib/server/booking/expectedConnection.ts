@@ -12,6 +12,9 @@ export type ExpectedConnection = {
 	signature: string;
 	startFixed: boolean;
 	requestedTime: UnixtimeMs;
+	pickupTime?: UnixtimeMs;
+	dropoffTime?: UnixtimeMs;
+	tourId?: number;
 	mode: Mode;
 };
 
@@ -26,6 +29,7 @@ export function expectedConnectionFromLeg(
 		throw new Error();
 	}
 	const mode = isTaxiLeg(leg) ? Mode.TAXI : Mode.RIDE_SHARE;
+	const context = leg.tripId ? JSON.parse(leg.tripId) : undefined;
 	return signature
 		? {
 				start: { lat: leg.from.lat, lng: leg.from.lon, address: leg.from.name },
@@ -34,7 +38,10 @@ export function expectedConnectionFromLeg(
 				targetTime: new Date(leg.endTime).getTime(),
 				signature,
 				startFixed,
-				requestedTime,
+				requestedTime: context?.rT ?? requestedTime,
+				pickupTime: context?.pT,
+				dropoffTime: context?.dT,
+				tourId: context?.tour,
 				mode
 			}
 		: null;

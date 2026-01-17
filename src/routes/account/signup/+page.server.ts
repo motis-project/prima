@@ -32,7 +32,7 @@ async function createUser(
 	phone: string | null
 ) {
 	const passwordHash = await hashPassword(password);
-	return await db
+	const user = await db
 		.insertInto('user')
 		.values({
 			name,
@@ -55,6 +55,16 @@ async function createUser(
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();
+	db.insertInto('rideShareVehicle')
+		.values({
+			passengers: 1,
+			luggage: 0,
+			owner: user.id,
+			smokingAllowed: false,
+			country: 'DE'
+		})
+		.executeTakeFirst();
+	return user;
 }
 
 export function load(event: PageServerLoadEvent) {
@@ -85,12 +95,16 @@ export const actions: Actions = {
 			name.length < 2 ||
 			typeof firstName !== 'string' ||
 			firstName.length < 2 ||
+			typeof gender !== 'string' ||
+			gender.length != 1
+		) {
+			return fail(400, { msg: msg('enterFirstLastName'), email: '' });
+		}
+		if (
 			typeof email !== 'string' ||
 			email.length < 5 ||
 			typeof password !== 'string' ||
-			password.length < 3 ||
-			typeof gender !== 'string' ||
-			gender.length != 1
+			password.length < 3
 		) {
 			return fail(400, { msg: msg('enterEmailAndPassword'), email: '' });
 		}

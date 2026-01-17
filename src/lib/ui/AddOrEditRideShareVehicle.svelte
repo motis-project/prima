@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as RadioGroup from '$lib/shadcn/radio-group';
+	import { Select, SelectTrigger, SelectContent } from '$lib/shadcn/select';
 	import { Input } from '$lib/shadcn/input';
 	import Label from '$lib/shadcn/label/label.svelte';
 	import { Button } from '$lib/shadcn/button';
@@ -10,12 +11,13 @@
 	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
 	import Panel from '$lib/ui/Panel.svelte';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
-	import { LICENSE_PLATE_PLACEHOLDER } from '$lib/constants.js';
 	import { defaultCarPicture } from '$lib/constants.js';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { enhance } from '$app/forms';
 	import type { Msg } from '$lib/msg';
+	import type { CountryKey } from '@codecorn/euro-plate-validator';
+	import { supportedCountries, DISPLAY_FORMATS } from '@codecorn/euro-plate-validator';
+	import SelectItem from '$lib/shadcn/select/select-item.svelte';
 
 	const {
 		form,
@@ -26,7 +28,8 @@
 		color,
 		vehiclePicturePath,
 		smokingAllowed,
-		vehicleId
+		vehicleId,
+		country
 	}: {
 		form: { msg?: Msg } | null;
 		luggage?: number;
@@ -34,9 +37,10 @@
 		color?: string | null;
 		model?: string | null;
 		smokingAllowed?: boolean;
-		licensePlate?: string;
+		licensePlate?: string | null;
 		vehiclePicturePath?: string | null;
 		vehicleId?: number;
+		country?: CountryKey;
 	} = $props();
 	const isEditMode = luggage !== undefined;
 	const action = !isEditMode ? '?/addVehicle' : '?/editVehicle';
@@ -45,6 +49,7 @@
 	let newModel: string = $state(model ?? '');
 	let hasModel = $state(model !== undefined && model !== null);
 	let smokingOptions = t.buttons.smokingOptions;
+	let newCountry = $state<CountryKey>(country ?? 'DE');
 	const smokingAllowedString: string | undefined =
 		smokingAllowed === undefined
 			? undefined
@@ -68,6 +73,8 @@
 		fromUrl = sessionStorage.getItem('lastPage') ?? '/default';
 		console.log('Came from:', fromUrl);
 	});
+
+	let loading = $state(false);
 </script>
 
 <div>
@@ -84,23 +91,37 @@
 		enctype="multipart/form-data"
 		method="post"
 		{action}
-		use:enhance={() => {
-			return async ({ update }) => {
-				update({ reset: false });
-			};
-		}}
 		class="flex flex-col gap-4"
+		onsubmit={() => {
+			loading = true;
+		}}
 	>
 		<h2 class="font-semibold">
 			{!isEditMode ? t.rideShare.createNewVehicle : t.rideShare.editVehicle}
 		</h2>
 		<Panel title={t.rideShare.licensePlate} subtitle={''}>
-			<Input
-				name="licensePlate"
-				type="string"
-				placeholder={LICENSE_PLATE_PLACEHOLDER}
-				value={licensePlate}
-			/>
+			<div class="flex flex-row gap-2">
+				<div class="w-fit">
+					<Select type="single" bind:value={newCountry}>
+						<SelectTrigger>
+							{newCountry}
+						</SelectTrigger>
+						<SelectContent>
+							{#each supportedCountries as c}
+								<SelectItem value={c}>
+									{c}
+								</SelectItem>
+							{/each}
+						</SelectContent>
+					</Select>
+				</div>
+				<Input
+					name="licensePlate"
+					type="string"
+					placeholder={DISPLAY_FORMATS[newCountry]}
+					value={licensePlate ?? undefined}
+				/>
+			</div>
 		</Panel>
 		<Panel title={t.rideShare.maxPassengers} subtitle={''}>
 			<RadioGroup.Root name="passengers" value={passengers?.toString() ?? '3'}>
@@ -122,7 +143,7 @@
 				</div>
 			</RadioGroup.Root>
 		</Panel>
-		<Panel title={t.rideShare.luggage} subtitle={t.rideShare.luggageExplanation}>
+		<Panel title={t.rideShare.luggage} subtitle={t.luggageExplanation}>
 			<Input name="luggage" type="number" placeholder="4" value={luggage ?? '4'} />
 		</Panel>
 		<div>
@@ -154,6 +175,15 @@
 				{/each}
 			</ToggleGroup.Root>
 		</Panel>
+		<Panel title={t.rideShare.vehiclePhoto} subtitle={''}>
+			<UploadPhoto name="vehiclePicture" defaultPicture={vehiclePicturePath ?? defaultCarPicture} />
+		</Panel>
+		<Message msg={form?.msg} class="mb-4" />
+
+		<Button type="submit" variant="outline" data-testid="create-vehicle" disabled={loading}>
+			{!isEditMode ? t.rideShare.createVehicle : t.rideShare.saveChanges}
+		</Button>
+
 		<input type="hidden" name="id" value={undefined} />
 		<input type="hidden" name="color" value={newColor} />
 		<input type="hidden" name="model" value={newModel} />
@@ -165,13 +195,6 @@
 			value={newSmokingAllowed === smokingOptions[0] ? '0' : '1'}
 		/>
 		<input type="hidden" name="vehicleId" value={vehicleId} />
-		<Panel title={t.rideShare.vehiclePhoto} subtitle={''}>
-			<UploadPhoto name="vehiclePicture" defaultPicture={vehiclePicturePath ?? defaultCarPicture} />
-		</Panel>
-		<Message msg={form?.msg} class="mb-4" />
-
-		<Button type="submit" variant="outline" data-testid="create-vehicle">
-			{!isEditMode ? t.rideShare.createVehicle : t.rideShare.saveChanges}
-		</Button>
+		<input type="hidden" name="country" value={newCountry} />
 	</form>
 </div>

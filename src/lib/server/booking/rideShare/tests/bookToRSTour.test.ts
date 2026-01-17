@@ -2,7 +2,7 @@ import { addTestUser, clearDatabase, getRSTours } from '$lib/testHelpers';
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { COORDINATE_ROUNDING_ERROR_THRESHOLD } from '$lib/constants';
 import { createSession } from '$lib/server/auth/session';
-import { dateInXMinutes, inXMinutes, whiteRideShare } from '$lib/server/booking/testUtils';
+import { inXMinutes, whiteRideShare } from '$lib/server/booking/testUtils';
 import { signEntry } from '$lib/server/booking/signEntry';
 import { rideShareApi } from '../rideShareApi';
 import { addRideShareTour, getRideShareTourCommunicatedTimes } from '../addRideShareTour';
@@ -46,7 +46,17 @@ beforeEach(async () => {
 
 describe('add ride share request', () => {
 	it('getRideShareTourCommunicatedTimes', async () => {
-		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test', null);
+		const vehicle = await createRideShareVehicle(
+			mockUserId,
+			0,
+			3,
+			'',
+			'',
+			false,
+			'test',
+			null,
+			'DE'
+		);
 		const communicatedTimesStartFixed = await getRideShareTourCommunicatedTimes(
 			inXMinutes(40),
 			true,
@@ -65,7 +75,17 @@ describe('add ride share request', () => {
 		expect(communicatedTimesStartNotFixed?.end).toBe(inXMinutes(40));
 	});
 	it('simple success case', async () => {
-		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test', null);
+		const vehicle = await createRideShareVehicle(
+			mockUserId,
+			0,
+			3,
+			'',
+			'',
+			false,
+			'test',
+			null,
+			'DE'
+		);
 		const tourId = await addRideShareTour(
 			inXMinutes(40),
 			true,
@@ -102,10 +122,14 @@ describe('add ride share request', () => {
 				inPechern.lng,
 				whiteResponse.direct[0][0].pickupTime,
 				whiteResponse.direct[0][0].dropoffTime,
-				false
+				false,
+				whiteResponse.direct[0][0].tripId
 			),
 			startFixed: true,
 			requestedTime: inXMinutes(70),
+			tourId,
+			pickupTime: whiteResponse.direct[0][0].pickupTime,
+			dropoffTime: whiteResponse.direct[0][0].dropoffTime,
 			mode: Mode.RIDE_SHARE
 		};
 		const bookingBody = {
@@ -114,7 +138,7 @@ describe('add ride share request', () => {
 			capacities
 		};
 
-		const bookingResponse = await rideShareApi(bookingBody, mockUserId, false, 0, 0, 0, tourId!);
+		const bookingResponse = await rideShareApi(bookingBody, mockUserId, false, 0, 0, 0);
 		const tours = await getRSTours();
 		expect(tours.length).toBe(1);
 		expect(tours[0].requests.length).toBe(2);
@@ -134,7 +158,7 @@ describe('add ride share request', () => {
 		expect(Math.abs(inSagar.lat - pickup.lat) + Math.abs(inSagar.lng - pickup.lng)).toBeLessThan(
 			COORDINATE_ROUNDING_ERROR_THRESHOLD
 		);
-		expect(new Date(pickup.communicatedTime).toISOString()).toBe(dateInXMinutes(70).toISOString());
+		expect(pickup.communicatedTime).toBe(inXMinutes(70));
 		expect(dropoff.address).toBe('target address');
 		expect(
 			Math.abs(inPechern.lat - dropoff.lat) + Math.abs(inPechern.lng - dropoff.lng)
@@ -151,7 +175,17 @@ describe('add ride share request', () => {
 	}, 30000);
 
 	it('request accpepted, sufficient profit', async () => {
-		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test', null);
+		const vehicle = await createRideShareVehicle(
+			mockUserId,
+			0,
+			3,
+			'',
+			'',
+			false,
+			'test',
+			null,
+			'DE'
+		);
 		const tourId = await addRideShareTour(
 			inXMinutes(40),
 			true,
@@ -178,7 +212,17 @@ describe('add ride share request', () => {
 	}, 30000);
 
 	it('request denied, insufficient profit', async () => {
-		const vehicle = await createRideShareVehicle(mockUserId, 0, 3, '', '', false, 'test', null);
+		const vehicle = await createRideShareVehicle(
+			mockUserId,
+			0,
+			3,
+			'',
+			'',
+			false,
+			'test',
+			null,
+			'DE'
+		);
 		const tourId = await addRideShareTour(
 			inXMinutes(40),
 			true,
@@ -205,7 +249,17 @@ describe('add ride share request', () => {
 	}, 30000);
 
 	it('tour with cancelled request is handled correctly', async () => {
-		const vehicle = await createRideShareVehicle(mockUserId, 0, 1, '', '', false, 'test', null);
+		const vehicle = await createRideShareVehicle(
+			mockUserId,
+			0,
+			1,
+			'',
+			'',
+			false,
+			'test',
+			null,
+			'DE'
+		);
 		const tourId = await addRideShareTour(
 			inXMinutes(40),
 			true,
@@ -241,10 +295,14 @@ describe('add ride share request', () => {
 				inPechern.lng,
 				whiteResponse.direct[0][0].pickupTime,
 				whiteResponse.direct[0][0].dropoffTime,
-				false
+				false,
+				whiteResponse.direct[0][0].tripId
 			),
 			startFixed: true,
 			requestedTime: inXMinutes(50),
+			tourId,
+			pickupTime: whiteResponse.direct[0][0].pickupTime,
+			dropoffTime: whiteResponse.direct[0][0].dropoffTime,
 			mode: Mode.RIDE_SHARE
 		};
 		const bookingBody = {
@@ -252,7 +310,7 @@ describe('add ride share request', () => {
 			connection2: null,
 			capacities
 		};
-		const bookingResponse = await rideShareApi(bookingBody, mockUserId, false, 0, 0, 0, tourId!);
+		const bookingResponse = await rideShareApi(bookingBody, mockUserId, false, 0, 0, 0);
 		expect(bookingResponse.status).toBe(200);
 		const tours = await getRSTours();
 		expect(tours.length).toBe(1);

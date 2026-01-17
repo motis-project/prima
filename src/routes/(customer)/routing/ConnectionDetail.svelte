@@ -23,7 +23,8 @@
 		onClickTrip,
 		licensePlate,
 		companyName,
-		companyPhone
+		companyPhone,
+		country
 	}: {
 		itinerary: SignedItinerary;
 		onClickStop: (name: string, stopId: string, time: Date) => void;
@@ -31,6 +32,7 @@
 		licensePlate?: string;
 		companyName?: string;
 		companyPhone?: string;
+		country?: string;
 	} = $props();
 
 	const lastLeg = $derived(itinerary.legs.findLast((l) => l.duration !== 0));
@@ -94,7 +96,7 @@
 						<CarTaxiFront class="relative  mr-1" />
 						<div class="flex w-fit rounded-md border-4 border-double border-black bg-white">
 							<div class="flex h-8 min-w-5 items-center justify-center bg-blue-700 p-1 text-white">
-								<div class="text-sm font-bold">D</div>
+								<div class="text-sm font-bold">{country}</div>
 							</div>
 							<div
 								class="flex h-8 items-center px-1 text-2xl font-bold uppercase tracking-wider text-black"
@@ -122,7 +124,7 @@
 
 		{#if isRideShareLeg(l)}
 			{@const tourInfo = itinerary.rideShareTourInfos?.find(
-				(i) => i?.tourId == parseInt(l.tripId || '')
+				(i) => i?.tourId == JSON.parse(l.tripId || '{}')?.tour
 			)}
 			{#if tourInfo}
 				<span class="ml-6">
@@ -173,7 +175,7 @@
 					{#if tourInfo.licensePlate}
 						<div class="my-2 flex w-fit rounded-md border-4 border-double border-black bg-white">
 							<div class="flex h-8 min-w-5 items-center justify-center bg-blue-700 p-1 text-white">
-								<div class="text-sm font-bold">D</div>
+								<div class="text-sm font-bold">{country}</div>
 							</div>
 							<div
 								class="flex h-8 items-center px-1 text-2xl font-bold uppercase tracking-wider text-black"

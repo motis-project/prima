@@ -3,7 +3,8 @@ import type { Translations } from './translation';
 const translations: Translations = {
 	menu: {
 		connections: 'Verbindungen',
-		bookings: 'Meine Fahrten',
+		bookings: 'Buchungen',
+		rideOffers: 'Mitfahrangebote',
 		account: 'Konto',
 		availability: 'Verfügbarkeit',
 		company: 'Unternehmen',
@@ -17,6 +18,7 @@ const translations: Translations = {
 
 		// Account
 		enterEmailAndPassword: 'Bitte geben Sie Ihre E-Mail und Ihr Passwort ein.',
+		enterFirstLastName: 'Bitte geben Sie Vor- und Nachname ein.',
 		invalidEmail: 'Ungültige E-Mail-Adresse.',
 		invalidPhone: 'Ungültige Telefonnummer.',
 		invalidZipCity: 'Ungültige PLZ/Ort/Region.',
@@ -64,6 +66,7 @@ const translations: Translations = {
 
 		// AddVehicle
 		invalidSeats: 'Ungültige Sitzzahl.',
+		invalidCountry: 'Ungültiges Land.',
 		invalidLicensePlate: 'Ungültiges Kennzeichen.',
 		invalidStorage: 'Ungültiger Stauraum.',
 		insufficientCapacities:
@@ -76,7 +79,7 @@ const translations: Translations = {
 		requestCancelled: 'Fahrt storniert',
 
 		// Booking
-		noRouteFound: 'Keine Route gefunden. Die maximale Fahrtzeit beträgt eine Stunde.',
+		noRouteFound: 'Keine Route gefunden. Die maximale Fahrtzeit beträgt zwei Stunden.',
 		distanceTooLong: 'Distanz zu lang.',
 		startDestTooClose: 'Distanz zu kurz.',
 		maxTravelTimeExceeded: 'Fahrstrecke zu lang.',
@@ -87,15 +90,18 @@ const translations: Translations = {
 		vehicleConflict: 'Das gewählte Fahrzeug ist zum gewählten Zeitpunkt nicht verfügbar.',
 
 		// Booking
-		bookingError: 'Die Fahrt konnte nicht gebucht werden.',
-		bookingError1: 'Erster Abschnitt konnte nicht gebucht werden.',
-		bookingError2: 'Zweiter Abschnitt konnte nicht gebucht werden.',
+		bookingError: 'Die Fahrt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
+		bookingError1:
+			'Erster Abschnitt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
+		bookingError2:
+			'Zweiter Abschnitt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
 		bookingSuccess: 'Buchung erfolgreich.',
 
 		// Journey
 		cancelled: 'Diese Fahrt wurde storniert.',
 		stillNegotiating:
 			'Die Anfrage wurde gesendet. Die Mitfahrgelegenheit ist noch nicht fest vereinbart.',
+		accepted: 'Die Fahrt ist fest vereinbart.',
 		openRequest: 'Dieses Mitfahrangebot hat offene Anfragen.',
 
 		// Feedback
@@ -108,7 +114,8 @@ const translations: Translations = {
 		fileTooLarge: 'Datei ist zu groß',
 
 		//Ride Sharing
-		vehicleEditedSuccessfully: 'Fahrzeug erfolgreich geändert'
+		vehicleEditedSuccessfully: 'Fahrzeug erfolgreich geändert',
+		rideShareAcceptError: 'Fehler. Möglicherweise Konflikt mit anderer Mitfahrt.'
 	},
 	admin: {
 		completedToursSubtitle: 'Abgeschlossene Fahrten',
@@ -189,7 +196,8 @@ const translations: Translations = {
 		yourFeedback: 'Ihr Feedback',
 		good: 'ja',
 		bad: 'nein',
-		sendFeedback: 'Feedback abschicken'
+		sendFeedback: 'Feedback abschicken',
+		backToHome: 'Zurück zur Startseite'
 	},
 
 	atDateTime: (timeType, t: Date, isToday: boolean) =>
@@ -206,6 +214,7 @@ const translations: Translations = {
 	bookingsHeader: 'Meine gebuchten und gespeicherten Fahrten',
 	cancelledJourneys: 'Vergangene und stornierte Fahrten',
 	noBookings: 'Sie haben bisher keine gebuchten oder gespeicherten Fahrten.',
+	noRideOffers: 'Sie haben bisher noch keine Mitfahrgelegenheit angeboten.',
 	journeyDetails: 'Verbindungsdetails',
 	transfer: 'Umstieg',
 	transfers: 'Umstiege',
@@ -220,6 +229,8 @@ const translations: Translations = {
 	odm: 'ÖPNV-Taxi - Buchung erforderlich!',
 	rideSharing: 'Mitfahrangebot',
 	rideSharingBookingRequired: 'Mitfahrangebot - Vereinbarung erforderlich!',
+	rideSharingInfo:
+		'Es handelt sich um private Mitfahrangebote. Wenn Sie sich für eine Verbindung mit privater Mitnahme interessieren, können Sie dem Anbieter eine Anfrage senden, um die Details zu vereinbaren. Registrieren Sie sich, um Mitfahrangebote zu erstellen und Anfragen zu senden.',
 	from: 'Von',
 	to: 'Nach',
 	arrival: 'Ankunft',
@@ -254,7 +265,7 @@ const translations: Translations = {
 	storeItinerary: 'Reisekette speichern',
 	removeItinerary: 'Reisekette entfernen',
 	introduction:
-		'Ziel des Projekts <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a> ist es, den ÖPNV durch Ruftaxis und in Zukunft auch Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Mehr über <a href="https://www.primaplusoev.de/" class="link" target="_blank">PriMa+ÖV</a>',
+		'Ziel des Projekts PriMa+ÖV ist es, den ÖPNV durch Ruftaxis und private Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Mehr über ',
 	publicTransitTaxi: 'ÖPNV-Taxi',
 	serviceArea: 'Bediengebiet',
 	serviceTime: 'Bedienzeit',
@@ -264,10 +275,11 @@ const translations: Translations = {
 	perRide: 'pro Fahrt',
 	fare: 'Fahrpreis',
 	bookingDeadline: 'Buchungsschluss',
-	bookingDeadlineContent:
-		'min. 1 Stunde im Voraus, bei Buchungen für das Wochenende bis Freitag 18 Uhr',
+	bookingDeadlineContent: 'min. 1 Stunde im Voraus',
 	logo: 'Das PriMa+ÖV Logo. Ikonographische Darstellung eines Autos, Busses, Zuges und Taxis.',
 	toConnectionSearch: 'Zur Verbindungssuche',
+	luggageExplanation:
+		'Ungefähre Anzahl von transportierbaren Gepäckstücken in Handgepäckgröße. Ein großer Koffer entspricht etwa drei Handgepäckstücken.',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
@@ -283,6 +295,9 @@ const translations: Translations = {
 		kidsZeroToTwo: '0 - 2 Jahre',
 		kidsThreeToFour: '3 - 4 Jahre',
 		kidsFiveToSix: '5 - 6 Jahre',
+		kidsSevenToFourteen: '7 - 14 Jahre',
+		fifteenPlus: 'ab 15 Jahre',
+		underSeven: 'unter 7 Jahre',
 		foldableWheelchair: 'Faltbarer Rollstuhl',
 		withFoldableWheelchair: 'Mit faltbarem Rollstuhl',
 		passengerNumber: 'Anzahl Personen',
@@ -296,6 +311,7 @@ const translations: Translations = {
 		},
 		totalPrice: 'Gesamtpreis',
 		cashOnly: 'Nur Barzahlung im Taxi',
+		ptTicketNeeded: 'Zusätzlich ist ein entsprechendes ÖPNV-Ticket erforderlich.',
 		cancel: 'Stornieren',
 		loginToBook: 'Einloggen zum Buchen',
 		connection: 'Verbindung',
@@ -353,14 +369,17 @@ const translations: Translations = {
 		offerBy: 'Angebot von',
 		acceptRequest: 'Mitfahrt bestätigen',
 		requestAccepted: 'Mitfahrt bestätigt',
-		requestCancelled: 'Mitfahrt abgesagt'
+		requestCancelled: 'Mitfahrt abgesagt',
+		showMap: 'Karte anzeigen'
 	},
 
 	buttons: {
 		addVehicleTitle: 'Fahrzeug für Mitfahrangebote hinzufügen',
 		addVehicle: 'Fahrzeug hinzufügen',
+		editVehicle: 'ausgewähltes Fahrzeug bearbeiten',
 		uploadPhoto: 'Foto auswählen',
 		savePhoto: 'Foto speichern',
+		photoSaved: 'Foto gespeichert',
 		smokingOptions: ['nicht erlaubt', 'erlaubt']
 	},
 
@@ -374,8 +393,6 @@ const translations: Translations = {
 		specifyColor: 'Farbe angeben',
 		specifyModel: 'Fahrzeugmodell angeben',
 		luggage: 'Gepäckstücke',
-		luggageExplanation:
-			'Ungefähre Anzahl von transportierbaren Gepäckstücken in Handgepäckgröße. Ein großer Koffer entspricht etwa drei Handgepäckstücken.',
 		licensePlate: 'Nummernschild',
 		createNewVehicle: 'Neues Fahrzeug anlegen',
 		createVehicle: 'Fahrzeug anlegen',
@@ -384,7 +401,9 @@ const translations: Translations = {
 		feedbackPrompt: 'Bitte bewerten Sie Ihre Reise mit',
 		feedbackPromptProvider: 'Bitte bewerten Sie Ihren Mitfahrer',
 		howHasItBeen: 'Sie können Ihre letzte Mitfahrerfahrung hier bewerten',
-		editVehicle: 'Fahrzeug ändern'
+		editVehicle: 'Fahrzeug ändern',
+		closeTo: 'in der Nähe von',
+		defaultLicensePlate: 'Standardfahrzeug'
 	}
 };
 

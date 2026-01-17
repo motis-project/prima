@@ -4,8 +4,8 @@ import type { Capacities } from '$lib/util/booking/Capacities';
 import { db, type Database } from '$lib/server/db';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 
-function selectByRequestId(requestId: number, trx: Transaction<Database>) {
-	return trx
+function selectByRequestId(requestId: number, trx?: Transaction<Database>) {
+	return (trx ?? db)
 		.selectFrom('rideShareTour')
 		.innerJoin('rideShareVehicle', 'rideShareTour.vehicle', 'rideShareVehicle.id')
 		.where('rideShareTour.cancelled', '=', false)
@@ -149,7 +149,7 @@ async function select(query: RideShareQuery, requestId?: number) {
 	});
 }
 
-export async function getRideShareTourByRequest(requestId: number, trx: Transaction<Database>) {
+export async function getRideShareTourByRequest(requestId: number, trx?: Transaction<Database>) {
 	return await select(selectByRequestId(requestId, trx), requestId);
 }
 
@@ -180,4 +180,5 @@ export const getRideShareTours = async (
 
 export type RideShareTour = Awaited<ReturnType<typeof getRideShareTours>>[0];
 export type RideShareEvent = RideShareTour['events'][0];
+export type RideShareTourDb = Awaited<ReturnType<typeof select>>[0];
 type RideShareQuery = Awaited<ReturnType<typeof selectWithoutRequestId>>;

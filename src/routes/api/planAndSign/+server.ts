@@ -36,7 +36,8 @@ export const POST = async (event: RequestEvent) => {
 									odmLeg1.to.lon,
 									new Date(odmLeg1.startTime).getTime(),
 									new Date(odmLeg1.endTime).getTime(),
-									false
+									false,
+									odmLeg1.tripId
 								)
 							: undefined,
 					signature2:
@@ -48,7 +49,8 @@ export const POST = async (event: RequestEvent) => {
 									odmLeg2.to.lon,
 									new Date(odmLeg2.startTime).getTime(),
 									new Date(odmLeg2.endTime).getTime(),
-									true
+									true,
+									odmLeg2.tripId
 								)
 							: undefined,
 					rideShareTourInfos

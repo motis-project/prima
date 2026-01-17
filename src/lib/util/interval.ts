@@ -43,6 +43,10 @@ export class Interval {
 		return this.startTime == other.endTime || this.endTime == other.startTime;
 	}
 
+	noDistanceBetween(other: Interval) {
+		return other.overlaps(this) || other.touches(this) || other.equals(this);
+	}
+
 	eitherEndIsEqual(other: Interval) {
 		return this.startTime == other.startTime || this.endTime == other.endTime;
 	}

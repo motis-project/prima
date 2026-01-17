@@ -81,12 +81,8 @@ export async function routing(
 		false
 	);
 
-	const fromBusStop = await Promise.all(
-		busStops.map((b) => batchOneToManyCarRouting(b, forward, false))
-	);
-	const toBusStop = await Promise.all(
-		busStops.map((b) => batchOneToManyCarRouting(b, backward, true))
-	);
+	const fromBusStop = Promise.all(busStops.map((b) => batchOneToManyCarRouting(b, forward, false)));
+	const toBusStop = Promise.all(busStops.map((b) => batchOneToManyCarRouting(b, backward, true)));
 	return {
 		userChosen: {
 			fromUserChosen: {
@@ -99,14 +95,14 @@ export async function routing(
 			}
 		},
 		busStops: {
-			fromBusStop: fromBusStop.map((b, busStopIdx) => {
+			fromBusStop: (await fromBusStop).map((b, busStopIdx) => {
 				const updatedB = setZeroDistanceForMatchingPlaces(busStops[busStopIdx], forward, b, false);
 				return {
 					company: updatedB.slice(0, companies.length),
 					event: updatedB.slice(companies.length)
 				};
 			}),
-			toBusStop: toBusStop.map((b, busStopIdx) => {
+			toBusStop: (await toBusStop).map((b, busStopIdx) => {
 				const values = {
 					company: b.slice(0, companies.length),
 					event: b.slice(companies.length)
