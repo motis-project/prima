@@ -60,7 +60,8 @@ async function createUser(
 			passengers: 1,
 			luggage: 0,
 			owner: user.id,
-			smokingAllowed: false
+			smokingAllowed: false,
+			country: 'DE'
 		})
 		.executeTakeFirst();
 	return user;
@@ -94,12 +95,16 @@ export const actions: Actions = {
 			name.length < 2 ||
 			typeof firstName !== 'string' ||
 			firstName.length < 2 ||
+			typeof gender !== 'string' ||
+			gender.length != 1
+		) {
+			return fail(400, { msg: msg('enterFirstLastName'), email: '' });
+		}
+		if (
 			typeof email !== 'string' ||
 			email.length < 5 ||
 			typeof password !== 'string' ||
-			password.length < 3 ||
-			typeof gender !== 'string' ||
-			gender.length != 1
+			password.length < 3
 		) {
 			return fail(400, { msg: msg('enterEmailAndPassword'), email: '' });
 		}

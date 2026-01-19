@@ -21,6 +21,7 @@ export type Translations = {
 
 		// Account
 		enterEmailAndPassword: string;
+		enterFirstLastName: string;
 		invalidEmail: string;
 		invalidPhone: string;
 		invalidZipCity: string;
@@ -64,6 +65,7 @@ export type Translations = {
 
 		// AddVehicle
 		invalidSeats: string;
+		invalidCountry: string;
 		invalidLicensePlate: string;
 		invalidStorage: string;
 		insufficientCapacities: string;

@@ -316,6 +316,7 @@
 											<input type="hidden" name="kidsZeroToTwo" value={kidsZeroToTwo} />
 											<input type="hidden" name="kidsThreeToFour" value={kidsThreeToFour} />
 											<input type="hidden" name="kidsFiveToSix" value={kidsFiveToSix} />
+											<input type="hidden" name="kidsSevenToFourteen" value={kidsSevenToFourteen} />
 											<input type="hidden" name="luggage" value={luggageToInt(luggage)} />
 											<input type="hidden" name="wheelchairs" value={wheelchair ? 1 : 0} />
 											<input
@@ -671,8 +672,7 @@
 								onclick={() =>
 									pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
 								><strong>{t.serviceArea}</strong></button
-							><br />{t.regionAround} Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife,
-							Trebendorf, Weißkeißel, Weißwasser/O.L.
+							><br />{t.regionAround} Görlitz, Niesky, Weißwasser/O.L., Zittau.
 						</p>
 						<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
 					</div>

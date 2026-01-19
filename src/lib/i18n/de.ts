@@ -18,6 +18,7 @@ const translations: Translations = {
 
 		// Account
 		enterEmailAndPassword: 'Bitte geben Sie Ihre E-Mail und Ihr Passwort ein.',
+		enterFirstLastName: 'Bitte geben Sie Vor- und Nachname ein.',
 		invalidEmail: 'Ungültige E-Mail-Adresse.',
 		invalidPhone: 'Ungültige Telefonnummer.',
 		invalidZipCity: 'Ungültige PLZ/Ort/Region.',
@@ -65,6 +66,7 @@ const translations: Translations = {
 
 		// AddVehicle
 		invalidSeats: 'Ungültige Sitzzahl.',
+		invalidCountry: 'Ungültiges Land.',
 		invalidLicensePlate: 'Ungültiges Kennzeichen.',
 		invalidStorage: 'Ungültiger Stauraum.',
 		insufficientCapacities:
@@ -88,9 +90,11 @@ const translations: Translations = {
 		vehicleConflict: 'Das gewählte Fahrzeug ist zum gewählten Zeitpunkt nicht verfügbar.',
 
 		// Booking
-		bookingError: 'Die Fahrt konnte nicht gebucht werden.',
-		bookingError1: 'Erster Abschnitt konnte nicht gebucht werden.',
-		bookingError2: 'Zweiter Abschnitt konnte nicht gebucht werden.',
+		bookingError: 'Die Fahrt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
+		bookingError1:
+			'Erster Abschnitt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
+		bookingError2:
+			'Zweiter Abschnitt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
 		bookingSuccess: 'Buchung erfolgreich.',
 
 		// Journey
@@ -271,8 +275,7 @@ const translations: Translations = {
 	perRide: 'pro Fahrt',
 	fare: 'Fahrpreis',
 	bookingDeadline: 'Buchungsschluss',
-	bookingDeadlineContent:
-		'min. 1 Stunde im Voraus, bei Buchungen für das Wochenende bis Freitag 18 Uhr',
+	bookingDeadlineContent: 'min. 1 Stunde im Voraus',
 	logo: 'Das PriMa+ÖV Logo. Ikonographische Darstellung eines Autos, Busses, Zuges und Taxis.',
 	toConnectionSearch: 'Zur Verbindungssuche',
 	luggageExplanation:
