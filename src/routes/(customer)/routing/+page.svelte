@@ -675,7 +675,9 @@
 						</p>
 						<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
 						<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
-						<p><strong>{t.cancellation}</strong><br />{t.cancellationAppeal} {t.booking.disclaimer}
+						<p>
+							<strong>{t.cancellation}</strong><br />{t.cancellationAppeal}
+							{t.booking.disclaimer}
 						</p>
 					</div>
 				</Dialog.Content>
