@@ -665,7 +665,6 @@
 							<div></div>
 							<div>{t.perPerson} {t.perRide}</div>
 						</div>
-						<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
 						<p>
 							<button
 								class="link"
@@ -675,6 +674,9 @@
 							><br />{t.regionAround} Görlitz, Niesky, Weißwasser/O.L., Zittau.
 						</p>
 						<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
+						<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
+						<p><strong>{t.cancellation}</strong><br />{t.cancellationAppeal} {t.booking.disclaimer}
+						</p>
 					</div>
 				</Dialog.Content>
 			</Dialog.Root>
