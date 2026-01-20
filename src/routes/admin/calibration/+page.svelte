@@ -24,8 +24,7 @@
 	import ConnectionDetail from '../../(customer)/routing/ConnectionDetail.svelte';
 	import { onClickStop, onClickTrip } from '$lib/util/onClick';
 	import StopTimes from '../../(customer)/routing/StopTimes.svelte';
-	import type { SignedItinerary } from '$lib/planAndSign';
-	import { onMount, tick } from 'svelte';
+	import Plotly from 'plotly.js';
 
 	const { data } = $props();
 
