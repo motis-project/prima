@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
+	define: { global: 'window' },
 	plugins: [sveltekit()],
 
 	test: {

@@ -19,12 +19,12 @@
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import ItinerarySummary from '../../(customer)/routing/ItinerarySummary.svelte';
 	import type { CalibrationItinerary } from '$lib/calibration';
-	import { filterTaxis } from '$lib/util/filterTaxis';
+	import { filterTaxis, type VisualizationPackage } from '$lib/util/filterTaxis';
 	import { page } from '$app/state';
 	import ConnectionDetail from '../../(customer)/routing/ConnectionDetail.svelte';
 	import { onClickStop, onClickTrip } from '$lib/util/onClick';
 	import StopTimes from '../../(customer)/routing/StopTimes.svelte';
-	import Plotly from 'plotly.js';
+	import * as Plot from '@observablehq/plot';
 
 	const { data } = $props();
 
@@ -36,10 +36,10 @@
 	let taxiSlope = $state(data.filterSettings?.taxiSlope ?? 2.0);
 	let calibrationSets = $state(data.calibrationSets);
 
-	let filterResults = new Array<[Array<CalibrationItinerary>, Array<number>, Array<number>]>();
+	let filterResults = new Array<{ itineraries: Array<CalibrationItinerary>; visualize?: VisualizationPackage }>();
 	$effect(() => {
 		filterResults = [];
-		for (const c of calibrationSets) {
+		calibrationSets.forEach((c, cI) => {
 			filterResults.push(
 				filterTaxis(
 					c.itineraries,
@@ -48,35 +48,39 @@
 					taxiPerMinute,
 					taxiDirectPenalty,
 					ptSlope,
-					taxiSlope
+					taxiSlope,
+					true
 				)
 			);
-			for (const it of c.itineraries) {
+			for (const it of c.itineraries) {				
 				if (it.keep || it.remove) {
 					const found =
 						filterResults
 							.at(-1)
-							?.at(0)
-							?.find((x) => x === it) !== undefined;
+							?.itineraries.find((x) => x === it) !== undefined;
 					it.fulfilled = (it.keep && found) || (it.remove && !found);
 				} else {
 					it.fulfilled = true;
 				}
+				
 			}
-		}
+			const plot = Plot.plot({style: "overflow: visible;", y:{grid: true}, marks: [Plot.ruleY([0]), Plot.barX([1,2,4,6,15])]})
+			const div = document.getElementById("vis" + cI);
+			div?.append(plot);
+		});
 	});
 </script>
 
 <Meta title={PUBLIC_PROVIDER} />
 
 <div>
-{#if page.state.showMap}
-	<PopupMap
-		itinerary={page.state.selectedItinerary}
-		areas={data.areas}
-		rideSharingBounds={data.rideSharingBounds}
-	/>
-{:else if page.state.selectedItinerary}
+	{#if page.state.showMap}
+		<PopupMap
+			itinerary={page.state.selectedItinerary}
+			areas={data.areas}
+			rideSharingBounds={data.rideSharingBounds}
+		/>
+	{:else if page.state.selectedItinerary}
 		<div class="flex items-center justify-between gap-4">
 			<Button variant="outline" size="icon" onclick={() => window.history.back()}>
 				<ChevronLeft />
@@ -91,18 +95,18 @@
 			</Button>
 		</div>
 		<Separator class="my-4" />
-		<ConnectionDetail itinerary={page.state.selectedItinerary} {onClickStop} {onClickTrip} />	
-{:else if page.state.stop}
-	<Button variant="outline" size="icon" onclick={() => window.history.back()}>
-		<ChevronLeft />
-	</Button>
-	<StopTimes
-		arriveBy={false}
-		time={page.state.stop.time}
-		stopId={page.state.stop.stopId}
-		{onClickTrip}
-	/>
-{/if}
+		<ConnectionDetail itinerary={page.state.selectedItinerary} {onClickStop} {onClickTrip} />
+	{:else if page.state.stop}
+		<Button variant="outline" size="icon" onclick={() => window.history.back()}>
+			<ChevronLeft />
+		</Button>
+		<StopTimes
+			arriveBy={false}
+			time={page.state.stop.time}
+			stopId={page.state.stop.stopId}
+			{onClickTrip}
+		/>
+	{/if}
 </div>
 
 <div class="contents" class:hidden={page.state.stop || page.state.selectedItinerary}>
@@ -137,7 +141,7 @@
 			</Button>
 		</form>
 
-		{#each calibrationSets as c}
+		{#each calibrationSets as c, cI}
 			<div class="flex h-[80vh] rounded-lg border-2 border-solid">
 				<div class="flex flex-col gap-2 p-1">
 					<Input class="font-bold" type="text" name="name" bind:value={c.name} />
@@ -146,7 +150,7 @@
 							<div class="flex flex-col p-1">
 								<button
 									onclick={() => {
-										pushState('', { selectedItinerary: $state.snapshot(it) } );
+										pushState('', { selectedItinerary: $state.snapshot(it) });
 									}}
 								>
 									<ItinerarySummary {it} />
@@ -206,8 +210,10 @@
 					</form>
 				</div>
 				<div class="flex grow flex-col gap-2 p-1">
-					<div class="flex grow flex-row items-center justify-center border-2 border-solid">
-						TODO Visualization
+					<div
+						id={'vis' + cI}
+						class="flex grow flex-row items-center justify-center border-2 border-solid"
+					>
 					</div>
 					<div class="flex flex-row justify-end">
 						<form

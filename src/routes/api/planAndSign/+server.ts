@@ -27,7 +27,7 @@ export const POST = async (event: RequestEvent) => {
 		return fail(500);
 	}
 
-	let [filteredItineraries, ptThreshold, taxiThreshold] = filterTaxis(
+	let filteredItineraries = filterTaxis(
 		response.itineraries,
 		filterSettings.perTransfer,
 		filterSettings.taxiBase,
@@ -35,7 +35,7 @@ export const POST = async (event: RequestEvent) => {
 		filterSettings.taxiDirectPenalty,
 		filterSettings.ptSlope,
 		filterSettings.taxiSlope
-	);
+	).itineraries;
 
 	const intvl_start = readTimeFromPageCursor(response.previousPageCursor);
 	const intvl_end = readTimeFromPageCursor(response.nextPageCursor);

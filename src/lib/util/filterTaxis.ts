@@ -2,6 +2,10 @@ import { type Itinerary } from '$lib/openapi';
 import { isTaxiLeg } from './booking/checkLegType';
 import { isDirectTaxi, publicTransitOnly, usesTaxi } from './itineraryHelpers';
 
+export type VisualizationPackage = {
+	thresholds: Array<{ time: Date; pt: number; taxi: number }>;
+};
+
 export function filterTaxis<T extends Itinerary>(
 	itineraries: Array<T>,
 	perTransfer: number,
@@ -9,10 +13,11 @@ export function filterTaxis<T extends Itinerary>(
 	taxiPerMinute: number,
 	taxiDirectPenalty: number,
 	ptSlope: number,
-	taxiSlope: number
-): [Array<T>, Array<number>, Array<number>] {
+	taxiSlope: number,
+	visualize = false
+): { itineraries: Array<T>; visualize?: VisualizationPackage } {
 	if (itineraries.length == 0) {
-		return [itineraries, [], []];
+		return { itineraries: itineraries };
 	}
 
 	const getCost = (i: T): number => {
@@ -29,8 +34,8 @@ export function filterTaxis<T extends Itinerary>(
 		);
 	};
 
-	const start = Math.floor(new Date(itineraries[0].startTime).getTime() / 60000);
-	const end = Math.ceil(new Date(itineraries[itineraries.length - 1].endTime).getTime() / 60000);
+	const start = getStart(itineraries);
+	const end = getEnd(itineraries);
 
 	const getCenter = (i: T): number => {
 		return Math.round((new Date(i.startTime).getTime() + (i.duration * 1000) / 2) / 60000) - start;
@@ -71,5 +76,45 @@ export function filterTaxis<T extends Itinerary>(
 			(getCost(i) <= ptThreshold[getCenter(i)] && getCost(i) <= taxiThreshold[getCenter(i)])
 	);
 
-	return [filteredItineraries, ptThreshold, taxiThreshold];
+	if (visualize) {
+		return {
+			itineraries: filteredItineraries,
+			visualize: getVisualizationPackage(itineraries, ptThreshold, taxiThreshold)
+		};
+	} else {
+		return { itineraries: filteredItineraries };
+	}
+}
+
+function getStart<T extends Itinerary>(itineraries: Array<T>): number {
+	return Math.floor(new Date(itineraries[0].startTime).getTime() / 60000);
+}
+
+function getEnd<T extends Itinerary>(itineraries: Array<T>): number {
+	return Math.ceil(new Date(itineraries[itineraries.length - 1].endTime).getTime() / 60000);
+}
+
+function getVisualizationPackage<T extends Itinerary>(
+	itineraries: Array<T>,
+	ptThreshold: Array<number>,
+	taxiTreshold: Array<number>
+): VisualizationPackage {
+	return { thresholds: getThresholds(itineraries, ptThreshold, taxiTreshold) };
+}
+
+function getThresholds<T extends Itinerary>(
+	itineraries: Array<T>,
+	ptThreshold: Array<number>,
+	taxiTreshold: Array<number>
+): Array<{ time: Date; pt: number; taxi: number }> {
+	const start = getStart(itineraries);
+	let thresholds = new Array<{ time: Date; pt: number; taxi: number }>();
+	for (let i = 0; i < ptThreshold.length && i < taxiTreshold.length; ++i) {
+		thresholds.push({
+			time: new Date((start + i) * 60000),
+			pt: ptThreshold[i],
+			taxi: taxiTreshold[i]
+		});
+	}
+	return thresholds;
 }
