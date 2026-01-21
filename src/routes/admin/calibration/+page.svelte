@@ -25,6 +25,7 @@
 	import { onClickStop, onClickTrip } from '$lib/util/onClick';
 	import StopTimes from '../../(customer)/routing/StopTimes.svelte';
 	import * as Plot from '@observablehq/plot';
+	import { continents } from 'countries-list';
 
 	const { data } = $props();
 
@@ -36,7 +37,10 @@
 	let taxiSlope = $state(data.filterSettings?.taxiSlope ?? 2.0);
 	let calibrationSets = $state(data.calibrationSets);
 
-	let filterResults = new Array<{ itineraries: Array<CalibrationItinerary>; visualize?: VisualizationPackage }>();
+	let filterResults = new Array<{
+		itineraries: Array<CalibrationItinerary>;
+		visualize?: VisualizationPackage;
+	}>();
 	$effect(() => {
 		filterResults = [];
 		calibrationSets.forEach((c, cI) => {
@@ -52,21 +56,34 @@
 					true
 				)
 			);
-			for (const it of c.itineraries) {				
+			const results = filterResults.at(-1);
+
+			for (const it of c.itineraries) {
 				if (it.keep || it.remove) {
-					const found =
-						filterResults
-							.at(-1)
-							?.itineraries.find((x) => x === it) !== undefined;
+					const found = results?.itineraries.find((x) => x === it) !== undefined;
 					it.fulfilled = (it.keep && found) || (it.remove && !found);
 				} else {
 					it.fulfilled = true;
 				}
-				
 			}
-			const plot = Plot.plot({style: "overflow: visible;", y:{grid: true}, marks: [Plot.ruleY([0]), Plot.barX([1,2,4,6,15])]})
-			const div = document.getElementById("vis" + cI);
-			div?.append(plot);
+
+			if (results === undefined || results.visualize === undefined) {
+				return;
+			}
+
+			const div = document.getElementById('vis' + cI);
+			const plot = Plot.plot({
+				width: div?.clientWidth,
+				height: div?.clientHeight,
+				style: 'overflow: visible;',
+				y: { grid: true },
+				marks: [
+					Plot.ruleY([0]),
+					Plot.lineY(results.visualize.thresholds, { x: 'time', y: 'pt',  tip: true }),
+					Plot.lineY(results.visualize.thresholds, { x: 'time', y: 'taxi',  tip: true })
+				]
+			});
+			div?.replaceChildren(plot);
 		});
 	});
 </script>
@@ -213,8 +230,7 @@
 					<div
 						id={'vis' + cI}
 						class="flex grow flex-row items-center justify-center border-2 border-solid"
-					>
-					</div>
+					></div>
 					<div class="flex flex-row justify-end">
 						<form
 							method="post"
