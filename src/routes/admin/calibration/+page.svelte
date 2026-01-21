@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import { enhance } from '$app/forms';
-	import { goto, invalidateAll, pushState } from '$app/navigation';
+	import { goto, pushState } from '$app/navigation';
 	import { t } from '$lib/i18n/translation';
 	import { Input } from '$lib/shadcn/input';
 	import Label from '$lib/shadcn/label/label.svelte';
@@ -25,7 +25,6 @@
 	import { onClickStop, onClickTrip } from '$lib/util/onClick';
 	import StopTimes from '../../(customer)/routing/StopTimes.svelte';
 	import * as Plot from '@observablehq/plot';
-	import { continents } from 'countries-list';
 
 	const { data } = $props();
 
