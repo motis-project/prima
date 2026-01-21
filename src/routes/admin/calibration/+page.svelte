@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { PUBLIC_PROVIDER } from '$env/static/public';
 	import { enhance } from '$app/forms';
-	import { goto, pushState } from '$app/navigation';
+	import { goto, invalidateAll, pushState } from '$app/navigation';
 	import { t } from '$lib/i18n/translation';
 	import { Input } from '$lib/shadcn/input';
 	import Label from '$lib/shadcn/label/label.svelte';
@@ -79,8 +79,8 @@
 				y: { grid: true },
 				marks: [
 					Plot.ruleY([0]),
-					Plot.lineY(results.visualize.thresholds, { x: 'time', y: 'pt',  tip: true }),
-					Plot.lineY(results.visualize.thresholds, { x: 'time', y: 'taxi',  tip: true })
+					Plot.lineY(results.visualize.thresholds, { x: 'time', y: 'pt', tip: true }),
+					Plot.lineY(results.visualize.thresholds, { x: 'time', y: 'taxi', tip: true })
 				]
 			});
 			div?.replaceChildren(plot);
