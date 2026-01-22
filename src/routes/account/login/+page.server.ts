@@ -62,6 +62,10 @@ export const actions: Actions = {
 		const session = await createSession(sessionToken, user.id);
 		setSessionTokenCookie(event, sessionToken, new Date(session.expiresAt));
 
-		return redirect(302, '/account');
+		if (user.isTaxiOwner) {
+			return redirect(303, '/taxi/availability');
+		} else {
+			return redirect(303, '/routing');
+		}
 	}
 };
