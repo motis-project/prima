@@ -276,6 +276,9 @@ const translations: Translations = {
 	fare: 'Fahrpreis',
 	bookingDeadline: 'Buchungsschluss',
 	bookingDeadlineContent: 'min. 1 Stunde im Voraus',
+	cancellation: 'Stornierung',
+	cancellationAppeal:
+		'Bitte stornieren Sie so früh wie möglich, um den Taxiunternehmen die Planung zu erleichtern.',
 	logo: 'Das PriMa+ÖV Logo. Ikonographische Darstellung eines Autos, Busses, Zuges und Taxis.',
 	toConnectionSearch: 'Zur Verbindungssuche',
 	luggageExplanation:
@@ -323,7 +326,7 @@ const translations: Translations = {
 		cancelHeadline: 'Möchten Sie wirklich diese Fahrt stornieren?',
 		noCancel: 'Nein, Fahrt nicht stornieren.',
 		cancelDescription:
-			'Die Stornierung der Fahrt kann nicht rückgängig gemacht werden. Eine Stornierung weniger als 24 Stunden vor der Fahrt ist mit Kosten verbunden.',
+			'Die Stornierung der Fahrt kann nicht rückgängig gemacht werden. Falls sich das Taxi schon auf dem Weg befindet, wird Ihnen die Anfahrt des Taxis voll in Rechnung gestellt.',
 		pin: 'PIN:',
 		pinExplainer:
 			'Zur Weitergabe an den Fahrgast. Der Fahrgast muss die PIN beim Einstieg den Taxifahrer:innen mitteilen.',

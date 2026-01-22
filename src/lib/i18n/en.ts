@@ -266,6 +266,9 @@ const translations: Translations = {
 	fare: 'Fare',
 	bookingDeadline: 'Booking deadline',
 	bookingDeadlineContent: 'at least 1 hour in advance.',
+	cancellation: 'Cancellation',
+	cancellationAppeal:
+		'Please cancel as early as possible to make planning easier for taxi companies.',
 	logo: 'The PriMa+ÖV logo. Iconographic representation of a car, bus, train and cab.',
 	toConnectionSearch: 'Go to connection search',
 	luggageExplanation:
@@ -311,7 +314,7 @@ const translations: Translations = {
 		ticket: 'Ticket',
 		cancelHeadline: 'Do you really want to cancel this trip?',
 		cancelDescription:
-			'Cancellation cannot be undone. Cancellation less than 24 hours before the trip will incur costs.',
+			'Cancellation cannot be undone. If the cab is already on its way, you will be charged in full for the cab approach.',
 		cancelTrip: 'Cancel Trip',
 		noCancel: 'No, I do not want to cancel.',
 		pin: 'PIN:',
