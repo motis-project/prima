@@ -280,6 +280,9 @@ const translations: Translations = {
 	toConnectionSearch: 'Zur Verbindungssuche',
 	luggageExplanation:
 		'Ungefähre Anzahl von transportierbaren Gepäckstücken in Handgepäckgröße. Ein großer Koffer entspricht etwa drei Handgepäckstücken.',
+	noAvailabilityTitle: 'Zu weit in der Zukunft',
+	noAvalablilityDescription:
+		'Für die angefragte Zeit wurden noch keine Taxis als verfügbar gemeldet. Versuchen Sie es später wieder.',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
