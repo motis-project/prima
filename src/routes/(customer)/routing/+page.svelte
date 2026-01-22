@@ -38,13 +38,16 @@
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { HelpCircleIcon, LocateFixed, MapIcon } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
-	import { BOOKING_MAX_PASSENGERS, MAX_MATCHING_DISTANCE } from '$lib/constants';
+	import { BOOKING_MAX_PASSENGERS, MAX_MATCHING_DISTANCE, MIN_PREP_BOOKING } from '$lib/constants';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { planAndSign, type SignedPlanResponse } from '$lib/planAndSign';
 	import logo from '$lib/assets/logo-alpha.png';
 	import Footer from '$lib/ui/Footer.svelte';
 	import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
+	import { HOUR } from '$lib/util/time';
+	import { Alert, AlertDescription, AlertTitle } from '$lib/shadcn/alert';
+	import AlertCircleIcon from 'lucide-svelte/icons/circle-alert';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -622,6 +625,17 @@
 					</Dialog.Content>
 				</Dialog.Root>
 			</div>
+
+			{#if data.lastAvailability != undefined && time.valueOf() > data.lastAvailability.endTime + (timeType === 'arrival' ? 12 * HOUR : -MIN_PREP_BOOKING)}
+				<div class="flex grow">
+					<Alert variant="warning">
+						<AlertCircleIcon />
+						<AlertTitle class="ml-2">{t.noAvailabilityTitle}</AlertTitle>
+						<AlertDescription class="ml-2">{t.noAvalablilityDescription}</AlertDescription>
+					</Alert>
+				</div>
+			{/if}
+
 			<div class="flex grow flex-col gap-4">
 				<ItineraryList
 					{baseQuery}
