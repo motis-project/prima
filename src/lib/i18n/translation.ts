@@ -240,9 +240,13 @@ export type Translations = {
 	fare: string;
 	bookingDeadline: string;
 	bookingDeadlineContent: string;
+	cancellation: string;
+	cancellationAppeal: string;
 	logo: string;
 	toConnectionSearch: string;
 	luggageExplanation: string;
+	noAvailabilityTitle: string;
+	noAvalablilityDescription: string;
 
 	booking: {
 		bookHere: string;
