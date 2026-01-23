@@ -9,6 +9,7 @@
 	import { odmPrice, getEuroString } from '$lib/util/odmPrice';
 	import { planAndSign, type SignedItinerary, type SignedPlanResponse } from '$lib/planAndSign';
 	import { isOdmLeg, isRideShareLeg, isTaxiLeg } from '$lib/util/booking/checkLegType';
+	import Time from './Time.svelte';
 
 	let {
 		routingResponses,
@@ -18,7 +19,10 @@
 		updateStartDest,
 		passengers,
 		freePassengers,
-		reducedPassengers
+		reducedPassengers,
+		noItinerariesFound,
+		searchIntervalStart,
+		searchIntervalEnd
 	}: {
 		routingResponses: Array<Promise<SignedPlanResponse | undefined>>;
 		baseResponse: Promise<SignedPlanResponse | undefined> | undefined;
@@ -28,17 +32,10 @@
 		passengers: number;
 		freePassengers: number;
 		reducedPassengers: number;
+		noItinerariesFound: Promise<boolean>;
+		searchIntervalStart: Promise<string>;
+		searchIntervalEnd: Promise<string>;
 	} = $props();
-
-	let noItinerariesFound = $derived.by(async () => {
-		const rs = await Promise.all(routingResponses);
-		for (const r of rs) {
-			if (r !== undefined && r.itineraries.length !== 0) {
-				return false;
-			}
-		}
-		return true;
-	});
 
 	const localDate = (timestamp: string) => {
 		const d = new Date(timestamp);
@@ -125,9 +122,28 @@
 							{/each}
 
 							{#if rI === routingResponses.length - 1 && baseQuery}
-								{#await noItinerariesFound then n}
+								{#await Promise.all( [noItinerariesFound, searchIntervalStart, searchIntervalEnd] ) then [n, s, e]}
 									{#if n}
-										<div class="justify-self-center">{t.noItinerariesFound}</div>
+										<div class="flex flex-col items-center gap-4 p-4">
+											<span class="text-left">
+												<Time
+													class="inline"
+													isRealtime={false}
+													timestamp={s}
+													scheduledTimestamp={s}
+													variant="schedule"
+													queriedTime={baseQuery?.time}
+												/> - <Time
+													class="inline"
+													isRealtime={false}
+													timestamp={e}
+													scheduledTimestamp={e}
+													variant="schedule"
+													queriedTime={baseQuery?.time}
+												/>
+											</span>
+											<p>{t.noItinerariesFound}</p>
+										</div>
 									{/if}
 								{/await}
 								<div class="flex w-full items-center justify-between space-x-4">

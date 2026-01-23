@@ -14,3 +14,15 @@ export function secondToMilli(second: number): number {
 export function roundToUnit(n: number, unit: number, roundFn: (n: number) => number) {
 	return roundFn(n / unit) * unit;
 }
+
+export function pageCursorToDateString(s: string | undefined): string {
+	let ret = new Date(0).toUTCString();
+	if (s) {
+		try {
+			return new Date(parseInt(s.split('|')[1]) * 1000).toUTCString();
+		} catch {
+			console.log('Error reading time from page cursor: ', s);
+		}
+	}
+	return ret;
+}
