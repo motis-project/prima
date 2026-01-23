@@ -72,7 +72,7 @@ fun Nav(intent: Intent?, viewModel: NavViewModel = hiltViewModel()) {
             else if (selectedVehicle.id == 0) {
                 "vehicles"
             } else {
-                "availability"//"tours"
+                "itinerary"//"tours"
             }
         }
 
@@ -117,6 +117,10 @@ fun Nav(intent: Intent?, viewModel: NavViewModel = hiltViewModel()) {
 
             composable(route = "availability") {
                 Availability(navController)
+            }
+
+            composable(route = "itinerary") {
+                ItineraryScreen(navController)
             }
         }
     }
