@@ -73,8 +73,6 @@
 	{:then r}
 		{#if r == undefined}
 			Error
-			<!-- {:else if r.itineraries.length === 0 && r.direct.length === 0}
-			<div>{t.noItinerariesFound}</div> -->
 		{:else}
 			{#if r.direct.length !== 0}
 				<div class="my-4 flex flex-wrap gap-x-3 gap-y-3">
