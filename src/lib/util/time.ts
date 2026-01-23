@@ -16,7 +16,6 @@ export function roundToUnit(n: number, unit: number, roundFn: (n: number) => num
 }
 
 export function pageCursorToDateString(s: string | undefined): string {
-	let ret = new Date(0).toUTCString();
 	if (s) {
 		try {
 			return new Date(parseInt(s.split('|')[1]) * 1000).toUTCString();
@@ -24,5 +23,5 @@ export function pageCursorToDateString(s: string | undefined): string {
 			console.log('Error reading time from page cursor: ', s);
 		}
 	}
-	return ret;
+	return new Date(0).toUTCString();
 }
