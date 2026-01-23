@@ -32,6 +32,12 @@
 
 	let noItinerariesFound = $derived.by(async () => {
 		const rs = await Promise.all(routingResponses);
+		for (const r of rs) {
+			if (r !== undefined && r.itineraries.length !== 0) {
+				return false;
+			}
+		}
+		return true;
 	});
 
 	const localDate = (timestamp: string) => {
@@ -58,7 +64,7 @@
 	{:then r}
 		{#if r == undefined}
 			Error
-		<!-- {:else if r.itineraries.length === 0 && r.direct.length === 0}
+			<!-- {:else if r.itineraries.length === 0 && r.direct.length === 0}
 			<div>{t.noItinerariesFound}</div> -->
 		{:else}
 			{#if r.direct.length !== 0}
@@ -119,6 +125,11 @@
 							{/each}
 
 							{#if rI === routingResponses.length - 1 && baseQuery}
+								{#await noItinerariesFound then n}
+									{#if n}
+										<div class="justify-self-center">{t.noItinerariesFound}</div>
+									{/if}
+								{/await}
 								<div class="flex w-full items-center justify-between space-x-4">
 									<div class="h-0 w-full border-t"></div>
 									<Button
