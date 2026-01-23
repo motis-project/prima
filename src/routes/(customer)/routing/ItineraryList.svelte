@@ -10,6 +10,7 @@
 	import { planAndSign, type SignedItinerary, type SignedPlanResponse } from '$lib/planAndSign';
 	import { isOdmLeg, isRideShareLeg, isTaxiLeg } from '$lib/util/booking/checkLegType';
 	import Time from './Time.svelte';
+	import { pageCursorToDateString } from '$lib/util/time';
 
 	let {
 		routingResponses,
@@ -19,10 +20,7 @@
 		updateStartDest,
 		passengers,
 		freePassengers,
-		reducedPassengers,
-		noItinerariesFound,
-		searchIntervalStart,
-		searchIntervalEnd
+		reducedPassengers
 	}: {
 		routingResponses: Array<Promise<SignedPlanResponse | undefined>>;
 		baseResponse: Promise<SignedPlanResponse | undefined> | undefined;
@@ -32,15 +30,29 @@
 		passengers: number;
 		freePassengers: number;
 		reducedPassengers: number;
-		noItinerariesFound: Promise<boolean>;
-		searchIntervalStart: Promise<string>;
-		searchIntervalEnd: Promise<string>;
 	} = $props();
 
 	const localDate = (timestamp: string) => {
 		const d = new Date(timestamp);
 		return d.toLocaleString(language, { weekday: 'long' }) + ', ' + d.toLocaleDateString();
 	};
+
+		let noItinerariesFound = $derived.by(async () => {
+		const rs = await Promise.all(routingResponses);
+		return rs.every((r) => {
+			return r === undefined || r.itineraries.length === 0;
+		});
+	});
+
+	let searchIntervalStart = $derived.by(async () => {
+		const rs = await Promise.all(routingResponses);
+		return pageCursorToDateString(rs.at(0)?.previousPageCursor);
+	});
+
+	let searchIntervalEnd = $derived.by(async () => {
+		const rs = await Promise.all(routingResponses);
+		return pageCursorToDateString(rs.at(-1)?.nextPageCursor);
+	});
 </script>
 
 {#snippet odmInfo(it: SignedItinerary)}

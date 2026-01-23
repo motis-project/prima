@@ -46,7 +46,7 @@
 	import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
 	import Info from 'lucide-svelte/icons/info';
-	import { HOUR, pageCursorToDateString } from '$lib/util/time';
+	import { HOUR } from '$lib/util/time';
 	import { Alert, AlertDescription, AlertTitle } from '$lib/shadcn/alert';
 	import AlertCircleIcon from 'lucide-svelte/icons/circle-alert';
 
@@ -222,23 +222,6 @@
 	};
 
 	let loading = $state(false);
-
-	let noItinerariesFound = $derived.by(async () => {
-		const rs = await Promise.all(routingResponses);
-		return rs.every((r) => {
-			return r === undefined || r.itineraries.length === 0;
-		});
-	});
-
-	let searchIntervalStart = $derived.by(async () => {
-		const rs = await Promise.all(routingResponses);
-		return pageCursorToDateString(rs.at(0)?.previousPageCursor);
-	});
-
-	let searchIntervalEnd = $derived.by(async () => {
-		const rs = await Promise.all(routingResponses);
-		return pageCursorToDateString(rs.at(-1)?.nextPageCursor);
-	});
 </script>
 
 <Meta title={PUBLIC_PROVIDER} />
@@ -666,9 +649,6 @@
 						goto('?detail', { state: { selectedItinerary } });
 					}}
 					updateStartDest={updateStartDest(from, to)}
-					noItinerariesFound={noItinerariesFound}
-					searchIntervalStart={searchIntervalStart}
-					searchIntervalEnd={searchIntervalEnd}
 				/>
 			</div>
 
