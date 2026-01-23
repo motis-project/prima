@@ -37,7 +37,7 @@
 		return d.toLocaleString(language, { weekday: 'long' }) + ', ' + d.toLocaleDateString();
 	};
 
-		let noItinerariesFound = $derived.by(async () => {
+	let noItinerariesFound = $derived.by(async () => {
 		const rs = await Promise.all(routingResponses);
 		return rs.every((r) => {
 			return r === undefined || r.itineraries.length === 0;
