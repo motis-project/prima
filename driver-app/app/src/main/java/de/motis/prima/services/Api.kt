@@ -63,6 +63,11 @@ interface ApiService {
         @Query("from") from: String,
         @Query("to") to: String
     ): Response<Void>
+
+    @GET("api/driver/journey")
+    suspend fun getItinerary(
+        @Query("requestId") requestId: Int
+    ): Itinerary
 }
 
 data class AvailabilityRequest(
@@ -129,4 +134,81 @@ data class Tour(
     val vehicleId: Int,
     val licensePlate: String,
     val events: List<Event>
+)
+
+data class Itinerary(
+    val duration: Long,
+    val startTime: String,
+    val endTime: String,
+    val transfers: Int,
+    val legs: List<Leg>,
+    //val fareTransfers: List<FareTransfer>
+)
+
+data class Leg(
+    val mode: String,
+    val from: Place,
+    val to: Place,
+    val duration: Long,
+    val startTime: String,
+    val endTime: String,
+    val scheduledStartTime: String?,
+    val scheduledEndTime: String?,
+    val realTime: Boolean,
+    val scheduled: Boolean,
+    val distance: Double,
+    val interlineWithPreviousLeg: Boolean,
+    val headsign: String?,
+    val tripTo: Place?,
+    val routeId: String?,
+    val directionId: String?,
+    val routeColor: String?,
+    val routeTextColor: String?,
+    val routeType: Int?,
+    val agencyName: String?,
+    val agencyUrl: String?,
+    val agencyId: String?,
+    val tripId: String?,
+    val routeShortName: String?,
+    val routeLongName: String?,
+    val tripShortName: String?,
+    val displayName: String?,
+    val cancelled: Boolean,
+    //val source: String?,
+    val intermediateStops: List<Place>,
+    //val legGeometry: Polyline?,
+    //val steps: List<Step>,
+    //val rental: Rental?,
+    //val fareTransferIndex: Int?,
+    //val effectiveFareLegIndex: Int?,
+    //val alerts: List<Alert>,
+    //val loopedCalendarSince: String?
+)
+
+data class Place(
+    val name: String?,
+    val stopId: String?,
+    val parentId: String?,
+    val importance: Double?,
+    val lat: Double,
+    val lon: Double,
+    val level: Int?,
+    val tz: String?,
+    val arrival: String?,
+    val departure: String?,
+    val scheduledArrival: String?,
+    val scheduledDeparture: String?,
+    val scheduledTrack: String?,
+    val track: String?,
+    val description: String?,
+    //val vertexType: VertexType?,
+    //val pickupType: PickupDropoffType?,
+    //val dropoffType: PickupDropoffType?,
+    val cancelled: Boolean,
+    //val alerts: List<Alert>,
+    //val flex: String?,
+    //val flexId: String?,
+    //val flexStartPickupDropOffWindow: String?,
+    //val flexEndPickupDropOffWindow: String?,
+    //val modes: List<Mode>
 )

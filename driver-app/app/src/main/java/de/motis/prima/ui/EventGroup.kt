@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.annotation.ColorRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +37,7 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -63,7 +66,12 @@ import de.motis.prima.data.EventObject
 import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.data.Ticket
 import de.motis.prima.data.ValidationStatus
+import de.motis.prima.services.Itinerary
 import de.motis.prima.ui.theme.LocalExtendedColors
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
 
@@ -72,6 +80,27 @@ class EventGroupViewModel @Inject constructor(
     private val repository: DataRepository
 ) : ViewModel() {
     val storedTickets = repository.storedTickets
+
+    private val _itinerary = MutableStateFlow<Itinerary?>(null)
+    val itinerary: StateFlow<Itinerary?> = _itinerary.asStateFlow()
+
+    fun onScreenExit() {
+        repository.updateRequestIDs.clear()
+    }
+
+    private fun startUpdates() {
+        viewModelScope.launch {
+            repository
+                .itineraryUpdates(intervalMs = 5_000)
+                .collect { itinerary ->
+                    _itinerary.value = itinerary
+                }
+        }
+    }
+
+    init {
+        startUpdates()
+    }
 
     fun getValidCount(eventGroupId: String): Int {
         var tickets = repository.getTicketsForEventGroup(eventGroupId)
@@ -84,6 +113,10 @@ class EventGroupViewModel @Inject constructor(
 
     fun updateTicket(requestId: Int, ticketHash: String) {
         repository.updateTicketStore(Ticket(requestId, ticketHash, "", ValidationStatus.DONE))
+    }
+
+    fun setItinerary(requestId: Int) {
+        repository.updateRequestIDs.add(requestId)
     }
 }
 
@@ -135,6 +168,19 @@ fun EventGroup(
     val validCount = viewModel.getValidCount(eventGroup.id)
     val nPickUp = eventGroup.events.filter { e -> e.isPickup && e.cancelled.not() }.size
     val hasUncheckedTicket = validCount < nPickUp
+
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.onScreenExit()
+        }
+    }
+
+
+    val itinerary by viewModel.itinerary.collectAsState()
+
+    itinerary?.let {
+        Log.d("test", it.toString())
+    }
 
     Column(
         modifier = Modifier
@@ -306,7 +352,7 @@ fun ShowCustomerDetails(
     val storedTickets = viewModel.storedTickets.collectAsState()
     val fareToPay: Double = (event.ticketPrice / 100).toDouble()
 
-    val publicTransport = event.isPickup.not() // TODO
+    val publicTransport = event.isPickup // TODO
     val ptScheduledTime = "20:35"
     val ptDelayed = false
     val ptStopCancelled = false
@@ -364,6 +410,7 @@ fun ShowCustomerDetails(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (publicTransport) {
+                    viewModel.setItinerary(event.requestId)
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp)),
@@ -372,6 +419,7 @@ fun ShowCustomerDetails(
                         Button(
                             onClick = {
                                 // open PT detail view
+                                //viewModel.(event.requestId)
                                 navController.navigate("itinerary")
                             },
                             colors = ButtonColors(LocalExtendedColors.current.secondaryButton, LocalExtendedColors.current.textColor, Color.White, Color.White),

@@ -1,6 +1,7 @@
 package de.motis.prima.ui
 
 import android.content.Intent
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -72,7 +73,7 @@ fun Nav(intent: Intent?, viewModel: NavViewModel = hiltViewModel()) {
             else if (selectedVehicle.id == 0) {
                 "vehicles"
             } else {
-                "itinerary"//"tours"
+                "tours"
             }
         }
 

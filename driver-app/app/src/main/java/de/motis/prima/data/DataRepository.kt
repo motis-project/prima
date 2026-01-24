@@ -5,9 +5,9 @@ import android.content.res.Configuration
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
 import de.motis.prima.services.ApiService
+import de.motis.prima.services.Itinerary
 import de.motis.prima.services.Tour
 import de.motis.prima.services.Vehicle
-import de.motis.prima.ui.TimeBlock
 import io.realm.kotlin.query.RealmResults
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -70,6 +70,10 @@ class DataRepository @Inject constructor(
 
     private val _markedTour = MutableStateFlow(-1)
     val markedTour: StateFlow<Int> = _markedTour.asStateFlow()
+
+    private val _itinerary = MutableStateFlow<Itinerary?>(null)
+    val itinerary: StateFlow<Itinerary?> = _itinerary.asStateFlow()
+    var updateRequestIDs = mutableSetOf<Int>()
 
     private val _eventObjectGroups = MutableStateFlow<List<EventObjectGroup>>(emptyList())
     val eventObjectGroups: StateFlow<List<EventObjectGroup>> = _eventObjectGroups.asStateFlow()
@@ -471,5 +475,18 @@ class DataRepository @Inject constructor(
 
     fun removeMarker() {
         _markedTour.value = -1
+    }
+
+    fun itineraryUpdates(
+        intervalMs: Long
+    ): Flow<Itinerary> = flow {
+        Log.d("test", "start fetching: ${updateRequestIDs.size}")
+        while (updateRequestIDs.isEmpty().not()) {
+            for (id in updateRequestIDs) {
+                //emit(apiService.getItinerary(id))
+                Log.d("test", "update: $id")
+            }
+            delay(intervalMs)
+        }
     }
 }
