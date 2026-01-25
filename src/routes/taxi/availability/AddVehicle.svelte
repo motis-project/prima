@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Plus } from 'lucide-svelte';
 	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
-	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import { Input } from '$lib/shadcn/input';
 	import Label from '$lib/shadcn/label/label.svelte';
 	import * as Popover from '$lib/shadcn/popover';

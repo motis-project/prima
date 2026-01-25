@@ -228,7 +228,7 @@ const translations: Translations = {
 	moped: 'Moped',
 	odm: 'ÖPNV-Taxi - Buchung erforderlich!',
 	rideSharing: 'Mitfahrangebot',
-	rideSharingBookingRequired: 'Mitfahrangebot - Vereinbarung erforderlich!',
+	rideSharingBookingRequired: 'privates Mitfahrangebot - Vereinbarung erforderlich!',
 	rideSharingInfo:
 		'Es handelt sich um private Mitfahrangebote. Wenn Sie sich für eine Verbindung mit privater Mitnahme interessieren, können Sie dem Anbieter eine Anfrage senden, um die Details zu vereinbaren. Registrieren Sie sich, um Mitfahrangebote zu erstellen und Anfragen zu senden.',
 	from: 'Von',
@@ -362,7 +362,7 @@ const translations: Translations = {
 		negotiatePrivacy:
 			'Die folgenden Daten werden beim Senden der Anfrage mit der Person, die diese Mitfahrgelegenheit anbietet, geteilt:',
 		negotiateExplanation:
-			'Sie müssen den Preis sowie genaue Abfahrtszeit und -ort mit der anbietenden Person vereinbaren.',
+			'Es handelt sich um eine private Mitfahrgelegenheit. Sie müssen den Preis sowie genaue Abfahrtszeit und -ort mit der anbietenden Person vereinbaren.',
 		startAndEnd: 'Start und Ziel der Fahrt',
 		profile: 'Ihr Profil',
 		email: 'Ihre E-Mail',

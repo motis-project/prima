@@ -219,7 +219,7 @@ const translations: Translations = {
 	moped: 'Moped',
 	odm: 'Public Transport Taxi, booking required!',
 	rideSharing: 'Ride sharing offer',
-	rideSharingBookingRequired: 'Ride sharing offer, negotiation required!',
+	rideSharingBookingRequired: 'private ride sharing offer, negotiation required!',
 	rideSharingInfo:
 		'These are private ride-sharing offers. If you are interested in a private ride-sharing connection, you can send a request to the provider to arrange the details. Register to create ride-sharing offers and send requests.',
 	from: 'From',
@@ -352,7 +352,7 @@ const translations: Translations = {
 		negotiatePrivacy:
 			'The following data will be shared with the person offering the ride when sending the negotiation request:',
 		negotiateExplanation:
-			'You need to negotiate the price and exact pickup location and time with the person offering this ride.',
+			'This is a private ride offer. You need to negotiate the price and exact pickup location and time with the person offering this ride.',
 		startAndEnd: 'Start and destination of the journey',
 		profile: 'Your profile',
 		email: 'Your email',
