@@ -41,7 +41,7 @@ export const actions: Actions = {
 		const luggage = readInt(formData.get('luggage'));
 		const passengers = readInt(formData.get('passengers'));
 
-		if (passengers !== 3 && passengers !== 5 && passengers !== 7) {
+		if (passengers < 1 || passengers > 8) {
 			return fail(400, { msg: msg('invalidSeats') });
 		}
 
@@ -90,7 +90,7 @@ export const actions: Actions = {
 		const passengers = readInt(formData.get('passengers'));
 		const id = readInt(formData.get('id'));
 
-		if (passengers !== 3 && passengers !== 5 && passengers !== 7) {
+		if (passengers < 1 || passengers > 8) {
 			return fail(400, { msg: msg('invalidSeats') });
 		}
 
