@@ -64,6 +64,9 @@ export interface Database {
 		directDuration: number | null;
 		cancelled: boolean;
 		message: string | null;
+		approachAndReturnM: number | null;
+		fullyPayedM: number | null;
+		occupiedM: number | null;
 	};
 	availability: {
 		id: Generated<number>;
@@ -137,6 +140,9 @@ export interface Database {
 		communicatedEnd: number;
 		earliestStart: number;
 		latestEnd: number;
+		approachAndReturnM: number | null;
+		fullyPayedM: number | null;
+		occupiedM: number | null;
 	};
 	rideShareVehicle: {
 		id: Generated<number>;
