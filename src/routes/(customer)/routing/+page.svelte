@@ -142,6 +142,7 @@
 					preTransitModes: ['WALK', 'ODM', 'RIDE_SHARING'],
 					postTransitModes: ['WALK', 'ODM', 'RIDE_SHARING'],
 					directModes: ['WALK', 'ODM', 'RIDE_SHARING'],
+					pedestrianProfile: wheelchair ? 'WHEELCHAIR' : 'FOOT',
 					luggage: luggageToInt(luggage),
 					fastestDirectFactor: 1.6,
 					maxMatchingDistance: MAX_MATCHING_DISTANCE,
