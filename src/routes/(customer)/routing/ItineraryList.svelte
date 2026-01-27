@@ -9,6 +9,8 @@
 	import { odmPrice, getEuroString } from '$lib/util/odmPrice';
 	import { planAndSign, type SignedItinerary, type SignedPlanResponse } from '$lib/planAndSign';
 	import { isOdmLeg, isRideShareLeg, isTaxiLeg } from '$lib/util/booking/checkLegType';
+	import Time from './Time.svelte';
+	import { pageCursorToDateString } from '$lib/util/time';
 
 	let {
 		routingResponses,
@@ -34,6 +36,23 @@
 		const d = new Date(timestamp);
 		return d.toLocaleString(language, { weekday: 'long' }) + ', ' + d.toLocaleDateString();
 	};
+
+	let noItinerariesFound = $derived.by(async () => {
+		const rs = await Promise.all(routingResponses);
+		return rs.every((r) => {
+			return r === undefined || r.itineraries.length === 0;
+		});
+	});
+
+	let searchIntervalStart = $derived.by(async () => {
+		const rs = await Promise.all(routingResponses);
+		return pageCursorToDateString(rs.at(0)?.previousPageCursor);
+	});
+
+	let searchIntervalEnd = $derived.by(async () => {
+		const rs = await Promise.all(routingResponses);
+		return pageCursorToDateString(rs.at(-1)?.nextPageCursor);
+	});
 </script>
 
 {#snippet odmInfo(it: SignedItinerary)}
@@ -54,8 +73,6 @@
 	{:then r}
 		{#if r == undefined}
 			Error
-		{:else if r.itineraries.length === 0 && r.direct.length === 0}
-			<div>{t.noItinerariesFound}</div>
 		{:else}
 			{#if r.direct.length !== 0}
 				<div class="my-4 flex flex-wrap gap-x-3 gap-y-3">
@@ -69,81 +86,103 @@
 					{/each}
 				</div>
 			{/if}
-			{#if r.itineraries.length !== 0}
-				<div class="flex flex-col gap-4">
-					{#each routingResponses as r, rI}
-						{#await r}
-							<div class="flex w-full items-center justify-center">
-								<LoaderCircle class="m-20 h-12 w-12 animate-spin" />
-							</div>
-						{:then r}
-							{#if r}
-								{#if rI === 0 && baseQuery}
-									<div class="flex w-full items-center justify-between space-x-4">
-										<div class="h-0 w-full border-t"></div>
-										<Button
-											class="h-8"
-											variant="outline"
-											onclick={() => {
-												routingResponses.splice(
-													0,
-													0,
-													planAndSign({
-														...baseQuery,
-														pageCursor: r.previousPageCursor
-													}).then(updateStartDest)
-												);
-											}}
-										>
-											{t.earlier}
-										</Button>
-										<div class="h-0 w-full border-t"></div>
+			<div class="flex flex-col gap-4">
+				{#each routingResponses as r, rI}
+					{#await r}
+						<div class="flex w-full items-center justify-center">
+							<LoaderCircle class="m-20 h-12 w-12 animate-spin" />
+						</div>
+					{:then r}
+						{#if r}
+							{#if rI === 0 && baseQuery}
+								<div class="flex w-full items-center justify-between space-x-4">
+									<div class="h-0 w-full border-t"></div>
+									<Button
+										class="h-8"
+										variant="outline"
+										onclick={() => {
+											routingResponses.splice(
+												0,
+												0,
+												planAndSign({
+													...baseQuery,
+													pageCursor: r.previousPageCursor
+												}).then(updateStartDest)
+											);
+										}}
+									>
+										{t.earlier}
+									</Button>
+									<div class="h-0 w-full border-t"></div>
+								</div>
+							{/if}
+
+							{#each r.itineraries as it, index}
+								{#if index > 0 && localDate(r.itineraries[index - 1].startTime) != localDate(it.startTime)}
+									<div class="my-5 flex w-full items-center justify-between space-x-1">
+										<div class="h-0 shrink grow border-t"></div>
+										<div class="px-2 font-bold">{localDate(it.startTime)}</div>
+										<div class="h-0 shrink grow border-t"></div>
 									</div>
 								{/if}
+								{@const hasODM = it.legs.some(isOdmLeg)}
+								<button onclick={() => selectItinerary(it)}>
+									<ItinerarySummary {it} {baseQuery} info={hasODM ? odmInfo : undefined} />
+								</button>
+							{/each}
 
-								{#each r.itineraries as it, index}
-									{#if index > 0 && localDate(r.itineraries[index - 1].startTime) != localDate(it.startTime)}
-										<div class="my-5 flex w-full items-center justify-between space-x-1">
-											<div class="h-0 shrink grow border-t"></div>
-											<div class="px-2 font-bold">{localDate(it.startTime)}</div>
-											<div class="h-0 shrink grow border-t"></div>
+							{#if rI === routingResponses.length - 1 && baseQuery}
+								{#await Promise.all( [noItinerariesFound, searchIntervalStart, searchIntervalEnd] ) then [n, s, e]}
+									{#if n}
+										<div class="flex flex-col items-center gap-4 p-4">
+											<span class="text-left">
+												<Time
+													class="inline"
+													isRealtime={false}
+													timestamp={s}
+													scheduledTimestamp={s}
+													variant="schedule"
+													queriedTime={baseQuery?.time}
+												/> - <Time
+													class="inline"
+													isRealtime={false}
+													timestamp={e}
+													scheduledTimestamp={e}
+													variant="schedule"
+													queriedTime={baseQuery?.time}
+												/>
+											</span>
+											<p>{t.noItinerariesFound}</p>
 										</div>
 									{/if}
-									{@const hasODM = it.legs.some(isOdmLeg)}
-									<button onclick={() => selectItinerary(it)}>
-										<ItinerarySummary {it} {baseQuery} info={hasODM ? odmInfo : undefined} />
-									</button>
-								{/each}
-
-								{#if rI === routingResponses.length - 1 && baseQuery}
-									<div class="flex w-full items-center justify-between space-x-4">
-										<div class="h-0 w-full border-t"></div>
-										<Button
-											class="h-8"
-											variant="outline"
-											onclick={() => {
-												routingResponses.push(
-													planAndSign({
-														...baseQuery,
-														pageCursor: r.nextPageCursor
-													}).then(updateStartDest)
-												);
-											}}
-										>
-											{t.later}
-										</Button>
-										<div class="h-0 w-full border-t"></div>
-									</div>
-								{/if}
-							{:else}
-								Error
+								{/await}
+								<div class="flex w-full items-center justify-between space-x-4">
+									<div class="h-0 w-full border-t"></div>
+									<Button
+										class="h-8"
+										variant="outline"
+										onclick={() => {
+											routingResponses.push(
+												planAndSign({
+													...baseQuery,
+													pageCursor: r.nextPageCursor
+												}).then(updateStartDest)
+											);
+										}}
+									>
+										{t.later}
+									</Button>
+									<div class="h-0 w-full border-t"></div>
+								</div>
 							{/if}
-						{:catch e}
-							<div>Error: {e}</div>
-						{/await}
-					{/each}
-				</div>
-			{/if}
+						{:else}
+							Error
+						{/if}
+					{:catch e}
+						<div>Error: {e}</div>
+					{/await}
+				{/each}
+			</div>
 		{/if}
 	{/await}
 {/if}
