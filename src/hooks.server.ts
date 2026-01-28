@@ -27,6 +27,9 @@ const authHandle: Handle = async ({ event, resolve }) => {
 			event.url.pathname.startsWith('/tests') ||
 			event.url.pathname.startsWith('/apiInternal'))
 	) {
+		console.log(
+			`Attempt to acces ${event.url.pathname} from outside localhost. Where userId was: ${session?.userId}`
+		);
 		error(403);
 	}
 	if (
@@ -41,6 +44,9 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		(!session?.companyId && event.url.pathname.startsWith('/api/driver')) ||
 		(!session?.companyId && event.url.pathname.startsWith('/api/cancelTour'))
 	) {
+		console.log(
+			`Attempt to access route ${event.url.pathname} for user with id: ${session?.userId}. ${event.url.pathname.startsWith('/admin') ? 'With isAdmin: ' + session?.isAdmin : 'With companyId: ' + session?.companyId}`
+		);
 		error(403);
 	}
 	if (token && session) {
