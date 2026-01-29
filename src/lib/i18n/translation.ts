@@ -46,6 +46,7 @@ export type Translations = {
 		oldEmail: string;
 		checkInboxToVerify: string;
 		passwordResetSuccess: string;
+		driverAppRequiresCompanyId: string;
 
 		// Admin
 		userDoesNotExist: string;

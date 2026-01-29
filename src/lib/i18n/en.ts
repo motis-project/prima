@@ -45,6 +45,8 @@ const translations: Translations = {
 		checkInboxToVerify: 'Please check your inbox to verify your new email address.',
 		passwordResetSuccess:
 			'Your password has been reset successfully. Please login with your new password.',
+		driverAppRequiresCompanyId:
+			'This app can only be used with accounts associated with a taxi company.',
 
 		// Admin
 		userDoesNotExist: 'User does not exist.',

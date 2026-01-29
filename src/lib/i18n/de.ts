@@ -47,6 +47,8 @@ const translations: Translations = {
 			'Bitte prüfen Sie Ihr E-Mail-Postfach um Ihre neue E-Mail-Adresse zu verifizieren.',
 		passwordResetSuccess:
 			'Passwort erfolgreich zurückgesetzt. Sie können sich jetzt mit dem neuen Passwort anmelden.',
+		driverAppRequiresCompanyId:
+			'Diese kann nur von Benutzern die mit einem Taxiunternehmen verknüpft sind verwendet werden.',
 
 		// Admin
 		userDoesNotExist: 'Nutzer existiert nicht.',
