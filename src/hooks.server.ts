@@ -33,14 +33,12 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		!session &&
 		(event.url.pathname.startsWith('/admin') || event.url.pathname.startsWith('/taxi'))
 	) {
-		redirect(302, '/account/login');
+		redirect(302, '/account/ui-login');
 	}
 	if (
 		(!session?.isAdmin && event.url.pathname.startsWith('/admin')) ||
 		(!session?.companyId && event.url.pathname.startsWith('/taxi')) ||
-		(!session?.companyId &&
-			event.url.pathname.startsWith('/api/driver') &&
-			event.url.pathname !== '/api/driver/login') ||
+		(!session?.companyId && event.url.pathname.startsWith('/api/driver')) ||
 		(!session?.companyId && event.url.pathname.startsWith('/api/cancelTour'))
 	) {
 		error(403);
@@ -55,7 +53,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 			redirect(302, '/account/verify-email');
 		}
 		if (
-			event.url.pathname.startsWith('/account/login') ||
+			event.url.pathname.startsWith('/account/ui-login') ||
 			event.url.pathname.startsWith('/account/signup')
 		) {
 			redirect(302, '/account');
@@ -65,11 +63,12 @@ const authHandle: Handle = async ({ event, resolve }) => {
 			event.url.pathname.startsWith('/bookings') ||
 			(event.url.pathname.startsWith('/account') &&
 				event.url.pathname !== '/account/login' &&
+				event.url.pathname !== '/account/ui-login' &&
 				event.url.pathname !== '/account/signup' &&
 				event.url.pathname !== '/account/reset-password' &&
 				event.url.pathname !== '/account/request-password-reset')
 		) {
-			redirect(302, '/account/login');
+			redirect(302, '/account/ui-login');
 		}
 		deleteSessionTokenCookie(event);
 	}

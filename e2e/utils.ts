@@ -77,7 +77,7 @@ export async function execSQL<T>(sql: RawBuilder<T>): Promise<QueryResult<T>> {
 }
 
 export async function login(page: Page, credentials: UserCredentials) {
-	await page.goto('/account/login');
+	await page.goto('/account/ui-login');
 	await expect(page.getByRole('heading', { name: 'Login' })).toBeVisible();
 	await page.getByRole('textbox', { name: 'E-Mail' }).fill(credentials.email);
 	await page.getByRole('textbox', { name: 'Passwort' }).fill(credentials.password);
