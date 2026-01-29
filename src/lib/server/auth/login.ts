@@ -25,7 +25,6 @@ function getErrorReturn(into: LoginInto, code: number, msg?: { msg: Msg; email?:
 }
 
 export async function login(event: RequestEvent, into: LoginInto) {
-	const errorFn = into === LoginInto.PRIMA_DRIVER ? error : fail;
 	const clientIP = getIp(event);
 	if (!ipBucket.check(clientIP, 1)) {
 		return getErrorReturn(into, 429, { msg: msg('tooManyRequests') });
