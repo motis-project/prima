@@ -6,8 +6,8 @@ import type { Itinerary, Leg } from '$lib/openapi';
 import { polyLineToLatLngArray } from '$lib/util/polylineToGeoJSON';
 
 export async function createStatistics() {
-    await computeAndPersistStatistics('tour');
-    await computeAndPersistStatistics('rideShareTour');
+	await computeAndPersistStatistics('tour');
+	await computeAndPersistStatistics('rideShareTour');
 }
 
 async function tourQuery() {
