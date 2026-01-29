@@ -12,3 +12,7 @@ export function isTaxiLeg(l: Leg | LegLike) {
 export function isOdmLeg(l: Leg | LegLike) {
 	return l.mode == 'ODM' || l.mode == 'RIDE_SHARING';
 }
+
+export function isPoolingLeg(l: Leg | LegLike) {
+	return l.displayName == 'POOLING';
+}

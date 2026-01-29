@@ -8,7 +8,8 @@
 	import { t } from '$lib/i18n/translation';
 	import type { Snippet } from 'svelte';
 	import DisplayAddresses from '$lib/ui/DisplayAddresses.svelte';
-	import { isRideShareLeg } from '$lib/util/booking/checkLegType';
+	import { isPoolingLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
+	import PoolingBadge from './PoolingBadge.svelte';
 
 	const {
 		it,
@@ -37,6 +38,9 @@
 			{l.routeShortName}
 		{:else}
 			{formatDurationSec(l.duration)}
+		{/if}
+		{#if isPoolingLeg(l)}
+			<span class="ml-2"><PoolingBadge /></span>
 		{/if}
 	</div>
 {/snippet}
