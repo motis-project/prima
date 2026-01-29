@@ -1,4 +1,4 @@
-import { error, fail, redirect } from '@sveltejs/kit';
+import { error, fail, json, redirect } from '@sveltejs/kit';
 import { verifyEmailInput } from '$lib/server/auth/email';
 import { getUserFromEmail, getUserPasswordHash } from '$lib/server/auth/user';
 import { RefillingTokenBucket, Throttler } from '$lib/server/auth/rate-limit';
@@ -65,6 +65,9 @@ export async function login(event: RequestEvent, into: LoginInto) {
 	const sessionToken = generateSessionToken();
 	const session = await createSession(sessionToken, user.id);
 	setSessionTokenCookie(event, sessionToken, new Date(session.expiresAt));
+	if (into === LoginInto.PRIMA_DRIVER) {
+		return json({});
+	}
 	if (user.isTaxiOwner) {
 		return redirect(303, '/taxi/availability');
 	} else {

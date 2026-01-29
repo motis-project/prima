@@ -3,7 +3,7 @@ import { redirect } from '@sveltejs/kit';
 import type { RequestEvent } from './$types';
 
 export const POST = async (event: RequestEvent) => {
-	await login(event, LoginInto.PRIMA_DRIVER);
+	return await login(event, LoginInto.PRIMA_DRIVER);
 };
 
 export const GET = async () => {
