@@ -1,4 +1,4 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { verifyEmailInput } from '$lib/server/auth/email';
 import { getUserFromEmail, getUserPasswordHash } from '$lib/server/auth/user';
 import { RefillingTokenBucket, Throttler } from '$lib/server/auth/rate-limit';
@@ -8,7 +8,7 @@ import {
 	generateSessionToken,
 	setSessionTokenCookie
 } from '$lib/server/auth/session';
-import { msg } from '$lib/msg';
+import { msg, type Msg } from '$lib/msg';
 import { getIp } from '$lib/server/getIp';
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -20,10 +20,15 @@ export enum LoginInto {
 	PRIMA_DRIVER
 }
 
+function getErrorReturn(into: LoginInto, code: number, msg?: { msg: Msg; email?: string }) {
+	return into === LoginInto.PRIMA_DRIVER ? error(code) : fail(code, msg!);
+}
+
 export async function login(event: RequestEvent, into: LoginInto) {
+	const errorFn = into === LoginInto.PRIMA_DRIVER ? error : fail;
 	const clientIP = getIp(event);
 	if (!ipBucket.check(clientIP, 1)) {
-		return fail(429, { msg: msg('tooManyRequests') });
+		return getErrorReturn(into, 429, { msg: msg('tooManyRequests') });
 	}
 	const formData = await event.request.formData();
 	const email = formData.get('email');
@@ -34,28 +39,28 @@ export async function login(event: RequestEvent, into: LoginInto) {
 		email === '' ||
 		password === ''
 	) {
-		return fail(400, { msg: msg('enterEmailAndPassword') });
+		return getErrorReturn(into, 400, { msg: msg('enterEmailAndPassword') });
 	}
 	if (!verifyEmailInput(email)) {
-		return fail(400, { msg: msg('invalidEmail'), email });
+		return getErrorReturn(into, 400, { msg: msg('invalidEmail'), email });
 	}
 	const user = await getUserFromEmail(email);
 	if (!user) {
-		return fail(400, { msg: msg('accountDoesNotExist'), email });
+		return getErrorReturn(into, 400, { msg: msg('accountDoesNotExist'), email });
 	}
 	if (clientIP !== null && !ipBucket.consume(clientIP, 1)) {
-		return fail(429, { msg: msg('tooManyRequests'), email });
+		return getErrorReturn(into, 429, { msg: msg('tooManyRequests'), email });
 	}
 	if (!throttler.consume(user.id)) {
-		return fail(429, { msg: msg('tooManyRequests'), email });
+		return getErrorReturn(into, 429, { msg: msg('tooManyRequests'), email });
 	}
 	const passwordHash = await getUserPasswordHash(user.id);
 	const validPassword = await verifyPasswordHash(passwordHash, password);
 	if (!validPassword) {
-		return fail(400, { msg: msg('invalidPassword'), email });
+		return getErrorReturn(into, 400, { msg: msg('invalidPassword'), email });
 	}
 	if (into === LoginInto.PRIMA_DRIVER && user.companyId === null) {
-		return fail(403, { msg: msg('driverAppRequiresCompanyId'), email });
+		return error(403);
 	}
 	throttler.reset(user.id);
 	const sessionToken = generateSessionToken();
