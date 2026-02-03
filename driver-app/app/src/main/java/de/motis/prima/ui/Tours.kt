@@ -367,6 +367,15 @@ fun ToursList(
                 }
 
                 try {
+                    val test = city.toDoubleOrNull()
+                    if (test != null) {
+                        city = "GPS, Navigation nutzen"
+                    }
+                } catch (e: Exception) {
+                    // ignore
+                }
+
+                try {
                     val dstSplit = dstAddress.split(',')
                     dstCity = if (dstSplit[1] == " Deutschland") {
                         dstSplit[0]

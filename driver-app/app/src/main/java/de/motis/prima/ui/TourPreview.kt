@@ -440,6 +440,18 @@ fun WayPointPreview(
         return
     }
 
+    var address = eventGroup.address
+
+    try {
+        val tokens = address.split(',')
+        val test = tokens[0].toDoubleOrNull()
+        if (test != null) {
+            address = "GPS, Navigation nutzen"
+        }
+    } catch (e: Exception) {
+        // ignore
+    }
+
     val cancelled = eventGroup.events.find { e -> e.cancelled.not() } == null
     if (cancelled.not()) {
         Card(
@@ -468,7 +480,7 @@ fun WayPointPreview(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = eventGroup.address,
+                        text = address,
                         fontSize = 24.sp,
                         textAlign = TextAlign.Center
                     )

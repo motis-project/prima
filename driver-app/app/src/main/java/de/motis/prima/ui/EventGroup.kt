@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -133,6 +134,18 @@ fun EventGroup(
     val nPickUp = eventGroup.events.filter { e -> e.isPickup && e.cancelled.not() }.size
     val hasUncheckedTicket = validCount < nPickUp
 
+    var address = eventGroup.address
+
+    try {
+        val tokens = address.split(',')
+        val test = tokens[0].toDoubleOrNull()
+        if (test != null) {
+            address = "GPS, Navigation nutzen"
+        }
+    } catch (e: Exception) {
+        // ignore
+    }
+
     Column(
         modifier = Modifier
             .padding(10.dp),
@@ -177,7 +190,7 @@ fun EventGroup(
                     }
                 } else {
                     Text(
-                        text = eventGroup.address,
+                        text = address,
                         fontSize = 24.sp,
                         textAlign = TextAlign.Center
                     )
