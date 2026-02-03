@@ -61,7 +61,6 @@ import de.motis.prima.viewmodel.ToursViewModel
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -361,6 +360,9 @@ fun ToursList(
                         split[0]
                     } else {
                         split[1]
+                    }
+                    if (city.toDoubleOrNull() != null) {
+                        city = "GPS, Navigation nutzen"
                     }
                 } catch (e: Exception) {
                     city = address
