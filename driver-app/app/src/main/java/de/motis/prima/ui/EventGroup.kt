@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -137,9 +136,7 @@ fun EventGroup(
     var address = eventGroup.address
 
     try {
-        val tokens = address.split(',')
-        val test = tokens[0].toDoubleOrNull()
-        if (test != null) {
+        if (address.split(',')[0].toDoubleOrNull() != null) {
             address = "GPS, Navigation nutzen"
         }
     } catch (e: Exception) {
@@ -363,7 +360,7 @@ fun ShowCustomerDetails(
                     )
                 }
 
-                Box() {
+                Box {
                     if (event.wheelchairs > 0) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_wheelchair),
@@ -532,38 +529,43 @@ fun ShowCustomerDetails(
                                 tint = LocalExtendedColors.current.textColor
                             )
 
-                            if (ticketStatus == ValidationStatus.OPEN) {
-                                Icon(
-                                    imageVector = Icons.Default.Clear,
-                                    contentDescription = "Localized description",
-                                    tint = Color.Gray,
-                                    modifier = Modifier
-                                        .size(width = 30.dp, height = 30.dp)
-                                )
-                            } else if (ticketStatus == ValidationStatus.DONE) {
-                                Icon(
-                                    imageVector = Icons.Default.Done,
-                                    contentDescription = "Localized description",
-                                    tint = Color.Green,
-                                    modifier = Modifier
-                                        .size(width = 32.dp, height = 32.dp)
-                                )
-                            } else if (ticketStatus == ValidationStatus.CHECKED_IN) {
-                                Icon(
-                                    imageVector = Icons.Default.Done,
-                                    contentDescription = "Localized description",
-                                    tint = Color.Gray,
-                                    modifier = Modifier
-                                        .size(width = 30.dp, height = 30.dp)
-                                )
-                            } else if (ticketStatus == ValidationStatus.REJECTED) {
-                                Icon(
-                                    imageVector = Icons.Default.Clear,
-                                    contentDescription = "Localized description",
-                                    tint = Color.Red,
-                                    modifier = Modifier
-                                        .size(width = 30.dp, height = 30.dp)
-                                )
+                            when (ticketStatus) {
+                                ValidationStatus.OPEN -> {
+                                    Icon(
+                                        imageVector = Icons.Default.Clear,
+                                        contentDescription = "Localized description",
+                                        tint = Color.Gray,
+                                        modifier = Modifier
+                                            .size(width = 30.dp, height = 30.dp)
+                                    )
+                                }
+                                ValidationStatus.DONE -> {
+                                    Icon(
+                                        imageVector = Icons.Default.Done,
+                                        contentDescription = "Localized description",
+                                        tint = Color.Green,
+                                        modifier = Modifier
+                                            .size(width = 32.dp, height = 32.dp)
+                                    )
+                                }
+                                ValidationStatus.CHECKED_IN -> {
+                                    Icon(
+                                        imageVector = Icons.Default.Done,
+                                        contentDescription = "Localized description",
+                                        tint = Color.Gray,
+                                        modifier = Modifier
+                                            .size(width = 30.dp, height = 30.dp)
+                                    )
+                                }
+                                ValidationStatus.REJECTED -> {
+                                    Icon(
+                                        imageVector = Icons.Default.Clear,
+                                        contentDescription = "Localized description",
+                                        tint = Color.Red,
+                                        modifier = Modifier
+                                            .size(width = 30.dp, height = 30.dp)
+                                    )
+                                }
                             }
                         }
                     }
