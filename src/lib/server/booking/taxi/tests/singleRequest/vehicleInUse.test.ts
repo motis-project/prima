@@ -94,7 +94,7 @@ describe('Whitelist and Booking API Tests', () => {
 				whiteResponse.direct[0].pickupTime,
 				whiteResponse.direct[0].dropoffTime,
 				false,
-				(inXMinutes(70)/1000).toString()
+				inXMinutes(70).toString()
 			),
 			startFixed: true,
 			requestedTime: inXMinutes(70),

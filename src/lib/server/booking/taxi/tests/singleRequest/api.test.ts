@@ -340,7 +340,7 @@ describe('Whitelist and Booking API Tests', () => {
 				whiteResponse.direct[0].pickupTime,
 				whiteResponse.direct[0].dropoffTime,
 				false,
-				(inXMinutes(70)/1000).toString()
+				inXMinutes(70).toString()
 			),
 			startFixed: true,
 			requestedTime: inXMinutes(70),
@@ -411,7 +411,7 @@ describe('Whitelist and Booking API Tests', () => {
 				whiteResponse.direct[0].pickupTime,
 				roundToUnit(whiteResponse.direct[0].dropoffTime, MINUTE, Math.floor),
 				false,
-				(inXMinutes(70)/1000).toString()
+				inXMinutes(70).toString()
 			),
 			startFixed: true,
 			mode: Mode.TAXI,
