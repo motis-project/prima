@@ -183,7 +183,6 @@ fun EventGroup(
         }
     }
 
-
     val itinerary by viewModel.itinerary.collectAsState()
 
     itinerary?.let {
@@ -360,7 +359,7 @@ fun ShowCustomerDetails(
     val storedTickets = viewModel.storedTickets.collectAsState()
     val fareToPay: Double = (event.ticketPrice / 100).toDouble()
 
-    val publicTransport = event.isPickup.not() // TODO
+    val publicTransport = event.isPickup.not()
     val ptScheduledTime = "20:35"
     val ptDelayed = false
     val ptStopCancelled = false
