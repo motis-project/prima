@@ -122,6 +122,7 @@ data class Location(
     val lng: Double,
 )
 
+@SuppressLint("QueryPermissionsNeeded")
 fun openGoogleMapsNavigation(to: Location, context: Context) {
     val gmmIntentUri = Uri.parse("google.navigation:q=${to.lat},${to.lng}")
     val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
