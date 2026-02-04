@@ -118,6 +118,10 @@ fun Nav(intent: Intent?, viewModel: NavViewModel = hiltViewModel()) {
             composable(route = "availability") {
                 Availability(navController)
             }
+
+            composable(route = "itinerary") {
+                ItineraryScreen(navController)
+            }
         }
     }
 }
