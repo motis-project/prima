@@ -50,7 +50,7 @@ export function getScheduledTimes(
 			return;
 		}
 		const newTime = !newEventIsEarlier ? newStartTime : newEndTime;
-		if (!event.time.shift(!newEventIsEarlier ? -duration : duration).covers(newTime)) {
+		if (!event.time.shift(newEventIsEarlier ? -duration : duration).covers(newTime)) {
 			return;
 		}
 		const newShiftedTime = newTime + (newEventIsEarlier ? duration : -duration);
