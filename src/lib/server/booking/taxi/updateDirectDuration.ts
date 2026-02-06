@@ -115,7 +115,9 @@ export async function updateDirectDurations(
 
 		if (newVehicle.nexttour) {
 			const routingResultNextTour = newVehicle.nexttour
-				? ((await oneToManyCarRouting(events[events.length - 1], [newVehicle.nexttour], false))[0] ?? null)
+				? ((
+						await oneToManyCarRouting(events[events.length - 1], [newVehicle.nexttour], false)
+					)[0] ?? null)
 				: null;
 			await trx
 				.updateTable('tour')
