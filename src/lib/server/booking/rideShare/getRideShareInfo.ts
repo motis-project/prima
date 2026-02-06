@@ -53,11 +53,11 @@ export async function getRideShareInfos(i: Itinerary, extended = false) {
 
 	if (i.legs.length !== 0) {
 		const rideShareTourFirstLeg = isRideShareLeg(i.legs[0])
-			? parseInt(i.legs[0].tripId!)
+			? JSON.parse(i.legs[0].tripId!)?.tour
 			: undefined;
 		const rideShareTourLastLeg =
 			i.legs.length > 1 && isRideShareLeg(i.legs[i.legs.length - 1])
-				? parseInt(i.legs[i.legs.length - 1].tripId!)
+				? JSON.parse(i.legs[i.legs.length - 1].tripId!)?.tour
 				: undefined;
 		if (rideShareTourFirstLeg !== undefined && !isNaN(rideShareTourFirstLeg)) {
 			rideShareTourInfos.push(await getRideShareInfo(rideShareTourFirstLeg, extended));

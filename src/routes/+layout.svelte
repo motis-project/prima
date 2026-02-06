@@ -3,6 +3,7 @@
 
 	import ChevronsRight from 'lucide-svelte/icons/chevrons-right';
 	import TicketCheck from 'lucide-svelte/icons/ticket-check';
+	import Car from 'lucide-svelte/icons/car';
 	import UserRound from 'lucide-svelte/icons/user-round';
 	import CarTaxiFront from 'lucide-svelte/icons/car-taxi-front';
 	import Building2 from 'lucide-svelte/icons/building-2';
@@ -20,7 +21,12 @@
 	const baseItems: Array<MenuItem> = [{ title: t.menu.account, href: '/account', Icon: UserRound }];
 	const customerItems: Array<MenuItem> = $derived([
 		{ title: t.menu.connections, href: '/routing', Icon: ChevronsRight },
-		...(data.isLoggedIn ? [{ title: t.menu.bookings, href: '/bookings', Icon: TicketCheck }] : [])
+		...(data.isLoggedIn
+			? [
+					{ title: t.menu.bookings, href: '/bookings', Icon: TicketCheck },
+					{ title: t.menu.rideOffers, href: '/ride-offers', Icon: Car }
+				]
+			: [])
 	]);
 	const taxiOwnerItems: Array<MenuItem> = [
 		{ title: t.menu.accounting, href: '/taxi/accounting', Icon: Receipt },

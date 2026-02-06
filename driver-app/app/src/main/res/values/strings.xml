@@ -28,6 +28,10 @@
     <string name="reload">Aktualisieren</string>
     <string name="tour_preview_header">Tour Übersicht</string>
     <string name="account_error">Ihr Nutzerkonto ist nicht freigeschaltet.</string>
+    <string name="unknown_error">Ein unbekannter Fehler ist aufgetreten.</string>
     <string name="invalidated_tickets">Es wurden nicht alle Tickets validiert. Fahrt trotzdem fortsetzen?</string>
     <string name="tickets_validated">Tickets validiert</string>
+    <string name="availability">Verfügbarkeit</string>
+    <string name="availabilityNetErrorTitle">Keine Internetverbindung</string>
+    <string name="availabilityNetErrorText">Bitte überprüfen Sie Ihr Netzwerk und versuchen Sie es ggf. zu einem späteren Zeitpunkt erneut.</string>
 </resources>

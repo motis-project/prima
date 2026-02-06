@@ -8,8 +8,10 @@ import { getScheduledTimes } from './getScheduledTimes';
 import type { Coordinates } from '$lib/util/Coordinates';
 import { Interval } from '$lib/util/interval';
 import { isSamePlace } from '../isSamePlace';
+import { printInsertionType } from '../insertionTypes';
 
 export async function acceptRideShareRequest(requestId: number, provider: number) {
+	console.log('ACCPECT RIDE SHARE REQUEST PARAMS:', { requestId, provider });
 	let message = 'success';
 	let status = 200;
 	await retry(() =>
@@ -44,7 +46,12 @@ export async function acceptRideShareRequest(requestId: number, provider: number
 						userChosen,
 						[busStop],
 						{ ...newPickup, wheelchairs: 0, bikes: 0 },
-						startFixed
+						startFixed,
+						{
+							pickup: newPickup.communicatedTime,
+							dropoff: newDropoff.communicatedTime,
+							tourId: tour.rideShareTour
+						}
 					)
 				)[0][0][0];
 				if (best === undefined) {
@@ -52,17 +59,18 @@ export async function acceptRideShareRequest(requestId: number, provider: number
 					message = 'The ride share tour is no longer valid';
 					return;
 				}
+				console.log(
+					'best: ',
+					JSON.stringify(best, null, 2),
+					printInsertionType(best.pickupCase),
+					printInsertionType(best.dropoffCase)
+				);
 				const durationUpdates = getDurationUpdates(best);
 				const events = tour.events;
-				const prevPickupEvent =
-					events[events.findIndex((e) => e.requestId === requestId && e.isPickup) - 1];
-				const nextPickupEvent =
-					events[events.findIndex((e) => e.requestId === requestId && e.isPickup) + 1];
-				const prevDropoffEvent =
-					events[events.findIndex((e) => e.requestId === requestId && e.isPickup) - 1];
-				const nextDropoffEvent =
-					events[events.findIndex((e) => e.requestId === requestId && e.isPickup) + 1];
-
+				const prevPickupEvent = events.find((e) => e.eventId === best.prevPickupId);
+				const nextPickupEvent = events.find((e) => e.eventId === best.nextPickupId);
+				const prevDropoffEvent = events.find((e) => e.eventId === best.prevDropoffId);
+				const nextDropoffEvent = events.find((e) => e.eventId === best.nextDropoffId);
 				let pickupEventGroup = undefined;
 				let dropoffEventGroup = undefined;
 				const pickupInterval = new Interval(

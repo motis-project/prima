@@ -5,6 +5,7 @@ import type { QuerySerializerOptions } from '@hey-api/client-fetch';
 import { fail, json, type RequestEvent } from '@sveltejs/kit';
 import { getRideShareInfos } from '$lib/server/booking/rideShare/getRideShareInfo';
 import { isOdmLeg } from '$lib/util/booking/checkLegType';
+import { filterRideSharing } from '$lib/util/filterRideSharing';
 
 export const POST = async (event: RequestEvent) => {
 	const q: PlanData['query'] = await event.request.json();
@@ -14,10 +15,13 @@ export const POST = async (event: RequestEvent) => {
 		query: q
 	});
 	const response = r.data;
-	console.log(r.request);
+	console.log('Plan Request', r.request);
 	if (response === undefined) {
 		return fail(500);
 	}
+
+	response.itineraries = filterRideSharing(response.itineraries);
+
 	return json({
 		...response!,
 		itineraries: await Promise.all(
@@ -36,7 +40,8 @@ export const POST = async (event: RequestEvent) => {
 									odmLeg1.to.lon,
 									new Date(odmLeg1.startTime).getTime(),
 									new Date(odmLeg1.endTime).getTime(),
-									false
+									false,
+									odmLeg1.tripId
 								)
 							: undefined,
 					signature2:
@@ -48,7 +53,8 @@ export const POST = async (event: RequestEvent) => {
 									odmLeg2.to.lon,
 									new Date(odmLeg2.startTime).getTime(),
 									new Date(odmLeg2.endTime).getTime(),
-									true
+									true,
+									odmLeg2.tripId
 								)
 							: undefined,
 					rideShareTourInfos

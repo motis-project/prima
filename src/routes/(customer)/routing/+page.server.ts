@@ -1,22 +1,21 @@
 import { toExpectedConnectionWithISOStrings } from '$lib/server/booking/taxi/bookRide';
 import { Mode } from '$lib/server/booking/mode';
 import type { Capacities } from '$lib/util/booking/Capacities';
-import { db, type Database } from '$lib/server/db';
+import { db } from '$lib/server/db';
 import { readInt } from '$lib/server/util/readForm';
 import { msg, type Msg } from '$lib/msg';
 import { redirect } from '@sveltejs/kit';
-import { sendMail } from '$lib/server/sendMail';
-import NewRide from '$lib/server/email/NewRide.svelte';
-import NewRideSharingRequest from '$lib/server/email/NewRideSharingRequest.svelte';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
 import type { SignedItinerary } from '$lib/planAndSign';
-import { sql, type ExpressionBuilder } from 'kysely';
+import { sql } from 'kysely';
 import type { PageServerLoad, PageServerLoadEvent } from './$types';
 import Prom from 'prom-client';
 import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhitelistRequestTimes';
 import { rideShareApi } from '$lib/server/booking/index';
 import { expectedConnectionFromLeg } from '$lib/server/booking/expectedConnection';
 import { isOdmLeg } from '$lib/util/booking/checkLegType';
+import { sendMail } from '$lib/server/sendMail';
+import { sendBookingMails } from '$lib/util/sendBookingEmails';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;
@@ -50,8 +49,8 @@ export const actions = {
 		const kidsZeroToTwoString = formData.get('kidsZeroToTwo');
 		const kidsThreeToFourString = formData.get('kidsThreeToFour');
 		const kidsFiveToSixString = formData.get('kidsFiveToSix');
+		const kidsSevenToFourteenString = formData.get('kidsSevenToFourteen');
 		const startFixedString = formData.get('startFixed');
-		const tourIdString = formData.get('tourId');
 		const json = formData.get('json');
 
 		if (
@@ -62,6 +61,7 @@ export const actions = {
 			typeof kidsZeroToTwoString !== 'string' ||
 			typeof kidsThreeToFourString !== 'string' ||
 			typeof kidsFiveToSixString !== 'string' ||
+			typeof kidsSevenToFourteenString !== 'string' ||
 			typeof startFixedString !== 'string'
 		) {
 			booking_errors?.inc();
@@ -73,6 +73,7 @@ export const actions = {
 		const kidsZeroToTwo = readInt(kidsZeroToTwoString);
 		const kidsThreeToFour = readInt(kidsThreeToFourString);
 		const kidsFiveToSix = readInt(kidsFiveToSixString);
+		const kidsSevenToFourteen = readInt(kidsSevenToFourteenString);
 		const startFixed = startFixedString === '1';
 
 		if (
@@ -82,6 +83,7 @@ export const actions = {
 			isNaN(kidsZeroToTwo) ||
 			isNaN(kidsThreeToFour) ||
 			isNaN(kidsFiveToSix) ||
+			isNaN(kidsSevenToFourteen) ||
 			(startFixedString !== '1' && startFixedString !== '0')
 		) {
 			throw 'invalid booking params';
@@ -105,7 +107,8 @@ export const actions = {
 				{ capacities },
 				{ kidsZeroToTwo },
 				{ kidsThreeToFour },
-				{ kidsFiveToSix }
+				{ kidsFiveToSix },
+				{ kidsSevenToFourteen }
 			);
 			booking_errors?.inc();
 			return { msg: msg('unknownError') };
@@ -121,7 +124,8 @@ export const actions = {
 				{ capacities },
 				{ kidsZeroToTwo },
 				{ kidsThreeToFour },
-				{ kidsFiveToSix }
+				{ kidsFiveToSix },
+				{ kidsSevenToFourteen }
 			);
 			booking_errors?.inc();
 			return { msg: msg('unknownError') };
@@ -137,8 +141,10 @@ export const actions = {
 				{ capacities },
 				{ kidsZeroToTwo },
 				{ kidsThreeToFour },
-				{ kidsFiveToSix }
+				{ kidsFiveToSix },
+				{ kidsSevenToFourteen }
 			);
+			booking_errors?.inc();
 			return { msg: msg('unknownError') };
 		}
 		const isDirect = legs.length === 1;
@@ -173,13 +179,7 @@ export const actions = {
 		);
 
 		const mode = connection1 !== null ? connection1.mode : connection2?.mode;
-		let tourId = -1;
-		if (mode === Mode.RIDE_SHARE) {
-			if (typeof tourIdString !== 'string') {
-				throw `invalid booking params, tourIdString: ${tourIdString} is not a string. `;
-			}
-			tourId = readInt(tourIdString);
-		}
+
 		const bookingResult =
 			mode === Mode.TAXI
 				? await bookingApi(
@@ -189,7 +189,8 @@ export const actions = {
 						false,
 						kidsZeroToTwo,
 						kidsThreeToFour,
-						kidsFiveToSix
+						kidsFiveToSix,
+						kidsSevenToFourteen
 					)
 				: await rideShareApi(
 						{ connection1, connection2, capacities },
@@ -197,8 +198,7 @@ export const actions = {
 						locals.session?.isService ?? false,
 						kidsZeroToTwo,
 						kidsThreeToFour,
-						kidsFiveToSix,
-						tourId
+						kidsFiveToSix
 					);
 		if (bookingResult.status !== 200) {
 			console.log(
@@ -208,6 +208,7 @@ export const actions = {
 				{ connection1 },
 				{ connection2 }
 			);
+			booking_errors?.inc();
 			return { msg: msg('bookingError') };
 		}
 		const request1: number | null = bookingResult.request1Id ?? null;
@@ -228,102 +229,7 @@ export const actions = {
 				.returning('id')
 				.executeTakeFirstOrThrow()
 		).id;
-
-		try {
-			const getEvents = (eb: ExpressionBuilder<Database, 'request'>) => [
-				eb
-					.selectFrom('event')
-					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-					.where('event.request', '=', request1)
-					.orderBy('eventGroup.scheduledTimeStart', 'asc')
-					.limit(1)
-					.select('address')
-					.as('firstAddress'),
-				eb
-					.selectFrom('event')
-					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-					.where('event.request', '=', request1)
-					.orderBy('eventGroup.scheduledTimeStart', 'asc')
-					.limit(1)
-					.select('eventGroup.scheduledTimeStart')
-					.as('firstTime'),
-				eb
-					.selectFrom('event')
-					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-					.where('event.request', '=', request1)
-					.orderBy('eventGroup.scheduledTimeStart', 'desc')
-					.limit(1)
-					.select('address')
-					.as('lastAddress'),
-				eb
-					.selectFrom('event')
-					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-					.where('event.request', '=', request1)
-					.orderBy('eventGroup.scheduledTimeStart', 'desc')
-					.limit(1)
-					.select('eventGroup.scheduledTimeStart')
-					.as('lastTime')
-			];
-
-			if (mode == Mode.TAXI) {
-				console.log('SENDING EMAIL TO TAXI OWNERS');
-				const rideInfo = await db
-					.selectFrom('request')
-					.innerJoin('tour', 'request.tour', 'tour.id')
-					.innerJoin('vehicle', 'tour.vehicle', 'vehicle.id')
-					.innerJoin('user', 'vehicle.company', 'user.companyId')
-					.select((eb) => ['user.email', 'user.name', 'tour.id as tourId', ...getEvents(eb)])
-					.where('request.id', '=', request1)
-					.where('user.isTaxiOwner', '=', true)
-					.execute();
-				await Promise.all(rideInfo.map((r) => sendMail(NewRide, 'Neue Beförderung', r.email, r)));
-			} else {
-				console.log('SENDING EMAIL TO RIDE SHARE PROVIDER');
-				const rideInfo = await db
-					.selectFrom('request')
-					.innerJoin('rideShareTour', 'request.rideShareTour', 'rideShareTour.id')
-					.innerJoin('rideShareVehicle', 'rideShareTour.vehicle', 'rideShareVehicle.id')
-					.innerJoin('user as provider', 'rideShareVehicle.owner', 'provider.id')
-					.innerJoin('user as passenger', 'request.customer', 'passenger.id')
-					.select((eb) => [
-						'provider.email as providerMail',
-						'provider.name as providerName',
-						'passenger.email as passengerMail',
-						'passenger.name as passengerName',
-						'passenger.phone as passengerPhone',
-						'rideShareTour.id as tourId',
-						'rideShareTour.communicatedStart as journeyTime',
-						...getEvents(eb),
-						eb
-							.selectFrom('event')
-							.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-							.innerJoin('request', 'request.id', 'event.request')
-							.whereRef('request.rideShareTour', '=', 'rideShareTour.id')
-							.orderBy('eventGroup.scheduledTimeStart', 'asc')
-							.limit(1)
-							.select('address')
-							.as('journeyFirst'),
-						eb
-							.selectFrom('event')
-							.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-							.innerJoin('request', 'request.id', 'event.request')
-							.whereRef('request.rideShareTour', '=', 'rideShareTour.id')
-							.orderBy('eventGroup.scheduledTimeStart', 'desc')
-							.limit(1)
-							.select('address')
-							.as('journeyLast')
-					])
-					.where('request.id', '=', request1)
-					.execute();
-				await Promise.all(
-					rideInfo.map((r) =>
-						sendMail(NewRideSharingRequest, 'Neue Mitfahr-Anfrage', r.providerMail, r)
-					)
-				);
-			}
-		} catch {
-			/* nothing we can do about this */
-		}
+		await sendBookingMails(request1, mode, db, sendMail);
 		return redirect(302, `/bookings/${id}`);
 	},
 	storeItineraryWithNoOdm: async ({ request, locals }): Promise<{ msg: Msg }> => {
@@ -374,13 +280,42 @@ export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 			db
 		);
 	};
+	const rideShareGeoJSON = async () => {
+		return await sql`
+		SELECT 'FeatureCollection' AS TYPE,
+			array_to_json(array_agg(f)) AS features
+		FROM
+			(SELECT 'Feature' AS TYPE,
+				ST_AsGeoJSON(lg.area, 15, 0)::json As geometry,
+				json_build_object('id', id, 'name', name) AS properties
+			FROM ride_share_zone AS lg) AS f`.execute(db);
+	};
+	const lastAvailability = await db
+		.selectFrom('availability')
+		.select('availability.endTime')
+		.orderBy('availability.endTime', 'desc')
+		.executeTakeFirst();
+	const userId = event.locals.session?.userId;
+	const ownRideShareOfferIds =
+		userId === undefined
+			? undefined
+			: await db
+					.selectFrom('rideShareTour')
+					.select('rideShareTour.id')
+					.innerJoin('rideShareVehicle', 'rideShareVehicle.id', 'rideShareTour.vehicle')
+					.where('rideShareVehicle.owner', '=', userId)
+					.execute();
 
 	return {
 		areas: (await areasGeoJSON()).rows[0],
+		rideSharingBounds: (await rideShareGeoJSON()).rows[0],
 		user: {
 			name: event.locals.session?.name,
 			email: event.locals.session?.email,
-			phone: event.locals.session?.phone
-		}
+			phone: event.locals.session?.phone,
+			id: event.locals.session?.id,
+			ownRideShareOfferIds
+		},
+		lastAvailability
 	};
 };

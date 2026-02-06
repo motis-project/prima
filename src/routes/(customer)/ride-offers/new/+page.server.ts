@@ -4,6 +4,7 @@ import { db } from '$lib/server/db';
 import { addRideShareTour } from '$lib/server/booking/index';
 import { msg } from '$lib/msg';
 import { readFloat, readInt } from '$lib/server/util/readForm';
+import { sql } from 'kysely';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const vehicles = await db
@@ -11,7 +12,17 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.where('owner', '=', locals.session!.userId!)
 		.select(['rideShareVehicle.id', 'licensePlate', 'passengers', 'luggage'])
 		.execute();
-	return { vehicles };
+	const rideShareGeoJSON = async () => {
+		return await sql`
+				SELECT 'FeatureCollection' AS TYPE,
+					array_to_json(array_agg(f)) AS features
+				FROM
+					(SELECT 'Feature' AS TYPE,
+						ST_AsGeoJSON(lg.area, 15, 0)::json As geometry,
+						json_build_object('id', id, 'name', name) AS properties
+					FROM ride_share_zone AS lg) AS f`.execute(db);
+	};
+	return { vehicles, rideSharingBounds: (await rideShareGeoJSON()).rows[0] };
 };
 
 export const actions = {

@@ -14,10 +14,57 @@
 	import { getCountryData, getCountryDataList, type TCountryCode } from 'countries-list';
 	import { defaultProfilePicture } from '$lib/constants.js';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
+	import SortableTable from '$lib/ui/SortableTable.svelte';
+	import { enhance } from '$app/forms';
 
 	const { data, form } = $props();
 	let showTooltip = $state(false);
+	const vehicles = data.vehicles.map((v) => {
+		return { ...v, licensePlate: v.licensePlate ?? t.rideShare.defaultLicensePlate };
+	});
 	let region: TCountryCode | undefined = $state(data.region ? (data.region as TCountryCode) : 'DE');
+	type Vehicle = {
+		luggage: number;
+		passengers: number;
+		color: string | null;
+		model: string | null;
+		licensePlate: string;
+	};
+	const vehicleRows = vehicles;
+	const vehicleCols = [
+		{
+			text: [t.rideShare.luggage],
+			sort: (a: Vehicle, b: Vehicle) => a.luggage - b.luggage,
+			toTableEntry: (r: Vehicle) => r.luggage
+		},
+		{
+			text: [t.rideShare.passengers],
+			sort: (a: Vehicle, b: Vehicle) => a.passengers - b.passengers,
+			toTableEntry: (r: Vehicle) => r.passengers
+		},
+		{
+			text: [t.rideShare.licensePlate],
+			sort: (a: Vehicle, b: Vehicle) => (a.licensePlate < b.licensePlate ? -1 : 1),
+			toTableEntry: (r: Vehicle) => r.licensePlate
+		},
+		{
+			text: [t.rideShare.model],
+			sort: (a: Vehicle, b: Vehicle) =>
+				a.model === null ? -1 : b.model === null ? 1 : a.model < b.model ? 1 : -1,
+			toTableEntry: (r: Vehicle) => r.model ?? ''
+		}
+	];
+	let selectedVehicle: Vehicle[] | undefined = $state(undefined);
+	$effect(() => {
+		if (selectedVehicle !== undefined && selectedVehicle.length !== 0) {
+			const selectedVehicleId = vehicles.find(
+				(v) => v.licensePlate === selectedVehicle![0].licensePlate
+			)!.id;
+			storeLastPageAndGoto(`/account/add-or-edit-ride-share-vehicle/${selectedVehicleId}`);
+		}
+	});
+	let loading = $state(false);
+	let uploaded = $state(false);
 </script>
 
 <Meta title="Account | {PUBLIC_PROVIDER}" />
@@ -25,62 +72,26 @@
 <div class="flex flex-col gap-10">
 	<Message msg={form?.msg} class="mb-4" />
 
-	<Panel title={t.account.resetPassword} subtitle={t.account.resetPasswordSubtitle}>
-		<form method="post" action="/account/settings?/changePassword">
-			<Input name="oldPassword" type="password" placeholder={t.account.oldPassword} class="mb-3" />
-			<div class="field relative">
-				<Input
-					name="newPassword"
-					type="password"
-					placeholder={t.account.newPassword}
-					onfocus={() => (showTooltip = true)}
-					onblur={() => (showTooltip = false)}
-				/>
-				{#if showTooltip}
-					<div
-						class="absolute bottom-full mt-1 w-64 rounded bg-gray-800 p-2 text-xs text-white shadow-lg"
-					>
-						🔒 Das Passwort muss mindestens 8 Zeichen enthalten.
-					</div>
-				{/if}
-				<div class="mt-4 flex justify-end">
-					<Button type="submit" variant="outline">{t.account.resetPassword}</Button>
-				</div>
-			</div>
-		</form>
-	</Panel>
-
-	<Panel title={t.account.changeEmail} subtitle={t.account.changeEmailSubtitle}>
-		<form method="post" action="/account/settings?/changeEmail" class="mt-8">
-			<Input name="email" type="email" placeholder={data.email} />
-			<div class="mt-4 flex justify-end">
-				<Button type="submit" variant="outline">{t.account.changeEmail}</Button>
-			</div>
-		</form>
-	</Panel>
-
-	<Panel title={t.account.changePhone} subtitle={t.account.changePhoneSubtitle}>
-		<form method="post" action="/account/settings?/changePhone" class="mt-8">
-			<Input
-				name="phone"
-				type="phone"
-				placeholder={data.phone === null ? t.account.phone : data.phone}
-			/>
-			<div class="mt-4 flex justify-end">
-				<Button type="submit" variant="outline">{t.account.changePhone}</Button>
-			</div>
-		</form>
-	</Panel>
-
 	<Panel title={t.buttons.addVehicleTitle} subtitle={''}>
 		<Button
 			variant="outline"
-			onclick={() => storeLastPageAndGoto('/account/add-ride-share-vehicle')}
+			onclick={() => storeLastPageAndGoto('/account/add-or-edit-ride-share-vehicle')}
 		>
 			<Plus class="mr-2 size-4" />
 			{t.buttons.addVehicle}
 		</Button>
 	</Panel>
+	{#if vehicleRows.length !== 0}
+		<Panel title={t.account.vehicleListRideShare} subtitle={t.account.vehicleListSubtitle}>
+			<SortableTable
+				rows={vehicleRows}
+				cols={vehicleCols}
+				bind:selectedRow={selectedVehicle}
+				bindSelectedRow={true}
+				getRowStyle={(_) => 'cursor-pointer '}
+			></SortableTable>
+		</Panel>
+	{/if}
 
 	<Panel title={t.account.profilePicture} subtitle={t.account.profilePictureSubtitle}>
 		<form
@@ -88,12 +99,22 @@
 			action={'/account/settings?/uploadProfilePicture'}
 			enctype="multipart/form-data"
 			class="mt-8"
+			use:enhance={() => {
+				loading = true;
+				return async ({ update }) => {
+					await update();
+					loading = false;
+					uploaded = true;
+				};
+			}}
 		>
 			<UploadPhoto
 				name="profilePicture"
 				displaySaveButton={true}
 				currentUrl={data.profilePicture ?? undefined}
 				defaultPicture={defaultProfilePicture}
+				bind:loading
+				bind:uploaded
 			/>
 		</form>
 	</Panel>
@@ -149,6 +170,54 @@
 
 			<div class="mt-2 flex justify-end">
 				<Button type="submit" variant="outline">{t.account.updatePersonalInfo}</Button>
+			</div>
+		</form>
+	</Panel>
+	<Message msg={form?.msg} class="mb-4" />
+
+	<Panel title={t.account.changePhone} subtitle={t.account.changePhoneSubtitle}>
+		<form method="post" action="/account/settings?/changePhone" class="mt-8">
+			<Input
+				name="phone"
+				type="phone"
+				placeholder={data.phone === null ? t.account.phone : data.phone}
+			/>
+			<div class="mt-4 flex justify-end">
+				<Button type="submit" variant="outline">{t.account.changePhone}</Button>
+			</div>
+		</form>
+	</Panel>
+
+	<Panel title={t.account.resetPassword} subtitle={t.account.resetPasswordSubtitle}>
+		<form method="post" action="/account/settings?/changePassword">
+			<Input name="oldPassword" type="password" placeholder={t.account.oldPassword} class="mb-3" />
+			<div class="field relative">
+				<Input
+					name="newPassword"
+					type="password"
+					placeholder={t.account.newPassword}
+					onfocus={() => (showTooltip = true)}
+					onblur={() => (showTooltip = false)}
+				/>
+				{#if showTooltip}
+					<div
+						class="absolute bottom-full mt-1 w-64 rounded bg-gray-800 p-2 text-xs text-white shadow-lg"
+					>
+						🔒 Das Passwort muss mindestens 8 Zeichen enthalten.
+					</div>
+				{/if}
+				<div class="mt-4 flex justify-end">
+					<Button type="submit" variant="outline">{t.account.resetPassword}</Button>
+				</div>
+			</div>
+		</form>
+	</Panel>
+
+	<Panel title={t.account.changeEmail} subtitle={t.account.changeEmailSubtitle}>
+		<form method="post" action="/account/settings?/changeEmail" class="mt-8">
+			<Input name="email" type="email" placeholder={data.email} />
+			<div class="mt-4 flex justify-end">
+				<Button type="submit" variant="outline">{t.account.changeEmail}</Button>
 			</div>
 		</form>
 	</Panel>

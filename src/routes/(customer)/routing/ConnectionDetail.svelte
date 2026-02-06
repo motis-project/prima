@@ -15,6 +15,7 @@
 	import type { SignedItinerary } from '$lib/planAndSign';
 	import ProfileBadge from '$lib/ui/ProfileBadge.svelte';
 	import { defaultCarPicture } from '$lib/constants';
+	import * as Dialog from '$lib/shadcn/dialog';
 
 	const {
 		itinerary,
@@ -22,7 +23,8 @@
 		onClickTrip,
 		licensePlate,
 		companyName,
-		companyPhone
+		companyPhone,
+		country
 	}: {
 		itinerary: SignedItinerary;
 		onClickStop: (name: string, stopId: string, time: Date) => void;
@@ -30,6 +32,7 @@
 		licensePlate?: string;
 		companyName?: string;
 		companyPhone?: string;
+		country?: string;
 	} = $props();
 
 	const lastLeg = $derived(itinerary.legs.findLast((l) => l.duration !== 0));
@@ -93,7 +96,7 @@
 						<CarTaxiFront class="relative  mr-1" />
 						<div class="flex w-fit rounded-md border-4 border-double border-black bg-white">
 							<div class="flex h-8 min-w-5 items-center justify-center bg-blue-700 p-1 text-white">
-								<div class="text-sm font-bold">D</div>
+								<div class="text-sm font-bold">{country}</div>
 							</div>
 							<div
 								class="flex h-8 items-center px-1 text-2xl font-bold uppercase tracking-wider text-black"
@@ -121,7 +124,7 @@
 
 		{#if isRideShareLeg(l)}
 			{@const tourInfo = itinerary.rideShareTourInfos?.find(
-				(i) => i?.tourId == parseInt(l.tripId || '')
+				(i) => i?.tourId == JSON.parse(l.tripId || '{}')?.tour
 			)}
 			{#if tourInfo}
 				<span class="ml-6">
@@ -136,12 +139,24 @@
 					/>
 
 					{#if tourInfo.picture || tourInfo.color}
-						<div class="flex flex-row gap-4">
-							<img
-								src={tourInfo.picture || defaultCarPicture}
-								alt="vehicle"
-								class="mt-2 h-20 w-20 overflow-hidden border border-gray-200"
-							/>
+						<div class="mt-2 flex flex-row gap-4">
+							<Dialog.Root>
+								<Dialog.Trigger>
+									<img
+										src={tourInfo.picture || defaultCarPicture}
+										alt="vehicle"
+										class="h-20 w-20 overflow-hidden border border-gray-200"
+									/>
+								</Dialog.Trigger>
+								<Dialog.Content class="max-h-[100vh] w-[90%] flex-col overflow-y-auto md:w-96">
+									<img
+										src={tourInfo.picture || defaultCarPicture}
+										alt="vehicle"
+										class="mt-2 w-full"
+									/>
+								</Dialog.Content>
+							</Dialog.Root>
+
 							<div>
 								<span>
 									{tourInfo.model}
@@ -160,7 +175,7 @@
 					{#if tourInfo.licensePlate}
 						<div class="my-2 flex w-fit rounded-md border-4 border-double border-black bg-white">
 							<div class="flex h-8 min-w-5 items-center justify-center bg-blue-700 p-1 text-white">
-								<div class="text-sm font-bold">D</div>
+								<div class="text-sm font-bold">{country}</div>
 							</div>
 							<div
 								class="flex h-8 items-center px-1 text-2xl font-bold uppercase tracking-wider text-black"
@@ -229,7 +244,8 @@
 						l.scheduledStartTime,
 						l.realTime,
 						l.from.name,
-						l.from.stopId
+						l.from.stopId,
+						isRideShareLeg(l)
 					)}
 				</div>
 				{#if l.headsign}

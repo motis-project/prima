@@ -23,7 +23,15 @@ function isSignatureInvalid(c: ExpectedConnection | null) {
 			c.target.lng,
 			c.startTime,
 			c.targetTime,
-			false
+			false,
+			c.tourId
+				? JSON.stringify({
+						tour: c.tourId,
+						rT: c.requestedTime,
+						pT: c.pickupTime,
+						dT: c.dropoffTime
+					})
+				: undefined
 		) !== c.signature
 	);
 }
@@ -56,7 +64,6 @@ export async function rideShareApi(
 	kidsZeroToTwo: number,
 	kidsThreeToFour: number,
 	kidsFiveToSix: number,
-	tourId: number,
 	skipPromiseCheck?: boolean
 ): Promise<{
 	message?: string;
@@ -129,7 +136,6 @@ export async function rideShareApi(
 						firstConnection = await bookSharedRide(
 							p.connection1,
 							p.capacities,
-							tourId,
 							trx,
 							skipPromiseCheck
 						);
@@ -146,7 +152,6 @@ export async function rideShareApi(
 						secondConnection = await bookSharedRide(
 							p.connection2,
 							p.capacities,
-							tourId,
 							trx,
 							skipPromiseCheck,
 							blockedProviderId

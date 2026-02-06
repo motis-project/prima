@@ -2,7 +2,7 @@
 	import { env } from '$env/dynamic/private';
 	import { formatTime } from '$lib/util/formatTime';
 	import EmailFooter from './EmailFooter.svelte';
-	const { firstAddress, lastAddress, firstTime, lastTime, name, tourId } = $props();
+	const { firstEvent, lastEvent, name, tourId } = $props();
 	const tourLink = $derived(`${env.ORIGIN}/taxi/accounting/?tourId=${tourId}`);
 </script>
 
@@ -11,13 +11,13 @@
 
 	<p>Es wurde eine neue Buchung angenommen:</p>
 	<ul>
-		<li>Erster Halt: {firstAddress}</li>
-		<li>Letzter Halt: {lastAddress}</li>
+		<li>Erster Halt: {firstEvent.address}</li>
+		<li>Letzter Halt: {lastEvent.address}</li>
 		<li>
-			Geplanter Start: {formatTime(firstTime)}
+			Geplanter Start: {formatTime(firstEvent.time)}
 		</li>
 		<li>
-			Geplante Ankunft: {formatTime(lastTime)}
+			Geplante Ankunft: {formatTime(lastEvent.time)}
 		</li>
 	</ul>
 

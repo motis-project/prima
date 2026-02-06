@@ -55,6 +55,10 @@ export const POST = async ({ locals, request }) => {
 	validator.addSchema(schemaDefinitions, '/schemaDefinitions');
 	const result = validator.validate(body, availabilitySchema);
 	if (!result.valid) {
+		console.log(
+			'Invalid json found in api/driver/availability',
+			JSON.stringify(result.errors, null, 2)
+		);
 		return json({ message: result.errors }, { status: 400 });
 	}
 
@@ -67,9 +71,9 @@ export const POST = async ({ locals, request }) => {
 	let i = 0;
 	while (i < from.length) {
 		if (add[i]) {
-			await addAvailability(from[i], to[i], companyId, vehicleId);
+			await addAvailability(from[i], to[i], vehicleId, companyId);
 		} else {
-			await deleteAvailability(from[i], to[i], companyId, vehicleId);
+			await deleteAvailability(from[i], to[i], vehicleId, companyId);
 		}
 		i++;
 	}
@@ -80,7 +84,6 @@ export const POST = async ({ locals, request }) => {
 	}
 
 	const utcDate = new Date(time + offset * MINUTE);
-	console.log('AVA DATE utc: ', utcDate, 'req:', date);
 	const {
 		companyDataComplete: _a,
 		companyCoordinates: _b,
@@ -97,5 +100,5 @@ export const POST = async ({ locals, request }) => {
 			})
 		};
 	});
-	return json({ ...res, from, to });
+	return json({ ...res, from, to, add });
 };

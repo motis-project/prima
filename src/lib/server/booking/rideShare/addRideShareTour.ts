@@ -33,14 +33,18 @@ async function util(
 	  }
 	| undefined
 > {
-	const routingResult = (
-		await carRouting(start, target, false, new Date().toISOString(), MAX_RIDE_SHARE_TOUR_TIME)
-	).direct;
-	if (routingResult.length === 0) {
+	const routingResult = await carRouting(
+		start,
+		target,
+		false,
+		new Date().toISOString(),
+		MAX_RIDE_SHARE_TOUR_TIME
+	);
+	if (!routingResult) {
 		console.log('adding tour: routing failed');
 		return undefined;
 	}
-	const duration = routingResult[0].duration * 1000;
+	const duration = routingResult.duration;
 	const allowedArrivalsAtFixed = new Interval(
 		startFixed ? time : time - 10 * MINUTE,
 		startFixed ? time + 10 * MINUTE : time
@@ -68,8 +72,8 @@ async function util(
 		.innerJoin('request', 'rideShareTour.id', 'request.rideShareTour')
 		.innerJoin('event', 'event.request', 'request.id')
 		.innerJoin('eventGroup', 'event.eventGroupId', 'eventGroup.id')
-		.where('eventGroup.scheduledTimeStart', '>', dayStart.getTime())
-		.where('eventGroup.scheduledTimeStart', '<', dayEnd.getTime())
+		.where('eventGroup.scheduledTimeStart', '>', dayStart.getTime() - 2 * MAX_RIDE_SHARE_TOUR_TIME)
+		.where('eventGroup.scheduledTimeStart', '<', dayEnd.getTime() + 2 * MAX_RIDE_SHARE_TOUR_TIME)
 		.where('rideShareTour.vehicle', '=', vehicle)
 		.where('rideShareTour.cancelled', '=', false)
 		.where('event.cancelled', '=', false)
@@ -86,8 +90,7 @@ async function util(
 			'eventGroup.id as grp'
 		])
 		.execute();
-
-	const splitTime = allowedArrivalsAtStart.startTime + duration;
+	const splitTime = allowedArrivalsAtStart.startTime + duration / 2;
 	const earlierEvents = otherTourEvents.filter((e) => e.scheduledTimeStart < splitTime);
 	const lastEventBefore =
 		earlierEvents.length === 0
@@ -104,28 +107,38 @@ async function util(
 				);
 	let allowedIntervals = [fullTravelInterval];
 	if (lastEventBefore !== null) {
-		const prevLegDurationResult = (await carRouting(lastEventBefore, start)).direct;
-		if (prevLegDurationResult.length === 0) {
+		const sameTourEvents = otherTourEvents
+			.filter((e) => e.tourId === lastEventBefore.tourId)
+			.sort((e1, e2) => e1.scheduledTimeStart - e2.scheduledTimeStart);
+		const firstTourEvent = sameTourEvents[0];
+		const lastTourEvent = sameTourEvents[sameTourEvents.length - 1];
+		const prevLegDurationResult = await carRouting(lastTourEvent, start);
+		if (!prevLegDurationResult) {
 			console.log('adding tour: previous leg conflict', prevLegDurationResult, lastEventBefore);
 			return undefined;
 		}
 		allowedIntervals = Interval.subtract(allowedIntervals, [
-			new Interval(lastEventBefore.scheduledTimeStart, lastEventBefore.scheduledTimeEnd).expand(
-				prevLegDurationResult[0].duration,
-				0
+			new Interval(firstTourEvent.scheduledTimeStart, lastTourEvent.scheduledTimeEnd).expand(
+				0,
+				prevLegDurationResult.duration
 			)
 		]);
 	}
 	if (firstEventAfter !== null) {
-		const nextLegDurationResult = (await carRouting(target, firstEventAfter)).direct;
-		if (nextLegDurationResult.length === 0) {
+		const sameTourEvents = otherTourEvents
+			.filter((e) => e.tourId === firstEventAfter.tourId)
+			.sort((e1, e2) => e1.scheduledTimeStart - e2.scheduledTimeStart);
+		const firstTourEvent = sameTourEvents[0];
+		const lastTourEvent = sameTourEvents[sameTourEvents.length - 1];
+		const nextLegDurationResult = await carRouting(target, firstTourEvent);
+		if (!nextLegDurationResult) {
 			console.log('adding tour: next leg conflict', nextLegDurationResult, firstEventAfter);
 			return undefined;
 		}
 		allowedIntervals = Interval.subtract(allowedIntervals, [
-			new Interval(firstEventAfter.scheduledTimeStart, firstEventAfter.scheduledTimeEnd).expand(
-				0,
-				nextLegDurationResult[0].duration
+			new Interval(firstTourEvent.scheduledTimeStart, lastTourEvent.scheduledTimeEnd).expand(
+				nextLegDurationResult.duration,
+				0
 			)
 		]);
 	}
@@ -194,6 +207,21 @@ export const addRideShareTour = async (
 	startAddress = '',
 	targetAddress = ''
 ): Promise<number | undefined> => {
+	console.log(
+		'ADD RIDE SHARE TOUR PARAMS: ',
+		JSON.stringify({
+			time,
+			startFixed,
+			passengers,
+			luggage,
+			provider,
+			vehicle,
+			start,
+			target,
+			startAddress,
+			targetAddress
+		})
+	);
 	const timesResult = await util(time, startFixed, vehicle, start, target);
 	if (timesResult === undefined) {
 		return undefined;

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { Plus } from 'lucide-svelte';
 	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
-	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import { Input } from '$lib/shadcn/input';
 	import Label from '$lib/shadcn/label/label.svelte';
 	import * as Popover from '$lib/shadcn/popover';
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import { enhance } from '$app/forms';
 	import { LICENSE_PLATE_PLACEHOLDER } from '$lib/constants';
+	import { t } from '$lib/i18n/translation';
 
 	const {
 		text,
@@ -61,50 +61,59 @@
 				{v == undefined ? 'Neues Fahrzeug' : 'Fahrzeug anpassen'}
 			</h2>
 			<div class="field">
-				<Label for="licensePlate">Nummernschild:</Label>
+				<Label for="licensePlate_input">Nummernschild:</Label>
 				<Input
 					name="licensePlate"
+					id="licensePlate_input"
 					type="string"
 					placeholder={LICENSE_PLATE_PLACEHOLDER}
 					value={v?.licensePlate ?? undefined}
 				/>
 			</div>
 			<div>
-				<h6 class="mb-1">Maximale Passagieranzahl:</h6>
-				<RadioGroup.Root name="passengers" value={v?.passengers?.toString() ?? '3'}>
-					<div class="flex items-center gap-2">
-						<RadioGroup.Item value="3" id="r1" />
-						<Label for="r1">3 Passagiere</Label>
-					</div>
-					<div class="flex items-center gap-2">
-						<RadioGroup.Item value="5" id="r2" />
-						<Label for="r2">5 Passagiere</Label>
-					</div>
-					<div class="flex items-center gap-2">
-						<RadioGroup.Item value="7" id="r3" />
-						<Label for="r3">7 Passagiere</Label>
-					</div>
-				</RadioGroup.Root>
+				<Label for="passengers_input">Maximale Passagieranzahl:</Label>
+				<Input
+					name="passengers"
+					id="passengers_input"
+					type="number"
+					placeholder="4"
+					min="1"
+					max="8"
+					value={v?.passengers?.toString() ?? '3'}
+				/>
 			</div>
 			<div class="flex flex-col gap-2">
 				<div class="flex items-center gap-2">
-					<Checkbox checked={(v?.bikes ?? 0) > 0} name="bike" aria-labelledby="bike-label" />
-					<Label for="bike" class="text-sm font-medium leading-none">Fahrradmitnahme</Label>
+					<Checkbox
+						checked={(v?.bikes ?? 0) > 0}
+						name="bike"
+						id="bike_input"
+						aria-labelledby="bike-label"
+					/>
+					<Label for="bike_input" class="text-sm font-medium leading-none">Fahrradmitnahme</Label>
 				</div>
 				<div class="flex items-center gap-2">
 					<Checkbox
 						checked={(v?.wheelchairs ?? 0) > 0}
 						name="wheelchair"
+						id="wheelchair_input"
 						aria-labelledby="wheelchair-label"
 					/>
-					<Label for="wheelchair" class="text-sm font-medium leading-none">
-						Für Rollstuhlfahrer geeignet
+					<Label for="wheelchair_input" class="text-sm font-medium leading-none">
+						Mitnahme faltbarer Rollstuhl mit Umsetzung
 					</Label>
 				</div>
 			</div>
 			<div class="field">
-				<Label for="luggage">Gepäckstücke:</Label>
-				<Input name="luggage" type="number" placeholder="4" value={v?.luggage?.toString() ?? '4'} />
+				<Label for="luggage_input">Gepäckstücke:</Label>
+				<Input
+					name="luggage"
+					id="luggage_input"
+					type="number"
+					placeholder="4"
+					value={v?.luggage?.toString() ?? '4'}
+				/>
+				<div class="text-sm tracking-tight text-muted-foreground">{t.luggageExplanation}</div>
 			</div>
 			<input type="hidden" name="id" value={v?.id} />
 			<Button type="submit" variant="outline" data-testid="create-vehicle">
