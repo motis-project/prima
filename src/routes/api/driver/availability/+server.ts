@@ -80,6 +80,7 @@ export const POST = async ({ locals, request }) => {
 	}
 
 	const utcDate = new Date(time + offset * MINUTE);
+	console.log('AVA DATE utc: ', utcDate, 'req:', date);
 	const {
 		companyDataComplete: _a,
 		companyCoordinates: _b,
