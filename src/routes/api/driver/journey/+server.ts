@@ -1,28 +1,100 @@
-import { db } from '$lib/server/db';
+import { db, type Database } from '$lib/server/db';
 import { readInt } from '$lib/server/util/readForm.js';
 import { json } from '@sveltejs/kit';
 import { error } from '@sveltejs/kit';
+import type { ReferenceExpression } from 'kysely';
 
-export const GET = async ({ url }) => {
+type Journey = Awaited<ReturnType<typeof query>>;
+
+const query = async (name: ReferenceExpression<Database, "journey">, requestId: number) => {
+    const itinerary = await db
+        .selectFrom('journey')
+        .where(name, '=', requestId)
+        .innerJoin('request', 'request.id', 'journey.request1')
+        .innerJoin('tour', 'request.tour', 'journey.request1')
+        .innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
+        .innerJoin('company', 'company.id', 'vehicle.company')
+        .select(['journey.json', 'vehicle.company'])
+        .executeTakeFirst();
+
+    return itinerary
+}
+
+const filter = (journey: Journey, companyId: number, isRequest1: boolean) => {
+    if (journey == undefined) {
+        return undefined;
+    }
+
+    if (journey.company != companyId) {
+        return undefined;
+    }
+
+    if (journey.json.legs.length == 1) {
+        return undefined;
+    }
+
+    const modifiedLegs = journey.json.legs
+        .filter(l => l.mode != 'WALK')
+        .map((e) => ({
+            mode: e.mode,
+            from: e.from,
+            to: e.to,
+            duration: e.duration,
+            startTime: e.startTime,
+            endTime: e.endTime,
+            scheduledStartTime: e.scheduledStartTime,
+            scheduledEndTime: e.scheduledEndTime,
+            realTime: e.realTime,
+            scheduled: e.scheduled,
+            headsign: e.headsign,
+            tripTo: e.tripTo,
+            routeColor: e.routeColor,
+            routeTextColor: e.routeTextColor,
+            tripId: e.tripId,
+            routeShortName: e.routeShortName,
+            routeLongName: e.routeLongName,
+            tripShortName: e.tripShortName,
+            displayName: e.displayName,
+            cancelled: e.cancelled,
+            intermediateStops: e.intermediateStops,
+        }));
+
+    if (modifiedLegs.length == 0) {
+        return undefined;
+    }
+
+    const odmLegIndex1 = modifiedLegs.findIndex(e => e.mode == 'ODM');
+    const odmLegIndex2 = modifiedLegs.findLastIndex(e => e.mode == 'ODM');
+
+    let ptLeg = modifiedLegs[0];
+
+    if (isRequest1) {
+        if (odmLegIndex1 == 0) {
+            // drop off
+            ptLeg = modifiedLegs[odmLegIndex1 + 1];
+        } else {
+            // pick up
+            ptLeg = modifiedLegs[odmLegIndex1 - 1];
+        }
+    } else {
+        // pick up
+        ptLeg = modifiedLegs[odmLegIndex2 - 1];
+    }
+
+    console.log("skjdkasjdkasjd", JSON.stringify(ptLeg, null, 2));
+    return json(ptLeg);
+}
+
+export const GET = async ({ url, locals }) => {
+    const companyId = locals.session!.companyId!;
     const requestId = readInt(url.searchParams.get('requestId'));
 
     if (isNaN(requestId)) {
-        error(400, { message: 'Invalid fare or tourId parameter' });
+        error(400, { message: 'Invalid requestId parameter' });
     }
 
-    const itinerary = await db
-        .selectFrom('journey')
-        .where('request1', '=', requestId)
-        .select('journey.json')
-        .executeTakeFirst()
+    const journey1 = await query('request1', requestId);
+    const journey2 = await query('request2', requestId);
 
-    if (itinerary != undefined) {
-        itinerary.json.legs.forEach(e => {
-            e.steps = undefined
-            e.legGeometry.points = ""
-        })
-        return json(itinerary.json);
-    } else {
-        return new Response(null, { status: 404 });
-    }
+    return filter(journey1, companyId, true) ?? filter(journey2, companyId, false) ?? new Response(null, { status: 404 });
 };
