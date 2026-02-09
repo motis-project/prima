@@ -3,7 +3,7 @@ import { Mode } from '$lib/server/booking/mode';
 import { isOdmLeg, isRideShareLeg, isTaxiLeg } from '$lib/util/booking/checkLegType';
 import type { Coordinates } from '$lib/util/Coordinates';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
-import type { Insertion } from './taxi/insertion';
+import { retrieveRequestedTime } from './taxi/requestedTime';
 
 export type ExpectedConnection = {
 	start: Coordinates;
@@ -19,10 +19,6 @@ export type ExpectedConnection = {
 	mode: Mode;
 };
 
-export type TripId = Insertion & {
-	requestedTime: number;
-};
-
 export function expectedConnectionFromLeg(
 	leg: Leg,
 	signature: string | undefined,
@@ -35,8 +31,7 @@ export function expectedConnectionFromLeg(
 	}
 	const mode = isTaxiLeg(leg) ? Mode.TAXI : Mode.RIDE_SHARE;
 	const context = leg.tripId && isRideShareLeg(leg) ? JSON.parse(leg.tripId) : undefined;
-	const reqTime =
-		leg.tripId && isTaxiLeg(leg) ? (JSON.parse(leg.tripId) as TripId).requestedTime : undefined;
+	const reqTime = leg.tripId && isTaxiLeg(leg) ? retrieveRequestedTime(leg.tripId) : undefined;
 	return signature
 		? {
 				start: { lat: leg.from.lat, lng: leg.from.lon, address: leg.from.name },
