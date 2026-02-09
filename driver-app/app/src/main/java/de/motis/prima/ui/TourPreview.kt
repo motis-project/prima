@@ -60,7 +60,6 @@ class TourViewModel @Inject constructor(
     val repository: DataRepository
 ) : ViewModel() {
     val eventObjectGroups = repository.eventObjectGroups
-    val pendingValidationTickets = repository.pendingValidationTickets
 
     private var _tour: TourObject? = null
 
@@ -84,13 +83,6 @@ class TourViewModel @Inject constructor(
         }
         return res
     }
-
-    /*fun hasPendingValidations(tourId: Int): Boolean {
-        //return repository.hasPendingValidations(tourId)
-        val tour = repository.getTour(tourId)
-        tour?.let { return tour.ticketValidated }
-        return false
-    }*/
 
     fun hasInvalidatedTickets(tourId: Int): Boolean {
         val tour = repository.getTour(tourId)
@@ -440,6 +432,16 @@ fun WayPointPreview(
         return
     }
 
+    var address = eventGroup.address
+
+    try {
+        if (address.split(',')[0].toDoubleOrNull() != null) {
+            address = "GPS, Navigation nutzen"
+        }
+    } catch (e: Exception) {
+        // ignore
+    }
+
     val cancelled = eventGroup.events.find { e -> e.cancelled.not() } == null
     if (cancelled.not()) {
         Card(
@@ -468,7 +470,7 @@ fun WayPointPreview(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = eventGroup.address,
+                        text = address,
                         fontSize = 24.sp,
                         textAlign = TextAlign.Center
                     )

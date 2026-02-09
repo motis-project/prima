@@ -290,6 +290,11 @@ export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 				json_build_object('id', id, 'name', name) AS properties
 			FROM ride_share_zone AS lg) AS f`.execute(db);
 	};
+	const lastAvailability = await db
+		.selectFrom('availability')
+		.select('availability.endTime')
+		.orderBy('availability.endTime', 'desc')
+		.executeTakeFirst();
 	const userId = event.locals.session?.userId;
 	const ownRideShareOfferIds =
 		userId === undefined
@@ -310,6 +315,7 @@ export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 			phone: event.locals.session?.phone,
 			id: event.locals.session?.id,
 			ownRideShareOfferIds
-		}
+		},
+		lastAvailability
 	};
 };

@@ -21,6 +21,7 @@ export type Translations = {
 
 		// Account
 		enterEmailAndPassword: string;
+		enterFirstLastName: string;
 		invalidEmail: string;
 		invalidPhone: string;
 		invalidZipCity: string;
@@ -45,6 +46,7 @@ export type Translations = {
 		oldEmail: string;
 		checkInboxToVerify: string;
 		passwordResetSuccess: string;
+		driverAppRequiresCompanyId: string;
 
 		// Admin
 		userDoesNotExist: string;
@@ -64,6 +66,7 @@ export type Translations = {
 
 		// AddVehicle
 		invalidSeats: string;
+		invalidCountry: string;
 		invalidLicensePlate: string;
 		invalidStorage: string;
 		insufficientCapacities: string;
@@ -238,9 +241,13 @@ export type Translations = {
 	fare: string;
 	bookingDeadline: string;
 	bookingDeadlineContent: string;
+	cancellation: string;
+	cancellationAppeal: string;
 	logo: string;
 	toConnectionSearch: string;
 	luggageExplanation: string;
+	noAvailabilityTitle: string;
+	noAvalablilityDescription: string;
 
 	booking: {
 		bookHere: string;

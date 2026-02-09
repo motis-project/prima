@@ -19,6 +19,7 @@ const translations: Translations = {
 
 		// Account
 		enterEmailAndPassword: 'Please enter your email and password.',
+		enterFirstLastName: 'Please enter your first and last name.',
 		invalidEmail: 'Invalid email address.',
 		invalidPhone: 'Invalid phone number.',
 		invalidZipCity: 'Invalid ZIP code/city/region.',
@@ -44,6 +45,8 @@ const translations: Translations = {
 		checkInboxToVerify: 'Please check your inbox to verify your new email address.',
 		passwordResetSuccess:
 			'Your password has been reset successfully. Please login with your new password.',
+		driverAppRequiresCompanyId:
+			'This app can only be used with accounts associated with a taxi company.',
 
 		// Admin
 		userDoesNotExist: 'User does not exist.',
@@ -63,6 +66,7 @@ const translations: Translations = {
 
 		// AddVehicle
 		invalidSeats: 'Invalid number of passengers',
+		invalidCountry: 'Invalid country',
 		invalidLicensePlate: 'Invalid license plate.',
 		invalidStorage: 'Invalid storage space.',
 		insufficientCapacities: 'Updated capacities are insufficient for planned tour on this vehicle.',
@@ -85,9 +89,9 @@ const translations: Translations = {
 		vehicleConflict: 'The selected vehicle is not available at the selected time.',
 
 		// Booking
-		bookingError: 'The ride could not be booked.',
-		bookingError1: 'First section could not be booked.',
-		bookingError2: 'Last section could not be booked.',
+		bookingError: 'The ride could not be booked. Please start a new search.',
+		bookingError1: 'First section could not be booked. Please start a new search.',
+		bookingError2: 'Last section could not be booked. Please start a new search.',
 		bookingSuccess: 'Booking successful.',
 
 		// Journey
@@ -217,7 +221,7 @@ const translations: Translations = {
 	moped: 'Moped',
 	odm: 'Public Transport Taxi, booking required!',
 	rideSharing: 'Ride sharing offer',
-	rideSharingBookingRequired: 'Ride sharing offer, negotiation required!',
+	rideSharingBookingRequired: 'private ride sharing offer, negotiation required!',
 	rideSharingInfo:
 		'These are private ride-sharing offers. If you are interested in a private ride-sharing connection, you can send a request to the provider to arrange the details. Register to create ride-sharing offers and send requests.',
 	from: 'From',
@@ -263,11 +267,17 @@ const translations: Translations = {
 	perRide: 'per ride',
 	fare: 'Fare',
 	bookingDeadline: 'Booking deadline',
-	bookingDeadlineContent: 'at least 1 hour in advance, weekend bookings until Friday 6 p.m.',
+	bookingDeadlineContent: 'at least 1 hour in advance.',
+	cancellation: 'Cancellation',
+	cancellationAppeal:
+		'Please cancel as early as possible to make planning easier for taxi companies.',
 	logo: 'The PriMa+ÖV logo. Iconographic representation of a car, bus, train and cab.',
 	toConnectionSearch: 'Go to connection search',
 	luggageExplanation:
 		'Approximate number of transportable items in handluggage size. A big suitcase corresponds to about three handluggage items.',
+	noAvailabilityTitle: 'Too far in the future',
+	noAvalablilityDescription:
+		'No taxis were reported as available for the requested time. Please try again later',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
@@ -306,7 +316,7 @@ const translations: Translations = {
 		ticket: 'Ticket',
 		cancelHeadline: 'Do you really want to cancel this trip?',
 		cancelDescription:
-			'Cancellation cannot be undone. Cancellation less than 24 hours before the trip will incur costs.',
+			'Cancellation cannot be undone. If the cab is already on its way, you will be charged in full for the cab approach.',
 		cancelTrip: 'Cancel Trip',
 		noCancel: 'No, I do not want to cancel.',
 		pin: 'PIN:',
@@ -344,7 +354,7 @@ const translations: Translations = {
 		negotiatePrivacy:
 			'The following data will be shared with the person offering the ride when sending the negotiation request:',
 		negotiateExplanation:
-			'You need to negotiate the price and exact pickup location and time with the person offering this ride.',
+			'This is a private ride offer. You need to negotiate the price and exact pickup location and time with the person offering this ride.',
 		startAndEnd: 'Start and destination of the journey',
 		profile: 'Your profile',
 		email: 'Your email',

@@ -5,7 +5,8 @@ import {
 	APPROACH_AND_RETURN_TIME_COST_FACTOR,
 	TAXI_WAITING_TIME_COST_FACTOR,
 	FULLY_PAYED_COST_FACTOR,
-	MAX_WAITING_TIME
+	MAX_WAITING_TIME,
+	MIN_PREP_BOOKING
 } from '$lib/constants';
 import { env } from '$env/dynamic/public';
 import {
@@ -503,7 +504,7 @@ export function evaluateNewTours(
 		where: InsertWhere.BEFORE_FIRST_EVENT,
 		direction: startFixed ? InsertDirection.BUS_STOP_PICKUP : InsertDirection.BUS_STOP_DROPOFF
 	};
-	let prepTime = Date.now() + MIN_PREP;
+	let prepTime = Date.now() + (promisedTimes === undefined ? MIN_PREP : MIN_PREP_BOOKING);
 	const now = new Date();
 	const isWeekend =
 		(now.getDay() == 5 && now.getHours() >= 18) || now.getDay() == 6 || now.getDay() == 0;
@@ -620,7 +621,7 @@ export function evaluateSingleInsertions(
 		}
 		bothEvaluations[i] = new Array<Insertion | undefined>(busStopTimes[i].length);
 	}
-	const prepTime = Date.now() + MIN_PREP;
+	const prepTime = Date.now() + (promisedTimes === undefined ? MIN_PREP : MIN_PREP_BOOKING);
 	const direction = startFixed ? InsertDirection.BUS_STOP_PICKUP : InsertDirection.BUS_STOP_DROPOFF;
 
 	iterateAllInsertions(companies, insertionRanges, (insertionInfo: InsertionInfo) => {

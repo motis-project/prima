@@ -39,7 +39,6 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import de.motis.prima.R
-import de.motis.prima.data.DeviceInfo
 import de.motis.prima.services.Vehicle
 import de.motis.prima.viewmodel.LoginViewModel
 import kotlinx.coroutines.launch
@@ -52,6 +51,7 @@ fun Login(
     val snackbarHostState = remember { SnackbarHostState() }
     var isLoginFailed by remember { mutableStateOf(false) }
     var accountError by remember { mutableStateOf(false) }
+    var unknownError by remember { mutableStateOf(false) }
     val networkErrorMessage = stringResource(id = R.string.login_error_message)
     val selectedVehicle by viewModel.selectedVehicle.collectAsState(Vehicle(0, ""))
 
@@ -88,6 +88,12 @@ fun Login(
         launch {
             viewModel.accountErrorEvent.collect { error ->
                 accountError = error
+            }
+        }
+
+        launch {
+            viewModel.unknownErrorEvent.collect { error ->
+                unknownError = error
             }
         }
 
@@ -144,6 +150,13 @@ fun Login(
                     accountError ->
                         Text(
                             text = stringResource(id = R.string.account_error),
+                            color = Color.Red,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    unknownError ->
+                        Text(
+                            text = stringResource(id = R.string.unknown_error),
                             color = Color.Red,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(bottom = 8.dp)
