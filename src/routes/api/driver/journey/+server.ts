@@ -22,14 +22,17 @@ const query = async (name: ReferenceExpression<Database, 'journey'>, requestId: 
 
 const filter = (journey: Journey, companyId: number, isRequest1: boolean) => {
 	if (journey == undefined) {
+		console.log('driver/journey: filter: invalid parameter: journey=undefined');
 		return undefined;
 	}
 
 	if (journey.company != companyId) {
+		console.log('driver/journey: filter: invalid parameter: companyId=undefined');
 		return undefined;
 	}
 
 	if (journey.json.legs.length == 1) {
+		console.log('driver/journey: filter: no legs in journey');
 		return undefined;
 	}
 
@@ -60,6 +63,7 @@ const filter = (journey: Journey, companyId: number, isRequest1: boolean) => {
 		}));
 
 	if (modifiedLegs.length == 0) {
+		console.log('driver/journey: filter: no PT legs in journey');
 		return undefined;
 	}
 
