@@ -81,7 +81,6 @@ const filter = (journey: Journey, companyId: number, isRequest1: boolean) => {
         ptLeg = modifiedLegs[odmLegIndex2 - 1];
     }
 
-    console.log("skjdkasjdkasjd", JSON.stringify(ptLeg, null, 2));
     return json(ptLeg);
 }
 
