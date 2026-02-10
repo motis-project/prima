@@ -33,7 +33,7 @@ function isSignatureInvalid(c: ExpectedConnection | null) {
 			c.startTime,
 			c.targetTime,
 			false,
-			JSON.stringify(c.requestedTime)
+			undefined
 		) !== c.signature
 	);
 }
