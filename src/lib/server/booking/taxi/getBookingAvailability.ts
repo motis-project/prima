@@ -5,7 +5,7 @@ import { sql, type ExpressionBuilder, type Transaction } from 'kysely';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db, type Database } from '$lib/server/db';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
-import { covers } from '$lib/server/db/covers';
+import { covers, coversExpanded } from '$lib/server/db/covers';
 import { DAY } from '$lib/util/time';
 import { sortEventsByTime } from '$lib/testHelpers';
 
@@ -274,23 +274,35 @@ const dbQuery = async (
 				.selectAll();
 		})
 		.selectFrom('zone')
-		.where(covers(userChosen))
+		.where((eb) =>
+			eb.or([
+				eb.and([eb('zone.expanded', 'is not', null), coversExpanded(userChosen)]),
+				covers(userChosen)
+			])
+		)
 		.select((eb) => [
 			selectCompanies(eb, expandedSearchInterval, twiceExpandedSearchInterval, requestCapacities),
 			jsonArrayFrom(
 				eb
 					.selectFrom('busstops')
-					.where(
-						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(cast(busstops.lng as float), cast(busstops.lat as float)), ${WGS84}))`
+					.where((eb) =>
+						eb.or([
+							eb.and([
+								eb('zone.expanded', 'is not', null),
+								sql<boolean>`ST_Covers(zone.expanded, ST_SetSRID(ST_MakePoint(cast(busstops.lng as float), cast(busstops.lat as float)), ${WGS84}))`
+							]),
+							sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(cast(busstops.lng as float), cast(busstops.lat as float)), ${WGS84}))`
+						])
 					)
 					.select(['busstops.index as busStopIndex'])
 			).as('busStop')
 		])
-		.executeTakeFirst();
+		.execute();
 };
 
 export type DbResult = NonNullable<Awaited<ReturnType<typeof dbQuery>>>;
-export type DbVehicle = DbResult['companies'][0]['vehicles'][0];
+type DbZone = DbResult[0];
+export type DbVehicle = DbZone['companies'][0]['vehicles'][0];
 export type DbTour = DbVehicle['tours'][0];
 export type DbEvent = DbTour['events'][0];
 
@@ -330,24 +342,26 @@ export const getBookingAvailability = async (
 
 	console.log('getBookingAvailabilty: dbResult=', JSON.stringify(dbResult, null, '\t'));
 
-	if (!dbResult) {
+	if (dbResult.length === 0) {
 		return {
 			companies: [],
 			filteredBusStops: []
 		};
 	}
 
-	const companies = dbResult.companies
-		.map((company) => {
-			return {
-				id: company.id,
-				lat: company.lat!,
-				lng: company.lng!,
-				zoneId: company.zone!,
-				vehicles: company.vehicles.map((v) => createVehicle(v, expandedSearchInterval))
-			};
-		})
-		.filter((c) => c.vehicles.length != 0);
+	const companies = dbResult.flatMap((r) =>
+		r.companies
+			.map((company) => {
+				return {
+					id: company.id,
+					lat: company.lat!,
+					lng: company.lng!,
+					zoneId: company.zone!,
+					vehicles: company.vehicles.map((v) => createVehicle(v, expandedSearchInterval))
+				};
+			})
+			.filter((c) => c.vehicles.length != 0)
+	);
 	companies.forEach((c) =>
 		c.vehicles.forEach((v) => {
 			v.tours.sort((t1, t2) => t1.departure - t2.departure);
@@ -363,7 +377,7 @@ export const getBookingAvailability = async (
 	const filteredBusStops = new Array<number | undefined>(busStops.length);
 	let counter = 0;
 	for (let i = 0; i != busStops.length; ++i) {
-		if (dbResult.busStop.find((bs) => bs.busStopIndex == i) != undefined) {
+		if (dbResult.some((r) => r.busStop.find((bs) => bs.busStopIndex == i) != undefined)) {
 			filteredBusStops[i] = counter++;
 		}
 	}
