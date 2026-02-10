@@ -6,6 +6,27 @@ export type VisualizationPackage = {
 	thresholds: Array<{ time: Date; pt: number; taxi: number }>;
 };
 
+export function getCostFn<T extends Itinerary>(
+	perTransfer: number,
+	taxiBase: number,
+	taxiPerMinute: number,
+	taxiDirectPenalty: number
+): (i: T) => number {
+	return (i: T): number => {
+		return (
+			i.legs
+				.map((l) =>
+					isTaxiLeg(l)
+						? taxiBase + Math.round(l.duration / 60) * taxiPerMinute
+						: Math.round(l.duration / 60)
+				)
+				.reduce((acc, val) => acc + val, 0) +
+			i.transfers * perTransfer +
+			(isDirectTaxi(i) ? taxiDirectPenalty : 0)
+		);
+	};
+}
+
 export function filterTaxis<T extends Itinerary>(
 	itineraries: Array<T>,
 	perTransfer: number,
@@ -20,19 +41,7 @@ export function filterTaxis<T extends Itinerary>(
 		return { itineraries: itineraries };
 	}
 
-	const getCost = (i: T): number => {
-		return (
-			i.legs
-				.map((l) =>
-					isTaxiLeg(l)
-						? taxiBase + Math.round(l.duration / 60) * taxiPerMinute
-						: Math.round(l.duration / 60)
-				)
-				.reduce((acc, val) => acc + val, 0) +
-			i.transfers * perTransfer +
-			(isDirectTaxi(i) ? taxiDirectPenalty : 0)
-		);
-	};
+	const getCost = getCostFn(perTransfer, taxiBase, taxiPerMinute, taxiDirectPenalty);
 
 	const start = getStart(itineraries);
 	const end = getEnd(itineraries);

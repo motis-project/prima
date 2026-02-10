@@ -19,7 +19,7 @@
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import ItinerarySummary from '../../(customer)/routing/ItinerarySummary.svelte';
 	import type { CalibrationItinerary } from '$lib/calibration';
-	import { filterTaxis, type VisualizationPackage } from '$lib/util/filterTaxis';
+	import { filterTaxis, getCostFn, type VisualizationPackage } from '$lib/util/filterTaxis';
 	import { page } from '$app/state';
 	import ConnectionDetail from '../../(customer)/routing/ConnectionDetail.svelte';
 	import { onClickStop, onClickTrip } from '$lib/util/onClick';
@@ -42,6 +42,7 @@
 	}>();
 	$effect(() => {
 		filterResults = [];
+		const getCost = getCostFn(perTransfer, taxiBase, taxiPerMinute, taxiDirectPenalty);
 		calibrationSets.forEach((c, cI) => {
 			filterResults.push(
 				filterTaxis(
@@ -75,12 +76,21 @@
 				width: div?.clientWidth,
 				height: div?.clientHeight,
 				style: 'overflow: visible;',
-				y: { grid: true },
+				grid: true,
 				marks: [
 					Plot.ruleY([0]),
-					Plot.lineY(results.visualize.thresholds, { x: 'time', y: 'pt', tip: true }),
-					Plot.lineY(results.visualize.thresholds, { x: 'time', y: 'taxi', tip: true })
-				]
+					Plot.lineY(results.visualize.thresholds, { x: 'time', y: 'pt', stroke: 'blue' }),
+					Plot.lineY(results.visualize.thresholds, { x: 'time', y: 'taxi', stroke: 'yellow' }),
+					Plot.dot(results.itineraries, {
+						x: (i: CalibrationItinerary) => {
+							const s = new Date(i.startTime);
+							const e = new Date(i.endTime);
+							return new Date(s.getTime() + (e.getTime() - s.getTime()) / 2);
+						},
+						y: (i: CalibrationItinerary) => getCost(i)
+					})
+				],
+				legend: true
 			});
 			div?.replaceChildren(plot);
 		});
@@ -226,10 +236,7 @@
 					</form>
 				</div>
 				<div class="flex grow flex-col gap-2 p-1">
-					<div
-						id={'vis' + cI}
-						class="flex grow flex-row items-center justify-center border-2 border-solid"
-					></div>
+					<div id={'vis' + cI} class="flex grow flex-row items-center justify-center"></div>
 					<div class="flex flex-row justify-end">
 						<form
 							method="post"
