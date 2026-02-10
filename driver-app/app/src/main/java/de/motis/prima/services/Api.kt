@@ -67,7 +67,7 @@ interface ApiService {
     @GET("api/driver/journey")
     suspend fun getItinerary(
         @Query("requestId") requestId: Int
-    ): Itinerary
+    ): Response<Leg?>
 }
 
 data class AvailabilityRequest(
@@ -152,22 +152,22 @@ data class Leg(
     val duration: Long,
     val startTime: String,
     val endTime: String,
-    val scheduledStartTime: String?,
+    var scheduledStartTime: String?,
     val scheduledEndTime: String?,
     val realTime: Boolean,
     val scheduled: Boolean,
-    val distance: Double,
-    val interlineWithPreviousLeg: Boolean,
+    //val distance: Double,
+    //val interlineWithPreviousLeg: Boolean,
     val headsign: String?,
     val tripTo: Place?,
-    val routeId: String?,
-    val directionId: String?,
+    //val routeId: String?,
+    //val directionId: String?,
     val routeColor: String?,
     val routeTextColor: String?,
-    val routeType: Int?,
-    val agencyName: String?,
-    val agencyUrl: String?,
-    val agencyId: String?,
+    //val routeType: Int?,
+    //val agencyName: String?,
+    //val agencyUrl: String?,
+    //val agencyId: String?,
     val tripId: String?,
     val routeShortName: String?,
     val routeLongName: String?,

@@ -120,8 +120,9 @@ fun Nav(intent: Intent?, viewModel: NavViewModel = hiltViewModel()) {
                 Availability(navController)
             }
 
-            composable(route = "itinerary") {
-                ItineraryScreen(navController)
+            composable(route = "itinerary/{requestId}") {
+                val requestId = it.arguments?.getString("requestId")?.toInt()
+                ItineraryScreen(navController, requestId!!)
             }
         }
     }

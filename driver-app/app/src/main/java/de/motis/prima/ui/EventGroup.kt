@@ -35,6 +35,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,12 +64,11 @@ import de.motis.prima.data.EventObject
 import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.data.Ticket
 import de.motis.prima.data.ValidationStatus
-import de.motis.prima.services.Itinerary
 import de.motis.prima.ui.theme.LocalExtendedColors
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Date
 import javax.inject.Inject
 
@@ -77,9 +77,7 @@ class EventGroupViewModel @Inject constructor(
     private val repository: DataRepository
 ) : ViewModel() {
     val storedTickets = repository.storedTickets
-
-    private val _itinerary = MutableStateFlow<Itinerary?>(null)
-    val itinerary: StateFlow<Itinerary?> = _itinerary.asStateFlow()
+    val ptLegs = repository.ptLegs
 
     fun onScreenExit() {
         repository.updateRequestIDs.clear()
@@ -90,13 +88,14 @@ class EventGroupViewModel @Inject constructor(
             repository
                 .itineraryUpdates(intervalMs = 5_000)
                 .collect { itinerary ->
-                    _itinerary.value = itinerary
+                    //_itinerary.value = itinerary
+                    //TODO fetch all PT legs
                 }
         }
     }
 
     init {
-        startUpdates()
+        //startUpdates()
     }
 
     fun getValidCount(eventGroupId: String): Int {
@@ -114,6 +113,10 @@ class EventGroupViewModel @Inject constructor(
 
     fun setItinerary(requestId: Int) {
         repository.updateRequestIDs.add(requestId)
+    }
+
+    fun getItinerary(requestId: Int) {
+        repository.getItinerary(requestId)
     }
 }
 
@@ -181,12 +184,6 @@ fun EventGroup(
         onDispose {
             viewModel.onScreenExit()
         }
-    }
-
-    val itinerary by viewModel.itinerary.collectAsState()
-
-    itinerary?.let {
-        Log.d("test", it.toString())
     }
 
     Column(
@@ -359,14 +356,50 @@ fun ShowCustomerDetails(
     val storedTickets = viewModel.storedTickets.collectAsState()
     val fareToPay: Double = (event.ticketPrice / 100).toDouble()
 
-    val publicTransport = event.isPickup.not()
-    val ptScheduledTime = "20:35"
-    val ptDelayed = false
+    val ptLegs by viewModel.ptLegs.collectAsState()
+    val leg = ptLegs[event.requestId]
+
+    var ptScheduledTime = "-:-"
+    var ptRealTime = "-:-"
+    var mode = ""
+    var rideCancelled = false
+    var toPT = false
+    var fromPT = false
+
+    if (leg != null) {
+        val scheduledStartTime = leg.scheduledStartTime
+        val scheduledEndTime = leg.scheduledEndTime
+        val startTime = leg.scheduledStartTime
+        val endTime = leg.scheduledEndTime
+
+        if (startTime != null && endTime != null && scheduledStartTime != null && scheduledEndTime != null) {
+            val scheduledStart = scheduledStartTime.split('T')[1].split('Z')[0]
+            val scheduledEnd = scheduledEndTime.split('T')[1].split('Z')[0]
+            val start = startTime.split('T')[1].split('Z')[0]
+            val end = endTime.split('T')[1].split('Z')[0]
+            ptScheduledTime = if (event.isPickup) scheduledEnd else scheduledStart
+            ptRealTime = if (event.isPickup) end else start
+        }
+
+        mode = leg.mode
+        rideCancelled = leg.cancelled
+
+        // determine PT / ODM order
+        try {
+            val startInstant = Instant.parse(scheduledStartTime)
+            val endInstant = Instant.parse(scheduledEndTime)
+            toPT = event.scheduledTime < startInstant.toEpochMilli()
+            fromPT = endInstant.toEpochMilli() < event.scheduledTime
+        } catch (e: Exception) {
+            Log.d("test", e.message.toString())
+        }
+    }
+
+    val ptDelayed = ptRealTime != ptScheduledTime
     val ptStopCancelled = false
-    val ptRideCancelled = false
+    val ptRideCancelled = rideCancelled
 
     var ptColor = if (ptDelayed) Color.Red else Color(62, 130, 79)
-    var ptRealTime = "20:35"
 
     if (ptStopCancelled) {
         ptRealTime = "Halt fällt aus"
@@ -375,6 +408,15 @@ fun ShowCustomerDetails(
     if (ptRideCancelled) {
         ptRealTime = "Fahrt fällt aus"
         ptColor = Color.Red
+    }
+
+    var icon = R.drawable.ic_public_transport
+    if (mode == "REGIONAL_RAIL") {
+        icon = R.drawable.ic_train
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.getItinerary(event.requestId)
     }
 
     Card(
@@ -416,7 +458,7 @@ fun ShowCustomerDetails(
                     .padding(top = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (publicTransport) {
+                if (event.isPickup && fromPT || event.isPickup.not() && toPT) {
                     viewModel.setItinerary(event.requestId)
                     Box(
                         modifier = Modifier
@@ -426,12 +468,12 @@ fun ShowCustomerDetails(
                         Button(
                             onClick = {
                                 // open PT detail view
-                                navController.navigate("itinerary")
+                                navController.navigate("itinerary/${event.requestId}")
                             },
                             colors = ButtonColors(LocalExtendedColors.current.secondaryButton, LocalExtendedColors.current.textColor, Color.White, Color.White),
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_public_transport),
+                                painter = painterResource(id = icon),
                                 contentDescription = "Localized description",
                                 Modifier.size(21.dp),
                                 tint = if (ptStopCancelled || ptRideCancelled) Color.Red else LocalExtendedColors.current.textColor
