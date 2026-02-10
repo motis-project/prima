@@ -355,9 +355,15 @@ export function evaluateBothInsertion(
 	}
 	if (promisedTimes) {
 		if (insertionCase.direction === InsertDirection.BUS_STOP_PICKUP) {
-			arrivalWindow.startTime = Math.max(promisedTimes.pickup, arrivalWindow.startTime);
+			arrivalWindow.startTime = Math.min(
+				Math.max(promisedTimes.pickup, arrivalWindow.startTime),
+				arrivalWindow.endTime
+			);
 		} else {
-			arrivalWindow.endTime = Math.min(promisedTimes.dropoff, arrivalWindow.endTime);
+			arrivalWindow.endTime = Math.max(
+				Math.min(promisedTimes.dropoff, arrivalWindow.endTime),
+				arrivalWindow.startTime
+			);
 		}
 	}
 	const taxiDurationDelta =
