@@ -23,11 +23,11 @@ async function generateExpectedConnection(
 	restricted: Coordinates[] | undefined
 ): Promise<ExpectedConnection> {
 	const chosenCoordinates = restricted ? restricted : coordinates;
-	const r1 = randomInt(0, chosenCoordinates.length);
+	const r1 = randomInt(0, chosenCoordinates.length - 1);
 	const c1 = chosenCoordinates[r1];
 	let r2 = r1;
 	while (r2 === r1) {
-		r2 = randomInt(0, coordinates.length);
+		r2 = randomInt(0, coordinates.length - 1);
 	}
 	const c2 = coordinates[r2];
 	const a1 = await reverseGeo(c1);
@@ -55,7 +55,7 @@ async function generateExpectedConnection(
 function generateCapacities(): Capacities {
 	return {
 		passengers: randomInt(1, 3),
-		bikes: randomInt(0, 1),
+		bikes: 0,
 		luggage: randomInt(0, 1),
 		wheelchairs: randomInt(0, 1)
 	};
