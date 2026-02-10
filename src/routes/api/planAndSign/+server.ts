@@ -5,6 +5,7 @@ import type { QuerySerializerOptions } from '@hey-api/client-fetch';
 import { fail, json, type RequestEvent } from '@sveltejs/kit';
 import { getRideShareInfos } from '$lib/server/booking/rideShare/getRideShareInfo';
 import { isOdmLeg } from '$lib/util/booking/checkLegType';
+import { filterRideSharing } from '$lib/util/filterRideSharing';
 import { db } from '$lib/server/db';
 import { filterTaxis } from '$lib/util/filterTaxis';
 import { readTimeFromPageCursor } from '$lib/util/time';
@@ -21,6 +22,8 @@ export const POST = async (event: RequestEvent) => {
 	if (response === undefined) {
 		return fail(500);
 	}
+
+	response.itineraries = filterRideSharing(response.itineraries);
 
 	const filterSettings = await db.selectFrom('taxiFilter').selectAll().executeTakeFirst();
 	if (filterSettings === undefined) {

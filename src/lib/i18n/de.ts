@@ -48,6 +48,8 @@ const translations: Translations = {
 			'Bitte prüfen Sie Ihr E-Mail-Postfach um Ihre neue E-Mail-Adresse zu verifizieren.',
 		passwordResetSuccess:
 			'Passwort erfolgreich zurückgesetzt. Sie können sich jetzt mit dem neuen Passwort anmelden.',
+		driverAppRequiresCompanyId:
+			'Diese kann nur von Benutzern die mit einem Taxiunternehmen verknüpft sind verwendet werden.',
 
 		// Admin
 		userDoesNotExist: 'Nutzer existiert nicht.',
@@ -230,7 +232,7 @@ const translations: Translations = {
 	moped: 'Moped',
 	odm: 'ÖPNV-Taxi - Buchung erforderlich!',
 	rideSharing: 'Mitfahrangebot',
-	rideSharingBookingRequired: 'Mitfahrangebot - Vereinbarung erforderlich!',
+	rideSharingBookingRequired: 'privates Mitfahrangebot - Vereinbarung erforderlich!',
 	rideSharingInfo:
 		'Es handelt sich um private Mitfahrangebote. Wenn Sie sich für eine Verbindung mit privater Mitnahme interessieren, können Sie dem Anbieter eine Anfrage senden, um die Details zu vereinbaren. Registrieren Sie sich, um Mitfahrangebote zu erstellen und Anfragen zu senden.',
 	from: 'Von',
@@ -278,10 +280,16 @@ const translations: Translations = {
 	fare: 'Fahrpreis',
 	bookingDeadline: 'Buchungsschluss',
 	bookingDeadlineContent: 'min. 1 Stunde im Voraus',
+	cancellation: 'Stornierung',
+	cancellationAppeal:
+		'Bitte stornieren Sie so früh wie möglich, um den Taxiunternehmen die Planung zu erleichtern.',
 	logo: 'Das PriMa+ÖV Logo. Ikonographische Darstellung eines Autos, Busses, Zuges und Taxis.',
 	toConnectionSearch: 'Zur Verbindungssuche',
 	luggageExplanation:
 		'Ungefähre Anzahl von transportierbaren Gepäckstücken in Handgepäckgröße. Ein großer Koffer entspricht etwa drei Handgepäckstücken.',
+	noAvailabilityTitle: 'Zu weit in der Zukunft',
+	noAvalablilityDescription:
+		'Für die angefragte Zeit wurden noch keine Taxis als verfügbar gemeldet. Versuchen Sie es später wieder.',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
@@ -322,7 +330,7 @@ const translations: Translations = {
 		cancelHeadline: 'Möchten Sie wirklich diese Fahrt stornieren?',
 		noCancel: 'Nein, Fahrt nicht stornieren.',
 		cancelDescription:
-			'Die Stornierung der Fahrt kann nicht rückgängig gemacht werden. Eine Stornierung weniger als 24 Stunden vor der Fahrt ist mit Kosten verbunden.',
+			'Die Stornierung der Fahrt kann nicht rückgängig gemacht werden. Falls sich das Taxi schon auf dem Weg befindet, wird Ihnen die Anfahrt des Taxis voll in Rechnung gestellt.',
 		pin: 'PIN:',
 		pinExplainer:
 			'Zur Weitergabe an den Fahrgast. Der Fahrgast muss die PIN beim Einstieg den Taxifahrer:innen mitteilen.',
@@ -358,7 +366,7 @@ const translations: Translations = {
 		negotiatePrivacy:
 			'Die folgenden Daten werden beim Senden der Anfrage mit der Person, die diese Mitfahrgelegenheit anbietet, geteilt:',
 		negotiateExplanation:
-			'Sie müssen den Preis sowie genaue Abfahrtszeit und -ort mit der anbietenden Person vereinbaren.',
+			'Es handelt sich um eine private Mitfahrgelegenheit. Sie müssen den Preis sowie genaue Abfahrtszeit und -ort mit der anbietenden Person vereinbaren.',
 		startAndEnd: 'Start und Ziel der Fahrt',
 		profile: 'Ihr Profil',
 		email: 'Ihre E-Mail',

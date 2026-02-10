@@ -38,7 +38,7 @@
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { HelpCircleIcon, LocateFixed, MapIcon } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
-	import { BOOKING_MAX_PASSENGERS, MAX_MATCHING_DISTANCE } from '$lib/constants';
+	import { BOOKING_MAX_PASSENGERS, MAX_MATCHING_DISTANCE, MIN_PREP_BOOKING } from '$lib/constants';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { planAndSign, type SignedPlanResponse } from '$lib/planAndSign';
 	import logo from '$lib/assets/logo-alpha.png';
@@ -46,6 +46,9 @@
 	import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
 	import Info from 'lucide-svelte/icons/info';
+	import { HOUR } from '$lib/util/time';
+	import { Alert, AlertDescription, AlertTitle } from '$lib/shadcn/alert';
+	import AlertCircleIcon from 'lucide-svelte/icons/circle-alert';
 	import SlidersVertical from 'lucide-svelte/icons/sliders-vertical';
 	import { collectItineraries } from '$lib/calibration';
 	import { onClickStop, onClickTrip } from '$lib/util/onClick';
@@ -142,6 +145,7 @@
 					preTransitModes: ['WALK', 'ODM', 'RIDE_SHARING'],
 					postTransitModes: ['WALK', 'ODM', 'RIDE_SHARING'],
 					directModes: ['WALK', 'ODM', 'RIDE_SHARING'],
+					pedestrianProfile: wheelchair ? 'WHEELCHAIR' : 'FOOT',
 					luggage: luggageToInt(luggage),
 					fastestDirectFactor: 1.6,
 					maxMatchingDistance: MAX_MATCHING_DISTANCE,
@@ -611,6 +615,17 @@
 					</Dialog.Content>
 				</Dialog.Root>
 			</div>
+
+			{#if data.lastAvailability != undefined && time.valueOf() > data.lastAvailability.endTime + (timeType === 'arrival' ? 12 * HOUR : -MIN_PREP_BOOKING)}
+				<div class="flex grow">
+					<Alert variant="warning">
+						<AlertCircleIcon />
+						<AlertTitle class="ml-2">{t.noAvailabilityTitle}</AlertTitle>
+						<AlertDescription class="ml-2">{t.noAvalablilityDescription}</AlertDescription>
+					</Alert>
+				</div>
+			{/if}
+
 			<div class="flex grow flex-col gap-4">
 				<ItineraryList
 					{baseQuery}
@@ -668,7 +683,6 @@
 							<div></div>
 							<div>{t.perPerson} {t.perRide}</div>
 						</div>
-						<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
 						<p>
 							<button
 								class="link"
@@ -678,6 +692,11 @@
 							><br />{t.regionAround} Görlitz, Niesky, Weißwasser/O.L., Zittau.
 						</p>
 						<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
+						<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
+						<p>
+							<strong>{t.cancellation}</strong><br />{t.cancellationAppeal}
+							{t.booking.disclaimer}
+						</p>
 					</div>
 				</Dialog.Content>
 			</Dialog.Root>

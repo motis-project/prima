@@ -7,6 +7,11 @@ export const PUT = async ({ url }) => {
 	const ticketCode = url.searchParams.get('ticketCode');
 
 	if (typeof ticketCode !== 'string' || isNaN(requestId)) {
+		console.log(
+			'Invalid ticketCode parameter in api/driver/ticket.',
+			{ requestId },
+			{ ticketCode }
+		);
 		error(400, { message: 'Invalid ticketCode parameter' });
 	}
 
