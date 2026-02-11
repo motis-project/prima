@@ -1,5 +1,6 @@
 import type { CalibrationItinerary } from '$lib/calibration';
 import type { Itinerary, Leg } from '$lib/openapi';
+import { isTaxiLeg } from '$lib/util/booking/checkLegType';
 import type { VisualizationPackage } from '$lib/util/filterTaxis';
 import { usesTaxi } from '$lib/util/itineraryHelpers';
 import * as Plot from '@observablehq/plot';
@@ -23,6 +24,8 @@ export function vis(
 		return new Date(s.getTime() + (e.getTime() - s.getTime()) / 2);
 	};
 
+	const legVisData = getLegVisData(results.itineraries, getCost);
+
 	const plot = Plot.plot({
 		width: div?.clientWidth,
 		height: div?.clientHeight,
@@ -44,18 +47,29 @@ export function vis(
 				stroke: 'yellow',
 				opacity: 0.5
 			}),
-			// Plot.lineY(results.itineraries.reduce((acc, val) => acc.concat(val.legs), new Array<Leg>())),
+			Plot.lineY(legVisData, { x: 'time', y: 'cost', z: 'id', stroke: 'color', opacity: 0.5 }),
 			Plot.dot(results.itineraries, {
 				x: (i: CalibrationItinerary) => getCenter(i),
 				y: (i: CalibrationItinerary) => getCost(i),
 				stroke: (i: CalibrationItinerary) => (usesTaxi(i) ? 'yellow' : 'blue'),
+				fill: (i: CalibrationItinerary) => (usesTaxi(i) ? 'yellow' : 'blue'),
+				symbol: (i: CalibrationItinerary) => (usesTaxi(i) ? 'square' : 'circle'),
 				channels: {
 					departure: (i: CalibrationItinerary) =>
 						d3.timeFormat('%Y-%m-%d %H:%M%Z')(new Date(i.startTime)),
 					arrival: (i: CalibrationItinerary) =>
 						d3.timeFormat('%Y-%m-%d %H:%M%Z')(new Date(i.endTime)),
+					travelTime: (i: CalibrationItinerary) => i.duration / 60 + ' min',
 					transfers: 'transfers',
-					usesTaxi: (i: CalibrationItinerary) => usesTaxi(i)
+					taxiFirstMile: (i: CalibrationItinerary) =>
+						(i.legs.length > 0 && isTaxiLeg(i.legs[0]) ? i.legs[0].duration : 0) / 60 + ' min',
+					taxiLastMile: (i: CalibrationItinerary) =>
+						(i.legs.length > 1 && isTaxiLeg(i.legs[i.legs.length - 1])
+							? i.legs[i.legs.length - 1].duration
+							: 0) + ' min',
+					keep: (i: CalibrationItinerary) => i.keep,
+					remove: (i: CalibrationItinerary) => i.remove,
+					fulfilled: (i: CalibrationItinerary) => i.fulfilled
 				},
 				tip: {
 					color: 'white',
@@ -65,9 +79,63 @@ export function vis(
 						y: true
 					}
 				}
-			})
+			}),
+			Plot.dot(
+				results.itineraries.filter((i) => !i.fulfilled),
+				{
+					x: (i: CalibrationItinerary) => getCenter(i),
+					y: (i: CalibrationItinerary) => getCost(i),
+					r: 5,
+					stroke: 'red',
+					strokeWidth: 3,
+					symbol: 'times'
+				}
+			)
 		],
 		legend: true
 	});
 	div?.replaceChildren(plot);
+}
+
+type LegVisData = {
+	time: Date;
+	cost: number;
+	color: 'yellow' | 'blue';
+	id: number;
+};
+
+function getLegVisData<T extends Itinerary>(
+	itineraries: Array<T>,
+	getCost: (i: Itinerary) => number
+): Array<LegVisData> {
+	let ret = new Array<LegVisData>();
+	itineraries.forEach((i, iI) => {
+		const cost = getCost(i);
+		let ptStart = new Date(i.startTime);
+		let ptEnd = new Date(i.endTime);
+		if (i.legs.length > 0 && isTaxiLeg(i.legs[0])) {
+			ret.push(
+				{ time: new Date(i.legs[0].startTime), cost: cost, color: 'yellow', id: iI },
+				{ time: new Date(i.legs[0].endTime), cost: cost, color: 'yellow', id: iI }
+			);
+			ptStart = new Date(i.legs[0].endTime);
+		}
+		if (i.legs.length > 1 && isTaxiLeg(i.legs[i.legs.length - 1])) {
+			ret.push(
+				{
+					time: new Date(i.legs[i.legs.length - 1].startTime),
+					cost: cost,
+					color: 'yellow',
+					id: iI
+				},
+				{ time: new Date(i.legs[i.legs.length - 1].endTime), cost: cost, color: 'yellow', id: iI }
+			);
+			ptEnd = new Date(i.legs[i.legs.length - 1].startTime);
+		}
+		ret.push(
+			{ time: ptStart, cost: cost, color: 'blue', id: iI },
+			{ time: ptEnd, cost: cost, color: 'blue', id: iI }
+		);
+	});
+	return ret;
 }
