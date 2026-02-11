@@ -3,8 +3,8 @@ import { db } from '$lib/server/db';
 import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
 import { MAX_RIDE_SHARE_TOUR_TIME, SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
-import { carRouting } from '$lib/util/carRouting';
 import { MINUTE } from '$lib/util/time';
+import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
 
 export async function getRideShareTourCommunicatedTimes(
 	time: number,
@@ -33,18 +33,11 @@ async function util(
 	  }
 	| undefined
 > {
-	const routingResult = await carRouting(
-		start,
-		target,
-		false,
-		new Date().toISOString(),
-		MAX_RIDE_SHARE_TOUR_TIME
-	);
-	if (!routingResult) {
+	const duration = (await oneToManyCarRouting(start, [target], false, MAX_RIDE_SHARE_TOUR_TIME))[0];
+	if (!duration) {
 		console.log('adding tour: routing failed');
 		return undefined;
 	}
-	const duration = routingResult.duration;
 	const allowedArrivalsAtFixed = new Interval(
 		startFixed ? time : time - 10 * MINUTE,
 		startFixed ? time + 10 * MINUTE : time
@@ -112,7 +105,7 @@ async function util(
 			.sort((e1, e2) => e1.scheduledTimeStart - e2.scheduledTimeStart);
 		const firstTourEvent = sameTourEvents[0];
 		const lastTourEvent = sameTourEvents[sameTourEvents.length - 1];
-		const prevLegDurationResult = await carRouting(lastTourEvent, start);
+		const prevLegDurationResult = (await oneToManyCarRouting(lastTourEvent, [start], false))[0];
 		if (!prevLegDurationResult) {
 			console.log('adding tour: previous leg conflict', prevLegDurationResult, lastEventBefore);
 			return undefined;
@@ -120,7 +113,7 @@ async function util(
 		allowedIntervals = Interval.subtract(allowedIntervals, [
 			new Interval(firstTourEvent.scheduledTimeStart, lastTourEvent.scheduledTimeEnd).expand(
 				0,
-				prevLegDurationResult.duration
+				prevLegDurationResult
 			)
 		]);
 	}
@@ -130,14 +123,14 @@ async function util(
 			.sort((e1, e2) => e1.scheduledTimeStart - e2.scheduledTimeStart);
 		const firstTourEvent = sameTourEvents[0];
 		const lastTourEvent = sameTourEvents[sameTourEvents.length - 1];
-		const nextLegDurationResult = await carRouting(target, firstTourEvent);
+		const nextLegDurationResult = (await oneToManyCarRouting(target, [firstTourEvent], false))[0];
 		if (!nextLegDurationResult) {
 			console.log('adding tour: next leg conflict', nextLegDurationResult, firstEventAfter);
 			return undefined;
 		}
 		allowedIntervals = Interval.subtract(allowedIntervals, [
 			new Interval(firstTourEvent.scheduledTimeStart, lastTourEvent.scheduledTimeEnd).expand(
-				nextLegDurationResult.duration,
+				nextLegDurationResult,
 				0
 			)
 		]);
