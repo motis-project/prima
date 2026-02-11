@@ -230,7 +230,7 @@ async function bookFull(
 			maxMatchingDistance: MAX_MATCHING_DISTANCE,
 			maxTravelTime: 1440,
 			passengers: parameters.capacities.passengers,
-			pedestrianProfile: parameters.capacities !== 0 ? 'WHEELCHAIR' : 'FOOT'
+			pedestrianProfile: parameters.capacities.wheelchairs !== 0 ? 'WHEELCHAIR' : 'FOOT'
 		}
 	} as PlanData;
 	const planResponse = await planAndSign(q.query, 'http://localhost:5173');

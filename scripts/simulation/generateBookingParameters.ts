@@ -57,6 +57,6 @@ function generateCapacities(): Capacities {
 		passengers: randomInt(1, 3),
 		bikes: 0,
 		luggage: randomInt(0, 1),
-		wheelchairs: randomInt(0, 1)
+		wheelchairs: 0
 	};
 }
