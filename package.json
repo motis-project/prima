@@ -115,6 +115,7 @@
 		"colord": "^2.9.3",
 		"console-stamp": "^3.1.2",
 		"countries-list": "^3.1.1",
+		"d3": "^7.9.0",
 		"date-fns": "^4.1.0",
 		"dotenv": "^16.5.0",
 		"file-saver": "^2.0.5",

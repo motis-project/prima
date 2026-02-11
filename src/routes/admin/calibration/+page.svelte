@@ -24,8 +24,7 @@
 	import ConnectionDetail from '../../(customer)/routing/ConnectionDetail.svelte';
 	import { onClickStop, onClickTrip } from '$lib/util/onClick';
 	import StopTimes from '../../(customer)/routing/StopTimes.svelte';
-	import * as Plot from '@observablehq/plot';
-	import { usesTaxi } from '$lib/util/itineraryHelpers';
+	import { vis } from './vis';
 
 	const { data } = $props();
 
@@ -58,6 +57,9 @@
 				)
 			);
 			const results = filterResults.at(-1);
+			if (results === undefined || results.visualize === undefined) {
+				return;
+			}
 
 			for (const it of c.itineraries) {
 				if (it.keep || it.remove) {
@@ -68,53 +70,7 @@
 				}
 			}
 
-			if (results === undefined || results.visualize === undefined) {
-				return;
-			}
-
-			const getCenter = (i: CalibrationItinerary) => {
-				const s = new Date(i.startTime);
-				const e = new Date(i.endTime);
-				return new Date(s.getTime() + (e.getTime() - s.getTime()) / 2);
-			};
-
-			const div = document.getElementById('vis' + cI);
-			const plot = Plot.plot({
-				width: div?.clientWidth,
-				height: div?.clientHeight,
-				style: 'overflow: visible; font-size: .8em;',
-				grid: true,
-				x: { label: 'time' },
-				y: { label: 'cost' },
-				marks: [
-					Plot.ruleY([0]),
-					Plot.lineY(results.visualize.thresholds, {
-						x: 'time',
-						y: 'pt',
-						stroke: 'blue',
-						opacity: 0.5
-					}),
-					Plot.lineY(results.visualize.thresholds, {
-						x: 'time',
-						y: 'taxi',
-						stroke: 'yellow',
-						opacity: 0.5
-					}),
-					Plot.dot(results.itineraries, {
-						x: (i: CalibrationItinerary) => getCenter(i),
-						y: (i: CalibrationItinerary) => getCost(i),
-						stroke: (i: CalibrationItinerary) => (usesTaxi(i) ? 'yellow' : 'blue'),
-						channels: {
-							departure: (i: CalibrationItinerary) => new Date(i.startTime),
-							arrival: (i: CalibrationItinerary) => new Date(i.endTime),
-							transfers: 'transfers'
-						},
-						tip: { color: 'white', fill: 'black' }
-					})
-				],
-				legend: true
-			});
-			div?.replaceChildren(plot);
+			vis(results, document.getElementById('vis' + cI), getCost);
 		});
 	});
 </script>
