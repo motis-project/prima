@@ -15,7 +15,7 @@
 	import CircleCheck from 'lucide-svelte/icons/circle-check';
 	import CircleX from 'lucide-svelte/icons/circle-x';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
-	import { MapIcon } from 'lucide-svelte';
+	import { Check, MapIcon, X } from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import ItinerarySummary from '../../(customer)/routing/ItinerarySummary.svelte';
 	import { filterTaxis, getCostFn } from '$lib/util/filterTaxis';
@@ -35,6 +35,7 @@
 	let ptSlope = $state(data.filterSettings?.ptSlope ?? 2.2);
 	let taxiSlope = $state(data.filterSettings?.taxiSlope ?? 2.0);
 	let calibrationSets = $state(data.calibrationSets);
+	let deletionPrimer = $state(new Array<boolean>(calibrationSets.length));
 
 	$effect(() => {
 		const getCost = getCostFn(perTransfer, taxiBase, taxiPerMinute, taxiDirectPenalty);
@@ -226,16 +227,24 @@
 							method="post"
 							action="?/delete"
 							autocomplete="off"
-							use:enhance={() => {
-								return async ({ update }) => {
-									update({ reset: false, invalidateAll: true });
-								};
-							}}
 						>
 							<input type="hidden" name="id" value={c.id} />
-							<Button type="submit" variant="default" size="default">
+							<Button variant="default" size="default" onclick={(e) => (deletionPrimer[cI] = true)}>
 								<Trash />{t.calibration.delete}
 							</Button>
+							{#if deletionPrimer[cI]}
+								<Button type="submit" variant="default" size="default" class="bg-green-500">
+									<Check />
+								</Button>
+								<Button
+									variant="default"
+									size="default"
+									class="bg-red-500"
+									onclick={(e) => (deletionPrimer[cI] = false)}
+								>
+									<X />
+								</Button>
+							{/if}
 						</form>
 					</div>
 				</div>
