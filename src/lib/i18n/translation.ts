@@ -372,6 +372,9 @@ export type Translations = {
 		greeter: string;
 		keep: string;
 		remove: string;
+		deploy: string;
+		save: string;
+		delete: string;
 	};
 };
 

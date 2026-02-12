@@ -427,7 +427,10 @@ const translations: Translations = {
 		addCalibrationSet: 'Kalibrierungsmenge hinzufügen',
 		greeter: 'Passen Sie die Parameter des Taxifilters an:',
 		keep: 'behalten',
-		remove: 'entfernen'
+		remove: 'entfernen',
+		deploy: 'Parameter verwenden',
+		save: 'Klassifizierung speichern',
+		delete: 'Verbindungsmenge entfernen'
 	}
 };
 

@@ -18,13 +18,13 @@
 	import { MapIcon } from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import ItinerarySummary from '../../(customer)/routing/ItinerarySummary.svelte';
-	import type { CalibrationItinerary } from '$lib/calibration';
-	import { filterTaxis, getCostFn, type VisualizationPackage } from '$lib/util/filterTaxis';
+	import { filterTaxis, getCostFn } from '$lib/util/filterTaxis';
 	import { page } from '$app/state';
 	import ConnectionDetail from '../../(customer)/routing/ConnectionDetail.svelte';
 	import { onClickStop, onClickTrip } from '$lib/util/onClick';
 	import StopTimes from '../../(customer)/routing/StopTimes.svelte';
 	import { vis } from './vis';
+	import { HoverCard, HoverCardTrigger, HoverCardContent } from '$lib/shadcn/hover-card';
 
 	const { data } = $props();
 
@@ -36,41 +36,34 @@
 	let taxiSlope = $state(data.filterSettings?.taxiSlope ?? 2.0);
 	let calibrationSets = $state(data.calibrationSets);
 
-	let filterResults = new Array<{
-		itineraries: Array<CalibrationItinerary>;
-		visualize?: VisualizationPackage;
-	}>();
 	$effect(() => {
-		filterResults = [];
 		const getCost = getCostFn(perTransfer, taxiBase, taxiPerMinute, taxiDirectPenalty);
 		calibrationSets.forEach((c, cI) => {
-			filterResults.push(
-				filterTaxis(
-					c.itineraries,
-					perTransfer,
-					taxiBase,
-					taxiPerMinute,
-					taxiDirectPenalty,
-					ptSlope,
-					taxiSlope,
-					true
-				)
+			const filterResult = filterTaxis(
+				c.itineraries,
+				perTransfer,
+				taxiBase,
+				taxiPerMinute,
+				taxiDirectPenalty,
+				ptSlope,
+				taxiSlope,
+				true
 			);
-			const results = filterResults.at(-1);
-			if (results === undefined || results.visualize === undefined) {
-				return;
-			}
 
-			for (const it of c.itineraries) {
-				if (it.keep || it.remove) {
-					const found = results?.itineraries.find((x) => x === it) !== undefined;
-					it.fulfilled = (it.keep && found) || (it.remove && !found);
+			for (const i of c.itineraries) {
+				if (i.keep || i.remove) {
+					const found = filterResult.itineraries.find((x) => x === i) !== undefined;
+					i.fulfilled = (i.keep && found) || (i.remove && !found);
 				} else {
-					it.fulfilled = true;
+					i.fulfilled = true;
 				}
 			}
 
-			vis(results, document.getElementById('vis' + cI), getCost);
+			const div = document.getElementById('vis' + cI);
+			if (filterResult.visualize === undefined || div === null) {
+				return;
+			}
+			vis(c.itineraries, filterResult.visualize, div, getCost);
 		});
 	});
 </script>
@@ -128,21 +121,34 @@
 			}}
 		>
 			<Label for="perTransfer">{t.calibration.perTransfer}</Label>
-			<Input name="perTransfer" type="string" bind:value={perTransfer} />
+			<Input name="perTransfer" type="number" min="0" step="any" bind:value={perTransfer} />
 			<Label for="taxiBase">{t.calibration.taxiBase}</Label>
-			<Input name="taxiBase" type="string" bind:value={taxiBase} />
+			<Input name="taxiBase" type="number" min="0" step="any" bind:value={taxiBase} />
 			<Label for="taxiPerMinute">{t.calibration.taxiPerMinute}</Label>
-			<Input name="taxiPerMinute" type="string" bind:value={taxiPerMinute} />
+			<Input name="taxiPerMinute" type="number" min="0" step="any" bind:value={taxiPerMinute} />
 			<Label for="taxiDirectPenalty">{t.calibration.taxiDirectPenalty}</Label>
-			<Input name="taxiDirectPenalty" type="string" bind:value={taxiDirectPenalty} />
+			<Input
+				name="taxiDirectPenalty"
+				type="number"
+				min="0"
+				step="any"
+				bind:value={taxiDirectPenalty}
+			/>
 			<Label for="ptSlope">{t.calibration.ptSlope}</Label>
-			<Input name="ptSlope" type="string" bind:value={ptSlope} />
+			<Input name="ptSlope" type="number" min="0" step="any" bind:value={ptSlope} />
 			<Label for="taxiSlope">{t.calibration.taxiSlope}</Label>
-			<Input name="taxiSlope" type="string" bind:value={taxiSlope} />
+			<Input name="taxiSlope" type="number" min="0" step="any" bind:value={taxiSlope} />
 
-			<Button type="submit">
-				<ArrowDownToLine />
-			</Button>
+			<HoverCard>
+				<HoverCardTrigger>
+					<Button type="submit">
+						<ArrowDownToLine />
+					</Button>
+				</HoverCardTrigger>
+				<HoverCardContent side="bottom" class="flex justify-center">
+					<p>{t.calibration.deploy}</p>
+				</HoverCardContent>
+			</HoverCard>
 		</form>
 
 		{#each calibrationSets as c, cI}
@@ -209,7 +215,7 @@
 						<input type="hidden" name="name" value={c.name} />
 						<input type="hidden" name="itineraries" value={JSON.stringify(c.itineraries)} />
 						<Button class="w-full" type="submit" variant="default">
-							<Save />
+							<Save />{t.calibration.save}
 						</Button>
 					</form>
 				</div>
@@ -228,7 +234,7 @@
 						>
 							<input type="hidden" name="id" value={c.id} />
 							<Button type="submit" variant="default" size="default">
-								<Trash />
+								<Trash />{t.calibration.delete}
 							</Button>
 						</form>
 					</div>

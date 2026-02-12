@@ -417,7 +417,10 @@ const translations: Translations = {
 		addCalibrationSet: 'Add calibration set',
 		greeter: 'Adjust the parameters of the taxi filter:',
 		keep: 'keep',
-		remove: 'remove'
+		remove: 'remove',
+		deploy: 'Deploy parameters',
+		save: 'Save classification',
+		delete: 'Remove calibration set'
 	}
 };
 
