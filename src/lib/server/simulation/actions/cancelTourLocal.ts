@@ -6,9 +6,22 @@ import { randomInt } from '../randomInt';
 export async function cancelTourLocal() {
 	const tours = await getToursWithRequests(false);
 	if (tours.length === 0) {
-		return false;
+		return {
+			lastActionSpecifics: null,
+			success: false,
+			error: false,
+			atomicDurations: {} as Record<string, number>
+		};
 	}
-	const r = randomInt(0, tours.length);
+	const r = randomInt(0, tours.length - 1);
 	await cancelTour(tours[r].tourId, 'message', tours[r].companyId);
-	return { vehicleId: tours[r].vehicleId, dayStart: Math.floor(tours[r].startTime / DAY) * DAY };
+	return {
+		lastActionSpecifics: {
+			vehicleId: tours[r].vehicleId,
+			dayStart: Math.floor(tours[r].startTime / DAY) * DAY
+		},
+		success: true,
+		error: false,
+		atomicDurations: {} as Record<string, number>
+	};
 }

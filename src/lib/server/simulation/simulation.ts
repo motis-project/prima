@@ -17,7 +17,21 @@ import { cancelRequestRsLocal } from './actions/cancelRequestRsLocal';
 import { cancelTourRsLocal } from './actions/cancelTourRsLocal';
 import { readCoordinates } from './readCoordinates';
 import { doBackup } from './doBackup';
+import { db } from '../db';
+import { sql } from 'kysely';
+import { createJsonlTimeStatWriter } from './stats';
+
+const FLUSH_INTERVAL = 10;
+const OUTPUT_FILE = './simulation-stats.jsonl';
+
 let counter = 0;
+
+export type ActionResponse = {
+	lastActionSpecifics: { vehicleId: number; dayStart: number } | null;
+	atomicDurations: Record<string, number>;
+	success: boolean;
+	error: boolean;
+};
 
 enum Action {
 	BOOKING_FULL,
@@ -43,7 +57,7 @@ type ActionType = {
 		mode?: string,
 		compareCosts?: boolean,
 		doWhitelist?: boolean
-	) => Promise<{ vehicleId: number; dayStart: number } | boolean>;
+	) => Promise<ActionResponse>;
 };
 
 const actionProbabilities: ActionType[] = [
@@ -177,7 +191,8 @@ export async function simulation(params: Params): Promise<boolean> {
 		const action = actionProbabilities[actionIdx];
 		chosen[actionIdx] += 1;
 		console.log('Chose:', action.text);
-		let lastActionSpecifics: { vehicleId: number; dayStart: number } | boolean = false;
+		let lastActionSpecifics: { vehicleId: number; dayStart: number } | null = null;
+		let result: ActionResponse | undefined = undefined;
 		try {
 			const mode =
 				action.action === Action.BOOK_RIDE_SHARE
@@ -185,15 +200,40 @@ export async function simulation(params: Params): Promise<boolean> {
 					: action.action === Action.BOOKING_FULL
 						? 'ODM'
 						: undefined;
-			lastActionSpecifics = await action.fnc(
+			const start = performance.now();
+			result = await action.fnc(
 				coordinates,
 				restrictedCoordinates,
 				mode,
 				params.cost,
 				params.whitelist
 			);
-			if (lastActionSpecifics === true) {
+			const end = performance.now();
+			if (result.error === true) {
 				return true;
+			}
+			console.log('');
+			if (result.success) {
+				lastDbState = await getDbState();
+			}
+			await timeStats.record({
+				...lastDbState,
+				iteration: i,
+				action: action.text,
+				durationMs: end - start,
+				atomicDurations: result.atomicDurations,
+				success: result.success
+			});
+			if (result.success) {
+				lastActionSpecifics = result.lastActionSpecifics!;
+				if (
+					params.healthChecks && lastActionWasRideShare(actionIdx)
+						? await healthCheckRideShare()
+						: await healthCheck(lastActionSpecifics.vehicleId, lastActionSpecifics.dayStart)
+				) {
+					await timeStats.close();
+					return true;
+				}
 			}
 		} catch (e) {
 			errors.push(JSON.stringify(e, null, 2));
@@ -201,18 +241,11 @@ export async function simulation(params: Params): Promise<boolean> {
 		if (params.backups) {
 			await doBackup(++counter);
 		}
-		console.log('');
-		if (typeof lastActionSpecifics !== 'boolean') {
-			if (
-				params.healthChecks && lastActionWasRideShare(actionIdx)
-					? await healthCheckRideShare()
-					: await healthCheck(lastActionSpecifics.vehicleId, lastActionSpecifics.dayStart)
-			) {
-				return true;
-			}
-		}
 	}
 
+	const timeStats = createJsonlTimeStatWriter(OUTPUT_FILE, FLUSH_INTERVAL);
+	let lastDbState = await getDbState();
+	await timeStats.init();
 	const { coordinates, restrictedCoordinates } = await setup(params);
 	const chosen = Array.from({ length: actionProbabilities.length }, (_) => 0);
 	let errorCount = 0;
@@ -252,6 +285,7 @@ export async function simulation(params: Params): Promise<boolean> {
 		`There are currently ${tours.reduce((acc, curr) => (acc = acc + curr.requests.length), 0)} uncancelled requests across ${tours.length} tours.`
 	);
 	console.log('RANDOM API END');
+	await timeStats.close();
 	return false;
 }
 
@@ -307,4 +341,95 @@ function setActionProbabilities(mode: string) {
 			break;
 	}
 	console.log('Updated action probabilities:', JSON.stringify(actionProbabilities));
+}
+
+export type DbState = {
+	requests: {
+		total: number;
+		cancelled: number;
+		active: number;
+	};
+
+	tours: {
+		total: number;
+		cancelled: number;
+		active: number;
+	};
+
+	rideShareTours: {
+		total: number;
+		cancelled: number;
+		active: number;
+	};
+};
+
+export type SimulationStats = {
+	iteration: number;
+	action: string;
+
+	durationMs: number;
+	atomicDurations: Record<string, number>;
+	success: boolean;
+} & DbState;
+
+async function getDbState() {
+	const [
+		requestsTotal,
+		requestsCancelled,
+		toursTotal,
+		toursCancelled,
+		rideShareTotal,
+		rideShareCancelled
+	] = await Promise.all([
+		db
+			.selectFrom('request')
+			.select(sql<number>`count(*)`.as('count'))
+			.executeTakeFirstOrThrow(),
+
+		db
+			.selectFrom('request')
+			.where('cancelled', '=', true)
+			.select(sql<number>`count(*)`.as('count'))
+			.executeTakeFirstOrThrow(),
+
+		db
+			.selectFrom('tour')
+			.select(sql<number>`count(*)`.as('count'))
+			.executeTakeFirstOrThrow(),
+
+		db
+			.selectFrom('tour')
+			.where('cancelled', '=', true)
+			.select(sql<number>`count(*)`.as('count'))
+			.executeTakeFirstOrThrow(),
+
+		db
+			.selectFrom('rideShareTour')
+			.select(sql<number>`count(*)`.as('count'))
+			.executeTakeFirstOrThrow(),
+
+		db
+			.selectFrom('rideShareTour')
+			.where('cancelled', '=', true)
+			.select(sql<number>`count(*)`.as('count'))
+			.executeTakeFirstOrThrow()
+	]);
+
+	return {
+		requests: {
+			total: Number(requestsTotal.count),
+			cancelled: Number(requestsCancelled.count),
+			active: Number(requestsTotal.count) - Number(requestsCancelled.count)
+		},
+		tours: {
+			total: Number(toursTotal.count),
+			cancelled: Number(toursCancelled.count),
+			active: Number(toursTotal.count) - Number(toursCancelled.count)
+		},
+		rideShareTours: {
+			total: Number(rideShareTotal.count),
+			cancelled: Number(rideShareCancelled.count),
+			active: Number(rideShareTotal.count) - Number(rideShareCancelled.count)
+		}
+	};
 }

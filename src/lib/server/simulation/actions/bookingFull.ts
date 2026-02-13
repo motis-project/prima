@@ -13,6 +13,7 @@ import { lngLatToStr } from '$lib/util/lngLatToStr';
 import { DAY } from '$lib/util/time';
 import { generateBookingParameters } from '../generateBookingParameters';
 import { randomInt } from '../randomInt';
+import type { ActionResponse } from '../simulation';
 
 function findLastIndex<T>(
 	arr: T[],
@@ -31,7 +32,7 @@ async function rideShareApiCall(
 	kidsFiveToSix: number,
 	doWhitelist?: boolean,
 	compareCosts?: boolean
-) {
+): Promise<ActionResponse> {
 	const toursBefore = await getRideShareTours(false);
 	const response = await rideShareApi(
 		parameters,
@@ -47,7 +48,12 @@ async function rideShareApiCall(
 	if (t.length !== 1) {
 		console.log(`Found ${t.length} tours containing the new request.`);
 		if (doWhitelist) {
-			return true;
+			return {
+				lastActionSpecifics: null,
+				success: false,
+				error: true,
+				atomicDurations: {} as Record<string, number>
+			};
 		}
 	}
 	const newTour = t[0];
@@ -125,15 +131,33 @@ async function rideShareApiCall(
 			fail = true;
 		}
 		if (fail) {
-			return true;
+			return {
+				lastActionSpecifics: null,
+				success: false,
+				error: true,
+				atomicDurations: {} as Record<string, number>
+			};
 		}
 		console.log('costs do match');
 	}
 	console.log(response.status === 200 ? 'succesful booking' : 'failed to book');
 	if (doWhitelist && response.status !== 200) {
-		return true;
+		return {
+			lastActionSpecifics: null,
+			success: false,
+			error: true,
+			atomicDurations: {} as Record<string, number>
+		};
 	}
-	return { vehicleId: newTour.vehicleId, dayStart: Math.floor(newTour.startTime / DAY) * DAY };
+	return {
+		lastActionSpecifics: {
+			vehicleId: newTour.vehicleId,
+			dayStart: Math.floor(newTour.startTime / DAY) * DAY
+		},
+		success: true,
+		error: false,
+		atomicDurations: {} as Record<string, number>
+	};
 }
 
 export async function bookingApiCall(
@@ -143,9 +167,9 @@ export async function bookingApiCall(
 	kidsFiveToSix: number,
 	doWhitelist?: boolean,
 	compareCosts?: boolean
-) {
-	console.log('doing2');
+): Promise<ActionResponse> {
 	const toursBefore = await getToursWithRequests(false);
+	const start = performance.now();
 	const response = await bookingApi(
 		parameters,
 		1,
@@ -157,13 +181,20 @@ export async function bookingApiCall(
 		0,
 		!(doWhitelist ?? false)
 	);
+	const bookingDuration = performance.now() - start;
+	const atomicDurations = { bookingDuration } as Record<string, number>;
 	const requestId = response.request1Id ?? response.request2Id;
 	const toursAfter = await getToursWithRequests(false);
 	const t = toursAfter.filter((t) => t.requests.some((r) => r.requestId === requestId));
 	if (t.length !== 1) {
 		console.log(`Found ${t.length} tours containing the new request.`);
 		if (doWhitelist) {
-			return true;
+			return {
+				lastActionSpecifics: null,
+				success: false,
+				error: true,
+				atomicDurations
+			};
 		}
 	}
 	const newTour = t[0];
@@ -241,15 +272,33 @@ export async function bookingApiCall(
 			fail = true;
 		}
 		if (fail) {
-			return true;
+			return {
+				lastActionSpecifics: null,
+				success: false,
+				error: true,
+				atomicDurations
+			};
 		}
 		console.log('costs do match');
 	}
 	console.log(response.status === 200 ? 'succesful booking' : 'failed to book');
 	if (doWhitelist && response.status !== 200) {
-		return true;
+		return {
+			lastActionSpecifics: null,
+			success: false,
+			error: true,
+			atomicDurations
+		};
 	}
-	return { vehicleId: newTour.vehicleId, dayStart: Math.floor(newTour.startTime / DAY) * DAY };
+	return {
+		lastActionSpecifics: {
+			vehicleId: newTour.vehicleId,
+			dayStart: Math.floor(newTour.startTime / DAY) * DAY
+		},
+		success: true,
+		error: false,
+		atomicDurations
+	};
 }
 
 export async function bookFull(
@@ -257,7 +306,7 @@ export async function bookFull(
 	restricted: Coordinates[] | undefined,
 	mode?: string,
 	compareCosts?: boolean
-) {
+): Promise<ActionResponse> {
 	console.log('doing1');
 	const parameters = await generateBookingParameters(coordinates, restricted);
 	const potentialKids = parameters.capacities.passengers - 1;
@@ -290,17 +339,30 @@ export async function bookFull(
 			passengers: parameters.capacities.passengers
 		}
 	} as PlanData;
+	const start = performance.now();
 	const planResponse = await planAndSign(q.query, 'http://localhost:5173');
+	const planAndSignDuration = performance.now() - start;
+	const atomicDurations = { planAndSignDuration, bookingDuration: 0 } as Record<string, number>;
 	if (planResponse === undefined) {
 		console.log('PlanResponse was undefined.');
-		return true;
+		return {
+			lastActionSpecifics: null,
+			success: false,
+			error: true,
+			atomicDurations
+		};
 	}
 	const relevantItineraries = mode
 		? planResponse.itineraries.filter((i) => i.legs.some((l) => l.mode === mode))
 		: planResponse.itineraries;
 	if (relevantItineraries.length === 0) {
 		console.log('Found no itinerary with the selected mode.');
-		return false;
+		return {
+			lastActionSpecifics: null,
+			success: false,
+			error: false,
+			atomicDurations: {} as Record<string, number>
+		};
 	}
 	for (const itinerary of relevantItineraries) {
 		let monotonicTime = 0;
@@ -313,12 +375,17 @@ export async function bookFull(
 					'Non-monotonic times in itinerary. Wrong communicated times? ' + JSON.stringify(itinerary)
 				);
 				console.log(e);
-				return true;
+				return {
+					lastActionSpecifics: null,
+					success: false,
+					error: true,
+					atomicDurations: {} as Record<string, number>
+				};
 			}
 			monotonicTime = new Date(leg.endTime).getTime();
 		}
 	}
-	const choice = randomInt(0, relevantItineraries.length);
+	const choice = randomInt(0, relevantItineraries.length - 1);
 	const chosenItinerary = relevantItineraries[choice];
 	if (chosenItinerary.legs[0].from.name === 'START') {
 		chosenItinerary.legs[0].from.name = parameters.connection1!.start.address ?? '';
@@ -343,13 +410,23 @@ export async function bookFull(
 		)
 	);
 	if (mode === undefined) {
-		return false;
+		return {
+			lastActionSpecifics: null,
+			success: false,
+			error: false,
+			atomicDurations: {} as Record<string, number>
+		};
 	}
 	const firstOdmIndex = chosenItinerary.legs.findIndex((l) => l.mode === mode);
 	const lastOdmIndex = findLastIndex(chosenItinerary.legs, (l) => l.mode === mode);
 	if (firstOdmIndex === -1) {
 		console.log('OdmLeg was undefined.');
-		return true;
+		return {
+			lastActionSpecifics: null,
+			success: false,
+			error: true,
+			atomicDurations: {} as Record<string, number>
+		};
 	}
 	const firstOdm = chosenItinerary.legs[firstOdmIndex];
 	const lastOdm = chosenItinerary.legs[lastOdmIndex];
@@ -401,7 +478,7 @@ export async function bookFull(
 			? null
 			: expectedConnectionFromLeg(lastOdm, chosenItinerary.signature2, true, requestedTime2);
 	if (mode === 'ODM') {
-		return await bookingApiCall(
+		const result = await bookingApiCall(
 			{ capacities: parameters.capacities, connection1, connection2 },
 			kidsZeroToTwo,
 			kidsThreeToFour,
@@ -409,15 +486,24 @@ export async function bookFull(
 			true,
 			compareCosts
 		);
+		result.atomicDurations['planAndSignDuration'] = planAndSignDuration;
+		return result;
 	} else if (mode === 'RIDE_SHARING') {
-		return await rideShareApiCall(
+		const result = await rideShareApiCall(
 			{ capacities: parameters.capacities, connection1, connection2 },
 			kidsZeroToTwo,
 			kidsThreeToFour,
 			kidsFiveToSix
 		);
+		result.atomicDurations['planAndSignDuration'] = planAndSignDuration;
+		return result;
 	} else {
 		console.log('internal simulation script error, unexpected mode.', mode);
-		return true;
+		return {
+			lastActionSpecifics: null,
+			success: false,
+			error: true,
+			atomicDurations: {} as Record<string, number>
+		};
 	}
 }
