@@ -9,6 +9,7 @@ import { filterRideSharing } from '$lib/util/filterRideSharing';
 import { db } from '$lib/server/db';
 import { filterTaxis } from '$lib/util/filterTaxis';
 import { readTimeFromPageCursor } from '$lib/util/time';
+import { publicTransitOnly } from '$lib/util/itineraryHelpers';
 
 export const POST = async (event: RequestEvent) => {
 	const q: PlanData['query'] = await event.request.json();
@@ -46,7 +47,10 @@ export const POST = async (event: RequestEvent) => {
 	const intvl_end = readTimeFromPageCursor(response.nextPageCursor);
 	filteredItineraries = filteredItineraries.filter((i) => {
 		const t = new Date(q.arriveBy ? i.endTime : i.startTime);
-		return intvl_start <= t && t <= intvl_end;
+		return (
+			(event.locals.session?.isAdmin && publicTransitOnly(i)) ||
+			(intvl_start <= t && t <= intvl_end)
+		);
 	});
 
 	return json({
