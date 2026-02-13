@@ -65,7 +65,7 @@ export function filterTaxis<T extends Itinerary>(
 			});
 		}
 
-		// TODO average damping
+		averageDamping(threshold);
 
 		return threshold;
 	};
@@ -126,4 +126,42 @@ function getThresholds<T extends Itinerary>(
 		});
 	}
 	return thresholds;
+}
+
+function averageDamping(a: Array<number>) {
+	const isMinimum = (a: Array<number>, i: number): boolean => {
+		return (i === 0 || a[i] <= a[i - 1]) && (i === a.length - 1 || a[i] <= a[i + 1]);
+	};
+
+	const getNextMinimum = (a: Array<number>, i: number) => {
+		for (; i < a.length; ++i) {
+			if (isMinimum(a, i)) {
+				break;
+			}
+		}
+		return i;
+	};
+
+	const getAverage = (a: Array<number>, i: number, j: number): number => {
+		let acc = 0;
+		for (let k = i; k <= j; ++k) {
+			acc += a[k];
+		}
+		return acc / (j - i + 1);
+	};
+
+	let i = getNextMinimum(a, 0);
+	while (i < a.length - 1) {
+		let j = getNextMinimum(a, i + 1);
+		if (j === a.length) {
+			break;
+		}
+
+		const avg = getAverage(a, i, j);
+		for (let k = i; k <= j; ++k) {
+			a[k] = Math.min(a[k], avg);
+		}
+
+		i = j;
+	}
 }
