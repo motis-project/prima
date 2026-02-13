@@ -5,7 +5,7 @@
 
 	const { data } = $props();
 
-	const statNames = ['requests', 'taxi tours', 'ride share tours'];
+	const statNames = ['requests taxi', 'requests ride share', 'taxi tours', 'ride share tours'];
 	let selectedStatOption = $state('active');
 	function getData(entry: SimulationStats, statName: string, statOption: string) {
 		let dbData = {
@@ -14,8 +14,11 @@
 			active: -1
 		};
 		switch (statName) {
-			case 'requests':
-				dbData = entry.requests;
+			case 'requests taxi':
+				dbData = entry.requestsTaxi;
+				break;
+			case 'requests ride share':
+				dbData = entry.requestsRideShare;
 				break;
 			case 'taxi tours':
 				dbData = entry.tours;

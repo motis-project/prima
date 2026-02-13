@@ -19,7 +19,7 @@ import { readCoordinates } from './readCoordinates';
 import { doBackup } from './doBackup';
 import { db } from '../db';
 import { sql } from 'kysely';
-import { createJsonlTimeStatWriter } from './stats';
+import { createJsonlTimeStatWriter as createJsonlStatWriter } from './stats';
 
 const FLUSH_INTERVAL = 10;
 const OUTPUT_FILE = './simulation-stats.jsonl';
@@ -243,7 +243,7 @@ export async function simulation(params: Params): Promise<boolean> {
 		}
 	}
 
-	const timeStats = createJsonlTimeStatWriter(OUTPUT_FILE, FLUSH_INTERVAL);
+	const timeStats = createJsonlStatWriter(OUTPUT_FILE, FLUSH_INTERVAL);
 	let lastDbState = await getDbState();
 	await timeStats.init();
 	const { coordinates, restrictedCoordinates } = await setup(params);
@@ -344,7 +344,12 @@ function setActionProbabilities(mode: string) {
 }
 
 export type DbState = {
-	requests: {
+	requestsTaxi: {
+		total: number;
+		cancelled: number;
+		active: number;
+	};
+	requestsRideShare: {
 		total: number;
 		cancelled: number;
 		active: number;
@@ -374,8 +379,10 @@ export type SimulationStats = {
 
 async function getDbState() {
 	const [
-		requestsTotal,
-		requestsCancelled,
+		requestsTotalTaxi,
+		requestsTotalRideShare,
+		requestsCancelledTaxi,
+		requestsCancelledRideShare,
 		toursTotal,
 		toursCancelled,
 		rideShareTotal,
@@ -383,12 +390,25 @@ async function getDbState() {
 	] = await Promise.all([
 		db
 			.selectFrom('request')
+			.where('request.tour', 'is not', null)
+			.select(sql<number>`count(*)`.as('count'))
+			.executeTakeFirstOrThrow(),
+		db
+			.selectFrom('request')
+			.where('request.rideShareTour', 'is not', null)
 			.select(sql<number>`count(*)`.as('count'))
 			.executeTakeFirstOrThrow(),
 
 		db
 			.selectFrom('request')
 			.where('cancelled', '=', true)
+			.where('request.tour', 'is not', null)
+			.select(sql<number>`count(*)`.as('count'))
+			.executeTakeFirstOrThrow(),
+		db
+			.selectFrom('request')
+			.where('cancelled', '=', true)
+			.where('request.rideShareTour', 'is not', null)
 			.select(sql<number>`count(*)`.as('count'))
 			.executeTakeFirstOrThrow(),
 
@@ -416,10 +436,15 @@ async function getDbState() {
 	]);
 
 	return {
-		requests: {
-			total: Number(requestsTotal.count),
-			cancelled: Number(requestsCancelled.count),
-			active: Number(requestsTotal.count) - Number(requestsCancelled.count)
+		requestsTaxi: {
+			total: Number(requestsTotalTaxi.count),
+			cancelled: Number(requestsCancelledTaxi.count),
+			active: Number(requestsTotalTaxi.count) - Number(requestsCancelledTaxi.count)
+		},
+		requestsRideShare: {
+			total: Number(requestsTotalRideShare.count),
+			cancelled: Number(requestsCancelledRideShare.count),
+			active: Number(requestsTotalRideShare.count) - Number(requestsCancelledRideShare.count)
 		},
 		tours: {
 			total: Number(toursTotal.count),
