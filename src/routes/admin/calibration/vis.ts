@@ -1,5 +1,5 @@
 import type { CalibrationItinerary } from '$lib/calibration';
-import type { Itinerary, Leg } from '$lib/openapi';
+import type { Itinerary } from '$lib/openapi';
 import { isTaxiLeg } from '$lib/util/booking/checkLegType';
 import type { VisualizationPackage } from '$lib/util/filterTaxis';
 import { usesTaxi } from '$lib/util/itineraryHelpers';
@@ -103,7 +103,7 @@ function getLegVisData<T extends Itinerary>(
 	is: Array<T>,
 	getCost: (i: Itinerary) => number
 ): Array<LegVisData> {
-	let ret = new Array<LegVisData>();
+	const ret = new Array<LegVisData>();
 	is.forEach((i, iI) => {
 		const cost = getCost(i);
 		let ptStart = new Date(i.startTime);

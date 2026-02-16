@@ -51,7 +51,7 @@ export function filterTaxis<T extends Itinerary>(
 	};
 
 	const getThreshold = (is: Array<T>, slope: number): Array<number> => {
-		let threshold = new Array<number>(end - start);
+		const threshold = new Array<number>(end - start);
 		threshold.fill(Number.POSITIVE_INFINITY);
 
 		for (const i of is) {
@@ -117,7 +117,7 @@ function getThresholds<T extends Itinerary>(
 	taxiTreshold: Array<number>
 ): Array<{ time: Date; pt: number; taxi: number }> {
 	const start = getStart(itineraries);
-	let thresholds = new Array<{ time: Date; pt: number; taxi: number }>();
+	const thresholds = new Array<{ time: Date; pt: number; taxi: number }>();
 	for (let i = 0; i < ptThreshold.length && i < taxiTreshold.length; ++i) {
 		thresholds.push({
 			time: new Date((start + i) * 60000),
@@ -152,7 +152,7 @@ function averageDamping(a: Array<number>) {
 
 	let i = getNextMinimum(a, 0);
 	while (i < a.length - 1) {
-		let j = getNextMinimum(a, i + 1);
+		const j = getNextMinimum(a, i + 1);
 		if (j === a.length) {
 			break;
 		}

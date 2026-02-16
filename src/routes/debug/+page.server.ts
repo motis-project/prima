@@ -1,7 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { readFloat } from '$lib/server/util/readForm';
-import { sql } from 'kysely';
 import { whitelist } from '../api/whitelist/whitelist';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import type { Translations } from '$lib/i18n/translation';

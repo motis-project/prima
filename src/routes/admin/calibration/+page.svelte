@@ -225,7 +225,7 @@
 					<div class="flex flex-row justify-end">
 						<form method="post" action="?/delete" autocomplete="off">
 							<input type="hidden" name="id" value={c.id} />
-							<Button variant="default" size="default" onclick={(e) => (deletionPrimer[cI] = true)}>
+							<Button variant="default" size="default" onclick={() => (deletionPrimer[cI] = true)}>
 								<Trash />{t.calibration.delete}
 							</Button>
 							{#if deletionPrimer[cI]}
@@ -236,7 +236,7 @@
 									variant="default"
 									size="default"
 									class="bg-red-500"
-									onclick={(e) => (deletionPrimer[cI] = false)}
+									onclick={() => (deletionPrimer[cI] = false)}
 								>
 									<X />
 								</Button>

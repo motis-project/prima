@@ -9,11 +9,11 @@ export type CalibrationItinerary = SignedItinerary & {
 export function collectItineraries(
 	routingResponses: Array<SignedPlanResponse | undefined>
 ): Array<CalibrationItinerary> {
-	let itineraries = new Array<CalibrationItinerary>();
+	const itineraries = new Array<CalibrationItinerary>();
 
-	for (let r of routingResponses) {
+	for (const r of routingResponses) {
 		if (r != undefined) {
-			for (let i of r.itineraries) {
+			for (const i of r.itineraries) {
 				itineraries.push({ ...i, keep: false, remove: false } as CalibrationItinerary);
 			}
 		}
@@ -23,7 +23,7 @@ export function collectItineraries(
 }
 
 export function deduplicate(itineraries: Array<CalibrationItinerary>): Array<CalibrationItinerary> {
-	let isDuplicate = Array<boolean>(itineraries.length);
+	const isDuplicate = Array<boolean>(itineraries.length);
 	for (let i = 0; i < itineraries.length; ++i) {
 		if (isDuplicate[i]) {
 			continue;
