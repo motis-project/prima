@@ -21,3 +21,22 @@ export function collectItineraries(
 
 	return itineraries;
 }
+
+export function deduplicate(itineraries: Array<CalibrationItinerary>): Array<CalibrationItinerary> {
+	let isDuplicate = Array<boolean>(itineraries.length);
+	for (let i = 0; i < itineraries.length; ++i) {
+		if (isDuplicate[i]) {
+			continue;
+		}
+		const first = JSON.stringify(itineraries[i]);
+		for (let j = i + 1; j < itineraries.length; ++j) {
+			if (isDuplicate[j]) {
+				continue;
+			}
+			isDuplicate[j] = first === JSON.stringify(itineraries[j]);
+		}
+	}
+	return itineraries.filter((_, i) => {
+		return !isDuplicate[i];
+	});
+}

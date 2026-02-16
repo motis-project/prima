@@ -15,7 +15,7 @@ import { expectedConnectionFromLeg } from '$lib/server/booking/expectedConnectio
 import { isOdmLeg } from '$lib/util/booking/checkLegType';
 import { sendMail } from '$lib/server/sendMail';
 import { sendBookingMails } from '$lib/util/sendBookingEmails';
-import type { CalibrationItinerary } from '$lib/calibration';
+import { deduplicate, type CalibrationItinerary } from '$lib/calibration';
 import { areasGeoJSON, rideshareGeoJSON } from '$lib/util/geoJSON';
 
 let booking_errors: Prom.Counter | undefined;
@@ -286,7 +286,7 @@ export const actions = {
 			return { msg: msg('unknownError') };
 		}
 
-		const itinerariesJson = JSON.stringify(itineraries);
+		const itinerariesJson = JSON.stringify(deduplicate(itineraries));
 		await db.insertInto('calibrationSets').values({ name, itinerariesJson }).execute();
 		return redirect(303, '/admin/calibration');
 	}
