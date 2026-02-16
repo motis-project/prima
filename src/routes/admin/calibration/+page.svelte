@@ -223,11 +223,7 @@
 				<div class="flex grow flex-col gap-2 p-1">
 					<div id={'vis' + cI} class="flex grow flex-row items-center justify-center"></div>
 					<div class="flex flex-row justify-end">
-						<form
-							method="post"
-							action="?/delete"
-							autocomplete="off"
-						>
+						<form method="post" action="?/delete" autocomplete="off">
 							<input type="hidden" name="id" value={c.id} />
 							<Button variant="default" size="default" onclick={(e) => (deletionPrimer[cI] = true)}>
 								<Trash />{t.calibration.delete}
