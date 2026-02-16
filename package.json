@@ -111,7 +111,6 @@
 		"@types/papaparse": "^5.3.15",
 		"@types/pg": "^8.11.11",
 		"@types/uuid": "^10.0.0",
-		"buffer": "^6.0.3",
 		"colord": "^2.9.3",
 		"console-stamp": "^3.1.2",
 		"countries-list": "^3.1.1",
