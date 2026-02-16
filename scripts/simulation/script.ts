@@ -4,6 +4,17 @@ import { logHelp } from './logHelp';
 import { simulation } from '../../src/lib/server/simulation/simulation';
 
 async function main() {
+	function checkIntArg(arg: string, flag: string) {
+		if (!arg.startsWith(`--${flag}`)) {
+			return -1;
+		}
+		const value = parseInt(arg.split('=')[1], 10);
+		if (isNaN(value) || value <= 0) {
+			console.error(`Invalid value for --${flag}. Must be a positive integer.`);
+			process.exit(1);
+		}
+		return value;
+	}
 	let healthChecks = false;
 	let runs: number | undefined = undefined;
 	let finishTime: number | undefined = undefined;
@@ -15,6 +26,8 @@ async function main() {
 	let cost = false;
 	let mode: undefined | string = undefined;
 	let full = false;
+	let companies = 3;
+	let vehicles = 2;
 	for (const arg of process.argv) {
 		if (arg === '--health') {
 			healthChecks = true;
@@ -43,19 +56,16 @@ async function main() {
 			}
 			mode = value;
 		}
+		if (arg.startsWith('--companies')) {
+			companies = checkIntArg(arg, 'companies');
+		}
+		if (arg.startsWith('--vehicles')) {
+			vehicles = checkIntArg(arg, 'vehicles');
+		}
 		if (arg.startsWith('--runs=')) {
-			const value = parseInt(arg.split('=')[1], 10);
-			if (isNaN(value) || value <= 0) {
-				console.error('Invalid value for --runs. Must be a positive integer.');
-				process.exit(1);
-			}
-			runs = value;
+			runs = checkIntArg(arg, 'runs');
 		} else if (arg.startsWith('--seconds=')) {
-			const value = parseInt(arg.split('=')[1], 10);
-			if (isNaN(value) || value <= 0) {
-				console.error('Invalid value for --runs. Must be a positive integer.');
-				process.exit(1);
-			}
+			const value = checkIntArg(arg, 'seconds');
 			finishTime = Date.now() + 1000 * value;
 		} else if (arg === '--ongoing') {
 			ongoing = true;
@@ -78,7 +88,9 @@ async function main() {
 		whitelist,
 		cost,
 		mode,
-		full
+		full,
+		companies,
+		vehiclesPerCompany: vehicles
 	});
 }
 main().catch((err) => {

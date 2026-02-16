@@ -20,6 +20,10 @@ import { doBackup } from './doBackup';
 import { db } from '../db';
 import { sql } from 'kysely';
 import { createJsonlTimeStatWriter as createJsonlStatWriter } from './stats';
+import { clearDatabase, Zone, addCompany, addTaxi } from '$lib/testHelpers';
+import { randomInt } from './randomInt';
+import type { Capacities } from '$lib/util/booking/Capacities';
+import { isSamePlace } from '../booking/isSamePlace';
 
 const FLUSH_INTERVAL = 10;
 const OUTPUT_FILE = './simulation-stats.jsonl';
@@ -100,7 +104,8 @@ const actionProbabilities: ActionType[] = [
 ];
 
 async function addInitialAvailabilities(company: number, vehicle: number) {
-	await addAvailability(Date.now(), Date.now() + DAY * 14, company, vehicle);
+	console.log('adding avas', { company }, { vehicle });
+	await addAvailability(Date.now(), Date.now() + DAY * 14, vehicle, company);
 }
 
 const isActionChosen = (r: number, a: ActionType) => {
@@ -132,6 +137,8 @@ type Params = {
 	cost?: boolean;
 	mode?: string;
 	full: boolean;
+	companies: number;
+	vehiclesPerCompany: number;
 };
 
 async function setup(params: Params) {
@@ -149,9 +156,26 @@ async function setup(params: Params) {
 				(c) => c.lat <= maxLat && c.lat >= minLat && c.lng <= maxLng && c.lng >= minLng
 			)
 		: undefined;
-	await addInitialAvailabilities(1, 1);
-	await addInitialAvailabilities(1, 2);
+	await clearDatabase();
+	const pickedCoordinates: Coordinates[] = [];
+	for (let i = 0; i != params.companies; ++i) {
+		let pickCoordinates = coordinates[randomInt(0, coordinates.length)];
+		while (pickedCoordinates.some((c) => isSamePlace(pickCoordinates, c))) {
+			pickCoordinates = coordinates[randomInt(0, coordinates.length)];
+		}
+		await addCompanyLocal(params.vehiclesPerCompany, pickCoordinates);
+	}
 	return { coordinates, restrictedCoordinates };
+}
+
+const capacaties: Capacities = { passengers: 3, luggage: 4, bikes: 0, wheelchairs: 1 };
+
+async function addCompanyLocal(vehicles: number, c: Coordinates) {
+	const companyId = await addCompany(Zone.WEIßWASSER, c);
+	for (let i = 0; i != vehicles; ++i) {
+		const taxiId = await addTaxi(companyId, capacaties);
+		await addInitialAvailabilities(companyId, taxiId);
+	}
 }
 
 function adjustToParams(params: Params) {
