@@ -11,8 +11,8 @@ import { bookFull } from './actions/bookingFull';
 import { cancelRequestLocal } from './actions/cancelRequestLocal';
 import { cancelTourLocal } from './actions/cancelTourLocal';
 import { moveTourLocal } from './actions/moveTourLocal';
-import { addRideShareTourLocal } from './actions/addRideShareTourLocal';
-import { acceptRideShareRequestLocal } from './actions/acceptRideShareRequestLocal';
+import { addRideShareTourSimulation } from './actions/addRideShareTourLocal';
+import { acceptRideShareRequestSimulation } from './actions/acceptRideShareRequestLocal';
 import { cancelRequestRsLocal } from './actions/cancelRequestRsLocal';
 import { cancelTourRsLocal } from './actions/cancelTourRsLocal';
 import { readCoordinates } from './readCoordinates';
@@ -20,7 +20,7 @@ import { doBackup } from './doBackup';
 import { db } from '../db';
 import { sql } from 'kysely';
 import { createJsonlTimeStatWriter as createJsonlStatWriter } from './stats';
-import { clearDatabase, Zone, addCompany, addTaxi } from '$lib/testHelpers';
+import { clearDatabase, Zone, addCompany, addTaxi, addTestUser } from '$lib/testHelpers';
 import { randomInt } from './randomInt';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { isSamePlace } from '../booking/isSamePlace';
@@ -36,6 +36,8 @@ export type ActionResponse = {
 	success: boolean;
 	error: boolean;
 };
+
+let customerId = -1;
 
 enum Action {
 	BOOKING_FULL,
@@ -56,8 +58,9 @@ type ActionType = {
 	probability: number;
 	text: string;
 	fnc: (
+		customerId: number,
 		coordinates: Coordinates[],
-		restrictedCoordinates: Coordinates[] | undefined,
+		restrictedCoordinates?: Coordinates[],
 		mode?: string,
 		compareCosts?: boolean,
 		doWhitelist?: boolean
@@ -79,14 +82,14 @@ const actionProbabilities: ActionType[] = [
 		action: Action.ADD_RIDE_SHARE_TOUR,
 		probability: 0.05,
 		text: 'add ride share tour',
-		fnc: addRideShareTourLocal
+		fnc: addRideShareTourSimulation
 	},
 	{ action: Action.BOOK_RIDE_SHARE, probability: 0.125, text: 'book ride share', fnc: bookFull },
 	{
 		action: Action.ACCPEPT_RIDE_SHARE_TOUR,
 		probability: 0.3,
 		text: 'accept ride share',
-		fnc: acceptRideShareRequestLocal
+		fnc: acceptRideShareRequestSimulation
 	},
 	{
 		action: Action.CANCEL_REQUEST_RS,
@@ -165,6 +168,7 @@ async function setup(params: Params) {
 		}
 		await addCompanyLocal(params.vehiclesPerCompany, pickCoordinates);
 	}
+	customerId = (await addTestUser()).id;
 	return { coordinates, restrictedCoordinates };
 }
 
@@ -226,6 +230,7 @@ export async function simulation(params: Params): Promise<boolean> {
 						: undefined;
 			const start = performance.now();
 			result = await action.fnc(
+				customerId,
 				coordinates,
 				restrictedCoordinates,
 				mode,

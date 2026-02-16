@@ -4,7 +4,9 @@ import { DAY } from '$lib/util/time';
 import { randomInt } from '../randomInt';
 import type { ActionResponse } from '../simulation';
 
-export async function acceptRideShareRequestLocal(): Promise<ActionResponse> {
+export async function acceptRideShareRequestSimulation(
+	customerId: number
+): Promise<ActionResponse> {
 	const tours = await getRideShareTours(false, true);
 	const requests = tours.flatMap((t) => t.requests);
 	if (requests.length === 0) {
@@ -18,7 +20,7 @@ export async function acceptRideShareRequestLocal(): Promise<ActionResponse> {
 	const r = randomInt(0, requests.length - 1);
 	const request = requests[r];
 	const tour = tours.find((t) => t.requests.some((req) => request.requestId === req.requestId))!;
-	const response = await acceptRideShareRequest(request.requestId, 1);
+	const response = await acceptRideShareRequest(request.requestId, customerId);
 	if (response.status === 200) {
 		console.log(`Successfully accepted ride share request with idx ${request.requestId}.`);
 		return {

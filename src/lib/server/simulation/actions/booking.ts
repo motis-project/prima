@@ -6,6 +6,7 @@ import type { ActionResponse } from '../simulation';
 import { bookingApiCall } from './bookingFull';
 
 export async function booking(
+	customerId: number,
 	coordinates: Coordinates[],
 	restricted: Coordinates[] | undefined,
 	compareCosts?: boolean,
@@ -44,6 +45,7 @@ export async function booking(
 		parameters.connection1!.requestedTime = requestedTime;
 	}
 	return await bookingApiCall(
+		customerId,
 		parameters,
 		kidsZeroToTwo,
 		kidsThreeToFour,

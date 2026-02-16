@@ -3,7 +3,7 @@ import { getRideShareTours } from '$lib/server/util/getRideShareTours';
 import { DAY } from '$lib/util/time';
 import { randomInt } from '../randomInt';
 
-export async function cancelTourRsLocal() {
+export async function cancelTourRsLocal(customerId: number) {
 	const tours = await getRideShareTours(false, false);
 	if (tours.length === 0) {
 		return {
@@ -14,7 +14,7 @@ export async function cancelTourRsLocal() {
 		};
 	}
 	const r = randomInt(0, tours.length - 1);
-	await cancelRideShareTour(tours[r].tourId, 1);
+	await cancelRideShareTour(tours[r].tourId, customerId);
 	return {
 		lastActionSpecifics: {
 			vehicleId: tours[r].vehicleId,

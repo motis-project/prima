@@ -4,7 +4,7 @@ import { DAY } from '$lib/util/time';
 import { randomInt } from '../randomInt';
 import type { ActionResponse } from '../simulation';
 
-export async function cancelRequestLocal(): Promise<ActionResponse> {
+export async function cancelRequestLocal(customerId: number): Promise<ActionResponse> {
 	const requests = (await getToursWithRequests(false)).flatMap((t) =>
 		t.requests.map((r) => {
 			return { ...t, ...r };
@@ -19,7 +19,7 @@ export async function cancelRequestLocal(): Promise<ActionResponse> {
 		};
 	}
 	const r = randomInt(0, requests.length - 1);
-	await cancelRequest(requests[r].requestId, requests[r].companyId);
+	await cancelRequest(requests[r].requestId, customerId);
 	return {
 		lastActionSpecifics: {
 			vehicleId: requests[r].vehicleId,

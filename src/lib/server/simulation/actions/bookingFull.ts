@@ -26,6 +26,7 @@ function findLastIndex<T>(
 }
 
 async function rideShareApiCall(
+	customerId: number,
 	parameters: BookingParameters,
 	kidsZeroToTwo: number,
 	kidsThreeToFour: number,
@@ -36,7 +37,7 @@ async function rideShareApiCall(
 	const toursBefore = await getRideShareTours(false);
 	const response = await rideShareApi(
 		parameters,
-		1,
+		customerId,
 		true,
 		kidsZeroToTwo,
 		kidsThreeToFour,
@@ -161,6 +162,7 @@ async function rideShareApiCall(
 }
 
 export async function bookingApiCall(
+	customerId: number,
 	parameters: BookingParameters,
 	kidsZeroToTwo: number,
 	kidsThreeToFour: number,
@@ -172,7 +174,7 @@ export async function bookingApiCall(
 	const start = performance.now();
 	const response = await bookingApi(
 		parameters,
-		1,
+		customerId,
 		false,
 		true,
 		kidsZeroToTwo,
@@ -302,6 +304,7 @@ export async function bookingApiCall(
 }
 
 export async function bookFull(
+	customerId: number,
 	coordinates: Coordinates[],
 	restricted: Coordinates[] | undefined,
 	mode?: string,
@@ -479,6 +482,7 @@ export async function bookFull(
 			: expectedConnectionFromLeg(lastOdm, chosenItinerary.signature2, true, requestedTime2);
 	if (mode === 'ODM') {
 		const result = await bookingApiCall(
+			customerId,
 			{ capacities: parameters.capacities, connection1, connection2 },
 			kidsZeroToTwo,
 			kidsThreeToFour,
@@ -490,6 +494,7 @@ export async function bookFull(
 		return result;
 	} else if (mode === 'RIDE_SHARING') {
 		const result = await rideShareApiCall(
+			customerId,
 			{ capacities: parameters.capacities, connection1, connection2 },
 			kidsZeroToTwo,
 			kidsThreeToFour,

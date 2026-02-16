@@ -6,7 +6,8 @@ import { type Coordinates } from '$lib/util/Coordinates';
 import { generateBookingParameters } from '../generateBookingParameters';
 import type { ActionResponse } from '../simulation';
 
-export async function addRideShareTourLocal(
+export async function addRideShareTourSimulation(
+	customerId: number,
 	coordinates: Coordinates[],
 	restricted: Coordinates[] | undefined
 ): Promise<ActionResponse> {
@@ -18,7 +19,7 @@ export async function addRideShareTourLocal(
 		connection.startFixed,
 		capacities.passengers,
 		capacities.luggage,
-		1,
+		customerId,
 		1,
 		connection.start,
 		connection.target,
