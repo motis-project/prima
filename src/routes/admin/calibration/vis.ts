@@ -66,7 +66,6 @@ export function vis(
 					fulfilled: (i: CalibrationItinerary) => i.fulfilled
 				},
 				tip: {
-					color: 'white',
 					fill: 'black',
 					format: {
 						x: d3.timeFormat('%Y-%m-%d %H:%M%Z'),
@@ -86,8 +85,7 @@ export function vis(
 					symbol: 'times'
 				}
 			)
-		],
-		legend: true
+		]
 	});
 	div?.replaceChildren(plot);
 }
