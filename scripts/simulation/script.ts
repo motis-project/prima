@@ -184,7 +184,7 @@ async function acceptRideShareRequestLocal() {
 	if (requests.length === 0) {
 		return false;
 	}
-	const r = randomInt(0, requests.length);
+	const r = randomInt(0, requests.length - 1);
 	const request = requests[r];
 	const tour = tours.find((t) => t.requests.some((r) => r.requestId === r.requestId))!;
 	const response = await acceptRideShareRequest(request.requestId, 1);
@@ -229,7 +229,8 @@ async function bookFull(
 			fastestDirectFactor: 1.6,
 			maxMatchingDistance: MAX_MATCHING_DISTANCE,
 			maxTravelTime: 1440,
-			passengers: parameters.capacities.passengers
+			passengers: parameters.capacities.passengers,
+			pedestrianProfile: parameters.capacities.wheelchairs !== 0 ? 'WHEELCHAIR' : 'FOOT'
 		}
 	} as PlanData;
 	const planResponse = await planAndSign(q.query, 'http://localhost:5173');
@@ -260,7 +261,7 @@ async function bookFull(
 			monotonicTime = new Date(leg.endTime).getTime();
 		}
 	}
-	const choice = randomInt(0, relevantItineraries.length);
+	const choice = randomInt(0, relevantItineraries.length - 1);
 	const chosenItinerary = relevantItineraries[choice];
 	if (chosenItinerary.legs[0].from.name === 'START') {
 		chosenItinerary.legs[0].from.name = parameters.connection1.start.address;
@@ -643,7 +644,7 @@ async function cancelRequestLocal() {
 	if (requests.length === 0) {
 		return false;
 	}
-	const r = randomInt(0, requests.length);
+	const r = randomInt(0, requests.length - 1);
 	await cancelRequest(requests[r].requestId, requests[r].companyId);
 	return {
 		vehicleId: requests[r].vehicleId,
@@ -656,7 +657,7 @@ async function cancelTourLocal() {
 	if (tours.length === 0) {
 		return false;
 	}
-	const r = randomInt(0, tours.length);
+	const r = randomInt(0, tours.length - 1);
 	await cancelTour(tours[r].tourId, 'message', tours[r].companyId);
 	return { vehicleId: tours[r].vehicleId, dayStart: Math.floor(tours[r].startTime / DAY) * DAY };
 }
@@ -666,7 +667,7 @@ async function moveTourLocal() {
 	if (tours.length === 0) {
 		return false;
 	}
-	const r = randomInt(0, tours.length);
+	const r = randomInt(0, tours.length - 1);
 	const tour = tours[r];
 	await moveTour(tour.tourId, tour.vehicleId, tour.companyId);
 	return { vehicleId: tour.vehicleId, dayStart: Math.floor(tour.startTime / DAY) * DAY };
@@ -681,7 +682,7 @@ async function cancelRequestRsLocal() {
 	if (requests.length === 0) {
 		return false;
 	}
-	const r = randomInt(0, requests.length);
+	const r = randomInt(0, requests.length - 1);
 	await cancelRideShareRequest(requests[r].requestId, 1);
 	return {
 		vehicleId: requests[r].vehicleId,
@@ -694,7 +695,7 @@ async function cancelTourRsLocal() {
 	if (tours.length === 0) {
 		return false;
 	}
-	const r = randomInt(0, tours.length);
+	const r = randomInt(0, tours.length - 1);
 	await cancelRideShareTour(tours[r].tourId, 1);
 	return { vehicleId: tours[r].vehicleId, dayStart: Math.floor(tours[r].startTime / DAY) * DAY };
 }
