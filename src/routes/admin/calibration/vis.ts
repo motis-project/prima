@@ -6,6 +6,9 @@ import { usesTaxi } from '$lib/util/itineraryHelpers';
 import * as Plot from '@observablehq/plot';
 import * as d3 from 'd3';
 
+export const colorPT = '#0247ec';
+export const colorTaxi = '#fdb813';
+
 export function vis(
 	is: Array<CalibrationItinerary>,
 	v: VisualizationPackage,
@@ -32,21 +35,21 @@ export function vis(
 			Plot.lineY(v.thresholds, {
 				x: 'time',
 				y: 'pt',
-				stroke: 'blue',
+				stroke: colorPT,
 				opacity: 0.5
 			}),
 			Plot.lineY(v.thresholds, {
 				x: 'time',
 				y: 'taxi',
-				stroke: 'yellow',
+				stroke: colorTaxi,
 				opacity: 0.5
 			}),
 			Plot.lineY(legVisData, { x: 'time', y: 'cost', z: 'id', stroke: 'color', opacity: 0.5 }),
 			Plot.dot(is, {
 				x: (i: CalibrationItinerary) => getCenter(i),
 				y: (i: CalibrationItinerary) => getCost(i),
-				stroke: (i: CalibrationItinerary) => (usesTaxi(i) ? 'yellow' : 'blue'),
-				fill: (i: CalibrationItinerary) => (usesTaxi(i) ? 'yellow' : 'blue'),
+				stroke: (i: CalibrationItinerary) => (usesTaxi(i) ? colorTaxi : colorPT),
+				fill: (i: CalibrationItinerary) => (usesTaxi(i) ? colorTaxi : colorPT),
 				symbol: (i: CalibrationItinerary) => (usesTaxi(i) ? 'square' : 'circle'),
 				channels: {
 					departure: (i: CalibrationItinerary) =>
@@ -93,7 +96,7 @@ export function vis(
 type LegVisData = {
 	time: Date;
 	cost: number;
-	color: 'yellow' | 'blue';
+	color: colorTaxi | colorPT;
 	id: number;
 };
 
@@ -108,8 +111,8 @@ function getLegVisData<T extends Itinerary>(
 		let ptEnd = new Date(i.endTime);
 		if (i.legs.length > 0 && isTaxiLeg(i.legs[0])) {
 			ret.push(
-				{ time: new Date(i.legs[0].startTime), cost: cost, color: 'yellow', id: iI },
-				{ time: new Date(i.legs[0].endTime), cost: cost, color: 'yellow', id: iI }
+				{ time: new Date(i.legs[0].startTime), cost: cost, color: colorTaxi, id: iI },
+				{ time: new Date(i.legs[0].endTime), cost: cost, color: colorTaxi, id: iI }
 			);
 			ptStart = new Date(i.legs[0].endTime);
 		}
@@ -118,16 +121,16 @@ function getLegVisData<T extends Itinerary>(
 				{
 					time: new Date(i.legs[i.legs.length - 1].startTime),
 					cost: cost,
-					color: 'yellow',
+					color: colorTaxi,
 					id: iI
 				},
-				{ time: new Date(i.legs[i.legs.length - 1].endTime), cost: cost, color: 'yellow', id: iI }
+				{ time: new Date(i.legs[i.legs.length - 1].endTime), cost: cost, color: colorTaxi, id: iI }
 			);
 			ptEnd = new Date(i.legs[i.legs.length - 1].startTime);
 		}
 		ret.push(
-			{ time: ptStart, cost: cost, color: 'blue', id: iI },
-			{ time: ptEnd, cost: cost, color: 'blue', id: iI }
+			{ time: ptStart, cost: cost, color: colorPT, id: iI },
+			{ time: ptEnd, cost: cost, color: colorPT, id: iI }
 		);
 	});
 	return ret;
