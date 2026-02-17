@@ -25,6 +25,7 @@
 	import StopTimes from '../../(customer)/routing/StopTimes.svelte';
 	import { vis } from './vis';
 	import { HoverCard, HoverCardTrigger, HoverCardContent } from '$lib/shadcn/hover-card';
+	import { usesTaxi } from '$lib/util/itineraryHelpers';
 
 	const { data } = $props();
 
@@ -166,6 +167,7 @@
 								>
 									<ItinerarySummary {it} />
 								</button>
+								{#if usesTaxi(it)}
 								<div class="flex gap-2 rounded-lg border-x-2 border-b-2 px-2 pt-1 text-sm">
 									<label>
 										<input
@@ -199,7 +201,8 @@
 										<CircleX class="h-5 w-5 text-red-500" />
 									{/if}
 								</div>
-							</div>
+								{/if}
+							</div>							
 						{/each}
 					</div>
 					<form
