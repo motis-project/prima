@@ -168,41 +168,41 @@
 									<ItinerarySummary {it} />
 								</button>
 								{#if usesTaxi(it)}
-								<div class="flex gap-2 rounded-lg border-x-2 border-b-2 px-2 pt-1 text-sm">
-									<label>
-										<input
-											type="checkbox"
-											name="required"
-											bind:checked={it.keep}
-											onchange={() => {
-												if (it.keep && it.remove) {
-													it.remove = false;
-												}
-											}}
-										/>
-										{t.calibration.keep}
-									</label>
-									<label>
-										<input
-											type="checkbox"
-											name="forbidden"
-											bind:checked={it.remove}
-											onchange={() => {
-												if (it.keep && it.remove) {
-													it.keep = false;
-												}
-											}}
-										/>
-										{t.calibration.remove}
-									</label>
-									{#if it.fulfilled}
-										<CircleCheck class="h-5 w-5 text-green-500" />
-									{:else}
-										<CircleX class="h-5 w-5 text-red-500" />
-									{/if}
-								</div>
+									<div class="flex gap-2 rounded-lg border-x-2 border-b-2 px-2 pt-1 text-sm">
+										<label>
+											<input
+												type="checkbox"
+												name="required"
+												bind:checked={it.keep}
+												onchange={() => {
+													if (it.keep && it.remove) {
+														it.remove = false;
+													}
+												}}
+											/>
+											{t.calibration.keep}
+										</label>
+										<label>
+											<input
+												type="checkbox"
+												name="forbidden"
+												bind:checked={it.remove}
+												onchange={() => {
+													if (it.keep && it.remove) {
+														it.keep = false;
+													}
+												}}
+											/>
+											{t.calibration.remove}
+										</label>
+										{#if it.fulfilled}
+											<CircleCheck class="h-5 w-5 text-green-500" />
+										{:else}
+											<CircleX class="h-5 w-5 text-red-500" />
+										{/if}
+									</div>
 								{/if}
-							</div>							
+							</div>
 						{/each}
 					</div>
 					<form
