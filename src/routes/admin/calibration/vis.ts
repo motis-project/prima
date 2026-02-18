@@ -122,7 +122,7 @@ export function vis(
 type LegVisData = {
 	time: Date;
 	cost: number;
-	color: colorTaxi | colorPT;
+	color: string;
 	id: number;
 };
 
