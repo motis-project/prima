@@ -38,12 +38,38 @@ export function vis(
 				stroke: colorPT,
 				opacity: 0.5
 			}),
+			Plot.text(
+				v.thresholds,
+				Plot.selectFirst({
+					x: 'time',
+					y: 'pt',
+					text: ['PT'],
+					textAnchor: 'start',
+					fill: colorPT,
+					fontWeight: 'bold',
+					dx: 5
+				})
+			),
 			Plot.lineY(v.thresholds, {
 				x: 'time',
 				y: 'taxi',
 				stroke: colorTaxi,
-				opacity: 0.5
+				opacity: 0.5,
+				strokeDasharray: 5
 			}),
+			Plot.text(
+				v.thresholds,
+				Plot.selectFirst({
+					x: 'time',
+					y: 'taxi',
+					text: ['Taxi'],
+					textAnchor: 'start',
+					fill: colorTaxi,
+					fontWeight: 'bold',
+					dx: 5,
+					dy: 0
+				})
+			),
 			Plot.lineY(legVisData, { x: 'time', y: 'cost', z: 'id', stroke: 'color', opacity: 0.5 }),
 			Plot.dot(is, {
 				x: (i: CalibrationItinerary) => getCenter(i),
