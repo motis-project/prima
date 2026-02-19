@@ -10,6 +10,7 @@
 	import UsersRound from 'lucide-svelte/icons/users-round';
 	import CircleAlert from 'lucide-svelte/icons/circle-alert';
 	import Receipt from 'lucide-svelte/icons/receipt';
+	import SlidersVertical from 'lucide-svelte/icons/sliders-vertical';
 
 	import * as Alert from '$lib/shadcn/alert';
 
@@ -36,7 +37,8 @@
 	];
 	const adminItems: Array<MenuItem> = [
 		{ title: t.menu.accounting, href: '/admin/accounting', Icon: Receipt },
-		{ title: t.menu.companies, href: '/admin/taxi-owners', Icon: CarTaxiFront }
+		{ title: t.menu.companies, href: '/admin/taxi-owners', Icon: CarTaxiFront },
+		{ title: t.menu.calibration, href: '/admin/calibration', Icon: SlidersVertical }
 	];
 
 	const items = $derived([
