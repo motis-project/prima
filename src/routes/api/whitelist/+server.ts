@@ -13,7 +13,56 @@ import { assertArraySizes } from '$lib/testHelpers';
 import { MINUTE } from '$lib/util/time';
 import { InsertHow } from '$lib/util/booking/insertionTypes';
 
-export type WhitelistResponse = {
+export type WhitelistResponseEntry = {
+	requestedTime: number;
+	pickupTime: number;
+	dropoffTime: number;
+	fullyPayedDurationDelta: number;
+	taxiWaitingTime: number;
+	approachPlusReturnDurationDelta: number;
+	passengerDuration: number;
+	cost: number;
+};
+
+function toWhitelistResponseEntry(
+	e: Insertion | undefined,
+	requestedTime: number
+): WhitelistResponseEntry | undefined {
+	return e === undefined
+		? undefined
+		: {
+				pickupTime: e.pickupTime,
+				dropoffTime: e.dropoffTime,
+				fullyPayedDurationDelta: e.fullyPayedDurationDelta,
+				taxiWaitingTime: e.taxiWaitingTime,
+				approachPlusReturnDurationDelta: e.approachPlusReturnDurationDelta,
+				passengerDuration: e.taxiWaitingTime,
+				cost: e.cost,
+				requestedTime
+			};
+}
+
+function toWhitelistResponse(r: WhitelistResult, p: WhitelistRequest): WhitelistResponse {
+	return {
+		start: r.start.map((s, i) =>
+			s.map((s2, j) => toWhitelistResponseEntry(s2, p.startBusStops[i].times[j]))
+		),
+		target: r.target.map((t, i) =>
+			t.map((t2, j) => toWhitelistResponseEntry(t2, p.targetBusStops[i].times[j]))
+		),
+		direct: filterDirectResponses(r.direct, p.startFixed).map((d, j) =>
+			toWhitelistResponseEntry(d, p.directTimes[j])
+		)
+	};
+}
+
+type WhitelistResponse = {
+	start: (WhitelistResponseEntry | undefined)[][];
+	target: (WhitelistResponseEntry | undefined)[][];
+	direct: (WhitelistResponseEntry | undefined)[];
+};
+
+type WhitelistResult = {
 	start: (Insertion | undefined)[][];
 	target: (Insertion | undefined)[][];
 	direct: (Insertion | undefined)[];
@@ -68,19 +117,16 @@ export async function POST(event: RequestEvent) {
 		'Array size mismatch in Whitelist - direct.'
 	);
 
-	const response: WhitelistResponse = {
-		start,
-		target,
-		direct: filterDirectResponses(direct, p.startFixed)
-	};
+	const whitelistResult = { start, target, direct };
+
 	console.log(
 		'WHITELIST RESPONSE: ',
-		JSON.stringify(toWhitelistResponseWithISOStrings(response), null, '\t')
+		JSON.stringify(toWhitelistResultWithISOStrings(whitelistResult), null, '\t')
 	);
-	return json(response);
+	return json(toWhitelistResponse(whitelistResult, p));
 }
 
-function toWhitelistResponseWithISOStrings(r: WhitelistResponse) {
+function toWhitelistResultWithISOStrings(r: WhitelistResult) {
 	return {
 		start: r.start.map((i) => i.map((j) => toInsertionWithISOStrings(j))),
 		target: r.target.map((i) => i.map((j) => toInsertionWithISOStrings(j))),
