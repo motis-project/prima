@@ -11,6 +11,7 @@ import {
 import { toInsertionWithISOStrings, type Insertion } from '$lib/server/booking/taxi/insertion';
 import { assertArraySizes } from '$lib/testHelpers';
 import { MINUTE } from '$lib/util/time';
+import { type InsertionType } from '$lib/server/booking/insertionTypes';
 import { InsertHow } from '$lib/util/booking/insertionTypes';
 
 export type WhitelistResponseEntry = {
@@ -22,6 +23,8 @@ export type WhitelistResponseEntry = {
 	approachPlusReturnDurationDelta: number;
 	passengerDuration: number;
 	cost: number;
+	pickupCase: InsertionType;
+	dropoffCase: InsertionType;
 };
 
 function toWhitelistResponseEntry(
@@ -38,7 +41,9 @@ function toWhitelistResponseEntry(
 				approachPlusReturnDurationDelta: e.approachPlusReturnDurationDelta,
 				passengerDuration: e.taxiWaitingTime,
 				cost: e.cost,
-				requestedTime
+				requestedTime,
+				pickupCase: e.pickupCase,
+				dropoffCase: e.dropoffCase
 			};
 }
 
