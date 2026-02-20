@@ -32,7 +32,8 @@ function isSignatureInvalid(c: ExpectedConnection | null) {
 			c.target.lng,
 			c.startTime,
 			c.targetTime,
-			false
+			false,
+			undefined
 		) !== c.signature
 	);
 }
