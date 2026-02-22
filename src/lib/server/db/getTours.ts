@@ -112,6 +112,7 @@ export const getToursWithRequests = async (
 			jsonArrayFrom(
 				eb
 					.selectFrom('request')
+					.leftJoin('journey as journey1', 'journey1.request1', 'request.id')
 					.where('request.tour', 'is not', null)
 					.whereRef('tour.id', '=', 'request.tour')
 					.$if(!selectCancelled, (qb) => qb.where('request.cancelled', '=', false))
@@ -125,6 +126,8 @@ export const getToursWithRequests = async (
 						'request.kidsFiveToSix',
 						'request.ticketChecked',
 						'request.ticketPrice',
+						'journey1.rating',
+						'journey1.comment',
 						'request.id as requestId',
 						'request.cancelled',
 						jsonArrayFrom(

@@ -312,3 +312,28 @@ export const companyColsAdmin: Column<CompanyRow>[] = [
 ];
 
 export const companyColsCompany = companyColsAdmin.slice(1);
+
+export type RatedTourWithRequests = TourWithRequests & {
+	rating: number | null;
+	comment: string | null;
+};
+export const feedbackCols: Column<RatedTourWithRequests>[] = [
+	{
+		text: ['Fahrzeug'],
+		sort: (a: RatedTourWithRequests, b: RatedTourWithRequests) => a.vehicleId - b.vehicleId,
+		toTableEntry: (r: RatedTourWithRequests) => r.licensePlate
+	},
+	{
+		text: ['Feedback'],
+		toTableEntry: (r: RatedTourWithRequests) => r.comment ?? ''
+	},
+	{
+		text: ['Bewertung'],
+		sort: (a: RatedTourWithRequests, b: RatedTourWithRequests) =>
+			(a.rating ?? -1) - (b.rating ?? -1),
+		toTableEntry: (r: RatedTourWithRequests) =>
+			r.rating === null ? '' : r.rating !== 0 ? 'gut' : 'schlecht',
+		toColumnStyle: (r: RatedTourWithRequests) =>
+			r.rating === null ? '' : r.rating !== 0 ? 'text-green-400' : 'text-red-400'
+	}
+];
