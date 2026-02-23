@@ -157,9 +157,9 @@ function averageDamping(a: Array<number>) {
 			break;
 		}
 
-		const avg = getAverage(a, i, j);
+		const limit = Math.max(getAverage(a, i, j), a[i], a[j]);
 		for (let k = i; k <= j; ++k) {
-			a[k] = Math.min(a[k], avg);
+			a[k] = Math.min(a[k], limit);
 		}
 
 		i = j;
