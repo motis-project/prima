@@ -8,7 +8,6 @@
 	import { Button } from '$lib/shadcn/button';
 	import Separator from '$lib/shadcn/separator/separator.svelte';
 	import Meta from '$lib/ui/Meta.svelte';
-	import ArrowDownToLine from 'lucide-svelte/icons/arrow-down-to-line';
 	import {
 		Save,
 		Check,
@@ -145,22 +144,22 @@
 			<HoverCard>
 				<HoverCardTrigger>
 					<div class="flex flex-row gap-2">
-					<Button variant="default" size="default" onclick={() => (deployPrimer = true)}>
-						<HardDriveUpload /> Deploy
-					</Button>
-					{#if deployPrimer}
-						<Button type="submit" variant="default" size="default" class="bg-green-500">
-							<Check />
+						<Button variant="default" size="default" onclick={() => (deployPrimer = true)}>
+							<HardDriveUpload /> Deploy
 						</Button>
-						<Button
-							variant="default"
-							size="default"
-							class="bg-red-500"
-							onclick={() => (deployPrimer = false)}
-						>
-							<X />
-						</Button>
-					{/if}
+						{#if deployPrimer}
+							<Button type="submit" variant="default" size="default" class="bg-green-500">
+								<Check />
+							</Button>
+							<Button
+								variant="default"
+								size="default"
+								class="bg-red-500"
+								onclick={() => (deployPrimer = false)}
+							>
+								<X />
+							</Button>
+						{/if}
 					</div>
 				</HoverCardTrigger>
 				<HoverCardContent side="bottom" class="flex justify-center">
