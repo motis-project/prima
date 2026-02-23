@@ -133,33 +133,39 @@ function getLegVisData<T extends Itinerary>(
 	getCost: (i: Itinerary) => number
 ): Array<LegVisData> {
 	const ret = new Array<LegVisData>();
+	const addLegVis = (start: Date, end: Date, cost: number, color: string, id: number) => {
+		ret.push(
+			{ time: start, cost: cost, color: color, id: id },
+			{ time: end, cost: cost, color: color, id: id }
+		);
+	};
+
 	is.forEach((i, iI) => {
 		const cost = getCost(i);
-		let ptStart = new Date(i.startTime);
-		let ptEnd = new Date(i.endTime);
-		if (i.legs.length > 0 && isTaxiLeg(i.legs[0])) {
-			ret.push(
-				{ time: new Date(i.legs[0].startTime), cost: cost, color: colorTaxi, id: iI },
-				{ time: new Date(i.legs[0].endTime), cost: cost, color: colorTaxi, id: iI }
-			);
-			ptStart = new Date(i.legs[0].endTime);
-		}
-		if (i.legs.length > 1 && isTaxiLeg(i.legs[i.legs.length - 1])) {
-			ret.push(
-				{
-					time: new Date(i.legs[i.legs.length - 1].startTime),
-					cost: cost,
-					color: colorTaxi,
-					id: iI
-				},
-				{ time: new Date(i.legs[i.legs.length - 1].endTime), cost: cost, color: colorTaxi, id: iI }
-			);
-			ptEnd = new Date(i.legs[i.legs.length - 1].startTime);
-		}
-		ret.push(
-			{ time: ptStart, cost: cost, color: colorPT, id: iI },
-			{ time: ptEnd, cost: cost, color: colorPT, id: iI }
-		);
+		const iStart = new Date(i.startTime);
+		const iEnd = new Date(i.endTime);
+
+		i.legs.forEach((l, lI) => {
+			const lStart = new Date(l.startTime);
+			const lEnd = new Date(l.endTime);
+
+			if (lI === 0 && iStart < lStart) {
+				addLegVis(iStart, lStart, cost, colorPT, iI);
+			}
+
+			if (lI > 0) {
+				const lPrevEnd = new Date(i.legs[lI - 1].endTime);
+				if (lPrevEnd < lStart) {
+					addLegVis(lPrevEnd, lStart, cost, colorPT, iI);
+				}
+			}
+
+			addLegVis(lStart, lEnd, cost, isTaxiLeg(l) ? colorTaxi : colorPT, iI);
+
+			if (lI === i.legs.length - 1 && lEnd < iEnd) {
+				addLegVis(lEnd, lEnd, cost, colorPT, iI);
+			}
+		});
 	});
 	return ret;
 }
