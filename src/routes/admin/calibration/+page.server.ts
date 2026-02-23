@@ -7,7 +7,11 @@ import { areasGeoJSON, rideshareGeoJSON } from '$lib/util/geoJSON.js';
 
 export const load: PageServerLoad = async () => {
 	const filterSettings = await db.selectFrom('taxiFilter').selectAll().executeTakeFirst();
-	const calibrationSetsJson = await db.selectFrom('calibrationSets').selectAll().execute();
+	const calibrationSetsJson = await db
+		.selectFrom('calibrationSets')
+		.selectAll()
+		.orderBy('name', 'asc')
+		.execute();
 	const calibrationSets = Array<{
 		id: number;
 		name: string;
