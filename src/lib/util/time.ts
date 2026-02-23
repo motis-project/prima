@@ -25,3 +25,7 @@ export function pageCursorToDateString(s: string | undefined): string {
 	}
 	return new Date(0).toUTCString();
 }
+
+export function readTimeFromPageCursor(c: string): Date {
+	return new Date(parseInt(c.split('|')[1]) * 1000);
+}

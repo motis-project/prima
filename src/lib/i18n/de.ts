@@ -11,7 +11,8 @@ const translations: Translations = {
 		completedTours: 'Fahrten',
 		accounting: 'Abrechnung',
 		employees: 'Mitarbeiter',
-		companies: 'Unternehmen'
+		companies: 'Unternehmen',
+		calibration: 'Kalibrierung'
 	},
 	msg: {
 		unknownError: 'Unbekannter Fehler.',
@@ -54,6 +55,7 @@ const translations: Translations = {
 		userDoesNotExist: 'Nutzer existiert nicht.',
 		activationSuccess: 'Nutzer freigeschaltet.',
 		userAlreadyActivated: 'Nutzer war bereits freigeschaltet.',
+		requiresAdminPrivileges: 'Erfordert Admin-Rechte',
 
 		// Taxi Members
 		driverAddedSuccessfully: 'Fahrer erfolgreich hinzugefügt.',
@@ -412,6 +414,23 @@ const translations: Translations = {
 		editVehicle: 'Fahrzeug ändern',
 		closeTo: 'in der Nähe von',
 		defaultLicensePlate: 'Standardfahrzeug'
+	},
+
+	calibration: {
+		perTransfer: 'pro Umstieg',
+		taxiBase: 'Taxi Basis',
+		taxiPerMinute: 'Taxi pro Minute',
+		taxiDirectPenalty: 'Taxi Direkt Strafe',
+		ptSlope: 'Öffentlicher Verkehr Steigung',
+		taxiSlope: 'Taxi Steigung',
+		useForCalibration: 'Zur Kalibrierung verwenden',
+		addCalibrationSet: 'Kalibrierungsmenge hinzufügen',
+		greeter: 'Passen Sie die Parameter des Taxifilters an:',
+		keep: 'behalten',
+		remove: 'entfernen',
+		deploy: 'Parameter verwenden',
+		save: 'Klassifizierung speichern',
+		delete: 'Verbindungsmenge entfernen'
 	}
 };
 

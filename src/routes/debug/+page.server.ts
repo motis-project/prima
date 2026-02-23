@@ -1,12 +1,12 @@
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { readFloat } from '$lib/server/util/readForm';
-import { sql } from 'kysely';
 import { whitelist } from '../api/whitelist/whitelist';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import type { Translations } from '$lib/i18n/translation';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
 import { Mode } from '$lib/server/booking/mode';
+import { areasGeoJSON } from '$lib/util/geoJSON';
 
 export type BookingError = { msg: keyof Translations['msg'] };
 
@@ -89,17 +89,6 @@ export const actions = {
 
 		return { request: bookingResponse.request1Id };
 	}
-};
-
-const areasGeoJSON = async () => {
-	return await sql`
-		SELECT 'FeatureCollection' AS TYPE,
-			array_to_json(array_agg(f)) AS features
-		FROM
-			(SELECT 'Feature' AS TYPE,
-				ST_AsGeoJSON(lg.area, 15, 0)::json As geometry,
-				json_build_object('id', id, 'name', name) AS properties
-			FROM zone AS lg) AS f`.execute(db);
 };
 
 export const load: PageServerLoad = async () => {
