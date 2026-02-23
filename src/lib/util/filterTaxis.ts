@@ -74,24 +74,25 @@ export function filterTaxis<T extends Itinerary>(
 		itineraries.filter((i) => publicTransitOnly(i)),
 		ptSlope
 	);
-	const taxiThreshold = getThreshold(
-		itineraries.filter((i) => usesTaxi(i)),
-		taxiSlope
+	const afterPtThreshold = itineraries.filter(
+		(i) => !usesTaxi(i) || getCost(i) <= ptThreshold[getCenter(i)]
 	);
 
-	const filteredItineraries = itineraries.filter(
-		(i) =>
-			!usesTaxi(i) ||
-			(getCost(i) <= ptThreshold[getCenter(i)] && getCost(i) <= taxiThreshold[getCenter(i)])
+	const taxiThreshold = getThreshold(
+		afterPtThreshold.filter((i) => usesTaxi(i)),
+		taxiSlope
+	);
+	const afterTaxiThreshold = afterPtThreshold.filter(
+		(i) => !usesTaxi(i) || getCost(i) <= taxiThreshold[getCenter(i)]
 	);
 
 	if (visualize) {
 		return {
-			itineraries: filteredItineraries,
+			itineraries: afterTaxiThreshold,
 			visualize: getVisualizationPackage(itineraries, ptThreshold, taxiThreshold)
 		};
 	} else {
-		return { itineraries: filteredItineraries };
+		return { itineraries: afterTaxiThreshold };
 	}
 }
 
