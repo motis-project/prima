@@ -9,13 +9,18 @@
 	import Separator from '$lib/shadcn/separator/separator.svelte';
 	import Meta from '$lib/ui/Meta.svelte';
 	import ArrowDownToLine from 'lucide-svelte/icons/arrow-down-to-line';
-	import Save from 'lucide-svelte/icons/save';
-	import ListPlus from 'lucide-svelte/icons/list-plus';
-	import Trash from 'lucide-svelte/icons/trash';
-	import CircleCheck from 'lucide-svelte/icons/circle-check';
-	import CircleX from 'lucide-svelte/icons/circle-x';
-	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
-	import { Check, MapIcon, X } from 'lucide-svelte';
+	import {
+		Save,
+		Check,
+		MapIcon,
+		X,
+		ListPlus,
+		Trash,
+		CircleCheck,
+		CircleX,
+		ChevronLeft,
+		HardDriveUpload
+	} from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import ItinerarySummary from '../../(customer)/routing/ItinerarySummary.svelte';
 	import { filterTaxis, getCostFn } from '$lib/util/filterTaxis';
@@ -37,6 +42,7 @@
 	let taxiSlope = $state(data.filterSettings?.taxiSlope ?? 2.0);
 	let calibrationSets = $state(data.calibrationSets);
 	let deletionPrimer = $state(new Array<boolean>(calibrationSets.length));
+	let deployPrimer = $state(false);
 
 	$effect(() => {
 		const getCost = getCostFn(perTransfer, taxiBase, taxiPerMinute, taxiDirectPenalty);
@@ -116,11 +122,6 @@
 			action="?/apply"
 			autocomplete="off"
 			class="flex flex-row gap-4 rounded-md border-2 border-solid p-2"
-			use:enhance={() => {
-				return async ({ update }) => {
-					update({ reset: false });
-				};
-			}}
 		>
 			<Label for="perTransfer">{t.calibration.perTransfer}</Label>
 			<Input name="perTransfer" type="number" min="0" step="any" bind:value={perTransfer} />
@@ -143,9 +144,24 @@
 
 			<HoverCard>
 				<HoverCardTrigger>
-					<Button type="submit">
-						<ArrowDownToLine />
+					<div class="flex flex-row gap-2">
+					<Button variant="default" size="default" onclick={() => (deployPrimer = true)}>
+						<HardDriveUpload /> Deploy
 					</Button>
+					{#if deployPrimer}
+						<Button type="submit" variant="default" size="default" class="bg-green-500">
+							<Check />
+						</Button>
+						<Button
+							variant="default"
+							size="default"
+							class="bg-red-500"
+							onclick={() => (deployPrimer = false)}
+						>
+							<X />
+						</Button>
+					{/if}
+					</div>
 				</HoverCardTrigger>
 				<HoverCardContent side="bottom" class="flex justify-center">
 					<p>{t.calibration.deploy}</p>
