@@ -89,7 +89,9 @@ export function vis(
 					taxiLastMile: (i: CalibrationItinerary) =>
 						(i.legs.length > 1 && isTaxiLeg(i.legs[i.legs.length - 1])
 							? i.legs[i.legs.length - 1].duration
-							: 0) + ' min',
+							: 0) /
+							60 +
+						' min',
 					keep: (i: CalibrationItinerary) => i.keep,
 					remove: (i: CalibrationItinerary) => i.remove,
 					fulfilled: (i: CalibrationItinerary) => i.fulfilled
