@@ -12,7 +12,7 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
 	const url = event.url;
 	let test = url.searchParams.get('test');
 	if (test) {
-		const testFilePath = path.resolve('src/lib/server/booking/tests/generatedTests/testJsons.ts');
+		const testFilePath = path.resolve('src/lib/server/booking/taxi/tests/generatedTests/testJsons.ts');
 
 		let fileContent: string;
 		try {
