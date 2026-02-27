@@ -16,6 +16,7 @@ async function tourQuery() {
 		.innerJoin('request', 'request.tour', 'tour.id')
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 		.innerJoin('company', 'company.id', 'vehicle.company')
+		.where('tour.arrival', '<', Date.now())
 		.where('tour.approachAndReturnM', 'is', null)
 		.where('tour.cancelled', '=', false)
 		.select((eb) => [
@@ -24,6 +25,8 @@ async function tourQuery() {
 					.selectFrom('request')
 					.innerJoin('event', 'event.request', 'request.id')
 					.innerJoin('eventGroup', 'event.eventGroupId', 'eventGroup.id')
+					.where('request.cancelled', '=', false)
+					.whereRef('request.tour', '=', 'tour.id')
 					.selectAll(['event', 'eventGroup'])
 					.select('request.passengers')
 			).as('events'),
@@ -35,25 +38,26 @@ async function tourQuery() {
 }
 
 async function rideShareTourQuery() {
-	return await db
-		.selectFrom('rideShareTour as tour')
-		.innerJoin('request', 'request.rideShareTour', 'tour.id')
-		.where('tour.approachAndReturnM', 'is', null)
-		.where('tour.cancelled', '=', false)
-		.select((eb) => [
-			jsonArrayFrom(
-				eb
-					.selectFrom('request')
-					.innerJoin('event', 'event.request', 'request.id')
-					.innerJoin('eventGroup', 'event.eventGroupId', 'eventGroup.id')
-					.selectAll(['event', 'eventGroup'])
-					.select('request.passengers')
-			).as('events'),
-			'tour.id as lat',
-			'tour.id as lng',
-			'tour.id'
-		])
-		.execute();
+	return (
+		await db
+			.selectFrom('rideShareTour as tour')
+			.where('tour.approachAndReturnM', 'is', null)
+			.where('tour.cancelled', '=', false)
+			.where('tour.arrival', '<', Date.now())
+			.select((eb) => [
+				jsonArrayFrom(
+					eb
+						.selectFrom('request')
+						.innerJoin('event', 'event.request', 'request.id')
+						.innerJoin('eventGroup', 'event.eventGroupId', 'eventGroup.id')
+						.where('request.cancelled', '=', false)
+						.whereRef('request.tour', '=', 'tour.id')
+						.selectAll(['event', 'eventGroup'])
+						.select('request.passengers')
+				).as('events')
+			])
+			.execute()
+	).map((t) => ({ ...t, lat: 0, lng: 0, id: 0 }));
 }
 
 type Tours = Awaited<ReturnType<typeof tourQuery>>;
