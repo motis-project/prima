@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,6 +34,8 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -61,6 +65,10 @@ import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.data.Ticket
 import de.motis.prima.data.ValidationStatus
 import de.motis.prima.ui.theme.LocalExtendedColors
+import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Date
 import javax.inject.Inject
 
@@ -69,6 +77,26 @@ class EventGroupViewModel @Inject constructor(
     private val repository: DataRepository
 ) : ViewModel() {
     val storedTickets = repository.storedTickets
+    val ptLegs = repository.ptLegs
+
+    fun onScreenExit() {
+        repository.updateRequestIDs.clear()
+    }
+
+    private fun startUpdates() {
+        viewModelScope.launch {
+            repository
+                .itineraryUpdates(intervalMs = 5_000)
+                .collect { itinerary ->
+                    //_itinerary.value = itinerary
+                    //TODO fetch all PT legs
+                }
+        }
+    }
+
+    init {
+        //startUpdates()
+    }
 
     fun getValidCount(eventGroupId: String): Int {
         var tickets = repository.getTicketsForEventGroup(eventGroupId)
@@ -82,6 +110,14 @@ class EventGroupViewModel @Inject constructor(
     fun updateTicket(requestId: Int, ticketHash: String) {
         repository.updateTicketStore(Ticket(requestId, ticketHash, "", ValidationStatus.DONE))
     }
+
+    fun setItinerary(requestId: Int) {
+        repository.updateRequestIDs.add(requestId)
+    }
+
+    fun getItinerary(requestId: Int) {
+        repository.getItinerary(requestId)
+    }
 }
 
 data class Location(
@@ -89,6 +125,7 @@ data class Location(
     val lng: Double,
 )
 
+@SuppressLint("QueryPermissionsNeeded")
 fun openGoogleMapsNavigation(to: Location, context: Context) {
     val gmmIntentUri = Uri.parse("google.navigation:q=${to.lat},${to.lng}")
     val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
@@ -141,6 +178,12 @@ fun EventGroup(
         }
     } catch (e: Exception) {
         // ignore
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.onScreenExit()
+        }
     }
 
     Column(
@@ -209,7 +252,7 @@ fun EventGroup(
                     .filter { e -> e.cancelled.not() }
                     .sortedBy { it.scheduledTimeStart }
                 items(items = validEvents, itemContent = { event ->
-                    ShowCustomerDetails(event, viewModel)
+                    ShowCustomerDetails(event, viewModel, navController)
                 })
             }
         }
@@ -306,11 +349,75 @@ fun EventGroup(
 @Composable
 fun ShowCustomerDetails(
     event: EventObject,
-    viewModel: EventGroupViewModel
+    viewModel: EventGroupViewModel,
+    navController: NavController
 ) {
     val context = LocalContext.current
     val storedTickets = viewModel.storedTickets.collectAsState()
     val fareToPay: Double = (event.ticketPrice / 100).toDouble()
+
+    val ptLegs by viewModel.ptLegs.collectAsState()
+    val leg = ptLegs[event.requestId]
+
+    var ptScheduledTime = "-:-"
+    var ptRealTime = "-:-"
+    var mode = ""
+    var rideCancelled = false
+    var toPT = false
+    var fromPT = false
+
+    if (leg != null) {
+        val scheduledStartTime = leg.scheduledStartTime
+        val scheduledEndTime = leg.scheduledEndTime
+        val startTime = leg.scheduledStartTime
+        val endTime = leg.scheduledEndTime
+
+        if (startTime != null && endTime != null && scheduledStartTime != null && scheduledEndTime != null) {
+            val scheduledStart = scheduledStartTime.split('T')[1].split('Z')[0]
+            val scheduledEnd = scheduledEndTime.split('T')[1].split('Z')[0]
+            val start = startTime.split('T')[1].split('Z')[0]
+            val end = endTime.split('T')[1].split('Z')[0]
+            ptScheduledTime = if (event.isPickup) scheduledEnd else scheduledStart
+            ptRealTime = if (event.isPickup) end else start
+        }
+
+        mode = leg.mode
+        rideCancelled = leg.cancelled
+
+        // determine PT / ODM order
+        try {
+            val startInstant = Instant.parse(scheduledStartTime)
+            val endInstant = Instant.parse(scheduledEndTime)
+            toPT = event.scheduledTime < startInstant.toEpochMilli()
+            fromPT = endInstant.toEpochMilli() < event.scheduledTime
+        } catch (e: Exception) {
+            Log.d("test", e.message.toString())
+        }
+    }
+
+    val ptDelayed = ptRealTime != ptScheduledTime
+    val ptStopCancelled = false
+    val ptRideCancelled = rideCancelled
+
+    var ptColor = if (ptDelayed) Color.Red else Color(62, 130, 79)
+
+    if (ptStopCancelled) {
+        ptRealTime = "Halt fällt aus"
+        ptColor = Color.Red
+    }
+    if (ptRideCancelled) {
+        ptRealTime = "Fahrt fällt aus"
+        ptColor = Color.Red
+    }
+
+    var icon = R.drawable.ic_public_transport
+    if (mode == "REGIONAL_RAIL") {
+        icon = R.drawable.ic_train
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.getItinerary(event.requestId)
+    }
 
     Card(
         modifier = Modifier
@@ -318,11 +425,14 @@ fun ShowCustomerDetails(
             .padding(horizontal = 10.dp),
         colors = CardColors(LocalExtendedColors.current.cardColor, Color.Black, Color.White, Color.White)
     ) {
-        Column {
+        Column(
+            modifier = Modifier.padding(start = 8.dp, end = 8.dp)
+        ) {
+            // event time
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp, start = 12.dp, end = 12.dp),
+                    .padding(top = 8.dp, start = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 val displayTime = if (event.scheduledTime.toInt() != 0) {
@@ -341,133 +451,210 @@ fun ShowCustomerDetails(
                     color = LocalExtendedColors.current.textColor
                 )
             }
+            // change info
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp, start = 12.dp, end = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (event.isPickup) Color.Green else Color.Red),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (event.isPickup) Icons.AutoMirrored.Filled.ArrowForward else Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Localized description",
-                        tint = Color.White
-                    )
-                }
-
-                Box {
-                    if (event.wheelchairs > 0) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_wheelchair),
-                            contentDescription = "Localized description",
-                            tint = LocalExtendedColors.current.textColor
-                        )
-                    }
-                }
-
-                Row {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
+                if (event.isPickup && fromPT || event.isPickup.not() && toPT) {
+                    viewModel.setItinerary(event.requestId)
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Localized description",
-                            tint = LocalExtendedColors.current.textColor
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Button(
+                            onClick = {
+                                // open PT detail view
+                                navController.navigate("itinerary/${event.requestId}")
+                            },
+                            colors = ButtonColors(LocalExtendedColors.current.secondaryButton, LocalExtendedColors.current.textColor, Color.White, Color.White),
+                        ) {
+                            Icon(
+                                painter = painterResource(id = icon),
+                                contentDescription = "Localized description",
+                                Modifier.size(21.dp),
+                                tint = if (ptStopCancelled || ptRideCancelled) Color.Red else LocalExtendedColors.current.textColor
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (event.isPickup) Color(62, 130, 79) else Color(94, 154, 191)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = if (event.isPickup) Icons.AutoMirrored.Filled.ArrowForward else Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Localized description",
+                                    tint = LocalExtendedColors.current.cardColor
+                                )
+                            }
+                        }
+                    }
+                    // PT scheduled time
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
-                            text = "${event.passengers}",
-                            fontSize = 24.sp,
+                            text = ptScheduledTime,
+                            fontSize = 16.sp,
                             textAlign = TextAlign.Center,
                             color = LocalExtendedColors.current.textColor
                         )
                     }
-                    Spacer(modifier = Modifier.width(30.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
+                    // PT real time
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_luggage),
-                            contentDescription = "Localized description",
-                            tint = LocalExtendedColors.current.textColor
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "${event.luggage}",
-                            fontSize = 24.sp,
+                            text = ptRealTime,
+                            fontSize = 16.sp,
                             textAlign = TextAlign.Center,
-                            color = LocalExtendedColors.current.textColor
+                            color = ptColor
                         )
                     }
-                    Spacer(modifier = Modifier.width(30.dp))
-
+                } else {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(start = 6.dp, end = 12.dp)
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_bike),
-                            contentDescription = "Localized description",
-                            tint = LocalExtendedColors.current.textColor
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "${event.bikes}",
-                            fontSize = 24.sp,
-                            textAlign = TextAlign.Center,
-                            color = LocalExtendedColors.current.textColor
-                        )
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (event.isPickup) Color(62, 130, 79) else Color(94, 154, 191)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = if (event.isPickup) Icons.AutoMirrored.Filled.ArrowForward else Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Localized description",
+                                tint = LocalExtendedColors.current.cardColor
+                            )
+                        }
                     }
                 }
             }
+            val hasSpecialInfo = event.wheelchairs > 0 || event.kidsZeroToTwo > 0 || event.luggage > 0 || event.bikes > 0
+
+            if (hasSpecialInfo) {
+                Spacer(modifier = Modifier.height(4.dp))
+                // special info
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color.White)
+                        .padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (event.wheelchairs > 0) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(start = 8.dp, end = 12.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_wheelchair),
+                                contentDescription = "Localized description",
+                                tint = LocalExtendedColors.current.textColor
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "${event.wheelchairs}",
+                                fontSize = 22.sp,
+                                textAlign = TextAlign.Center,
+                                color = LocalExtendedColors.current.textColor
+                            )
+                        }
+                    }
+                    if (event.kidsZeroToTwo > 0) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(start = 12.dp, end = 12.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_baby_stroller),
+                                contentDescription = "Localized description",
+                                tint = LocalExtendedColors.current.textColor,
+                                modifier = Modifier.size(21.dp),
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "${event.kidsZeroToTwo}",
+                                fontSize = 22.sp,
+                                textAlign = TextAlign.Center,
+                                color = LocalExtendedColors.current.textColor
+                            )
+                        }
+                    }
+                    if (event.luggage > 0) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(end = 12.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_luggage),
+                                contentDescription = "Localized description",
+                                tint = LocalExtendedColors.current.textColor
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "${event.luggage}",
+                                fontSize = 22.sp,
+                                textAlign = TextAlign.Center,
+                                color = LocalExtendedColors.current.textColor
+                            )
+                        }
+                    }
+                    if (event.bikes > 0) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(start = 12.dp, end = 12.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_bike),
+                                contentDescription = "Localized description",
+                                tint = LocalExtendedColors.current.textColor
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "${event.bikes}",
+                                fontSize = 22.sp,
+                                textAlign = TextAlign.Center,
+                                color = LocalExtendedColors.current.textColor
+                            )
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 8.dp),
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = event.customerName,
-                    fontSize = 24.sp,
+                    fontSize = 22.sp,
                     textAlign = TextAlign.Center,
                     color = LocalExtendedColors.current.textColor
                 )
             }
-
-            if (!event.isPickup) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                        .padding(bottom = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "${String.format("%.2f", fareToPay)} €",
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center,
-                        color = LocalExtendedColors.current.textColor
-                    )
-                }
-            }
-
-            if (event.isPickup) {
-                Spacer(modifier = Modifier.height(20.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                        .padding(bottom = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (event.isPickup) {
                     if (event.customerPhone != null && event.customerPhone != "") {
                         Button(
                             onClick = {
@@ -488,28 +675,58 @@ fun ShowCustomerDetails(
                                 .size(width = 24.dp, height = 24.dp)
                         )
                     }
+                } else {
+                    Box { /* place holder */ }
+                }
 
-                    var ticketStatus: ValidationStatus = ValidationStatus.OPEN
+                var ticketStatus: ValidationStatus = ValidationStatus.OPEN
 
-                    val ticketObject = storedTickets.value
-                        .find { t -> t.ticketHash == event.ticketHash }
+                val ticketObject = storedTickets.value
+                    .find { t -> t.ticketHash == event.ticketHash }
 
-                    ticketObject?.let { ticket ->
-                        ticketStatus = ValidationStatus.valueOf(ticket.validationStatus)
+                ticketObject?.let { ticket ->
+                    ticketStatus = ValidationStatus.valueOf(ticket.validationStatus)
+                }
+
+                if(event.ticketChecked) {
+                    ticketStatus = ValidationStatus.DONE
+                    viewModel.updateTicket(event.requestId, event.ticketHash)
+                }
+
+
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.White)
+                            .height(height = 40.dp)
+                            .padding(start = 6.dp, end = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Localized description",
+                            tint = LocalExtendedColors.current.textColor
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "${event.passengers}",
+                            fontSize = 22.sp,
+                            textAlign = TextAlign.Center,
+                            color = LocalExtendedColors.current.textColor
+                        )
                     }
-
-                    if(event.ticketChecked) {
-                        ticketStatus = ValidationStatus.DONE
-                        viewModel.updateTicket(event.requestId, event.ticketHash)
-                    }
-
+                    Spacer(modifier = Modifier.width(width = 12.dp))
                     Text(
                         text = "${String.format("%.2f", fareToPay)} €",
-                        fontSize = 24.sp,
+                        fontSize = 22.sp,
                         textAlign = TextAlign.Center,
                         color = LocalExtendedColors.current.textColor
                     )
-
+                    Spacer(modifier = Modifier.width(width = 12.dp))
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(10.dp))
