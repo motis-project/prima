@@ -156,6 +156,19 @@ export interface Database {
 		request: number;
 		ratedIsCustomer: boolean;
 	};
+	taxiFilter: {
+		perTransfer: number;
+		taxiBase: number;
+		taxiPerMinute: number;
+		taxiDirectPenalty: number;
+		ptSlope: number;
+		taxiSlope: number;
+	};
+	calibrationSets: {
+		id: Generated<number>;
+		name: string;
+		itinerariesJson: string;
+	};
 }
 
 export const pool = new pg.Pool({ connectionString: env.DATABASE_URL });

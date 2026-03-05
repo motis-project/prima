@@ -16,7 +16,7 @@
 	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import { Input } from '$lib/shadcn/input';
 	import { Label } from '$lib/shadcn/label';
-	import { trip, type Match, type PlanData } from '$lib/openapi';
+	import { type Match, type PlanData } from '$lib/openapi';
 	import { t } from '$lib/i18n/translation';
 	import { lngLatToStr } from '$lib/util/lngLatToStr';
 	import Meta from '$lib/ui/Meta.svelte';
@@ -49,6 +49,9 @@
 	import { HOUR } from '$lib/util/time';
 	import { Alert, AlertDescription, AlertTitle } from '$lib/shadcn/alert';
 	import AlertCircleIcon from 'lucide-svelte/icons/circle-alert';
+	import SlidersVertical from 'lucide-svelte/icons/sliders-vertical';
+	import { collectItineraries } from '$lib/calibration';
+	import { onClickStop, onClickTrip } from '$lib/util/onClick';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -193,21 +196,6 @@
 				onClickStop('', urlParams.get('stopId')!, time, true);
 			}
 		}
-	};
-
-	const onClickTrip = async (tripId: string, replace = false) => {
-		const { data: itinerary, error } = await trip({ query: { tripId } });
-		if (error) {
-			alert(error);
-			return;
-		}
-		const updateState = replace ? replaceState : pushState;
-		updateState('', { selectedItinerary: itinerary });
-	};
-
-	const onClickStop = (name: string, stopId: string, time: Date, replace = false) => {
-		const updateState = replace ? replaceState : pushState;
-		updateState('', { stop: { name, stopId, time } });
 	};
 
 	const getLocation = () => {
@@ -651,6 +639,21 @@
 					}}
 					updateStartDest={updateStartDest(from, to)}
 				/>
+				{#if data.isAdmin && baseResponse}
+					{#await Promise.all(routingResponses) then r}
+						<form
+							method="post"
+							action="?/useForCalibration"
+							class="flex grow flex-col gap-2 rounded-md border-2 border-solid p-2"
+						>
+							<Input type="text" name="name" placeholder="Name" />
+							<input type="hidden" name="json" value={JSON.stringify(collectItineraries(r))} />
+							<Button type="submit" class="grow"
+								><SlidersVertical /> {t.calibration.useForCalibration}</Button
+							>
+						</form>
+					{/await}
+				{/if}
 			</div>
 
 			<p class="mx-auto mt-6 text-sm">

@@ -6,6 +6,10 @@ import { fail, json, type RequestEvent } from '@sveltejs/kit';
 import { getRideShareInfos } from '$lib/server/booking/rideShare/getRideShareInfo';
 import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
 import { filterRideSharing } from '$lib/util/filterRideSharing';
+import { db } from '$lib/server/db';
+import { filterTaxis } from '$lib/util/filterTaxis';
+import { readTimeFromPageCursor } from '$lib/util/time';
+import { publicTransitOnly } from '$lib/util/itineraryHelpers';
 
 export const POST = async (event: RequestEvent) => {
 	const q: PlanData['query'] = await event.request.json();
@@ -22,10 +26,38 @@ export const POST = async (event: RequestEvent) => {
 
 	response.itineraries = filterRideSharing(response.itineraries);
 
+	const intvl_start = readTimeFromPageCursor(response.previousPageCursor);
+	const intvl_end = readTimeFromPageCursor(response.nextPageCursor);
+
+	if (event.locals.session?.isAdmin) {
+		response.itineraries = response.itineraries.filter((i) => {
+			const t = new Date(q.arriveBy ? i.endTime : i.startTime);
+			return publicTransitOnly(i) || (intvl_start <= t && t <= intvl_end);
+		});
+	} else {
+		const filterSettings = await db.selectFrom('taxiFilter').selectAll().executeTakeFirst();
+		if (filterSettings === undefined) {
+			return fail(500);
+		}
+
+		response.itineraries = filterTaxis(
+			response.itineraries,
+			filterSettings.perTransfer,
+			filterSettings.taxiBase,
+			filterSettings.taxiPerMinute,
+			filterSettings.taxiDirectPenalty,
+			filterSettings.ptSlope,
+			filterSettings.taxiSlope
+		).itineraries.filter((i) => {
+			const t = new Date(q.arriveBy ? i.endTime : i.startTime);
+			return intvl_start <= t && t <= intvl_end;
+		});
+	}
+
 	return json({
 		...response!,
 		itineraries: await Promise.all(
-			response!.itineraries.map(async (i: Itinerary) => {
+			response.itineraries.map(async (i: Itinerary) => {
 				const odmLeg1 = i.legs.find(isOdmLeg);
 				const odmLeg2 = i.legs.findLast(isOdmLeg);
 				const rideShareTourInfos = await getRideShareInfos(i);
