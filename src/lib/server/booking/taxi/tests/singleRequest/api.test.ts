@@ -339,7 +339,8 @@ describe('Whitelist and Booking API Tests', () => {
 				inNiesky2.lng,
 				whiteResponse.direct[0].pickupTime,
 				whiteResponse.direct[0].dropoffTime,
-				false
+				false,
+				undefined
 			),
 			startFixed: true,
 			requestedTime: inXMinutes(70),
@@ -409,7 +410,8 @@ describe('Whitelist and Booking API Tests', () => {
 				inNiesky2.lng,
 				whiteResponse.direct[0].pickupTime,
 				roundToUnit(whiteResponse.direct[0].dropoffTime, MINUTE, Math.floor),
-				false
+				false,
+				undefined
 			),
 			startFixed: true,
 			mode: Mode.TAXI,
