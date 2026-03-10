@@ -1,8 +1,10 @@
 package de.motis.prima.ui
 
-import android.graphics.drawable.Icon
 import android.util.Log
+import android.widget.Space
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,24 +22,29 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -45,7 +52,12 @@ import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.R
 import de.motis.prima.data.DataRepository
+import de.motis.prima.services.Place
 import de.motis.prima.ui.theme.LocalExtendedColors
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import javax.inject.Inject
 
 enum class TransportType {
@@ -57,9 +69,10 @@ data class ItineraryItem(
     val departureTime: String,
     val from: String,
     val to: String,
-    val subtitle: String? = null,
+    val intermediateStops: List<Place> = emptyList(),
     val transportType: TransportType,
-    val isLast: Boolean = false
+    var isLast: Boolean = false,
+    val name: String
 )
 
 @HiltViewModel
@@ -69,43 +82,83 @@ class ItineraryViewModel @Inject constructor(
     val ptLegs = repository.ptLegs
 }
 
+fun isoToLocalTime(isoString: String): String {
+    val instant = Instant.parse(isoString)
+    val localDateTime = instant.atZone(ZoneId.systemDefault())
+    val formatter = DateTimeFormatter
+        .ofPattern("HH:mm", Locale.getDefault())
+    val formatted = localDateTime.format(formatter)
+
+    return formatted
+}
+
+fun epochToLocalTime(epochMillis: Long): String {
+    val zoneId = ZoneId.systemDefault()
+    val time = Instant.ofEpochMilli(epochMillis).atZone(zoneId)
+    val formatter = DateTimeFormatter
+        .ofPattern("HH:mm", Locale.getDefault())
+    val formatted = time.format(formatter)
+
+    return formatted
+}
+
 @Composable
 fun ItineraryScreen(
     navController: NavController,
     requestId: Int,
+    eventId: Int,
     viewModel: EventGroupViewModel = hiltViewModel(),
 ) {
     val ptLegs by viewModel.ptLegs.collectAsState()
+    val itinerary = mutableListOf<ItineraryItem>()
 
-    Log.d("test", "startTime: ${ptLegs[requestId]?.scheduledStartTime}")
-
-    val itinerary = listOf(
-        ItineraryItem(
-            departureTime = "20:35",
-            arrivalTime = "21:15",
-            from = "Klein Priebus, Krauschwitz – Krušwica",
-            to = "Weißwasser Bahnhof",
-            subtitle = "40 min Public Transport Taxi · 27 km · Booking required",
-            transportType = TransportType.TAXI
-        ),
-        ItineraryItem(
-            departureTime = "21:20",
-            arrivalTime = "21:26",
-            from = "Weißwasser Bahnhof",
-            to = "Schleife Bahnhof",
-            subtitle = "5 min transfer",
-            transportType = TransportType.TRAIN
-        ),
-        ItineraryItem(
-            departureTime = "21:26",
-            arrivalTime = "21:27",
-            from = "Schleife Bahnhof",
-            to = "Schleife, Slepo",
-            subtitle = "1 min walk",
-            transportType = TransportType.WALK,
-            isLast = true
+    val leg = ptLegs[requestId]
+    if (leg != null) {
+        itinerary.add(
+            ItineraryItem(
+                departureTime = isoToLocalTime(leg.from.scheduledDeparture ?: "-:-"),
+                arrivalTime = isoToLocalTime(leg.to.scheduledArrival ?: "-:-"),
+                from = leg.from.name.toString(),
+                to = leg.to.name.toString(),
+                intermediateStops = leg.intermediateStops,
+                transportType = TransportType.TRAIN,
+                name = leg.displayName.toString()
+            )
         )
-    )
+    }
+
+    var taxiFrom = ""
+    var taxiTo = ""
+    var taxiDeparture = ""
+    var taxiArrival = ""
+    var isPickup = true
+
+    val event = viewModel.getEvent(eventId)
+    if (event != null) {
+        isPickup = event.isPickup
+        val time = epochToLocalTime(event.scheduledTime)
+        if (event.isPickup) {
+            taxiFrom = event.address
+            taxiDeparture = time
+        } else {
+            taxiTo = event.address
+            taxiArrival = time
+        }
+
+        itinerary.add(
+            ItineraryItem(
+                departureTime = taxiDeparture,
+                arrivalTime = taxiArrival,
+                from = taxiFrom,
+                to = taxiTo,
+                transportType = TransportType.TAXI,
+                name = "Taxi"
+            )
+        )
+    }
+
+    itinerary.sortBy { e -> e.departureTime }
+    itinerary.last().isLast = true
 
     Scaffold(
         topBar = {
@@ -128,7 +181,7 @@ fun ItineraryScreen(
                     .background(Color.White)
             ) {
                 items(itinerary) { item ->
-                    ItineraryRow(item = item)
+                    ItineraryRow(item = item, isPickup)
                 }
             }
         }
@@ -137,104 +190,181 @@ fun ItineraryScreen(
 
 @Composable
 fun ItineraryRow(
-    item: ItineraryItem
+    item: ItineraryItem,
+    isPickup: Boolean
 ) {
-    Row(
+    val isTaxi = item.transportType == TransportType.TAXI
+    val baseHeight = if (isTaxi) 80.dp else 160.dp
+    var height by remember { mutableStateOf(baseHeight) }
+    val interStopHeight = 30.dp
+
+    var intermediateStops = item.intermediateStops
+
+    intermediateStops = if (isPickup) {
+        intermediateStops.takeLast(3)
+    } else {
+        intermediateStops.take(3)
+    }
+
+    val nInterStops = intermediateStops.size
+
+    var extended by remember { mutableStateOf(false) }
+
+    val distTimeName = 48.dp
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
     ) {
-
-        // ───── Timeline column (icon + line) ─────
-        val height = 130.dp
-        Column(
-            modifier = Modifier.fillMaxWidth()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
         ) {
+            TransportIcon(item.transportType, false, item.name)
+        }
 
-            TransportIcon(item.transportType)
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(height)
+        ) {
+            Column(
+                modifier = Modifier
+                    .width(18.dp)
             ) {
-                Spacer(Modifier.width(10.dp))
-                Box(
-                    modifier = Modifier
-                        .width(2.dp)
-                        .height(height)
-                        .background(transportColor(item.transportType))
-                )
-                Box(
-                    modifier = Modifier
-                        .width(100.dp)
-                        .height(height)
-                        .background(Color.White)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(top = 10.dp, bottom = 10.dp, start = 30.dp)
-                            .fillMaxHeight(),
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = item.departureTime,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color.Black
-                        )
-                        Text(
-                            text = item.arrivalTime,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color.Black
+                if (item.isLast.not()) {
+                    Row {
+                        Spacer(modifier = Modifier.width(14.dp))
+                        Box(
+                            modifier = Modifier
+                                .width(2.dp)
+                                .height(height)
+                                .background(transportColor(item.transportType))
                         )
                     }
-                }
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(height)
-                        .background(Color.White)
-                ) {
-                    // ───── Text content ─────
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(top = 10.dp, bottom = 10.dp),
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Box {
-                            Text(
-                                text = item.from,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.Black
-                            )
-                        }
+                } else {
+                    Row {
+                        Spacer(modifier = Modifier.width(14.dp))
                         Box(
-                            modifier = Modifier.padding(20.dp)
-                        ) {
-                            item.subtitle?.let {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = it,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Black
-                                )
-                            }
-                        }
+                            modifier = Modifier
+                                .width(2.dp)
+                                .height(height - 30.dp)
+                                .background(transportColor(item.transportType))
+                        )
+                    }
+                    Row {
+                        Spacer(modifier = Modifier.width(9.dp))
                         Box {
-                            Text(
-                                text = item.to,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.Black
-                            )
+                            TransportIcon(item.transportType, true, "")
                         }
                     }
                 }
             }
-
-            if (item.isLast) {
-                Row(
-                    modifier = Modifier.padding(start = 5.dp)
-                ) {
-                    TransportIcon(item.transportType, true)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                if (isTaxi || isPickup.not()) {
+                    Row {
+                        Text(
+                            text = item.departureTime,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.Black,
+                            fontSize = 20.sp
+                        )
+                        Spacer(modifier = Modifier.width(distTimeName))
+                        Text(
+                            text = item.from,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.Black,
+                            fontSize = 20.sp
+                        )
+                    }
+                }
+                Row {
+                    Column {
+                        Box {
+                            if (item.intermediateStops.isEmpty().not()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Button(
+                                    colors = ButtonColors(
+                                        Color.White,
+                                        Color.White,
+                                        Color.White,
+                                        Color.White
+                                    ),
+                                    onClick = {
+                                        extended = extended.not()
+                                        height = if (extended) {
+                                            baseHeight + interStopHeight * nInterStops
+                                        } else {
+                                            baseHeight
+                                        }
+                                    }) {
+                                    Row {
+                                        Icon(
+                                            imageVector = if (extended) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                            contentDescription = "Localized description",
+                                            modifier = Modifier
+                                                .size(width = 20.dp, height = 20.dp)
+                                                .background(Color.White),
+                                            tint = LocalExtendedColors.current.textColor
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Text(
+                                            text = "Zwischenhalte",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color.Black,
+                                            fontSize = 20.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        if (extended) {
+                            LazyColumn {
+                                items(intermediateStops) { stop ->
+                                    val scheduledDeparture = isoToLocalTime(stop.scheduledDeparture ?: "-:-")
+                                    val name = stop.name ?: "-"
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row {
+                                        Text(
+                                            text = scheduledDeparture,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = Color.Black,
+                                            fontSize = 20.sp
+                                        )
+                                        Spacer(modifier = Modifier.width(distTimeName))
+                                        Text(
+                                            text = name,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = Color.Black,
+                                            fontSize = 20.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (isTaxi || isPickup) {
+                    Row {
+                        Text(
+                            text = item.arrivalTime,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.Black,
+                            fontSize = 20.sp
+                        )
+                        Spacer(modifier = Modifier.width(distTimeName))
+                        Text(
+                            text = item.to,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.Black,
+                            fontSize = 20.sp
+                        )
+                    }
                 }
             }
         }
@@ -242,14 +372,14 @@ fun ItineraryRow(
 }
 
 @Composable
-fun TransportIcon(type: TransportType, terminal: Boolean = false) {
-    val (icon, bgColor) = when (type) {
+fun TransportIcon(mode: TransportType, terminal: Boolean = false, name: String) {
+    val (icon, bgColor) = when (mode) {
         TransportType.TAXI ->
-            Icons.Default.Face to Color(0xFFFFC107)
+            R.drawable.ic_taxi to transportColor(TransportType.TAXI)
         TransportType.TRAIN ->
-            Icons.Default.Face to Color(0xFFD32F2F)
+            R.drawable.ic_train to transportColor(TransportType.TRAIN)
         TransportType.WALK ->
-            Icons.Default.Face to Color(0xFFBDBDBD)
+            R.drawable.ic_walk to transportColor(TransportType.WALK)
     }
 
     if (terminal.not()) {
@@ -266,13 +396,16 @@ fun TransportIcon(type: TransportType, terminal: Boolean = false) {
                 horizontalArrangement = Arrangement.Center
             ){
                 Icon(
-                    imageVector = icon,
+                    painter = painterResource(id = icon),
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Taxi")
+                Text(
+                    text= name,
+                    color = Color.White
+                )
             }
         }
     } else {

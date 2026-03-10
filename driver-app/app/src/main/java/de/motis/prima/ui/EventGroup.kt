@@ -78,6 +78,7 @@ class EventGroupViewModel @Inject constructor(
 ) : ViewModel() {
     val storedTickets = repository.storedTickets
     val ptLegs = repository.ptLegs
+    val events = HashMap<Int, EventObject>(hashMapOf())
 
     fun onScreenExit() {
         repository.updateRequestIDs.clear()
@@ -117,6 +118,10 @@ class EventGroupViewModel @Inject constructor(
 
     fun getItinerary(requestId: Int) {
         repository.getItinerary(requestId)
+    }
+
+    fun getEvent(id: Int): EventObject? {
+        return repository.getEvent(id)
     }
 }
 
@@ -251,8 +256,9 @@ fun EventGroup(
                 val validEvents = eventGroup.events
                     .filter { e -> e.cancelled.not() }
                     .sortedBy { it.scheduledTimeStart }
+
                 items(items = validEvents, itemContent = { event ->
-                    ShowCustomerDetails(event, viewModel, navController)
+                    ShowEvent(event, viewModel, navController)
                 })
             }
         }
@@ -347,7 +353,7 @@ fun EventGroup(
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun ShowCustomerDetails(
+fun ShowEvent(
     event: EventObject,
     viewModel: EventGroupViewModel,
     navController: NavController
@@ -362,21 +368,22 @@ fun ShowCustomerDetails(
     var ptScheduledTime = "-:-"
     var ptRealTime = "-:-"
     var mode = ""
-    var rideCancelled = false
+    var rideCancelled = true
     var toPT = false
     var fromPT = false
 
     if (leg != null) {
         val scheduledStartTime = leg.scheduledStartTime
         val scheduledEndTime = leg.scheduledEndTime
-        val startTime = leg.scheduledStartTime
-        val endTime = leg.scheduledEndTime
+        val startTime = leg.scheduledStartTime // TODO
+        val endTime = leg.scheduledEndTime // TODO
 
         if (startTime != null && endTime != null && scheduledStartTime != null && scheduledEndTime != null) {
-            val scheduledStart = scheduledStartTime.split('T')[1].split('Z')[0]
-            val scheduledEnd = scheduledEndTime.split('T')[1].split('Z')[0]
-            val start = startTime.split('T')[1].split('Z')[0]
-            val end = endTime.split('T')[1].split('Z')[0]
+            val scheduledStart = isoToLocalTime(scheduledStartTime)
+            val scheduledEnd = isoToLocalTime(scheduledEndTime)
+            val start = isoToLocalTime(startTime)
+            val end = isoToLocalTime(endTime)
+
             ptScheduledTime = if (event.isPickup) scheduledEnd else scheduledStart
             ptRealTime = if (event.isPickup) end else start
         }
@@ -468,7 +475,7 @@ fun ShowCustomerDetails(
                         Button(
                             onClick = {
                                 // open PT detail view
-                                navController.navigate("itinerary/${event.requestId}")
+                                navController.navigate("itinerary/${event.requestId}/${event.id}")
                             },
                             colors = ButtonColors(LocalExtendedColors.current.secondaryButton, LocalExtendedColors.current.textColor, Color.White, Color.White),
                         ) {

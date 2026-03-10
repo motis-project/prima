@@ -434,6 +434,10 @@ class DataRepository @Inject constructor(
         return tourStore.getTour(id)
     }
 
+    fun getEvent(id: Int): EventObject? {
+        return tourStore.getEvent(id)
+    }
+
     fun hasPendingValidations(tourId: Int): Boolean {
         for (id in tourStore.getPickupRequestIDs(tourId)) {
             if (_pendingValidationTickets.value.find { e -> e.requestId == id } != null ) {
