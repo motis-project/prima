@@ -1,6 +1,7 @@
 package de.motis.prima.ui
 
 import android.content.Intent
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -117,6 +118,12 @@ fun Nav(intent: Intent?, viewModel: NavViewModel = hiltViewModel()) {
 
             composable(route = "availability") {
                 Availability(navController)
+            }
+
+            composable(route = "itinerary/{requestId}/{eventId}") {
+                val requestId = it.arguments?.getString("requestId")?.toInt()
+                val eventId = it.arguments?.getString("eventId")?.toInt()
+                ItineraryScreen(navController, requestId!!, eventId!!)
             }
         }
     }
