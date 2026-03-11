@@ -151,6 +151,7 @@ export const getToursWithRequests = async (
 									'event.eventGroupId',
 									'event.cancelled',
 									'request.cancelled as requestCancelled',
+									'request.cancelledByCustomer',
 									'tour.cancelled as tourCancelled',
 									'request.bikes',
 									'request.customer',

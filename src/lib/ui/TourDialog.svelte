@@ -354,7 +354,9 @@
 									{:else if event.isPickup && !event.cancelled && event.scheduledTimeEnd + event.nextLegDuration < Date.now()}
 										<span class="text-red-500">Ticket nicht verifiziert</span>
 									{:else if event.cancelled}
-										<span class="text-orange-400">Storniert</span>
+										<span class="text-orange-400"
+											>{event.cancelledByCustomer ? 'vom Kunden Storniert' : 'Storniert'}</span
+										>
 									{/if}
 								</Table.Cell>
 							</Table.Row>
