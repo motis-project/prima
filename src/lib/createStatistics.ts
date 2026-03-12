@@ -43,7 +43,7 @@ async function rideShareTourQuery() {
 			.selectFrom('rideShareTour as tour')
 			.where('tour.approachAndReturnM', 'is', null)
 			.where('tour.cancelled', '=', false)
-			.where('tour.arrival', '<', Date.now())
+			.where('tour.latestEnd', '<', Date.now())
 			.select((eb) => [
 				jsonArrayFrom(
 					eb
@@ -115,17 +115,18 @@ function haversineDistance(c1: Coordinates, c2: Coordinates) {
 }
 
 function legToTravelDistance(leg: Leg): number {
-	const legGeometry = polyLineToLatLngArray(leg.legGeometry.points).map((v) => ({
-		lat: v[0],
-		lng: v[1]
-	}));
-	let sum = 0;
-	for (let i = 1; i != legGeometry.length; ++i) {
-		const prev = legGeometry[i - 1];
-		const curr = legGeometry[i];
-		sum += haversineDistance(prev, curr);
-	}
-	return sum;
+	return leg.distance!
+	// const legGeometry = polyLineToLatLngArray(leg.legGeometry.points).map((v) => ({
+	// 	lat: v[0],
+	// 	lng: v[1]
+	// }));
+	// let sum = 0;
+	// for (let i = 1; i != legGeometry.length; ++i) {
+	// 	const prev = legGeometry[i - 1];
+	// 	const curr = legGeometry[i];
+	// 	sum += haversineDistance(prev, curr);
+	// }
+	// return sum;
 }
 
 function legsToTravelDistance(legs: Leg[] | undefined) {
