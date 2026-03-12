@@ -68,23 +68,32 @@
 			.sort((e1, e2) => getScheduledEventTime(e1) - getScheduledEventTime(e2))
 	);
 	let company = $derived(tour && { lat: tour.companyLat!, lng: tour.companyLng! });
+	let uncancelledEvents = $derived(events?.filter((e) => !e.cancelled));
+	let cancelledByCompanyEvents = $derived(
+		events?.filter((e) => e.cancelled && !e.cancelledByCustomer)
+	);
+	let relevantEvents = $derived(
+		tour == null ? undefined : tour.cancelled ? cancelledByCompanyEvents : uncancelledEvents
+	);
 
 	const getRoutes = (): Promise<Itinerary | undefined>[] => {
 		let routes: Array<Promise<Itinerary | undefined>> = [];
 		if (tour == null || company == null || events!.length == 0) {
 			return routes;
 		}
-		for (let e = 0; e < events!.length - 1; e++) {
-			const e1 = events![e];
-			const e2 = events![e + 1];
+		for (let e = 0; e < relevantEvents!.length - 1; e++) {
+			const e1 = relevantEvents![e];
+			const e2 = relevantEvents![e + 1];
 			routes.push(carRouting(e1, e2));
 		}
 		return routes;
 	};
 
 	const routes = $derived(tour && getRoutes());
-	const fromCompany = $derived(tour && company && carRouting(company, events![0]));
-	const toCompany = $derived(tour && company && carRouting(events![events!.length - 1], company));
+	const fromCompany = $derived(tour && company && carRouting(company, relevantEvents![0]));
+	const toCompany = $derived(
+		tour && company && carRouting(relevantEvents![relevantEvents!.length - 1], company)
+	);
 
 	$effect(() => {
 		if (map && tour) {
