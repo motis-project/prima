@@ -254,7 +254,8 @@ export const addRideShareTour = async (
 				ticketChecked: false,
 				ticketPrice: 300,
 				cancelled: false,
-				pending: false
+				pending: false,
+				cancelledByCustomer: false
 			})
 			.returning('id')
 			.execute()
