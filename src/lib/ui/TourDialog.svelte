@@ -90,9 +90,15 @@
 	};
 
 	const routes = $derived(tour && getRoutes());
-	const fromCompany = $derived(tour && company && carRouting(company, relevantEvents![0]));
+	const fromCompany = $derived(
+		tour && company && relevantEvents?.length !== 0
+			? carRouting(company, relevantEvents![0])
+			: undefined
+	);
 	const toCompany = $derived(
-		tour && company && carRouting(relevantEvents![relevantEvents!.length - 1], company)
+		tour && company && relevantEvents?.length !== 0
+			? carRouting(relevantEvents![relevantEvents!.length - 1], company)
+			: undefined
 	);
 
 	$effect(() => {
@@ -266,9 +272,11 @@
 			class="h-full w-full rounded-lg border shadow"
 			attribution={"&copy; <a href='http://www.openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a>"}
 		>
-			{@render drawRoutes([fromCompany], 'outward', '#ff0000', '#000000')}
-			{@render drawRoutes([toCompany], 'return', '#00ff00', '#000000')}
-			{@render drawRoutes(routes, 'events', '#0000ff', '#000000')}
+			{#if fromCompany && toCompany}
+				{@render drawRoutes([fromCompany], 'outward', '#ff0000', '#000000')}
+				{@render drawRoutes([toCompany], 'return', '#00ff00', '#000000')}
+				{@render drawRoutes(routes, 'events', '#0000ff', '#000000')}
+			{/if}
 		</Map>
 	{/if}
 {/snippet}
