@@ -273,8 +273,8 @@
 			attribution={"&copy; <a href='http://www.openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a>"}
 		>
 			{#if fromCompany && toCompany}
-				{@render drawRoutes([fromCompany], 'outward', '#ff0000', '#000000')}
-				{@render drawRoutes([toCompany], 'return', '#00ff00', '#000000')}
+				{@render drawRoutes([fromCompany], 'outward', '#00ff00', '#000000')}
+				{@render drawRoutes([toCompany], 'return', '#ff0000', '#000000')}
 				{@render drawRoutes(routes, 'events', '#0000ff', '#000000')}
 			{/if}
 		</Map>
@@ -372,7 +372,9 @@
 										<span class="text-red-500">Ticket nicht verifiziert</span>
 									{:else if event.cancelled}
 										<span class="text-orange-400"
-											>{event.cancelledByCustomer ? 'vom Kunden Storniert' : 'Storniert'}</span
+											>{event.cancelledByCustomer
+												? 'vom Kunden Storniert'
+												: 'vom Unternehmen Storniert'}</span
 										>
 									{/if}
 								</Table.Cell>
