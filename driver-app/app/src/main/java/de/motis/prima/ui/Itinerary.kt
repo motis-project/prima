@@ -1,16 +1,11 @@
 package de.motis.prima.ui
 
-import android.util.Log
-import android.widget.Space
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,14 +17,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,7 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -72,7 +65,10 @@ data class ItineraryItem(
     val intermediateStops: List<Place> = emptyList(),
     val transportType: TransportType,
     var isLast: Boolean = false,
-    val name: String
+    val name: String,
+    val fromCancelled: Boolean = false,
+    val toCancelled: Boolean = false,
+    val cancelled: Boolean = false
 )
 
 @HiltViewModel
@@ -122,7 +118,10 @@ fun ItineraryScreen(
                 to = leg.to.name.toString(),
                 intermediateStops = leg.intermediateStops,
                 transportType = TransportType.TRAIN,
-                name = leg.displayName.toString()
+                name = leg.displayName.toString(),
+                fromCancelled = leg.from.cancelled,
+                toCancelled = leg.to.cancelled,
+                cancelled = leg.cancelled
             )
         )
     }
@@ -197,9 +196,9 @@ fun ItineraryRow(
     val baseHeight = if (isTaxi) 80.dp else 160.dp
     var height by remember { mutableStateOf(baseHeight) }
     val interStopHeight = 30.dp
+    val distTimeName = 48.dp
 
     var intermediateStops = item.intermediateStops
-
     intermediateStops = if (isPickup) {
         intermediateStops.takeLast(3)
     } else {
@@ -207,10 +206,11 @@ fun ItineraryRow(
     }
 
     val nInterStops = intermediateStops.size
-
     var extended by remember { mutableStateOf(false) }
 
-    val distTimeName = 48.dp
+    val fromCancelled = item.fromCancelled
+    val toCancelled = item.toCancelled
+    val legCancelled = item.cancelled
 
     Column(
         modifier = Modifier
@@ -260,109 +260,144 @@ fun ItineraryRow(
                     }
                 }
             }
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                if (isTaxi || isPickup.not()) {
-                    Row {
-                        Text(
-                            text = item.departureTime,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color.Black,
-                            fontSize = 20.sp
-                        )
-                        Spacer(modifier = Modifier.width(distTimeName))
-                        Text(
-                            text = item.from,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.Black,
-                            fontSize = 20.sp
-                        )
+            if (legCancelled.not()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    if (isTaxi || isPickup.not()) {
+                        Row {
+                            val color = if (fromCancelled) Color.Red else LocalExtendedColors.current.textColor
+                            val timeTxt = if (fromCancelled) "X" else item.departureTime
+                            Text(
+                                text = timeTxt,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = color,
+                                fontSize = 20.sp
+                            )
+                            Spacer(modifier = Modifier.width(distTimeName))
+                            Text(
+                                text = item.from,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = color,
+                                fontSize = 20.sp
+                            )
+                        }
                     }
-                }
-                Row {
-                    Column {
-                        Box {
-                            if (item.intermediateStops.isEmpty().not()) {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Button(
-                                    colors = ButtonColors(
-                                        Color.White,
-                                        Color.White,
-                                        Color.White,
-                                        Color.White
-                                    ),
-                                    onClick = {
-                                        extended = extended.not()
-                                        height = if (extended) {
-                                            baseHeight + interStopHeight * nInterStops
-                                        } else {
-                                            baseHeight
+                    Row {
+                        Column {
+                            Box {
+                                if (item.intermediateStops.isEmpty().not()) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Button(
+                                        colors = ButtonColors(
+                                            Color.White,
+                                            Color.White,
+                                            Color.White,
+                                            Color.White
+                                        ),
+                                        onClick = {
+                                            extended = extended.not()
+                                            height = if (extended) {
+                                                baseHeight + interStopHeight * nInterStops
+                                            } else {
+                                                baseHeight
+                                            }
+                                        }) {
+                                        Row {
+                                            Icon(
+                                                imageVector = if (extended) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                                contentDescription = "Localized description",
+                                                modifier = Modifier
+                                                    .size(width = 20.dp, height = 20.dp)
+                                                    .background(Color.White),
+                                                tint = LocalExtendedColors.current.textColor
+                                            )
+                                            Spacer(modifier = Modifier.width(10.dp))
+                                            Text(
+                                                text = "Zwischenhalte",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = Color.Black,
+                                                fontSize = 20.sp
+                                            )
                                         }
-                                    }) {
-                                    Row {
-                                        Icon(
-                                            imageVector = if (extended) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                            contentDescription = "Localized description",
-                                            modifier = Modifier
-                                                .size(width = 20.dp, height = 20.dp)
-                                                .background(Color.White),
-                                            tint = LocalExtendedColors.current.textColor
-                                        )
-                                        Spacer(modifier = Modifier.width(10.dp))
-                                        Text(
-                                            text = "Zwischenhalte",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = Color.Black,
-                                            fontSize = 20.sp
-                                        )
                                     }
                                 }
                             }
-                        }
-                        if (extended) {
-                            LazyColumn {
-                                items(intermediateStops) { stop ->
-                                    val scheduledDeparture = isoToLocalTime(stop.scheduledDeparture ?: "-:-")
-                                    val name = stop.name ?: "-"
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    Row {
-                                        Text(
-                                            text = scheduledDeparture,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = Color.Black,
-                                            fontSize = 20.sp
-                                        )
-                                        Spacer(modifier = Modifier.width(distTimeName))
-                                        Text(
-                                            text = name,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = Color.Black,
-                                            fontSize = 20.sp
-                                        )
+                            if (extended) {
+                                LazyColumn {
+                                    items(intermediateStops) { stop ->
+                                        val scheduledDeparture = isoToLocalTime(stop.scheduledDeparture ?: "-:-")
+                                        val name = stop.name ?: "-"
+                                        val textColor = if (stop.cancelled) Color.Red else LocalExtendedColors.current.textColor
+                                        val scheduledDepartureText = if (stop.cancelled) "    X   " else scheduledDeparture
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Row {
+                                            Text(
+                                                text = scheduledDepartureText,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = textColor,
+                                                fontSize = 20.sp
+                                            )
+                                            Spacer(modifier = Modifier.width(distTimeName))
+                                            Text(
+                                                text = name,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                color = textColor,
+                                                fontSize = 20.sp
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                    if (isTaxi || isPickup) {
+                        Row {
+                            val color = if (toCancelled) Color.Red else LocalExtendedColors.current.textColor
+                            val timeTxt = if (toCancelled) "X" else item.arrivalTime
+                            Text(
+                                text = timeTxt,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = color,
+                                fontSize = 20.sp
+                            )
+                            Spacer(modifier = Modifier.width(distTimeName))
+                            Text(
+                                text = item.to,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = color,
+                                fontSize = 20.sp
+                            )
+                        }
+                    }
                 }
-                if (isTaxi || isPickup) {
-                    Row {
-                        Text(
-                            text = item.arrivalTime,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color.Black,
-                            fontSize = 20.sp
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = "Localized description",
+                            modifier = Modifier
+                                .size(width = 40.dp, height = 40.dp)
+                                .background(Color.White),
+                            tint = Color.Red
                         )
-                        Spacer(modifier = Modifier.width(distTimeName))
+                        Spacer(modifier = Modifier.width(30.dp))
                         Text(
-                            text = item.to,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.Black,
-                            fontSize = 20.sp
+                                text = "Fahrt fällt aus",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.Red,
+                        fontSize = 20.sp
                         )
                     }
                 }

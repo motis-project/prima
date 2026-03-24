@@ -74,7 +74,12 @@ class DataRepository @Inject constructor(
     private val _ptLegs = MutableStateFlow<HashMap<Int, Leg>>(hashMapOf())
     val ptLegs: StateFlow<HashMap<Int, Leg>> = _ptLegs.asStateFlow()
 
-    var updateRequestIDs = mutableSetOf<Int>()
+    private val _updateRequestIDs = MutableStateFlow(emptySet<Int>())
+    private val updateRequestIDs = _updateRequestIDs.asStateFlow()
+
+    fun setUpdateIds(ids: Set<Int>) {
+        _updateRequestIDs.value = ids
+    }
 
     private val _eventObjectGroups = MutableStateFlow<List<EventObjectGroup>>(emptyList())
     val eventObjectGroups: StateFlow<List<EventObjectGroup>> = _eventObjectGroups.asStateFlow()
@@ -482,29 +487,50 @@ class DataRepository @Inject constructor(
         _markedTour.value = -1
     }
 
-    fun getItinerary(requestId: Int) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
+    fun stopPolling() {
+        _updateRequestIDs.value = emptySet()
+        _realTimePolling.value = false
+    }
+
+    private val _realTimePolling = MutableStateFlow(false)
+
+    private suspend fun updateLegs(requestId: Int): Int {
+        try {
+            val res = apiService.getItinerary(requestId)
+            if (res.isSuccessful) {
                 val leg = apiService.getItinerary(requestId).body()
                 _ptLegs.value = HashMap(_ptLegs.value).apply {
                     put(requestId, leg)
                 }
-            } catch (e: Exception) {
-                Log.e("error", "setTours: ${e.message}")
+                return requestId
             }
+            return -1
+        } catch (e: Exception) {
+            Log.e("error", "${e.message}")
+            return -1
         }
     }
 
-    fun itineraryUpdates(
-        intervalMs: Long
-    ): Flow<Leg> = flow {
-        Log.d("test", "start fetching: ${updateRequestIDs.size}")
-        while (updateRequestIDs.isEmpty().not()) {
-            for (id in updateRequestIDs) {
-                //emit(apiService.getItinerary(id))
-                Log.d("test", "update: $id")
+    fun getItinerary(requestId: Int) {
+        CoroutineScope(Dispatchers.IO).launch {
+            updateLegs(requestId)
+        }
+    }
+
+    private fun updateItinerariesFlow() = flow {
+        while (_realTimePolling.value) {
+            Log.d("test", "${updateRequestIDs.value}")
+            for (requestId in updateRequestIDs.value) {
+                emit(updateLegs(requestId))
             }
-            delay(intervalMs)
+            delay(2000)
+        }
+    }.flowOn(Dispatchers.IO)
+
+    fun initRealTimePolling() {
+        _realTimePolling.value = true
+        CoroutineScope(Dispatchers.IO).launch {
+            updateItinerariesFlow().collect { e -> Log.d("test", "${e}") }
         }
     }
 }

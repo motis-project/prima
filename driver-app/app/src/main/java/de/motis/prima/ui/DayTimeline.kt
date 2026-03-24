@@ -1,4 +1,3 @@
-import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -41,7 +40,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import de.motis.prima.R
 import de.motis.prima.ui.AvailabilityViewModel
-import java.time.LocalDate
 
 @Composable
 fun DayTimeline(

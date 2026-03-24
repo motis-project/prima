@@ -34,7 +34,6 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -54,7 +53,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -65,10 +63,7 @@ import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.data.Ticket
 import de.motis.prima.data.ValidationStatus
 import de.motis.prima.ui.theme.LocalExtendedColors
-import kotlinx.coroutines.launch
 import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
 import java.util.Date
 import javax.inject.Inject
 
@@ -78,26 +73,6 @@ class EventGroupViewModel @Inject constructor(
 ) : ViewModel() {
     val storedTickets = repository.storedTickets
     val ptLegs = repository.ptLegs
-    val events = HashMap<Int, EventObject>(hashMapOf())
-
-    fun onScreenExit() {
-        repository.updateRequestIDs.clear()
-    }
-
-    private fun startUpdates() {
-        viewModelScope.launch {
-            repository
-                .itineraryUpdates(intervalMs = 5_000)
-                .collect { itinerary ->
-                    //_itinerary.value = itinerary
-                    //TODO fetch all PT legs
-                }
-        }
-    }
-
-    init {
-        //startUpdates()
-    }
 
     fun getValidCount(eventGroupId: String): Int {
         var tickets = repository.getTicketsForEventGroup(eventGroupId)
@@ -112,8 +87,8 @@ class EventGroupViewModel @Inject constructor(
         repository.updateTicketStore(Ticket(requestId, ticketHash, "", ValidationStatus.DONE))
     }
 
-    fun setItinerary(requestId: Int) {
-        repository.updateRequestIDs.add(requestId)
+    fun setItineraries(ids: Set<Int>) {
+        repository.setUpdateIds(ids)
     }
 
     fun getItinerary(requestId: Int) {
@@ -185,10 +160,12 @@ fun EventGroup(
         // ignore
     }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            viewModel.onScreenExit()
+    LaunchedEffect(Unit) {
+        val requestIds = mutableSetOf<Int>()
+        for (event in eventGroup.events) {
+            requestIds.add(event.requestId)
         }
+        viewModel.setItineraries(requestIds)
     }
 
     Column(
@@ -368,7 +345,8 @@ fun ShowEvent(
     var ptScheduledTime = "-:-"
     var ptRealTime = "-:-"
     var mode = ""
-    var rideCancelled = true
+    var ptRideCancelled = false
+    var ptStopCancelled = false
     var toPT = false
     var fromPT = false
 
@@ -389,7 +367,7 @@ fun ShowEvent(
         }
 
         mode = leg.mode
-        rideCancelled = leg.cancelled
+        ptRideCancelled = leg.cancelled
 
         // determine PT / ODM order
         try {
@@ -397,14 +375,20 @@ fun ShowEvent(
             val endInstant = Instant.parse(scheduledEndTime)
             toPT = event.scheduledTime < startInstant.toEpochMilli()
             fromPT = endInstant.toEpochMilli() < event.scheduledTime
+
+            if (fromPT && leg.to.cancelled) {
+                ptStopCancelled = true
+            }
+
+            if (toPT && leg.from.cancelled) {
+                ptStopCancelled = true
+            }
         } catch (e: Exception) {
-            Log.d("test", e.message.toString())
+            Log.e("error", e.message.toString())
         }
     }
 
     val ptDelayed = ptRealTime != ptScheduledTime
-    val ptStopCancelled = false
-    val ptRideCancelled = rideCancelled
 
     var ptColor = if (ptDelayed) Color.Red else Color(62, 130, 79)
 
@@ -466,7 +450,6 @@ fun ShowEvent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (event.isPickup && fromPT || event.isPickup.not() && toPT) {
-                    viewModel.setItinerary(event.requestId)
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp)),
@@ -511,7 +494,7 @@ fun ShowEvent(
                             text = ptScheduledTime,
                             fontSize = 16.sp,
                             textAlign = TextAlign.Center,
-                            color = LocalExtendedColors.current.textColor
+                            color = if (ptStopCancelled || ptRideCancelled) Color.Red else LocalExtendedColors.current.textColor
                         )
                     }
                     // PT real time
