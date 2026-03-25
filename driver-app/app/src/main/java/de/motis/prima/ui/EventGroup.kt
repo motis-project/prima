@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -32,6 +33,7 @@ import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -73,6 +75,7 @@ class EventGroupViewModel @Inject constructor(
 ) : ViewModel() {
     val storedTickets = repository.storedTickets
     val ptLegs = repository.ptLegs
+    val updateError = repository.updateError
 
     fun getValidCount(eventGroupId: String): Int {
         var tickets = repository.getTicketsForEventGroup(eventGroupId)
@@ -328,6 +331,22 @@ fun EventGroup(
     }
 }
 
+@Composable
+fun ChangeIcon(isPickup: Boolean) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(if (isPickup) Color(62, 130, 79) else Color(222, 132, 126)),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = if (isPickup) Icons.AutoMirrored.Filled.ArrowForward else Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = "Localized description",
+            tint = LocalExtendedColors.current.cardColor
+        )
+    }
+}
+
 @SuppressLint("DefaultLocale")
 @Composable
 fun ShowEvent(
@@ -338,6 +357,8 @@ fun ShowEvent(
     val context = LocalContext.current
     val storedTickets = viewModel.storedTickets.collectAsState()
     val fareToPay: Double = (event.ticketPrice / 100).toDouble()
+
+    val updateError by viewModel.updateError.collectAsState()
 
     val ptLegs by viewModel.ptLegs.collectAsState()
     val leg = ptLegs[event.requestId]
@@ -373,8 +394,8 @@ fun ShowEvent(
         try {
             val startInstant = Instant.parse(scheduledStartTime)
             val endInstant = Instant.parse(scheduledEndTime)
-            toPT = event.scheduledTime < startInstant.toEpochMilli()
-            fromPT = endInstant.toEpochMilli() < event.scheduledTime
+            toPT = event.isPickup.not() && event.scheduledTime < startInstant.toEpochMilli()
+            fromPT = event.isPickup && endInstant.toEpochMilli() < event.scheduledTime
 
             if (fromPT && leg.to.cancelled) {
                 ptStopCancelled = true
@@ -388,8 +409,8 @@ fun ShowEvent(
         }
     }
 
+    val isPT = fromPT || toPT
     val ptDelayed = ptRealTime != ptScheduledTime
-
     var ptColor = if (ptDelayed) Color.Red else Color(62, 130, 79)
 
     if (ptStopCancelled) {
@@ -442,47 +463,25 @@ fun ShowEvent(
                     color = LocalExtendedColors.current.textColor
                 )
             }
+            Spacer(modifier = Modifier.height(6.dp))
             // change info
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color.White)
+                    .padding(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (event.isPickup && fromPT || event.isPickup.not() && toPT) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Button(
-                            onClick = {
-                                // open PT detail view
-                                navController.navigate("itinerary/${event.requestId}/${event.id}")
-                            },
-                            colors = ButtonColors(LocalExtendedColors.current.secondaryButton, LocalExtendedColors.current.textColor, Color.White, Color.White),
-                        ) {
-                            Icon(
-                                painter = painterResource(id = icon),
-                                contentDescription = "Localized description",
-                                Modifier.size(21.dp),
-                                tint = if (ptStopCancelled || ptRideCancelled) Color.Red else LocalExtendedColors.current.textColor
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(if (event.isPickup) Color(62, 130, 79) else Color(94, 154, 191)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = if (event.isPickup) Icons.AutoMirrored.Filled.ArrowForward else Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Localized description",
-                                    tint = LocalExtendedColors.current.cardColor
-                                )
-                            }
-                        }
-                    }
+                if (ptLegs[event.requestId] != null && updateError.not() && isPT) {
+                    Icon(
+                        painter = painterResource(id = icon),
+                        contentDescription = "Localized description",
+                        Modifier.size(24.dp),
+                        tint = if (ptStopCancelled || ptRideCancelled) Color.Red else LocalExtendedColors.current.textColor
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    ChangeIcon(event.isPickup)
+
                     // PT scheduled time
                     Spacer(modifier = Modifier.width(12.dp))
                     Box(
@@ -511,21 +510,34 @@ fun ShowEvent(
                             color = ptColor
                         )
                     }
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    IconButton(
+                        onClick = {
+                            // open PT detail view
+                            navController.navigate("itinerary/${event.requestId}/${event.id}")
+                        },
+                        Modifier.size(width = 24.dp, height = 24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Localized description",
+                            tint = Color(94, 154, 191)
+                        )
+                    }
                 } else {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(start = 6.dp, end = 12.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (event.isPickup) Color(62, 130, 79) else Color(94, 154, 191)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = if (event.isPickup) Icons.AutoMirrored.Filled.ArrowForward else Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Localized description",
-                                tint = LocalExtendedColors.current.cardColor
+                        ChangeIcon(event.isPickup)
+                        if (updateError) {
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text(
+                                text = "offline",
+                                fontSize = 16.sp,
+                                textAlign = TextAlign.Center,
+                                color = Color.Red
                             )
                         }
                     }

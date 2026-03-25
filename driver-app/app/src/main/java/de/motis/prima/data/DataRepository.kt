@@ -63,6 +63,9 @@ class DataRepository @Inject constructor(
     private val _networkError = MutableStateFlow(false)
     val networkError = _networkError.asStateFlow()
 
+    private val _updateError = MutableStateFlow(false)
+    val updateError = _updateError.asStateFlow()
+
     val selectedVehicle: Flow<Vehicle> = dataStoreManager.selectedVehicleFlow
     private var _vehicleId = 0
 
@@ -443,21 +446,6 @@ class DataRepository @Inject constructor(
         return tourStore.getEvent(id)
     }
 
-    fun hasPendingValidations(tourId: Int): Boolean {
-        for (id in tourStore.getPickupRequestIDs(tourId)) {
-            if (_pendingValidationTickets.value.find { e -> e.requestId == id } != null ) {
-                return true
-            }
-        }
-        return false
-    }
-
-    fun hasInvalidatedTickets(tourId: Int): Boolean {
-        val pickupEvents = tourStore.getEventsForTour(tourId).filter { e -> e.isPickup }
-        val invalidated = pickupEvents.filter { e -> e.ticketChecked.not() }
-        return invalidated.isNotEmpty()
-    }
-
     fun getTourSpecialInfo(tourId: Int): TourSpecialInfo {
         val tourInfo = TourSpecialInfo()
         val events = tourStore.getEventsForTour(tourId)
@@ -495,20 +483,23 @@ class DataRepository @Inject constructor(
     private val _realTimePolling = MutableStateFlow(false)
 
     private suspend fun updateLegs(requestId: Int): Int {
+        var error: Int
         try {
             val res = apiService.getItinerary(requestId)
             if (res.isSuccessful) {
-                val leg = apiService.getItinerary(requestId).body()
+                val leg = res.body()
                 _ptLegs.value = HashMap(_ptLegs.value).apply {
                     put(requestId, leg)
                 }
-                return requestId
+                return 0
             }
-            return -1
+            error = -1
         } catch (e: Exception) {
             Log.e("error", "${e.message}")
-            return -1
+            error = -2
         }
+        _ptLegs.value.remove(requestId)  // invalidate previously fetched data
+        return error
     }
 
     fun getItinerary(requestId: Int) {
@@ -519,18 +510,19 @@ class DataRepository @Inject constructor(
 
     private fun updateItinerariesFlow() = flow {
         while (_realTimePolling.value) {
-            Log.d("test", "${updateRequestIDs.value}")
             for (requestId in updateRequestIDs.value) {
                 emit(updateLegs(requestId))
             }
-            delay(2000)
+            delay(120000)
         }
     }.flowOn(Dispatchers.IO)
 
     fun initRealTimePolling() {
         _realTimePolling.value = true
         CoroutineScope(Dispatchers.IO).launch {
-            updateItinerariesFlow().collect { e -> Log.d("test", "${e}") }
+            updateItinerariesFlow().collect { e ->
+                _updateError.value = e == -2
+            }
         }
     }
 }
