@@ -8,7 +8,11 @@ import {
 	Zone
 } from '$lib/testHelpers';
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
-import { COORDINATE_ROUNDING_ERROR_THRESHOLD, EARLIEST_SHIFT_START, LATEST_SHIFT_END } from '$lib/constants';
+import {
+	COORDINATE_ROUNDING_ERROR_THRESHOLD,
+	EARLIEST_SHIFT_START,
+	LATEST_SHIFT_END
+} from '$lib/constants';
 import { createSession } from '$lib/server/auth/session';
 import { HOUR, MINUTE, roundToUnit } from '$lib/util/time';
 import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
@@ -248,7 +252,7 @@ describe('Whitelist and Booking API Tests', () => {
 		let earliest = inXMinutes(598);
 		let latest = inXMinutes(700);
 		const allowedTimes = getAllowedTimes(earliest, latest, EARLIEST_SHIFT_START, LATEST_SHIFT_END);
-		if(!allowedTimes[0].contains(new Interval(earliest, latest))){
+		if (!allowedTimes[0].contains(new Interval(earliest, latest))) {
 			earliest -= HOUR;
 			latest -= HOUR;
 		}
