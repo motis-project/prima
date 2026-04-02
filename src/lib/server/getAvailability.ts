@@ -53,3 +53,36 @@ export async function getAvailability(utcDate: Date, companyId: number) {
 			: null
 	};
 }
+
+export async function getAllCompaniesAvailability(utcDate: Date) {
+	const fromTime = new Date(utcDate);
+	fromTime.setHours(utcDate.getHours() - 1);
+	const toTime = new Date(utcDate);
+	toTime.setHours(utcDate.getHours() + 25);
+
+	const vehicles = db
+		.selectFrom('company')
+		.select('company.name as licensePlate')
+		.select('company.id as id')
+		.select((eb) => [
+			jsonArrayFrom(
+				eb
+					.selectFrom('vehicle')
+					.innerJoin('availability', 'vehicle.id', 'availability.vehicle')
+					.whereRef('vehicle.company', '=', 'company.id')
+					.where('availability.startTime', '<', toTime.getTime())
+					.where('availability.endTime', '>', fromTime.getTime())
+					.select(['availability.id', 'availability.startTime', 'availability.endTime'])
+					.orderBy('availability.startTime')
+			).as('availability')
+		])
+		.execute();
+
+	return {
+		tours: [],
+		vehicles: await vehicles,
+		utcDate,
+		companyDataComplete: true,
+		companyCoordinates: null
+	};
+}
