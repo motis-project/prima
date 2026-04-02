@@ -181,6 +181,14 @@ export type LocationType = 'ADDRESS' | 'PLACE' | 'STOP';
 export type Match = {
     type: LocationType;
     /**
+     * Experimental. Type categories might be adjusted.
+     *
+     * For OSM stop locations: the amenity type based on
+     * https://wiki.openstreetmap.org/wiki/OpenStreetMap_Carto/Symbols
+     *
+     */
+    category?: string;
+    /**
      * list of non-overlapping tokens that were matched
      */
     tokens: Array<Token>;
@@ -234,6 +242,14 @@ export type Match = {
      * score according to the internal scoring system (the scoring algorithm might change in the future)
      */
     score: number;
+    /**
+     * available transport modes for stops
+     */
+    modes?: Array<Mode>;
+    /**
+     * importance of a stop, normalized from [0, 1]
+     */
+    importance?: number;
 };
 
 /**
@@ -1856,23 +1872,17 @@ export type GeocodeData = {
     path?: never;
     query: {
         /**
-         * the (potentially partially typed) address to resolve
-         */
-        text: string;
-        /**
          * language tags as used in OpenStreetMap
          * (usually ISO 639-1, or ISO 639-2 if there's no ISO 639-1)
          *
          */
-        language?: string;
+        language?: Array<(string)>;
         /**
-         * Optional. Default is all types.
-         *
-         * Only return results of the given types.
-         * For example, this can be used to allow only `ADDRESS` and `STOP` results.
+         * Optional. Filter stops by available transport modes.
+         * Defaults to applying no filter.
          *
          */
-        type?: LocationType;
+        mode?: Array<Mode>;
         /**
          * Optional. Used for biasing results towards the coordinate.
          *
@@ -1885,6 +1895,18 @@ export type GeocodeData = {
          *
          */
         placeBias?: number;
+        /**
+         * the (potentially partially typed) address to resolve
+         */
+        text: string;
+        /**
+         * Optional. Default is all types.
+         *
+         * Only return results of the given types.
+         * For example, this can be used to allow only `ADDRESS` and `STOP` results.
+         *
+         */
+        type?: LocationType;
     };
     url: '/api/v1/geocode';
 };
