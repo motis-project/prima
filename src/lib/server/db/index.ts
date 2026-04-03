@@ -110,6 +110,7 @@ export interface Database {
 		startFixed: boolean | null;
 		busStopTime: number | null;
 		requestedTime: number | null;
+		cancelledByCustomer: boolean;
 	};
 	journey: {
 		id: Generated<number>;

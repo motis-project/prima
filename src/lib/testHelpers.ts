@@ -126,7 +126,8 @@ export const setRequest = async (
 			kidsZeroToTwo: 0,
 			ticketPrice: (passengers ?? 1) * 300,
 			pending: false,
-			rideShareTour: isRideShareTour ? tour : null
+			rideShareTour: isRideShareTour ? tour : null,
+			cancelledByCustomer: false
 		})
 		.returning('id')
 		.executeTakeFirstOrThrow();

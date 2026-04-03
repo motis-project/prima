@@ -64,7 +64,9 @@ export const cancelRideShareRequest = async (requestId: number, userId: number) 
 					return;
 				}
 				const queryResult =
-					await sql`CALL cancel_ride_share_request(${requestId}, ${userId})`.execute(trx);
+					await sql`CALL cancel_ride_share_request(${requestId}, ${userId}, ${Date.now()})`.execute(
+						trx
+					);
 				const tourInfo = await trx
 					.selectFrom('request as cancelled_request')
 					.where('cancelled_request.id', '=', requestId)
