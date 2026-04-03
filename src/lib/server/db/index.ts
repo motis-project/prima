@@ -36,6 +36,7 @@ export interface Database {
 		name: string;
 		isCommunity: boolean;
 		rates: number;
+		expanded: unknown | null;
 	};
 	company: {
 		id: Generated<number>;
