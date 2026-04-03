@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
+	import { type Location } from '$lib/map/Location';
 	import { Button } from '$lib/shadcn/button';
 	import { LocateFixed, ChevronLeft } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';

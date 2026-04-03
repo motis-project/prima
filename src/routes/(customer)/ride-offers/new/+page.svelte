@@ -21,7 +21,7 @@
 	} from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
-	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
+	import { type Location } from '$lib/map/Location';
 	import AddressTypeahead from '$lib/ui/AddressTypeahead.svelte';
 	import { Input } from '$lib/shadcn/input';
 	import { Label } from '$lib/shadcn/label';

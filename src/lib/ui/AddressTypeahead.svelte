@@ -1,53 +1,22 @@
 <script lang="ts">
-	import Bus from 'lucide-svelte/icons/bus-front';
-	import House from 'lucide-svelte/icons/map-pin-house';
-	import Place from 'lucide-svelte/icons/map-pin';
-
 	import { Combobox } from 'bits-ui';
-	import { geocode, type Match } from '$lib/openapi';
+	import { geocode, type LocationType, type Match, type Mode } from '$lib/openapi';
+	import { MapPinHouse as House, MapPin as Place } from 'lucide-svelte';
+	import { parseCoordinatesToLocation, type Location } from '$lib/map/Location';
 	import { language } from '$lib/i18n/translation';
 	import maplibregl from 'maplibre-gl';
+	import { getModeStyle, type LegLike } from './modeStyle';
 	import { onMount } from 'svelte';
-
-	export type Location = {
-		label?: string;
-		value: {
-			match?: Match;
-			precision?: number;
-		};
-	};
-
-	export function posToLocation(pos: maplibregl.LngLatLike, level: number): Location {
-		const { lat, lng } = maplibregl.LngLat.convert(pos);
-		const label = `${lat},${lng},${level}`;
-		return {
-			label,
-			value: {
-				match: {
-					lat,
-					lon: lng,
-					level,
-					id: '',
-					areas: [],
-					type: 'PLACE',
-					name: label,
-					tokens: [],
-					score: 0
-				},
-				precision: 100
-			}
-		};
-	}
-
-	const COORD_LVL_REGEX = /^([+-]?\d+(\.\d+)?)\s*,\s*([+-]?\d+(\.\d+)?)\s*,\s*([+-]?\d+(\.\d+)?)$/;
-	const COORD_REGEX = /^([+-]?\d+(\.\d+)?)\s*,\s*([+-]?\d+(\.\d+)?)$/;
 
 	let {
 		items = $bindable([]),
 		selected = $bindable(),
-		onValueChange,
+		onValueChange = () => {},
 		placeholder,
 		name,
+		place,
+		type,
+		transitModes,
 		open = $bindable(false),
 		focus = true
 	}: {
@@ -56,6 +25,9 @@
 		onValueChange?: (m: Location) => void;
 		placeholder?: string;
 		name?: string;
+		place?: maplibregl.LngLatLike;
+		type?: undefined | LocationType;
+		transitModes?: Mode[];
 		open?: boolean;
 		focus?: boolean;
 	} = $props();
@@ -70,11 +42,21 @@
 			if (matchedArea?.name.match(/^[0-9]*$/)) {
 				matchedArea.name += ' ' + defaultArea?.name;
 			}
-			let area = (matchedArea ?? defaultArea)?.name;
-			if (area == match.name) {
-				area = match.areas[0]!.name;
-			}
-			return area;
+
+			const areas = new Set<number>();
+
+			match.areas.forEach((a, i) => {
+				if (a.matched || a.unique || a.default || a.adminLevel == 4) {
+					if (a.name != match.name) {
+						areas.add(i);
+					}
+				}
+			});
+
+			const sorted = Array.from(areas);
+			sorted.sort((a, b) => b - a);
+
+			return sorted.map((a) => match.areas[a].name).join(', ');
 		}
 		return '';
 	};
@@ -85,27 +67,23 @@
 	};
 
 	const updateGuesses = async () => {
-		const coordinateWithLevel = inputValue.match(COORD_LVL_REGEX);
-		if (coordinateWithLevel) {
-			items = [
-				posToLocation(
-					[Number(coordinateWithLevel[3]), Number(coordinateWithLevel[1])],
-					Number(coordinateWithLevel[5])
-				)
-			];
+		const coord = parseCoordinatesToLocation(inputValue);
+		if (coord) {
+			items = [coord];
 			value = '';
 			return;
 		}
 
-		const coordinate = inputValue.match(COORD_REGEX);
-		if (coordinate) {
-			items = [posToLocation([Number(coordinate[3]), Number(coordinate[1])], 0)];
-			value = '';
-			return;
-		}
-
+		const pos = place ? maplibregl.LngLat.convert(place) : undefined;
+		const biasPlace = pos ? { place: `${pos.lat},${pos.lng}` } : {};
 		const { data: matches, error } = await geocode({
-			query: { text: inputValue, language }
+			query: {
+				...biasPlace,
+				text: inputValue,
+				language: [language],
+				mode: transitModes,
+				type
+			}
 		});
 		if (error) {
 			console.error('TYPEAHEAD ERROR: ', error);
@@ -116,15 +94,6 @@
 				label: getLabel(match),
 				value: { match }
 			};
-		});
-		const shown = new Set<string>();
-		items = items.filter((x) => {
-			const entry = x.value.match?.type + x.label!;
-			if (shown.has(entry)) {
-				return false;
-			}
-			shown.add(entry);
-			return true;
 		});
 	};
 
@@ -167,6 +136,19 @@
 	});
 </script>
 
+{#snippet modeCircle(mode: Mode)}
+	{@const modeIcon = getModeStyle({ mode } as LegLike)[0]}
+	{@const modeColor = getModeStyle({ mode } as LegLike)[1]}
+	<div
+		style="background-color: {modeColor}; fill: white;"
+		class="flex items-center justify-center rounded-full p-1"
+	>
+		<svg class="relative size-4 rounded-full">
+			<use xlink:href={`#${modeIcon}`}></use>
+		</svg>
+	</div>
+{/snippet}
+
 <Combobox.Root
 	type="single"
 	allowDeselect={false}
@@ -176,9 +158,7 @@
 		if (e) {
 			selected = deserialize(e);
 			inputValue = selected.label!;
-			if (onValueChange) {
-				onValueChange(selected);
-			}
+			onValueChange(selected);
 		}
 	}}
 >
@@ -188,7 +168,7 @@
 		bind:ref
 		class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
 		autocomplete="off"
-		oninput={(e) => (inputValue = e.currentTarget.value)}
+		oninput={(e: Event) => (inputValue = (e.currentTarget as HTMLInputElement).value)}
 		aria-label={placeholder}
 		data-combobox-input={inputValue}
 	/>
@@ -200,23 +180,46 @@
 			>
 				{#each items as item (item.value)}
 					<Combobox.Item
-						class="flex w-full cursor-default select-none items-center rounded-sm py-4 pl-4 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50"
+						class="flex w-full cursor-default select-none rounded-sm py-4 pl-4 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50"
 						value={JSON.stringify(item.value)}
 						label={item.label}
 					>
+						<div class="flex grow items-center">
+							<div class="size-6">
+								{#if item.value.match?.type == 'STOP'}
+									{@render modeCircle(
+										item.value.match.modes?.length ? item.value.match.modes![0] : 'BUS'
+									)}
+								{:else if item.value.match?.type == 'ADDRESS'}
+									<House class="size-5" />
+								{:else if item.value.match?.type == 'PLACE'}
+									{#if !item.value.match?.category || item.value.match?.category == 'none'}
+										<Place class="size-5" />
+									{:else}
+										<img
+											src={`/icons/categories/${item.value.match?.category}.svg`}
+											alt={item.value.match?.category}
+											class="size-5"
+										/>
+									{/if}
+								{/if}
+							</div>
+							<div class="ml-4 flex flex-col">
+								<span class="overflow-hidden text-ellipsis text-nowrap font-semibold">
+									{item.value.match?.name}
+								</span>
+								<span class="overflow-hidden text-ellipsis text-nowrap text-muted-foreground">
+									{getDisplayArea(item.value.match)}
+								</span>
+							</div>
+						</div>
 						{#if item.value.match?.type == 'STOP'}
-							<Bus />
-						{:else if item.value.match?.type == 'ADDRESS'}
-							<House />
-						{:else if item.value.match?.type == 'PLACE'}
-							<Place />
+							<div class="ml-4 mt-1 flex flex-row items-center gap-1.5">
+								{#each item.value.match.modes! as mode, i (i)}
+									{@render modeCircle(mode)}
+								{/each}
+							</div>
 						{/if}
-						<span class="ml-4 overflow-hidden text-ellipsis text-nowrap font-semibold">
-							{item.value.match?.name}
-						</span>
-						<span class="ml-2 overflow-hidden text-ellipsis text-nowrap text-muted-foreground">
-							{getDisplayArea(item.value.match)}
-						</span>
 					</Combobox.Item>
 				{/each}
 			</Combobox.Content>

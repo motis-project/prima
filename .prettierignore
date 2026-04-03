@@ -7,3 +7,4 @@ src/lib/shadcn/*
 migrations/*
 src/lib/openapi
 driver-app
+db_backups

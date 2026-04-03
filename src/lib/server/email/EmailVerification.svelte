@@ -8,11 +8,11 @@
 <div>
 	Guten Tag {name},
 	<p>
-		Bitte verifizieren Sie Ihre E-Mail Addresse:<br />
+		Bitte verifizieren Sie Ihre E-Mail-Adresse:<br />
 		<a href="{env.ORIGIN}/account/verify-email/?code={code}" target="_blank">
 			{env.ORIGIN}/verify-email/?code={code}
 		</a>
-		<br />oder verwenden sie den Code:<br />
+		<br />Oder verwenden Sie den Code:<br />
 	</p>
 	<DisplayCode {code} />
 

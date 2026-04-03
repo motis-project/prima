@@ -21,7 +21,7 @@
 	import { lngLatToStr } from '$lib/util/lngLatToStr';
 	import Meta from '$lib/ui/Meta.svelte';
 	import AddressTypeahead from '$lib/ui/AddressTypeahead.svelte';
-	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
+	import { type Location } from '$lib/map/Location';
 	import ItineraryList from './ItineraryList.svelte';
 	import ConnectionDetail from './ConnectionDetail.svelte';
 	import StopTimes from './StopTimes.svelte';
