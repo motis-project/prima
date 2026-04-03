@@ -321,7 +321,6 @@ export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 			ownRideShareOfferIds,
 			desiredTrips
 		},
-		lastAvailability,
-		ownRideShareOfferIds
+		lastAvailability
 	};
 };
