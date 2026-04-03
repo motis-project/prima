@@ -318,11 +318,10 @@ export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 			email: event.locals.session?.email,
 			phone: event.locals.session?.phone,
 			id: event.locals.session?.id,
-			ownRideShareOfferIds
-		},
-		lastAvailability
 			ownRideShareOfferIds,
 			desiredTrips
-		}
+		},
+		lastAvailability,
+		ownRideShareOfferIds
 	};
 };
