@@ -51,7 +51,7 @@ export async function cancelRideShareTour(
 				);
 				return {};
 			}
-			await sql`CALL cancel_ride_share_tour(${tourId}, ${user})`.execute(trx);
+			await sql`CALL cancel_ride_share_tour(${tourId}, ${user}, ${Date.now()})`.execute(trx);
 			console.assert(tour.requests.length != 0, 'Found a tour with no requests');
 			for (const request of tour.requests) {
 				console.assert(request.events.length != 0, 'Found a request with no events');

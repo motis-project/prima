@@ -11,7 +11,8 @@ const translations: Translations = {
 		completedTours: 'Tours',
 		accounting: 'Accounting',
 		employees: 'Employees',
-		companies: 'Companies'
+		companies: 'Companies',
+		calibration: 'Calibration'
 	},
 	msg: {
 		// Unknown error
@@ -45,11 +46,14 @@ const translations: Translations = {
 		checkInboxToVerify: 'Please check your inbox to verify your new email address.',
 		passwordResetSuccess:
 			'Your password has been reset successfully. Please login with your new password.',
+		driverAppRequiresCompanyId:
+			'This app can only be used with accounts associated with a taxi company.',
 
 		// Admin
 		userDoesNotExist: 'User does not exist.',
 		activationSuccess: 'User already activated.',
 		userAlreadyActivated: 'User has already been activated.',
+		requiresAdminPrivileges: 'Admin privileges required.',
 
 		// Taxi Members
 		driverAddedSuccessfully: 'Driver added successfully.',
@@ -219,7 +223,7 @@ const translations: Translations = {
 	moped: 'Moped',
 	odm: 'Public Transport Taxi, booking required!',
 	rideSharing: 'Ride sharing offer',
-	rideSharingBookingRequired: 'Ride sharing offer, negotiation required!',
+	rideSharingBookingRequired: 'private ride sharing offer, negotiation required!',
 	rideSharingInfo:
 		'These are private ride-sharing offers. If you are interested in a private ride-sharing connection, you can send a request to the provider to arrange the details. Register to create ride-sharing offers and send requests.',
 	from: 'From',
@@ -267,10 +271,16 @@ const translations: Translations = {
 	fare: 'Fare',
 	bookingDeadline: 'Booking deadline',
 	bookingDeadlineContent: 'at least 1 hour in advance.',
+	cancellation: 'Cancellation',
+	cancellationAppeal:
+		'Please cancel as early as possible to make planning easier for taxi companies.',
 	logo: 'The PriMa+ÖV logo. Iconographic representation of a car, bus, train and cab.',
 	toConnectionSearch: 'Go to connection search',
 	luggageExplanation:
 		'Approximate number of transportable items in handluggage size. A big suitcase corresponds to about three handluggage items.',
+	noAvailabilityTitle: 'Too far in the future',
+	noAvalablilityDescription:
+		'No taxis were reported as available for the requested time. Please try again later',
 	addAlert: 'Receive a notification if a ride sharing offer matching this search is published',
 	notificationsList: 'List of activated notifications',
 
@@ -311,7 +321,7 @@ const translations: Translations = {
 		ticket: 'Ticket',
 		cancelHeadline: 'Do you really want to cancel this trip?',
 		cancelDescription:
-			'Cancellation cannot be undone. Cancellation less than 24 hours before the trip will incur costs.',
+			'Cancellation cannot be undone. If the cab is already on its way, you will be charged in full for the cab approach.',
 		cancelTrip: 'Cancel Trip',
 		noCancel: 'No, I do not want to cancel.',
 		pin: 'PIN:',
@@ -349,7 +359,7 @@ const translations: Translations = {
 		negotiatePrivacy:
 			'The following data will be shared with the person offering the ride when sending the negotiation request:',
 		negotiateExplanation:
-			'You need to negotiate the price and exact pickup location and time with the person offering this ride.',
+			'This is a private ride offer. You need to negotiate the price and exact pickup location and time with the person offering this ride.',
 		startAndEnd: 'Start and destination of the journey',
 		profile: 'Your profile',
 		email: 'Your email',
@@ -397,6 +407,23 @@ const translations: Translations = {
 		editVehicle: 'Edit Vehicle',
 		closeTo: 'close to',
 		defaultLicensePlate: 'Default vehicle'
+	},
+
+	calibration: {
+		perTransfer: 'per transfer',
+		taxiBase: 'taxi base',
+		taxiPerMinute: 'taxi per minute',
+		taxiDirectPenalty: 'taxi direct penalty',
+		ptSlope: 'public transit slope',
+		taxiSlope: 'taxi slope',
+		useForCalibration: 'Use for calibration',
+		addCalibrationSet: 'Add calibration set',
+		greeter: 'Adjust the parameters of the taxi filter:',
+		keep: 'keep',
+		remove: 'remove',
+		deploy: 'Deploy parameters',
+		save: 'Save classification',
+		delete: 'Remove calibration set'
 	}
 };
 

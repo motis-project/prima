@@ -16,7 +16,7 @@
 	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import { Input } from '$lib/shadcn/input';
 	import { Label } from '$lib/shadcn/label';
-	import { trip, type Match, type PlanData } from '$lib/openapi';
+	import { type Match, type PlanData } from '$lib/openapi';
 	import { t } from '$lib/i18n/translation';
 	import { lngLatToStr } from '$lib/util/lngLatToStr';
 	import Meta from '$lib/ui/Meta.svelte';
@@ -38,13 +38,20 @@
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { HelpCircleIcon, LocateFixed, MapIcon } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
-	import { BOOKING_MAX_PASSENGERS, MAX_MATCHING_DISTANCE } from '$lib/constants';
+	import { BOOKING_MAX_PASSENGERS, MAX_MATCHING_DISTANCE, MIN_PREP_BOOKING } from '$lib/constants';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { planAndSign, type SignedPlanResponse } from '$lib/planAndSign';
 	import logo from '$lib/assets/logo-alpha.png';
 	import Footer from '$lib/ui/Footer.svelte';
 	import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
+	import Info from 'lucide-svelte/icons/info';
+	import { HOUR } from '$lib/util/time';
+	import { Alert, AlertDescription, AlertTitle } from '$lib/shadcn/alert';
+	import AlertCircleIcon from 'lucide-svelte/icons/circle-alert';
+	import SlidersVertical from 'lucide-svelte/icons/sliders-vertical';
+	import { collectItineraries } from '$lib/calibration';
+	import { onClickStop, onClickTrip } from '$lib/util/onClick';
 	import { matchesDesiredTrip } from '$lib/util/booking/matchesDesiredTrip';
 	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
 
@@ -140,6 +147,7 @@
 					preTransitModes: ['WALK', 'ODM', 'RIDE_SHARING'],
 					postTransitModes: ['WALK', 'ODM', 'RIDE_SHARING'],
 					directModes: ['WALK', 'ODM', 'RIDE_SHARING'],
+					pedestrianProfile: wheelchair ? 'WHEELCHAIR' : 'FOOT',
 					luggage: luggageToInt(luggage),
 					fastestDirectFactor: 1.6,
 					maxMatchingDistance: MAX_MATCHING_DISTANCE,
@@ -190,21 +198,6 @@
 				onClickStop('', urlParams.get('stopId')!, time, true);
 			}
 		}
-	};
-
-	const onClickTrip = async (tripId: string, replace = false) => {
-		const { data: itinerary, error } = await trip({ query: { tripId } });
-		if (error) {
-			alert(error);
-			return;
-		}
-		const updateState = replace ? replaceState : pushState;
-		updateState('', { selectedItinerary: itinerary });
-	};
-
-	const onClickStop = (name: string, stopId: string, time: Date, replace = false) => {
-		const updateState = replace ? replaceState : pushState;
-		updateState('', { stop: { name, stopId, time } });
 	};
 
 	const getLocation = () => {
@@ -670,6 +663,17 @@
 					</Dialog.Content>
 				</Dialog.Root>
 			</div>
+
+			{#if data.lastAvailability != undefined && time.valueOf() > data.lastAvailability.endTime + (timeType === 'arrival' ? 12 * HOUR : -MIN_PREP_BOOKING)}
+				<div class="flex grow">
+					<Alert variant="warning">
+						<AlertCircleIcon />
+						<AlertTitle class="ml-2">{t.noAvailabilityTitle}</AlertTitle>
+						<AlertDescription class="ml-2">{t.noAvalablilityDescription}</AlertDescription>
+					</Alert>
+				</div>
+			{/if}
+
 			{#if data.user.name !== undefined}
 				<div class="flex items-center space-x-2">
 					<Checkbox
@@ -695,7 +699,67 @@
 					}}
 					updateStartDest={updateStartDest(from, to)}
 				/>
+				{#if data.isAdmin && baseResponse}
+					{#await Promise.all(routingResponses) then r}
+						<form
+							method="post"
+							action="?/useForCalibration"
+							class="flex grow flex-col gap-2 rounded-md border-2 border-solid p-2"
+						>
+							<Input type="text" name="name" placeholder="Name" />
+							<input type="hidden" name="json" value={JSON.stringify(collectItineraries(r))} />
+							<Button type="submit" class="grow"
+								><SlidersVertical /> {t.calibration.useForCalibration}</Button
+							>
+						</form>
+					{/await}
+				{/if}
 			</div>
+
+			<p class="mx-auto mt-6 text-sm">
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+				{t.introduction}
+				<a href={PUBLIC_INFO_URL} class="link" target="_blank">{PUBLIC_PROVIDER}</a>
+			</p>
+
+			<Dialog.Root>
+				<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}>
+					<Info />
+					{t.publicTransitTaxi}
+				</Dialog.Trigger>
+				<Dialog.Content class="w-[90%] flex-col md:max-w-[28rem]">
+					<Dialog.Header>
+						<Dialog.Title>{t.publicTransitTaxi}</Dialog.Title>
+					</Dialog.Header>
+					<div class="space-y-2 text-sm">
+						<strong>{t.fare}</strong>
+						<div class="grid grid-cols-2">
+							<div>{t.booking.fifteenPlus}</div>
+							<div>{getEuroString(legOdmPrice(1, 0, 0))}</div>
+							<div>{t.booking.kidsSevenToFourteen}</div>
+							<div>{getEuroString(legOdmPrice(1, 0, 1))}</div>
+							<div>{t.booking.underSeven}</div>
+							<div>{getEuroString(legOdmPrice(1, 1, 0))}</div>
+							<div></div>
+							<div>{t.perPerson} {t.perRide}</div>
+						</div>
+						<p>
+							<button
+								class="link"
+								onclick={() =>
+									pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
+								><strong>{t.serviceArea}</strong></button
+							><br />{t.regionAround} Görlitz, Niesky, Weißwasser/O.L., Zittau.
+						</p>
+						<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
+						<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
+						<p>
+							<strong>{t.cancellation}</strong><br />{t.cancellationAppeal}
+							{t.booking.disclaimer}
+						</p>
+					</div>
+				</Dialog.Content>
+			</Dialog.Root>
 			<div class="border-rounded-md mx-auto w-full space-y-2 rounded-md border-2 border-solid p-2">
 				<p class="text-md font-bold">{t.publicTransitTaxi}</p>
 				<hr />
@@ -725,19 +789,20 @@
 				</div>
 			</div>
 
-			<div class="border-rounded-md mx-auto w-full space-y-2 rounded-md border-2 border-solid p-2">
-				<p class="text-md font-bold">{t.rideSharing}</p>
-				<hr />
-				<div class="space-y-2 text-sm">
-					{t.rideSharingInfo}
-				</div>
-			</div>
-
-			<p class="mx-auto mt-6 text-sm">
-				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-				{t.introduction}
-				<a href={PUBLIC_INFO_URL} class="link" target="_blank">{PUBLIC_PROVIDER}</a>
-			</p>
+			<Dialog.Root>
+				<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}>
+					<Info />
+					{t.rideSharing}
+				</Dialog.Trigger>
+				<Dialog.Content class="w-[90%] flex-col md:max-w-[28rem]">
+					<Dialog.Header>
+						<Dialog.Title>{t.rideSharing}</Dialog.Title>
+					</Dialog.Header>
+					<div class="space-y-2 text-sm">
+						{t.rideSharingInfo}
+					</div>
+				</Dialog.Content>
+			</Dialog.Root>
 		</div>
 		<Footer />
 	</div>

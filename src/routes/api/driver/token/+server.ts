@@ -7,6 +7,12 @@ export const PUT = async ({ locals, url }) => {
 	const token = url.searchParams.get('token');
 
 	if (deviceId == null || deviceId == '' || token == null || token == '') {
+		console.log(
+			'Invalid deviceId or token parameter in api/driver/token endpoint.',
+			{ companyId },
+			{ deviceId },
+			{ token }
+		);
 		error(400, { message: 'Invalid deviceId or token parameter' });
 	}
 

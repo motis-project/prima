@@ -15,6 +15,7 @@ export type Translations = {
 		accounting: string;
 		employees: string;
 		companies: string;
+		calibration: string;
 	};
 	msg: {
 		unknownError: string;
@@ -46,11 +47,13 @@ export type Translations = {
 		oldEmail: string;
 		checkInboxToVerify: string;
 		passwordResetSuccess: string;
+		driverAppRequiresCompanyId: string;
 
 		// Admin
 		userDoesNotExist: string;
 		activationSuccess: string;
 		userAlreadyActivated: string;
+		requiresAdminPrivileges: string;
 
 		// Taxi Members
 		driverAddedSuccessfully: string;
@@ -241,9 +244,13 @@ export type Translations = {
 	fare: string;
 	bookingDeadline: string;
 	bookingDeadlineContent: string;
+	cancellation: string;
+	cancellationAppeal: string;
 	logo: string;
 	toConnectionSearch: string;
 	luggageExplanation: string;
+	noAvailabilityTitle: string;
+	noAvalablilityDescription: string;
 	addAlert: string;
 	notificationsList: string;
 
@@ -354,6 +361,23 @@ export type Translations = {
 		editVehicle: string;
 		closeTo: string;
 		defaultLicensePlate: string;
+	};
+
+	calibration: {
+		perTransfer: string;
+		taxiBase: string;
+		taxiPerMinute: string;
+		taxiDirectPenalty: string;
+		ptSlope: string;
+		taxiSlope: string;
+		useForCalibration: string;
+		addCalibrationSet: string;
+		greeter: string;
+		keep: string;
+		remove: string;
+		deploy: string;
+		save: string;
+		delete: string;
 	};
 };
 

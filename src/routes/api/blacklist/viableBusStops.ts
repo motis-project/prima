@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { covers } from '$lib/server/db/covers';
+import { covers, coversExpanded } from '$lib/server/db/covers';
 import { sql } from 'kysely';
 import type { Coordinates } from '$lib/util/Coordinates';
 import type { Capacities } from '$lib/util/booking/Capacities';
@@ -44,53 +44,69 @@ export const getViableBusStops = async (
 	if (busStops.length == 0) {
 		return [];
 	}
-	const response = await withBusStops(busStops)
-		.selectFrom('zone')
-		.where(covers(userChosen))
-		.select((eb) => [
-			jsonArrayFrom(
-				eb
-					.selectFrom('busstops')
-					.where(
-						sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(busstops.lng, busstops.lat), ${WGS84}))`
-					)
-					.select((eb) => [
-						'busstops.busStopIndex',
-						jsonArrayFrom(
-							eb
-								.selectFrom('company')
-								.innerJoin('vehicle', 'vehicle.company', 'company.id')
-								.whereRef('company.zone', '=', 'zone.id')
-								.where('vehicle.passengers', '>=', capacities.passengers)
-								.where('vehicle.bikes', '>=', capacities.bikes)
-								.where('vehicle.wheelchairs', '>=', capacities.wheelchairs)
-								.where(
-									sql<boolean>`"vehicle"."luggage" >= cast(${capacities.luggage} as integer) + cast(${capacities.passengers} as integer) - cast("vehicle"."passengers" as integer)`
-								)
-								.select((eb) => [
-									jsonArrayFrom(
-										eb
-											.selectFrom('availability')
-											.whereRef('availability.vehicle', '=', 'vehicle.id')
-											.where('availability.startTime', '<=', latest)
-											.where('availability.endTime', '>=', earliest)
-											.select(['availability.startTime', 'availability.endTime'])
-									).as('availabilities'),
-									jsonArrayFrom(
-										eb
-											.selectFrom('tour')
-											.whereRef('tour.vehicle', '=', 'vehicle.id')
-											.where('tour.departure', '<=', latest)
-											.where('tour.arrival', '>=', earliest)
-											.select(['tour.departure as startTime', 'tour.arrival as endTime'])
-									).as('tours')
+	const response = (
+		await withBusStops(busStops)
+			.selectFrom('zone')
+			.where((eb) =>
+				eb.or([
+					eb.and([eb('zone.expanded', 'is not', null), coversExpanded(userChosen)]),
+					eb.and([eb('zone.expanded', 'is', null), covers(userChosen)])
+				])
+			)
+			.select((eb) => [
+				jsonArrayFrom(
+					eb
+						.selectFrom('busstops')
+						.where((eb) =>
+							eb.or([
+								eb.and([
+									eb('zone.expanded', 'is not', null),
+									sql<boolean>`ST_Covers(zone.expanded, ST_SetSRID(ST_MakePoint(cast(busstops.lng as float), cast(busstops.lat as float)), ${WGS84}))`
+								]),
+								eb.and([
+									eb('zone.expanded', 'is', null),
+									sql<boolean>`ST_Covers(zone.area, ST_SetSRID(ST_MakePoint(cast(busstops.lng as float), cast(busstops.lat as float)), ${WGS84}))`
 								])
-						).as('intervals')
-					])
-			).as('valid')
-		])
-		.executeTakeFirst();
-	if (response === undefined || response.valid.length === 0) {
+							])
+						)
+						.select((eb) => [
+							'busstops.busStopIndex',
+							jsonArrayFrom(
+								eb
+									.selectFrom('company')
+									.innerJoin('vehicle', 'vehicle.company', 'company.id')
+									.whereRef('company.zone', '=', 'zone.id')
+									.where('vehicle.passengers', '>=', capacities.passengers)
+									.where('vehicle.bikes', '>=', capacities.bikes)
+									.where('vehicle.wheelchairs', '>=', capacities.wheelchairs)
+									.where(
+										sql<boolean>`"vehicle"."luggage" >= cast(${capacities.luggage} as integer) + cast(${capacities.passengers} as integer) - cast("vehicle"."passengers" as integer)`
+									)
+									.select((eb) => [
+										jsonArrayFrom(
+											eb
+												.selectFrom('availability')
+												.whereRef('availability.vehicle', '=', 'vehicle.id')
+												.where('availability.startTime', '<=', latest)
+												.where('availability.endTime', '>=', earliest)
+												.select(['availability.startTime', 'availability.endTime'])
+										).as('availabilities'),
+										jsonArrayFrom(
+											eb
+												.selectFrom('tour')
+												.whereRef('tour.vehicle', '=', 'vehicle.id')
+												.where('tour.departure', '<=', latest)
+												.where('tour.arrival', '>=', earliest)
+												.select(['tour.departure as startTime', 'tour.arrival as endTime'])
+										).as('tours')
+									])
+							).as('intervals')
+						])
+				).as('valid')
+			])
+			.execute()
+	).filter((r) => r.valid.length !== 0);
+	if (response.length === 0) {
 		return [];
 	}
 	const lastValidTime = 8640000000000000;
@@ -100,24 +116,26 @@ export const getViableBusStops = async (
 		[afterPreptime]
 	);
 	console.log('BLACKLIST QUERY RESULT: ', JSON.stringify(response, null, '\t'));
-	return response.valid.map((r) => {
-		return {
-			...r,
-			intervals: Interval.intersect(
-				Interval.intersect(
-					Interval.merge(
-						r.intervals.flatMap((i) =>
-							i.availabilities
-								.map((a) => new Interval(a.startTime, a.endTime))
-								.concat(i.tours.map((t) => new Interval(t.startTime, t.endTime)))
-						)
+	return response.flatMap((r) =>
+		r.valid.map((r) => {
+			return {
+				...r,
+				intervals: Interval.intersect(
+					Interval.intersect(
+						Interval.merge(
+							r.intervals.flatMap((i) =>
+								i.availabilities
+									.map((a) => new Interval(a.startTime, a.endTime))
+									.concat(i.tours.map((t) => new Interval(t.startTime, t.endTime)))
+							)
+						),
+						allowedTimes
 					),
-					allowedTimes
-				),
-				[new Interval(earliest, latest)]
-			)
-		};
-	});
+					[new Interval(earliest, latest)]
+				)
+			};
+		})
+	);
 };
 
 export type BlacklistingResult = {

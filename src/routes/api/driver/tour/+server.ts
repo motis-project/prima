@@ -11,6 +11,7 @@ export const GET = async ({ locals, url }) => {
 	const toTime = readInt(url.searchParams.get('toTime'));
 
 	if (isNaN(fromTime) || isNaN(toTime)) {
+		console.log('Invalid time range in api/driver/tour.', { companyId }, { fromTime }, { toTime });
 		error(400, { message: 'Invalid time range' });
 	}
 	return json(updateEventGroups(await getTours(true, companyId, [fromTime, toTime])));

@@ -7,6 +7,7 @@ export const PUT = async ({ url }) => {
 	const fare = readInt(url.searchParams.get('fare'));
 
 	if (isNaN(fare) || isNaN(tourId)) {
+		console.log('Invalid fare or tourId parameter in api/driver/fare.', { tourId }, { fare });
 		error(400, { message: 'Invalid fare or tourId parameter' });
 	}
 

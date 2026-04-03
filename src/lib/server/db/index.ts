@@ -36,6 +36,7 @@ export interface Database {
 		name: string;
 		isCommunity: boolean;
 		rates: number;
+		expanded: unknown | null;
 	};
 	company: {
 		id: Generated<number>;
@@ -110,6 +111,7 @@ export interface Database {
 		startFixed: boolean | null;
 		busStopTime: number | null;
 		requestedTime: number | null;
+		cancelledByCustomer: boolean;
 	};
 	journey: {
 		id: Generated<number>;
@@ -155,6 +157,19 @@ export interface Database {
 		rating: number;
 		request: number;
 		ratedIsCustomer: boolean;
+	};
+	taxiFilter: {
+		perTransfer: number;
+		taxiBase: number;
+		taxiPerMinute: number;
+		taxiDirectPenalty: number;
+		ptSlope: number;
+		taxiSlope: number;
+	};
+	calibrationSets: {
+		id: Generated<number>;
+		name: string;
+		itinerariesJson: string;
 	};
 	desiredRideShare: {
 		id: Generated<number>;

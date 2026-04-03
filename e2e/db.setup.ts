@@ -49,6 +49,10 @@ setup('setup db', async () => {
 	const zonesQuery = fs.readFileSync(zonesSqlPath).toString();
 	await pool.query(zonesQuery);
 
+	const updateSqlPath = path.join(__dirname, '../data/expandWeißwasser.sql');
+	const updateQuery = fs.readFileSync(updateSqlPath).toString();
+	await pool.query(updateQuery);
+
 	await sleep(1000);
 });
 

@@ -54,6 +54,10 @@ export const POST = async ({ locals, request }) => {
 	validator.addSchema(schemaDefinitions, '/schemaDefinitions');
 	const result = validator.validate(body, availabilitySchema);
 	if (!result.valid) {
+		console.log(
+			'Invalid json found in api/driver/availability',
+			JSON.stringify(result.errors, null, 2)
+		);
 		return json({ message: result.errors }, { status: 400 });
 	}
 

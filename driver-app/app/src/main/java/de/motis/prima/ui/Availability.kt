@@ -431,7 +431,7 @@ fun DateSelect(
     val datePickerDialog = DatePickerDialog(
         context,
         { _, year, month, dayOfMonth ->
-            viewModel.setDate(LocalDate.parse("$year-${month + 1}-$dayOfMonth"))
+            viewModel.setDate(LocalDate.of(year, month + 1, dayOfMonth))
         },
         viewModel.calendar.get(Calendar.YEAR),
         viewModel.calendar.get(Calendar.MONTH),

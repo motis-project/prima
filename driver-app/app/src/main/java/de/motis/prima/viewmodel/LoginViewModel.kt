@@ -1,7 +1,6 @@
 package de.motis.prima.viewmodel
 
 import android.util.Log
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,6 +31,9 @@ class LoginViewModel @Inject constructor(
 
     private val _accountErrorEvent = MutableSharedFlow<Boolean>()
     val accountErrorEvent = _accountErrorEvent.asSharedFlow()
+
+    private val _unknownErrorEvent = MutableSharedFlow<Boolean>()
+    val unknownErrorEvent = _unknownErrorEvent.asSharedFlow()
 
     val deviceInfo = repository.deviceInfo
     private val _deviceInfo = MutableStateFlow(DeviceInfo("", "", false))
@@ -71,8 +73,8 @@ class LoginViewModel @Inject constructor(
                 _navigationEvent.emit(true)
                 Log.d("login", "User has companyID, fcmToken updated")
             } else if (resFCM.code() == 403) {
-                _accountErrorEvent.emit(true)
                 logout()
+                _accountErrorEvent.emit(true)
                 Log.d("login", "No companyID: login rejected")
             } else if (resFCM.code() == 400) {
                 repository.fetchFirebaseToken()
@@ -94,8 +96,16 @@ class LoginViewModel @Inject constructor(
                     Log.d("login", "Authentication succeeded")
                     fcmToken()
                 } else {
-                    _loginErrorEvent.emit(true)
-                    Log.e("login", "Login request rejected by backend")
+                    if (resLogin.code() == 400) {
+                        Log.e("login", "Wrong credentials. Login request rejected by backend")
+                        _loginErrorEvent.emit(true)
+                    } else if (resLogin.code() == 403) {
+                        Log.e("login", "Missing company-ID. Login request rejected by backend")
+                        _accountErrorEvent.emit(true)
+                    } else {
+                        Log.e("login", "Login request rejected for unknown reason")
+                        _unknownErrorEvent.emit(true)
+                    }
                 }
             } catch (e: Exception) {
                 _networkErrorEvent.emit(Unit)
