@@ -37,6 +37,7 @@
 	];
 	const adminItems: Array<MenuItem> = [
 		{ title: t.menu.accounting, href: '/admin/accounting', Icon: Receipt },
+		{ title: t.menu.availability, href: '/taxi/availability', Icon: CarTaxiFront },
 		{ title: t.menu.companies, href: '/admin/taxi-owners', Icon: CarTaxiFront },
 		{ title: t.menu.calibration, href: '/admin/calibration', Icon: SlidersVertical }
 	];
