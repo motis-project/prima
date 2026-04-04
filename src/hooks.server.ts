@@ -42,7 +42,8 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		(!session?.isAdmin && event.url.pathname.startsWith('/admin')) ||
 		(!session?.isAdmin && !session?.companyId && event.url.pathname.startsWith('/taxi')) ||
 		(!session?.companyId && event.url.pathname.startsWith('/api/driver')) ||
-		(!session?.companyId && event.url.pathname.startsWith('/api/cancelTour'))
+		(!session?.companyId && event.url.pathname.startsWith('/api/cancelTour')) ||
+		((!session?.userId || !token) && event.url.pathname.startsWith('/api/addOrRemoveDesiredTrip'))
 	) {
 		console.log(
 			`Attempt to access route ${event.url.pathname} for user with id: ${session?.userId}. ${event.url.pathname.startsWith('/admin') ? 'With isAdmin: ' + session?.isAdmin : 'With companyId: ' + session?.companyId}`

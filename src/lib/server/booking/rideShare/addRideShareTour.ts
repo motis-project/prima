@@ -5,6 +5,8 @@ import { MAX_RIDE_SHARE_TOUR_TIME, SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/con
 import { Interval } from '$lib/util/interval';
 import { MINUTE } from '$lib/util/time';
 import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
+import { sendMail } from '$lib/server/sendMail';
+import { sendDesiredTripMails } from './sendDesiredTripMails';
 
 export async function getRideShareTourCommunicatedTimes(
 	time: number,
@@ -310,5 +312,14 @@ export const addRideShareTour = async (
 			eventGroupId: eventGroupDropoff
 		})
 		.execute();
+	sendDesiredTripMails(
+		start,
+		target,
+		startTimeStart,
+		targetTimeEnd,
+		sendMail,
+		startFixed,
+		tourId
+	).catch((err) => console.error('matchDesiredTrips failed:', err));
 	return tourId;
 };
