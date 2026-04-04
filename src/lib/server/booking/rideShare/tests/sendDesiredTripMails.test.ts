@@ -1,9 +1,11 @@
-import { addCompany, addDesiredTrip, addTestUser, clearDatabase } from '$lib/testHelpers';
+import { addDesiredTrip, addTestUser, clearDatabase } from '$lib/testHelpers';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { generateMail } from '$lib/server/sendMail';
 import { createSession } from '$lib/server/auth/session';
 import { sendDesiredTripMails } from '../sendDesiredTripMails';
 import { DAY, HOUR, MINUTE } from '$lib/util/time';
+import { addRideShareTour } from '../addRideShareTour';
+import { createRideShareVehicle } from '../createRideShareVehicle';
 
 let sessionToken: string;
 const inSchleife = { lat: 51.54065368738395, lng: 14.53267340988063 };
@@ -15,11 +17,24 @@ beforeEach(async () => {
 
 describe('tests for sending desired trip emails', () => {
 	it('template desired trip mail', async () => {
-		const c = await addCompany(1);
-		const mockUserId = (await addTestUser(c)).id;
+		const mockUserId = (await addTestUser()).id;
 		sessionToken = 'generateSessionToken()';
 		await createSession(sessionToken, mockUserId);
 		await addDesiredTrip(inSchleife, 'startaddresse', inKleinPriebus, 'zieladdresse', mockUserId);
+
+		const v = await createRideShareVehicle(mockUserId, 0, 3, null, null, true, '', null, '');
+		await addRideShareTour(
+			Date.now() + DAY,
+			true,
+			3,
+			0,
+			mockUserId,
+			v,
+			inSchleife,
+			inKleinPriebus,
+			'startaddresse',
+			'zieladdresse'
+		);
 
 		let mailSubj = undefined;
 		let mailAddr = undefined;
@@ -39,11 +54,11 @@ describe('tests for sending desired trip emails', () => {
 			true
 		);
 		expect(mailSubj).toBe('Passendes Mitfahrangebot');
-		expect(mailAddr).toBe('company@owner.de');
+		expect(mailAddr).toBe('test@user.de');
 		expect(mailBody?.text).contain(
 			'Es wurde ein Mitfahrangebot passend zu Ihrem Gesuch eingestellt:'
 		);
-		expect(mailBody?.text).contain('Guten Tag owner');
+		expect(mailBody?.text).contain('Guten Tag customer');
 		expect(mailBody?.text).contain('Start: ');
 		expect(mailBody?.text).contain('startaddresse');
 		expect(mailBody?.text).contain('Ziel: ');
