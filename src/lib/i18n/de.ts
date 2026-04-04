@@ -237,7 +237,6 @@ const translations: Translations = {
 		'Es handelt sich um private Mitfahrangebote. Wenn Sie sich für eine Verbindung mit privater Mitnahme interessieren, können Sie dem Anbieter eine Anfrage senden, um die Details zu vereinbaren. Registrieren Sie sich, um Mitfahrangebote zu erstellen und Anfragen zu senden.',
 	from: 'Von',
 	to: 'Nach',
-	when: 'Wann',
 	arrival: 'Ankunft',
 	departure: 'Abfahrt',
 	duration: 'Dauer',
@@ -291,8 +290,6 @@ const translations: Translations = {
 	noAvailabilityTitle: 'Zu weit in der Zukunft',
 	noAvalablilityDescription:
 		'Für die angefragte Zeit wurden noch keine Taxis als verfügbar gemeldet. Versuchen Sie es später wieder.',
-	addAlert: 'Benachrichtung erhalten wenn eine Mitfahrt möglich ist',
-	notificationsList: 'Liste von aktivierten Benachrichtungen',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',

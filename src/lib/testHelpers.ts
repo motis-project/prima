@@ -6,7 +6,6 @@ import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
 import type { BusStop } from './server/booking/taxi/BusStop';
 import { getScheduledEventTime } from './util/getScheduledEventTime';
-import { DAY } from './util/time';
 
 export enum Zone {
 	NIESKY = 1,
@@ -205,7 +204,6 @@ export const clearDatabase = async () => {
 	await db.deleteFrom('session').execute();
 	await db.deleteFrom('rideShareTour').execute();
 	await db.deleteFrom('rideShareVehicle').execute();
-	await db.deleteFrom('desiredRideShare').execute();
 	await db.deleteFrom('user').execute();
 	await db.deleteFrom('company').execute();
 };
@@ -389,35 +387,4 @@ export function sortEventsByTime<
 		}
 		return b.prevLegDuration - a.prevLegDuration;
 	});
-}
-
-export async function addDesiredTrip(
-	from: Coordinates,
-	fromAddress: string,
-	to: Coordinates,
-	toAddress: string,
-	user: number,
-	startFixed: boolean = true,
-	passengers: number = 1,
-	luggage: number = 0,
-	url: string = 'url',
-	time: number = Date.now() + DAY
-) {
-	await db
-		.insertInto('desiredRideShare')
-		.values({
-			fromLat: from.lat,
-			fromLng: from.lng,
-			toLat: to.lat,
-			toLng: to.lng,
-			fromAddress,
-			toAddress,
-			startFixed,
-			time,
-			luggage,
-			passengers,
-			interestedUser: user,
-			url
-		})
-		.execute();
 }

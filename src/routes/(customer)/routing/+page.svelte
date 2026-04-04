@@ -52,8 +52,6 @@
 	import SlidersVertical from 'lucide-svelte/icons/sliders-vertical';
 	import { collectItineraries } from '$lib/calibration';
 	import { onClickStop, onClickTrip } from '$lib/util/onClick';
-	import { matchesDesiredTrip } from '$lib/util/booking/matchesDesiredTrip';
-	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
@@ -211,52 +209,6 @@
 	const applyPosition = (position: { coords: { latitude: number; longitude: number } }) => {
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
 	};
-
-	let desiredTrips = $state(data.user.desiredTrips);
-	let alertId = $derived(
-		from?.value?.match === undefined || to?.value?.match === undefined
-			? undefined
-			: desiredTrips.find((t) =>
-					matchesDesiredTrip(
-						from?.value?.match === undefined
-							? undefined
-							: { lat: from.value.match.lat, lng: from.value.match.lon },
-						to.value.match === undefined
-							? undefined
-							: { lat: to.value.match.lat, lng: to.value.match.lon },
-						time.getTime(),
-						timeType === 'arrival',
-						luggageToInt(luggage),
-						passengers,
-						t
-					)
-				)?.id
-	);
-	async function toggleAlert() {
-		const response = await fetch('/api/addOrRemoveDesiredTrip', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				from: {
-					lat: from.value.match!.lat,
-					lng: from.value.match!.lon,
-					address: from.value.match!.name
-				},
-				to: { lat: to.value.match!.lat, lng: to.value.match!.lon, address: to.value.match!.name },
-				time: time.getTime(),
-				startFixed: timeType === 'arrival',
-				alertId: alertId ?? null,
-				passengers,
-				luggage: luggageToInt(luggage),
-				url: window.location.href
-			})
-		});
-		if (response.ok) {
-			desiredTrips = await response.json();
-		}
-	}
 
 	let loading = $state(false);
 </script>
@@ -674,18 +626,6 @@
 				</div>
 			{/if}
 
-			{#if data.user.name !== undefined}
-				<div class="flex items-center space-x-2">
-					<Checkbox
-						onclick={async () => toggleAlert()}
-						checked={alertId !== undefined}
-						id="alert"
-						class="ml-auto"
-						disabled={from.value.match === undefined || to.value.match === undefined}
-					/>
-					<Label for="alert">{t.addAlert}</Label>
-				</div>
-			{/if}
 			<div class="flex grow flex-col gap-4">
 				<ItineraryList
 					{baseQuery}
@@ -760,34 +700,6 @@
 					</div>
 				</Dialog.Content>
 			</Dialog.Root>
-			<div class="border-rounded-md mx-auto w-full space-y-2 rounded-md border-2 border-solid p-2">
-				<p class="text-md font-bold">{t.publicTransitTaxi}</p>
-				<hr />
-				<div class="space-y-2 text-sm">
-					<strong>{t.fare}</strong>
-					<div class="grid grid-cols-2">
-						<div>{t.booking.fifteenPlus}</div>
-						<div>{getEuroString(legOdmPrice(1, 0, 0))}</div>
-						<div>{t.booking.kidsSevenToFourteen}</div>
-						<div>{getEuroString(legOdmPrice(1, 0, 1))}</div>
-						<div>{t.booking.underSeven}</div>
-						<div>{getEuroString(legOdmPrice(1, 1, 0))}</div>
-						<div></div>
-						<div>{t.perPerson} {t.perRide}</div>
-					</div>
-					<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
-					<p>
-						<button
-							class="link"
-							onclick={() =>
-								pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
-							><strong>{t.serviceArea}</strong></button
-						><br />{t.regionAround} Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife,
-						Trebendorf, Weißkeißel, Weißwasser/O.L.
-					</p>
-					<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
-				</div>
-			</div>
 
 			<Dialog.Root>
 				<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}>

@@ -228,7 +228,6 @@ const translations: Translations = {
 		'These are private ride-sharing offers. If you are interested in a private ride-sharing connection, you can send a request to the provider to arrange the details. Register to create ride-sharing offers and send requests.',
 	from: 'From',
 	to: 'To',
-	when: 'When',
 	arrival: 'Arrival',
 	departure: 'Departure',
 	duration: 'Duration',
@@ -281,8 +280,6 @@ const translations: Translations = {
 	noAvailabilityTitle: 'Too far in the future',
 	noAvalablilityDescription:
 		'No taxis were reported as available for the requested time. Please try again later',
-	addAlert: 'Receive a notification if a ride sharing offer matching this search is published',
-	notificationsList: 'List of activated notifications',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',

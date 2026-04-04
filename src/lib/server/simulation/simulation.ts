@@ -23,7 +23,7 @@ import { createJsonlTimeStatWriter as createJsonlStatWriter } from './stats';
 import { clearDatabase, Zone, addCompany, addTaxi, addTestUser } from '$lib/testHelpers';
 import { randomInt } from './randomInt';
 import type { Capacities } from '$lib/util/booking/Capacities';
-import { isSamePlace } from '$lib/util/booking/isSamePlace';
+import { isSamePlace } from '../booking/isSamePlace';
 
 const FLUSH_INTERVAL = 10;
 const OUTPUT_FILE = './simulation-stats.jsonl';

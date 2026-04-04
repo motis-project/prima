@@ -171,21 +171,6 @@ export interface Database {
 		name: string;
 		itinerariesJson: string;
 	};
-	desiredRideShare: {
-		id: Generated<number>;
-		fromLat: number;
-		fromLng: number;
-		toLat: number;
-		toLng: number;
-		fromAddress: string;
-		toAddress: string;
-		startFixed: boolean;
-		time: number;
-		luggage: number;
-		passengers: number;
-		interestedUser: number;
-		url: string;
-	};
 }
 
 export const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
