@@ -17,7 +17,8 @@
 		Plus,
 		Car,
 		Users,
-		Luggage
+		Luggage,
+		CalendarIcon
 	} from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
@@ -35,9 +36,17 @@
 	import maplibregl from 'maplibre-gl';
 	import type { Itinerary } from '$lib/openapi';
 	import { enhance } from '$app/forms';
-	import { HOUR } from '$lib/util/time';
+	import { DAY, HOUR, MINUTE, SECOND } from '$lib/util/time';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
+	import * as Select from '$lib/shadcn/select';
+	import { Calendar } from '$lib/shadcn/calendar';
+	import { LOCALE, TZ } from '$lib/constants';
+	import { fromDate, toCalendarDate, type DateValue } from '@internationalized/date';
+	import Tabs from '$lib/ui/Tabs.svelte';
+
+	type RepetitionType = 'ONCE' | 'DAILY' | 'WEEKDAYS' | 'WEEKEND' | 'WEEKLY';
+	const repetitionTypes: RepetitionType[] = ['ONCE', 'DAILY', 'WEEKDAYS', 'WEEKEND', 'WEEKLY'];
 
 	const { data, form } = $props();
 
@@ -79,6 +88,73 @@
 	type Timeout = ReturnType<typeof setTimeout>;
 	let searchDebounceTimer: Timeout;
 	let loading = $state(false);
+	let repetitionType = $state<RepetitionType>('ONCE');
+	let repetitionDescription = $derived.by(() => {
+		switch (repetitionType) {
+			case 'ONCE':
+				return 'once';
+			default:
+				return 'bla';
+		}
+	});
+	const texts = ['ONCE', 'DAILY', 'WEEKDAYS', 'WEEKEND', 'WEEKLY'];
+	function getText(t: string) {
+		const idx = repetitionTypes.findIndex((e) => e === t);
+		if (idx === -1) {
+			throw new Error();
+		}
+		return texts[idx];
+	}
+	let firstDay = $derived<DateValue>(toCalendarDate(fromDate(time, TZ)));
+	let lastDay = $state<DateValue>(toCalendarDate(fromDate(new Date(Date.now() + DAY * 30), TZ)));
+	const repetitionOptions = [
+		{ label: 'add rule', value: 1, component: repetitionByRule },
+		{ label: 'individual', value: 2, component: repetitionIndividual }
+	];
+	let days: DateValue[] = $state([]);
+	function isWeekend(day: DateValue) {
+		const jsDate = day.toDate(TZ);
+		const d = jsDate.getDay();
+		return d === 0 || d === 6;
+	}
+	function addDaysByRule() {
+		let currentDay = firstDay;
+		let difference = 0;
+		while (currentDay.compare(lastDay) <= 0) {
+			switch (repetitionType) {
+				case 'ONCE':
+					break;
+				case 'DAILY':
+					days.push(currentDay);
+					break;
+				case 'WEEKDAYS':
+					if (!isWeekend(currentDay)) {
+						days.push(currentDay);
+					}
+					break;
+				case 'WEEKEND':
+					if (isWeekend(currentDay)) {
+						days.push(currentDay);
+					}
+					break;
+				case 'WEEKLY':
+					if (difference % 7 === 0) {
+						days.push(currentDay);
+					}
+					break;
+			}
+			difference++;
+			currentDay = currentDay.add({ days: 1 });
+		}
+	}
+	let timeAfterMidnight = $derived<number>(
+		time.getHours() * HOUR +
+			time.getMinutes() * MINUTE +
+			time.getSeconds() * SECOND +
+			time.getMilliseconds()
+	);
+	let times = $derived<number[]>(days.map((d) => d.toDate(TZ).getTime() + timeAfterMidnight));
+
 	$effect(() => {
 		if (from.value.match && to.value.match && vehicle && time && timeType) {
 			loading = true;
@@ -127,6 +203,42 @@
 		}
 	});
 </script>
+
+{#snippet repetitionByRule()}
+	<div class="flex flex-col gap-4">
+		<Select.Root type="single" bind:value={repetitionType}>
+			<Select.Trigger class="w-full min-w-56">
+				{repetitionDescription}
+			</Select.Trigger>
+			<Select.Content>
+				{#each repetitionTypes as option}
+					<Select.Item value={option}>
+						{getText(option)}
+					</Select.Item>
+				{/each}
+			</Select.Content>
+		</Select.Root>
+		{#if repetitionType !== 'ONCE'}
+			<Label>letzter tag</Label>
+			<Popover.Root>
+				<Popover.Trigger class={cn(buttonVariants({ variant: 'outline' }), 'w-fit justify-start')}>
+					<CalendarIcon class="mr-2 size-4" />
+					{lastDay ? lastDay.toString() : 'Pick a date'}
+				</Popover.Trigger>
+				<Popover.Content class="w-auto p-2">
+					<Calendar type="single" bind:value={lastDay} />
+				</Popover.Content>
+			</Popover.Root>
+			<Button onclick={() => addDaysByRule()}>add rule</Button>
+		{/if}
+	</div>
+{/snippet}
+
+{#snippet repetitionIndividual()}
+	<div class="rounded-md border p-2">
+		<Calendar type="multiple" bind:value={days} locale={LOCALE} />
+	</div>
+{/snippet}
 
 <div class="md:min-h-[70dvh] md:w-96">
 	{#if page.state.selectFrom}
@@ -344,6 +456,17 @@
 				</Popover.Root>
 			</div>
 
+			<div class="flex gap-2">
+				<Popover.Root>
+					<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
+						{repetitionDescription}
+					</Popover.Trigger>
+					<Popover.Content class="flex w-fit flex-col gap-4">
+						<Tabs items={repetitionOptions}></Tabs>
+					</Popover.Content>
+				</Popover.Root>
+			</div>
+
 			<div class="flex items-center justify-center">
 				{#if page.state.selectedItinerary && !loading}
 					<Button
@@ -400,7 +523,7 @@
 			<input type="hidden" name="endLat" value={to.value.match?.lat} />
 			<input type="hidden" name="endLon" value={to.value.match?.lon} />
 			<input type="hidden" name="endLabel" value={to.label} />
-			<input type="hidden" name="time" value={time.getTime()} />
+			<input type="hidden" name="time" value={JSON.stringify(times)} />
 			<input type="hidden" name="timeType" value={timeType} />
 			<input type="hidden" name="vehicle" value={vehicle} />
 			<input type="hidden" name="luggage" value={luggage} />
