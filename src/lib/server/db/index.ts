@@ -139,6 +139,7 @@ export interface Database {
 		communicatedEnd: number;
 		earliestStart: number;
 		latestEnd: number;
+		hash: string | null;
 	};
 	rideShareVehicle: {
 		id: Generated<number>;
