@@ -35,7 +35,6 @@ export const actions = {
 			};
 		};
 
-		const time = readInt(formData.get('time'));
 		const startFixed = formData.get('timeType') !== 'arrival';
 		const passengers = readInt(formData.get('passengers'));
 		const luggage = readInt(formData.get('luggage'));
@@ -45,32 +44,49 @@ export const actions = {
 		const end = parseCoords('end');
 		const startLabel = formData.get('startLabel');
 		const endLabel = formData.get('endLabel');
+		const rawTimes = formData.get('time');
 
 		if (
-			Number.isNaN(time) ||
 			Number.isNaN(passengers) ||
 			Number.isNaN(luggage) ||
 			Number.isNaN(vehicle) ||
 			typeof startLabel !== 'string' ||
-			typeof endLabel !== 'string'
+			typeof endLabel !== 'string' ||
+			typeof rawTimes !== 'string'
 		) {
+			return fail(400, { msg: msg('unknownError') });
+		}
+		let times: number[];
+
+		try {
+			times = JSON.parse(rawTimes) as number[];
+		} catch {
+			return fail(400, { msg: msg('unknownError') });
+		}
+		if (!Array.isArray(times) || !times.every((x) => typeof x === 'number' && Number.isFinite(x))) {
 			return fail(400, { msg: msg('unknownError') });
 		}
 
 		// TODO transaction
-		const tourId = await addRideShareTour(
-			time,
-			startFixed,
-			passengers,
-			luggage,
-			locals.session!.userId!,
-			vehicle,
-			start,
-			end,
-			startLabel,
-			endLabel
-		);
-		if (tourId == undefined) {
+		let successes = 0;
+		for (const time of times) {
+			const tourId = await addRideShareTour(
+				time,
+				startFixed,
+				passengers,
+				luggage,
+				locals.session!.userId!,
+				vehicle,
+				start,
+				end,
+				startLabel,
+				endLabel
+			);
+			if (tourId != undefined) {
+				successes++;
+			}
+		}
+		if (successes !== times.length) {
 			return fail(400, { msg: msg('vehicleConflict') });
 		}
 		return redirect(302, `/ride-offers`);
