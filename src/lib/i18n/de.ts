@@ -384,7 +384,16 @@ const translations: Translations = {
 		acceptRequest: 'Mitfahrt bestätigen',
 		requestAccepted: 'Mitfahrt bestätigt',
 		requestCancelled: 'Mitfahrt abgesagt',
-		showMap: 'Karte anzeigen'
+		showMap: 'Karte anzeigen',
+		weekdays: 'Wochentage',
+		weekend: 'Wochenende',
+		weekly: 'Wöchentlich',
+		daily: 'Täglich',
+		once: 'Einmal',
+		repetitionLabel: 'Wiederholende Fahrten einstellen',
+		addRule: 'Regel hinzufügen',
+		individualDays: 'individuelle Tage',
+		lastDay: 'letzter Tag:'
 	},
 
 	buttons: {

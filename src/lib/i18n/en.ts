@@ -373,7 +373,16 @@ const translations: Translations = {
 		acceptRequest: 'Confirm ride',
 		requestAccepted: 'Ride confirmed',
 		requestCancelled: 'Ride cancelled',
-		showMap: 'Show map'
+		showMap: 'Show map',
+		weekdays: 'Weekdays',
+		weekend: 'Weekend',
+		weekly: 'Weekly',
+		daily: 'Daily',
+		once: 'Once',
+		repetitionLabel: 'Publish repeating ride offers',
+		addRule: 'Add rule',
+		individualDays: 'Individual days',
+		lastDay: 'last day:'
 	},
 
 	buttons: {
