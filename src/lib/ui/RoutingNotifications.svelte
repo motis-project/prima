@@ -13,8 +13,8 @@
 		url: string;
 	};
 
-	const {
-		rows
+	let {
+		rows = $bindable()
 	}: {
 		rows: Notification[];
 	} = $props();
@@ -56,7 +56,7 @@
 
 	<Card.Content>
 		<SortableTable
-			{rows}
+			bind:rows
 			{cols}
 			bind:selectedRow
 			bindSelectedRow={true}

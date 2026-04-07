@@ -686,6 +686,12 @@
 					<Label for="alert">{t.addAlert}</Label>
 				</div>
 			{/if}
+
+			{#if alertId !== undefined}
+				<div class="rounded-md border px-3 py-2 text-sm">
+					{t.alertInfo}
+				</div>
+			{/if}
 			<div class="flex grow flex-col gap-4">
 				<ItineraryList
 					{baseQuery}
@@ -760,34 +766,6 @@
 					</div>
 				</Dialog.Content>
 			</Dialog.Root>
-			<div class="border-rounded-md mx-auto w-full space-y-2 rounded-md border-2 border-solid p-2">
-				<p class="text-md font-bold">{t.publicTransitTaxi}</p>
-				<hr />
-				<div class="space-y-2 text-sm">
-					<strong>{t.fare}</strong>
-					<div class="grid grid-cols-2">
-						<div>{t.booking.fifteenPlus}</div>
-						<div>{getEuroString(legOdmPrice(1, 0, 0))}</div>
-						<div>{t.booking.kidsSevenToFourteen}</div>
-						<div>{getEuroString(legOdmPrice(1, 0, 1))}</div>
-						<div>{t.booking.underSeven}</div>
-						<div>{getEuroString(legOdmPrice(1, 1, 0))}</div>
-						<div></div>
-						<div>{t.perPerson} {t.perRide}</div>
-					</div>
-					<p><strong>{t.bookingDeadline}</strong><br />{t.bookingDeadlineContent}</p>
-					<p>
-						<button
-							class="link"
-							onclick={() =>
-								pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
-							><strong>{t.serviceArea}</strong></button
-						><br />{t.regionAround} Bad Muskau, Boxberg/O.L., Gablenz, Groß Düben, Krauschwitz, Schleife,
-						Trebendorf, Weißkeißel, Weißwasser/O.L.
-					</p>
-					<p><strong>{t.serviceTime}</strong><br />{t.serviceTimeContent}</p>
-				</div>
-			</div>
 
 			<Dialog.Root>
 				<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}>

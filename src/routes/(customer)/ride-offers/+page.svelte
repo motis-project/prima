@@ -8,6 +8,7 @@
 	import RoutingNotifications from '$lib/ui/RoutingNotifications.svelte';
 
 	const { data } = $props();
+	let notificationRows = $state(data.notifications);
 	const pastJourneys = data.journeys.filter(
 		(j) => j.cancelled || new Date(j.journey.endTime).getTime() < Date.now()
 	);
@@ -59,7 +60,9 @@
 	</div>
 	{#if plannedJourneys.length === 0 && pastJourneys.length === 0}
 		{t.noRideOffers}
-		<RoutingNotifications rows={data.notifications}></RoutingNotifications>
+	{/if}
+	{#if data.notifications.length !== 0}
+		<RoutingNotifications bind:rows={notificationRows}></RoutingNotifications>
 	{/if}
 	{@render journeyList(plannedJourneys)}
 	{#if pastJourneys.length !== 0}

@@ -281,7 +281,9 @@ const translations: Translations = {
 	noAvailabilityTitle: 'Too far in the future',
 	noAvalablilityDescription:
 		'No taxis were reported as available for the requested time. Please try again later',
-	addAlert: 'Receive a notification if a ride sharing offer matching this search is published',
+	addAlert: 'Receive a notification, if a ride sharing offer matching this search is published',
+	alertInfo:
+		'You will receive an Email notification once a ride offer matching your search is published. You can manage your notifications under ride-offers.',
 	notificationsList: 'List of activated notifications',
 
 	booking: {
