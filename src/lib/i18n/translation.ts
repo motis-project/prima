@@ -252,6 +252,7 @@ export type Translations = {
 	noAvailabilityTitle: string;
 	noAvalablilityDescription: string;
 	addAlert: string;
+	alertInfo: string;
 	notificationsList: string;
 
 	booking: {

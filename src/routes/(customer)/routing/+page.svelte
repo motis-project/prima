@@ -686,6 +686,12 @@
 					<Label for="alert">{t.addAlert}</Label>
 				</div>
 			{/if}
+
+			{#if alertId !== undefined}
+				<div class="rounded-md border px-3 py-2 text-sm">
+					{t.alertInfo}
+				</div>
+			{/if}
 			<div class="flex grow flex-col gap-4">
 				<ItineraryList
 					{baseQuery}
