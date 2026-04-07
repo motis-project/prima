@@ -89,15 +89,7 @@
 	let searchDebounceTimer: Timeout;
 	let loading = $state(false);
 	let repetitionType = $state<RepetitionType>('ONCE');
-	let repetitionDescription = $derived.by(() => {
-		switch (repetitionType) {
-			case 'ONCE':
-				return 'once';
-			default:
-				return 'bla';
-		}
-	});
-	const texts = ['ONCE', 'DAILY', 'WEEKDAYS', 'WEEKEND', 'WEEKLY'];
+	const texts = [t.ride.once, t.ride.daily, t.ride.weekdays, t.ride.weekend, t.ride.weekly];
 	function getText(t: string) {
 		const idx = repetitionTypes.findIndex((e) => e === t);
 		if (idx === -1) {
@@ -105,11 +97,12 @@
 		}
 		return texts[idx];
 	}
+	let repetitionDescription = $derived(getText(repetitionType));
 	let firstDay = $derived<DateValue>(toCalendarDate(fromDate(time, TZ)));
 	let lastDay = $state<DateValue>(toCalendarDate(fromDate(new Date(Date.now() + DAY * 30), TZ)));
 	const repetitionOptions = [
-		{ label: 'add rule', value: 1, component: repetitionByRule },
-		{ label: 'individual', value: 2, component: repetitionIndividual }
+		{ label: t.ride.addRule, value: 1, component: repetitionByRule },
+		{ label: t.ride.individualDays, value: 2, component: repetitionIndividual }
 	];
 	let days: DateValue[] = $state([]);
 	function isWeekend(day: DateValue) {
@@ -153,7 +146,11 @@
 			time.getSeconds() * SECOND +
 			time.getMilliseconds()
 	);
-	let times = $derived<number[]>(days.map((d) => d.toDate(TZ).getTime() + timeAfterMidnight));
+	let times = $derived<number[]>(
+		days.length === 0
+			? [time.getTime()]
+			: days.map((d) => d.toDate(TZ).getTime() + timeAfterMidnight)
+	);
 
 	$effect(() => {
 		if (from.value.match && to.value.match && vehicle && time && timeType) {
@@ -219,7 +216,7 @@
 			</Select.Content>
 		</Select.Root>
 		{#if repetitionType !== 'ONCE'}
-			<Label>letzter tag</Label>
+			<Label>{t.ride.lastDay}</Label>
 			<Popover.Root>
 				<Popover.Trigger class={cn(buttonVariants({ variant: 'outline' }), 'w-fit justify-start')}>
 					<CalendarIcon class="mr-2 size-4" />
@@ -229,7 +226,7 @@
 					<Calendar type="single" bind:value={lastDay} />
 				</Popover.Content>
 			</Popover.Root>
-			<Button onclick={() => addDaysByRule()}>add rule</Button>
+			<Button onclick={() => addDaysByRule()}>{t.ride.addRule}</Button>
 		{/if}
 	</div>
 {/snippet}
@@ -459,7 +456,7 @@
 			<div class="flex gap-2">
 				<Popover.Root>
 					<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
-						{repetitionDescription}
+						{t.ride.repetitionLabel}
 					</Popover.Trigger>
 					<Popover.Content class="flex w-fit flex-col gap-4">
 						<Tabs items={repetitionOptions}></Tabs>
