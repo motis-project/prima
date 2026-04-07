@@ -152,6 +152,34 @@
 			: days.map((d) => d.toDate(TZ).getTime() + timeAfterMidnight)
 	);
 
+	let payloadForHash = $derived({
+		startLat: from.value.match?.lat ?? null,
+		startLon: from.value.match?.lon ?? null,
+		startLabel: from.label,
+		endLat: to.value.match?.lat ?? null,
+		endLon: to.value.match?.lon ?? null,
+		endLabel: to.label,
+		time: times,
+		timeType,
+		vehicle,
+		luggage,
+		passengers,
+		now: Date.now()
+	});
+	let hash = $state('');
+	$effect(() => {
+		const json = JSON.stringify(payloadForHash);
+
+		(async () => {
+			const bytes = new TextEncoder().encode(json);
+			const digest = await crypto.subtle.digest('SHA-256', bytes);
+
+			hash = Array.from(new Uint8Array(digest))
+				.map((b) => b.toString(16).padStart(2, '0'))
+				.join('');
+		})();
+	});
+
 	$effect(() => {
 		if (from.value.match && to.value.match && vehicle && time && timeType) {
 			loading = true;
@@ -525,6 +553,7 @@
 			<input type="hidden" name="vehicle" value={vehicle} />
 			<input type="hidden" name="luggage" value={luggage} />
 			<input type="hidden" name="passengers" value={passengers} />
+			<input type="hidden" name="hash" value={hash} />
 		</form>
 	</div>
 </div>

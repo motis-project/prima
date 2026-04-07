@@ -200,7 +200,8 @@ export const addRideShareTour = async (
 	start: Coordinates,
 	target: Coordinates,
 	startAddress = '',
-	targetAddress = ''
+	targetAddress = '',
+	hash?: string
 ): Promise<number | undefined> => {
 	console.log(
 		'ADD RIDE SHARE TOUR PARAMS: ',
@@ -233,7 +234,8 @@ export const addRideShareTour = async (
 				earliestStart: startTimeStart,
 				communicatedStart: startTimeStart,
 				latestEnd: targetTimeEnd,
-				communicatedEnd: targetTimeEnd
+				communicatedEnd: targetTimeEnd,
+				hash: hash ?? null
 			})
 			.returning('id')
 			.executeTakeFirstOrThrow()

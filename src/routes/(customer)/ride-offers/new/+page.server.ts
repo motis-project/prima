@@ -45,6 +45,7 @@ export const actions = {
 		const startLabel = formData.get('startLabel');
 		const endLabel = formData.get('endLabel');
 		const rawTimes = formData.get('time');
+		const hash = formData.get('hash');
 
 		if (
 			Number.isNaN(passengers) ||
@@ -52,7 +53,8 @@ export const actions = {
 			Number.isNaN(vehicle) ||
 			typeof startLabel !== 'string' ||
 			typeof endLabel !== 'string' ||
-			typeof rawTimes !== 'string'
+			typeof rawTimes !== 'string' ||
+			typeof hash !== 'string'
 		) {
 			return fail(400, { msg: msg('unknownError') });
 		}
@@ -80,7 +82,8 @@ export const actions = {
 				start,
 				end,
 				startLabel,
-				endLabel
+				endLabel,
+				times.length === 1 ? undefined : hash
 			);
 			if (tourId != undefined) {
 				successes++;
