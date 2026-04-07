@@ -291,7 +291,7 @@ const translations: Translations = {
 	noAvailabilityTitle: 'Zu weit in der Zukunft',
 	noAvalablilityDescription:
 		'Für die angefragte Zeit wurden noch keine Taxis als verfügbar gemeldet. Versuchen Sie es später wieder.',
-	addAlert: 'Benachrichtung erhalten wenn eine Mitfahrt möglich ist',
+	addAlert: 'Benachrichtung erhalten, wenn eine Mitfahrt möglich ist',
 	notificationsList: 'Liste von aktivierten Benachrichtungen',
 
 	booking: {

@@ -59,6 +59,8 @@
 	</div>
 	{#if plannedJourneys.length === 0 && pastJourneys.length === 0}
 		{t.noRideOffers}
+	{/if}
+	{#if data.notifications.length !== 0}
 		<RoutingNotifications rows={data.notifications}></RoutingNotifications>
 	{/if}
 	{@render journeyList(plannedJourneys)}
