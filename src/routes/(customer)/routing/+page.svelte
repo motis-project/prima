@@ -59,13 +59,16 @@
 
 	const { form, data } = $props();
 
-	const urlParams = browser ? new URLSearchParams(window.location.search) : undefined;
+	const urlParams = page.url.searchParams;
 
-	let kidsZeroToTwo = $state(0);
-	let kidsThreeToFour = $state(0);
-	let kidsFiveToSix = $state(0);
-	let kidsSevenToFourteen = $state(0);
-	let fourteenPlus = $state(1);
+	const parseUrlInt = (key: string, fallback: number = 0) =>
+		parseInt(urlParams?.get(key) || '') || fallback;
+
+	let kidsZeroToTwo = $state(parseUrlInt('kidsZeroToTwo'));
+	let kidsThreeToFour = $state(parseUrlInt('kidsThreeToFour'));
+	let kidsFiveToSix = $state(parseUrlInt('kidsFiveToSix'));
+	let kidsSevenToFourteen = $state(parseUrlInt('kidsSevenToFourteen'));
+	let fourteenPlus = $state(parseUrlInt('fourteenPlus', 1));
 	let passengers = $derived(
 		fourteenPlus + kidsSevenToFourteen + kidsFiveToSix + kidsThreeToFour + kidsZeroToTwo
 	);
@@ -84,13 +87,19 @@
 	}
 
 	let freeKids = $derived(kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix);
-	let wheelchair = $state(false);
-	let luggage = $state<LuggageType>('none');
+	let wheelchair = $state(urlParams?.get('wheelchair') == 'true');
+	let luggage = $state<LuggageType>(
+		urlParams?.get('luggage') == 'light'
+			? 'light'
+			: urlParams?.get('luggage') == 'heavy'
+				? 'heavy'
+				: 'none'
+	);
 	let time = $state<Date>(new Date(urlParams?.get('time') || Date.now()));
 	let timeType = $state<TimeType>(urlParams?.get('arriveBy') == 'true' ? 'arrival' : 'departure');
 	let fromParam: Match | undefined = undefined;
 	let toParam: Match | undefined = undefined;
-	if (browser && urlParams && urlParams.has('from') && urlParams.has('to')) {
+	if (urlParams && urlParams.has('from') && urlParams.has('to')) {
 		fromParam = JSON.parse(urlParams.get('from') ?? '') ?? {};
 		toParam = JSON.parse(urlParams.get('to') ?? '') ?? {};
 	}
@@ -106,6 +115,7 @@
 	});
 	let fromItems = $state<Array<Location>>([]);
 	let toItems = $state<Array<Location>>([]);
+	let fromOrToEmpty = $derived(!from?.value?.match || !to?.value?.match);
 
 	const luggageToInt = (str: LuggageType) => {
 		switch (str) {
@@ -138,7 +148,7 @@
 	};
 
 	let baseQuery = $derived(
-		from.value.match && to.value.match
+		!fromOrToEmpty
 			? ({
 					time: time.toISOString(),
 					arriveBy: timeType === 'arrival',
@@ -173,7 +183,14 @@
 						from: JSON.stringify(from?.value?.match),
 						to: JSON.stringify(to?.value?.match),
 						time: time,
-						arriveBy: timeType === 'arrival'
+						arriveBy: timeType === 'arrival',
+						kidsZeroToTwo,
+						kidsThreeToFour,
+						kidsFiveToSix,
+						kidsSevenToFourteen,
+						fourteenPlus,
+						wheelchair,
+						luggage
 					},
 					{ showMap: page.state.showMap },
 					true
@@ -214,7 +231,7 @@
 
 	let desiredTrips = $state(data.user.desiredTrips);
 	let alertId = $derived(
-		from?.value?.match === undefined || to?.value?.match === undefined
+		fromOrToEmpty
 			? undefined
 			: desiredTrips.find((t) =>
 					matchesDesiredTrip(
@@ -681,7 +698,7 @@
 						checked={alertId !== undefined}
 						id="alert"
 						class="ml-auto"
-						disabled={from.value.match === undefined || to.value.match === undefined}
+						disabled={fromOrToEmpty}
 					/>
 					<Label for="alert">{t.addAlert}</Label>
 				</div>
