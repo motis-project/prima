@@ -293,7 +293,7 @@ const translations: Translations = {
 		'Für die angefragte Zeit wurden noch keine Taxis als verfügbar gemeldet. Versuchen Sie es später wieder.',
 	addAlert: 'Benachrichtung erhalten, wenn eine Mitfahrt möglich ist',
 	alertInfo:
-		'Sie werden per E-Mail benachrichtigt, sobald jemand für diese Strecke und Zeit ein Mitfahrangebot einstellt. Sie können ihre Benachrichtigungen unter Mitfahrangebote verwalten.',
+		'Sie werden per E-Mail benachrichtigt, sobald jemand für diese Strecke und Zeit ein Mitfahrangebot einstellt. Sie können Ihre Benachrichtigungen unter Mitfahrangebote verwalten.',
 	notificationsList: 'Liste von aktivierten Benachrichtungen',
 
 	booking: {
