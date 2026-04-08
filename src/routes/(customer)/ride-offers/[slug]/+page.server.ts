@@ -23,7 +23,11 @@ export const actions = {
 	cancel: async ({ request, locals }): Promise<{ msg: Msg }> => {
 		const formData = await request.formData();
 		const requestId = readInt(formData.get('requestId'));
-		await cancelRideShareTour(requestId, locals.session!.userId!);
+		const hash = formData.get('hash');
+		if (typeof hash !== 'string' || hash === null) {
+			throw new Error();
+		}
+		await cancelRideShareTour(requestId, locals.session!.userId!, hash);
 		return redirect(302, `/bookings`);
 	},
 	accept: async ({ request, locals }) => {

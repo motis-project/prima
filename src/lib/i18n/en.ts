@@ -331,7 +331,9 @@ const translations: Translations = {
 		pinExplainer:
 			'To give to the passenger. The passenger must give this PIN to the taxi driver when starting the journey.',
 		itineraryOnDate: 'Journey on',
-		withVehicle: 'with vehicle'
+		withVehicle: 'with vehicle',
+		cancelCheckbox:
+			'Cancel all tours created by the same rule (will not cancel tours which already have agreed ride shares)'
 	},
 
 	explainer: {
@@ -385,7 +387,7 @@ const translations: Translations = {
 		repetitionLabel: 'Publish repeating ride offers',
 		addRule: 'Add rule',
 		individualDays: 'Individual days',
-		lastDay: 'last day:'
+		lastDay: 'until:'
 	},
 
 	buttons: {
