@@ -88,7 +88,7 @@ const translations: Translations = {
 		startDestNotInSameZone: 'Start and destination not in the same zone.',
 		noVehicle: 'No vehicle available.',
 		routingRequestFailed: 'Routing request failed.',
-		vehicleConflict: 'The selected vehicle is not available at the selected time.',
+		vehicleConflict: 'The selected vehicle is not available at at least one of the selected times.',
 
 		// Booking
 		bookingError: 'The ride could not be booked. Please start a new search.',
@@ -330,7 +330,9 @@ const translations: Translations = {
 		pinExplainer:
 			'To give to the passenger. The passenger must give this PIN to the taxi driver when starting the journey.',
 		itineraryOnDate: 'Journey on',
-		withVehicle: 'with vehicle'
+		withVehicle: 'with vehicle',
+		cancelCheckbox:
+			'Cancel all tours created by the same rule (will not cancel tours which already have agreed ride shares)'
 	},
 
 	explainer: {
@@ -375,7 +377,16 @@ const translations: Translations = {
 		acceptRequest: 'Confirm ride',
 		requestAccepted: 'Ride confirmed',
 		requestCancelled: 'Ride cancelled',
-		showMap: 'Show map'
+		showMap: 'Show map',
+		weekdays: 'Weekdays',
+		weekend: 'Weekend',
+		weekly: 'Weekly',
+		daily: 'Daily',
+		once: 'Once',
+		repetitionLabel: 'Publish repeating ride offers',
+		addRule: 'Add rule',
+		individualDays: 'Individual days',
+		lastDay: 'until:'
 	},
 
 	buttons: {

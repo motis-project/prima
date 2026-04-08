@@ -91,7 +91,8 @@ const translations: Translations = {
 		startDestNotInSameZone: 'Start und Ziel nicht im selben Pflichtfahrgebiet.',
 		noVehicle: 'Kein Fahrzeug verfügbar.',
 		routingRequestFailed: 'Routinganfrage fehlgeschlagen.',
-		vehicleConflict: 'Das gewählte Fahrzeug ist zum gewählten Zeitpunkt nicht verfügbar.',
+		vehicleConflict:
+			'Das gewählte Fahrzeug ist zu mindestens einem der gewählten Zeitpunkte nicht verfügbar.',
 
 		// Booking
 		bookingError: 'Die Fahrt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
@@ -340,7 +341,9 @@ const translations: Translations = {
 		pinExplainer:
 			'Zur Weitergabe an den Fahrgast. Der Fahrgast muss die PIN beim Einstieg den Taxifahrer:innen mitteilen.',
 		itineraryOnDate: 'Fahrt am',
-		withVehicle: 'mit Fahrzeug'
+		withVehicle: 'mit Fahrzeug',
+		cancelCheckbox:
+			'Alle Touren löschen, die mit der selben Regel erstellt wurden (wird keine Touren löschen, für die bereits eine Mitfahrt vereinbart wurde)	'
 	},
 
 	explainer: {
@@ -385,7 +388,16 @@ const translations: Translations = {
 		acceptRequest: 'Mitfahrt bestätigen',
 		requestAccepted: 'Mitfahrt bestätigt',
 		requestCancelled: 'Mitfahrt abgesagt',
-		showMap: 'Karte anzeigen'
+		showMap: 'Karte anzeigen',
+		weekdays: 'Wochentage',
+		weekend: 'Wochenende',
+		weekly: 'Wöchentlich',
+		daily: 'Täglich',
+		once: 'Einmal',
+		repetitionLabel: 'Wiederholende Fahrten einstellen',
+		addRule: 'Regel hinzufügen',
+		individualDays: 'individuelle Tage',
+		lastDay: 'bis zum:'
 	},
 
 	buttons: {

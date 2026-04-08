@@ -289,6 +289,7 @@ export type Translations = {
 		pinExplainer: string;
 		itineraryOnDate: string;
 		withVehicle: string;
+		cancelCheckbox: string;
 	};
 
 	explainer: {
@@ -329,6 +330,15 @@ export type Translations = {
 		requestAccepted: string;
 		requestCancelled: string;
 		showMap: string;
+		weekdays: string;
+		weekend: string;
+		weekly: string;
+		daily: string;
+		once: string;
+		repetitionLabel: string;
+		addRule: string;
+		individualDays: string;
+		lastDay: string;
 	};
 
 	buttons: {
