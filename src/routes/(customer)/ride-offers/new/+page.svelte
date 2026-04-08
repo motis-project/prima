@@ -39,14 +39,9 @@
 	import { DAY, HOUR, MINUTE, SECOND } from '$lib/util/time';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
-	import * as Select from '$lib/shadcn/select';
 	import { Calendar } from '$lib/shadcn/calendar';
-	import { LOCALE, TZ } from '$lib/constants';
+	import { TZ } from '$lib/constants';
 	import { fromDate, toCalendarDate, type DateValue } from '@internationalized/date';
-	import Tabs from '$lib/ui/Tabs.svelte';
-
-	type RepetitionType = 'ONCE' | 'DAILY' | 'WEEKDAYS' | 'WEEKEND' | 'WEEKLY';
-	const repetitionTypes: RepetitionType[] = ['ONCE', 'DAILY', 'WEEKDAYS', 'WEEKEND', 'WEEKLY'];
 
 	const { data, form } = $props();
 
@@ -88,69 +83,64 @@
 	type Timeout = ReturnType<typeof setTimeout>;
 	let searchDebounceTimer: Timeout;
 	let loading = $state(false);
-	let repetitionType = $state<RepetitionType>('ONCE');
-	const texts = [t.ride.once, t.ride.daily, t.ride.weekdays, t.ride.weekend, t.ride.weekly];
-	function getText(t: string) {
-		const idx = repetitionTypes.findIndex((e) => e === t);
-		if (idx === -1) {
-			throw new Error();
-		}
-		return texts[idx];
-	}
-	let repetitionDescription = $derived(getText(repetitionType));
 	let firstDay = $derived<DateValue>(toCalendarDate(fromDate(time, TZ)));
 	let lastDay = $state<DateValue>(toCalendarDate(fromDate(new Date(Date.now() + DAY * 30), TZ)));
-	const repetitionOptions = [
-		{ label: t.ride.addRule, value: 1, component: repetitionByRule },
-		{ label: t.ride.individualDays, value: 2, component: repetitionIndividual }
-	];
-	let days: DateValue[] = $state([]);
-	function isWeekend(day: DateValue) {
-		const jsDate = day.toDate(TZ);
-		const d = jsDate.getDay();
-		return d === 0 || d === 6;
-	}
-	function addDaysByRule() {
-		let currentDay = firstDay;
-		let difference = 0;
-		while (currentDay.compare(lastDay) <= 0) {
-			switch (repetitionType) {
-				case 'ONCE':
-					break;
-				case 'DAILY':
-					days.push(currentDay);
-					break;
-				case 'WEEKDAYS':
-					if (!isWeekend(currentDay)) {
-						days.push(currentDay);
-					}
-					break;
-				case 'WEEKEND':
-					if (isWeekend(currentDay)) {
-						days.push(currentDay);
-					}
-					break;
-				case 'WEEKLY':
-					if (difference % 7 === 0) {
-						days.push(currentDay);
-					}
-					break;
-			}
-			difference++;
-			currentDay = currentDay.add({ days: 1 });
-		}
-	}
 	let timeAfterMidnight = $derived<number>(
 		time.getHours() * HOUR +
 			time.getMinutes() * MINUTE +
 			time.getSeconds() * SECOND +
 			time.getMilliseconds()
 	);
-	let times = $derived<number[]>(
-		days.length === 0
-			? [time.getTime()]
-			: days.map((d) => d.toDate(TZ).getTime() + timeAfterMidnight)
-	);
+	let times = $state<number[]>([]);
+	type Day = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+	let open = $state(false);
+	const daysList: { key: Day; short: string; full: string }[] = [
+		{ key: 0, short: 'S', full: 'Sunday' },
+		{ key: 1, short: 'M', full: 'Monday' },
+		{ key: 2, short: 'T', full: 'Tuesday' },
+		{ key: 3, short: 'W', full: 'Wednesday' },
+		{ key: 4, short: 'T', full: 'Thursday' },
+		{ key: 5, short: 'F', full: 'Friday' },
+		{ key: 6, short: 'S', full: 'Saturday' }
+	];
+
+	let selectedDays: Day[] = $state([]);
+
+	function toggleDay(day: Day) {
+		selectedDays = selectedDays.includes(day)
+			? (selectedDays.filter((d) => d !== day) as Day[])
+			: ([...selectedDays, day].sort((a, b) => a - b) as Day[]);
+	}
+
+	function addDaysByRule() {
+		times = [];
+		let currentDay = firstDay;
+		while (currentDay.compare(lastDay) <= 0) {
+			const currentDate = new Date(currentDay.toDate(TZ).getTime() + timeAfterMidnight);
+			if (selectedDays.some((d) => d === currentDate.getDay())) {
+				times.push(currentDate.getTime());
+			}
+			currentDay = currentDay.add({ days: 1 });
+		}
+	}
+	let repetitionLabel: undefined | string = $state(undefined);
+
+	function updateDescription() {
+		console.log({ selectedDays: selectedDays.length });
+		if (selectedDays.length === 0) {
+			repetitionLabel = undefined;
+			return;
+		}
+		const suffix = ' ' + t.ride.lastDay + ' ' + lastDay.toString();
+		if (selectedDays.length === 7) {
+			repetitionLabel = 'daily' + suffix;
+			return;
+		}
+		repetitionLabel = selectedDays
+			.map((d) => daysList.find((day) => day.key === d)!.full)
+			.join(', ')
+			.concat();
+	}
 
 	let payloadForHash = $derived({
 		startLat: from.value.match?.lat ?? null,
@@ -228,42 +218,6 @@
 		}
 	});
 </script>
-
-{#snippet repetitionByRule()}
-	<div class="flex flex-col gap-4">
-		<Select.Root type="single" bind:value={repetitionType}>
-			<Select.Trigger class="w-full min-w-56">
-				{repetitionDescription}
-			</Select.Trigger>
-			<Select.Content>
-				{#each repetitionTypes as option}
-					<Select.Item value={option}>
-						{getText(option)}
-					</Select.Item>
-				{/each}
-			</Select.Content>
-		</Select.Root>
-		{#if repetitionType !== 'ONCE'}
-			<Label>{t.ride.lastDay}</Label>
-			<Popover.Root>
-				<Popover.Trigger class={cn(buttonVariants({ variant: 'outline' }), 'w-fit justify-start')}>
-					<CalendarIcon class="mr-2 size-4" />
-					{lastDay ? lastDay.toString() : 'Pick a date'}
-				</Popover.Trigger>
-				<Popover.Content class="w-auto p-2">
-					<Calendar type="single" bind:value={lastDay} />
-				</Popover.Content>
-			</Popover.Root>
-			<Button onclick={() => addDaysByRule()}>{t.ride.addRule}</Button>
-		{/if}
-	</div>
-{/snippet}
-
-{#snippet repetitionIndividual()}
-	<div class="rounded-md border p-2">
-		<Calendar type="multiple" bind:value={days} locale={LOCALE} />
-	</div>
-{/snippet}
 
 <div class="md:min-h-[70dvh] md:w-96">
 	{#if page.state.selectFrom}
@@ -482,12 +436,52 @@
 			</div>
 
 			<div class="flex gap-2">
-				<Popover.Root>
+				<Popover.Root bind:open>
 					<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
-						{t.ride.repetitionLabel}
+						{repetitionLabel ?? t.ride.repetitionLabel}
 					</Popover.Trigger>
 					<Popover.Content class="flex w-fit flex-col gap-4">
-						<Tabs items={repetitionOptions}></Tabs>
+						<fieldset class="flex flex-col gap-2">
+							<legend class="text-sm font-medium text-neutral-700"> Repeat on </legend>
+
+							<div class="flex items-center gap-2">
+								{#each daysList as day}
+									<button
+										type="button"
+										aria-pressed={selectedDays.includes(day.key)}
+										aria-label={day.full}
+										onclick={() => toggleDay(day.key)}
+										class={`flex h-10 w-10 items-center justify-center rounded-full border text-sm font-medium transition-colors
+					${
+						selectedDays.includes(day.key)
+							? 'border-blue-600 bg-blue-600 text-white'
+							: 'border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100'
+					}`}
+									>
+										{day.short}
+									</button>
+								{/each}
+							</div>
+						</fieldset>
+						<Label>{t.ride.lastDay}</Label>
+						<Popover.Root>
+							<Popover.Trigger
+								class={cn(buttonVariants({ variant: 'outline' }), 'w-fit justify-start')}
+							>
+								<CalendarIcon class="mr-2 size-4" />
+								{lastDay ? lastDay.toString() : 'Pick a date'}
+							</Popover.Trigger>
+							<Popover.Content class="w-auto p-2">
+								<Calendar type="single" bind:value={lastDay} />
+							</Popover.Content>
+						</Popover.Root>
+						<Button
+							onclick={() => {
+								addDaysByRule();
+								updateDescription();
+								open = false;
+							}}>{t.ride.addRule}</Button
+						>
 					</Popover.Content>
 				</Popover.Root>
 			</div>
