@@ -339,7 +339,9 @@ const translations: Translations = {
 		pinExplainer:
 			'Zur Weitergabe an den Fahrgast. Der Fahrgast muss die PIN beim Einstieg den Taxifahrer:innen mitteilen.',
 		itineraryOnDate: 'Fahrt am',
-		withVehicle: 'mit Fahrzeug'
+		withVehicle: 'mit Fahrzeug',
+		cancelCheckbox:
+			'Alle Touren löschen, die mit der selben Regel erstellt wurden (wird keine Touren löschen, für die bereits eine Mitfahrt vereinbart wurde)	'
 	},
 
 	explainer: {
@@ -393,7 +395,7 @@ const translations: Translations = {
 		repetitionLabel: 'Wiederholende Fahrten einstellen',
 		addRule: 'Regel hinzufügen',
 		individualDays: 'individuelle Tage',
-		lastDay: 'letzter Tag:'
+		lastDay: 'bis zum:'
 	},
 
 	buttons: {

@@ -288,6 +288,7 @@ export type Translations = {
 		pinExplainer: string;
 		itineraryOnDate: string;
 		withVehicle: string;
+		cancelCheckbox: string;
 	};
 
 	explainer: {

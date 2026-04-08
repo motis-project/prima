@@ -15,6 +15,7 @@ export async function getRideshareToursAsItinerary(
 		id: number;
 		cancelled: boolean;
 		negotiating: boolean;
+		hash: string | null;
 		requests: {
 			journey: Itinerary;
 			firstName: string;
@@ -41,6 +42,7 @@ export async function getRideshareToursAsItinerary(
 			'communicatedEnd',
 			'rideShareTour.cancelled as tourCancelled',
 			'rideShareVehicle.licensePlate',
+			'rideShareTour.hash',
 			jsonArrayFrom(
 				eb
 					.selectFrom('request')
@@ -191,7 +193,8 @@ export async function getRideshareToursAsItinerary(
 					journey.requests.some((r) => r.pending && !r.requestCancelled) &&
 					journey.communicatedStart > Date.now(),
 				licensePlate: journey.licensePlate,
-				requests
+				requests,
+				hash: journey.hash
 			};
 		})
 	};

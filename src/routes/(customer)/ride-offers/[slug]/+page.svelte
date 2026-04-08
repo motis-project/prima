@@ -19,6 +19,7 @@
 
 	const { data, form } = $props();
 	let loading = $state(false);
+	let cancelAll = $state(false);
 </script>
 
 <div class="flex h-full flex-col gap-4 md:min-h-[70dvh] md:w-96">
@@ -38,13 +39,22 @@
 							<AlertDialog.Header>
 								<AlertDialog.Title>{t.ride.cancelHeadline}</AlertDialog.Title>
 								<AlertDialog.Description>
-									{t.ride.cancelDescription}
+									<div class="flex flex-col">
+										{t.ride.cancelDescription}
+										{#if data.hash}
+											<label class="flex items-center gap-2">
+												<input type="checkbox" bind:checked={cancelAll} />
+												<span>{t.booking.cancelCheckbox}</span>
+											</label>
+										{/if}
+									</div>
 								</AlertDialog.Description>
 							</AlertDialog.Header>
 							<AlertDialog.Footer class="mt-4">
 								<AlertDialog.Cancel>{t.booking.noCancel}</AlertDialog.Cancel>
 								<form method="post" use:enhance action="?/cancel">
 									<input type="hidden" name="requestId" value={data.id} />
+									<input type="hidden" name="hash" value={cancelAll ? data.hash : null} />
 									<AlertDialog.Action>
 										{t.ride.cancelTrip}
 									</AlertDialog.Action>
