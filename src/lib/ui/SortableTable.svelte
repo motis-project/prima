@@ -2,6 +2,7 @@
 	import * as Table from '$lib/shadcn/table/index';
 	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button } from '$lib/shadcn/button';
+	import type { Column } from './tableData';
 
 	let {
 		rows = $bindable(),
@@ -12,13 +13,7 @@
 		fixLastRow
 	}: {
 		rows: T[];
-		cols: {
-			text: string[];
-			sort?: (r1: T, r2: T) => number;
-			toTableEntry: (r: T) => string | number;
-			toColumnStyle?: (r: T) => string;
-			hidden?: boolean;
-		}[];
+		cols: Column<T>[];
 		getRowStyle?: (row: T) => string;
 		selectedRow?: undefined | T[];
 		bindSelectedRow?: boolean;
@@ -84,9 +79,9 @@
 				>
 					{#each cols as col}
 						{#if !col.hidden}
-							<Table.Cell class={col.toColumnStyle ? col.toColumnStyle(row) : ''}
-								>{col.toTableEntry(row)}</Table.Cell
-							>
+							<Table.Cell class={col.toColumnStyle ? col.toColumnStyle(row) : ''}>
+								{col.toTableEntry(row)}
+							</Table.Cell>
 						{/if}
 					{/each}
 				</Table.Row>
