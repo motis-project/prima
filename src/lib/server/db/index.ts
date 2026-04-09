@@ -186,6 +186,11 @@ export interface Database {
 		interestedUser: number;
 		url: string;
 	};
+	availabilityState: {
+		takenAt: number;
+		company: number;
+		score: number;
+	};
 }
 
 export const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
