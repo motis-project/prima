@@ -19,7 +19,12 @@ export async function getAvailability(utcDate: Date, companyId: number) {
 					.whereRef('availability.vehicle', '=', 'vehicle.id')
 					.where('availability.startTime', '<', toTime.getTime())
 					.where('availability.endTime', '>', fromTime.getTime())
-					.select(['availability.id', 'availability.startTime', 'availability.endTime'])
+					.select([
+						'availability.id',
+						'availability.startTime',
+						'availability.endTime',
+						'availability.createdAt'
+					])
 					.orderBy('availability.startTime')
 			).as('availability')
 		])
@@ -72,7 +77,12 @@ export async function getAllCompaniesAvailability(utcDate: Date) {
 					.whereRef('vehicle.company', '=', 'company.id')
 					.where('availability.startTime', '<', toTime.getTime())
 					.where('availability.endTime', '>', fromTime.getTime())
-					.select(['availability.id', 'availability.startTime', 'availability.endTime'])
+					.select([
+						'availability.id',
+						'availability.startTime',
+						'availability.endTime',
+						'availability.createdAt'
+					])
 					.orderBy('availability.startTime')
 			).as('availability')
 		])

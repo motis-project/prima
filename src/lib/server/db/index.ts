@@ -71,6 +71,7 @@ export interface Database {
 		startTime: number;
 		endTime: number;
 		vehicle: number;
+		createdAt: number;
 	};
 	event: {
 		id: Generated<number>;

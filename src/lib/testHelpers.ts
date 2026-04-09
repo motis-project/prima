@@ -57,7 +57,10 @@ export const setAvailability = async (
 	startTime: UnixtimeMs,
 	endTime: UnixtimeMs
 ) => {
-	await db.insertInto('availability').values({ vehicle, startTime, endTime }).execute();
+	await db
+		.insertInto('availability')
+		.values({ vehicle, startTime, endTime, createdAt: Date.now() })
+		.execute();
 };
 
 export const setTour = async (

@@ -95,7 +95,7 @@ export const POST = async ({ locals, request }) => {
 			availability: Interval.merge(
 				v.availability.map((av) => new Interval(av.startTime, av.endTime))
 			).map((av) => {
-				return { ...av, id: 0 };
+				return { ...av, id: 0, createdAt: 0 };
 			})
 		};
 	});

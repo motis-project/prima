@@ -15,7 +15,13 @@
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import * as Card from '$lib/shadcn/card';
 	import { ChevronRight, ChevronLeft } from 'lucide-svelte';
-	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, LOCALE, TZ } from '$lib/constants.js';
+	import {
+		AVAILABILITY_CONFIRMATION_DEADLINE,
+		EARLIEST_SHIFT_START,
+		LATEST_SHIFT_END,
+		LOCALE,
+		TZ
+	} from '$lib/constants.js';
 
 	import { goto, invalidateAll } from '$app/navigation';
 
@@ -146,6 +152,10 @@
 			.sort((a, b) => a.startTime - b.startTime);
 
 	const isAvailable = (v: Vehicle, cell: Range) => v.availability.some((a) => overlaps(a, cell));
+	const isLongTimeAvailable = (v: Vehicle, cell: Range) =>
+		v.availability
+			.filter((a) => a.createdAt <= cell.startTime - AVAILABILITY_CONFIRMATION_DEADLINE)
+			.some((a) => overlaps(a, cell));
 
 	const split = (range: Range, size: number): Array<Range> => {
 		let cells: Array<Range> = [];
@@ -363,10 +373,13 @@
 			return 'bg-orange-400';
 		}
 		if (!isAvailabilityAlterable(cell)) {
-			if (isAvailable(v, cell)) {
-				return 'border-none border-gray-50 bg-yellow-100 bg-opacity-40 dark:bg-opacity-60';
+			if (!isAvailable(v, cell)) {
+				return 'border-none';
 			}
-			return 'border-none';
+			if (isLongTimeAvailable(v, cell)) {
+				return 'border-none border-gray-50 bg-green-600 bg-opacity-40 dark:bg-opacity-60';
+			}
+			return 'border-none border-gray-50 bg-yellow-100 bg-opacity-40 dark:bg-opacity-60';
 		} else if (selection !== null && isSelected(id, cell)) {
 			return selection.available ? 'bg-yellow-100' : '';
 		} else if (isAvailable(v, cell)) {

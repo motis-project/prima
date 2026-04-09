@@ -1,4 +1,4 @@
-import { HOUR, MINUTE } from '$lib/util/time';
+import { DAY, HOUR, MINUTE } from '$lib/util/time';
 
 export const TZ = 'Europe/Berlin';
 export const LOCALE = 'de-DE';
@@ -59,3 +59,4 @@ export const defaultCarPicture = '/car-default.jpg';
 export const MAX_RIDE_SHARE_TOUR_TIME = 2 * HOUR;
 export const LICENSE_PLATE_PLACEHOLDER = 'WSW-AB-1234';
 export const BOOKING_MAX_PASSENGERS = 9;
+export const AVAILABILITY_CONFIRMATION_DEADLINE = 14 * DAY;

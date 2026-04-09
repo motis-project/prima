@@ -7,20 +7,31 @@ import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
 type Availability = Selectable<Database['availability']>;
 type NewAvailability = Insertable<Database['availability']>;
 
-const toAvailability = (interval: Interval, id: number, vehicle: number): Availability => {
+const toAvailability = (
+	interval: Interval,
+	id: number,
+	vehicle: number,
+	createdAt: number
+): Availability => {
 	return {
 		startTime: interval.startTime,
 		endTime: interval.endTime,
 		vehicle: vehicle,
-		id: id
+		id: id,
+		createdAt
 	};
 };
 
-const toNewAvailability = (interval: Interval, vehicle: number): NewAvailability => {
+const toNewAvailability = (
+	interval: Interval,
+	vehicle: number,
+	createdAt: number
+): NewAvailability => {
 	return {
 		startTime: interval.startTime,
 		endTime: interval.endTime,
-		vehicle: vehicle
+		vehicle,
+		createdAt
 	};
 };
 
@@ -67,10 +78,10 @@ export async function deleteAvailability(
 					} else if (availability.contains(toRemove) && !availability.eitherEndIsEqual(toRemove)) {
 						toRemoveIds.push(a.id);
 						const [left, right] = availability.split(toRemove);
-						create.push(toNewAvailability(left, a.vehicle));
-						create.push(toNewAvailability(right, a.vehicle));
+						create.push(toNewAvailability(left, a.vehicle, a.createdAt));
+						create.push(toNewAvailability(right, a.vehicle, a.createdAt));
 					} else {
-						cut.push(toAvailability(availability.cut(toRemove), a.id, a.vehicle));
+						cut.push(toAvailability(availability.cut(toRemove), a.id, a.vehicle, a.createdAt));
 					}
 				});
 				const promises = [];
@@ -89,7 +100,8 @@ export async function deleteAvailability(
 								oc.column('id').doUpdateSet((eb) => ({
 									startTime: eb.ref('excluded.startTime'),
 									endTime: eb.ref('excluded.endTime'),
-									vehicle: vehicleId
+									vehicle: vehicleId,
+									createdAt: eb.ref('excluded.createdAt')
 								}))
 							)
 							.execute()

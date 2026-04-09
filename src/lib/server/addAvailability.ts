@@ -16,6 +16,7 @@ export async function addAvailability(
 		return false;
 	}
 	console.log('add availability vehicle=', vehicleId, 'toRemove=', interval);
+	const now = Date.now();
 	await Promise.all(
 		getAllowedTimes(
 			interval.startTime,
@@ -28,14 +29,15 @@ export async function addAvailability(
 			.map((availability) =>
 				db
 					.insertInto('availability')
-					.columns(['startTime', 'endTime', 'vehicle'])
+					.columns(['startTime', 'endTime', 'vehicle', 'createdAt'])
 					.expression((eb) =>
 						eb
 							.selectFrom('vehicle')
 							.select((eb) => [
 								eb.val(availability.startTime).as('startTime'),
 								eb.val(availability.endTime).as('endTime'),
-								'vehicle.id as vehicle'
+								'vehicle.id as vehicle',
+								eb.val(now).as('createdAt')
 							])
 							.where('vehicle.company', '=', companyId)
 							.where('vehicle.id', '=', vehicleId)
