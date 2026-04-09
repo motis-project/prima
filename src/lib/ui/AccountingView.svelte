@@ -116,7 +116,8 @@
 					return {
 						...t,
 						comment: r.comment,
-						rating: r.rating
+						rating: r.rating,
+						ratingBooking: r.ratingBooking
 					};
 				})
 		)
