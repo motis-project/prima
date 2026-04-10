@@ -15,7 +15,14 @@
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import * as Card from '$lib/shadcn/card';
 	import { ChevronRight, ChevronLeft } from 'lucide-svelte';
-	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, LOCALE, TZ } from '$lib/constants.js';
+	import {
+		EARLIEST_SHIFT_START,
+		LATEST_SHIFT_END,
+		LOCALE,
+		MAX_AVAILABILITY_FOR_COMPENSATION,
+		MIN_AVAILABILITY_FOR_COMPENSATION,
+		TZ
+	} from '$lib/constants.js';
 
 	import { goto, invalidateAll } from '$app/navigation';
 
@@ -33,6 +40,7 @@
 	import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 	import type { Msg } from '$lib/msg';
 	import { t } from '$lib/i18n/translation';
+	import AvailabilityPercent from './AvailabilityPercent.svelte';
 
 	const { data, form } = $props();
 	const vehicles = $derived.by(() => {
@@ -373,6 +381,24 @@
 			return 'bg-yellow-100';
 		}
 	};
+	const availabilityPercent = $derived.by(() => {
+		if (data.availabilityPercent < MIN_AVAILABILITY_FOR_COMPENSATION) {
+			return 'red';
+		}
+		if (data.availabilityPercent > MAX_AVAILABILITY_FOR_COMPENSATION) {
+			return 'green';
+		}
+		const t =
+			(data.availabilityPercent - MIN_AVAILABILITY_FOR_COMPENSATION) /
+			(MAX_AVAILABILITY_FOR_COMPENSATION - MIN_AVAILABILITY_FOR_COMPENSATION);
+		const r = Math.round(255 * (1 - t));
+		const g = Math.round(255 * t);
+		return `rgb(${r}, ${g}, 0)`;
+	});
+	function formatAvailabilityPercent() {
+		const s = data.availabilityPercent.toFixed(2).replaceAll('.', '');
+		return (data.availabilityPercent >= 1 ? '100' : s.slice(s.startsWith('0') ? 1 : 0)) + '%';
+	}
 </script>
 
 <svelte:window onmouseup={() => selectionFinish()} />
@@ -482,6 +508,9 @@
 
 		<div class="flex gap-4 p-6 font-semibold leading-none tracking-tight">
 			<div class="flex gap-1">
+				{#if !data.isAdmin}<div class="w-full pr-6 text-right" style="color: {availabilityPercent}">
+						<AvailabilityPercent text={formatAvailabilityPercent()} />
+					</div>{/if}
 				<Button variant="outline" size="icon" onclick={() => (value = value.add({ days: -1 }))}>
 					<ChevronLeft class="size-4" />
 				</Button>

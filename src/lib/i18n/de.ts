@@ -436,7 +436,10 @@ const translations: Translations = {
 		deploy: 'Parameter verwenden',
 		save: 'Klassifizierung speichern',
 		delete: 'Verbindungsmenge entfernen'
-	}
+	},
+	availabilityPercent: 'Abdeckung',
+	availabilityPercentExplanation:
+		'Dieser Prozentwert gibt an wie komplett im aktuell ausgewählten Monat die Abdeckung durch Verfügbarkeiten durch das Unternehmen bisher war. Eine Vergütung wird ab 75% vergeben und skaliert bis zu 95% Abdeckung.'
 };
 
 export default translations;

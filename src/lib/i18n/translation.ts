@@ -380,6 +380,9 @@ export type Translations = {
 		save: string;
 		delete: string;
 	};
+
+	availabilityPercent: string;
+	availabilityPercentExplanation: string;
 };
 
 const translations: Map<string, Translations> = new Map(Object.entries({ en, de }));

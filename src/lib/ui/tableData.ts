@@ -1,4 +1,11 @@
-import { CAP, LOCALE } from '$lib/constants';
+import {
+	CAP,
+	LOCALE,
+	MAX_AVAILABILITY_COMPENSATION_EUROS,
+	MAX_AVAILABILITY_FOR_COMPENSATION,
+	MIN_AVAILABILITY_FOR_COMPENSATION
+} from '$lib/constants';
+import type { AvailabilityScore } from '$lib/server/availabilityCompensation/availabilityCompensation';
 import type { TourWithRequests } from '$lib/util/getToursTypes';
 import { getEuroString } from '$lib/util/odmPrice';
 import { HOUR, MINUTE, SECOND } from '$lib/util/time';
@@ -345,5 +352,43 @@ export const feedbackCols: Column<RatedTourWithRequests>[] = [
 			r.ratingBooking === null ? '' : r.ratingBooking !== 0 ? 'gut' : 'schlecht',
 		toColumnStyle: (r: RatedTourWithRequests) =>
 			r.ratingBooking === null ? '' : r.ratingBooking !== 0 ? 'text-green-400' : 'text-red-400'
+	}
+];
+export const availabilityCols: Column<AvailabilityScore>[] = [
+	{
+		text: ['Unternehmen'],
+		sort: (a: AvailabilityScore, b: AvailabilityScore) => a.company - b.company,
+		toTableEntry: (r: AvailabilityScore) => r.name!
+	},
+	{
+		text: ['Prozent'],
+		sort: (a: AvailabilityScore, b: AvailabilityScore) =>
+			a.availabilityPercent - b.availabilityPercent,
+		toTableEntry: (r: AvailabilityScore) => r.availabilityPercent.toFixed(2) + '%'
+	},
+	{
+		text: ['Betrag'],
+		sort: (a: AvailabilityScore, b: AvailabilityScore) =>
+			a.availabilityPercent - b.availabilityPercent,
+		toTableEntry: (r: AvailabilityScore) =>
+			MAX_AVAILABILITY_COMPENSATION_EUROS *
+				(r.availabilityPercent < MIN_AVAILABILITY_FOR_COMPENSATION
+					? 0
+					: r.availabilityPercent > MAX_AVAILABILITY_FOR_COMPENSATION
+						? 1
+						: ((Math.max(r.availabilityPercent, MAX_AVAILABILITY_FOR_COMPENSATION / 100) -
+								MIN_AVAILABILITY_FOR_COMPENSATION / 100) *
+								100) /
+							(MAX_AVAILABILITY_FOR_COMPENSATION - MIN_AVAILABILITY_FOR_COMPENSATION)) +
+			'€'
+	},
+	{
+		text: ['Monat'],
+		sort: (a: AvailabilityScore, b: AvailabilityScore) => a.startOfMonth - b.startOfMonth,
+		toTableEntry: (r: AvailabilityScore) =>
+			new Date(r.startOfMonth).toLocaleDateString(LOCALE, {
+				month: 'long',
+				year: 'numeric'
+			})
 	}
 ];

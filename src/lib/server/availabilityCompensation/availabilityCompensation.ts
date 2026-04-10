@@ -3,45 +3,79 @@ import { selectAvailabilities, selectTours } from '$lib/server/booking/taxi/getB
 import {
 	AVAILABILITY_CONFIRMATION_DEADLINE,
 	EARLIEST_SHIFT_START,
-	LATEST_SHIFT_END
+	LATEST_SHIFT_END,
+	MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE
 } from '$lib/constants';
 import { db } from '$lib/server/db';
 import { groupBy } from '$lib/util/groupBy';
+import { HOUR } from '$lib/util/time';
 
-export async function computeCompensation(startOfMonth: number, selectedCompany?: number) {
+export function getStartOfMonth(date: Date) {
+	return new Date(date.getUTCFullYear(), date.getUTCMonth(), 1, 0, 0, 0, 0).getTime();
+}
+
+export async function computeCompensation(
+	startOfMonth?: number,
+	write?: boolean,
+	selectedCompany?: number
+) {
 	const availabilityStates = await db
 		.selectFrom('availabilityState')
-		.where('availabilityState.startOfMonth', '=', startOfMonth)
+		.$if(startOfMonth !== undefined, (qb) =>
+			qb.where('availabilityState.startOfMonth', '=', startOfMonth!)
+		)
 		.$if(selectedCompany !== undefined, (qb) =>
 			qb.where('availabilityState.company', '=', selectedCompany!)
 		)
-		.select(['availabilityState.company', 'availabilityState.score', 'availabilityState.prefactor'])
+		.innerJoin('company', 'company.id', 'availabilityState.company')
+		.selectAll('availabilityState')
+		.select('company.name')
 		.execute();
 	const byCompany = groupBy(
 		availabilityStates,
 		(a) => a.company,
-		(a) => ({ score: a.score, prefactor: a.prefactor })
+		(a) => ({ score: a.score, prefactor: a.prefactor, name: a.name, startOfMonth: a.startOfMonth })
 	);
-	const ret = new Array<{ availabilityPercent: number; company: number }>();
+	const ret = new Array<{
+		availabilityPercent: number;
+		company: number;
+		name: string | null;
+		startOfMonth: number;
+	}>();
 	for (const [company, scores] of byCompany) {
-		const avgScore =
-			scores.length === 0
-				? 0
-				: scores.reduce((prev, curr) => prev + curr.prefactor * curr.score, 0) /
-					scores.reduce((prev, curr) => prev + curr.prefactor, 0);
-		ret.push({ availabilityPercent: avgScore, company });
-		if (selectedCompany === undefined) {
-			await db
-				.insertInto('availabilityCompensation')
-				.values({ score: avgScore, company, startOfMonth })
-				.execute();
+		const byMonth = groupBy(
+			scores,
+			(s) => s.startOfMonth,
+			(s) => s
+		);
+		for (const [_, scoresByMonth] of byMonth) {
+			const avgScore =
+				(scoresByMonth.length === 0
+					? 0
+					: scoresByMonth.reduce((prev, curr) => prev + curr.prefactor * curr.score, 0) /
+						scoresByMonth.reduce((prev, curr) => prev + curr.prefactor, 0)) /
+				MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE;
+			ret.push({
+				availabilityPercent: avgScore,
+				company,
+				name: scoresByMonth[0].name,
+				startOfMonth: scoresByMonth[0].startOfMonth
+			});
+			if (write) {
+				await db
+					.insertInto('availabilityCompensation')
+					.values({ score: avgScore, company, startOfMonth: startOfMonth ?? -1 })
+					.execute();
+			}
 		}
 	}
 	return ret;
 }
 
+export type AvailabilityScore = Awaited<ReturnType<typeof computeCompensation>>[0];
+
 function startOfDay(date: Date): Date {
-	return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+	return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0);
 }
 
 function getPrefactor(interval: Interval): number {
@@ -51,16 +85,17 @@ function getPrefactor(interval: Interval): number {
 	let day = startOfDay(start);
 	while (day.getTime() < end.getTime()) {
 		const midnight = day.getTime();
-		const windowStart = midnight + EARLIEST_SHIFT_START;
-		const windowEnd = midnight + LATEST_SHIFT_END;
-		sum += new Interval(windowStart, windowEnd).cut(interval).size();
-		day = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1, 0, 0, 0, 0);
+		const windowStart = midnight + EARLIEST_SHIFT_START - HOUR;
+		const windowEnd = midnight + LATEST_SHIFT_END + HOUR;
+		const intersected = new Interval(windowStart, windowEnd).intersect(interval);
+		sum += intersected ? intersected.size() : 0;
+		day = new Date(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate() + 2, 0, 0, 0, 0);
 	}
 	return sum;
 }
 
 async function writeAvailabilityCovering(interval: Interval, startOfMonth: number) {
-	const prefactor = getPrefactor(interval);
+	const prefactor = getPrefactor(interval) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE;
 	const vehicles = await db
 		.selectFrom('vehicle')
 		.select((eb) => [
@@ -99,7 +134,7 @@ async function writeAvailabilityCovering(interval: Interval, startOfMonth: numbe
 			.values({
 				company: company[0].company,
 				startOfMonth,
-				score: score * prefactor,
+				score,
 				prefactor
 			})
 			.execute();
@@ -110,25 +145,31 @@ export async function captureAvailabilityState() {
 	const now = Date.now();
 	const nowDate = new Date(now);
 	const endDate = new Date(now + AVAILABILITY_CONFIRMATION_DEADLINE);
-	const startMonth = nowDate.getMonth();
-	const endMonth = endDate.getMonth();
-	const startOfStartMonth = new Date(nowDate.getUTCFullYear(), startMonth, 1, 0, 0, 0, 0).getTime();
-	const startOfEndMonth = new Date(nowDate.getUTCFullYear(), endMonth, 1, 0, 0, 0, 0).getTime();
+	const startMonth = nowDate.getUTCMonth();
+	const endMonth = endDate.getUTCMonth();
+	const startOfStartMonth = getStartOfMonth(nowDate);
+	const startOfNextMonth = new Date(
+		nowDate.getUTCFullYear(),
+		startMonth + 1,
+		1,
+		0,
+		0,
+		0,
+		0
+	).getTime();
+	const startOfEndMonth = getStartOfMonth(endDate);
 
 	const interval1 = new Interval(
 		now,
-		Math.min(now + AVAILABILITY_CONFIRMATION_DEADLINE, startOfEndMonth)
+		Math.min(now + AVAILABILITY_CONFIRMATION_DEADLINE, startOfNextMonth)
 	);
 	await writeAvailabilityCovering(interval1, startOfStartMonth);
 	if (startMonth === endMonth) {
 		return;
 	}
 	const interval2 = new Interval(
-		Math.min(
-			now + AVAILABILITY_CONFIRMATION_DEADLINE,
-			startOfEndMonth,
-			now + AVAILABILITY_CONFIRMATION_DEADLINE
-		)
+		Math.min(now + AVAILABILITY_CONFIRMATION_DEADLINE, startOfNextMonth),
+		now + AVAILABILITY_CONFIRMATION_DEADLINE
 	);
 	await writeAvailabilityCovering(interval2, startOfEndMonth);
 }

@@ -12,5 +12,6 @@
 		latestTime={data.latestTime}
 		costPerDayAndVehicle={data.costPerDayAndVehicle}
 		selectedTourId={data.tourId}
+		availabilityPercent={data.availabilityPercent}
 	/>
 </div>

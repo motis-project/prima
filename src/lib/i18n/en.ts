@@ -426,7 +426,10 @@ const translations: Translations = {
 		deploy: 'Deploy parameters',
 		save: 'Save classification',
 		delete: 'Remove calibration set'
-	}
+	},
+	availabilityPercent: 'Coverage',
+	availabilityPercentExplanation:
+		'This value represents the coverage for availability in the currently selected month by the company so far. The company is eligbile for a compensation starting at 75% and scaling to 95%.'
 };
 
 export default translations;
