@@ -187,7 +187,13 @@ export interface Database {
 		url: string;
 	};
 	availabilityState: {
-		takenAt: number;
+		startOfMonth: number;
+		company: number;
+		score: number;
+		prefactor: number;
+	};
+	availabilityCompensation: {
+		startOfMonth: number;
 		company: number;
 		score: number;
 	};
