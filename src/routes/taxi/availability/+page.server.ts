@@ -7,6 +7,11 @@ import { readInt } from '$lib/server/util/readForm';
 import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import { retry } from '$lib/server/db/retryQuery';
 import { getAllCompaniesAvailability, getAvailability } from '$lib/server/getAvailability.js';
+import {
+	computeCompensation,
+	getStartOfMonth
+} from '$lib/server/availabilityCompensation/availabilityCompensation';
+import { HOUR } from '$lib/util/time';
 
 const LICENSE_PLATE_REGEX = /^([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})$/;
 
@@ -21,7 +26,20 @@ export async function load(event: RequestEvent) {
 			? new Date(new Date(localDateParam!).getTime() + Number(timezoneOffset) * 60 * 1000)
 			: new Date();
 
-	return companyId ? getAvailability(utcDate, companyId) : getAllCompaniesAvailability(utcDate);
+	return {
+		...(await (companyId
+			? getAvailability(utcDate, companyId)
+			: getAllCompaniesAvailability(utcDate))),
+		availabilityPercent:
+			(
+				await computeCompensation(
+					getStartOfMonth(new Date(utcDate.getTime() + 10 * HOUR)),
+					false,
+					event.locals.session?.companyId ?? undefined
+				)
+			)[0]?.availabilityPercent ?? 0,
+		isAdmin: !companyId
+	};
 }
 
 export const actions: Actions = {

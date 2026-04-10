@@ -1,4 +1,4 @@
-import { HOUR, MINUTE } from '$lib/util/time';
+import { DAY, HOUR, MINUTE } from '$lib/util/time';
 
 export const TZ = 'Europe/Berlin';
 export const LOCALE = 'de-DE';
@@ -59,3 +59,9 @@ export const defaultCarPicture = '/car-default.jpg';
 export const MAX_RIDE_SHARE_TOUR_TIME = 2 * HOUR;
 export const LICENSE_PLATE_PLACEHOLDER = 'WSW-AB-1234';
 export const BOOKING_MAX_PASSENGERS = 9;
+export const AVAILABILITY_CONFIRMATION_DEADLINE = 14 * DAY;
+export const MAXIMUM_DAILY_AVAILABILITY = LATEST_SHIFT_END + HOUR - EARLIEST_SHIFT_START + HOUR;
+export const MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE = 14 * MAXIMUM_DAILY_AVAILABILITY;
+export const MIN_AVAILABILITY_FOR_COMPENSATION = 0.75;
+export const MAX_AVAILABILITY_FOR_COMPENSATION = 0.95;
+export const MAX_AVAILABILITY_COMPENSATION_EUROS = 250;

@@ -40,7 +40,7 @@ const selectEvents = (eb: ExpressionBuilder<Database, 'tour'>) => {
 	).as('events');
 };
 
-const selectTours = (eb: ExpressionBuilder<Database, 'vehicle'>, interval: Interval) => {
+export const selectTours = (eb: ExpressionBuilder<Database, 'vehicle'>, interval: Interval) => {
 	return jsonArrayFrom(
 		eb
 			.selectFrom('tour')
@@ -56,7 +56,10 @@ const selectTours = (eb: ExpressionBuilder<Database, 'vehicle'>, interval: Inter
 	).as('tours');
 };
 
-const selectAvailabilities = (eb: ExpressionBuilder<Database, 'vehicle'>, interval: Interval) => {
+export const selectAvailabilities = (
+	eb: ExpressionBuilder<Database, 'vehicle'>,
+	interval: Interval
+) => {
 	return jsonArrayFrom(
 		eb
 			.selectFrom('availability')

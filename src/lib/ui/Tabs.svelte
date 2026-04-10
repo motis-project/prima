@@ -1,6 +1,7 @@
 <script lang="ts">
-	const { items } = $props();
-	let activeTabValue = $state(1);
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	type Item = { label: string; value: number; component: any };
+	let { items, activeTabValue = $bindable() }: { items: Item[]; activeTabValue: number } = $props();
 
 	const handleClick = (tabValue: number) => () => (activeTabValue = tabValue);
 </script>

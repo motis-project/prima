@@ -16,6 +16,7 @@
 		companyColsAdmin,
 		companyColsCompany,
 		feedbackCols,
+		availabilityCols,
 		subtractionColsAdmin,
 		subtractionColsCompany,
 		tourColsAdmin,
@@ -28,6 +29,7 @@
 	import { LOCALE, MONTHS, QUARTERS } from '$lib/constants.js';
 	import type { UnixtimeMs } from '$lib/util/UnixtimeMs.js';
 	import TourDialog from './TourDialog.svelte';
+	import type { AvailabilityScore } from '$lib/server/availabilityCompensation/availabilityCompensation.js';
 
 	let range: {
 		start: CalendarDate | undefined;
@@ -44,7 +46,8 @@
 		costPerDayAndVehicle,
 		earliestTime,
 		latestTime,
-		selectedTourId
+		selectedTourId,
+		availabilityPercent
 	}: {
 		isAdmin: boolean;
 		tours: ToursWithRequests;
@@ -52,6 +55,7 @@
 		earliestTime: UnixtimeMs;
 		latestTime: UnixtimeMs;
 		selectedTourId?: number;
+		availabilityPercent: AvailabilityScore[];
 	} = $props();
 
 	const updateCompanySums = (subtractionRows: Subtractions[]) => {
@@ -122,6 +126,7 @@
 				})
 		)
 	);
+	let currentAvailabilityRows: AvailabilityScore[] = $state(availabilityPercent);
 
 	const getNewSum = (rows: Subtractions[]) => {
 		let newSum = 0;
@@ -169,12 +174,18 @@
 		const subtractionRows = getNewRows(subtractionFilters, costPerDayAndVehicle);
 		currentCompanyRows = updateCompanySums(subtractionRows);
 		currentRowsSubtractionsTable = subtractionRows;
+		currentAvailabilityRows = getNewRows(availabilityFilters, availabilityPercent);
 	});
 
 	const companyNames: string[] = [];
 	for (let tour of tours) {
 		if (tour.companyName && companyNames.find((c) => c == tour.companyName) === undefined) {
 			companyNames.push(tour.companyName!);
+		}
+	}
+	for (let a of availabilityPercent) {
+		if (a.name !== null && companyNames.find((c) => c == a.name) === undefined) {
+			companyNames.push(a.name);
 		}
 	}
 	companyNames.sort((a, b) => (a.toLowerCase() < b.toLowerCase() ? -1 : 1));
@@ -239,6 +250,18 @@
 		(row: Subtractions) => new Date(row.timestamp).getFullYear() === selectedYear
 	];
 
+	const availabilityFilters = [
+		(row: AvailabilityScore) => row.name === companyNames[selectedCompanyIdx],
+		(_: AvailabilityScore) => true,
+		(row: AvailabilityScore) => selectedMonthIdx === new Date(row.startOfMonth).getMonth(),
+		(row: AvailabilityScore) => {
+			const month = new Date(row.startOfMonth).getMonth();
+			return selectedQuarterIdx * 3 <= month && month < (selectedQuarterIdx + 1) * 3;
+		},
+		(_: AvailabilityScore) => true,
+		(row: AvailabilityScore) => new Date(row.startOfMonth).getFullYear() === selectedYear
+	];
+
 	const filename = 'Abrechnung';
 	const csvExport = <T extends Subtractions | TourWithRequests>(
 		rows: T[],
@@ -286,8 +309,10 @@
 		{ label: 'pro Tour', value: 1, component: tourTable },
 		{ label: 'pro Tag und Fahrzeug', value: 2, component: subtractionTable },
 		{ label: isAdmin ? 'pro Unternehmen' : 'Summe', value: 3, component: companyTable },
-		{ label: 'Feedback', value: 4, component: feedbackTable }
+		{ label: 'Feedback', value: 4, component: feedbackTable },
+		{ label: 'AvailabilityPercent', value: 5, component: availabilityTable }
 	];
+	let activeTabValue = $state(1);
 
 	let selectedCompletedToursIdx = $state(-1);
 	let selectedCancelledToursIdx = $state(-1);
@@ -374,6 +399,15 @@
 	<TourDialog bind:tours={selectedFeedbackRow} {isAdmin} />
 {/snippet}
 
+{#snippet availabilityTable()}
+	<SortableTable
+		rows={currentAvailabilityRows}
+		cols={availabilityCols}
+		getRowStyle={(_) => 'cursor-pointer '}
+	/>
+	<TourDialog bind:tours={selectedFeedbackRow} {isAdmin} />
+{/snippet}
+
 {#snippet filterOptions()}
 	<div class="grid gap-2 pb-4 pt-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
 		{#if isAdmin}
@@ -388,7 +422,7 @@
 			bind:selectedIdx={selectedLicensePlateIdx}
 			entries={licensePlates}
 			initial={'Fahrzeug'}
-			disabled={null}
+			disabled={activeTabValue === 5}
 		/>
 		<Select
 			bind:selectedIdx={selectedMonthIdx}
@@ -410,7 +444,10 @@
 		/>
 		<Dialog.Root>
 			<Dialog.Trigger
-				disabled={selectedMonthIdx !== -1 || selectedQuarterIdx !== -1 || selectedYearIdx !== -1}
+				disabled={selectedMonthIdx !== -1 ||
+					selectedQuarterIdx !== -1 ||
+					selectedYearIdx !== -1 ||
+					activeTabValue === 5}
 				class={buttonVariants({ variant: 'outline' })}
 				>{range.start === undefined
 					? 'Zeitspanne'
@@ -424,13 +461,13 @@
 			bind:selectedIdx={selectedCompletedToursIdx}
 			entries={toggleTours1}
 			initial={'nach abgeschlossenen Touren filtern'}
-			disabled={false}
+			disabled={activeTabValue === 5}
 		/>
 		<Select
 			bind:selectedIdx={selectedCancelledToursIdx}
 			entries={toggleTours2}
 			initial={'nach stornierten Touren filtern'}
-			disabled={false}
+			disabled={activeTabValue === 5}
 		/>
 		<Button type="submit" onclick={() => resetFilter()}>Filter zurücksetzten</Button>
 		<Button type="submit" onclick={() => csvExportToursTable(currentRowsToursTable)}>
@@ -450,6 +487,6 @@
 		<div class="flex flex-row justify-start">
 			{@render filterOptions()}
 		</div>
-		<Tabs items={tables} />
+		<Tabs items={tables} bind:activeTabValue />
 	</Card.Content>
 </div>
