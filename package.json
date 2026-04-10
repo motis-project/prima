@@ -58,7 +58,9 @@
 		"repeataddh": "npm run rr && npm run addrs && npm run healthrs",
 		"repeatbookrsh": "npm run rr && npm run bookrs && npm run healthrs",
 		"flc": "npm run format && npm run lint && npm run check",
-		"updateDurations": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/updateDatabaseDurations.ts"
+		"updateDurations": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/updateDatabaseDurations.ts",
+		"stats": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/createStatistics.ts",
+		"vstats": "pnpx vite-node --options.transformMode.ssr='/.*/' scripts/viewStatistics.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",
