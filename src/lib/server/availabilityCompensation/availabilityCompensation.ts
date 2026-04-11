@@ -11,7 +11,7 @@ import { groupBy } from '$lib/util/groupBy';
 import { HOUR } from '$lib/util/time';
 
 export function getStartOfMonth(date: Date) {
-	return new Date(date.getUTCFullYear(), date.getUTCMonth(), 1, 0, 0, 0, 0).getTime();
+	return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1, 0, 0, 0, 0);
 }
 
 export async function computeCompensation(
@@ -55,12 +55,14 @@ export async function computeCompensation(
 					: scoresByMonth.reduce((prev, curr) => prev + curr.prefactor * curr.score, 0) /
 						scoresByMonth.reduce((prev, curr) => prev + curr.prefactor, 0)) /
 				MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE;
+
 			ret.push({
 				availabilityPercent: avgScore,
 				company,
 				name: scoresByMonth[0].name,
 				startOfMonth: scoresByMonth[0].startOfMonth
 			});
+
 			if (write) {
 				await db
 					.insertInto('availabilityCompensation')
@@ -74,8 +76,8 @@ export async function computeCompensation(
 
 export type AvailabilityScore = Awaited<ReturnType<typeof computeCompensation>>[0];
 
-function startOfDay(date: Date): Date {
-	return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0);
+function startOfDay(date: Date): number {
+	return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0);
 }
 
 function getPrefactor(interval: Interval): number {
@@ -83,13 +85,24 @@ function getPrefactor(interval: Interval): number {
 	const end = new Date(interval.endTime);
 	let sum = 0;
 	let day = startOfDay(start);
-	while (day.getTime() < end.getTime()) {
-		const midnight = day.getTime();
+
+	while (day < end.getTime()) {
+		const midnight = day;
 		const windowStart = midnight + EARLIEST_SHIFT_START - HOUR;
 		const windowEnd = midnight + LATEST_SHIFT_END + HOUR;
 		const intersected = new Interval(windowStart, windowEnd).intersect(interval);
 		sum += intersected ? intersected.size() : 0;
-		day = new Date(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate() + 2, 0, 0, 0, 0);
+
+		const dayDate = new Date(day);
+		day = Date.UTC(
+			dayDate.getUTCFullYear(),
+			dayDate.getUTCMonth(),
+			dayDate.getUTCDate() + 1,
+			0,
+			0,
+			0,
+			0
+		);
 	}
 	return sum;
 }
@@ -148,15 +161,7 @@ export async function captureAvailabilityState() {
 	const startMonth = nowDate.getUTCMonth();
 	const endMonth = endDate.getUTCMonth();
 	const startOfStartMonth = getStartOfMonth(nowDate);
-	const startOfNextMonth = new Date(
-		nowDate.getUTCFullYear(),
-		startMonth + 1,
-		1,
-		0,
-		0,
-		0,
-		0
-	).getTime();
+	const startOfNextMonth = Date.UTC(nowDate.getUTCFullYear(), startMonth + 1, 1, 0, 0, 0, 0);
 	const startOfEndMonth = getStartOfMonth(endDate);
 
 	const interval1 = new Interval(
