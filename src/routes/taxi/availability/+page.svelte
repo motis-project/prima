@@ -396,8 +396,11 @@
 		return `rgb(${r}, ${g}, 0)`;
 	});
 	function formatAvailabilityPercent() {
-		const s = data.availabilityPercent.toFixed(2).replaceAll('.', '');
-		return (data.availabilityPercent >= 1 ? '100' : s.slice(s.startsWith('0') ? 1 : 0)) + '%';
+		let s = data.availabilityPercent.toFixed(2).replaceAll('.', '');
+		while (s.length > 1 && s.startsWith('0')) {
+			s = s.slice(1);
+		}
+		return (data.availabilityPercent >= 1 ? '100' : s) + '%';
 	}
 </script>
 
