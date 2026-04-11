@@ -130,8 +130,13 @@ async function writeAvailabilityCovering(interval: Interval, startOfMonth: numbe
 		const vehicleIntervals = company.flatMap((vehicle) =>
 			Interval.merge(
 				vehicle.tours
-					.map((t) => (new Interval(t.departure, t.arrival)).intersect(interval))
-					.concat(vehicle.availabilities.map((a) => (new Interval(a.startTime, a.endTime)).intersect(interval))).filter((i) => i!==undefined)
+					.map((t) => new Interval(t.departure, t.arrival).intersect(interval))
+					.concat(
+						vehicle.availabilities.map((a) =>
+							new Interval(a.startTime, a.endTime).intersect(interval)
+						)
+					)
+					.filter((i) => i !== undefined)
 			)
 		);
 		const withCounts = Interval.aggregate(vehicleIntervals);
