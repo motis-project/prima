@@ -391,8 +391,8 @@
 		const t =
 			(data.availabilityPercent - MIN_AVAILABILITY_FOR_COMPENSATION) /
 			(MAX_AVAILABILITY_FOR_COMPENSATION - MIN_AVAILABILITY_FOR_COMPENSATION);
-		const r = Math.round(255 * (1 - t));
-		const g = Math.round(255 * t);
+		const r = Math.round(255 * (1 - t * 0.8));
+		const g = Math.round(255 * (0.2 + t * 0.8));
 		return `rgb(${r}, ${g}, 0)`;
 	});
 	function formatAvailabilityPercent() {
