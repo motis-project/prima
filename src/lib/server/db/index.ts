@@ -191,6 +191,7 @@ export interface Database {
 		company: number;
 		score: number;
 		prefactor: number;
+		takenAt: number;
 	};
 	availabilityCompensation: {
 		startOfMonth: number;

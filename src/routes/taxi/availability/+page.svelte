@@ -20,6 +20,7 @@
 		LATEST_SHIFT_END,
 		LOCALE,
 		MAX_AVAILABILITY_FOR_COMPENSATION,
+		MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE,
 		MIN_AVAILABILITY_FOR_COMPENSATION,
 		TZ
 	} from '$lib/constants.js';
@@ -381,26 +382,48 @@
 			return 'bg-yellow-100';
 		}
 	};
-	const availabilityPercent = $derived.by(() => {
-		if (data.availabilityPercent < MIN_AVAILABILITY_FOR_COMPENSATION) {
+	function getCompensationColor(percent: number) {
+		if (percent < MIN_AVAILABILITY_FOR_COMPENSATION) {
 			return 'red';
 		}
-		if (data.availabilityPercent > MAX_AVAILABILITY_FOR_COMPENSATION) {
+		if (percent > MAX_AVAILABILITY_FOR_COMPENSATION) {
 			return 'green';
 		}
 		const t =
-			(data.availabilityPercent - MIN_AVAILABILITY_FOR_COMPENSATION) /
+			(percent - MIN_AVAILABILITY_FOR_COMPENSATION) /
 			(MAX_AVAILABILITY_FOR_COMPENSATION - MIN_AVAILABILITY_FOR_COMPENSATION);
 		const r = Math.round(255 * (1 - t * 0.8));
 		const g = Math.round(255 * (0.2 + t * 0.8));
-		return `rgb(${r}, ${g}, 0)`;
-	});
-	function formatAvailabilityPercent() {
-		let s = data.availabilityPercent.toFixed(2).replaceAll('.', '');
+		return `rgb(${r}, ${g}, 30)`;
+	}
+	const availabilityPercentAverage = $derived(
+		getCompensationColor(data.availabilityPercentAverage)
+	);
+	const availabilityPercent = $derived(
+		getCompensationColor(
+			data.availabilityPercent
+				? data.availabilityPercent.score /
+						MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
+						data.availabilityPercent.prefactor
+				: 0
+		)
+	);
+
+	type SnapShot = 'average' | 'lastSnap';
+	function formatAvailabilityPercent(t: SnapShot) {
+		const v =
+			t === 'average'
+				? data.availabilityPercentAverage
+				: data.availabilityPercent
+					? data.availabilityPercent.score /
+						MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
+						data.availabilityPercent.prefactor
+					: 0;
+		let s = v.toFixed(2).replaceAll('.', '');
 		while (s.length > 1 && s.startsWith('0')) {
 			s = s.slice(1);
 		}
-		return (data.availabilityPercent >= 1 ? '100' : s) + '%';
+		return (v >= 1 ? '100' : s) + '%';
 	}
 </script>
 
@@ -511,9 +534,16 @@
 
 		<div class="flex gap-4 p-6 font-semibold leading-none tracking-tight">
 			<div class="flex gap-1">
-				{#if !data.isAdmin}<div class="w-full pr-6 text-right" style="color: {availabilityPercent}">
-						<AvailabilityPercent text={formatAvailabilityPercent()} />
-					</div>{/if}
+				{#if !data.isAdmin}
+					<div class="flex flex-col">
+						<div class="w-full pr-6 text-right" style="color: {availabilityPercent}">
+							<AvailabilityPercent text={formatAvailabilityPercent('lastSnap')} />
+						</div>
+						<div class="w-full pr-6 text-right" style="color: {availabilityPercentAverage}">
+							<AvailabilityPercent showIcon={true} text={formatAvailabilityPercent('average')} />
+						</div>
+					</div>
+				{/if}
 				<Button variant="outline" size="icon" onclick={() => (value = value.add({ days: -1 }))}>
 					<ChevronLeft class="size-4" />
 				</Button>

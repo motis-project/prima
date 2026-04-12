@@ -439,7 +439,9 @@ const translations: Translations = {
 	},
 	availabilityPercent: 'Abdeckung',
 	availabilityPercentExplanation:
-		'Dieser Prozentwert gibt an wie komplett im aktuell ausgewählten Monat die Abdeckung durch Verfügbarkeiten durch das Unternehmen bisher war. Eine Vergütung wird ab 75% vergeben und skaliert bis zu 95% Abdeckung.'
+		'Dieser Wert zeigt die aktuelle Verfügbarkeits-Abdeckung der nächsten 2 Wochen.',
+	availabilityPercentAverageExplanation:
+		'Die 2-Wochen-Abdeckung wird fortlaufend in festen Zeitabständen ermittelt. Dieser Wert zeigt den Durchschnitt aller bisher ermittelten 2-Wochen-Abdeckungen im aktuellen Monat. Eine Vergütung wird ab 75% vergeben und skaliert bis zu 95% Abdeckung.'
 };
 
 export default translations;
