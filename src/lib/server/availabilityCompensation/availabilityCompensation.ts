@@ -1,14 +1,13 @@
 import { Interval } from '$lib/util/interval';
 import { selectAvailabilities, selectTours } from '$lib/server/booking/taxi/getBookingAvailability';
 import {
+	AVAILABILITY_COMPENSATION_WINDOW_END,
+	AVAILABILITY_COMPENSATION_WINDOW_START,
 	AVAILABILITY_CONFIRMATION_DEADLINE,
-	EARLIEST_SHIFT_START,
-	LATEST_SHIFT_END,
 	MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE
 } from '$lib/constants';
 import { db } from '$lib/server/db';
 import { groupBy } from '$lib/util/groupBy';
-import { HOUR } from '$lib/util/time';
 
 export function getStartOfMonth(date: Date) {
 	return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1, 0, 0, 0, 0);
@@ -88,8 +87,8 @@ function getPrefactor(interval: Interval): number {
 
 	while (day < end.getTime()) {
 		const midnight = day;
-		const windowStart = midnight + EARLIEST_SHIFT_START - HOUR;
-		const windowEnd = midnight + LATEST_SHIFT_END + HOUR;
+		const windowStart = midnight + AVAILABILITY_COMPENSATION_WINDOW_START;
+		const windowEnd = midnight + AVAILABILITY_COMPENSATION_WINDOW_END;
 		const intersected = new Interval(windowStart, windowEnd).intersect(interval);
 		sum += intersected ? intersected.size() : 0;
 
