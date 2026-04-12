@@ -429,6 +429,8 @@ const translations: Translations = {
 	},
 	availabilityPercent: 'Coverage',
 	availabilityPercentExplanation:
+		'This value represents the current coverage for availability in the next two weeks.',
+	availabilityPercentAverageExplanation:
 		'This value represents the coverage for availability in the currently selected month by the company so far. The company is eligbile for a compensation starting at 75% and scaling to 95%.'
 };
 

@@ -2,11 +2,14 @@
 	import * as Popover from '$lib/shadcn/popover';
 	import { buttonVariants } from '$lib/shadcn/button';
 	import { t } from '$lib/i18n/translation';
+	import { CircleSlash2 } from 'lucide-svelte';
 
 	const {
-		text
+		text,
+		showIcon
 	}: {
 		text: string;
+		showIcon?: boolean;
 	} = $props();
 
 	let popoverOpen = $state(false);
@@ -16,16 +19,20 @@
 	<Popover.Trigger
 		class={buttonVariants({
 			variant: 'outline',
-			class: 'w-fit justify-start text-left font-normal'
+			class: 'w-full justify-start text-left font-normal'
 		})}
 	>
-		{t.availabilityPercent + ': ' + text}
+		<span class="inline-flex items-center gap-1">
+			{#if showIcon}
+				<CircleSlash2 size={16} />
+			{/if}
+			{t.availabilityPercent + ': ' + text}
+		</span>
 	</Popover.Trigger>
+
 	<Popover.Content>
 		<div class="flex flex-col gap-4">
-			<h2 class="font-medium leading-none">
-				{t.availabilityPercentExplanation}
-			</h2>
+			{showIcon ? t.availabilityPercentAverageExplanation : t.availabilityPercentExplanation}
 		</div>
 	</Popover.Content>
 </Popover.Root>

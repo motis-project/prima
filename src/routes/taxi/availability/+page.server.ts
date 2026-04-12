@@ -16,7 +16,7 @@ import { HOUR } from '$lib/util/time';
 const LICENSE_PLATE_REGEX = /^([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})$/;
 
 export async function load(event: RequestEvent) {
-	const companyId = event.locals.session?.companyId;
+	const companyId = event.locals.session?.companyId ?? undefined;
 
 	const localDateParam = event.url.searchParams.get('date');
 	const timezoneOffset = event.url.searchParams.get('offset');
@@ -25,20 +25,26 @@ export async function load(event: RequestEvent) {
 		localDateParam && timezoneOffset
 			? new Date(new Date(localDateParam!).getTime() + Number(timezoneOffset) * 60 * 1000)
 			: new Date();
-
+	const startOfMonth = getStartOfMonth(new Date(utcDate.getTime() + 10 * HOUR));
+	const availabilityPercent =
+		companyId === undefined
+			? undefined
+			: db
+					.selectFrom('availabilityState')
+					.where('availabilityState.company', '=', companyId)
+					.where('availabilityState.startOfMonth', '=', startOfMonth)
+					.orderBy('availabilityState.takenAt desc')
+					.limit(1)
+					.select(['availabilityState.prefactor', 'availabilityState.score'])
+					.executeTakeFirst();
 	return {
 		...(await (companyId
 			? getAvailability(utcDate, companyId)
 			: getAllCompaniesAvailability(utcDate))),
-		availabilityPercent:
-			(
-				await computeCompensation(
-					getStartOfMonth(new Date(utcDate.getTime() + 10 * HOUR)),
-					false,
-					event.locals.session?.companyId ?? undefined
-				)
-			)[0]?.availabilityPercent ?? 0,
-		isAdmin: !companyId
+		availabilityPercentAverage:
+			(await computeCompensation(startOfMonth, false, companyId))[0]?.availabilityPercent ?? 0,
+		isAdmin: !companyId,
+		availabilityPercent: await availabilityPercent
 	};
 }
 
