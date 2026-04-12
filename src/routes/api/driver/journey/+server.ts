@@ -99,6 +99,8 @@ export const GET = async ({ url, locals }) => {
 	const journey1 = await query('request1', requestId);
 	const journey2 = await query('request2', requestId);
 
+	// TODO: extract trip-ID and request updates for the journey from motis
+
 	return (
 		filter(journey1, companyId, true) ??
 		filter(journey2, companyId, false) ??
