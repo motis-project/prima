@@ -144,12 +144,12 @@ describe('capture availability state', () => {
 		await computeCompensation(getStartOfMonth(mockDate), true);
 		const compensations = await db.selectFrom('availabilityCompensation').selectAll().execute();
 		expect(compensations).toHaveLength(1);
-		expect(compensations[0].score).toBe(1 / 14);
+		expect(compensations[0].score).toBe(1);
 
 		await computeCompensation(getStartOfMonth(new Date(mockDate.getTime() + DAY * 5)), true);
 		const compensations2 = await db.selectFrom('availabilityCompensation').selectAll().execute();
 		expect(compensations2).toHaveLength(2);
-		expect(compensations2[1].score).toBe(2 / 7);
+		expect(compensations2[1].score).toBe((14 / 13) * (2 / 7));
 	});
 	it('2 vehicles', async () => {
 		const mockDate = new Date('2024-01-01T00:00:00Z');
@@ -191,5 +191,23 @@ describe('capture availability state', () => {
 		const compensations = await db.selectFrom('availabilityCompensation').selectAll().execute();
 		expect(compensations).toHaveLength(1);
 		expect(compensations[0].score).toBe(12 / 14 / 21);
+	});
+	it('touching 2 months full 2 weeks made available', async () => {
+		const mockDate = new Date('2024-01-31T00:00:00Z');
+		vi.setSystemTime(mockDate);
+		await addAvailability(Date.now(), Date.now() + 14 * DAY, vehicle, company);
+		await captureAvailabilityState();
+
+		const states = await db.selectFrom('availabilityState').selectAll().execute();
+		expect(states).toHaveLength(2);
+		expect(states[0].score).toBe(MAXIMUM_DAILY_AVAILABILITY);
+		expect(states[0].prefactor).toBe(1 / 14);
+
+		await computeCompensation(getStartOfMonth(mockDate), true);
+		await computeCompensation(getStartOfMonth(new Date(mockDate.getTime() + 5 * DAY)), true);
+		const compensations = await db.selectFrom('availabilityCompensation').selectAll().execute();
+		expect(compensations).toHaveLength(2);
+		expect(compensations[0].score).toBe(1);
+		expect(compensations[1].score).toBe(1);
 	});
 });
