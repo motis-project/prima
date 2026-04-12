@@ -48,12 +48,15 @@ export async function computeCompensation(
 			(s) => s
 		);
 		for (const [_, scoresByMonth] of byMonth) {
+			const preFactorSum = scoresByMonth.reduce((prev, curr) => prev + curr.prefactor, 0);
+			const avgPrefactor = preFactorSum / scoresByMonth.length;
 			const avgScore =
 				(scoresByMonth.length === 0
 					? 0
 					: scoresByMonth.reduce((prev, curr) => prev + curr.prefactor * curr.score, 0) /
-						scoresByMonth.reduce((prev, curr) => prev + curr.prefactor, 0)) /
-				MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE;
+						preFactorSum) /
+				MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
+				avgPrefactor;
 
 			ret.push({
 				availabilityPercent: avgScore,
@@ -152,7 +155,8 @@ async function writeAvailabilityCovering(interval: Interval, startOfMonth: numbe
 				company: company[0].company,
 				startOfMonth,
 				score,
-				prefactor
+				prefactor,
+				takenAt: Date.now()
 			})
 			.execute();
 	}
