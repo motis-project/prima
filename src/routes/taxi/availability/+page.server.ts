@@ -8,10 +8,21 @@ import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import { retry } from '$lib/server/db/retryQuery';
 import { getAllCompaniesAvailability, getAvailability } from '$lib/server/getAvailability.js';
 import {
+	captureAvailabilityState,
 	computeCompensation,
 	getStartOfMonth
 } from '$lib/server/availabilityCompensation/availabilityCompensation';
 import { HOUR } from '$lib/util/time';
+
+async function getSnapshot(companyId: number, startOfMonth: number) {
+	const snaps = await captureAvailabilityState(true);
+	console.log({ snaps: JSON.stringify(snaps, null, 2) });
+	return (
+		snaps.snapshot1
+			.concat(snaps.snapshot2 ?? [])
+			.filter((s) => s.company === companyId && startOfMonth === s.startOfMonth)[0] ?? undefined
+	);
+}
 
 const LICENSE_PLATE_REGEX = /^([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})$/;
 
@@ -27,16 +38,7 @@ export async function load(event: RequestEvent) {
 			: new Date();
 	const startOfMonth = getStartOfMonth(new Date(utcDate.getTime() + 10 * HOUR));
 	const availabilityPercent =
-		companyId === undefined
-			? undefined
-			: db
-					.selectFrom('availabilityState')
-					.where('availabilityState.company', '=', companyId)
-					.where('availabilityState.startOfMonth', '=', startOfMonth)
-					.orderBy('availabilityState.takenAt desc')
-					.limit(1)
-					.select(['availabilityState.prefactor', 'availabilityState.score'])
-					.executeTakeFirst();
+		companyId === undefined ? undefined : getSnapshot(companyId, startOfMonth);
 	return {
 		...(await (companyId
 			? getAvailability(utcDate, companyId)

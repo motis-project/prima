@@ -364,23 +364,29 @@ export const availabilityCols: Column<AvailabilityScore>[] = [
 		text: ['Prozent'],
 		sort: (a: AvailabilityScore, b: AvailabilityScore) =>
 			a.availabilityPercent - b.availabilityPercent,
-		toTableEntry: (r: AvailabilityScore) => r.availabilityPercent.toFixed(2) + '%'
+		toTableEntry: (r: AvailabilityScore) => {
+			let s = r.availabilityPercent.toFixed(2).replaceAll('.', '');
+			while (s.length > 1 && s.startsWith('0')) {
+				s = s.slice(1);
+			}
+			return (r.availabilityPercent >= 1 ? '100' : s) + '%';
+		}
 	},
 	{
 		text: ['Betrag'],
 		sort: (a: AvailabilityScore, b: AvailabilityScore) =>
 			a.availabilityPercent - b.availabilityPercent,
 		toTableEntry: (r: AvailabilityScore) =>
-			MAX_AVAILABILITY_COMPENSATION_EUROS *
+			(
+				MAX_AVAILABILITY_COMPENSATION_EUROS *
 				(r.availabilityPercent < MIN_AVAILABILITY_FOR_COMPENSATION
 					? 0
 					: r.availabilityPercent > MAX_AVAILABILITY_FOR_COMPENSATION
 						? 1
-						: ((Math.max(r.availabilityPercent, MAX_AVAILABILITY_FOR_COMPENSATION / 100) -
-								MIN_AVAILABILITY_FOR_COMPENSATION / 100) *
-								100) /
-							(MAX_AVAILABILITY_FOR_COMPENSATION - MIN_AVAILABILITY_FOR_COMPENSATION)) +
-			'€'
+						: (Math.min(r.availabilityPercent, MAX_AVAILABILITY_FOR_COMPENSATION) -
+								MIN_AVAILABILITY_FOR_COMPENSATION) /
+							(MAX_AVAILABILITY_FOR_COMPENSATION - MIN_AVAILABILITY_FOR_COMPENSATION))
+			).toFixed(2) + '€'
 	},
 	{
 		text: ['Monat'],

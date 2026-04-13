@@ -425,6 +425,19 @@
 		}
 		return (v >= 1 ? '100' : s) + '%';
 	}
+
+	let monthString = $derived(
+		new Intl.DateTimeFormat(LOCALE, {
+			month: 'long'
+		}).format(data.utcDate)
+	);
+	let selectedDayIsInFutureMonth = $derived(
+		data.utcDate.getMonth() > new Date(Date.now()).getMonth()
+	);
+	let showAvailabilityPercent = $derived(
+		!selectedDayIsInFutureMonth &&
+			data.utcDate.getTime() >= new Date('2026-03-31T22:00:00.000Z').getTime()
+	);
 </script>
 
 <svelte:window onmouseup={() => selectionFinish()} />
@@ -534,13 +547,20 @@
 
 		<div class="flex gap-4 p-6 font-semibold leading-none tracking-tight">
 			<div class="flex gap-1">
-				{#if !data.isAdmin}
+				{#if !data.isAdmin && showAvailabilityPercent}
 					<div class="flex flex-col">
 						<div class="w-full pr-6 text-right" style="color: {availabilityPercent}">
-							<AvailabilityPercent text={formatAvailabilityPercent('lastSnap')} />
+							<AvailabilityPercent
+								month={monthString}
+								text={formatAvailabilityPercent('lastSnap')}
+							/>
 						</div>
 						<div class="w-full pr-6 text-right" style="color: {availabilityPercentAverage}">
-							<AvailabilityPercent showIcon={true} text={formatAvailabilityPercent('average')} />
+							<AvailabilityPercent
+								month={monthString}
+								showIcon={true}
+								text={formatAvailabilityPercent('average')}
+							/>
 						</div>
 					</div>
 				{/if}

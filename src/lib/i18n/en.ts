@@ -427,7 +427,8 @@ const translations: Translations = {
 		save: 'Save classification',
 		delete: 'Remove calibration set'
 	},
-	availabilityPercent: 'Coverage',
+	availabilityPercentAverage: 'recorded Coverage',
+	availabilityPercent: 'current Coverage next two weeks',
 	availabilityPercentExplanation:
 		'This value represents the current coverage for availability in the next two weeks.',
 	availabilityPercentAverageExplanation:

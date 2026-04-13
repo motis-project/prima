@@ -109,7 +109,11 @@ function getPrefactor(interval: Interval): number {
 	return sum;
 }
 
-async function writeAvailabilityCovering(interval: Interval, startOfMonth: number) {
+async function writeAvailabilityCovering(
+	interval: Interval,
+	startOfMonth: number,
+	skipWriting: boolean
+) {
 	const prefactor = getPrefactor(interval) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE;
 	const vehicles = await db
 		.selectFrom('vehicle')
@@ -125,6 +129,13 @@ async function writeAvailabilityCovering(interval: Interval, startOfMonth: numbe
 		(v) => v.company,
 		(v) => v
 	);
+	const ret = new Array<{
+		company: number;
+		takenAt: number;
+		startOfMonth: number;
+		score: number;
+		prefactor: number;
+	}>();
 	for (const company of byCompany.values()) {
 		if (company.length === 0) {
 			continue;
@@ -149,20 +160,22 @@ async function writeAvailabilityCovering(interval: Interval, startOfMonth: numbe
 		if (prefactor === 0) {
 			continue;
 		}
-		await db
-			.insertInto('availabilityState')
-			.values({
-				company: company[0].company,
-				startOfMonth,
-				score,
-				prefactor,
-				takenAt: Date.now()
-			})
-			.execute();
+		const v = {
+			company: company[0].company,
+			startOfMonth,
+			score,
+			prefactor,
+			takenAt: Date.now()
+		};
+		ret.push(v);
+		if (!skipWriting) {
+			await db.insertInto('availabilityState').values(v).execute();
+		}
 	}
+	return ret;
 }
 
-export async function captureAvailabilityState() {
+export async function captureAvailabilityState(skipWriting?: boolean) {
 	const now = Date.now();
 	const nowDate = new Date(now);
 	const endDate = new Date(now + AVAILABILITY_CONFIRMATION_DEADLINE);
@@ -176,13 +189,22 @@ export async function captureAvailabilityState() {
 		now,
 		Math.min(now + AVAILABILITY_CONFIRMATION_DEADLINE, startOfNextMonth)
 	);
-	await writeAvailabilityCovering(interval1, startOfStartMonth);
+	const snapshot1 = await writeAvailabilityCovering(
+		interval1,
+		startOfStartMonth,
+		skipWriting ?? false
+	);
 	if (startMonth === endMonth) {
-		return;
+		return { snapshot1 };
 	}
 	const interval2 = new Interval(
 		Math.min(now + AVAILABILITY_CONFIRMATION_DEADLINE, startOfNextMonth),
 		now + AVAILABILITY_CONFIRMATION_DEADLINE
 	);
-	await writeAvailabilityCovering(interval2, startOfEndMonth);
+	const snapshot2 = await writeAvailabilityCovering(
+		interval2,
+		startOfEndMonth,
+		skipWriting ?? false
+	);
+	return { snapshot1, snapshot2 };
 }

@@ -381,6 +381,7 @@ export type Translations = {
 		delete: string;
 	};
 
+	availabilityPercentAverage: string;
 	availabilityPercent: string;
 	availabilityPercentExplanation: string;
 	availabilityPercentAverageExplanation: string;

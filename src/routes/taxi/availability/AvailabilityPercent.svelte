@@ -6,9 +6,11 @@
 
 	const {
 		text,
+		month,
 		showIcon
 	}: {
 		text: string;
+		month: string;
 		showIcon?: boolean;
 	} = $props();
 
@@ -26,7 +28,11 @@
 			{#if showIcon}
 				<CircleSlash2 size={16} />
 			{/if}
-			{t.availabilityPercent + ': ' + text}
+			{(showIcon ? t.availabilityPercentAverage : t.availabilityPercent) +
+				' ' +
+				month +
+				': ' +
+				text}
 		</span>
 	</Popover.Trigger>
 

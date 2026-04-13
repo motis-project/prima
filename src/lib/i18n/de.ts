@@ -437,7 +437,8 @@ const translations: Translations = {
 		save: 'Klassifizierung speichern',
 		delete: 'Verbindungsmenge entfernen'
 	},
-	availabilityPercent: 'Abdeckung',
+	availabilityPercentAverage: 'aufgezeichnete Abdeckung',
+	availabilityPercent: 'aktuelle Abdeckung',
 	availabilityPercentExplanation:
 		'Dieser Wert zeigt die aktuelle Verfügbarkeits-Abdeckung der nächsten 2 Wochen.',
 	availabilityPercentAverageExplanation:
