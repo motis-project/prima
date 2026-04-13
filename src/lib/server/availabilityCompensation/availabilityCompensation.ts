@@ -8,9 +8,17 @@ import {
 } from '$lib/constants';
 import { db } from '$lib/server/db';
 import { groupBy } from '$lib/util/groupBy';
+import { getAllowedTimes } from '$lib/util/getAllowedTimes';
+import { DAY, HOUR } from '$lib/util/time';
+import { getOffset } from '$lib/util/getOffset';
 
-export function getStartOfMonth(date: Date) {
-	return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1, 0, 0, 0, 0);
+export function getStartOfMonth(date: Date, next?: boolean) {
+	const hoursOnDay = date.getTime() % DAY;
+	const noon =
+		date.getTime() - (hoursOnDay > 12 * HOUR ? hoursOnDay - 12 * HOUR : 12 * HOUR - hoursOnDay);
+	const offset = getOffset(noon);
+	const d = new Date(date.getTime() + offset);
+	return new Date(d.getUTCFullYear(), d.getUTCMonth() + (next ? 1 : 0), 1, 0, 0, 0, 0).getTime();
 }
 
 export async function computeCompensation(
@@ -78,35 +86,18 @@ export async function computeCompensation(
 
 export type AvailabilityScore = Awaited<ReturnType<typeof computeCompensation>>[0];
 
-function startOfDay(date: Date): number {
-	return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0);
-}
-
 function getPrefactor(interval: Interval): number {
 	const start = new Date(interval.startTime);
 	const end = new Date(interval.endTime);
-	let sum = 0;
-	let day = startOfDay(start);
-
-	while (day < end.getTime()) {
-		const midnight = day;
-		const windowStart = midnight + AVAILABILITY_COMPENSATION_WINDOW_START;
-		const windowEnd = midnight + AVAILABILITY_COMPENSATION_WINDOW_END;
-		const intersected = new Interval(windowStart, windowEnd).intersect(interval);
-		sum += intersected ? intersected.size() : 0;
-
-		const dayDate = new Date(day);
-		day = Date.UTC(
-			dayDate.getUTCFullYear(),
-			dayDate.getUTCMonth(),
-			dayDate.getUTCDate() + 1,
-			0,
-			0,
-			0,
-			0
-		);
-	}
-	return sum;
+	return Interval.intersect(
+		[new Interval(start.getTime(), end.getTime())],
+		getAllowedTimes(
+			start.getTime(),
+			end.getTime(),
+			AVAILABILITY_COMPENSATION_WINDOW_START,
+			AVAILABILITY_COMPENSATION_WINDOW_END
+		)
+	).reduce((prev, curr) => prev + curr.size(), 0);
 }
 
 async function writeAvailabilityCovering(
@@ -154,13 +145,16 @@ async function writeAvailabilityCovering(
 				)
 			)
 			.map((i) => {
-				const dayStart = startOfDay(new Date(i.startTime));
-				return i.intersect(
-					new Interval(
-						dayStart + AVAILABILITY_COMPENSATION_WINDOW_START,
-						dayStart + AVAILABILITY_COMPENSATION_WINDOW_END
-					)
+				const allowed = getAllowedTimes(
+					i.startTime,
+					i.endTime,
+					AVAILABILITY_COMPENSATION_WINDOW_START,
+					AVAILABILITY_COMPENSATION_WINDOW_END
 				);
+				if (allowed.length === 0) {
+					return undefined;
+				}
+				return i.intersect(allowed[0]);
 			})
 			.filter((i) => i !== undefined);
 		const withCounts = Interval.aggregate(vehicleIntervals);
@@ -190,10 +184,8 @@ export async function captureAvailabilityState(skipWriting?: boolean) {
 	const now = Date.now();
 	const nowDate = new Date(now);
 	const endDate = new Date(now + AVAILABILITY_CONFIRMATION_DEADLINE);
-	const startMonth = nowDate.getUTCMonth();
-	const endMonth = endDate.getUTCMonth();
 	const startOfStartMonth = getStartOfMonth(nowDate);
-	const startOfNextMonth = Date.UTC(nowDate.getUTCFullYear(), startMonth + 1, 1, 0, 0, 0, 0);
+	const startOfNextMonth = getStartOfMonth(nowDate, true);
 	const startOfEndMonth = getStartOfMonth(endDate);
 
 	const interval1 = new Interval(
@@ -205,7 +197,7 @@ export async function captureAvailabilityState(skipWriting?: boolean) {
 		startOfStartMonth,
 		skipWriting ?? false
 	);
-	if (startMonth === endMonth) {
+	if (startOfStartMonth === startOfEndMonth) {
 		return { snapshot1 };
 	}
 	const interval2 = new Interval(
