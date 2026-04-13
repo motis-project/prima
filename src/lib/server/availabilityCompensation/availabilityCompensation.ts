@@ -140,18 +140,29 @@ async function writeAvailabilityCovering(
 		if (company.length === 0) {
 			continue;
 		}
-		const vehicleIntervals = company.flatMap((vehicle) =>
-			Interval.merge(
-				vehicle.tours
-					.map((t) => new Interval(t.departure, t.arrival).intersect(interval))
-					.concat(
-						vehicle.availabilities.map((a) =>
-							new Interval(a.startTime, a.endTime).intersect(interval)
+		const vehicleIntervals = company
+			.flatMap((vehicle) =>
+				Interval.merge(
+					vehicle.tours
+						.map((t) => new Interval(t.departure, t.arrival).intersect(interval))
+						.concat(
+							vehicle.availabilities.map((a) =>
+								new Interval(a.startTime, a.endTime).intersect(interval)
+							)
 						)
-					)
-					.filter((i) => i !== undefined)
+						.filter((i) => i !== undefined)
+				)
 			)
-		);
+			.map((i) => {
+				const dayStart = startOfDay(new Date(i.startTime));
+				return i.intersect(
+					new Interval(
+						dayStart + AVAILABILITY_COMPENSATION_WINDOW_START,
+						dayStart + AVAILABILITY_COMPENSATION_WINDOW_END
+					)
+				);
+			})
+			.filter((i) => i !== undefined);
 		const withCounts = Interval.aggregate(vehicleIntervals);
 		const score = withCounts.reduce(
 			(prev, curr) => prev + (curr.count === 0 ? 0 : curr.interval.size()),
