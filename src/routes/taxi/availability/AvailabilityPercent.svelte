@@ -29,9 +29,9 @@
 				<CircleSlash2 size={16} />
 			{/if}
 			{(showIcon ? t.availabilityPercentAverage : t.availabilityPercent) +
-				' ' +
+				' (' +
 				month +
-				': ' +
+				'): ' +
 				text}
 		</span>
 	</Popover.Trigger>
