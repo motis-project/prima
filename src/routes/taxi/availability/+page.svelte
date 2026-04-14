@@ -15,15 +15,7 @@
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import * as Card from '$lib/shadcn/card';
 	import { ChevronRight, ChevronLeft } from 'lucide-svelte';
-	import {
-		EARLIEST_SHIFT_START,
-		LATEST_SHIFT_END,
-		LOCALE,
-		MAX_AVAILABILITY_FOR_COMPENSATION,
-		MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE,
-		MIN_AVAILABILITY_FOR_COMPENSATION,
-		TZ
-	} from '$lib/constants.js';
+	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, LOCALE, TZ } from '$lib/constants.js';
 
 	import { goto, invalidateAll } from '$app/navigation';
 
@@ -382,41 +374,6 @@
 			return 'bg-yellow-100';
 		}
 	};
-	function getCompensationColor(percent: number) {
-		if (percent < MIN_AVAILABILITY_FOR_COMPENSATION) {
-			return 0;
-		}
-		if (percent > MAX_AVAILABILITY_FOR_COMPENSATION) {
-			return 100;
-		}
-		const t = Math.round(
-			(100 * (percent - MIN_AVAILABILITY_FOR_COMPENSATION)) /
-				(MAX_AVAILABILITY_FOR_COMPENSATION - MIN_AVAILABILITY_FOR_COMPENSATION)
-		);
-		return t;
-	}
-	const availabilityPercent = $derived(
-		getCompensationColor(
-			data.availabilityPercent
-				? data.availabilityPercent.score /
-						MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
-						data.availabilityPercent.prefactor
-				: 0
-		)
-	);
-
-	function formatAvailabilityPercent() {
-		const v = data.availabilityPercent
-			? data.availabilityPercent.score /
-				MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
-				data.availabilityPercent.prefactor
-			: 0;
-		let s = v.toFixed(2).replaceAll('.', '');
-		while (s.length > 1 && s.startsWith('0')) {
-			s = s.slice(1);
-		}
-		return (v >= 1 ? '100' : s) + '%';
-	}
 </script>
 
 <svelte:window onmouseup={() => selectionFinish()} />
@@ -526,11 +483,7 @@
 
 		<div class="flex gap-4 p-6 font-semibold leading-none tracking-tight">
 			<div class="flex gap-1">
-				<div class="flex flex-col">
-					<div class="w-full pr-6 text-right" style="color: hsl({availabilityPercent} 100% 67.3%)">
-						<AvailabilityPercent text={formatAvailabilityPercent()} />
-					</div>
-				</div>
+				<AvailabilityPercent availabilityCoverage={0.9} class="mr-4" />
 				<Button variant="outline" size="icon" onclick={() => (value = value.add({ days: -1 }))}>
 					<ChevronLeft class="size-4" />
 				</Button>
