@@ -438,9 +438,9 @@ const translations: Translations = {
 		delete: 'Verbindungsmenge entfernen'
 	},
 	availabilityPercentAverage: 'aufgezeichnete Abdeckung',
-	availabilityPercent: 'aktuelle Abdeckung',
+	availabilityPercent: 'aktuelle 2-Wochen-Abdeckung',
 	availabilityPercentExplanation:
-		'Dieser Wert zeigt die aktuelle Verfügbarkeits-Abdeckung der nächsten 2 Wochen.',
+		'Dieser Wert zeigt die aktuelle Verfügbarkeits-Abdeckung der nächsten 2 Wochen eingeschränkt auf den aktuellen Monat.',
 	availabilityPercentAverageExplanation:
 		'Die 2-Wochen-Abdeckung wird fortlaufend in festen Zeitabständen ermittelt. Dieser Wert zeigt den Durchschnitt aller bisher ermittelten 2-Wochen-Abdeckungen im aktuellen Monat. Eine Vergütung wird ab 75% vergeben und skaliert bis zu 95% Abdeckung.'
 };
