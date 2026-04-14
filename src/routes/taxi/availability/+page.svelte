@@ -483,7 +483,9 @@
 
 		<div class="flex gap-4 p-6 font-semibold leading-none tracking-tight">
 			<div class="flex gap-1">
-				<AvailabilityPercent availabilityCoverage={data.availabilityPercent ?? 0} class="mr-4" />
+				{#if !data.isAdmin}
+					<AvailabilityPercent availabilityCoverage={data.availabilityPercent ?? 0} class="mr-4" />
+				{/if}
 				<Button variant="outline" size="icon" onclick={() => (value = value.add({ days: -1 }))}>
 					<ChevronLeft class="size-4" />
 				</Button>

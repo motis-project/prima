@@ -26,7 +26,8 @@ export async function load(event: RequestEvent) {
 		...(await (companyId
 			? getAvailability(utcDate, companyId)
 			: getAllCompaniesAvailability(utcDate))),
-		availabilityPercent: await availabilityPercent
+		availabilityPercent: await availabilityPercent,
+		isAdmin: companyId === undefined
 	};
 }
 
