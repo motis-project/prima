@@ -341,7 +341,7 @@ describe('capture availability state', () => {
 				(1 - (MINUTE * 30) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE)
 		);
 	});
-	it.only('add first hour of day', async () => {
+	it('add first hour of day', async () => {
 		const mockDate = new Date('2024-01-30T00:00:00');
 		vi.setSystemTime(mockDate);
 		await addAvailability(Date.now() + DAY, Date.now() + 5 * DAY, vehicle, company);
