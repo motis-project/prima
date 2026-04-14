@@ -118,6 +118,8 @@ class AvailabilityViewModel @Inject constructor(
     private val _minDateReached = MutableStateFlow(false)
     val minDateReached = _minDateReached.asStateFlow()
 
+    val vehicles = repository.vehicles
+
     init {
         setDayBlocks(_displayDate.value, _displayDate.value)
         setPassedSlots(_displayDate.value)
@@ -393,12 +395,17 @@ class AvailabilityViewModel @Inject constructor(
         _maxDateReached.value = date >= LocalDate.now().plusDays(14)
     }
 
-    fun updateDayBlocks(start: Int, end: Int, dragStart: Int) {
+    fun updateDayBlocks(start: Int, end: Int, dragStart: Int): Boolean {
         val blocks = dayMap[_displayDate.value.toString()] ?: emptyList()
         val startBlock = blocks[getSlotIndex(dragStart)]
         val remove = startBlock.color == colorAvailable
         var a = getSlotIndex(start)
         val b = getSlotIndex(end)
+
+        if (b == a + 1 && blocks[a].color == colorTour) {
+            return true
+        }
+
         while ( a < b ) {
             if (blocks[a].color == colorPassed || blocks[a].color == colorTour) {
                 a++
@@ -415,6 +422,7 @@ class AvailabilityViewModel @Inject constructor(
         _dayBlocks.value = blocks
         dayMap[_displayDate.value.toString()] = blocks
         setDayBlocks(_displayDate.value, _displayDate.value)
+        return false
     }
 }
 

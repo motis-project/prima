@@ -1,3 +1,4 @@
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -19,12 +20,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -39,7 +43,59 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import de.motis.prima.R
+import de.motis.prima.services.Vehicle
 import de.motis.prima.ui.AvailabilityViewModel
+import de.motis.prima.ui.theme.LocalExtendedColors
+
+@Composable
+fun MoveTourDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (List<Vehicle>) -> Unit,
+    viewModel: AvailabilityViewModel
+) {
+    // State: which options are selected
+    val selectedOptions = remember { mutableStateListOf<Vehicle>() }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Select options") },
+        text = {
+            Column {
+                val vehicles by viewModel.vehicles.collectAsState()
+                vehicles.forEach { option ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = selectedOptions.contains(option),
+                            onCheckedChange = { isChecked ->
+                                if (isChecked) {
+                                    selectedOptions.add(option)
+                                } else {
+                                    selectedOptions.remove(option)
+                                }
+                            }
+                        )
+                        Text(option.licensePlate)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                onConfirm(selectedOptions)
+                onDismiss()
+            }) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
 
 @Composable
 fun DayTimeline(
@@ -62,6 +118,7 @@ fun DayTimeline(
     val passedSlots by viewModel.passedSlots.collectAsState()
 
     var showDialog by remember { mutableStateOf(false) }
+    var showMoveTourDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = viewModel) {
         viewModel.networkError.collect { networkError ->
@@ -94,7 +151,21 @@ fun DayTimeline(
         )
     }
 
-    Row (modifier = Modifier.padding(top = 24.dp)) {
+    if (showMoveTourDialog) {
+       MoveTourDialog(
+           onDismiss = { showMoveTourDialog = false },
+           onConfirm = { selected ->
+               Log.d("test", "$selected")
+           },
+           viewModel
+       )
+    }
+
+    Row (
+        modifier = Modifier
+            .padding(top = 24.dp)
+            .background(LocalExtendedColors.current.containerColor)
+    ) {
         val heightPerSlotDp = 120.dp / (60 / slotMinutes)
         val totalHeight = heightPerSlotDp * (slots + 1 - passedSlots)
 
@@ -107,7 +178,7 @@ fun DayTimeline(
         ) {
             Row(
                 modifier = Modifier
-                    .background(Color.White)
+                    .background(LocalExtendedColors.current.containerColor)
             ) {
                 // Hour labels
                 Column(
@@ -127,14 +198,18 @@ fun DayTimeline(
                             Text(
                                 text = String.format("%02d:00", hour),
                                 fontSize = 10.sp,
-                                color = Color.DarkGray
+                                color = LocalExtendedColors.current.textColor//Color.DarkGray
                             )
                         }
                     }
                 }
 
                 // Timeline drawing area
-                Box(modifier = Modifier.weight(1f)) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(LocalExtendedColors.current.containerColor)
+                ) {
                     val visibleHeight = heightPerSlotDp * slots - heightPerSlotDp * passedSlots
                     val passedSlotsLocal by viewModel.passedSlots.collectAsState()
                     Canvas(
@@ -148,7 +223,7 @@ fun DayTimeline(
                                     val start = slot * slotMinutes
                                     val end = start + slotMinutes
                                     dragStart = start
-                                    viewModel.updateDayBlocks(start, end, dragStart!!)
+                                    showMoveTourDialog = viewModel.updateDayBlocks(start, end, dragStart!!)
                                     dragStart = null
                                 }
                             }
@@ -282,11 +357,3 @@ fun DayTimeline(
         }
     }
 }
-
-/*@Composable
-fun PreviewDayTimeline(
-    navController: NavController,
-    viewModel: AvailabilityViewModel
-) {
-    DayTimeline(navController,viewModel)
-}*/

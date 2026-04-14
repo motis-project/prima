@@ -196,13 +196,15 @@ fun TourInfoView(tourInfo: TourSpecialInfo) {
                 Text(
                     text = "${tourInfo.wheelChairs}",
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = LocalExtendedColors.current.textColor
                 )
-                Text(text = " x ")
+                Text(text = " x ", color = LocalExtendedColors.current.textColor)
                 Icon(
                     painter = painterResource(id = R.drawable.ic_wheelchair),
                     contentDescription = "Localized description",
-                    Modifier.fillMaxHeight()
+                    tint = LocalExtendedColors.current.textColor,
+                    //Modifier.fillMaxHeight()
                 )
             }
             if (tourInfo.kidsZeroToTwo != 0) {
@@ -210,45 +212,51 @@ fun TourInfoView(tourInfo: TourSpecialInfo) {
                 Text(
                     text = "${tourInfo.kidsZeroToTwo}",
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = LocalExtendedColors.current.textColor,
                 )
-                Text(text = " x ")
+                Text(text = " x ", color = LocalExtendedColors.current.textColor)
                 Icon(
                     painter = painterResource(id = R.drawable.ic_child_seat),
                     contentDescription = "Localized description",
-                    Modifier.fillMaxHeight()
+                    tint = LocalExtendedColors.current.textColor,
+                    //Modifier.fillMaxHeight()
                 )
-                Text(text = "0-2J")
+                Text(text = "0-2J", color = LocalExtendedColors.current.textColor)
             }
             if (tourInfo.kidsThreeToFour != 0) {
                 Spacer(Modifier.width(10.dp))
                 Text(
                     text = "${tourInfo.kidsThreeToFour}",
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = LocalExtendedColors.current.textColor
                 )
-                Text(text = " x ")
+                Text(text = " x ", color = LocalExtendedColors.current.textColor)
                 Icon(
                     painter = painterResource(id = R.drawable.ic_child_seat),
                     contentDescription = "Localized description",
-                    Modifier.fillMaxHeight()
+                    tint = LocalExtendedColors.current.textColor,
+                    //Modifier.fillMaxHeight()
                 )
-                Text(text = "3-4J")
+                Text(text = "3-4J", color = LocalExtendedColors.current.textColor)
             }
             if (tourInfo.kidsFiveToSix != 0) {
                 Spacer(Modifier.width(10.dp))
                 Text(
                     text = "${tourInfo.kidsFiveToSix}",
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = LocalExtendedColors.current.textColor
                 )
-                Text(text = " x ")
+                Text(text = " x ", color = LocalExtendedColors.current.textColor)
                 Icon(
                     painter = painterResource(id = R.drawable.ic_child_seat),
                     contentDescription = "Localized description",
-                    Modifier.fillMaxHeight()
+                    tint = LocalExtendedColors.current.textColor,
+                    //Modifier.fillMaxHeight()
                 )
-                Text(text = "5-6J")
+                Text(text = "5-6J", color = LocalExtendedColors.current.textColor)
             }
         }
     }
