@@ -361,7 +361,7 @@ export const availabilityCols: Column<AvailabilityScore>[] = [
 		toTableEntry: (r: AvailabilityScore) => r.name!
 	},
 	{
-		text: ['Prozent'],
+		text: ['Verfügbarkeits-Abdeckung'],
 		sort: (a: AvailabilityScore, b: AvailabilityScore) =>
 			a.availabilityPercent - b.availabilityPercent,
 		toTableEntry: (r: AvailabilityScore) => {
@@ -371,6 +371,27 @@ export const availabilityCols: Column<AvailabilityScore>[] = [
 			}
 			return (r.availabilityPercent >= 1 ? '100' : s) + '%';
 		}
+	},
+	{
+		text: ['Prozent'],
+		sort: (a: AvailabilityScore, b: AvailabilityScore) =>
+			a.availabilityPercent - b.availabilityPercent,
+		toTableEntry: (r: AvailabilityScore) => {
+			const s = Math.round(
+				100 *
+					(r.availabilityPercent < MIN_AVAILABILITY_FOR_COMPENSATION
+						? 0
+						: r.availabilityPercent > MAX_AVAILABILITY_FOR_COMPENSATION
+							? 1
+							: (r.availabilityPercent - MIN_AVAILABILITY_FOR_COMPENSATION) /
+								(MAX_AVAILABILITY_FOR_COMPENSATION - MIN_AVAILABILITY_FOR_COMPENSATION))
+			);
+			return (r.availabilityPercent >= 1 ? '100' : s) + '%';
+		}
+	},
+	{
+		text: ['Maximaler Betrag'],
+		toTableEntry: (_: AvailabilityScore) => MAX_AVAILABILITY_COMPENSATION_EUROS + ' €'
 	},
 	{
 		text: ['Betrag'],
@@ -383,8 +404,7 @@ export const availabilityCols: Column<AvailabilityScore>[] = [
 					? 0
 					: r.availabilityPercent > MAX_AVAILABILITY_FOR_COMPENSATION
 						? 1
-						: (Math.min(r.availabilityPercent, MAX_AVAILABILITY_FOR_COMPENSATION) -
-								MIN_AVAILABILITY_FOR_COMPENSATION) /
+						: (r.availabilityPercent - MIN_AVAILABILITY_FOR_COMPENSATION) /
 							(MAX_AVAILABILITY_FOR_COMPENSATION - MIN_AVAILABILITY_FOR_COMPENSATION))
 			).toFixed(2) + '€'
 	},
