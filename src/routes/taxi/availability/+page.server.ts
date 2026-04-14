@@ -7,12 +7,7 @@ import { readInt } from '$lib/server/util/readForm';
 import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import { retry } from '$lib/server/db/retryQuery';
 import { getAllCompaniesAvailability, getAvailability } from '$lib/server/getAvailability.js';
-import { captureAvailabilityState } from '$lib/server/availabilityCompensation/availabilityCompensation';
-
-async function getSnapshot(companyId: number) {
-	const snaps = await captureAvailabilityState(true);
-	return snaps.filter((s) => s.company === companyId)[0] ?? undefined;
-}
+import { getSnapshot } from '$lib/server/availabilityCompensation/availabilityCompensation';
 
 const LICENSE_PLATE_REGEX = /^([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})$/;
 

@@ -18,11 +18,10 @@
 		if (availabilityCoverage > MAX_AVAILABILITY_FOR_COMPENSATION) {
 			return 100;
 		}
-		const t = Math.round(
+		return (
 			(100 * (availabilityCoverage - MIN_AVAILABILITY_FOR_COMPENSATION)) /
-				(MAX_AVAILABILITY_FOR_COMPENSATION - MIN_AVAILABILITY_FOR_COMPENSATION)
+			(MAX_AVAILABILITY_FOR_COMPENSATION - MIN_AVAILABILITY_FOR_COMPENSATION)
 		);
-		return t;
 	});
 
 	let popoverOpen = $state(false);
@@ -34,7 +33,7 @@
 			class="{className} rounded-full border px-2 text-lg font-bold"
 			style="background: hsl({percent} 100% 33%)"
 		>
-			{availabilityCoverage * 100}%
+			{Math.round(availabilityCoverage * 100)}%
 		</div>
 	</Popover.Trigger>
 

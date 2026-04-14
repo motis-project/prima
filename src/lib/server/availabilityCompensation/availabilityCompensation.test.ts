@@ -5,6 +5,7 @@ import { addAvailability } from '../addAvailability';
 import {
 	captureAvailabilityState,
 	computeCompensation,
+	getSnapshot,
 	getStartOfMonth
 } from './availabilityCompensation';
 import { db } from '../db';
@@ -339,5 +340,14 @@ describe('capture availability state', () => {
 				MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
 				(1 - (MINUTE * 30) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE)
 		);
+	});
+	it.only('add first hour of day', async () => {
+		const mockDate = new Date('2024-01-30T00:00:00');
+		vi.setSystemTime(mockDate);
+		await addAvailability(Date.now() + DAY, Date.now() + 5 * DAY, vehicle, company);
+		await captureAvailabilityState();
+
+		const availabilityPercent = await getSnapshot(company);
+		expect(availabilityPercent).toBe(4 / 14);
 	});
 });
