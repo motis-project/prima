@@ -9,5 +9,3 @@
 
 # Cron job to store current availability states
 * * * * * /usr/local/bin/node /app/scripts/captureAvailabilityState.js >> /var/log/cron.log 2>&1
-
-30 3 2 * * /usr/local/bin/node /app/scripts/availabilityCompensation.js >> /var/log/cron.log 2>&1
