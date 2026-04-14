@@ -5,6 +5,7 @@ import { addAvailability } from '../addAvailability';
 import {
 	captureAvailabilityState,
 	computeCompensation,
+	getSnapshot,
 	getStartOfMonth
 } from './availabilityCompensation';
 import { db } from '../db';
@@ -339,5 +340,24 @@ describe('capture availability state', () => {
 				MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
 				(1 - (MINUTE * 30) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE)
 		);
+	});
+	it('compute availability percent for full 2 weeks crossing month end', async () => {
+		const mockDate = new Date('2024-01-30T00:00:00');
+		vi.setSystemTime(mockDate);
+		await addAvailability(Date.now() + DAY, Date.now() + 5 * DAY, vehicle, company);
+		await captureAvailabilityState();
+
+		const availabilityPercent = await getSnapshot(company);
+		expect(availabilityPercent).toBe(4 / 14);
+	});
+	it('compute availability percent, availabilities in past are not conisdered', async () => {
+		const mockDate = new Date('2024-01-15T00:00:00');
+		vi.setSystemTime(mockDate);
+		await addAvailability(Date.now() + DAY, Date.now() + 5 * DAY, vehicle, company);
+		await captureAvailabilityState();
+		vi.setSystemTime(new Date('2024-01-30T00:00:00'));
+
+		const availabilityPercent = await getSnapshot(company);
+		expect(availabilityPercent).toBe(0);
 	});
 });

@@ -15,15 +15,7 @@
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import * as Card from '$lib/shadcn/card';
 	import { ChevronRight, ChevronLeft } from 'lucide-svelte';
-	import {
-		EARLIEST_SHIFT_START,
-		LATEST_SHIFT_END,
-		LOCALE,
-		MAX_AVAILABILITY_FOR_COMPENSATION,
-		MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE,
-		MIN_AVAILABILITY_FOR_COMPENSATION,
-		TZ
-	} from '$lib/constants.js';
+	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, LOCALE, TZ } from '$lib/constants.js';
 
 	import { goto, invalidateAll } from '$app/navigation';
 
@@ -382,62 +374,6 @@
 			return 'bg-yellow-100';
 		}
 	};
-	function getCompensationColor(percent: number) {
-		if (percent < MIN_AVAILABILITY_FOR_COMPENSATION) {
-			return 'red';
-		}
-		if (percent > MAX_AVAILABILITY_FOR_COMPENSATION) {
-			return 'green';
-		}
-		const t =
-			(percent - MIN_AVAILABILITY_FOR_COMPENSATION) /
-			(MAX_AVAILABILITY_FOR_COMPENSATION - MIN_AVAILABILITY_FOR_COMPENSATION);
-		const r = Math.round(255 * (1 - t * 0.8));
-		const g = Math.round(255 * (0.2 + t * 0.8));
-		return `rgb(${r}, ${g}, 30)`;
-	}
-	const availabilityPercentAverage = $derived(
-		getCompensationColor(data.availabilityPercentAverage)
-	);
-	const availabilityPercent = $derived(
-		getCompensationColor(
-			data.availabilityPercent
-				? data.availabilityPercent.score /
-						MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
-						data.availabilityPercent.prefactor
-				: 0
-		)
-	);
-
-	type SnapShot = 'average' | 'lastSnap';
-	function formatAvailabilityPercent(t: SnapShot) {
-		const v =
-			t === 'average'
-				? data.availabilityPercentAverage
-				: data.availabilityPercent
-					? data.availabilityPercent.score /
-						MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
-						data.availabilityPercent.prefactor
-					: 0;
-		let s = v.toFixed(2).replaceAll('.', '');
-		while (s.length > 1 && s.startsWith('0')) {
-			s = s.slice(1);
-		}
-		return (v >= 1 ? '100' : s) + '%';
-	}
-
-	let monthString = $derived(
-		new Intl.DateTimeFormat(LOCALE, {
-			month: 'long'
-		}).format(data.utcDate)
-	);
-	let selectedDayIsInFutureMonth = $derived(
-		data.utcDate.getMonth() > new Date(Date.now()).getMonth()
-	);
-	let showAvailabilityPercent = $derived(
-		!selectedDayIsInFutureMonth &&
-			data.utcDate.getTime() >= new Date('2026-03-31T22:00:00.000Z').getTime()
-	);
 </script>
 
 <svelte:window onmouseup={() => selectionFinish()} />
@@ -547,22 +483,8 @@
 
 		<div class="flex gap-4 p-6 font-semibold leading-none tracking-tight">
 			<div class="flex gap-1">
-				{#if !data.isAdmin && showAvailabilityPercent}
-					<div class="flex flex-col">
-						<div class="w-full pr-6 text-right" style="color: {availabilityPercent}">
-							<AvailabilityPercent
-								month={monthString}
-								text={formatAvailabilityPercent('lastSnap')}
-							/>
-						</div>
-						<div class="w-full pr-6 text-right" style="color: {availabilityPercentAverage}">
-							<AvailabilityPercent
-								month={monthString}
-								showIcon={true}
-								text={formatAvailabilityPercent('average')}
-							/>
-						</div>
-					</div>
+				{#if !data.isAdmin}
+					<AvailabilityPercent availabilityCoverage={data.availabilityPercent ?? 0} class="mr-4" />
 				{/if}
 				<Button variant="outline" size="icon" onclick={() => (value = value.add({ days: -1 }))}>
 					<ChevronLeft class="size-4" />

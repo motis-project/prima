@@ -1,44 +1,45 @@
 <script lang="ts">
 	import * as Popover from '$lib/shadcn/popover';
-	import { buttonVariants } from '$lib/shadcn/button';
 	import { t } from '$lib/i18n/translation';
-	import { CircleSlash2 } from 'lucide-svelte';
+	import {
+		MAX_AVAILABILITY_FOR_COMPENSATION,
+		MIN_AVAILABILITY_FOR_COMPENSATION
+	} from '$lib/constants';
 
 	const {
-		text,
-		month,
-		showIcon
-	}: {
-		text: string;
-		month: string;
-		showIcon?: boolean;
-	} = $props();
+		availabilityCoverage,
+		class: className
+	}: { availabilityCoverage: number; class: string } = $props();
+
+	const percent = $derived.by(() => {
+		if (availabilityCoverage < MIN_AVAILABILITY_FOR_COMPENSATION) {
+			return 0;
+		}
+		if (availabilityCoverage > MAX_AVAILABILITY_FOR_COMPENSATION) {
+			return 100;
+		}
+		return (
+			(100 * (availabilityCoverage - MIN_AVAILABILITY_FOR_COMPENSATION)) /
+			(MAX_AVAILABILITY_FOR_COMPENSATION - MIN_AVAILABILITY_FOR_COMPENSATION)
+		);
+	});
 
 	let popoverOpen = $state(false);
 </script>
 
 <Popover.Root bind:open={popoverOpen}>
-	<Popover.Trigger
-		class={buttonVariants({
-			variant: 'outline',
-			class: 'w-full justify-start text-left font-normal'
-		})}
-	>
-		<span class="inline-flex items-center gap-1">
-			{#if showIcon}
-				<CircleSlash2 size={16} />
-			{/if}
-			{(showIcon ? t.availabilityPercentAverage : t.availabilityPercent) +
-				' (' +
-				month +
-				'): ' +
-				text}
-		</span>
+	<Popover.Trigger>
+		<div
+			class="{className} rounded-full border px-2 text-lg font-bold"
+			style="background: hsl({percent} 100% 33%)"
+		>
+			{Math.round(availabilityCoverage * 100)}%
+		</div>
 	</Popover.Trigger>
 
 	<Popover.Content>
 		<div class="flex flex-col gap-4">
-			{showIcon ? t.availabilityPercentAverageExplanation : t.availabilityPercentExplanation}
+			{t.availabilityPercentExplanation}
 		</div>
 	</Popover.Content>
 </Popover.Root>

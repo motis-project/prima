@@ -200,3 +200,14 @@ export async function captureAvailabilityState(skipWriting?: boolean) {
 	);
 	return snapshot1.concat(snapshot2);
 }
+
+export async function getSnapshot(companyId: number): Promise<number> {
+	const snaps = await captureAvailabilityState(true);
+	const relevantSnaps = snaps.filter((s) => s.company === companyId) ?? undefined;
+	return relevantSnaps
+		? relevantSnaps.reduce(
+				(prev, curr) => prev + curr.score / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE,
+				0
+			) / relevantSnaps.reduce((prev, curr) => prev + curr.prefactor, 0)
+		: 0;
+}
