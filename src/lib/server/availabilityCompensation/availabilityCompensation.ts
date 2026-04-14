@@ -198,7 +198,7 @@ export async function captureAvailabilityState(skipWriting?: boolean) {
 		skipWriting ?? false
 	);
 	if (startOfStartMonth === startOfEndMonth) {
-		return { snapshot1 };
+		return snapshot1;
 	}
 	const interval2 = new Interval(
 		Math.min(now + AVAILABILITY_CONFIRMATION_DEADLINE, startOfNextMonth),
@@ -209,5 +209,5 @@ export async function captureAvailabilityState(skipWriting?: boolean) {
 		startOfEndMonth,
 		skipWriting ?? false
 	);
-	return { snapshot1, snapshot2 };
+	return snapshot1.concat(snapshot2);
 }

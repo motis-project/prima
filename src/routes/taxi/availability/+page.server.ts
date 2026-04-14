@@ -16,11 +16,8 @@ import { HOUR } from '$lib/util/time';
 
 async function getSnapshot(companyId: number, startOfMonth: number) {
 	const snaps = await captureAvailabilityState(true);
-	console.log({ snaps: JSON.stringify(snaps, null, 2) });
 	return (
-		snaps.snapshot1
-			.concat(snaps.snapshot2 ?? [])
-			.filter((s) => s.company === companyId && startOfMonth === s.startOfMonth)[0] ?? undefined
+		snaps.filter((s) => s.company === companyId && startOfMonth === s.startOfMonth)[0] ?? undefined
 	);
 }
 
