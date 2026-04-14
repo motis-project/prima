@@ -12,7 +12,6 @@ import {
 	computeCompensation,
 	getStartOfMonth
 } from '$lib/server/availabilityCompensation/availabilityCompensation';
-import { HOUR } from '$lib/util/time';
 
 async function getSnapshot(companyId: number, startOfMonth: number) {
 	const snaps = await captureAvailabilityState(true);
@@ -33,7 +32,7 @@ export async function load(event: RequestEvent) {
 		localDateParam && timezoneOffset
 			? new Date(new Date(localDateParam!).getTime() + Number(timezoneOffset) * 60 * 1000)
 			: new Date();
-	const startOfMonth = getStartOfMonth(new Date(utcDate.getTime() + 10 * HOUR));
+	const startOfMonth = getStartOfMonth(new Date(utcDate.getTime()));
 	const availabilityPercent =
 		companyId === undefined ? undefined : getSnapshot(companyId, startOfMonth);
 	return {
@@ -41,7 +40,7 @@ export async function load(event: RequestEvent) {
 			? getAvailability(utcDate, companyId)
 			: getAllCompaniesAvailability(utcDate))),
 		availabilityPercentAverage:
-			(await computeCompensation(startOfMonth, false, companyId))[0]?.availabilityPercent ?? 0,
+			(await computeCompensation(startOfMonth, companyId))[0]?.availabilityPercent ?? 0,
 		isAdmin: !companyId,
 		availabilityPercent: await availabilityPercent
 	};

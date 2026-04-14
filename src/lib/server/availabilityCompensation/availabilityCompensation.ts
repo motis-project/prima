@@ -21,11 +21,7 @@ export function getStartOfMonth(date: Date, next?: boolean) {
 	return new Date(d.getUTCFullYear(), d.getUTCMonth() + (next ? 1 : 0), 1, 0, 0, 0, 0).getTime();
 }
 
-export async function computeCompensation(
-	startOfMonth?: number,
-	write?: boolean,
-	selectedCompany?: number
-) {
+export async function computeCompensation(startOfMonth?: number, selectedCompany?: number) {
 	const availabilityStates = await db
 		.selectFrom('availabilityState')
 		.$if(startOfMonth !== undefined, (qb) =>
@@ -72,13 +68,6 @@ export async function computeCompensation(
 				name: scoresByMonth[0].name,
 				startOfMonth: scoresByMonth[0].startOfMonth
 			});
-
-			if (write) {
-				await db
-					.insertInto('availabilityCompensation')
-					.values({ score: avgScore, company, startOfMonth: startOfMonth ?? -1 })
-					.execute();
-			}
 		}
 	}
 	return ret;

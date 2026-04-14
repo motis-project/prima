@@ -209,7 +209,6 @@ export const clearDatabase = async () => {
 	await db.deleteFrom('user').execute();
 	await db.deleteFrom('company').execute();
 	await db.deleteFrom('availabilityState').execute();
-	await db.deleteFrom('availabilityCompensation').execute();
 };
 
 export const clearTours = async () => {
@@ -269,7 +268,6 @@ export const getRSTours = async () => {
 };
 
 export const selectEvents = async () => {
-	console.log('did selectEvents');
 	return await db
 		.selectFrom('tour')
 		.innerJoin('request', 'tour.id', 'request.tour')

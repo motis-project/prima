@@ -8,6 +8,6 @@ import { json, type RequestEvent } from '@sveltejs/kit';
 export const POST = async (_: RequestEvent) => {
 	const now = new Date(Date.now());
 	const startOfMonth = getStartOfMonth(new Date(now.getTime()));
-	await computeCompensation(startOfMonth, true);
+	await computeCompensation(startOfMonth);
 	return json({});
 };
