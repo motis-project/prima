@@ -10,11 +10,9 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
 	const companyId = event.locals.session!.companyId!;
 	const { tours, earliestTime, latestTime, costPerDayAndVehicle } =
 		await getCompanyCosts(companyId);
-	const availabilityPercent = await computeCompensation(
-		undefined,
-		false,
-		event.locals.session!.companyId!
-	);
+	const availabilityPercent = (
+		await computeCompensation(undefined, event.locals.session!.companyId!)
+	).filter((c) => companyId === c.company);
 	return {
 		tours: tours.map(({ interval: _, ...rest }) => rest),
 		earliestTime,

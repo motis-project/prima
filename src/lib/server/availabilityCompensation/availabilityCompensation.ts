@@ -8,16 +8,20 @@ import {
 } from '$lib/constants';
 import { db } from '$lib/server/db';
 import { groupBy } from '$lib/util/groupBy';
+import { getAllowedTimes } from '$lib/util/getAllowedTimes';
+import { DAY, HOUR } from '$lib/util/time';
+import { getOffset } from '$lib/util/getOffset';
 
-export function getStartOfMonth(date: Date) {
-	return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1, 0, 0, 0, 0);
+export function getStartOfMonth(date: Date, next?: boolean) {
+	const hoursOnDay = date.getTime() % DAY;
+	const noon =
+		date.getTime() - (hoursOnDay > 12 * HOUR ? hoursOnDay - 12 * HOUR : 12 * HOUR - hoursOnDay);
+	const offset = getOffset(noon);
+	const d = new Date(date.getTime() + offset);
+	return new Date(d.getUTCFullYear(), d.getUTCMonth() + (next ? 1 : 0), 1, 0, 0, 0, 0).getTime();
 }
 
-export async function computeCompensation(
-	startOfMonth?: number,
-	write?: boolean,
-	selectedCompany?: number
-) {
+export async function computeCompensation(startOfMonth?: number, selectedCompany?: number) {
 	const availabilityStates = await db
 		.selectFrom('availabilityState')
 		.$if(startOfMonth !== undefined, (qb) =>
@@ -64,13 +68,6 @@ export async function computeCompensation(
 				name: scoresByMonth[0].name,
 				startOfMonth: scoresByMonth[0].startOfMonth
 			});
-
-			if (write) {
-				await db
-					.insertInto('availabilityCompensation')
-					.values({ score: avgScore, company, startOfMonth: startOfMonth ?? -1 })
-					.execute();
-			}
 		}
 	}
 	return ret;
@@ -78,38 +75,25 @@ export async function computeCompensation(
 
 export type AvailabilityScore = Awaited<ReturnType<typeof computeCompensation>>[0];
 
-function startOfDay(date: Date): number {
-	return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0);
-}
-
 function getPrefactor(interval: Interval): number {
 	const start = new Date(interval.startTime);
 	const end = new Date(interval.endTime);
-	let sum = 0;
-	let day = startOfDay(start);
-
-	while (day < end.getTime()) {
-		const midnight = day;
-		const windowStart = midnight + AVAILABILITY_COMPENSATION_WINDOW_START;
-		const windowEnd = midnight + AVAILABILITY_COMPENSATION_WINDOW_END;
-		const intersected = new Interval(windowStart, windowEnd).intersect(interval);
-		sum += intersected ? intersected.size() : 0;
-
-		const dayDate = new Date(day);
-		day = Date.UTC(
-			dayDate.getUTCFullYear(),
-			dayDate.getUTCMonth(),
-			dayDate.getUTCDate() + 1,
-			0,
-			0,
-			0,
-			0
-		);
-	}
-	return sum;
+	return Interval.intersect(
+		[new Interval(start.getTime(), end.getTime())],
+		getAllowedTimes(
+			start.getTime(),
+			end.getTime(),
+			AVAILABILITY_COMPENSATION_WINDOW_START,
+			AVAILABILITY_COMPENSATION_WINDOW_END
+		)
+	).reduce((prev, curr) => prev + curr.size(), 0);
 }
 
-async function writeAvailabilityCovering(interval: Interval, startOfMonth: number) {
+async function writeAvailabilityCovering(
+	interval: Interval,
+	startOfMonth: number,
+	skipWriting: boolean
+) {
 	const prefactor = getPrefactor(interval) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE;
 	const vehicles = await db
 		.selectFrom('vehicle')
@@ -125,22 +109,43 @@ async function writeAvailabilityCovering(interval: Interval, startOfMonth: numbe
 		(v) => v.company,
 		(v) => v
 	);
+	const ret = new Array<{
+		company: number;
+		takenAt: number;
+		startOfMonth: number;
+		score: number;
+		prefactor: number;
+	}>();
 	for (const company of byCompany.values()) {
 		if (company.length === 0) {
 			continue;
 		}
-		const vehicleIntervals = company.flatMap((vehicle) =>
-			Interval.merge(
-				vehicle.tours
-					.map((t) => new Interval(t.departure, t.arrival).intersect(interval))
-					.concat(
-						vehicle.availabilities.map((a) =>
-							new Interval(a.startTime, a.endTime).intersect(interval)
+		const vehicleIntervals = company
+			.flatMap((vehicle) =>
+				Interval.merge(
+					vehicle.tours
+						.map((t) => new Interval(t.departure, t.arrival).intersect(interval))
+						.concat(
+							vehicle.availabilities.map((a) =>
+								new Interval(a.startTime, a.endTime).intersect(interval)
+							)
 						)
-					)
-					.filter((i) => i !== undefined)
+						.filter((i) => i !== undefined)
+				)
 			)
-		);
+			.map((i) => {
+				const allowed = getAllowedTimes(
+					i.startTime,
+					i.endTime,
+					AVAILABILITY_COMPENSATION_WINDOW_START,
+					AVAILABILITY_COMPENSATION_WINDOW_END
+				);
+				if (allowed.length === 0) {
+					return undefined;
+				}
+				return i.intersect(allowed[0]);
+			})
+			.filter((i) => i !== undefined);
 		const withCounts = Interval.aggregate(vehicleIntervals);
 		const score = withCounts.reduce(
 			(prev, curr) => prev + (curr.count === 0 ? 0 : curr.interval.size()),
@@ -149,40 +154,49 @@ async function writeAvailabilityCovering(interval: Interval, startOfMonth: numbe
 		if (prefactor === 0) {
 			continue;
 		}
-		await db
-			.insertInto('availabilityState')
-			.values({
-				company: company[0].company,
-				startOfMonth,
-				score,
-				prefactor,
-				takenAt: Date.now()
-			})
-			.execute();
+		const v = {
+			company: company[0].company,
+			startOfMonth,
+			score,
+			prefactor,
+			takenAt: Date.now()
+		};
+		ret.push(v);
+		if (!skipWriting) {
+			await db.insertInto('availabilityState').values(v).execute();
+		}
 	}
+	return ret;
 }
 
-export async function captureAvailabilityState() {
+export async function captureAvailabilityState(skipWriting?: boolean) {
 	const now = Date.now();
 	const nowDate = new Date(now);
 	const endDate = new Date(now + AVAILABILITY_CONFIRMATION_DEADLINE);
-	const startMonth = nowDate.getUTCMonth();
-	const endMonth = endDate.getUTCMonth();
 	const startOfStartMonth = getStartOfMonth(nowDate);
-	const startOfNextMonth = Date.UTC(nowDate.getUTCFullYear(), startMonth + 1, 1, 0, 0, 0, 0);
+	const startOfNextMonth = getStartOfMonth(nowDate, true);
 	const startOfEndMonth = getStartOfMonth(endDate);
 
 	const interval1 = new Interval(
 		now,
 		Math.min(now + AVAILABILITY_CONFIRMATION_DEADLINE, startOfNextMonth)
 	);
-	await writeAvailabilityCovering(interval1, startOfStartMonth);
-	if (startMonth === endMonth) {
-		return;
+	const snapshot1 = await writeAvailabilityCovering(
+		interval1,
+		startOfStartMonth,
+		skipWriting ?? false
+	);
+	if (startOfStartMonth === startOfEndMonth) {
+		return snapshot1;
 	}
 	const interval2 = new Interval(
 		Math.min(now + AVAILABILITY_CONFIRMATION_DEADLINE, startOfNextMonth),
 		now + AVAILABILITY_CONFIRMATION_DEADLINE
 	);
-	await writeAvailabilityCovering(interval2, startOfEndMonth);
+	const snapshot2 = await writeAvailabilityCovering(
+		interval2,
+		startOfEndMonth,
+		skipWriting ?? false
+	);
+	return snapshot1.concat(snapshot2);
 }

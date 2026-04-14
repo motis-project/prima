@@ -310,7 +310,7 @@
 		{ label: 'pro Tag und Fahrzeug', value: 2, component: subtractionTable },
 		{ label: isAdmin ? 'pro Unternehmen' : 'Summe', value: 3, component: companyTable },
 		{ label: 'Feedback', value: 4, component: feedbackTable },
-		{ label: 'AvailabilityPercent', value: 5, component: availabilityTable }
+		{ label: 'Verfügbarkeitsabdeckung', value: 5, component: availabilityTable }
 	];
 	let activeTabValue = $state(1);
 

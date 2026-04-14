@@ -193,11 +193,6 @@ export interface Database {
 		prefactor: number;
 		takenAt: number;
 	};
-	availabilityCompensation: {
-		startOfMonth: number;
-		company: number;
-		score: number;
-	};
 }
 
 export const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
