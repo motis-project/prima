@@ -373,7 +373,9 @@ export const availabilityCols: Column<AvailabilityScore>[] = [
 		}
 	},
 	{
-		text: ['Prozent'],
+		text: [
+			`vergüteter Anteil (${MIN_AVAILABILITY_FOR_COMPENSATION * 100}%-${MAX_AVAILABILITY_FOR_COMPENSATION * 100}%)`
+		],
 		sort: (a: AvailabilityScore, b: AvailabilityScore) =>
 			a.availabilityPercent - b.availabilityPercent,
 		toTableEntry: (r: AvailabilityScore) => {
