@@ -234,6 +234,7 @@ export type Translations = {
 	storeItinerary: string;
 	removeItinerary: string;
 	introduction: string;
+	hotline: string;
 	publicTransitTaxi: string;
 	serviceArea: string;
 	serviceTime: string;

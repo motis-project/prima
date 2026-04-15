@@ -261,6 +261,7 @@ const translations: Translations = {
 	removeItinerary: 'Remove Itinerary',
 	introduction:
 		'The PriMa+ÖV project augments public transport with on-demand taxis and private ride-sharing options. The goal is to ensure a service at least every two hours, even in rural areas and at off-peak times. More about ',
+	hotline: 'Booking via telephone: ',
 	publicTransitTaxi: 'Public-transit Taxi',
 	serviceArea: 'Service area',
 	serviceTime: 'Service time',
