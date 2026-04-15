@@ -271,6 +271,7 @@ const translations: Translations = {
 	removeItinerary: 'Reisekette entfernen',
 	introduction:
 		'Ziel des Projekts PriMa+ÖV ist es, den ÖPNV durch Ruftaxis und private Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Mehr über ',
+	hotline: 'Buchung via Telefon: ',
 	publicTransitTaxi: 'ÖPNV-Taxi',
 	serviceArea: 'Bediengebiet',
 	serviceTime: 'Bedienzeit',

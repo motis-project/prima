@@ -469,7 +469,7 @@
 			initial={'nach stornierten Touren filtern'}
 			disabled={activeTabValue === 5}
 		/>
-		<Button type="submit" onclick={() => resetFilter()}>Filter zurücksetzten</Button>
+		<Button type="submit" onclick={() => resetFilter()}>Filter zurücksetzen</Button>
 		<Button type="submit" onclick={() => csvExportToursTable(currentRowsToursTable)}>
 			pro Tour als CSV exportieren
 		</Button>
