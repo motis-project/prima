@@ -1,6 +1,8 @@
 import { Interval } from '$lib/util/interval';
 import { selectAvailabilities, selectTours } from '$lib/server/booking/taxi/getBookingAvailability';
 import {
+	AVAILABILITY_COMPENSATION_DOUBLE_WINDOW_END,
+	AVAILABILITY_COMPENSATION_DOUBLE_WINDOW_START,
 	AVAILABILITY_COMPENSATION_WINDOW_END,
 	AVAILABILITY_COMPENSATION_WINDOW_START,
 	AVAILABILITY_CONFIRMATION_DEADLINE,
@@ -76,26 +78,66 @@ export async function computeCompensation(startOfMonth?: number, selectedCompany
 export type AvailabilityScore = Awaited<ReturnType<typeof computeCompensation>>[0];
 
 function getPrefactor(interval: Interval): number {
+	function intervalToCumulatedDuration(
+		interval: Interval,
+		dailyWindowStart: number,
+		dailyWindowEnd: number
+	) {
+		return Interval.intersect(
+			[new Interval(interval.startTime, interval.endTime)],
+			getAllowedTimes(start.getTime(), end.getTime(), dailyWindowStart, dailyWindowEnd)
+		).reduce((prev, curr) => prev + curr.size(), 0);
+	}
 	const start = new Date(interval.startTime);
 	const end = new Date(interval.endTime);
-	return Interval.intersect(
-		[new Interval(start.getTime(), end.getTime())],
-		getAllowedTimes(
-			start.getTime(),
-			end.getTime(),
+	const i = new Interval(start.getTime(), end.getTime());
+	return (
+		intervalToCumulatedDuration(
+			i,
 			AVAILABILITY_COMPENSATION_WINDOW_START,
 			AVAILABILITY_COMPENSATION_WINDOW_END
+		) +
+		intervalToCumulatedDuration(
+			i,
+			AVAILABILITY_COMPENSATION_DOUBLE_WINDOW_START,
+			AVAILABILITY_COMPENSATION_DOUBLE_WINDOW_END
 		)
-	).reduce((prev, curr) => prev + curr.size(), 0);
+	);
 }
 
-async function writeAvailabilityCovering(
+function computeScore(
+	company: Vehicle[],
 	interval: Interval,
-	startOfMonth: number,
-	skipWriting: boolean
+	dailyWindowStart: number,
+	dailyWindowEnd: number
 ) {
-	const prefactor = getPrefactor(interval) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE;
-	const vehicles = await db
+	const vehicleIntervals = company
+		.flatMap((vehicle) =>
+			Interval.merge(
+				vehicle.tours
+					.map((t) => new Interval(t.departure, t.arrival).intersect(interval))
+					.concat(
+						vehicle.availabilities.map((a) =>
+							new Interval(a.startTime, a.endTime).intersect(interval)
+						)
+					)
+					.filter((i) => i !== undefined)
+			)
+		)
+		.map((i) => {
+			const allowed = getAllowedTimes(i.startTime, i.endTime, dailyWindowStart, dailyWindowEnd);
+			if (allowed.length === 0) {
+				return undefined;
+			}
+			return i.intersect(allowed[0]);
+		})
+		.filter((i) => i !== undefined);
+	const withCounts = Interval.aggregate(vehicleIntervals);
+	return withCounts.reduce((prev, curr) => prev + (curr.count === 0 ? 0 : curr.interval.size()), 0);
+}
+
+async function query(interval: Interval) {
+	return await db
 		.selectFrom('vehicle')
 		.select((eb) => [
 			'vehicle.company',
@@ -104,6 +146,17 @@ async function writeAvailabilityCovering(
 			selectTours(eb, interval)
 		])
 		.execute();
+}
+
+type Vehicle = Awaited<ReturnType<typeof query>>[0];
+
+async function writeAvailabilityCovering(
+	interval: Interval,
+	startOfMonth: number,
+	skipWriting: boolean
+) {
+	const prefactor = getPrefactor(interval) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE;
+	const vehicles = await query(interval);
 	const byCompany = groupBy(
 		vehicles,
 		(v) => v.company,
@@ -120,37 +173,19 @@ async function writeAvailabilityCovering(
 		if (company.length === 0) {
 			continue;
 		}
-		const vehicleIntervals = company
-			.flatMap((vehicle) =>
-				Interval.merge(
-					vehicle.tours
-						.map((t) => new Interval(t.departure, t.arrival).intersect(interval))
-						.concat(
-							vehicle.availabilities.map((a) =>
-								new Interval(a.startTime, a.endTime).intersect(interval)
-							)
-						)
-						.filter((i) => i !== undefined)
-				)
-			)
-			.map((i) => {
-				const allowed = getAllowedTimes(
-					i.startTime,
-					i.endTime,
-					AVAILABILITY_COMPENSATION_WINDOW_START,
-					AVAILABILITY_COMPENSATION_WINDOW_END
-				);
-				if (allowed.length === 0) {
-					return undefined;
-				}
-				return i.intersect(allowed[0]);
-			})
-			.filter((i) => i !== undefined);
-		const withCounts = Interval.aggregate(vehicleIntervals);
-		const score = withCounts.reduce(
-			(prev, curr) => prev + (curr.count === 0 ? 0 : curr.interval.size()),
-			0
-		);
+		const score =
+			computeScore(
+				company,
+				interval,
+				AVAILABILITY_COMPENSATION_WINDOW_START,
+				AVAILABILITY_COMPENSATION_WINDOW_END
+			) +
+			computeScore(
+				company,
+				interval,
+				AVAILABILITY_COMPENSATION_DOUBLE_WINDOW_START,
+				AVAILABILITY_COMPENSATION_DOUBLE_WINDOW_END
+			);
 		if (prefactor === 0) {
 			continue;
 		}

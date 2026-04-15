@@ -92,7 +92,7 @@ describe('capture availability state', () => {
 		expect(compensations).toHaveLength(1);
 		expect(compensations[0].availabilityPercent).toBe(1);
 	});
-	it('1 hour', async () => {
+	it('1 hour (single counted)', async () => {
 		const mockDate = new Date('2024-01-01T00:00:00');
 		vi.setSystemTime(mockDate);
 
@@ -100,13 +100,64 @@ describe('capture availability state', () => {
 		await captureAvailabilityState();
 		const states = await db.selectFrom('availabilityState').selectAll().execute();
 		expect(states).toHaveLength(1);
-		expect(states[0].score).toBe(MAXIMUM_DAILY_AVAILABILITY / (MAXIMUM_DAILY_AVAILABILITY / HOUR));
+		expect(states[0].score).toBe(HOUR);
 		expect(states[0].prefactor).toBe(1);
 
 		const compensations = await computeCompensation(getStartOfMonth(mockDate));
 		expect(compensations).toHaveLength(1);
 		expect(compensations[0].availabilityPercent).toBe(
 			1 / AVAILABILITY_CONFIRMATION_DEADLINE_DAYS / (MAXIMUM_DAILY_AVAILABILITY / HOUR)
+		);
+	});
+	it('1 hour (double counted)', async () => {
+		const mockDate = new Date('2024-01-01T00:00:00');
+		vi.setSystemTime(mockDate);
+
+		await addAvailability(Date.now() + 18 * HOUR, Date.now() + 19 * HOUR, vehicle, company);
+		await captureAvailabilityState();
+		const states = await db.selectFrom('availabilityState').selectAll().execute();
+		expect(states).toHaveLength(1);
+		expect(states[0].score).toBe(2 * HOUR);
+		expect(states[0].prefactor).toBe(1);
+
+		const compensations = await computeCompensation(getStartOfMonth(mockDate));
+		expect(compensations).toHaveLength(1);
+		expect(compensations[0].availabilityPercent).toBe(
+			2 / AVAILABILITY_CONFIRMATION_DEADLINE_DAYS / (MAXIMUM_DAILY_AVAILABILITY / HOUR)
+		);
+	});
+	it('all single counted hours', async () => {
+		const mockDate = new Date('2024-01-01T00:00:00');
+		vi.setSystemTime(mockDate);
+
+		await addAvailability(Date.now() + 5 * HOUR, Date.now() + 18 * HOUR, vehicle, company);
+		await captureAvailabilityState();
+		const states = await db.selectFrom('availabilityState').selectAll().execute();
+		expect(states).toHaveLength(1);
+		expect(states[0].score).toBe(13 * HOUR);
+		expect(states[0].prefactor).toBe(1);
+
+		const compensations = await computeCompensation(getStartOfMonth(mockDate));
+		expect(compensations).toHaveLength(1);
+		expect(compensations[0].availabilityPercent).toBe(
+			13 / AVAILABILITY_CONFIRMATION_DEADLINE_DAYS / (MAXIMUM_DAILY_AVAILABILITY / HOUR)
+		);
+	});
+	it('all double counted hours', async () => {
+		const mockDate = new Date('2024-01-01T00:00:00');
+		vi.setSystemTime(mockDate);
+
+		await addAvailability(Date.now() + 18 * HOUR, Date.now() + 23 * HOUR, vehicle, company);
+		await captureAvailabilityState();
+		const states = await db.selectFrom('availabilityState').selectAll().execute();
+		expect(states).toHaveLength(1);
+		expect(states[0].score).toBe(2 * 5 * HOUR);
+		expect(states[0].prefactor).toBe(1);
+
+		const compensations = await computeCompensation(getStartOfMonth(mockDate));
+		expect(compensations).toHaveLength(1);
+		expect(compensations[0].availabilityPercent).toBe(
+			(2 * 5) / AVAILABILITY_CONFIRMATION_DEADLINE_DAYS / (MAXIMUM_DAILY_AVAILABILITY / HOUR)
 		);
 	});
 	it('1 block', async () => {
@@ -122,15 +173,35 @@ describe('capture availability state', () => {
 		await captureAvailabilityState();
 		const states = await db.selectFrom('availabilityState').selectAll().execute();
 		expect(states).toHaveLength(1);
-		expect(states[0].score).toBe(
-			MAXIMUM_DAILY_AVAILABILITY / (MAXIMUM_DAILY_AVAILABILITY / HOUR) / 4
-		);
+		expect(states[0].score).toBe(HOUR / 4);
 		expect(states[0].prefactor).toBe(1);
 
 		const compensations = await computeCompensation(getStartOfMonth(mockDate));
 		expect(compensations).toHaveLength(1);
 		expect(compensations[0].availabilityPercent).toBe(
 			1 / AVAILABILITY_CONFIRMATION_DEADLINE_DAYS / (MAXIMUM_DAILY_AVAILABILITY / HOUR) / 4
+		);
+	});
+	it('1 double counted block', async () => {
+		const mockDate = new Date('2024-01-01T00:00:00');
+		vi.setSystemTime(mockDate);
+
+		await addAvailability(
+			Date.now() + 18 * HOUR,
+			Date.now() + 18 * HOUR + 15 * MINUTE,
+			vehicle,
+			company
+		);
+		await captureAvailabilityState();
+		const states = await db.selectFrom('availabilityState').selectAll().execute();
+		expect(states).toHaveLength(1);
+		expect(states[0].score).toBe((2 * HOUR) / 4);
+		expect(states[0].prefactor).toBe(1);
+
+		const compensations = await computeCompensation(getStartOfMonth(mockDate));
+		expect(compensations).toHaveLength(1);
+		expect(compensations[0].availabilityPercent).toBe(
+			2 / AVAILABILITY_CONFIRMATION_DEADLINE_DAYS / (MAXIMUM_DAILY_AVAILABILITY / HOUR) / 4
 		);
 	});
 	it('touching 2 months', async () => {
@@ -188,13 +259,13 @@ describe('capture availability state', () => {
 		await captureAvailabilityState();
 		const states = await db.selectFrom('availabilityState').selectAll().execute();
 		expect(states).toHaveLength(1);
-		expect(states[0].score).toBe(10 * HOUR);
+		expect(states[0].score).toBe(6 * HOUR + 5 * 2 * HOUR);
 		expect(states[0].prefactor).toBe(1);
 
 		const compensations = await computeCompensation(getStartOfMonth(mockDate));
 		expect(compensations).toHaveLength(1);
 		expect(compensations[0].availabilityPercent).toBe(
-			10 / AVAILABILITY_CONFIRMATION_DEADLINE_DAYS / (MAXIMUM_DAILY_AVAILABILITY / HOUR)
+			16 / AVAILABILITY_CONFIRMATION_DEADLINE_DAYS / (MAXIMUM_DAILY_AVAILABILITY / HOUR)
 		);
 	});
 	it('touching 2 months full 2 weeks made available', async () => {
@@ -245,24 +316,24 @@ describe('capture availability state', () => {
 	it('last hour of day', async () => {
 		const mockDate = new Date('2024-01-01T00:00:00');
 		vi.setSystemTime(mockDate);
-		await addAvailability(Date.now() + HOUR * 21, Date.now() + 22 * HOUR, vehicle, company);
+		await addAvailability(Date.now() + HOUR * 22, Date.now() + 23 * HOUR, vehicle, company);
 		await captureAvailabilityState();
 
 		const states = await db.selectFrom('availabilityState').selectAll().execute();
 		expect(states).toHaveLength(1);
-		expect(states[0].score).toBe(HOUR);
+		expect(states[0].score).toBe(2 * HOUR);
 		expect(states[0].prefactor).toBe(1);
 
 		const compensations = await computeCompensation(getStartOfMonth(mockDate));
 		expect(compensations).toHaveLength(1);
 		expect(compensations[0].availabilityPercent).toBe(
-			1 / (MAXIMUM_DAILY_AVAILABILITY / HOUR) / AVAILABILITY_CONFIRMATION_DEADLINE_DAYS
+			2 / (MAXIMUM_DAILY_AVAILABILITY / HOUR) / AVAILABILITY_CONFIRMATION_DEADLINE_DAYS
 		);
 	});
 	it('add disallowed availability -> score stays at zero', async () => {
 		const mockDate = new Date('2024-01-01T00:00:00');
 		vi.setSystemTime(mockDate);
-		await addAvailability(Date.now() + HOUR * 24, Date.now() + 25 * HOUR, vehicle, company);
+		await addAvailability(Date.now() + HOUR * 23, Date.now() + 24 * HOUR, vehicle, company);
 		await captureAvailabilityState();
 
 		const states = await db.selectFrom('availabilityState').selectAll().execute();
@@ -277,7 +348,7 @@ describe('capture availability state', () => {
 	it('add disallowed availability slightly before allowed -> score stays at zero', async () => {
 		const mockDate = new Date('2024-01-01T00:00:00');
 		vi.setSystemTime(mockDate);
-		await addAvailability(Date.now() + HOUR * 26, Date.now() + 27 * HOUR, vehicle, company);
+		await addAvailability(Date.now() + HOUR * 28, Date.now() + 29 * HOUR, vehicle, company);
 		await captureAvailabilityState();
 
 		const states = await db.selectFrom('availabilityState').selectAll().execute();
@@ -320,11 +391,13 @@ describe('capture availability state', () => {
 
 		const states = await db.selectFrom('availabilityState').selectAll().execute();
 		expect(states).toHaveLength(2);
-		expect(states[0].score).toBe(MINUTE * 30);
-		expect(states[0].prefactor).toBe((MINUTE * 30) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE);
+		expect(states[0].score).toBe(2 * (HOUR + MINUTE * 30));
+		expect(states[0].prefactor).toBe(
+			(2 * (HOUR + MINUTE * 30)) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE
+		);
 		expect(states[1].score).toBe(MAXIMUM_DAILY_AVAILABILITY);
 		expect(states[1].prefactor).toBe(
-			1 - (MINUTE * 30) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE
+			1 - (2 * (HOUR + MINUTE * 30)) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE
 		);
 
 		const compensations = await computeCompensation(getStartOfMonth(mockDate));
@@ -338,7 +411,7 @@ describe('capture availability state', () => {
 		expect(compensations2[0].availabilityPercent).toBe(
 			MAXIMUM_DAILY_AVAILABILITY /
 				MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
-				(1 - (MINUTE * 30) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE)
+				(1 - (2 * (HOUR + MINUTE * 30)) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE)
 		);
 	});
 	it('compute availability percent for full 2 weeks crossing month end', async () => {
