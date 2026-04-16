@@ -59,7 +59,6 @@ export const actions = {
 			return fail(400, { msg: msg('unknownError') });
 		}
 		let times: number[];
-console.log("bla", JSON.stringify(rawTimes,null,2))
 		try {
 			times = JSON.parse(rawTimes) as number[];
 		} catch {
