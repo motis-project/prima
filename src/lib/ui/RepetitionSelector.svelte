@@ -9,21 +9,17 @@
 	import { Label } from '$lib/shadcn/label';
 	import { LOCALE } from '$lib/constants';
 
-	export type Day = 0 | 1 | 2 | 3 | 4 | 5 | 6;
-
 	let {
 		minValue,
 		selectedDays = $bindable(),
-		range = $bindable(),
-		addDaysByRule
+		range = $bindable()
 	}: {
 		minValue: CalendarDate;
-		selectedDays: Day[];
+		selectedDays: boolean[];
 		range: {
 			start: CalendarDate;
 			end: CalendarDate;
 		};
-		addDaysByRule: () => void;
 	} = $props();
 
 	let repetitionLabel: undefined | string = $state(undefined);
@@ -46,20 +42,24 @@
 			repetitionLabel = undefined;
 			return;
 		}
-		if (selectedDays.length === 7) {
+		if (!selectedDays.some((d) => !d)) {
 			repetitionLabel = 'daily' + timeRangeString;
 			return;
 		}
 		repetitionLabel = selectedDays
-			.map((d) => t.ride.daysList.find((day) => day.key === d)!.full)
+			.map((d, i) => (d ? t.ride.daysList[i].full : undefined))
+			.filter((d) => d !== undefined)
 			.join(', ')
 			.concat(timeRangeString);
 	}
 
-	function toggleDay(day: Day) {
-		selectedDays = selectedDays.includes(day)
-			? (selectedDays.filter((d) => d !== day) as Day[])
-			: ([...selectedDays, day].sort((a, b) => a - b) as Day[]);
+	function toggleDay(day: string) {
+		const idx = t.ride.daysList.findIndex((d) => d.full === day);
+		selectedDays[idx] = !selectedDays[idx];
+	}
+
+	function isDaySelected(day: string) {
+		return selectedDays[t.ride.daysList.findIndex((d) => d.full === day)];
 	}
 
 	let open = $state(false);
@@ -78,12 +78,12 @@
 					{#each t.ride.daysList as day}
 						<button
 							type="button"
-							aria-pressed={selectedDays.includes(day.key)}
+							aria-pressed={isDaySelected(day.full)}
 							aria-label={day.full}
-							onclick={() => toggleDay(day.key)}
+							onclick={() => toggleDay(day.full)}
 							class={`flex h-10 w-10 items-center justify-center rounded-full border text-sm font-medium transition-colors
 					${
-						selectedDays.includes(day.key)
+						isDaySelected(day.full)
 							? 'border-blue-600 bg-blue-600 text-white'
 							: 'border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100'
 					}`}
@@ -110,7 +110,6 @@
 			</Popover.Root>
 			<Button
 				onclick={() => {
-					addDaysByRule();
 					updateDescription();
 					open = false;
 				}}>{t.ride.addRule}</Button

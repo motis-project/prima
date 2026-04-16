@@ -5,6 +5,9 @@ import { addRideShareTour } from '$lib/server/booking/index';
 import { msg } from '$lib/msg';
 import { readFloat, readInt } from '$lib/server/util/readForm';
 import { sql } from 'kysely';
+import { parseDate } from '@internationalized/date';
+import { TZ } from '$lib/constants';
+import { HOUR, MINUTE, SECOND } from '$lib/util/time';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const vehicles = await db
@@ -35,6 +38,7 @@ export const actions = {
 			};
 		};
 
+		const time = readInt(formData.get('time'));
 		const startFixed = formData.get('timeType') !== 'arrival';
 		const passengers = readInt(formData.get('passengers'));
 		const luggage = readInt(formData.get('luggage'));
@@ -44,35 +48,47 @@ export const actions = {
 		const end = parseCoords('end');
 		const startLabel = formData.get('startLabel');
 		const endLabel = formData.get('endLabel');
-		const rawTimes = formData.get('time');
-		const hash = formData.get('hash');
+
+		const days = readInt(formData.get('days'));
+		const rangeStartRaw = formData.get('rangeStart');
+		const rangeEndRaw = formData.get('rangeEnd');
 
 		if (
+			Number.isNaN(time) ||
 			Number.isNaN(passengers) ||
 			Number.isNaN(luggage) ||
 			Number.isNaN(vehicle) ||
+			typeof rangeStartRaw !== 'string' ||
+			typeof rangeEndRaw !== 'string' ||
+			Number.isNaN(days) ||
 			typeof startLabel !== 'string' ||
-			typeof endLabel !== 'string' ||
-			typeof rawTimes !== 'string' ||
-			typeof hash !== 'string'
+			typeof endLabel !== 'string'
 		) {
 			return fail(400, { msg: msg('unknownError') });
 		}
-		let times: number[];
-		try {
-			times = JSON.parse(rawTimes) as number[];
-		} catch {
-			return fail(400, { msg: msg('unknownError') });
-		}
-		if (!Array.isArray(times) || !times.every((x) => typeof x === 'number' && Number.isFinite(x))) {
-			return fail(400, { msg: msg('unknownError') });
-		}
 
-		// TODO transaction
-		let successes = 0;
-		for (const time of times) {
-			const tourId = await addRideShareTour(
-				time,
+		const rangeStart = parseDate(rangeStartRaw);
+		const rangeEnd = parseDate(rangeEndRaw);
+
+		const date = new Date(time);
+		const timeAfterMidnight =
+			date.getHours() * HOUR +
+			date.getMinutes() * MINUTE +
+			date.getSeconds() * SECOND +
+			date.getMilliseconds();
+
+		const times: number[] = [];
+		let currentDay = rangeStart;
+		while (currentDay.compare(rangeEnd) <= 0) {
+			const currentDate = new Date(currentDay.toDate(TZ).getTime() + timeAfterMidnight);
+			if (days & (currentDate.getDay() + 6) % 7) {
+				times.push(currentDate.getTime());
+			}
+			currentDay = currentDay.add({ days: 1 });
+		}
+		await db.transaction().execute(async (trx) => {
+			const result = await addRideShareTour(
+				times,
 				startFixed,
 				passengers,
 				luggage,
@@ -82,15 +98,15 @@ export const actions = {
 				end,
 				startLabel,
 				endLabel,
-				times.length === 1 ? undefined : hash
+				trx,
+				days,
+				rangeStart.toString(),
+				rangeEnd.toString()
 			);
-			if (tourId != undefined) {
-				successes++;
+			if (result == undefined) {
+				return fail(400, { msg: msg('vehicleConflict') });
 			}
-		}
-		if (successes !== times.length) {
-			return fail(400, { msg: msg('vehicleConflict') });
-		}
+		});
 		return redirect(302, `/ride-offers`);
 	}
 };

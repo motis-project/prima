@@ -400,13 +400,13 @@ const translations: Translations = {
 		individualDays: 'individuelle Tage',
 		to: 'bis ',
 		daysList: [
-			{ key: 0, short: 'S', full: 'So' },
-			{ key: 1, short: 'M', full: 'Mo' },
-			{ key: 2, short: 'D', full: 'Di' },
-			{ key: 3, short: 'M', full: 'Mi' },
-			{ key: 4, short: 'D', full: 'Do' },
-			{ key: 5, short: 'F', full: 'Fr' },
-			{ key: 6, short: 'S', full: 'Sa' }
+			{ short: 'S', full: 'So' },
+			{ short: 'M', full: 'Mo' },
+			{ short: 'D', full: 'Di' },
+			{ short: 'M', full: 'Mi' },
+			{ short: 'D', full: 'Do' },
+			{ short: 'F', full: 'Fr' },
+			{ short: 'S', full: 'Sa' }
 		],
 		chooseTimeSpan: 'Zeitspanne anpassen:'
 	},

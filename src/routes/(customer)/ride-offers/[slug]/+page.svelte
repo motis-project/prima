@@ -41,7 +41,7 @@
 								<AlertDialog.Description>
 									<div class="flex flex-col">
 										{t.ride.cancelDescription}
-										{#if data.hash}
+										{#if data.pattern}
 											<label class="flex items-center gap-2">
 												<input type="checkbox" bind:checked={cancelAll} />
 												<span>{t.booking.cancelCheckbox}</span>
@@ -54,7 +54,7 @@
 								<AlertDialog.Cancel>{t.booking.noCancel}</AlertDialog.Cancel>
 								<form method="post" use:enhance action="?/cancel">
 									<input type="hidden" name="requestId" value={data.id} />
-									<input type="hidden" name="hash" value={cancelAll ? data.hash : null} />
+									<input type="hidden" name="pattern" value={cancelAll ? data.pattern : null} />
 									<AlertDialog.Action>
 										{t.ride.cancelTrip}
 									</AlertDialog.Action>

@@ -15,7 +15,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	if (result.journeys.length != 1) {
 		error(404, 'Not found');
 	}
-
 	return result.journeys[0];
 };
 
@@ -23,11 +22,18 @@ export const actions = {
 	cancel: async ({ request, locals }): Promise<{ msg: Msg }> => {
 		const formData = await request.formData();
 		const requestId = readInt(formData.get('requestId'));
-		const hash = formData.get('hash');
-		if (typeof hash !== 'string' || hash === null) {
+		const patternString = formData.get('pattern');
+		if (typeof patternString !== 'string' || patternString === null) {
 			throw new Error();
 		}
-		await cancelRideShareTour(requestId, locals.session!.userId!, hash);
+		let pattern: number | undefined = undefined;
+		if (patternString) {
+			pattern = parseInt(patternString);
+		}
+		if (Number.isNaN(pattern)) {
+			throw new Error();
+		}
+		await cancelRideShareTour(requestId, locals.session!.userId!, pattern);
 		return redirect(302, `/bookings`);
 	},
 	accept: async ({ request, locals }) => {

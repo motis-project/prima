@@ -35,12 +35,12 @@
 	import maplibregl from 'maplibre-gl';
 	import type { Itinerary } from '$lib/openapi';
 	import { enhance } from '$app/forms';
-	import { DAY, HOUR, MINUTE, SECOND } from '$lib/util/time';
+	import { DAY, HOUR } from '$lib/util/time';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
 	import { TZ } from '$lib/constants';
 	import { CalendarDate, fromDate, toCalendarDate } from '@internationalized/date';
-	import RepetitionSelector, { type Day } from '$lib/ui/RepetitionSelector.svelte';
+	import RepetitionSelector from '$lib/ui/RepetitionSelector.svelte';
 
 	const { data, form } = $props();
 
@@ -89,55 +89,9 @@
 		start: toCalendarDate(fromDate(new Date(Date.now() + HOUR * 2), TZ)),
 		end: toCalendarDate(fromDate(new Date(Date.now() + DAY * 30), TZ))
 	});
-	let timeAfterMidnight = $derived<number>(
-		time.getHours() * HOUR +
-			time.getMinutes() * MINUTE +
-			time.getSeconds() * SECOND +
-			time.getMilliseconds()
-	);
-	let times = $state<number[]>([]);
 
-	let selectedDays: Day[] = $state([]);
-
-	function addDaysByRule() {
-		times = [];
-		let currentDay = range.start;
-		while (currentDay.compare(range.end) <= 0) {
-			const currentDate = new Date(currentDay.toDate(TZ).getTime() + timeAfterMidnight);
-			if (selectedDays.some((d) => d === currentDate.getDay())) {
-				times.push(currentDate.getTime());
-			}
-			currentDay = currentDay.add({ days: 1 });
-		}
-	}
-
-	let payloadForHash = $derived({
-		startLat: from.value.match?.lat ?? null,
-		startLon: from.value.match?.lon ?? null,
-		startLabel: from.label,
-		endLat: to.value.match?.lat ?? null,
-		endLon: to.value.match?.lon ?? null,
-		endLabel: to.label,
-		time: times,
-		timeType,
-		vehicle,
-		luggage,
-		passengers,
-		now: Date.now()
-	});
-	let hash = $state('');
-	$effect(() => {
-		const json = JSON.stringify(payloadForHash);
-
-		(async () => {
-			const bytes = new TextEncoder().encode(json);
-			const digest = await crypto.subtle.digest('SHA-256', bytes);
-
-			hash = Array.from(new Uint8Array(digest))
-				.map((b) => b.toString(16).padStart(2, '0'))
-				.join('');
-		})();
-	});
+	let selectedDays: boolean[] = $state(Array.from(t.ride.daysList, (_) => false));
+	let bitDays = $derived(selectedDays.reduce((mask, val, i) => (val ? mask | (1 << i) : mask), 0));
 
 	$effect(() => {
 		if (from.value.match && to.value.match && vehicle && time && timeType) {
@@ -407,7 +361,6 @@
 			<RepetitionSelector
 				minValue={toCalendarDate(fromDate(new Date(Date.now() + HOUR * 2), TZ))}
 				bind:range
-				{addDaysByRule}
 				bind:selectedDays
 			></RepetitionSelector>
 
@@ -467,12 +420,14 @@
 			<input type="hidden" name="endLat" value={to.value.match?.lat} />
 			<input type="hidden" name="endLon" value={to.value.match?.lon} />
 			<input type="hidden" name="endLabel" value={to.label} />
-			<input type="hidden" name="time" value={JSON.stringify(times)} />
+			<input type="hidden" name="time" value={time.getTime()} />
 			<input type="hidden" name="timeType" value={timeType} />
 			<input type="hidden" name="vehicle" value={vehicle} />
 			<input type="hidden" name="luggage" value={luggage} />
 			<input type="hidden" name="passengers" value={passengers} />
-			<input type="hidden" name="hash" value={hash} />
+			<input type="hidden" name="days" value={bitDays} />
+			<input type="hidden" name="rangeStart" value={range.start.toString()} />
+			<input type="hidden" name="rangeEnd" value={range.end.toString()} />
 		</form>
 	</div>
 </div>

@@ -87,7 +87,7 @@ describe('add ride share request', () => {
 			'DE'
 		);
 		const tourId = await addRideShareTour(
-			inXMinutes(40),
+			[inXMinutes(40)],
 			true,
 			3,
 			0,
@@ -187,7 +187,7 @@ describe('add ride share request', () => {
 			'DE'
 		);
 		const tourId = await addRideShareTour(
-			inXMinutes(40),
+			[inXMinutes(40)],
 			true,
 			3,
 			0,
@@ -224,7 +224,7 @@ describe('add ride share request', () => {
 			'DE'
 		);
 		const tourId = await addRideShareTour(
-			inXMinutes(40),
+			[inXMinutes(40)],
 			true,
 			3,
 			0,
@@ -261,7 +261,7 @@ describe('add ride share request', () => {
 			'DE'
 		);
 		const tourId = await addRideShareTour(
-			inXMinutes(40),
+			[inXMinutes(40)],
 			true,
 			1,
 			0,

@@ -8,23 +8,27 @@ import { retry } from '$lib/server/db/retryQuery';
 export async function cancelRideShareTour(
 	tourId: number,
 	user: number,
-	hash?: string
+	pattern?: number
 ): Promise<{ status?: number; message?: string }> {
 	await retry(() =>
 		db.transaction().execute(async (trx) => {
 			let cancelIds: number[] = [];
-			if (hash !== undefined) {
+			if (pattern !== undefined) {
 				cancelIds = (
 					await trx
 						.selectFrom('rideShareTour')
-						.where('rideShareTour.hash', '=', hash)
+						.where('rideShareTour.pattern', '=', pattern)
+						.where('rideShareTour.cancelled', '=', false)
 						.where((eb) =>
-							eb.exists(
-								eb
-									.selectFrom('request')
-									.whereRef('request.rideShareTour', '=', 'rideShareTour.id')
-									.where('request.pending', '=', false)
-									.where('request.startFixed', 'is', null)
+							eb.not(
+								eb.exists(
+									eb
+										.selectFrom('request')
+										.whereRef('request.rideShareTour', '=', 'rideShareTour.id')
+										.where('request.pending', '=', false)
+										.where('request.startFixed', 'is not', null)
+										.where('request.cancelled', '=', false)
+								)
 							)
 						)
 						.select('rideShareTour.id')
