@@ -24,7 +24,7 @@ export async function cancelRideShareTour(
 									.selectFrom('request')
 									.whereRef('request.rideShareTour', '=', 'rideShareTour.id')
 									.where('request.pending', '=', false)
-									.where('request.startFixed', 'is not', null)
+									.where('request.startFixed', 'is', null)
 							)
 						)
 						.select('rideShareTour.id')
