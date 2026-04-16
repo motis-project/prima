@@ -339,7 +339,9 @@ export type Translations = {
 		repetitionLabel: string;
 		addRule: string;
 		individualDays: string;
-		lastDay: string;
+		to: string;
+		daysList: { key: 0 | 1 | 2 | 3 | 4 | 5 | 6; short: string; full: string }[];
+		chooseTimeSpan: string;
 	};
 
 	buttons: {

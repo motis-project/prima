@@ -387,7 +387,17 @@ const translations: Translations = {
 		repetitionLabel: 'Publish repeating ride offers',
 		addRule: 'Add rule',
 		individualDays: 'Individual days',
-		lastDay: 'until:'
+		to: 'to ',
+		daysList: [
+			{ key: 0, short: 'S', full: 'Sun' },
+			{ key: 1, short: 'M', full: 'Mon' },
+			{ key: 2, short: 'T', full: 'Tue' },
+			{ key: 3, short: 'W', full: 'Wed' },
+			{ key: 4, short: 'T', full: 'Thu' },
+			{ key: 5, short: 'F', full: 'Fri' },
+			{ key: 6, short: 'S', full: 'Sat' }
+		],
+		chooseTimeSpan: 'adjust time range:'
 	},
 
 	buttons: {
