@@ -17,8 +17,7 @@
 		Plus,
 		Car,
 		Users,
-		Luggage,
-		CalendarIcon
+		Luggage
 	} from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
@@ -405,7 +404,12 @@
 				</Popover.Root>
 			</div>
 
-			<RepetitionSelector bind:selectedDays bind:range {addDaysByRule}></RepetitionSelector>
+			<RepetitionSelector
+				minValue={toCalendarDate(fromDate(new Date(Date.now() + HOUR * 2), TZ))}
+				bind:range
+				{addDaysByRule}
+				bind:selectedDays
+			></RepetitionSelector>
 
 			<div class="flex items-center justify-center">
 				{#if page.state.selectedItinerary && !loading}

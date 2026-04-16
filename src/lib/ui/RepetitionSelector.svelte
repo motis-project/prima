@@ -12,10 +12,12 @@
 	export type Day = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 	let {
+		minValue,
 		selectedDays = $bindable(),
 		range = $bindable(),
 		addDaysByRule
 	}: {
+		minValue: CalendarDate;
 		selectedDays: Day[];
 		range: {
 			start: CalendarDate;
@@ -29,8 +31,17 @@
 		' ' + range.start?.toString() + ' ' + t.ride.to + range.end?.toString()
 	);
 
+	let intermediateRange = $state({ start: range.start, end: range.end });
+	$effect(() => {
+		if (intermediateRange.start && intermediateRange.start !== range.start) {
+			range.start = intermediateRange.start;
+		}
+		if (intermediateRange.end && intermediateRange.end !== range.end) {
+			range.end = intermediateRange.end;
+		}
+	});
+
 	function updateDescription() {
-		console.log({ selectedDays: selectedDays.length });
 		if (selectedDays.length === 0) {
 			repetitionLabel = undefined;
 			return;
@@ -89,7 +100,12 @@
 					{timeRangeString}
 				</Popover.Trigger>
 				<Popover.Content class="w-auto p-2">
-					<RangeCalendar bind:value={range} class="rounded-md border" locale={LOCALE} />
+					<RangeCalendar
+						{minValue}
+						bind:value={intermediateRange}
+						class="rounded-md border"
+						locale={LOCALE}
+					/>
 				</Popover.Content>
 			</Popover.Root>
 			<Button
