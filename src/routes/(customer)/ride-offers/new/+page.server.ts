@@ -86,6 +86,10 @@ export const actions = {
 			}
 			currentDay = currentDay.add({ days: 1 });
 		}
+
+		if (days === 0) {
+			times.push(time);
+		}
 		await db.transaction().execute(async (trx) => {
 			const result = await addRideShareTour(
 				times,
