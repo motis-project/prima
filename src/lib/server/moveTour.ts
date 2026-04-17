@@ -84,7 +84,7 @@ export async function moveTour(
 				console.assert(
 					!movedTour.requests.some((r) => r.events.length == 0),
 					'Found a request which contains no events. requestId: ' +
-						movedTour.requests.find((r) => r.events.length === 0)?.requestId
+					movedTour.requests.find((r) => r.events.length === 0)?.requestId
 				);
 				if (vehicleId === undefined) {
 					console.log('MOVE TOUR early exit - no vehicle id was provided. tourId: ', tourId);
@@ -173,6 +173,11 @@ export async function moveTour(
 						'MOVE TOUR early exit - there is a collision with another tour of the target vehicle. tourId: ',
 						tourId
 					);
+					result = {
+						status: 400,
+						message:
+							'Es gibt eine Kollision mit einer anderen Tour auf dem Zielfahrzeug.'
+					};
 					return;
 				}
 				await trx
