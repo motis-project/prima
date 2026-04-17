@@ -4,6 +4,7 @@ import { msg, type Msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
 import { acceptRideShareRequest, getRideshareToursAsItinerary } from '$lib/server/booking/index';
 import { cancelRideShareTour } from '$lib/server/booking/rideShare/cancelRideShareTour';
+import { db } from '$lib/server/db';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const result = await getRideshareToursAsItinerary(
@@ -15,7 +16,26 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	if (result.journeys.length != 1) {
 		error(404, 'Not found');
 	}
-	return result.journeys[0];
+	const pattern =
+		(await db
+			.selectFrom('repeatPattern')
+			.selectAll()
+			.where('id', '=', result.journeys[0].pattern)
+			.executeTakeFirst()) ?? null;
+	const days = Array.from({ length: 7 }, () => false);
+	if (pattern) {
+		for (let i = 0; i != 7; ++i) {
+			if (pattern.days & (1 << i)) {
+				days[i] = true;
+			}
+		}
+	}
+	return {
+		...result.journeys[0],
+		days,
+		rangeStart: pattern?.rangeStart,
+		rangeEnd: pattern?.rangeEnd
+	};
 };
 
 export const actions = {
