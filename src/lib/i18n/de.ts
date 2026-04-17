@@ -462,7 +462,9 @@ const translations: Translations = {
 	},
 	availabilityPercent: 'aktuelle Abdeckung',
 	availabilityPercentExplanation:
-		'Dieser Wert zeigt die aktuelle Verfügbarkeits-Abdeckung zwischen 05:00 Uhr und 22:00 Uhr der nächsten 2 Wochen.'
+		'Dieser Wert zeigt die aktuelle Verfügbarkeits-Abdeckung zwischen 05:00 Uhr und 22:00 Uhr der nächsten 2 Wochen.',
+
+	daily: 'täglich'
 };
 
 export default translations;

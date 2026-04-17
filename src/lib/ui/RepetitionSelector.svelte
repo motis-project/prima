@@ -43,7 +43,7 @@
 			return;
 		}
 		if (!selectedDays.some((d) => !d)) {
-			repetitionLabel = 'daily' + timeRangeString;
+			repetitionLabel = t.daily + timeRangeString;
 			return;
 		}
 		repetitionLabel = selectedDays

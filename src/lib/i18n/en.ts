@@ -451,7 +451,9 @@ const translations: Translations = {
 	},
 	availabilityPercent: 'current Coverage next two weeks',
 	availabilityPercentExplanation:
-		'This value represents the current coverage between 05:00 and 21:00 for availability in the next two weeks.'
+		'This value represents the current coverage between 05:00 and 21:00 for availability in the next two weeks.',
+
+	daily: 'daily'
 };
 
 export default translations;

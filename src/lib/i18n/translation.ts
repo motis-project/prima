@@ -396,6 +396,8 @@ export type Translations = {
 
 	availabilityPercent: string;
 	availabilityPercentExplanation: string;
+
+	daily: string;
 };
 
 const translations: Map<string, Translations> = new Map(Object.entries({ en, de }));
