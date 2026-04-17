@@ -18,6 +18,14 @@ export const GET = async ({ locals, url }) => {
 	return json(updateEventGroups(await getTours(true, companyId, [fromTime, toTime])));
 };
 
+export const POST = async ({ locals, url }) => {
+	const companyId = locals.session!.companyId!;
+	const tourId = readInt(url.searchParams.get('tourId'));
+	const vehicleId = readInt(url.searchParams.get('vehicleId'));
+
+	return json(await moveTour(tourId, vehicleId, companyId));
+};
+
 function updateEventGroups(tours: Tours) {
 	const toursWithEventGroups = new Array<Tour>(tours.length);
 	for (const [tIdx, tour] of tours.entries()) {
@@ -46,11 +54,3 @@ function updateEventGroups(tours: Tours) {
 	}
 	return toursWithEventGroups;
 }
-
-export const POST = async ({ locals, url }) => {
-	const companyId = locals.session!.companyId!;
-	const tourId = readInt(url.searchParams.get('tourId'));
-	const vehicleId = readInt(url.searchParams.get('vehicleId'));
-
-	return json(await moveTour(tourId, vehicleId, companyId));
-};
