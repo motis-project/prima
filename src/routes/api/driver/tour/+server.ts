@@ -6,6 +6,18 @@ import type { TourEvent, Tour, Tours } from '$lib/util/getToursTypes';
 import { error, json } from '@sveltejs/kit';
 import { moveTour } from '$lib/server/moveTour';
 
+export const GET = async ({ locals, url }) => {
+	const companyId = locals.session!.companyId!;
+	const fromTime = readInt(url.searchParams.get('fromTime'));
+	const toTime = readInt(url.searchParams.get('toTime'));
+
+	if (isNaN(fromTime) || isNaN(toTime)) {
+		console.log('Invalid time range in api/driver/tour.', { companyId }, { fromTime }, { toTime });
+		error(400, { message: 'Invalid time range' });
+	}
+	return json(updateEventGroups(await getTours(true, companyId, [fromTime, toTime])));
+};
+
 function updateEventGroups(tours: Tours) {
 	const toursWithEventGroups = new Array<Tour>(tours.length);
 	for (const [tIdx, tour] of tours.entries()) {
@@ -34,18 +46,6 @@ function updateEventGroups(tours: Tours) {
 	}
 	return toursWithEventGroups;
 }
-
-export const GET = async ({ locals, url }) => {
-	const companyId = locals.session!.companyId!;
-	const fromTime = readInt(url.searchParams.get('fromTime'));
-	const toTime = readInt(url.searchParams.get('toTime'));
-
-	if (isNaN(fromTime) || isNaN(toTime)) {
-		console.log('Invalid time range in api/driver/tour.', { companyId }, { fromTime }, { toTime });
-		error(400, { message: 'Invalid time range' });
-	}
-	return json(updateEventGroups(await getTours(true, companyId, [fromTime, toTime])));
-};
 
 export const POST = async ({ locals, url }) => {
 	const companyId = locals.session!.companyId!;
