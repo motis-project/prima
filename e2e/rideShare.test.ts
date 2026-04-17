@@ -22,6 +22,7 @@ test('add ride share tour', async ({ page }) => {
 	await page.goto('/ride-offers/new');
 	await expect(page.getByRole('heading', { name: 'Neues Mitfahrangebot' })).toBeVisible();
 	await chooseFromTypeAhead(page, 'Von', 'schleife slepo', 'Schleife ');
+	await page.screenshot({ path: 'screenshots/afterEnteringFromAddress.png', fullPage: true });
 	await chooseFromTypeAhead(page, 'Nach', 'klein prie', 'Klein Priebus Krauschwitz');
 	await page.getByRole('button', { name: 'Los um' }).click();
 	await page.locator('input[type="datetime-local"]').fill('2035-12-12T03:15');
@@ -101,7 +102,6 @@ async function chooseFromTypeAhead(
 	expectedOption: string
 ) {
 	await page.getByRole('textbox', { name: placeholder }).click();
-	await page.screenshot({ path: 'screenshots/beforeOpeningCombobox.png', fullPage: true });
 	await expect(page.getByRole('combobox', { name: placeholder })).toBeVisible();
 	await page.getByRole('combobox', { name: placeholder }).fill(search);
 	await page
