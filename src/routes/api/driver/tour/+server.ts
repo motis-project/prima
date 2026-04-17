@@ -52,10 +52,5 @@ export const POST = async ({ locals, url }) => {
 	const tourId = readInt(url.searchParams.get('tourId'));
 	const vehicleId = readInt(url.searchParams.get('vehicleId'));
 
-	console.log(
-		'MOVE TOUR PARAMS START: ',
-		JSON.stringify({ tourId, vehicleId, companyId }, null, '\t'),
-		'MOVE TOUR PARAMS END'
-	);
 	return json(await moveTour(tourId, vehicleId, companyId));
 };
