@@ -66,7 +66,6 @@ export const actions = {
 		) {
 			return fail(400, { msg: msg('unknownError') });
 		}
-
 		const rangeStart = parseDate(rangeStartRaw);
 		const rangeEnd = parseDate(rangeEndRaw);
 
@@ -81,7 +80,7 @@ export const actions = {
 		let currentDay = rangeStart;
 		while (currentDay.compare(rangeEnd) <= 0) {
 			const currentDate = new Date(currentDay.toDate(TZ).getTime() + timeAfterMidnight);
-			if (days & (currentDate.getDay() + 6) % 7) {
+			if (days & (1 << currentDate.getDay())) {
 				times.push(currentDate.getTime());
 			}
 			currentDay = currentDay.add({ days: 1 });
