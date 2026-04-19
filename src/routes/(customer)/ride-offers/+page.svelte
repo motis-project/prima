@@ -27,12 +27,18 @@
 	{t.msg.openRequest}
 {/snippet}
 
+{#snippet comitted()}
+	<Alert class="size-4" />
+	{t.msg.acceptedRequest}
+{/snippet}
+
 {#snippet journeyList(
 	journeys: {
 		journey: Itinerary;
 		id: number;
 		cancelled: boolean | null;
 		negotiating: boolean | null;
+		comitted: boolean | null;
 	}[]
 )}
 	<div class="flex flex-col gap-4">
@@ -40,8 +46,14 @@
 			<a href="/ride-offers/{it.id}">
 				<ItinerarySummary
 					it={it.journey}
-					info={it.cancelled ? cancelled : it.negotiating ? negotiating : undefined}
-					infoVariant={it.negotiating ? 'warning' : undefined}
+					info={it.cancelled
+						? cancelled
+						: it.negotiating
+							? negotiating
+							: it.comitted
+								? comitted
+								: undefined}
+					infoVariant={it.negotiating ? 'text-warning' : it.comitted ? 'text-success' : undefined}
 					showAddress={true}
 				/>
 			</a>

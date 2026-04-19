@@ -15,6 +15,7 @@ export async function getRideshareToursAsItinerary(
 		id: number;
 		cancelled: boolean;
 		negotiating: boolean;
+		comitted: boolean;
 		requests: {
 			journey: Itinerary;
 			firstName: string;
@@ -190,6 +191,10 @@ export async function getRideshareToursAsItinerary(
 				negotiating:
 					journey.requests.some((r) => r.pending && !r.requestCancelled) &&
 					journey.communicatedStart > Date.now(),
+				comitted:
+					journey.requests.some(
+						(r) => !r.pending && !r.requestCancelled && r.customerId !== providerId
+					) && journey.communicatedStart > Date.now(),
 				licensePlate: journey.licensePlate,
 				requests
 			};
