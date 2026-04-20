@@ -14,14 +14,12 @@ import { LICENSE_PLATE_PLACEHOLDER } from '../src/lib/constants';
 test.describe.configure({ mode: 'serial' });
 
 test('add ride share tour', async ({ page }) => {
-	test.setTimeout(70000);
 	await signup(page, RIDE_SHARE_PROVIDER, true);
 	await page.goto('/account/add-or-edit-ride-share-vehicle');
 	await page.getByRole('textbox', { name: 'B-AA' }).fill(LICENSE_PLATE_PLACEHOLDER);
 	await page.getByRole('button', { name: 'Fahrzeug anlegen' }).click();
 	await page.goto('/ride-offers/new');
 	await expect(page.getByRole('heading', { name: 'Neues Mitfahrangebot' })).toBeVisible();
-	await page.screenshot({ path: 'screenshots/beforeEnteringFromAddress.png', fullPage: true });
 	await chooseFromTypeAhead(page, 'Von', 'schleife slepo', 'Schleife ');
 	await chooseFromTypeAhead(page, 'Nach', 'klein prie', 'Klein Priebus Krauschwitz');
 	await page.getByRole('button', { name: 'Los um' }).click();
