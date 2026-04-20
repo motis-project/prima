@@ -15,7 +15,7 @@ export const isValid = (capacities: Capacities, required: Capacities): boolean =
 	);
 };
 
-type Event = Capacities & { isPickup: boolean, scheduledTimeStart: number, eventGroupId: number };
+type Event = Capacities & { isPickup: boolean; scheduledTimeStart: number; eventGroupId: number };
 
 export function getPossibleInsertions(
 	taxiCapacities: Capacities,
@@ -25,8 +25,8 @@ export function getPossibleInsertions(
 	if (events.length == 0 || !isValid(taxiCapacities, requestCapacities)) {
 		return [];
 	}
-	const sortedEvents = events.sort((e1,e2) => {
-		if(e1.eventGroupId !== e2.eventGroupId) {
+	const sortedEvents = events.sort((e1, e2) => {
+		if (e1.eventGroupId !== e2.eventGroupId) {
 			return e1.scheduledTimeStart - e2.scheduledTimeStart;
 		}
 		const p1 = e1.isPickup ? 1 : -1;
