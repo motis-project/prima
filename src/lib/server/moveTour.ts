@@ -64,7 +64,8 @@ export async function moveTour(
 												'eventGroup.scheduledTimeStart',
 												'eventGroup.scheduledTimeEnd',
 												'event.communicatedTime',
-												'event.isPickup'
+												'event.isPickup',
+												'event.eventGroupId'
 											])
 									).as('events')
 								])
@@ -115,7 +116,9 @@ export async function moveTour(
 							passengers: r.passengers,
 							bikes: r.bikes,
 							wheelchairs: r.wheelchairs,
-							luggage: r.luggage
+							luggage: r.luggage,
+							scheduledTimeStart: e.scheduledTimeStart,
+							eventGroupId: e.eventGroupId
 						};
 					})
 				);
