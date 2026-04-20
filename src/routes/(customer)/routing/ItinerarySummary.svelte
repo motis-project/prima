@@ -21,7 +21,7 @@
 		it: Itinerary;
 		baseQuery?: PlanData['query'] | undefined;
 		info?: Snippet<[Itinerary]> | undefined;
-		infoVariant?: string;
+		infoVariant?: 'text-destructive' | 'text-success' | 'text-warning';
 	} = $props();
 </script>
 
@@ -84,7 +84,7 @@
 	</Card.Content>
 	{#if info}
 		<div
-			class={`flex items-center justify-end gap-1 rounded-b-lg border-t border-input bg-accent px-4 py-1.5 text-sm text-${infoVariant ?? 'destructive'}`}
+			class={`flex items-center justify-end gap-1 rounded-b-lg border-t border-input bg-accent px-4 py-1.5 text-sm ${infoVariant}`}
 		>
 			{@render info(it)}
 		</div>

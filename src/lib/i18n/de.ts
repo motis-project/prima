@@ -107,6 +107,8 @@ const translations: Translations = {
 			'Die Anfrage wurde gesendet. Die Mitfahrgelegenheit ist noch nicht fest vereinbart.',
 		accepted: 'Die Fahrt ist fest vereinbart.',
 		openRequest: 'Dieses Mitfahrangebot hat offene Anfragen.',
+		acceptedRequest: 'Dieses Mitfahrangebot hat akzeptierte Anfragen.',
+		openAndAcceptedRequest: 'Dieses Mitfahrangebot hat offene und akzeptierte Anfragen.',
 
 		// Feedback
 		feedbackThank: 'Vielen Dank für Ihr Feedback!',
