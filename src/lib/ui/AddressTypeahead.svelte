@@ -222,50 +222,53 @@
 						</button>
 					</div>
 				{/if}
-				{#each items as item (item.value)}
-					<Combobox.Item
-						class="flex w-full cursor-default select-none rounded-sm py-4 pl-4 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50"
-						value={JSON.stringify(item.value)}
-						label={item.label}
-					>
-						<div class="flex grow items-center">
-							<div class="size-6">
-								{#if item.value.match?.type == 'STOP'}
-									{@render modeCircle(
-										item.value.match.modes?.length ? item.value.match.modes![0] : 'BUS'
-									)}
-								{:else if item.value.match?.type == 'ADDRESS'}
-									<House class="size-5" />
-								{:else if item.value.match?.type == 'PLACE'}
-									{#if !item.value.match?.category || item.value.match?.category == 'none'}
-										<Place class="size-5" />
-									{:else}
-										<img
-											src={`/icons/categories/${item.value.match?.category}.svg`}
-											alt={item.value.match?.category}
-											class="size-5"
-										/>
+
+				<div class="h-[80vh] overflow-auto">
+					{#each items as item (item.value)}
+						<Combobox.Item
+							class="flex w-full cursor-default select-none rounded-sm py-4 pl-4 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50"
+							value={JSON.stringify(item.value)}
+							label={item.label}
+						>
+							<div class="flex grow items-center">
+								<div class="size-6">
+									{#if item.value.match?.type == 'STOP'}
+										{@render modeCircle(
+											item.value.match.modes?.length ? item.value.match.modes![0] : 'BUS'
+										)}
+									{:else if item.value.match?.type == 'ADDRESS'}
+										<House class="size-5" />
+									{:else if item.value.match?.type == 'PLACE'}
+										{#if !item.value.match?.category || item.value.match?.category == 'none'}
+											<Place class="size-5" />
+										{:else}
+											<img
+												src={`/icons/categories/${item.value.match?.category}.svg`}
+												alt={item.value.match?.category}
+												class="size-5"
+											/>
+										{/if}
 									{/if}
-								{/if}
+								</div>
+								<div class="ml-4 flex flex-col">
+									<span class="overflow-hidden text-ellipsis text-nowrap font-semibold">
+										{item.value.match?.name}
+									</span>
+									<span class="overflow-hidden text-ellipsis text-nowrap text-muted-foreground">
+										{getDisplayArea(item.value.match)}
+									</span>
+								</div>
 							</div>
-							<div class="ml-4 flex flex-col">
-								<span class="overflow-hidden text-ellipsis text-nowrap font-semibold">
-									{item.value.match?.name}
-								</span>
-								<span class="overflow-hidden text-ellipsis text-nowrap text-muted-foreground">
-									{getDisplayArea(item.value.match)}
-								</span>
-							</div>
-						</div>
-						{#if item.value.match?.type == 'STOP'}
-							<div class="ml-4 mt-1 flex flex-row items-center gap-1.5">
-								{#each item.value.match.modes! as mode, i (i)}
-									{@render modeCircle(mode)}
-								{/each}
-							</div>
-						{/if}
-					</Combobox.Item>
-				{/each}
+							{#if item.value.match?.type == 'STOP'}
+								<div class="ml-4 mt-1 flex flex-row items-center gap-1.5">
+									{#each item.value.match.modes! as mode, i (i)}
+										{@render modeCircle(mode)}
+									{/each}
+								</div>
+							{/if}
+						</Combobox.Item>
+					{/each}
+				</div>
 			</Combobox.Content>
 		</Combobox.Portal>
 	{/if}
