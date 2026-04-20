@@ -176,7 +176,7 @@
 		<Combobox.Portal>
 			<Combobox.Content
 				align="start"
-				class="absolute top-2 z-10 w-[var(--bits-combobox-anchor-width)] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md outline-none"
+				class="flex top-2 z-10 w-[var(--bits-combobox-anchor-width)] h-[80vh] overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md outline-none"
 			>
 				{#each items as item (item.value)}
 					<Combobox.Item
