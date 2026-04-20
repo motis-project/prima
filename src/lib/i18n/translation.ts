@@ -331,11 +331,6 @@ export type Translations = {
 		requestAccepted: string;
 		requestCancelled: string;
 		showMap: string;
-		weekdays: string;
-		weekend: string;
-		weekly: string;
-		daily: string;
-		once: string;
 		repetitionLabel: string;
 		addRule: string;
 		individualDays: string;
