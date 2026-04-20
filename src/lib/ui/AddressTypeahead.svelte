@@ -7,6 +7,13 @@
 	import maplibregl from 'maplibre-gl';
 	import { getModeStyle, type LegLike } from './modeStyle';
 	import { onMount } from 'svelte';
+	import {
+		clearHistoryLocations,
+		getHistoryLocations,
+		recordHistoryLocation
+	} from '$lib/stores/history';
+	import { t } from '$lib/i18n/translation';
+	import { Trash2 } from 'lucide-svelte';
 
 	let {
 		items = $bindable([]),
@@ -34,6 +41,26 @@
 
 	let inputValue = $state('');
 	let value = $state('');
+
+	let history = $state(getHistoryLocations());
+
+	let inputWasNotEmpty = $state(false);
+	let favTimer: ReturnType<typeof setTimeout>;
+
+	$effect(() => {
+		clearTimeout(favTimer);
+		if (inputValue) {
+			return;
+		}
+		if (inputWasNotEmpty) {
+			items = history;
+		}
+		favTimer = setTimeout(() => {
+			items = history;
+		}, 200);
+	});
+
+	const showHistoryHint = $derived(!inputValue && items.length > 0);
 
 	const getDisplayArea = (match: Match | undefined) => {
 		if (match) {
@@ -73,7 +100,6 @@
 			value = '';
 			return;
 		}
-
 		const pos = place ? maplibregl.LngLat.convert(place) : undefined;
 		const biasPlace = pos ? { place: `${pos.lat},${pos.lng}` } : {};
 		const { data: matches, error } = await geocode({
@@ -156,8 +182,10 @@
 	{open}
 	onValueChange={(e: string) => {
 		if (e) {
+			clearTimeout(favTimer);
 			selected = deserialize(e);
 			inputValue = selected.label!;
+			recordHistoryLocation(selected);
 			onValueChange(selected);
 		}
 	}}
@@ -178,6 +206,22 @@
 				align="start"
 				class="absolute top-2 z-10 w-[var(--bits-combobox-anchor-width)] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md outline-none"
 			>
+				{#if showHistoryHint}
+					<div class="text-s flex items-center justify-between border-b px-4 py-2 text-foreground">
+						<span>{t.booking.history}</span>
+
+						<button
+							class="rounded p-1 hover:bg-accent"
+							onclick={() => {
+								clearHistoryLocations();
+								history = getHistoryLocations();
+							}}
+							aria-label="Clear history"
+						>
+							<Trash2 class="size-4" />
+						</button>
+					</div>
+				{/if}
 				{#each items as item (item.value)}
 					<Combobox.Item
 						class="flex w-full cursor-default select-none rounded-sm py-4 pl-4 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50"
