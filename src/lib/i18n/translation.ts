@@ -102,6 +102,7 @@ export type Translations = {
 		accepted: string;
 		openRequest: string;
 		acceptedRequest: string;
+		openAndAcceptedRequest: string;
 
 		// Feedback
 		feedbackThank: string;

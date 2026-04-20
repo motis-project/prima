@@ -4,7 +4,7 @@
 	import { t } from '$lib/i18n/translation';
 	import type { Itinerary } from '$lib/openapi';
 	import Button from '$lib/shadcn/button/button.svelte';
-	import { Plus } from 'lucide-svelte';
+	import { Info, Plus } from 'lucide-svelte';
 	import RoutingNotifications from '$lib/ui/RoutingNotifications.svelte';
 
 	const { data } = $props();
@@ -27,8 +27,13 @@
 	{t.msg.openRequest}
 {/snippet}
 
-{#snippet comitted()}
+{#snippet negotiatingAndComitted()}
 	<Alert class="size-4" />
+	{t.msg.openAndAcceptedRequest}
+{/snippet}
+
+{#snippet comitted()}
+	<Info class="size-4" />
 	{t.msg.acceptedRequest}
 {/snippet}
 
@@ -48,11 +53,13 @@
 					it={it.journey}
 					info={it.cancelled
 						? cancelled
-						: it.negotiating
-							? negotiating
-							: it.comitted
-								? comitted
-								: undefined}
+						: it.negotiating && it.comitted
+							? negotiatingAndComitted
+							: it.negotiating
+								? negotiating
+								: it.comitted
+									? comitted
+									: undefined}
 					infoVariant={it.negotiating ? 'text-warning' : it.comitted ? 'text-success' : undefined}
 					showAddress={true}
 				/>

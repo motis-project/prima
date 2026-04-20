@@ -102,6 +102,7 @@ const translations: Translations = {
 		accepted: 'This ride has been agreed upon.',
 		openRequest: 'This ride offer has open requests.',
 		acceptedRequest: 'This ride offer has accepted requests.',
+		openAndAcceptedRequest: 'This ride offer has open and accepted requests.',
 
 		// Feedback
 		feedbackThank: 'Thank you very much for your feedback!',
