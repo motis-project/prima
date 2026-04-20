@@ -267,7 +267,6 @@ class AvailabilityViewModel @Inject constructor(
         }
 
         val intervals = mergeModifications(fetchDate)
-        Log.d("merge", "merged: $intervals") //TODO: fix merging
         val from = mutableListOf<Long>()
         val to = mutableListOf<Long>()
         val add = mutableListOf<Boolean>()
