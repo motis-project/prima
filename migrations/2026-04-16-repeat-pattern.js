@@ -1,11 +1,11 @@
 export async function up(db) {
 	await db.schema
-        .createTable('repeat_pattern')
+		.createTable('repeat_pattern')
 		.addColumn('id', 'serial', (col) => col.primaryKey())
-        .addColumn('days', 'integer', (col) => col.notNull())
-        .addColumn('range_start', 'varchar', (col) => col.notNull())
+		.addColumn('days', 'integer', (col) => col.notNull())
+		.addColumn('range_start', 'varchar', (col) => col.notNull())
 		.addColumn('range_end', 'varchar', (col) => col.notNull())
-        .execute();
+		.execute();
 
 	await db.schema
 		.alterTable('ride_share_tour')
