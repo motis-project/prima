@@ -7,7 +7,7 @@ beforeAll(async () => {
 	await clearDatabase();
 });
 
-const duration = 3 * MINUTE;
+const duration = 9 * MINUTE;
 
 describe(
 	'simulation as test',
