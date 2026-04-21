@@ -11,7 +11,7 @@
 	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
 	import Panel from '$lib/ui/Panel.svelte';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
-	import { defaultCarPicture } from '$lib/constants.js';
+	import { defaultCarPicture, RIDE_SHARE_MAX_PASSENGERS } from '$lib/constants.js';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import type { Msg } from '$lib/msg';
@@ -125,22 +125,17 @@
 		</Panel>
 		<Panel title={t.rideShare.maxPassengers} subtitle={''}>
 			<RadioGroup.Root name="passengers" value={passengers?.toString() ?? '3'}>
-				<div class="flex items-center gap-2">
-					<RadioGroup.Item value="1" id="r1" />
-					<Label for="r1">1 {t.rideShare.passengers}</Label>
-				</div>
-				<div class="flex items-center gap-2">
-					<RadioGroup.Item value="2" id="r2" />
-					<Label for="r2">2 {t.rideShare.passengers}</Label>
-				</div>
-				<div class="flex items-center gap-2">
-					<RadioGroup.Item value="3" id="r3" />
-					<Label for="r3">3 {t.rideShare.passengers}</Label>
-				</div>
-				<div class="flex items-center gap-2">
-					<RadioGroup.Item value="4" id="r4" />
-					<Label for="r4">4 {t.rideShare.passengers}</Label>
-				</div>
+				{#each Array.from({ length: RIDE_SHARE_MAX_PASSENGERS }, (_, i) => i + 1) as passengerCount}
+					<div class="flex items-center gap-2">
+						<RadioGroup.Item
+							value={passengerCount.toString()}
+							id={'r' + passengerCount.toString()}
+						/>
+						<Label for={'r' + passengerCount.toString()}
+							>{passengerCount + ' ' + t.rideShare.passengers}</Label
+						>
+					</div>
+				{/each}
 			</RadioGroup.Root>
 		</Panel>
 		<Panel title={t.rideShare.luggage} subtitle={t.luggageExplanation}>

@@ -4,6 +4,7 @@ import { replacePhoto } from '$lib/server/util/uploadPhoto';
 import { fail } from '@sveltejs/kit';
 import type { CountryKey } from '@codecorn/euro-plate-validator';
 import { supportedCountries } from '@codecorn/euro-plate-validator';
+import { RIDE_SHARE_MAX_PASSENGERS } from '$lib/constants';
 
 export async function prepareVehicleUAddOrpdate(formData: FormData, userId: number) {
 	const licensePlate = formData.get('licensePlate');
@@ -16,7 +17,7 @@ export async function prepareVehicleUAddOrpdate(formData: FormData, userId: numb
 	const passengers = readInt(formData.get('passengers'));
 	const vehiclePicture = formData.get('vehiclePicture');
 	const country = formData.get('country');
-	if (passengers < 1 || 4 < passengers) {
+	if (passengers < 1 || RIDE_SHARE_MAX_PASSENGERS < passengers) {
 		return fail(400, { msg: msg('invalidSeats') });
 	}
 	if (typeof country !== 'string' || !supportedCountries.includes(country as CountryKey)) {

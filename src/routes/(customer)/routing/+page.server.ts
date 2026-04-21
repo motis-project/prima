@@ -18,6 +18,7 @@ import { sendBookingMails } from '$lib/util/sendBookingEmails';
 import { deduplicate, type CalibrationItinerary } from '$lib/calibration';
 import { areasGeoJSON, rideshareGeoJSON } from '$lib/util/geoJSON';
 import { selectDesiredTrips } from '$lib/server/booking/rideShare/selectDesiredTrips';
+import { BOOKING_MAX_PASSENGERS, RIDE_SHARE_MAX_PASSENGERS } from '$lib/constants';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;
@@ -299,6 +300,32 @@ export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 		.select('availability.endTime')
 		.orderBy('availability.endTime', 'desc')
 		.executeTakeFirst();
+	const maxPassengers =
+		(
+			await db
+				.selectFrom(
+					db
+						.selectFrom('vehicle')
+						.select((eb) =>
+							eb.fn
+								.coalesce(eb.fn.max('passengers'), eb.lit(BOOKING_MAX_PASSENGERS))
+								.as('maxPassengers')
+						)
+						.unionAll(
+							db
+								.selectFrom('rideShareVehicle')
+								.select((eb) =>
+									eb.fn
+										.coalesce(eb.fn.max('passengers'), eb.lit(RIDE_SHARE_MAX_PASSENGERS))
+										.as('maxPassengers')
+								)
+						)
+						.as('t')
+				)
+				.select((eb) => eb.fn.max('maxPassengers').as('value'))
+				.executeTakeFirst()
+		)?.value ?? Math.max(RIDE_SHARE_MAX_PASSENGERS, BOOKING_MAX_PASSENGERS);
+
 	const userId = event.locals.session?.userId;
 	const ownRideShareOfferIds =
 		userId === undefined
@@ -321,6 +348,7 @@ export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 			ownRideShareOfferIds,
 			desiredTrips
 		},
-		lastAvailability
+		lastAvailability,
+		maxPassengers
 	};
 };
