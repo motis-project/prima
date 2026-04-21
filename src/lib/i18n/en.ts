@@ -333,7 +333,9 @@ const translations: Translations = {
 		pinExplainer:
 			'To give to the passenger. The passenger must give this PIN to the taxi driver when starting the journey.',
 		itineraryOnDate: 'Journey on',
-		withVehicle: 'with vehicle'
+		withVehicle: 'with vehicle',
+		history: 'History',
+		deleteFavourites: 'Delete History'
 	},
 
 	explainer: {

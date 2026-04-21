@@ -343,7 +343,9 @@ const translations: Translations = {
 		pinExplainer:
 			'Zur Weitergabe an den Fahrgast. Der Fahrgast muss die PIN beim Einstieg den Taxifahrer:innen mitteilen.',
 		itineraryOnDate: 'Fahrt am',
-		withVehicle: 'mit Fahrzeug'
+		withVehicle: 'mit Fahrzeug',
+		history: 'Verlauf',
+		deleteFavourites: 'Verlauf löschen'
 	},
 
 	explainer: {
