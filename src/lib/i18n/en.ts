@@ -335,7 +335,7 @@ const translations: Translations = {
 		itineraryOnDate: 'Journey on',
 		withVehicle: 'with vehicle',
 		cancelCheckbox:
-			'Cancel all tours created by the same rule (will not cancel tours which already have agreed ride shares)'
+			'Cancel all tours created by the same rule (will not cancel tours which already have agreed ride shares)',
 		history: 'History',
 		deleteFavourites: 'Delete History'
 	},

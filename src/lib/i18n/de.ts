@@ -346,7 +346,7 @@ const translations: Translations = {
 		itineraryOnDate: 'Fahrt am',
 		withVehicle: 'mit Fahrzeug',
 		cancelCheckbox:
-			'Alle Touren löschen, die mit der selben Regel erstellt wurden (wird keine Touren löschen, für die bereits eine Mitfahrt vereinbart wurde)	'
+			'Alle Touren löschen, die mit der selben Regel erstellt wurden (wird keine Touren löschen, für die bereits eine Mitfahrt vereinbart wurde)	',
 		history: 'Verlauf',
 		deleteFavourites: 'Verlauf löschen'
 	},
