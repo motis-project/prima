@@ -4,7 +4,6 @@ import { getTours } from '$lib/server/db/getTours';
 import { readInt } from '$lib/server/util/readForm.js';
 import type { TourEvent, Tour, Tours } from '$lib/util/getToursTypes';
 import { error, json } from '@sveltejs/kit';
-import { moveTour } from '$lib/server/moveTour';
 
 export const GET = async ({ locals, url }) => {
 	const companyId = locals.session!.companyId!;
@@ -16,14 +15,6 @@ export const GET = async ({ locals, url }) => {
 		error(400, { message: 'Invalid time range' });
 	}
 	return json(updateEventGroups(await getTours(true, companyId, [fromTime, toTime])));
-};
-
-export const POST = async ({ locals, url }) => {
-	const companyId = locals.session!.companyId!;
-	const tourId = readInt(url.searchParams.get('tourId'));
-	const vehicleId = readInt(url.searchParams.get('vehicleId'));
-
-	return json(await moveTour(tourId, vehicleId, companyId));
 };
 
 function updateEventGroups(tours: Tours) {
