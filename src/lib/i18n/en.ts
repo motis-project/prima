@@ -101,6 +101,8 @@ const translations: Translations = {
 		stillNegotiating: 'The request has been sent. This ride is still being negotiated.',
 		accepted: 'This ride has been agreed upon.',
 		openRequest: 'This ride offer has open requests.',
+		acceptedRequest: 'This ride offer has accepted requests.',
+		openAndAcceptedRequest: 'This ride offer has open and accepted requests.',
 
 		// Feedback
 		feedbackThank: 'Thank you very much for your feedback!',
@@ -334,6 +336,8 @@ const translations: Translations = {
 		withVehicle: 'with vehicle',
 		cancelCheckbox:
 			'Cancel all tours created by the same rule (will not cancel tours which already have agreed ride shares)'
+		history: 'History',
+		deleteFavourites: 'Delete History'
 	},
 
 	explainer: {

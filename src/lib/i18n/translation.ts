@@ -101,6 +101,8 @@ export type Translations = {
 		stillNegotiating: string;
 		accepted: string;
 		openRequest: string;
+		acceptedRequest: string;
+		openAndAcceptedRequest: string;
 
 		// Feedback
 		feedbackThank: string;
@@ -291,6 +293,8 @@ export type Translations = {
 		itineraryOnDate: string;
 		withVehicle: string;
 		cancelCheckbox: string;
+		history: string;
+		deleteFavourites: string;
 	};
 
 	explainer: {

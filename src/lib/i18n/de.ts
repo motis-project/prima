@@ -108,6 +108,8 @@ const translations: Translations = {
 			'Die Anfrage wurde gesendet. Die Mitfahrgelegenheit ist noch nicht fest vereinbart.',
 		accepted: 'Die Fahrt ist fest vereinbart.',
 		openRequest: 'Dieses Mitfahrangebot hat offene Anfragen.',
+		acceptedRequest: 'Dieses Mitfahrangebot hat akzeptierte Anfragen.',
+		openAndAcceptedRequest: 'Dieses Mitfahrangebot hat offene und akzeptierte Anfragen.',
 
 		// Feedback
 		feedbackThank: 'Vielen Dank für Ihr Feedback!',
@@ -345,6 +347,8 @@ const translations: Translations = {
 		withVehicle: 'mit Fahrzeug',
 		cancelCheckbox:
 			'Alle Touren löschen, die mit der selben Regel erstellt wurden (wird keine Touren löschen, für die bereits eine Mitfahrt vereinbart wurde)	'
+		history: 'Verlauf',
+		deleteFavourites: 'Verlauf löschen'
 	},
 
 	explainer: {

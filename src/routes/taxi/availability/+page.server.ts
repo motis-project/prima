@@ -124,6 +124,7 @@ export const actions: Actions = {
 								eb
 									.selectFrom('event')
 									.innerJoin('request', 'request.id', 'event.request')
+									.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 									.whereRef('request.tour', '=', 'tour.id')
 									.where('request.cancelled', '=', false)
 									.select([
@@ -132,7 +133,9 @@ export const actions: Actions = {
 										'request.bikes',
 										'request.wheelchairs',
 										'request.luggage',
-										'request.id as requestId'
+										'request.id as requestId',
+										'event.eventGroupId',
+										'eventGroup.scheduledTimeStart'
 									])
 							).as('events')
 						])

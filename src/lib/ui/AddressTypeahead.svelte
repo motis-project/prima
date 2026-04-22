@@ -7,6 +7,13 @@
 	import maplibregl from 'maplibre-gl';
 	import { getModeStyle, type LegLike } from './modeStyle';
 	import { onMount } from 'svelte';
+	import {
+		clearHistoryLocations,
+		getHistoryLocations,
+		recordHistoryLocation
+	} from '$lib/stores/history';
+	import { t } from '$lib/i18n/translation';
+	import { Trash2 } from 'lucide-svelte';
 
 	let {
 		items = $bindable([]),
@@ -34,6 +41,26 @@
 
 	let inputValue = $state('');
 	let value = $state('');
+
+	let history = $state(getHistoryLocations());
+
+	let inputWasNotEmpty = $state(false);
+	let favTimer: ReturnType<typeof setTimeout>;
+
+	$effect(() => {
+		clearTimeout(favTimer);
+		if (inputValue) {
+			return;
+		}
+		if (inputWasNotEmpty) {
+			items = history;
+		}
+		favTimer = setTimeout(() => {
+			items = history;
+		}, 200);
+	});
+
+	const showHistoryHint = $derived(!inputValue && items.length > 0);
 
 	const getDisplayArea = (match: Match | undefined) => {
 		if (match) {
@@ -73,7 +100,6 @@
 			value = '';
 			return;
 		}
-
 		const pos = place ? maplibregl.LngLat.convert(place) : undefined;
 		const biasPlace = pos ? { place: `${pos.lat},${pos.lng}` } : {};
 		const { data: matches, error } = await geocode({
@@ -156,8 +182,10 @@
 	{open}
 	onValueChange={(e: string) => {
 		if (e) {
+			clearTimeout(favTimer);
 			selected = deserialize(e);
 			inputValue = selected.label!;
+			recordHistoryLocation(selected);
 			onValueChange(selected);
 		}
 	}}
@@ -178,50 +206,69 @@
 				align="start"
 				class="absolute top-2 z-10 w-[var(--bits-combobox-anchor-width)] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md outline-none"
 			>
-				{#each items as item (item.value)}
-					<Combobox.Item
-						class="flex w-full cursor-default select-none rounded-sm py-4 pl-4 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50"
-						value={JSON.stringify(item.value)}
-						label={item.label}
-					>
-						<div class="flex grow items-center">
-							<div class="size-6">
-								{#if item.value.match?.type == 'STOP'}
-									{@render modeCircle(
-										item.value.match.modes?.length ? item.value.match.modes![0] : 'BUS'
-									)}
-								{:else if item.value.match?.type == 'ADDRESS'}
-									<House class="size-5" />
-								{:else if item.value.match?.type == 'PLACE'}
-									{#if !item.value.match?.category || item.value.match?.category == 'none'}
-										<Place class="size-5" />
-									{:else}
-										<img
-											src={`/icons/categories/${item.value.match?.category}.svg`}
-											alt={item.value.match?.category}
-											class="size-5"
-										/>
+				{#if showHistoryHint}
+					<div class="text-s flex items-center justify-between border-b px-4 py-2 text-foreground">
+						<span>{t.booking.history}</span>
+
+						<button
+							class="rounded p-1 hover:bg-accent"
+							onclick={() => {
+								clearHistoryLocations();
+								history = getHistoryLocations();
+							}}
+							aria-label="Clear history"
+						>
+							<Trash2 class="size-4" />
+						</button>
+					</div>
+				{/if}
+
+				<div class="h-[80vh] overflow-auto">
+					{#each items as item (item.value)}
+						<Combobox.Item
+							class="flex w-full cursor-default select-none rounded-sm py-4 pl-4 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50"
+							value={JSON.stringify(item.value)}
+							label={item.label}
+						>
+							<div class="flex grow items-center">
+								<div class="size-6">
+									{#if item.value.match?.type == 'STOP'}
+										{@render modeCircle(
+											item.value.match.modes?.length ? item.value.match.modes![0] : 'BUS'
+										)}
+									{:else if item.value.match?.type == 'ADDRESS'}
+										<House class="size-5" />
+									{:else if item.value.match?.type == 'PLACE'}
+										{#if !item.value.match?.category || item.value.match?.category == 'none'}
+											<Place class="size-5" />
+										{:else}
+											<img
+												src={`/icons/categories/${item.value.match?.category}.svg`}
+												alt={item.value.match?.category}
+												class="size-5"
+											/>
+										{/if}
 									{/if}
-								{/if}
+								</div>
+								<div class="ml-4 flex flex-col">
+									<span class="overflow-hidden text-ellipsis text-nowrap font-semibold">
+										{item.value.match?.name}
+									</span>
+									<span class="overflow-hidden text-ellipsis text-nowrap text-muted-foreground">
+										{getDisplayArea(item.value.match)}
+									</span>
+								</div>
 							</div>
-							<div class="ml-4 flex flex-col">
-								<span class="overflow-hidden text-ellipsis text-nowrap font-semibold">
-									{item.value.match?.name}
-								</span>
-								<span class="overflow-hidden text-ellipsis text-nowrap text-muted-foreground">
-									{getDisplayArea(item.value.match)}
-								</span>
-							</div>
-						</div>
-						{#if item.value.match?.type == 'STOP'}
-							<div class="ml-4 mt-1 flex flex-row items-center gap-1.5">
-								{#each item.value.match.modes! as mode, i (i)}
-									{@render modeCircle(mode)}
-								{/each}
-							</div>
-						{/if}
-					</Combobox.Item>
-				{/each}
+							{#if item.value.match?.type == 'STOP'}
+								<div class="ml-4 mt-1 flex flex-row items-center gap-1.5">
+									{#each item.value.match.modes! as mode, i (i)}
+										{@render modeCircle(mode)}
+									{/each}
+								</div>
+							{/if}
+						</Combobox.Item>
+					{/each}
+				</div>
 			</Combobox.Content>
 		</Combobox.Portal>
 	{/if}
