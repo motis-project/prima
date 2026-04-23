@@ -37,8 +37,12 @@
 			{firstName || name}
 			{t.account.genderShort(gender || 'n')}
 		</h3>
-		<h2>{t.booking.passengerNumber + ': ' + (numberPassengers ?? 1)}</h2>
-		<h2>{t.rideShare.luggage + ': ' + (luggage ?? 0)}</h2>
+		{#if numberPassengers !== null}
+			<h2>{t.booking.passengerNumber + ': ' + numberPassengers}</h2>
+		{/if}
+		{#if luggage !== null}
+			<h2>{t.rideShare.luggage + ': ' + luggage}</h2>
+		{/if}
 		<div class="flex flex-row items-center gap-1">
 			{#if smokingAllowed}
 				<CigaretteIcon class="mr-4" />
