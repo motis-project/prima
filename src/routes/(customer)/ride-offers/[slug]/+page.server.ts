@@ -4,6 +4,7 @@ import { msg, type Msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
 import { acceptRideShareRequest, getRideshareToursAsItinerary } from '$lib/server/booking/index';
 import { cancelRideShareTour } from '$lib/server/booking/rideShare/cancelRideShareTour';
+import { cancelRideShareRequest } from '$lib/server/booking/rideShare/cancelRideShareRequest';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const result = await getRideshareToursAsItinerary(
@@ -33,5 +34,10 @@ export const actions = {
 		if (result.status != 200) {
 			return fail(result.status, { msg: msg('rideShareAcceptError') });
 		}
+	},
+	decline: async ({ request, locals }) => {
+		const formData = await request.formData();
+		const requestId = readInt(formData.get('requestId'));
+		await cancelRideShareRequest(requestId, locals.session!.userId!, 'provider');
 	}
 };

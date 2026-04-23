@@ -10,7 +10,7 @@
 	import { msg } from '$lib/msg';
 	import { language, t } from '$lib/i18n/translation';
 	import * as Card from '$lib/shadcn/card';
-	import { Check, MapIcon } from 'lucide-svelte';
+	import { X, Check, MapIcon } from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
 	import Time from '../../routing/Time.svelte';
@@ -153,6 +153,25 @@
 							<Button type="submit" class="w-full" disabled={loading}>
 								<Check class="mr-1 size-4" />
 								{t.ride.acceptRequest}
+							</Button>
+						</form>
+						<form
+							method="post"
+							action="?/decline"
+							use:enhance={() => {
+								loading = true;
+								return async ({ update }) => {
+									await update();
+									window.setTimeout(() => {
+										loading = false;
+									}, 5000);
+								};
+							}}
+						>
+							<input type="hidden" name="requestId" value={n.id} />
+							<Button type="submit" class="mt-1 w-full text-destructive" disabled={loading}>
+								<X class="mr-1 size-4" />
+								{t.ride.declineRequest}
 							</Button>
 						</form>
 					{:else}
