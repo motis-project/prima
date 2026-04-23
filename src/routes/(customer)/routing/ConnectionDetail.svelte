@@ -136,6 +136,8 @@
 						profilePicture={tourInfo.profilePicture}
 						smokingAllowed={tourInfo.smokingAllowed}
 						averageRating={tourInfo.averageRatingProvider}
+						numberPassengers={tourInfo.passengers}
+						luggage={tourInfo.luggage}
 					/>
 
 					{#if tourInfo.picture || tourInfo.color}
