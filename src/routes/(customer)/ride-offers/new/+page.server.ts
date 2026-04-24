@@ -5,6 +5,9 @@ import { addRideShareTour } from '$lib/server/booking/index';
 import { msg } from '$lib/msg';
 import { readFloat, readInt } from '$lib/server/util/readForm';
 import { sql } from 'kysely';
+import { parseDate } from '@internationalized/date';
+import { TZ } from '$lib/constants';
+import { HOUR, MINUTE, SECOND } from '$lib/util/time';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const vehicles = await db
@@ -46,33 +49,67 @@ export const actions = {
 		const startLabel = formData.get('startLabel');
 		const endLabel = formData.get('endLabel');
 
+		const days = readInt(formData.get('days'));
+		const rangeStartRaw = formData.get('rangeStart');
+		const rangeEndRaw = formData.get('rangeEnd');
+
 		if (
 			Number.isNaN(time) ||
 			Number.isNaN(passengers) ||
 			Number.isNaN(luggage) ||
 			Number.isNaN(vehicle) ||
+			typeof rangeStartRaw !== 'string' ||
+			typeof rangeEndRaw !== 'string' ||
+			Number.isNaN(days) ||
 			typeof startLabel !== 'string' ||
 			typeof endLabel !== 'string'
 		) {
 			return fail(400, { msg: msg('unknownError') });
 		}
+		const rangeStart = parseDate(rangeStartRaw);
+		const rangeEnd = parseDate(rangeEndRaw);
 
-		// TODO transaction
-		const tourId = await addRideShareTour(
-			time,
-			startFixed,
-			passengers,
-			luggage,
-			locals.session!.userId!,
-			vehicle,
-			start,
-			end,
-			startLabel,
-			endLabel
-		);
-		if (tourId == undefined) {
-			return fail(400, { msg: msg('vehicleConflict') });
+		const date = new Date(time);
+		const timeAfterMidnight =
+			date.getHours() * HOUR +
+			date.getMinutes() * MINUTE +
+			date.getSeconds() * SECOND +
+			date.getMilliseconds();
+
+		const times: number[] = [];
+		let currentDay = rangeStart;
+		while (currentDay.compare(rangeEnd) <= 0) {
+			const currentDate = new Date(currentDay.toDate(TZ).getTime() + timeAfterMidnight);
+			if (days & (1 << currentDate.getDay())) {
+				times.push(currentDate.getTime());
+			}
+			currentDay = currentDay.add({ days: 1 });
 		}
+
+		if (days === 0) {
+			times.push(time);
+		}
+		await db.transaction().execute(async (trx) => {
+			const result = await addRideShareTour(
+				times,
+				startFixed,
+				passengers,
+				luggage,
+				locals.session!.userId!,
+				vehicle,
+				start,
+				end,
+				startLabel,
+				endLabel,
+				trx,
+				days,
+				rangeStart.toString(),
+				rangeEnd.toString()
+			);
+			if (result == undefined) {
+				return fail(400, { msg: msg('vehicleConflict') });
+			}
+		});
 		return redirect(302, `/ride-offers`);
 	}
 };

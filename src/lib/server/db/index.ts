@@ -139,6 +139,7 @@ export interface Database {
 		communicatedEnd: number;
 		earliestStart: number;
 		latestEnd: number;
+		pattern: number | null;
 	};
 	rideShareVehicle: {
 		id: Generated<number>;
@@ -192,6 +193,12 @@ export interface Database {
 		score: number;
 		prefactor: number;
 		takenAt: number;
+	};
+	repeatPattern: {
+		id: Generated<number>;
+		days: number;
+		rangeStart: string;
+		rangeEnd: string;
 	};
 }
 

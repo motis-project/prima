@@ -24,7 +24,7 @@ describe('tests for sending desired trip emails', () => {
 
 		const v = await createRideShareVehicle(mockUserId, 0, 3, null, null, true, '', null, '');
 		await addRideShareTour(
-			Date.now() + DAY,
+			[Date.now() + DAY],
 			true,
 			3,
 			0,

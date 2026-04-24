@@ -47,7 +47,7 @@ describe('Create new ride share tour', () => {
 			'DE'
 		);
 		await addRideShareTour(
-			inXMinutes(100),
+			[inXMinutes(100)],
 			true,
 			3,
 			0,

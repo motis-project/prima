@@ -35,9 +35,12 @@
 	import maplibregl from 'maplibre-gl';
 	import type { Itinerary } from '$lib/openapi';
 	import { enhance } from '$app/forms';
-	import { HOUR } from '$lib/util/time';
+	import { DAY, HOUR } from '$lib/util/time';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
+	import { TZ } from '$lib/constants';
+	import { CalendarDate, fromDate, toCalendarDate } from '@internationalized/date';
+	import RepetitionSelector from '$lib/ui/RepetitionSelector.svelte';
 
 	const { data, form } = $props();
 
@@ -79,6 +82,17 @@
 	type Timeout = ReturnType<typeof setTimeout>;
 	let searchDebounceTimer: Timeout;
 	let loading = $state(false);
+	let range: {
+		start: CalendarDate;
+		end: CalendarDate;
+	} = $state({
+		start: toCalendarDate(fromDate(new Date(Date.now() + HOUR * 2), TZ)),
+		end: toCalendarDate(fromDate(new Date(Date.now() + DAY * 30), TZ))
+	});
+
+	let selectedDays: boolean[] = $state(Array.from(t.ride.daysList, (_) => false));
+	let bitDays = $derived(selectedDays.reduce((mask, val, i) => (val ? mask | (1 << i) : mask), 0));
+
 	$effect(() => {
 		if (from.value.match && to.value.match && vehicle && time && timeType) {
 			loading = true;
@@ -344,6 +358,12 @@
 				</Popover.Root>
 			</div>
 
+			<RepetitionSelector
+				minValue={toCalendarDate(fromDate(new Date(Date.now() + HOUR * 2), TZ))}
+				bind:range
+				bind:selectedDays
+			></RepetitionSelector>
+
 			<div class="flex items-center justify-center">
 				{#if page.state.selectedItinerary && !loading}
 					<Button
@@ -405,6 +425,9 @@
 			<input type="hidden" name="vehicle" value={vehicle} />
 			<input type="hidden" name="luggage" value={luggage} />
 			<input type="hidden" name="passengers" value={passengers} />
+			<input type="hidden" name="days" value={bitDays} />
+			<input type="hidden" name="rangeStart" value={range.start.toString()} />
+			<input type="hidden" name="rangeEnd" value={range.end.toString()} />
 		</form>
 	</div>
 </div>

@@ -88,7 +88,7 @@ const translations: Translations = {
 		startDestNotInSameZone: 'Start and destination not in the same zone.',
 		noVehicle: 'No vehicle available.',
 		routingRequestFailed: 'Routing request failed.',
-		vehicleConflict: 'The selected vehicle is not available at the selected time.',
+		vehicleConflict: 'The selected vehicle is not available at at least one of the selected times.',
 
 		// Booking
 		bookingError: 'The ride could not be booked. Please start a new search.',
@@ -334,6 +334,8 @@ const translations: Translations = {
 			'To give to the passenger. The passenger must give this PIN to the taxi driver when starting the journey.',
 		itineraryOnDate: 'Journey on',
 		withVehicle: 'with vehicle',
+		cancelCheckbox:
+			'Cancel all tours created by the same rule (will not cancel tours which already have agreed ride shares)',
 		history: 'History',
 		deleteFavourites: 'Delete History'
 	},
@@ -380,7 +382,21 @@ const translations: Translations = {
 		acceptRequest: 'Confirm ride',
 		requestAccepted: 'Ride confirmed',
 		requestCancelled: 'Ride cancelled',
-		showMap: 'Show map'
+		showMap: 'Show map',
+		repetitionLabel: 'Publish repeating ride offers',
+		addRule: 'Add rule',
+		individualDays: 'Individual days',
+		to: 'to ',
+		daysList: [
+			{ short: 'S', full: 'Sun' },
+			{ short: 'M', full: 'Mon' },
+			{ short: 'T', full: 'Tue' },
+			{ short: 'W', full: 'Wed' },
+			{ short: 'T', full: 'Thu' },
+			{ short: 'F', full: 'Fri' },
+			{ short: 'S', full: 'Sat' }
+		],
+		chooseTimeSpan: 'adjust time range:'
 	},
 
 	buttons: {
@@ -434,7 +450,9 @@ const translations: Translations = {
 	},
 	availabilityPercent: 'current Coverage next two weeks',
 	availabilityPercentExplanation:
-		'This value represents the current coverage between 05:00 and 21:00 for availability in the next two weeks.'
+		'This value represents the current coverage between 05:00 and 21:00 for availability in the next two weeks.',
+
+	daily: 'daily'
 };
 
 export default translations;
