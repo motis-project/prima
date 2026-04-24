@@ -127,7 +127,6 @@
 						smokingAllowed={undefined}
 						averageRating={n.averageRatingCustomer}
 						numberPassengers={n.passengers}
-						luggage={n.luggage}
 					/>
 					<div class="grid grid-cols-[max-content_auto] gap-x-2">
 						<span>{t.account.email}:</span><span><a href="mailto:{n.email}">{n.email}</a></span>

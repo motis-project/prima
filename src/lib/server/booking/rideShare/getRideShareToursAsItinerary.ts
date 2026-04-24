@@ -30,7 +30,6 @@ export async function getRideshareToursAsItinerary(
 			averageRatingCustomer: string | number | null;
 			requestCancelled: boolean;
 			passengers: number;
-			luggage: number;
 		}[];
 		licensePlate: string | undefined | null;
 	}[];
@@ -62,7 +61,6 @@ export async function getRideshareToursAsItinerary(
 						'user.profilePicture',
 						'request.cancelled as requestCancelled',
 						'request.passengers',
-						'request.luggage',
 						jsonArrayFrom(
 							eb
 								.selectFrom('event')
@@ -168,8 +166,7 @@ export async function getRideshareToursAsItinerary(
 									id: r.id,
 									averageRatingCustomer: r.averageRatingCustomer,
 									requestCancelled: r.requestCancelled,
-									passengers: r.passengers,
-									luggage: r.luggage
+									passengers: r.passengers
 								};
 							});
 			const events = journey.requests

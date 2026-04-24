@@ -20,7 +20,6 @@ export async function getRideShareInfo(tourId: number, extended: boolean) {
 			'rideShareVehicle.color',
 			'rideShareVehicle.picture',
 			'rideShareRequest.passengers',
-			'rideShareRequest.luggage',
 			eb
 				.selectFrom('rideShareRating')
 				.innerJoin('request', 'rideShareRating.request', 'request.id')

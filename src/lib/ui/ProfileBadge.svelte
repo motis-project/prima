@@ -10,8 +10,7 @@
 		gender,
 		smokingAllowed,
 		averageRating,
-		numberPassengers,
-		luggage
+		numberPassengers
 	}: {
 		isCustomer: boolean;
 		firstName: string;
@@ -21,7 +20,6 @@
 		smokingAllowed: boolean | undefined;
 		averageRating: string | number | null;
 		numberPassengers: number | null;
-		luggage: number | null;
 	} = $props();
 </script>
 
@@ -39,9 +37,6 @@
 		</h3>
 		{#if numberPassengers !== null}
 			<h2>{t.booking.passengerNumber + ': ' + numberPassengers}</h2>
-		{/if}
-		{#if luggage !== null}
-			<h2>{t.rideShare.luggage + ': ' + luggage}</h2>
 		{/if}
 		<div class="flex flex-row items-center gap-1">
 			{#if smokingAllowed}
