@@ -15,7 +15,7 @@ export async function addRideShareTourSimulation(
 	const connection: ExpectedConnection = parameters.connection1!;
 	const capacities = parameters.capacities;
 	const request = await addRideShareTour(
-		connection.startFixed ? connection.startTime : connection.targetTime,
+		[connection.startFixed ? connection.startTime : connection.targetTime],
 		connection.startFixed,
 		capacities.passengers,
 		capacities.luggage,

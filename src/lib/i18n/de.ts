@@ -91,7 +91,8 @@ const translations: Translations = {
 		startDestNotInSameZone: 'Start und Ziel nicht im selben Pflichtfahrgebiet.',
 		noVehicle: 'Kein Fahrzeug verfügbar.',
 		routingRequestFailed: 'Routinganfrage fehlgeschlagen.',
-		vehicleConflict: 'Das gewählte Fahrzeug ist zum gewählten Zeitpunkt nicht verfügbar.',
+		vehicleConflict:
+			'Das gewählte Fahrzeug ist zu mindestens einem der gewählten Zeitpunkte nicht verfügbar.',
 
 		// Booking
 		bookingError: 'Die Fahrt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
@@ -344,6 +345,8 @@ const translations: Translations = {
 			'Zur Weitergabe an den Fahrgast. Der Fahrgast muss die PIN beim Einstieg den Taxifahrer:innen mitteilen.',
 		itineraryOnDate: 'Fahrt am',
 		withVehicle: 'mit Fahrzeug',
+		cancelCheckbox:
+			'Alle Touren löschen, die mit der selben Regel erstellt wurden (wird keine Touren löschen, für die bereits eine Mitfahrt vereinbart wurde)	',
 		history: 'Verlauf',
 		deleteFavourites: 'Verlauf löschen'
 	},
@@ -391,7 +394,21 @@ const translations: Translations = {
 		declineRequest: 'Mitfahrt ablehnen',
 		requestAccepted: 'Mitfahrt bestätigt',
 		requestCancelled: 'Mitfahrt abgesagt',
-		showMap: 'Karte anzeigen'
+		showMap: 'Karte anzeigen',
+		repetitionLabel: 'Wiederholende Fahrten einstellen',
+		addRule: 'Regel hinzufügen',
+		individualDays: 'individuelle Tage',
+		to: 'bis ',
+		daysList: [
+			{ short: 'S', full: 'So' },
+			{ short: 'M', full: 'Mo' },
+			{ short: 'D', full: 'Di' },
+			{ short: 'M', full: 'Mi' },
+			{ short: 'D', full: 'Do' },
+			{ short: 'F', full: 'Fr' },
+			{ short: 'S', full: 'Sa' }
+		],
+		chooseTimeSpan: 'Zeitspanne anpassen:'
 	},
 
 	buttons: {
@@ -445,7 +462,9 @@ const translations: Translations = {
 	},
 	availabilityPercent: 'aktuelle Abdeckung',
 	availabilityPercentExplanation:
-		'Dieser Wert zeigt die aktuelle Verfügbarkeits-Abdeckung zwischen 05:00 Uhr und 22:00 Uhr der nächsten 2 Wochen.'
+		'Dieser Wert zeigt die aktuelle Verfügbarkeits-Abdeckung zwischen 05:00 Uhr und 22:00 Uhr der nächsten 2 Wochen.',
+
+	daily: 'täglich'
 };
 
 export default translations;

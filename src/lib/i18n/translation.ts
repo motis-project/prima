@@ -292,6 +292,7 @@ export type Translations = {
 		pinExplainer: string;
 		itineraryOnDate: string;
 		withVehicle: string;
+		cancelCheckbox: string;
 		history: string;
 		deleteFavourites: string;
 	};
@@ -335,6 +336,12 @@ export type Translations = {
 		requestAccepted: string;
 		requestCancelled: string;
 		showMap: string;
+		repetitionLabel: string;
+		addRule: string;
+		individualDays: string;
+		to: string;
+		daysList: { short: string; full: string }[];
+		chooseTimeSpan: string;
 	};
 
 	buttons: {
@@ -389,6 +396,8 @@ export type Translations = {
 
 	availabilityPercent: string;
 	availabilityPercentExplanation: string;
+
+	daily: string;
 };
 
 const translations: Map<string, Translations> = new Map(Object.entries({ en, de }));

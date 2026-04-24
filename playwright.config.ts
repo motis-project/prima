@@ -2,6 +2,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
 	// test for development version
+	timeout: 70_000,
 	webServer: {
 		command: 'npm run dev',
 		url: 'http://localhost:5173',

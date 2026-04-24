@@ -5,6 +5,7 @@ import { readInt } from '$lib/server/util/readForm';
 import { acceptRideShareRequest, getRideshareToursAsItinerary } from '$lib/server/booking/index';
 import { cancelRideShareTour } from '$lib/server/booking/rideShare/cancelRideShareTour';
 import { cancelRideShareRequest } from '$lib/server/booking/rideShare/cancelRideShareRequest';
+import { db } from '$lib/server/db';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const result = await getRideshareToursAsItinerary(
@@ -16,15 +17,44 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	if (result.journeys.length != 1) {
 		error(404, 'Not found');
 	}
-
-	return result.journeys[0];
+	const pattern =
+		(await db
+			.selectFrom('repeatPattern')
+			.selectAll()
+			.where('id', '=', result.journeys[0].pattern)
+			.executeTakeFirst()) ?? null;
+	const days = Array.from({ length: 7 }, () => false);
+	if (pattern) {
+		for (let i = 0; i != 7; ++i) {
+			if (pattern.days & (1 << i)) {
+				days[i] = true;
+			}
+		}
+	}
+	return {
+		...result.journeys[0],
+		days,
+		rangeStart: pattern?.rangeStart,
+		rangeEnd: pattern?.rangeEnd
+	};
 };
 
 export const actions = {
 	cancel: async ({ request, locals }): Promise<{ msg: Msg }> => {
 		const formData = await request.formData();
 		const requestId = readInt(formData.get('requestId'));
-		await cancelRideShareTour(requestId, locals.session!.userId!);
+		const patternString = formData.get('pattern');
+		if (typeof patternString !== 'string' || patternString === null) {
+			throw new Error();
+		}
+		let pattern: number | undefined = undefined;
+		if (patternString) {
+			pattern = parseInt(patternString);
+		}
+		if (Number.isNaN(pattern)) {
+			throw new Error();
+		}
+		await cancelRideShareTour(requestId, locals.session!.userId!, pattern);
 		return redirect(302, `/bookings`);
 	},
 	accept: async ({ request, locals }) => {
