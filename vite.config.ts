@@ -7,7 +7,6 @@ export default defineConfig({
 	test: {
 		testTimeout: 70_000,
 		include: ['src/**/*.{test,spec}.{js,ts}'],
-		testTimeout: 70_000,
 		poolOptions: {
 			threads: {
 				maxThreads: 1,
