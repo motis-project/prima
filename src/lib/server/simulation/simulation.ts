@@ -53,6 +53,9 @@ enum Action {
 	PUBLIC_TRANSPORT
 }
 
+type SimulationMode = 'taxi' | 'taxionly' | 'rs' | 'pt';
+type ActionMode = 'ODM' | 'RIDE_SHARING';
+
 type ActionType = {
 	action: Action;
 	probability: number;
@@ -61,7 +64,7 @@ type ActionType = {
 		customerId: number,
 		coordinates: Coordinates[],
 		restrictedCoordinates?: Coordinates[],
-		mode?: string,
+		mode?: ActionMode,
 		compareCosts?: boolean,
 		doWhitelist?: boolean
 	) => Promise<ActionResponse>;
@@ -129,7 +132,7 @@ const getAction = (r: number) => {
 	return undefined;
 };
 
-type Params = {
+export type SimulationParams = {
 	backups?: boolean;
 	healthChecks?: boolean;
 	restrict?: boolean;
@@ -138,13 +141,13 @@ type Params = {
 	finishTime?: number;
 	whitelist?: boolean;
 	cost?: boolean;
-	mode?: string;
+	mode?: SimulationMode;
 	full: boolean;
 	companies: number;
 	vehiclesPerCompany: number;
 };
 
-async function setup(params: Params) {
+async function setup(params: SimulationParams) {
 	adjustToParams(params);
 	const coordinates = await readCoordinates();
 	// The following coordinates are used to restrict either start or target (which is chosen at random) in each booking.
@@ -182,7 +185,7 @@ async function addCompanyLocal(vehicles: number, c: Coordinates) {
 	}
 }
 
-function adjustToParams(params: Params) {
+function adjustToParams(params: SimulationParams) {
 	const probabilitySum = actionProbabilities.reduce((sum, curr) => sum + curr.probability, 0);
 	if (Math.abs(probabilitySum - 1) > 0.00000001) {
 		console.log('The probabilities in actionProbabilies must add to 1 exactly. ', {
@@ -206,7 +209,7 @@ function adjustToParams(params: Params) {
 	}
 }
 
-export async function simulation(params: Params): Promise<boolean> {
+export async function simulation(params: SimulationParams): Promise<boolean> {
 	async function mainLoop(i: number) {
 		const r = Math.random();
 		console.log('RANDOM API ITERATION: ', i, ' with random value: ', r);
@@ -326,7 +329,7 @@ function lastActionWasRideShare(idx: number) {
 	);
 }
 
-function setActionProbabilities(mode: string) {
+function setActionProbabilities(mode: SimulationMode) {
 	function setActionProbability(probability: number, action: Action) {
 		actionProbabilities[actionProbabilities.findIndex((a) => a.action === action)].probability =
 			probability;
