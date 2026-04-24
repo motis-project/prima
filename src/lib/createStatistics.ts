@@ -3,6 +3,7 @@ import { db } from '$lib/server/db';
 import type { Coordinates } from '$lib/util/Coordinates';
 import { carRouting } from '$lib/util/carRouting';
 import type { Itinerary, Leg } from '$lib/openapi';
+import { polyLineToLatLngArray } from '$lib/util/polylineToGeoJSON';
 
 export async function createStatistics() {
 	await computeAndPersistStatistics('tour');
@@ -98,8 +99,33 @@ async function computeStatistics(events: Event[], company?: Coordinates) {
 	};
 }
 
+export function haversineDistance(c1: Coordinates, c2: Coordinates) {
+	function toRad(deg: number) {
+		return (deg * Math.PI) / 180;
+	}
+	const R = 6371000; // Earth radius in meters
+
+	const dLat = toRad(c2.lat - c1.lat);
+	const dLon = toRad(c2.lng - c1.lng);
+	const a =
+		Math.sin(dLat / 2) ** 2 +
+		Math.cos(toRad(c1.lat)) * Math.cos(toRad(c2.lat)) * Math.sin(dLon / 2) ** 2;
+	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+	return R * c;
+}
+
 function legToTravelDistance(leg: Leg): number {
-	return leg.distance!;
+	const legGeometry = polyLineToLatLngArray(leg.legGeometry.points).map((v) => ({
+		lat: v[0],
+		lng: v[1]
+	}));
+	let sum = 0;
+	for (let i = 1; i != legGeometry.length; ++i) {
+		const prev = legGeometry[i - 1];
+		const curr = legGeometry[i];
+		sum += haversineDistance(prev, curr);
+	}
+	return sum;
 }
 
 function legsToTravelDistance(legs: Leg[] | undefined) {
