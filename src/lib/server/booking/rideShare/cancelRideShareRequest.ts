@@ -7,8 +7,15 @@ import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
 import { MAX_RIDE_SHARE_TOUR_TIME, PASSENGER_CHANGE_DURATION } from '$lib/constants';
 import { sortEventsByTime } from '$lib/testHelpers';
 import { retry } from '$lib/server/db/retryQuery';
+import CancelNotificationCustomer from '$lib/server/email/CancelNotificationCustomer.svelte';
 
-export const cancelRideShareRequest = async (requestId: number, userId: number) => {
+export type CancelledBy = 'provider' | 'passenger';
+
+export const cancelRideShareRequest = async (
+	requestId: number,
+	userId: number,
+	cancelledBy: CancelledBy
+) => {
 	console.log(
 		'Cancel Request PARAMS START: ',
 		JSON.stringify({ requestId, userId }, null, '\t'),
@@ -23,38 +30,7 @@ export const cancelRideShareRequest = async (requestId: number, userId: number) 
 					.selectFrom('request')
 					.where('request.id', '=', requestId)
 					.innerJoin('rideShareTour as relevant_tour', 'relevant_tour.id', 'request.rideShareTour')
-					.select((eb) => [
-						'relevant_tour.id as tourId',
-						jsonArrayFrom(
-							eb
-								.selectFrom('request as cancelled_request')
-								.where('cancelled_request.id', '=', requestId)
-								.innerJoin(
-									'rideShareTour as relevant_tour',
-									'cancelled_request.rideShareTour',
-									'relevant_tour.id'
-								)
-								.innerJoin(
-									'request as relevant_request',
-									'relevant_request.tour',
-									'relevant_tour.id'
-								)
-								.select((eb) => [
-									jsonArrayFrom(
-										eb
-											.selectFrom('event')
-											.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-											.whereRef('event.request', '=', 'relevant_request.id')
-											.select([
-												'eventGroup.scheduledTimeStart',
-												'eventGroup.scheduledTimeEnd',
-												'event.isPickup',
-												'event.request as requestId'
-											])
-									).as('events')
-								])
-						).as('requests')
-					])
+					.select('request.customer')
 					.executeTakeFirst();
 				if (tour === undefined) {
 					console.log(
@@ -63,83 +39,10 @@ export const cancelRideShareRequest = async (requestId: number, userId: number) 
 					);
 					return;
 				}
-				const queryResult =
-					await sql`CALL cancel_ride_share_request(${requestId}, ${userId}, ${Date.now()})`.execute(
-						trx
-					);
-				const tourInfo = await trx
-					.selectFrom('request as cancelled_request')
-					.where('cancelled_request.id', '=', requestId)
-					.innerJoin('rideShareTour', 'rideShareTour.id', 'cancelled_request.rideShareTour')
-					.innerJoin('rideShareVehicle', 'rideShareTour.vehicle', 'rideShareVehicle.id')
-					.innerJoin('user', 'user.id', 'rideShareVehicle.owner')
-					.select((eb) => [
-						'cancelled_request.cancelled as wasRequestCancelled',
-						'rideShareTour.vehicle',
-						'rideShareTour.id',
-						'user.name',
-						'user.firstName',
-						'user.email',
-						'cancelled_request.pending',
-						jsonArrayFrom(
-							eb
-								.selectFrom('request as cancelled_request')
-								.innerJoin(
-									'rideShareTour as cancelled_tour',
-									'cancelled_tour.id',
-									'cancelled_request.rideShareTour'
-								)
-								.innerJoin('request', 'request.rideShareTour', 'cancelled_tour.id')
-								.innerJoin('event', 'event.request', 'request.id')
-								.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
-								.where('cancelled_request.id', '=', requestId)
-								.select([
-									'eventGroup.address',
-									'eventGroup.scheduledTimeStart',
-									'eventGroup.scheduledTimeEnd',
-									'event.cancelled',
-									'eventGroup.prevLegDuration',
-									'eventGroup.nextLegDuration',
-									'eventGroup.lat',
-									'eventGroup.lng',
-									'request.id as requestid',
-									'cancelled_tour.id as tourid',
-									'event.id as eventid',
-									'event.eventGroupId',
-									'request.pending'
-								])
-						).as('events')
-					])
-					.executeTakeFirst();
-				if (tourInfo === undefined) {
-					console.log(
-						'Tour was undefined unexpectedly in cancelRequest cannot send notification Emails, requestId: ',
-						requestId
-					);
-					return;
+				if (cancelledBy === 'provider') {
+					return await cancelledByProvider(requestId, tour.customer, userId, trx);
 				}
-				if (!tourInfo.wasRequestCancelled) {
-					console.log('The request could not be cancelled due to missing authorization.');
-					return;
-				}
-				console.assert(queryResult.rows.length === 1);
-				if (!tourInfo.pending) {
-					await updateLegDurations(tourInfo.events, requestId, trx);
-				}
-				try {
-					await sendMail(CancelNotificationCompany, 'Stornierte Buchung', tourInfo.email, {
-						events: tourInfo.events,
-						name: tourInfo.firstName + ' ' + tourInfo.name
-					});
-				} catch {
-					console.log(
-						'Failed to send cancellation email to company with email: ',
-						tourInfo.email,
-						' tourId: ',
-						tourInfo.id
-					);
-				}
-				console.log('Cancel Ride Share Request - success', { requestId, userId });
+				return await cancelledByCustomer(requestId, userId, trx);
 			})
 	);
 };
@@ -235,4 +138,168 @@ async function updateLegDurations(
 		await update(cancelledIdx1 - 1, cancelledIdx1 + 1, uncancelledEvents, trx);
 		await update(cancelledIdx2 - 1, cancelledIdx2 + 1, uncancelledEvents, trx);
 	}
+}
+async function cancelledByProvider(
+	requestId: number,
+	customerId: number,
+	providerId: number,
+	trx: Transaction<Database>
+) {
+	if (customerId === providerId) {
+		console.log('Customer id matches provider id -> use cancel ride share tour instead.');
+		return;
+	}
+	const queryResult =
+		await sql`CALL cancel_ride_share_request_by_provider(${requestId}, ${customerId}, ${providerId}, ${Date.now()})`.execute(
+			trx
+		);
+	const tourInfo = await trx
+		.selectFrom('request as cancelled_request')
+		.where('cancelled_request.id', '=', requestId)
+		.innerJoin('rideShareTour', 'rideShareTour.id', 'cancelled_request.rideShareTour')
+		.innerJoin('user', 'user.id', 'cancelled_request.customer')
+		.select((eb) => [
+			'cancelled_request.cancelled as wasRequestCancelled',
+			'rideShareTour.id',
+			'user.name',
+			'user.firstName',
+			'user.email',
+			'cancelled_request.pending',
+			jsonArrayFrom(
+				eb
+					.selectFrom('request as cancelled_request')
+					.innerJoin(
+						'rideShareTour as cancelled_tour',
+						'cancelled_tour.id',
+						'cancelled_request.rideShareTour'
+					)
+					.innerJoin('request', 'request.rideShareTour', 'cancelled_tour.id')
+					.innerJoin('event', 'event.request', 'request.id')
+					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+					.where('cancelled_request.id', '=', requestId)
+					.select([
+						'eventGroup.address',
+						'eventGroup.scheduledTimeStart',
+						'eventGroup.scheduledTimeEnd',
+						'event.cancelled',
+						'eventGroup.prevLegDuration',
+						'eventGroup.nextLegDuration',
+						'eventGroup.lat',
+						'eventGroup.lng',
+						'request.id as requestid',
+						'cancelled_tour.id as tourid',
+						'event.id as eventid',
+						'event.eventGroupId',
+						'request.pending'
+					])
+			).as('events')
+		])
+		.executeTakeFirst();
+	if (tourInfo === undefined) {
+		console.log(
+			'Tour was undefined unexpectedly in cancelRequest cannot send notification Emails, requestId: ',
+			requestId
+		);
+		return;
+	}
+	if (!tourInfo.wasRequestCancelled) {
+		console.log('The request could not be cancelled due to missing authorization.');
+		return;
+	}
+	console.assert(queryResult.rows.length === 1);
+	if (!tourInfo.pending) {
+		await updateLegDurations(tourInfo.events, requestId, trx);
+	}
+	try {
+		await sendMail(CancelNotificationCustomer, 'Stornierte Buchung', tourInfo.email, {
+			events: tourInfo.events,
+			name: tourInfo.firstName + ' ' + tourInfo.name
+		});
+	} catch {
+		console.log(
+			'Failed to send cancellation email to customer with email: ',
+			tourInfo.email,
+			' tourId: ',
+			tourInfo.id
+		);
+	}
+	console.log('Cancel Ride Share Request - success', { requestId, providerId });
+}
+
+async function cancelledByCustomer(requestId: number, userId: number, trx: Transaction<Database>) {
+	const queryResult =
+		await sql`CALL cancel_ride_share_request(${requestId}, ${userId}, ${Date.now()})`.execute(trx);
+	const tourInfo = await trx
+		.selectFrom('request as cancelled_request')
+		.where('cancelled_request.id', '=', requestId)
+		.innerJoin('rideShareTour', 'rideShareTour.id', 'cancelled_request.rideShareTour')
+		.innerJoin('rideShareVehicle', 'rideShareTour.vehicle', 'rideShareVehicle.id')
+		.innerJoin('user', 'user.id', 'rideShareVehicle.owner')
+		.select((eb) => [
+			'cancelled_request.cancelled as wasRequestCancelled',
+			'rideShareTour.vehicle',
+			'rideShareTour.id',
+			'user.name',
+			'user.firstName',
+			'user.email',
+			'cancelled_request.pending',
+			jsonArrayFrom(
+				eb
+					.selectFrom('request as cancelled_request')
+					.innerJoin(
+						'rideShareTour as cancelled_tour',
+						'cancelled_tour.id',
+						'cancelled_request.rideShareTour'
+					)
+					.innerJoin('request', 'request.rideShareTour', 'cancelled_tour.id')
+					.innerJoin('event', 'event.request', 'request.id')
+					.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
+					.where('cancelled_request.id', '=', requestId)
+					.select([
+						'eventGroup.address',
+						'eventGroup.scheduledTimeStart',
+						'eventGroup.scheduledTimeEnd',
+						'event.cancelled',
+						'eventGroup.prevLegDuration',
+						'eventGroup.nextLegDuration',
+						'eventGroup.lat',
+						'eventGroup.lng',
+						'request.id as requestid',
+						'cancelled_tour.id as tourid',
+						'event.id as eventid',
+						'event.eventGroupId',
+						'request.pending'
+					])
+			).as('events')
+		])
+		.executeTakeFirst();
+	if (tourInfo === undefined) {
+		console.log(
+			'Tour was undefined unexpectedly in cancelRequest cannot send notification Emails, requestId: ',
+			requestId
+		);
+		return;
+	}
+	if (!tourInfo.wasRequestCancelled) {
+		console.log('The request could not be cancelled due to missing authorization.');
+		return;
+	}
+	console.assert(queryResult.rows.length === 1);
+	if (!tourInfo.pending) {
+		await updateLegDurations(tourInfo.events, requestId, trx);
+	}
+	try {
+		await sendMail(CancelNotificationCompany, 'Stornierte Buchung', tourInfo.email, {
+			events: tourInfo.events,
+			name: tourInfo.firstName + ' ' + tourInfo.name
+		});
+	} catch {
+		console.log(
+			'Failed to send cancellation email to company with email: ',
+			tourInfo.email,
+			' tourId: ',
+			tourInfo.id
+		);
+	}
+	console.log('Cancel Ride Share Request - success', { requestId, userId });
 }

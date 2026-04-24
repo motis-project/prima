@@ -380,6 +380,7 @@ const translations: Translations = {
 		requestBy: 'Request from',
 		offerBy: 'Offered by',
 		acceptRequest: 'Confirm ride',
+		declineRequest: 'Decline ride',
 		requestAccepted: 'Ride confirmed',
 		requestCancelled: 'Ride cancelled',
 		showMap: 'Show map',

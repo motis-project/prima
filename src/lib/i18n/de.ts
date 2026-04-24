@@ -391,6 +391,7 @@ const translations: Translations = {
 		requestBy: 'Anfrage von',
 		offerBy: 'Angebot von',
 		acceptRequest: 'Mitfahrt bestätigen',
+		declineRequest: 'Mitfahrt ablehnen',
 		requestAccepted: 'Mitfahrt bestätigt',
 		requestCancelled: 'Mitfahrt abgesagt',
 		showMap: 'Karte anzeigen',
