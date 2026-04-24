@@ -9,7 +9,8 @@
 		profilePicture,
 		gender,
 		smokingAllowed,
-		averageRating
+		averageRating,
+		numberPassengers
 	}: {
 		isCustomer: boolean;
 		firstName: string;
@@ -18,6 +19,7 @@
 		gender: string | null;
 		smokingAllowed: boolean | undefined;
 		averageRating: string | number | null;
+		numberPassengers: number | null;
 	} = $props();
 </script>
 
@@ -33,6 +35,9 @@
 			{firstName || name}
 			{t.account.genderShort(gender || 'n')}
 		</h3>
+		{#if numberPassengers !== null}
+			<h2>{t.booking.passengerNumber + ': ' + numberPassengers}</h2>
+		{/if}
 		<div class="flex flex-row items-center gap-1">
 			{#if smokingAllowed}
 				<CigaretteIcon class="mr-4" />
