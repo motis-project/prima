@@ -38,7 +38,7 @@
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { HelpCircleIcon, LocateFixed, MapIcon } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
-	import { BOOKING_MAX_PASSENGERS, MAX_MATCHING_DISTANCE, MIN_PREP_BOOKING } from '$lib/constants';
+	import { MAX_MATCHING_DISTANCE, MIN_PREP_BOOKING } from '$lib/constants';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { planAndSign, type SignedPlanResponse } from '$lib/planAndSign';
 	import logo from '$lib/assets/logo-alpha.png';
@@ -72,7 +72,7 @@
 	let passengers = $derived(
 		fourteenPlus + kidsSevenToFourteen + kidsFiveToSix + kidsThreeToFour + kidsZeroToTwo
 	);
-	let remainingPassengers = $derived(BOOKING_MAX_PASSENGERS - passengers);
+	let remainingPassengers = $derived(data.maxPassengers - passengers);
 	let fourteenPlusMin = $derived(
 		kidsZeroToTwo > 0 || kidsThreeToFour > 0 || kidsFiveToSix > 0 || kidsSevenToFourteen == 0
 			? 1

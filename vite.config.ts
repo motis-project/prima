@@ -5,6 +5,7 @@ export default defineConfig({
 	plugins: [sveltekit()],
 
 	test: {
+		testTimeout: 70_000,
 		include: ['src/**/*.{test,spec}.{js,ts}'],
 		testTimeout: 70_000,
 		poolOptions: {
