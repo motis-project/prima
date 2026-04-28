@@ -41,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -76,6 +77,11 @@ fun Tours(
     val toursToday by viewModel.toursCache.collectAsState()
     val toursDate by viewModel.toursForDate.collectAsState()
     val intentSeen by viewModel.intentSeen.collectAsState()
+    val refresh by viewModel.refresh.collectAsState()
+
+    if (refresh) {
+        viewModel.resetDate()
+    }
 
     intent?.let { safeIntent ->
         runCatching {

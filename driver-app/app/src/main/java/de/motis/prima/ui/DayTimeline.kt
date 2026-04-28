@@ -1,4 +1,3 @@
-import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -23,12 +22,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,47 +42,58 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import de.motis.prima.R
-import de.motis.prima.services.Vehicle
 import de.motis.prima.ui.AvailabilityViewModel
 import de.motis.prima.ui.theme.LocalExtendedColors
 
 @Composable
 fun MoveTourDialog(
     onDismiss: () -> Unit,
-    onConfirm: (List<Vehicle>) -> Unit,
+    onConfirm: (Int) -> Unit,
     viewModel: AvailabilityViewModel
 ) {
-    // State: which options are selected
-    val selectedOptions = remember { mutableStateListOf<Vehicle>() }
+    val selectedOption = remember { mutableIntStateOf(0) }
+    val selectedVehicle by viewModel.selectedVehicle.collectAsState()
+    val storedTours by viewModel.storedTours.collectAsState()
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Select options") },
+        title = { Text("Verschieben nach:") },
         text = {
             Column {
                 val vehicles by viewModel.vehicles.collectAsState()
-                vehicles.forEach { option ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = selectedOptions.contains(option),
-                            onCheckedChange = { isChecked ->
-                                if (isChecked) {
-                                    selectedOptions.add(option)
-                                } else {
-                                    selectedOptions.remove(option)
-                                }
+                selectedVehicle?.let { sv ->
+                    val filteredVehicles = vehicles.filter { e ->
+                        e.id != sv.id
+                        // TODO: filter out infeasible vehicles
+                    }
+                    if (filteredVehicles.size == 1) {
+                        selectedOption.intValue = filteredVehicles.first().id
+                    }
+                    filteredVehicles.forEach { v ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (v.id != sv.id) {
+                                Checkbox(
+                                    checked = selectedOption.intValue == v.id,
+                                    onCheckedChange = { isChecked ->
+                                        if (isChecked) {
+                                            selectedOption.intValue = v.id
+                                        } else {
+                                            selectedOption.intValue = 0
+                                        }
+                                    }
+                                )
+                                Text(v.licensePlate)
                             }
-                        )
-                        Text(option.licensePlate)
+                        }
                     }
                 }
             }
         },
         confirmButton = {
             Button(onClick = {
-                onConfirm(selectedOptions)
+                onConfirm(selectedOption.intValue)
                 onDismiss()
             }) {
                 Text("OK")
@@ -118,12 +128,47 @@ fun DayTimeline(
     val passedSlots by viewModel.passedSlots.collectAsState()
 
     var showDialog by remember { mutableStateOf(false) }
-    var showMoveTourDialog by remember { mutableStateOf(false) }
+    var showMoveTourDialog by remember { mutableLongStateOf(0) }
+
+    val moveTourResponse by viewModel.moveToursResponse.collectAsState()
+
+    val refresh by viewModel.refresh.collectAsState()
 
     LaunchedEffect(key1 = viewModel) {
         viewModel.networkError.collect { networkError ->
             showDialog = networkError
         }
+    }
+
+    if (refresh) {
+        viewModel.setDate()
+    }
+
+    if (moveTourResponse.status != 0 && moveTourResponse.status != 200) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(text = "Verschieben nicht möglich", fontSize = 16.sp) },
+            text = { Text(text = moveTourResponse.message, fontSize = 12.sp) },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Clear,
+                    contentDescription = "Localized description",
+                    tint = Color.Red,
+                    modifier = Modifier.size(32.dp)
+
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.resetTMR()
+                    showDialog = false
+                }) {
+                    Text("Ok")
+                }
+            }
+        )
+    } else if (moveTourResponse.status == 200) {
+        viewModel.setDate()
     }
 
     if (showDialog) {
@@ -151,14 +196,15 @@ fun DayTimeline(
         )
     }
 
-    if (showMoveTourDialog) {
-       MoveTourDialog(
-           onDismiss = { showMoveTourDialog = false },
+    val none: Long = 0
+    if (showMoveTourDialog != none) {
+        MoveTourDialog(
+           onDismiss = { showMoveTourDialog = none },
            onConfirm = { selected ->
-               Log.d("test", "$selected")
+               viewModel.moveTour(showMoveTourDialog, selected)
            },
            viewModel
-       )
+        )
     }
 
     Row (
@@ -219,23 +265,27 @@ fun DayTimeline(
                             .padding(top = 12.dp, start = 6.dp, end = 12.dp)
                             .pointerInput(Unit) {
                                 detectTapGestures { offset ->
-                                    val slot = (offset.y / heightPerSlotDp.toPx()).toInt() + passedSlotsLocal
+                                    val slot =
+                                        (offset.y / heightPerSlotDp.toPx()).toInt() + passedSlotsLocal
                                     val start = slot * slotMinutes
                                     val end = start + slotMinutes
                                     dragStart = start
-                                    showMoveTourDialog = viewModel.updateDayBlocks(start, end, dragStart!!)
+                                    showMoveTourDialog =
+                                        viewModel.updateDayBlocks(start, end, dragStart!!)
                                     dragStart = null
                                 }
                             }
                             .pointerInput(Unit) {
                                 detectDragGestures(
                                     onDragStart = { offset ->
-                                        val slot = (offset.y / heightPerSlotDp.toPx()).toInt() + passedSlotsLocal
+                                        val slot =
+                                            (offset.y / heightPerSlotDp.toPx()).toInt() + passedSlotsLocal
                                         dragStart = slot * slotMinutes
                                         dragEnd = slot * slotMinutes
                                     },
                                     onDrag = { change, _ ->
-                                        val slot = (change.position.y / heightPerSlotDp.toPx()).toInt() + passedSlotsLocal
+                                        val slot =
+                                            (change.position.y / heightPerSlotDp.toPx()).toInt() + passedSlotsLocal
                                         dragEnd = slot * slotMinutes
                                     },
                                     onDragEnd = {

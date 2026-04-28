@@ -1,22 +1,14 @@
 package de.motis.prima.viewmodel
 
-import android.annotation.SuppressLint
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.data.DataRepository
-import de.motis.prima.data.Ticket
-import de.motis.prima.data.TourObject
-import de.motis.prima.data.ValidationStatus
-import de.motis.prima.services.ApiService
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.Calendar
 import javax.inject.Inject
@@ -46,6 +38,8 @@ class ToursViewModel @Inject constructor(
 
     val calendar: Calendar = repository.calendar
 
+    val refresh = repository.refresh
+
     init {
         resetDate()
     }
@@ -70,7 +64,7 @@ class ToursViewModel @Inject constructor(
         repository.updateEventGroups(tourId)
     }
 
-    @SuppressLint("DefaultLocale")
+    /*@SuppressLint("DefaultLocale")
     fun getFareString(tourId: Int): String {
         val tour = repository.getTour(tourId)
         var res = ""
@@ -80,7 +74,7 @@ class ToursViewModel @Inject constructor(
             res = "$rounded Euro"
         }
         return res
-    }
+    }*/
 
     fun isCancelled(tourId: Int): Boolean {
         return repository.isTourCancelled(tourId)

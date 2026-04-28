@@ -46,6 +46,7 @@ class FirebaseService : FirebaseMessagingService() {
 
             repository.updateVehicles()
             repository.fetchTours(pickupTime?.toLong())
+            repository.refresh()
 
             tourId?.let { tourIdStr ->
                 repository.updateEventGroups(tourIdStr.toInt())
@@ -55,20 +56,6 @@ class FirebaseService : FirebaseMessagingService() {
                 val vehicle = repository.vehicles.value.find { e -> e.id == id.toInt() }
                 vehicle?.let { v -> body +=  ": ${v.licensePlate}" }
             }
-
-            // TODO: reminder for upcoming tours?
-            /*CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    val msgVehicleId = data["vehicleId"]?.toInt()
-                    dataStore.selectedVehicleFlow.collect { value ->
-                        if (value.id == msgVehicleId) {
-                            showNotification(title, body, tourId)
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e("error", "Failed to retrieve stored vehicle id", e)
-                }
-            }*/
 
             showNotification(title, body, tourId, pickupTime?.toLong())
         }
