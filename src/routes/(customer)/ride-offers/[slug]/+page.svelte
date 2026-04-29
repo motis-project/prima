@@ -10,7 +10,7 @@
 	import { msg } from '$lib/msg';
 	import { language, t } from '$lib/i18n/translation';
 	import * as Card from '$lib/shadcn/card';
-	import { Check, MapIcon } from 'lucide-svelte';
+	import { Check, Info, MapIcon } from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
 	import Time from '../../routing/Time.svelte';
@@ -176,6 +176,10 @@
 							}}
 						>
 							<input type="hidden" name="requestId" value={n.id} />
+							<p class="mb-3 flex gap-2 text-sm text-muted-foreground">
+								<Info class="mt-0.5 size-4 shrink-0" />
+								<span>{t.ride.acceptRequestInfo}</span>
+							</p>
 							<Button type="submit" class="w-full" disabled={loading}>
 								<Check class="mr-1 size-4" />
 								{t.ride.acceptRequest}

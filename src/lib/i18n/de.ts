@@ -391,6 +391,8 @@ const translations: Translations = {
 		requestBy: 'Anfrage von',
 		offerBy: 'Angebot von',
 		acceptRequest: 'Mitfahrt bestätigen',
+		acceptRequestInfo:
+			'Bitte stimmen Sie vor der Bestätigung den genauen Treffpunkt, die genaue Treffzeit und die Gepäckmitnahme mit der anfragenden Person ab.',
 		requestAccepted: 'Mitfahrt bestätigt',
 		requestCancelled: 'Mitfahrt abgesagt',
 		showMap: 'Karte anzeigen',

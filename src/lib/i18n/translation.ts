@@ -332,6 +332,7 @@ export type Translations = {
 		requestBy: string;
 		offerBy: string;
 		acceptRequest: string;
+		acceptRequestInfo: string;
 		requestAccepted: string;
 		requestCancelled: string;
 		showMap: string;
