@@ -332,6 +332,7 @@
 										{wheelchair}
 										luggage={luggageToInt(luggage)}
 										price={undefined}
+										requiresPtTicket={false}
 									/>
 
 									<form
