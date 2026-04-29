@@ -2,7 +2,7 @@
 	import { t } from '$lib/i18n/translation';
 	import type { CalendarDate } from '@internationalized/date';
 	import * as Popover from '$lib/shadcn/popover';
-	import { Button, buttonVariants } from '$lib/shadcn/button';
+	import { Button } from '$lib/shadcn/button';
 	import { cn } from '$lib/shadcn/utils';
 	import { RangeCalendar } from '$lib/shadcn/range-calendar/index.js';
 	import { CalendarIcon } from 'lucide-svelte';
@@ -12,7 +12,9 @@
 	let {
 		minValue,
 		selectedDays = $bindable(),
-		range = $bindable()
+		range = $bindable(),
+		active = true,
+		framed = true
 	}: {
 		minValue: CalendarDate;
 		selectedDays: boolean[];
@@ -20,12 +22,27 @@
 			start: CalendarDate;
 			end: CalendarDate;
 		};
+		active?: boolean;
+		framed?: boolean;
 	} = $props();
 
-	let repetitionLabel: undefined | string = $state(undefined);
 	let timeRangeString = $derived(
 		' ' + range.start?.toString() + ' ' + t.ride.to + range.end?.toString()
 	);
+
+	let repetitionLabel = $derived.by(() => {
+		if (!selectedDays.some(Boolean)) {
+			return t.ride.noDaysSelected;
+		}
+		if (!selectedDays.some((d) => !d)) {
+			return t.daily + timeRangeString;
+		}
+		return selectedDays
+			.map((d, i) => (d ? t.ride.daysList[i].full : undefined))
+			.filter((d) => d !== undefined)
+			.join(', ')
+			.concat(timeRangeString);
+	});
 
 	let intermediateRange = $state({ start: range.start, end: range.end });
 	$effect(() => {
@@ -37,23 +54,10 @@
 		}
 	});
 
-	function updateDescription() {
-		if (selectedDays.length === 0) {
-			repetitionLabel = undefined;
-			return;
-		}
-		if (!selectedDays.some((d) => !d)) {
-			repetitionLabel = t.daily + timeRangeString;
-			return;
-		}
-		repetitionLabel = selectedDays
-			.map((d, i) => (d ? t.ride.daysList[i].full : undefined))
-			.filter((d) => d !== undefined)
-			.join(', ')
-			.concat(timeRangeString);
-	}
-
 	function toggleDay(day: string) {
+		if (!active) {
+			return;
+		}
 		const idx = t.ride.daysList.findIndex((d) => d.full === day);
 		selectedDays[idx] = !selectedDays[idx];
 	}
@@ -61,59 +65,66 @@
 	function isDaySelected(day: string) {
 		return selectedDays[t.ride.daysList.findIndex((d) => d.full === day)];
 	}
-
-	let open = $state(false);
 </script>
 
-<div class="flex gap-2">
-	<Popover.Root bind:open>
-		<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
-			{repetitionLabel ?? t.ride.repetitionLabel}
-		</Popover.Trigger>
-		<Popover.Content class="flex w-fit flex-col gap-4">
-			<fieldset class="flex flex-col gap-2">
-				<legend class="text-sm font-medium"> Repeat on </legend>
+<div
+	class={cn(
+		'flex flex-col gap-4 transition-opacity',
+		framed && 'rounded-lg border border-input p-4',
+		!active && 'opacity-60'
+	)}
+>
+	<div class="text-sm text-muted-foreground">{repetitionLabel}</div>
 
-				<div class="flex items-center gap-2">
-					{#each t.ride.daysList as day}
-						<button
-							type="button"
-							aria-pressed={isDaySelected(day.full)}
-							aria-label={day.full}
-							onclick={() => toggleDay(day.full)}
-							class={`flex h-10 w-10 items-center justify-center rounded-full border text-sm font-medium transition-colors
+	<fieldset class="flex flex-col gap-2" disabled={!active}>
+		<legend class="text-sm font-medium">{t.ride.individualDays}</legend>
+
+		<div class="flex items-center gap-2">
+			{#each t.ride.daysList as day}
+				<button
+					type="button"
+					aria-pressed={isDaySelected(day.full)}
+					aria-label={day.full}
+					disabled={!active}
+					onclick={() => toggleDay(day.full)}
+					class={`flex h-10 w-10 items-center justify-center rounded-full border text-sm font-medium transition-colors disabled:cursor-not-allowed
 					${
 						isDaySelected(day.full)
 							? 'border-blue-600 bg-blue-600 text-white'
 							: 'border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100'
 					}`}
-						>
-							{day.short}
-						</button>
-					{/each}
-				</div>
-			</fieldset>
-			<Label>{t.ride.chooseTimeSpan}</Label>
-			<Popover.Root>
-				<Popover.Trigger class={cn(buttonVariants({ variant: 'outline' }), 'w-fit justify-start')}>
-					<CalendarIcon class="mr-2 size-4" />
-					{timeRangeString}
-				</Popover.Trigger>
-				<Popover.Content class="w-auto p-2">
-					<RangeCalendar
-						{minValue}
-						bind:value={intermediateRange}
-						class="rounded-md border"
-						locale={LOCALE}
-					/>
-				</Popover.Content>
-			</Popover.Root>
-			<Button
-				onclick={() => {
-					updateDescription();
-					open = false;
-				}}>{t.ride.addRule}</Button
-			>
-		</Popover.Content>
-	</Popover.Root>
+				>
+					{day.short}
+				</button>
+			{/each}
+		</div>
+	</fieldset>
+
+	<div class="flex flex-col gap-2">
+		<Label>{t.ride.chooseTimeSpan}</Label>
+		<Popover.Root>
+			<Popover.Trigger disabled={!active}>
+				{#snippet child({ props })}
+					<Button
+						{...props}
+						variant="outline"
+						class="w-fit justify-start"
+						disabled={!active}
+						type="button"
+					>
+						<CalendarIcon class="mr-2 size-4" />
+						{timeRangeString}
+					</Button>
+				{/snippet}
+			</Popover.Trigger>
+			<Popover.Content class="w-auto p-2">
+				<RangeCalendar
+					{minValue}
+					bind:value={intermediateRange}
+					class="rounded-md border"
+					locale={LOCALE}
+				/>
+			</Popover.Content>
+		</Popover.Root>
+	</div>
 </div>

@@ -369,6 +369,8 @@ const translations: Translations = {
 		outro:
 			'Ihr Mitfahrangebot wird öffentlich in der Verbindungsauskunft angezeigt. Über Anfragen werden Sie per E-Mail benachrichtigt.',
 		publish: 'Mitfahrangebot veröffentlichen',
+		publishSingleRideOffer: 'Einzelfahrt veröffentlichen',
+		publishRepeatingRideOffers: 'Wiederholende Fahrten veröffentlichen',
 		cancelTrip: 'Mitfahrangebot stornieren',
 		cancelHeadline: 'Möchten Sie wirklich dieses Mitfahrangebot stornieren?',
 		noCancel: 'Nein, Fahrt nicht stornieren.',
@@ -394,9 +396,11 @@ const translations: Translations = {
 		requestAccepted: 'Mitfahrt bestätigt',
 		requestCancelled: 'Mitfahrt abgesagt',
 		showMap: 'Karte anzeigen',
+		singleRideOffer: 'Einzelfahrt einstellen',
 		repetitionLabel: 'Wiederholende Fahrten einstellen',
 		addRule: 'Regel hinzufügen',
 		individualDays: 'individuelle Tage',
+		noDaysSelected: 'Keine Wochentage ausgewählt',
 		to: 'bis ',
 		daysList: [
 			{ short: 'S', full: 'So' },

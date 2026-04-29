@@ -314,6 +314,8 @@ export type Translations = {
 		addVehicle: string;
 		outro: string;
 		publish: string;
+		publishSingleRideOffer: string;
+		publishRepeatingRideOffers: string;
 		cancelTrip: string;
 		cancelHeadline: string;
 		noCancel: string;
@@ -335,9 +337,11 @@ export type Translations = {
 		requestAccepted: string;
 		requestCancelled: string;
 		showMap: string;
+		singleRideOffer: string;
 		repetitionLabel: string;
 		addRule: string;
 		individualDays: string;
+		noDaysSelected: string;
 		to: string;
 		daysList: { short: string; full: string }[];
 		chooseTimeSpan: string;
