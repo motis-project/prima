@@ -16,7 +16,7 @@
 	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import { Input } from '$lib/shadcn/input';
 	import { Label } from '$lib/shadcn/label';
-	import { type Match, type PlanData } from '$lib/openapi';
+	import { reverseGeocode, type Match, type PlanData } from '$lib/openapi';
 	import { t } from '$lib/i18n/translation';
 	import { lngLatToStr } from '$lib/util/lngLatToStr';
 	import Meta from '$lib/ui/Meta.svelte';
@@ -116,6 +116,106 @@
 	let fromItems = $state<Array<Location>>([]);
 	let toItems = $state<Array<Location>>([]);
 	let fromOrToEmpty = $derived(!from?.value?.match || !to?.value?.match);
+	let fromReverseGeocodeRequest = 0;
+	let toReverseGeocodeRequest = 0;
+
+	const getDisplayArea = (match: Match | undefined) => {
+		if (!match) {
+			return '';
+		}
+
+		const matchedArea = match.areas.find((a) => a.matched);
+		const defaultArea = match.areas.find((a) => a.default);
+		const matchedAreaName =
+			matchedArea?.name.match(/^[0-9]*$/) && defaultArea
+				? `${matchedArea.name} ${defaultArea.name}`
+				: matchedArea?.name;
+
+		const areas = new Set<string>();
+		match.areas.forEach((area) => {
+			if (area.matched || area.unique || area.default || area.adminLevel == 4) {
+				const name = area === matchedArea && matchedAreaName ? matchedAreaName : area.name;
+				if (name != match.name) {
+					areas.add(name);
+				}
+			}
+		});
+
+		return Array.from(areas).reverse().join(', ');
+	};
+
+	const getLabel = (match: Match) => {
+		const displayArea = getDisplayArea(match);
+		return displayArea ? `${match.name}, ${displayArea}` : match.name;
+	};
+
+	const reverseGeocodeLocation = async (
+		location: Location,
+		setItems: (items: Location[]) => void,
+		requestId: number,
+		getCurrentRequestId: () => number,
+		getCurrentLocation: () => Location | undefined
+	) => {
+		const coordinateMatch = location.value.match;
+		if (!coordinateMatch) {
+			return location;
+		}
+
+		const { data: matches, error } = await reverseGeocode({
+			query: {
+				place: `${coordinateMatch.lat},${coordinateMatch.lon}`,
+				type: 'ADDRESS'
+			}
+		});
+
+		if (requestId !== getCurrentRequestId()) {
+			return getCurrentLocation() ?? location;
+		}
+		if (error || !matches?.length) {
+			if (error) {
+				console.error('REVERSE GEOCODE ERROR: ', error);
+			}
+			return location;
+		}
+
+		const match = {
+			...matches[0],
+			lat: coordinateMatch.lat,
+			lon: coordinateMatch.lon,
+			level: coordinateMatch.level ?? matches[0].level
+		};
+		const reversedLocation: Location = {
+			label: getLabel(match),
+			value: {
+				match,
+				precision: location.value.precision
+			}
+		};
+		setItems([reversedLocation]);
+		return reversedLocation;
+	};
+
+	const reverseGeocodeFrom = (location: Location) => {
+		const requestId = ++fromReverseGeocodeRequest;
+		return reverseGeocodeLocation(
+			location,
+			(items) => (fromItems = items),
+			requestId,
+			() => fromReverseGeocodeRequest,
+			() => from
+		);
+	};
+
+	const reverseGeocodeTo = (location: Location) => {
+		const requestId = ++toReverseGeocodeRequest;
+		return reverseGeocodeLocation(
+			location,
+			(items) => (toItems = items),
+			requestId,
+			() => toReverseGeocodeRequest,
+			() => to
+		);
+	};
 
 	const luggageToInt = (str: LuggageType) => {
 		switch (str) {
@@ -225,8 +325,9 @@
 		}
 	};
 
-	const applyPosition = (position: { coords: { latitude: number; longitude: number } }) => {
+	const applyPosition = async (position: { coords: { latitude: number; longitude: number } }) => {
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
+		from = await reverseGeocodeFrom(from);
 	};
 
 	let desiredTrips = $state(data.user.desiredTrips);
@@ -303,6 +404,8 @@
 		<PopupMap
 			bind:from
 			bind:to
+			onFromLocationChange={reverseGeocodeFrom}
+			onToLocationChange={reverseGeocodeTo}
 			itinerary={page.state.selectedItinerary}
 			areas={data.areas}
 			rideSharingBounds={data.rideSharingBounds}
