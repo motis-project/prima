@@ -7,7 +7,7 @@
 	import { RangeCalendar } from '$lib/shadcn/range-calendar/index.js';
 	import { CalendarIcon } from 'lucide-svelte';
 	import { Label } from '$lib/shadcn/label';
-	import { LOCALE } from '$lib/constants';
+	import { LOCALE, TZ } from '$lib/constants';
 
 	let {
 		minValue,
@@ -26,8 +26,12 @@
 		framed?: boolean;
 	} = $props();
 
+	function formatCalendarDate(date: CalendarDate | undefined) {
+		return date?.toDate(TZ).toLocaleDateString(LOCALE) ?? '';
+	}
+
 	let timeRangeString = $derived(
-		' ' + range.start?.toString() + ' ' + t.ride.to + range.end?.toString()
+		' ' + formatCalendarDate(range.start) + ' ' + t.ride.to + formatCalendarDate(range.end)
 	);
 
 	let repetitionLabel = $derived.by(() => {

@@ -40,7 +40,7 @@
 	import { DAY, HOUR } from '$lib/util/time';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
-	import { TZ } from '$lib/constants';
+	import { LOCALE, TZ } from '$lib/constants';
 	import { CalendarDate, fromDate, toCalendarDate } from '@internationalized/date';
 	import RepetitionSelector from '$lib/ui/RepetitionSelector.svelte';
 	import * as Card from '$lib/shadcn/card';
@@ -99,8 +99,12 @@
 		selectedDays.reduce((mask, val, i) => (val ? mask | (1 << i) : mask), 0)
 	);
 	let bitDays = $derived(offerMode === 'repeating' ? selectedDayMask : 0);
+	function formatCalendarDate(date: CalendarDate | undefined) {
+		return date?.toDate(TZ).toLocaleDateString(LOCALE) ?? '';
+	}
+
 	let repetitionTimeRangeString = $derived(
-		`${range.start?.toString()} ${t.ride.to}${range.end?.toString()}`
+		`${formatCalendarDate(range.start)} ${t.ride.to}${formatCalendarDate(range.end)}`
 	);
 	let repetitionSummary = $derived.by(() => {
 		if (selectedDayMask === 0) {
