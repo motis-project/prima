@@ -15,6 +15,7 @@
 		"lint": "prettier --check . && eslint . --ignore-pattern src/lib/openapi",
 		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"test:e2e": "playwright test",
+		"test:e2eone": "playwright test rideShare.test.ts",
 		"test:unit": "./setup-db.sh && vitest --fileParallelism false",
 		"test:gen": "./setup-db.sh && vitest src/lib/server/booking/taxi/tests/generatedTests/gen.test.ts --fileParallelism false",
 		"test:one": "./setup-db.sh && vitest src/lib/server/availabilityCompensation/availabilityCompensation.test.ts --fileParallelism false",

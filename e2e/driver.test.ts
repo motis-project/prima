@@ -1,10 +1,64 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { sql } from 'kysely';
+import { hashPassword } from '../src/lib/server/auth/password';
 import { DAY, HOUR, MINUTE, SECOND } from '../src/lib/util/time';
 import { login, in6Days, execSQL, TAXI_OWNER, offset, dayString, logout } from './utils';
+import {
+	clearE2EData,
+	seedAvailability,
+	seedTourWithEvents,
+	seedUser,
+	seedVehicle,
+	seedWeisswasserCompany
+} from './testData';
 
 const fromTime = in6Days.getTime();
 const toTime = in6Days.getTime() + DAY - SECOND;
+const taxiOwnerEmail = TAXI_OWNER.email;
+const customerEmail = 'driver-test-customer@test.de';
+
+test.beforeAll(async () => {
+	const taxiOwnerPasswordHash = await hashPassword(TAXI_OWNER.password);
+	const customerPasswordHash = await hashPassword('longEnough2');
+
+	await clearE2EData();
+	const companyId = await seedWeisswasserCompany();
+
+	await seedUser({
+		email: taxiOwnerEmail,
+		passwordHash: taxiOwnerPasswordHash,
+		companyId,
+		isTaxiOwner: true
+	});
+	const customerId = await seedUser({
+		email: customerEmail,
+		name: 'driver test customer',
+		passwordHash: customerPasswordHash
+	});
+
+	const vehicle1 = await seedVehicle({ licensePlate: 'GR-TU-11', companyId });
+	await seedVehicle({ licensePlate: 'GR-TU-12', companyId });
+
+	const availabilityStart = in6Days.getTime() + HOUR * 7;
+	await seedAvailability({
+		startTime: availabilityStart,
+		endTime: availabilityStart + HOUR * 3,
+		vehicleId: vehicle1
+	});
+
+	await seedTourWithEvents({
+		vehicleId: vehicle1,
+		customerId,
+		pickupTime: availabilityStart + HOUR,
+		dropoffTime: availabilityStart + HOUR + MINUTE * 30
+	});
+	await seedTourWithEvents({
+		vehicleId: vehicle1,
+		customerId,
+		pickupTime: availabilityStart + HOUR * 2,
+		dropoffTime: availabilityStart + HOUR * 2 + MINUTE * 30
+	});
+});
 
 test('Get tours', async ({ page }) => {
 	await login(page, TAXI_OWNER);

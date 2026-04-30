@@ -1,17 +1,25 @@
 import { expect, test, type Page } from '@playwright/test';
-import {
-	login,
-	setCompanyData,
-	addVehicle,
-	TAXI_OWNER,
-	COMPANY1,
-	moveMouse,
-	offset,
-	dayString,
-	logout
-} from './utils';
+import { hashPassword } from '../src/lib/server/auth/password';
+import { login, addVehicle, TAXI_OWNER, moveMouse, offset, dayString, logout } from './utils';
+import { clearSessionsForUser, seedUser, seedWeisswasserCompany } from './testData';
 
 test.describe.configure({ mode: 'serial' });
+
+let taxiOwnerPasswordHash: string;
+
+test.beforeAll(async () => {
+	taxiOwnerPasswordHash = await hashPassword(TAXI_OWNER.password);
+
+	await clearSessionsForUser(TAXI_OWNER.email);
+	const companyId = await seedWeisswasserCompany();
+	await seedUser({
+		email: TAXI_OWNER.email,
+		passwordHash: taxiOwnerPasswordHash,
+		companyId,
+		isTaxiOwner: true,
+		upsert: true
+	});
+});
 
 export async function setAvailability(page: Page) {
 	await login(page, TAXI_OWNER);
@@ -34,10 +42,6 @@ export async function requestRide(page: Page) {
 	await page.getByRole('button', { name: 'Suchen' }).click();
 	await expect(page.getByText('Request: ')).toBeVisible();
 }
-
-test('Set company data', async ({ page }) => {
-	await setCompanyData(page, TAXI_OWNER, COMPANY1);
-});
 
 test('Add vehicle', async ({ page }) => {
 	await addVehicle(page, 'GR-TU-11');

@@ -1,6 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
 import {
-	signup,
 	RIDE_SHARE_PROVIDER,
 	login,
 	RIDE_SHARE_CUSTOMER,
@@ -9,13 +8,24 @@ import {
 	logout
 } from './utils';
 import { sql } from 'kysely';
+import { hashPassword } from '../src/lib/server/auth/password';
 import { LICENSE_PLATE_PLACEHOLDER } from '../src/lib/constants';
+import { clearE2EData, seedUser } from './testData';
 
 test.describe.configure({ mode: 'serial' });
 
+test.beforeAll(async () => {
+	const providerPasswordHash = await hashPassword(RIDE_SHARE_PROVIDER.password);
+	const customerPasswordHash = await hashPassword(RIDE_SHARE_CUSTOMER.password);
+
+	await clearE2EData();
+	await seedUser({ email: RIDE_SHARE_PROVIDER.email, passwordHash: providerPasswordHash });
+	await seedUser({ email: RIDE_SHARE_CUSTOMER.email, passwordHash: customerPasswordHash });
+});
+
 test('add ride share tour', async ({ page }) => {
 	test.setTimeout(70000);
-	await signup(page, RIDE_SHARE_PROVIDER, true);
+	await login(page, RIDE_SHARE_PROVIDER);
 	await page.goto('/account/add-or-edit-ride-share-vehicle');
 	await page.getByRole('textbox', { name: 'B-AA' }).fill(LICENSE_PLATE_PLACEHOLDER);
 	await page.getByRole('button', { name: 'Fahrzeug anlegen' }).click();
@@ -33,7 +43,7 @@ test('add ride share tour', async ({ page }) => {
 });
 
 test.skip('start ride share negotiation', async ({ page }) => {
-	await signup(page, RIDE_SHARE_CUSTOMER, true);
+	await login(page, RIDE_SHARE_CUSTOMER);
 	await page.goto('/routing');
 	await page.waitForTimeout(1000);
 	await chooseFromTypeAhead(page, 'Von', 'schleife', 'Schleife ');
