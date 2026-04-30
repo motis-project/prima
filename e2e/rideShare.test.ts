@@ -1,6 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
 import {
-	signup,
 	RIDE_SHARE_PROVIDER,
 	login,
 	RIDE_SHARE_CUSTOMER,
@@ -9,13 +8,84 @@ import {
 	logout
 } from './utils';
 import { sql } from 'kysely';
+import { hashPassword } from '../src/lib/server/auth/password';
 import { LICENSE_PLATE_PLACEHOLDER } from '../src/lib/constants';
 
 test.describe.configure({ mode: 'serial' });
 
+test.beforeAll(async () => {
+	const providerPasswordHash = await hashPassword(RIDE_SHARE_PROVIDER.password);
+	const customerPasswordHash = await hashPassword(RIDE_SHARE_CUSTOMER.password);
+
+	await execSQL(sql`
+		DELETE FROM journey;
+		DELETE FROM availability;
+		DELETE FROM event;
+		DELETE FROM event_group;
+		DELETE FROM ride_share_rating;
+		DELETE FROM request;
+		DELETE FROM tour;
+		DELETE FROM ride_share_tour;
+		DELETE FROM ride_share_vehicle;
+		DELETE FROM vehicle;
+		DELETE FROM session;
+		DELETE FROM desired_ride_share;
+		DELETE FROM "user";
+		DELETE FROM company;
+	`);
+
+	await seedUser(RIDE_SHARE_PROVIDER.email, providerPasswordHash);
+	await seedUser(RIDE_SHARE_CUSTOMER.email, customerPasswordHash);
+});
+
+async function seedUser(email: string, passwordHash: string) {
+	await execSQL(sql`
+		INSERT INTO "user" (
+			email,
+			name,
+			first_name,
+			gender,
+			zip_code,
+			city,
+			region,
+			password_hash,
+			is_email_verified,
+			email_verification_code,
+			email_verification_expires_at,
+			password_reset_code,
+			password_reset_expires_at,
+			is_taxi_owner,
+			is_admin,
+			is_service,
+			phone,
+			company_id
+		)
+		VALUES (
+			${email},
+			${email},
+			'Vorname',
+			'o',
+			'ZIP',
+			'City',
+			'',
+			${passwordHash},
+			TRUE,
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			FALSE,
+			FALSE,
+			FALSE,
+			NULL,
+			NULL
+		)
+	`);
+}
+
 test('add ride share tour', async ({ page }) => {
 	test.setTimeout(70000);
-	await signup(page, RIDE_SHARE_PROVIDER, true);
+	await login(page, RIDE_SHARE_PROVIDER);
 	await page.goto('/account/add-or-edit-ride-share-vehicle');
 	await page.getByRole('textbox', { name: 'B-AA' }).fill(LICENSE_PLATE_PLACEHOLDER);
 	await page.getByRole('button', { name: 'Fahrzeug anlegen' }).click();
@@ -33,7 +103,7 @@ test('add ride share tour', async ({ page }) => {
 });
 
 test.skip('start ride share negotiation', async ({ page }) => {
-	await signup(page, RIDE_SHARE_CUSTOMER, true);
+	await login(page, RIDE_SHARE_CUSTOMER);
 	await page.goto('/routing');
 	await page.waitForTimeout(1000);
 	await chooseFromTypeAhead(page, 'Von', 'schleife', 'Schleife ');

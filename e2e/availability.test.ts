@@ -1,17 +1,104 @@
 import { expect, test, type Page } from '@playwright/test';
+import { sql } from 'kysely';
+import { hashPassword } from '../src/lib/server/auth/password';
 import {
 	login,
-	setCompanyData,
 	addVehicle,
 	TAXI_OWNER,
-	COMPANY1,
 	moveMouse,
 	offset,
 	dayString,
-	logout
+	logout,
+	execSQL
 } from './utils';
 
 test.describe.configure({ mode: 'serial' });
+
+let taxiOwnerPasswordHash: string;
+
+test.beforeAll(async () => {
+	taxiOwnerPasswordHash = await hashPassword(TAXI_OWNER.password);
+
+	await execSQL(sql`
+		DELETE FROM "session"
+		WHERE user_id IN (SELECT id FROM "user" WHERE email = ${TAXI_OWNER.email})
+	`);
+
+	const company = await execSQL<{ id: number }>(sql`
+		INSERT INTO company (lat, lng, name, address, zone, phone)
+		VALUES (
+			51.493713,
+			14.6258545,
+			'Taxi Weißwasser',
+			'Werner-Seelenbinder-Straße 70a, Weißwasser/Oberlausitz, Weißwasser/Oberlausitz, Sachsen',
+			(SELECT id FROM zone WHERE name = 'Weißwasser' ORDER BY id DESC LIMIT 1),
+			'555666'
+		)
+		RETURNING id
+	`);
+	const companyId = company.rows[0].id;
+
+	await execSQL(sql`
+		INSERT INTO "user" (
+			email,
+			name,
+			first_name,
+			gender,
+			zip_code,
+			city,
+			region,
+			password_hash,
+			is_email_verified,
+			email_verification_code,
+			email_verification_expires_at,
+			password_reset_code,
+			password_reset_expires_at,
+			is_taxi_owner,
+			is_admin,
+			is_service,
+			phone,
+			company_id
+		)
+		VALUES (
+			${TAXI_OWNER.email},
+			${TAXI_OWNER.email},
+			'Vorname',
+			'o',
+			'ZIP',
+			'City',
+			'',
+			${taxiOwnerPasswordHash},
+			TRUE,
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			TRUE,
+			FALSE,
+			FALSE,
+			NULL,
+			${companyId}
+		)
+		ON CONFLICT (email) DO UPDATE SET
+			name = EXCLUDED.name,
+			first_name = EXCLUDED.first_name,
+			gender = EXCLUDED.gender,
+			zip_code = EXCLUDED.zip_code,
+			city = EXCLUDED.city,
+			region = EXCLUDED.region,
+			password_hash = EXCLUDED.password_hash,
+			is_email_verified = EXCLUDED.is_email_verified,
+			email_verification_code = EXCLUDED.email_verification_code,
+			email_verification_expires_at = EXCLUDED.email_verification_expires_at,
+			password_reset_code = EXCLUDED.password_reset_code,
+			password_reset_expires_at = EXCLUDED.password_reset_expires_at,
+			is_taxi_owner = EXCLUDED.is_taxi_owner,
+			is_admin = EXCLUDED.is_admin,
+			is_service = EXCLUDED.is_service,
+			phone = EXCLUDED.phone,
+			company_id = EXCLUDED.company_id
+	`);
+});
 
 export async function setAvailability(page: Page) {
 	await login(page, TAXI_OWNER);
@@ -34,10 +121,6 @@ export async function requestRide(page: Page) {
 	await page.getByRole('button', { name: 'Suchen' }).click();
 	await expect(page.getByText('Request: ')).toBeVisible();
 }
-
-test('Set company data', async ({ page }) => {
-	await setCompanyData(page, TAXI_OWNER, COMPANY1);
-});
 
 test('Add vehicle', async ({ page }) => {
 	await addVehicle(page, 'GR-TU-11');
