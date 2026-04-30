@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
-import { sql } from 'kysely';
 import { hashPassword } from '../src/lib/server/auth/password';
-import { chooseFromTypeAhead, execSQL, login, TAXI_OWNER } from './utils';
+import { chooseFromTypeAhead, login, TAXI_OWNER } from './utils';
+import { clearSessionsForUser, seedCompany, seedUser } from './testData';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -12,78 +12,22 @@ test.beforeAll(async () => {
 });
 
 test.beforeEach(async () => {
-	await execSQL(sql`
-		DELETE FROM "session"
-		WHERE user_id IN (SELECT id FROM "user" WHERE email = ${TAXI_OWNER.email})
-	`);
-
-	const company = await execSQL<{ id: number }>(sql`
-		INSERT INTO company (lat, lng, name, address, zone, phone)
-		VALUES (NULL, NULL, NULL, NULL, NULL, NULL)
-		RETURNING id
-	`);
-	const companyId = company.rows[0].id;
-
-	await execSQL(sql`
-		INSERT INTO "user" (
-			email,
-			name,
-			first_name,
-			gender,
-			zip_code,
-			city,
-			region,
-			password_hash,
-			is_email_verified,
-			email_verification_code,
-			email_verification_expires_at,
-			password_reset_code,
-			password_reset_expires_at,
-			is_taxi_owner,
-			is_admin,
-			is_service,
-			phone,
-			company_id
-		)
-		VALUES (
-			${TAXI_OWNER.email},
-			${TAXI_OWNER.email},
-			'Vorname',
-			'o',
-			'ZIP',
-			'City',
-			'',
-			${taxiOwnerPasswordHash},
-			TRUE,
-			NULL,
-			NULL,
-			NULL,
-			NULL,
-			TRUE,
-			FALSE,
-			FALSE,
-			NULL,
-			${companyId}
-		)
-		ON CONFLICT (email) DO UPDATE SET
-			name = EXCLUDED.name,
-			first_name = EXCLUDED.first_name,
-			gender = EXCLUDED.gender,
-			zip_code = EXCLUDED.zip_code,
-			city = EXCLUDED.city,
-			region = EXCLUDED.region,
-			password_hash = EXCLUDED.password_hash,
-			is_email_verified = EXCLUDED.is_email_verified,
-			email_verification_code = EXCLUDED.email_verification_code,
-			email_verification_expires_at = EXCLUDED.email_verification_expires_at,
-			password_reset_code = EXCLUDED.password_reset_code,
-			password_reset_expires_at = EXCLUDED.password_reset_expires_at,
-			is_taxi_owner = EXCLUDED.is_taxi_owner,
-			is_admin = EXCLUDED.is_admin,
-			is_service = EXCLUDED.is_service,
-			phone = EXCLUDED.phone,
-			company_id = EXCLUDED.company_id
-	`);
+	await clearSessionsForUser(TAXI_OWNER.email);
+	const companyId = await seedCompany({
+		lat: null,
+		lng: null,
+		name: null,
+		address: null,
+		zoneName: null,
+		phone: null
+	});
+	await seedUser({
+		email: TAXI_OWNER.email,
+		passwordHash: taxiOwnerPasswordHash,
+		companyId,
+		isTaxiOwner: true,
+		upsert: true
+	});
 });
 
 async function loginAndOpenCompanyData(page: Page) {

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { sql } from 'kysely';
 import { hashPassword } from '../src/lib/server/auth/password';
-import { TAXI_OWNER, execSQL, login } from './utils';
+import { TAXI_OWNER, login } from './utils';
+import { clearE2EData, seedUser, seedWeisswasserCompany } from './testData';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -15,92 +15,19 @@ const unassignedUserEmails = [
 test.beforeAll(async () => {
 	const passwordHash = await hashPassword(TAXI_OWNER.password);
 
-	await execSQL(sql`
-		DELETE FROM journey;
-		DELETE FROM availability;
-		DELETE FROM event;
-		DELETE FROM event_group;
-		DELETE FROM ride_share_rating;
-		DELETE FROM request;
-		DELETE FROM tour;
-		DELETE FROM ride_share_tour;
-		DELETE FROM ride_share_vehicle;
-		DELETE FROM vehicle;
-		DELETE FROM session;
-		DELETE FROM desired_ride_share;
-		DELETE FROM "user";
-		DELETE FROM company;
-	`);
+	await clearE2EData();
+	const companyId = await seedWeisswasserCompany();
 
-	const company = await execSQL<{ id: number }>(sql`
-		INSERT INTO company (lat, lng, name, address, zone, phone)
-		VALUES (
-			51.493713,
-			14.6258545,
-			'Taxi Weißwasser',
-			'Werner-Seelenbinder-Straße 70a, Weißwasser/Oberlausitz, Weißwasser/Oberlausitz, Sachsen',
-			(SELECT id FROM zone WHERE name = 'Weißwasser' ORDER BY id DESC LIMIT 1),
-			'555666'
-		)
-		RETURNING id
-	`);
-	const companyId = company.rows[0].id;
-
-	await seedUser(TAXI_OWNER.email, passwordHash, companyId, true);
+	await seedUser({
+		email: TAXI_OWNER.email,
+		passwordHash,
+		companyId,
+		isTaxiOwner: true
+	});
 	for (const email of unassignedUserEmails) {
-		await seedUser(email, passwordHash, null, false);
+		await seedUser({ email, passwordHash });
 	}
 });
-
-async function seedUser(
-	email: string,
-	passwordHash: string,
-	companyId: number | null,
-	isTaxiOwner: boolean
-) {
-	await execSQL(sql`
-		INSERT INTO "user" (
-			email,
-			name,
-			first_name,
-			gender,
-			zip_code,
-			city,
-			region,
-			password_hash,
-			is_email_verified,
-			email_verification_code,
-			email_verification_expires_at,
-			password_reset_code,
-			password_reset_expires_at,
-			is_taxi_owner,
-			is_admin,
-			is_service,
-			phone,
-			company_id
-		)
-		VALUES (
-			${email},
-			${email},
-			'Vorname',
-			'o',
-			'ZIP',
-			'City',
-			'',
-			${passwordHash},
-			TRUE,
-			NULL,
-			NULL,
-			NULL,
-			NULL,
-			${isTaxiOwner},
-			FALSE,
-			FALSE,
-			NULL,
-			${companyId}
-		)
-	`);
-}
 
 async function loginAndOpenMembers(page: Parameters<typeof login>[0]) {
 	await login(page, TAXI_OWNER);
