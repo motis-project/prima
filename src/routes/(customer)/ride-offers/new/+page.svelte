@@ -18,6 +18,7 @@
 		Car,
 		CalendarDays,
 		Clock,
+		TriangleAlert,
 		Users,
 		Luggage
 	} from 'lucide-svelte';
@@ -108,7 +109,7 @@
 	);
 	let repetitionSummary = $derived.by(() => {
 		if (selectedDayMask === 0) {
-			return t.ride.noDaysSelected;
+			return repetitionTimeRangeString;
 		}
 		if (!selectedDays.some((d) => !d)) {
 			return `${t.daily} ${repetitionTimeRangeString}`;
@@ -122,12 +123,9 @@
 
 	function activateOfferMode(mode: 'single' | 'repeating') {
 		offerMode = mode;
-	}
-
-	function handleOfferModeKeydown(event: KeyboardEvent, mode: 'single' | 'repeating') {
-		if (event.key === 'Enter' || event.key === ' ') {
-			event.preventDefault();
-			activateOfferMode(mode);
+		msg = undefined;
+		if (from.value.match && to.value.match && vehicle && time && timeType) {
+			doRouting();
 		}
 	}
 
@@ -140,51 +138,78 @@
 		);
 	}
 
+	let publishBlocker = $derived.by(() => {
+		if (!from.value.match) {
+			return t.ride.publishBlockerStart;
+		}
+		if (!to.value.match) {
+			return t.ride.publishBlockerTarget;
+		}
+		if (offerMode === 'repeating' && selectedDayMask === 0) {
+			return t.ride.publishBlockerWeekdays;
+		}
+		if (loading) {
+			return undefined;
+		}
+		if (!page.state.selectedItinerary) {
+			if (offerMode === 'repeating') {
+				return undefined;
+			}
+			return t.ride.publishBlockerSingleTime;
+		}
+		return undefined;
+	});
+
+	async function doRouting() {
+		loading = true;
+		msg = undefined;
+		clearTimeout(searchDebounceTimer);
+		searchDebounceTimer = setTimeout(() => {
+			fetch('/api/rideShareTimes', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					time: time.getTime(),
+					startFixed: timeType != 'arrival',
+					vehicle: parseInt(vehicle!),
+					start: maplibregl.LngLat.convert(from.value.match!),
+					end: maplibregl.LngLat.convert(to.value.match!),
+					checkConflicts: offerMode === 'single'
+				})
+			})
+				.then(function (response) {
+					return response.json();
+				})
+				.then((j) => {
+					if (!j || !j.end || !j.start) {
+						msg = { type: 'error', text: 'noRouteFound' };
+						loading = false;
+						replaceState('', {});
+						return;
+					}
+					const it: Itinerary = {
+						duration: (j!.end - j!.start) / 1000,
+						startTime: new Date(j!.start).toISOString(),
+						endTime: new Date(j!.end).toISOString(),
+						legs: [],
+						transfers: 0
+					};
+					replaceState('', { selectedItinerary: it });
+					loading = false;
+				})
+				.catch(() => {
+					msg = { type: 'error', text: 'routingRequestFailed' };
+					replaceState('', {});
+					loading = false;
+				});
+		}, 400);
+	}
+
 	$effect(() => {
 		if (from.value.match && to.value.match && vehicle && time && timeType) {
-			loading = true;
-			msg = undefined;
-			clearTimeout(searchDebounceTimer);
-			searchDebounceTimer = setTimeout(() => {
-				fetch('/api/rideShareTimes', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({
-						time: time.getTime(),
-						startFixed: timeType != 'arrival',
-						vehicle: parseInt(vehicle!),
-						start: maplibregl.LngLat.convert(from.value.match!),
-						end: maplibregl.LngLat.convert(to.value.match!)
-					})
-				})
-					.then(function (response) {
-						return response.json();
-					})
-					.then((j) => {
-						if (!j || !j.end || !j.start) {
-							msg = { type: 'error', text: 'noRouteFound' };
-							loading = false;
-							replaceState('', {});
-							return;
-						}
-						const it: Itinerary = {
-							duration: (j!.end - j!.start) / 1000,
-							startTime: new Date(j!.start).toISOString(),
-							endTime: new Date(j!.end).toISOString(),
-							legs: [],
-							transfers: 0
-						};
-						replaceState('', { selectedItinerary: it });
-						loading = false;
-					})
-					.catch(() => {
-						msg = { type: 'error', text: 'routingRequestFailed' };
-						replaceState('', {});
-						loading = false;
-					});
-			}, 400);
+			doRouting();
 		}
 	});
 </script>
@@ -229,7 +254,7 @@
 
 {#snippet repetitionPreview()}
 	<div class="flex flex-col gap-3">
-		<div class={cn('text-sm', selectedDayMask === 0 ? 'text-warning' : 'text-muted-foreground')}>
+		<div class="text-sm text-muted-foreground">
 			{repetitionSummary}
 		</div>
 		<div class="flex flex-wrap gap-2">
@@ -429,7 +454,6 @@
 				aria-checked={offerMode === 'single'}
 				tabindex={0}
 				onclick={() => activateOfferMode('single')}
-				onkeydown={(event) => handleOfferModeKeydown(event, 'single')}
 			>
 				<Card.Header>
 					<Card.Title class="flex items-center gap-2 text-base">
@@ -459,7 +483,6 @@
 				aria-checked={offerMode === 'repeating'}
 				tabindex={0}
 				onclick={() => activateOfferMode('repeating')}
-				onkeydown={(event) => handleOfferModeKeydown(event, 'repeating')}
 			>
 				<Card.Header>
 					<Card.Title class="flex items-center gap-2 text-base">
@@ -537,13 +560,13 @@
 			<Message class="mb-6" msg={form?.msg || msg} />
 
 			<p>{t.ride.outro}</p>
-			<Button
-				type="submit"
-				class="w-full"
-				disabled={!page.state.selectedItinerary ||
-					loading ||
-					(offerMode === 'repeating' && selectedDayMask === 0)}
-			>
+			{#if publishBlocker}
+				<div class="flex items-start gap-2 text-sm text-warning">
+					<TriangleAlert class="mt-0.5 size-4 shrink-0" />
+					<span>{publishBlocker}</span>
+				</div>
+			{/if}
+			<Button type="submit" class="w-full" disabled={publishBlocker !== undefined || loading}>
 				{offerMode === 'single' ? t.ride.publishSingleRideOffer : t.ride.publishRepeatingRideOffers}
 				<ChevronRightIcon />
 			</Button>

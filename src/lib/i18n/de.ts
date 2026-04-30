@@ -401,10 +401,14 @@ const translations: Translations = {
 		requestCancelled: 'Mitfahrt abgesagt',
 		showMap: 'Karte anzeigen',
 		singleRideOffer: 'Einzelfahrt einstellen',
+		publishBlockerStart: 'Geben Sie einen Start an, um das Mitfahrangebot zu veröffentlichen.',
+		publishBlockerTarget: 'Geben Sie ein Ziel an, um das Mitfahrangebot zu veröffentlichen.',
+		publishBlockerSingleTime: 'Wählen Sie eine Zeit aus, um das Mitfahrangebot zu veröffentlichen.',
+		publishBlockerWeekdays:
+			'Wählen Sie mindestens einen Wochentag für die wiederholenden Mitfahrangebote aus.',
 		repetitionLabel: 'Wiederholende Fahrten einstellen',
 		addRule: 'Regel hinzufügen',
 		individualDays: 'individuelle Tage',
-		noDaysSelected: 'Keine Wochentage ausgewählt',
 		to: 'bis ',
 		daysList: [
 			{ short: 'S', full: 'So' },

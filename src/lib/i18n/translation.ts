@@ -340,10 +340,13 @@ export type Translations = {
 		requestCancelled: string;
 		showMap: string;
 		singleRideOffer: string;
+		publishBlockerStart: string;
+		publishBlockerTarget: string;
+		publishBlockerSingleTime: string;
+		publishBlockerWeekdays: string;
 		repetitionLabel: string;
 		addRule: string;
 		individualDays: string;
-		noDaysSelected: string;
 		to: string;
 		daysList: { short: string; full: string }[];
 		chooseTimeSpan: string;

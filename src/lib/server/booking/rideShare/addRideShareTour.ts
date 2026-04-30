@@ -14,9 +14,10 @@ export async function getRideShareTourCommunicatedTimes(
 	startFixed: boolean,
 	vehicle: number,
 	start: Coordinates,
-	target: Coordinates
+	target: Coordinates,
+	checkConflicts?: boolean
 ) {
-	const r = await util([time], startFixed, vehicle, start, target);
+	const r = await util([time], startFixed, vehicle, start, target, checkConflicts);
 	return r[0] === undefined ? undefined : { start: r[0].startTimeStart, end: r[0].targetTimeEnd };
 }
 
@@ -25,7 +26,8 @@ async function util(
 	startFixed: boolean,
 	vehicle: number,
 	start: Coordinates,
-	target: Coordinates
+	target: Coordinates,
+	checkConflicts: boolean = true
 ): Promise<
 	(
 		| {
@@ -67,33 +69,39 @@ async function util(
 		const dayEnd = new Date(dayStart);
 		dayEnd.setDate(dayEnd.getDate() + 1);
 
-		const otherTourEvents = await db
-			.selectFrom('rideShareTour')
-			.innerJoin('request', 'rideShareTour.id', 'request.rideShareTour')
-			.innerJoin('event', 'event.request', 'request.id')
-			.innerJoin('eventGroup', 'event.eventGroupId', 'eventGroup.id')
-			.where(
-				'eventGroup.scheduledTimeStart',
-				'>',
-				dayStart.getTime() - 2 * MAX_RIDE_SHARE_TOUR_TIME
-			)
-			.where('eventGroup.scheduledTimeStart', '<', dayEnd.getTime() + 2 * MAX_RIDE_SHARE_TOUR_TIME)
-			.where('rideShareTour.vehicle', '=', vehicle)
-			.where('rideShareTour.cancelled', '=', false)
-			.where('event.cancelled', '=', false)
-			.where('request.cancelled', '=', false)
-			.where('request.pending', '=', false)
-			.select([
-				'eventGroup.scheduledTimeStart',
-				'eventGroup.scheduledTimeEnd',
-				'event.isPickup',
-				'eventGroup.lat',
-				'eventGroup.lng',
-				'rideShareTour.id as tourId',
-				'event.id as eventId',
-				'eventGroup.id as grp'
-			])
-			.execute();
+		const otherTourEvents = checkConflicts
+			? await db
+					.selectFrom('rideShareTour')
+					.innerJoin('request', 'rideShareTour.id', 'request.rideShareTour')
+					.innerJoin('event', 'event.request', 'request.id')
+					.innerJoin('eventGroup', 'event.eventGroupId', 'eventGroup.id')
+					.where(
+						'eventGroup.scheduledTimeStart',
+						'>',
+						dayStart.getTime() - 2 * MAX_RIDE_SHARE_TOUR_TIME
+					)
+					.where(
+						'eventGroup.scheduledTimeStart',
+						'<',
+						dayEnd.getTime() + 2 * MAX_RIDE_SHARE_TOUR_TIME
+					)
+					.where('rideShareTour.vehicle', '=', vehicle)
+					.where('rideShareTour.cancelled', '=', false)
+					.where('event.cancelled', '=', false)
+					.where('request.cancelled', '=', false)
+					.where('request.pending', '=', false)
+					.select([
+						'eventGroup.scheduledTimeStart',
+						'eventGroup.scheduledTimeEnd',
+						'event.isPickup',
+						'eventGroup.lat',
+						'eventGroup.lng',
+						'rideShareTour.id as tourId',
+						'event.id as eventId',
+						'eventGroup.id as grp'
+					])
+					.execute()
+			: [];
 		const splitTime = allowedArrivalsAtStart.startTime + duration / 2;
 		const earlierEvents = otherTourEvents.filter((e) => e.scheduledTimeStart < splitTime);
 		const lastEventBefore =

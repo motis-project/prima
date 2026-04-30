@@ -36,7 +36,7 @@
 
 	let repetitionLabel = $derived.by(() => {
 		if (!selectedDays.some(Boolean)) {
-			return t.ride.noDaysSelected;
+			return timeRangeString.trim();
 		}
 		if (!selectedDays.some((d) => !d)) {
 			return t.daily + timeRangeString;
