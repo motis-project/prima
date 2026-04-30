@@ -6,12 +6,14 @@
 		passengers,
 		wheelchair,
 		price,
-		luggage
+		luggage,
+		requiresPtTicket = true
 	}: {
 		passengers: number;
 		wheelchair: boolean;
 		price: number | undefined;
 		luggage: number;
+		requiresPtTicket?: boolean;
 	} = $props();
 </script>
 
@@ -25,7 +27,9 @@
 		</li>
 	{/if}
 
-	<li>{t.booking.ptTicketNeeded}</li>
+	{#if requiresPtTicket}
+		<li>{t.booking.ptTicketNeeded}</li>
+	{/if}
 
 	<li>{t.booking.bookingFor(passengers)}</li>
 

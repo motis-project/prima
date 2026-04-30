@@ -11,6 +11,7 @@
 		level,
 		location = $bindable(),
 		marker = $bindable(),
+		onLocationChange = (location: Location) => location,
 		popup
 	}: {
 		color: string;
@@ -18,6 +19,7 @@
 		level?: number;
 		location: Location;
 		marker?: maplibregl.Marker;
+		onLocationChange?: (location: Location) => Location | Promise<Location>;
 		popup?: string;
 	} = $props();
 
@@ -33,9 +35,13 @@
 				marker
 					.setLngLat(location.value.match)
 					.addTo(ctx.map)
-					.on('dragend', () => {
+					.on('dragend', async () => {
 						if (marker && location.value.match) {
 							let x = posToLocation(marker.getLngLat(), level ?? 0);
+							location.value = x.value;
+							location.label = x.label;
+
+							x = await onLocationChange(x);
 							location.value = x.value;
 							location.label = x.label;
 						}

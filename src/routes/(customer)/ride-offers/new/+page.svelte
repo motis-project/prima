@@ -16,6 +16,8 @@
 		MapIcon,
 		Plus,
 		Car,
+		CalendarDays,
+		Clock,
 		Users,
 		Luggage
 	} from 'lucide-svelte';
@@ -38,9 +40,10 @@
 	import { DAY, HOUR } from '$lib/util/time';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
-	import { TZ } from '$lib/constants';
+	import { LOCALE, TZ } from '$lib/constants';
 	import { CalendarDate, fromDate, toCalendarDate } from '@internationalized/date';
 	import RepetitionSelector from '$lib/ui/RepetitionSelector.svelte';
+	import * as Card from '$lib/shadcn/card';
 
 	const { data, form } = $props();
 
@@ -90,8 +93,52 @@
 		end: toCalendarDate(fromDate(new Date(Date.now() + DAY * 30), TZ))
 	});
 
+	let offerMode = $state<'single' | 'repeating'>('single');
 	let selectedDays: boolean[] = $state(Array.from(t.ride.daysList, (_) => false));
-	let bitDays = $derived(selectedDays.reduce((mask, val, i) => (val ? mask | (1 << i) : mask), 0));
+	let selectedDayMask = $derived(
+		selectedDays.reduce((mask, val, i) => (val ? mask | (1 << i) : mask), 0)
+	);
+	let bitDays = $derived(offerMode === 'repeating' ? selectedDayMask : 0);
+	function formatCalendarDate(date: CalendarDate | undefined) {
+		return date?.toDate(TZ).toLocaleDateString(LOCALE) ?? '';
+	}
+
+	let repetitionTimeRangeString = $derived(
+		`${formatCalendarDate(range.start)} ${t.ride.to}${formatCalendarDate(range.end)}`
+	);
+	let repetitionSummary = $derived.by(() => {
+		if (selectedDayMask === 0) {
+			return t.ride.noDaysSelected;
+		}
+		if (!selectedDays.some((d) => !d)) {
+			return `${t.daily} ${repetitionTimeRangeString}`;
+		}
+		return selectedDays
+			.map((selected, index) => (selected ? t.ride.daysList[index].full : undefined))
+			.filter((day) => day !== undefined)
+			.join(', ')
+			.concat(` ${repetitionTimeRangeString}`);
+	});
+
+	function activateOfferMode(mode: 'single' | 'repeating') {
+		offerMode = mode;
+	}
+
+	function handleOfferModeKeydown(event: KeyboardEvent, mode: 'single' | 'repeating') {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			activateOfferMode(mode);
+		}
+	}
+
+	function offerCardClass(active: boolean) {
+		return cn(
+			'cursor-pointer border-input transition-colors hover:bg-accent/40',
+			active
+				? 'border-blue-600 ring-1 ring-blue-600'
+				: 'bg-muted/30 text-muted-foreground opacity-65'
+		);
+	}
 
 	$effect(() => {
 		if (from.value.match && to.value.match && vehicle && time && timeType) {
@@ -141,6 +188,66 @@
 		}
 	});
 </script>
+
+{#snippet timeControls(idPrefix: string)}
+	<RadioGroup.Root class="grid grid-cols-2 gap-3" bind:value={timeType}>
+		<Label
+			for="{idPrefix}-departure"
+			class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
+		>
+			<RadioGroup.Item
+				value="departure"
+				id="{idPrefix}-departure"
+				class="sr-only"
+				aria-label={t.departure}
+			/>
+			{t.departure}
+		</Label>
+		<Label
+			for="{idPrefix}-arrival"
+			class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
+		>
+			<RadioGroup.Item
+				value="arrival"
+				id="{idPrefix}-arrival"
+				class="sr-only"
+				aria-label={t.arrival}
+			/>
+			{t.arrival}
+		</Label>
+	</RadioGroup.Root>
+
+	<DateInput bind:value={time} />
+{/snippet}
+
+{#snippet timePreview()}
+	<div class="flex items-center gap-2 text-sm">
+		<Clock class="size-4 shrink-0" />
+		{t.atDateTime(timeType, time, time.toLocaleDateString() == new Date().toLocaleDateString())}
+	</div>
+{/snippet}
+
+{#snippet repetitionPreview()}
+	<div class="flex flex-col gap-3">
+		<div class={cn('text-sm', selectedDayMask === 0 ? 'text-warning' : 'text-muted-foreground')}>
+			{repetitionSummary}
+		</div>
+		<div class="flex flex-wrap gap-2">
+			{#each t.ride.daysList as day, index}
+				<span
+					class={cn(
+						'flex h-9 w-9 items-center justify-center rounded-full border text-sm font-medium',
+						selectedDays[index]
+							? 'border-blue-600 bg-blue-600 text-white'
+							: 'border-muted bg-muted/60 text-muted-foreground'
+					)}
+				>
+					{day.short}
+				</span>
+			{/each}
+		</div>
+	</div>
+{/snippet}
 
 <div class="md:min-h-[70dvh] md:w-96">
 	{#if page.state.selectFrom}
@@ -316,53 +423,73 @@
 					<ArrowUpDown class="h-5 w-5" />
 				</Button>
 			</div>
-			<div class="flex gap-2">
-				<Popover.Root>
-					<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
-						{t.atDateTime(
-							timeType,
-							time,
-							time.toLocaleDateString() == new Date().toLocaleDateString()
-						)}
-					</Popover.Trigger>
-					<Popover.Content class="flex w-fit flex-col gap-4">
-						<RadioGroup.Root class="flex justify-stretch" bind:value={timeType}>
-							<Label
-								for="departure"
-								class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
-							>
-								<RadioGroup.Item
-									value="departure"
-									id="departure"
-									class="sr-only"
-									aria-label={t.departure}
-								/>
-								{t.departure}
-							</Label>
-							<Label
-								for="arrival"
-								class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
-							>
-								<RadioGroup.Item
-									value="arrival"
-									id="arrival"
-									class="sr-only"
-									aria-label={t.arrival}
-								/>
-								{t.arrival}
-							</Label>
-						</RadioGroup.Root>
+			<Card.Root
+				class={offerCardClass(offerMode === 'single')}
+				role="radio"
+				aria-checked={offerMode === 'single'}
+				tabindex={0}
+				onclick={() => activateOfferMode('single')}
+				onkeydown={(event) => handleOfferModeKeydown(event, 'single')}
+			>
+				<Card.Header>
+					<Card.Title class="flex items-center gap-2 text-base">
+						<Clock class="size-4" />
+						{t.ride.singleRideOffer}
+					</Card.Title>
+				</Card.Header>
+				<Card.Content class="flex flex-col gap-4 p-4">
+					{#if offerMode === 'single'}
+						<div
+							class="flex flex-col gap-4"
+							role="presentation"
+							onclick={(event) => event.stopPropagation()}
+							onkeydown={(event) => event.stopPropagation()}
+						>
+							{@render timeControls('single')}
+						</div>
+					{:else}
+						{@render timePreview()}
+					{/if}
+				</Card.Content>
+			</Card.Root>
 
-						<DateInput bind:value={time} />
-					</Popover.Content>
-				</Popover.Root>
-			</div>
-
-			<RepetitionSelector
-				minValue={toCalendarDate(fromDate(new Date(Date.now() + HOUR * 2), TZ))}
-				bind:range
-				bind:selectedDays
-			></RepetitionSelector>
+			<Card.Root
+				class={offerCardClass(offerMode === 'repeating')}
+				role="radio"
+				aria-checked={offerMode === 'repeating'}
+				tabindex={0}
+				onclick={() => activateOfferMode('repeating')}
+				onkeydown={(event) => handleOfferModeKeydown(event, 'repeating')}
+			>
+				<Card.Header>
+					<Card.Title class="flex items-center gap-2 text-base">
+						<CalendarDays class="size-4" />
+						{t.ride.repetitionLabel}
+					</Card.Title>
+				</Card.Header>
+				<Card.Content class="flex flex-col gap-4 p-4">
+					{#if offerMode === 'repeating'}
+						<div
+							class="flex flex-col gap-4"
+							role="presentation"
+							onclick={(event) => event.stopPropagation()}
+							onkeydown={(event) => event.stopPropagation()}
+						>
+							{@render timeControls('repeating')}
+							<RepetitionSelector
+								minValue={toCalendarDate(fromDate(new Date(Date.now() + HOUR * 2), TZ))}
+								bind:range
+								bind:selectedDays
+								active={true}
+								framed={false}
+							></RepetitionSelector>
+						</div>
+					{:else}
+						{@render timePreview()}
+						{@render repetitionPreview()}
+					{/if}
+				</Card.Content>
+			</Card.Root>
 
 			<div class="flex items-center justify-center">
 				{#if page.state.selectedItinerary && !loading}
@@ -410,8 +537,14 @@
 			<Message class="mb-6" msg={form?.msg || msg} />
 
 			<p>{t.ride.outro}</p>
-			<Button type="submit" class="w-full" disabled={!page.state.selectedItinerary || loading}>
-				{t.ride.publish}
+			<Button
+				type="submit"
+				class="w-full"
+				disabled={!page.state.selectedItinerary ||
+					loading ||
+					(offerMode === 'repeating' && selectedDayMask === 0)}
+			>
+				{offerMode === 'single' ? t.ride.publishSingleRideOffer : t.ride.publishRepeatingRideOffers}
 				<ChevronRightIcon />
 			</Button>
 			<input type="hidden" name="startLat" value={from.value.match?.lat} />

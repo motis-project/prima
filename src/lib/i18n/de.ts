@@ -369,11 +369,15 @@ const translations: Translations = {
 		outro:
 			'Ihr Mitfahrangebot wird öffentlich in der Verbindungsauskunft angezeigt. Über Anfragen werden Sie per E-Mail benachrichtigt.',
 		publish: 'Mitfahrangebot veröffentlichen',
+		publishSingleRideOffer: 'Einzelfahrt veröffentlichen',
+		publishRepeatingRideOffers: 'Wiederholende Fahrten veröffentlichen',
 		cancelTrip: 'Mitfahrangebot stornieren',
 		cancelHeadline: 'Möchten Sie wirklich dieses Mitfahrangebot stornieren?',
-		noCancel: 'Nein, Fahrt nicht stornieren.',
+		noCancel: 'Nein, Mitfahrangebot nicht stornieren.',
 		cancelDescription:
 			'Sie sollten ggf. vorhandene Mitfahrer persönlich informieren, auch wenn diese per E-Mail über die Stornierung benachrichtigt werden.',
+		cancelCheckbox:
+			'Alle Mitfahrangebote löschen, die mit derselben Regel erstellt wurden. Mitfahrangebote mit bestätigten Mitfahrten werden nicht storniert.',
 		negotiateHere: 'Hier vereinbaren',
 		negotiateHeader: 'Mitfahrgelegenheit vereinbaren',
 		negotiatePrivacy:
@@ -391,12 +395,16 @@ const translations: Translations = {
 		requestBy: 'Anfrage von',
 		offerBy: 'Angebot von',
 		acceptRequest: 'Mitfahrt bestätigen',
+		acceptRequestInfo:
+			'Bitte stimmen Sie vor der Bestätigung den genauen Treffpunkt, die genaue Treffzeit und die Gepäckmitnahme mit der anfragenden Person ab.',
 		requestAccepted: 'Mitfahrt bestätigt',
 		requestCancelled: 'Mitfahrt abgesagt',
 		showMap: 'Karte anzeigen',
+		singleRideOffer: 'Einzelfahrt einstellen',
 		repetitionLabel: 'Wiederholende Fahrten einstellen',
 		addRule: 'Regel hinzufügen',
 		individualDays: 'individuelle Tage',
+		noDaysSelected: 'Keine Wochentage ausgewählt',
 		to: 'bis ',
 		daysList: [
 			{ short: 'S', full: 'So' },
