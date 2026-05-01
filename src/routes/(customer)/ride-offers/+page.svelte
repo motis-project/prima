@@ -11,7 +11,7 @@
 	import DateInput from '../routing/DateInput.svelte';
 	import type { TimeType } from '$lib/util/TimeType';
 	import * as RadioGroup from '$lib/shadcn/radio-group';
-	import { Bell, Car, Check, Clock, Info, Luggage, Plus, X, Users } from 'lucide-svelte';
+	import { Bell, Car, Check, Clock, Info, Plus, X, Users } from 'lucide-svelte';
 
 	const { data } = $props();
 	type Notification = (typeof data.notifications)[number];
@@ -178,18 +178,6 @@
 	{t.cancelledJourneys}
 {/snippet}
 
-{#snippet luggageLabel(luggage: number)}
-	{#if luggage === 0}
-		{t.booking.noLuggage}
-	{:else if luggage === 1}
-		{t.booking.handLuggage}
-	{:else if luggage === 3}
-		{t.booking.heavyLuggage}
-	{:else}
-		{luggage} {t.rideShare.luggage}
-	{/if}
-{/snippet}
-
 {#snippet notificationList(notifications: Notification[])}
 	<div class="flex flex-col gap-4">
 		<div
@@ -289,10 +277,6 @@
 							<span class="flex items-center gap-1">
 								<Users class="size-4 shrink-0" />
 								{t.booking.bookingFor(notification.passengers)}
-							</span>
-							<span class="flex items-center gap-1">
-								<Luggage class="size-4 shrink-0" />
-								{@render luggageLabel(notification.luggage)}
 							</span>
 						</div>
 					{/if}
