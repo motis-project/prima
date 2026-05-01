@@ -10,7 +10,7 @@
 	import { msg } from '$lib/msg';
 	import { language, t } from '$lib/i18n/translation';
 	import * as Card from '$lib/shadcn/card';
-	import { Check, Info, MapIcon } from 'lucide-svelte';
+	import { Check, Info, MapIcon, Users } from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
 	import Time from '../../routing/Time.svelte';
@@ -127,6 +127,12 @@
 						smokingAllowed={undefined}
 						averageRating={n.averageRatingCustomer}
 					/>
+					<div class="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
+						<span class="flex items-center gap-1">
+							<Users class="size-4 shrink-0" />
+							{t.booking.bookingFor(n.passengers)}
+						</span>
+					</div>
 					<div class="grid grid-cols-[max-content_auto] gap-x-2">
 						<span>{t.account.email}:</span><span><a href="mailto:{n.email}">{n.email}</a></span>
 						{#if n.phone}
