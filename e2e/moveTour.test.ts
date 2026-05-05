@@ -1,5 +1,43 @@
 import { test, expect } from '@playwright/test';
-import { addVehicle, moveMouse, offset, dayString } from './utils';
+import { hashPassword } from '../src/lib/server/auth/password';
+import { HOUR, MINUTE } from '../src/lib/util/time';
+import { addVehicle, moveMouse, offset, dayString, in6Days, TAXI_OWNER } from './utils';
+import {
+	clearE2EData,
+	seedAvailability,
+	seedTourWithEvents,
+	seedUser,
+	seedVehicle,
+	seedWeisswasserCompany
+} from './testData';
+
+test.beforeAll(async () => {
+	const taxiOwnerPasswordHash = await hashPassword(TAXI_OWNER.password);
+
+	await clearE2EData();
+	const companyId = await seedWeisswasserCompany();
+	const userId = await seedUser({
+		email: TAXI_OWNER.email,
+		passwordHash: taxiOwnerPasswordHash,
+		companyId,
+		isTaxiOwner: true
+	});
+	const vehicleId = await seedVehicle({ licensePlate: 'GR-TU-11', companyId });
+
+	const availabilityStart = in6Days.getTime() + HOUR * 7;
+	await seedAvailability({
+		startTime: availabilityStart,
+		endTime: availabilityStart + HOUR * 3,
+		vehicleId
+	});
+
+	await seedTourWithEvents({
+		vehicleId,
+		customerId: userId,
+		pickupTime: availabilityStart + HOUR,
+		dropoffTime: availabilityStart + HOUR + MINUTE * 30
+	});
+});
 
 test('Move tour to vehicle with cancelled tour', async ({ page }) => {
 	await addVehicle(page, 'GR-TU-12');

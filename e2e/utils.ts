@@ -109,7 +109,7 @@ export async function signup(page: Page, credentials: UserCredentials, skipLogou
 	}
 }
 
-async function chooseFromTypeAhead(
+export async function chooseFromTypeAhead(
 	page: Page,
 	label: string,
 	search: string,

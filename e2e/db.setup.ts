@@ -1,4 +1,3 @@
-import { test as setup } from '@playwright/test';
 import { CamelCasePlugin, FileMigrationProvider, Kysely, Migrator, PostgresDialect } from 'kysely';
 import pg from 'pg';
 import { fileURLToPath } from 'url';
@@ -9,7 +8,7 @@ import { dbConfig } from './config.ts';
 import * as fs from 'fs';
 import type { Database } from '../src/lib/server/db';
 
-setup('setup db', async () => {
+export default async function globalSetup() {
 	const __filename = fileURLToPath(import.meta.url);
 	const __dirname = dirname(__filename);
 
@@ -27,34 +26,38 @@ setup('setup db', async () => {
 		})
 	});
 
-	await migrator.migrateToLatest();
+	try {
+		await migrator.migrateToLatest();
 
-	await db.deleteFrom('journey').executeTakeFirstOrThrow();
-	await db.deleteFrom('availability').executeTakeFirstOrThrow();
-	await db.deleteFrom('event').executeTakeFirstOrThrow();
-	await db.deleteFrom('eventGroup').executeTakeFirstOrThrow();
-	await db.deleteFrom('rideShareRating').executeTakeFirstOrThrow();
-	await db.deleteFrom('request').executeTakeFirstOrThrow();
-	await db.deleteFrom('tour').executeTakeFirstOrThrow();
-	await db.deleteFrom('rideShareTour').executeTakeFirstOrThrow();
-	await db.deleteFrom('rideShareVehicle').executeTakeFirstOrThrow();
-	await db.deleteFrom('vehicle').executeTakeFirstOrThrow();
-	await db.deleteFrom('session').executeTakeFirstOrThrow();
-	await db.deleteFrom('desiredRideShare').executeTakeFirstOrThrow();
-	await db.deleteFrom('user').executeTakeFirstOrThrow();
-	await db.deleteFrom('company').executeTakeFirstOrThrow();
-	await db.deleteFrom('zone').executeTakeFirstOrThrow();
+		await db.deleteFrom('journey').executeTakeFirstOrThrow();
+		await db.deleteFrom('availability').executeTakeFirstOrThrow();
+		await db.deleteFrom('event').executeTakeFirstOrThrow();
+		await db.deleteFrom('eventGroup').executeTakeFirstOrThrow();
+		await db.deleteFrom('rideShareRating').executeTakeFirstOrThrow();
+		await db.deleteFrom('request').executeTakeFirstOrThrow();
+		await db.deleteFrom('tour').executeTakeFirstOrThrow();
+		await db.deleteFrom('rideShareTour').executeTakeFirstOrThrow();
+		await db.deleteFrom('rideShareVehicle').executeTakeFirstOrThrow();
+		await db.deleteFrom('vehicle').executeTakeFirstOrThrow();
+		await db.deleteFrom('session').executeTakeFirstOrThrow();
+		await db.deleteFrom('desiredRideShare').executeTakeFirstOrThrow();
+		await db.deleteFrom('user').executeTakeFirstOrThrow();
+		await db.deleteFrom('company').executeTakeFirstOrThrow();
+		await db.deleteFrom('zone').executeTakeFirstOrThrow();
 
-	const zonesSqlPath = path.join(__dirname, '../data/zone.sql');
-	const zonesQuery = fs.readFileSync(zonesSqlPath).toString();
-	await pool.query(zonesQuery);
+		const zonesSqlPath = path.join(__dirname, '../data/zone.sql');
+		const zonesQuery = fs.readFileSync(zonesSqlPath).toString();
+		await pool.query(zonesQuery);
 
-	const updateSqlPath = path.join(__dirname, '../data/expandWeißwasser.sql');
-	const updateQuery = fs.readFileSync(updateSqlPath).toString();
-	await pool.query(updateQuery);
+		const updateSqlPath = path.join(__dirname, '../data/expandWeißwasser.sql');
+		const updateQuery = fs.readFileSync(updateSqlPath).toString();
+		await pool.query(updateQuery);
 
-	await sleep(1000);
-});
+		await sleep(1000);
+	} finally {
+		await db.destroy();
+	}
+}
 
 function sleep(ms: number) {
 	return new Promise((resolve) => {
