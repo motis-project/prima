@@ -26,6 +26,7 @@
 
 	let showTicket = $state(false);
 	const isOdm = data.journey.legs.some(isOdmLeg);
+	const requiresPtTicket = data.journey.legs.some(isTaxiLeg);
 </script>
 
 <div class="flex h-full flex-col gap-4 md:min-h-[70dvh] md:w-96">
@@ -111,6 +112,7 @@
 					wheelchair={data.wheelchairs !== 0}
 					luggage={data.luggage!}
 					price={data.ticketPrice!}
+					{requiresPtTicket}
 				/>
 			</Card.Content>
 		</Card.Root>
@@ -124,6 +126,7 @@
 						wheelchair={data.wheelchairs !== 0}
 						luggage={data.luggage!}
 						price={data.ticketPrice!}
+						{requiresPtTicket}
 					/>
 				</Card.Content>
 			</Card.Root>

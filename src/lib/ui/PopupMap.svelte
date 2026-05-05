@@ -20,6 +20,8 @@
 	let {
 		from = $bindable(),
 		to = $bindable(),
+		onFromLocationChange = (location: Location) => location,
+		onToLocationChange = (location: Location) => location,
 		itinerary,
 		areas = $bindable(),
 		rideSharingBounds = $bindable(),
@@ -27,6 +29,8 @@
 	}: {
 		from?: Location | undefined;
 		to?: Location | undefined;
+		onFromLocationChange?: (location: Location) => Location | Promise<Location>;
+		onToLocationChange?: (location: Location) => Location | Promise<Location>;
 		itinerary?: SignedItinerary | undefined;
 		areas?: unknown;
 		rideSharingBounds?: unknown;
@@ -79,20 +83,24 @@
 {#snippet contextMenu(e: maplibregl.MapMouseEvent, close: () => void)}
 	<Button
 		variant="default"
-		onclick={() => {
+		onclick={async () => {
 			from = posToLocation(e.lngLat, level);
 			fromMarker?.setLngLat(from.value.match!);
 			close();
+			from = await onFromLocationChange(from);
+			fromMarker?.setLngLat(from.value.match!);
 		}}
 	>
 		From
 	</Button>
 	<Button
 		variant="default"
-		onclick={() => {
+		onclick={async () => {
 			to = posToLocation(e.lngLat, level);
 			toMarker?.setLngLat(to.value.match!);
 			close();
+			to = await onToLocationChange(to);
+			toMarker?.setLngLat(to.value.match!);
 		}}
 	>
 		To
@@ -227,11 +235,19 @@
 				{level}
 				bind:location={from}
 				bind:marker={fromMarker}
+				onLocationChange={onFromLocationChange}
 			/>
 		{/if}
 
 		{#if to}
-			<Marker color="red" draggable={true} {level} bind:location={to} bind:marker={toMarker} />
+			<Marker
+				color="red"
+				draggable={true}
+				{level}
+				bind:location={to}
+				bind:marker={toMarker}
+				onLocationChange={onToLocationChange}
+			/>
 		{/if}
 	</Map>
 </div>
