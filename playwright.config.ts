@@ -17,7 +17,7 @@ export default defineConfig({
 		locale: 'de-DE',
 		timezoneId: 'Europe/Berlin',
 		launchOptions: {
-			slowMo: 500
+			slowMo: 200
 		}
 	},
 
