@@ -60,8 +60,13 @@
 		value: {}
 	});
 
-	let time = $state<Date>(new Date(Date.now() + HOUR * 2));
-	let timeType = $state<TimeType>('departure');
+	let singleTime = $state<Date>(new Date(Date.now() + HOUR * 2));
+	let repeatingTime = $state<Date>(new Date(Date.now() + HOUR * 2));
+	let singleTimeType = $state<TimeType>('departure');
+	let repeatingTimeType = $state<TimeType>('departure');
+	let offerMode = $state<'single' | 'repeating'>('single');
+	let activeTime = $derived(offerMode === 'single' ? singleTime : repeatingTime);
+	let activeTimeType = $derived(offerMode === 'single' ? singleTimeType : repeatingTimeType);
 
 	let passengers = $state(0);
 	let luggage = $state(0);
@@ -94,7 +99,6 @@
 		end: toCalendarDate(fromDate(new Date(Date.now() + DAY * 30), TZ))
 	});
 
-	let offerMode = $state<'single' | 'repeating'>('single');
 	let selectedDays: boolean[] = $state(Array.from(t.ride.daysList, (_) => false));
 	let selectedDayMask = $derived(
 		selectedDays.reduce((mask, val, i) => (val ? mask | (1 << i) : mask), 0)
@@ -124,7 +128,7 @@
 	function activateOfferMode(mode: 'single' | 'repeating') {
 		offerMode = mode;
 		msg = undefined;
-		if (from.value.match && to.value.match && vehicle && time && timeType) {
+		if (from.value.match && to.value.match && vehicle && activeTime && activeTimeType) {
 			doRouting();
 		}
 	}
@@ -171,8 +175,8 @@
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					time: time.getTime(),
-					startFixed: timeType != 'arrival',
+					time: activeTime.getTime(),
+					startFixed: activeTimeType != 'arrival',
 					vehicle: parseInt(vehicle!),
 					start: maplibregl.LngLat.convert(from.value.match!),
 					end: maplibregl.LngLat.convert(to.value.match!),
@@ -208,47 +212,101 @@
 	}
 
 	$effect(() => {
-		if (from.value.match && to.value.match && vehicle && time && timeType) {
+		if (from.value.match && to.value.match && vehicle && activeTime && activeTimeType) {
 			doRouting();
 		}
 	});
+
+	type TimeControlMode = 'single' | 'repeating';
+
+	function timeForMode(mode: TimeControlMode) {
+		return mode === 'single' ? singleTime : repeatingTime;
+	}
+
+	function timeTypeForMode(mode: TimeControlMode) {
+		return mode === 'single' ? singleTimeType : repeatingTimeType;
+	}
+
+	function formatTimeInputValue(date: Date) {
+		return `${date.getHours().toString().padStart(2, '0')}:${date
+			.getMinutes()
+			.toString()
+			.padStart(2, '0')}`;
+	}
+
+	function updateRepeatingTime(value: string) {
+		const [hours, minutes] = value.split(':').map(Number);
+		if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+			return;
+		}
+		const updatedTime = new Date(repeatingTime);
+		updatedTime.setHours(hours, minutes, 0, 0);
+		repeatingTime = updatedTime;
+	}
 </script>
 
-{#snippet timeControls(idPrefix: string)}
-	<RadioGroup.Root class="grid grid-cols-2 gap-3" bind:value={timeType}>
-		<Label
-			for="{idPrefix}-departure"
-			class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
-		>
-			<RadioGroup.Item
-				value="departure"
-				id="{idPrefix}-departure"
-				class="sr-only"
-				aria-label={t.departure}
-			/>
-			{t.departure}
-		</Label>
-		<Label
-			for="{idPrefix}-arrival"
-			class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
-		>
-			<RadioGroup.Item
-				value="arrival"
-				id="{idPrefix}-arrival"
-				class="sr-only"
-				aria-label={t.arrival}
-			/>
-			{t.arrival}
-		</Label>
-	</RadioGroup.Root>
-
-	<DateInput bind:value={time} />
+{#snippet timeTypeControls(idPrefix: TimeControlMode)}
+	<Label
+		for="{idPrefix}-departure"
+		class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
+	>
+		<RadioGroup.Item
+			value="departure"
+			id="{idPrefix}-departure"
+			class="sr-only"
+			aria-label={t.departure}
+		/>
+		{t.departure}
+	</Label>
+	<Label
+		for="{idPrefix}-arrival"
+		class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
+	>
+		<RadioGroup.Item
+			value="arrival"
+			id="{idPrefix}-arrival"
+			class="sr-only"
+			aria-label={t.arrival}
+		/>
+		{t.arrival}
+	</Label>
 {/snippet}
 
-{#snippet timePreview()}
+{#snippet timeControls(idPrefix: TimeControlMode)}
+	{#if idPrefix === 'single'}
+		<RadioGroup.Root class="grid grid-cols-2 gap-3" bind:value={singleTimeType}>
+			{@render timeTypeControls(idPrefix)}
+		</RadioGroup.Root>
+
+		<DateInput bind:value={singleTime} />
+	{:else}
+		<RadioGroup.Root class="grid grid-cols-2 gap-3" bind:value={repeatingTimeType}>
+			{@render timeTypeControls(idPrefix)}
+		</RadioGroup.Root>
+
+		<input
+			type="time"
+			aria-label={timeTypeForMode(idPrefix) === 'departure' ? t.departure : t.arrival}
+			class="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+			value={formatTimeInputValue(repeatingTime)}
+			onchange={(event) => updateRepeatingTime(event.currentTarget.value)}
+		/>
+	{/if}
+{/snippet}
+
+{#snippet timePreview(mode: TimeControlMode)}
 	<div class="flex items-center gap-2 text-sm">
 		<Clock class="size-4 shrink-0" />
-		{t.atDateTime(timeType, time, time.toLocaleDateString() == new Date().toLocaleDateString())}
+		{#if mode === 'single'}
+			{t.atDateTime(
+				timeTypeForMode(mode),
+				timeForMode(mode),
+				timeForMode(mode).toLocaleDateString() == new Date().toLocaleDateString()
+			)}
+		{:else}
+			{timeTypeForMode(mode) === 'departure' ? t.departure : t.arrival}
+			{formatTimeInputValue(timeForMode(mode))}
+		{/if}
 	</div>
 {/snippet}
 
@@ -472,7 +530,7 @@
 							{@render timeControls('single')}
 						</div>
 					{:else}
-						{@render timePreview()}
+						{@render timePreview('single')}
 					{/if}
 				</Card.Content>
 			</Card.Root>
@@ -508,7 +566,7 @@
 							></RepetitionSelector>
 						</div>
 					{:else}
-						{@render timePreview()}
+						{@render timePreview('repeating')}
 						{@render repetitionPreview()}
 					{/if}
 				</Card.Content>
@@ -528,7 +586,7 @@
 								<Time
 									variant="schedule"
 									class="mr-4 w-auto font-semibold "
-									queriedTime={time.toISOString()}
+									queriedTime={activeTime.toISOString()}
 									isRealtime={false}
 									scheduledTimestamp={page.state.selectedItinerary?.startTime}
 									timestamp={page.state.selectedItinerary?.startTime}
@@ -544,7 +602,7 @@
 								<Time
 									variant="schedule"
 									class="mr-4 w-auto font-semibold"
-									queriedTime={time.toISOString()}
+									queriedTime={activeTime.toISOString()}
 									isRealtime={false}
 									scheduledTimestamp={page.state.selectedItinerary?.endTime}
 									timestamp={page.state.selectedItinerary?.endTime}
@@ -576,8 +634,8 @@
 			<input type="hidden" name="endLat" value={to.value.match?.lat} />
 			<input type="hidden" name="endLon" value={to.value.match?.lon} />
 			<input type="hidden" name="endLabel" value={to.label} />
-			<input type="hidden" name="time" value={time.getTime()} />
-			<input type="hidden" name="timeType" value={timeType} />
+			<input type="hidden" name="time" value={activeTime.getTime()} />
+			<input type="hidden" name="timeType" value={activeTimeType} />
 			<input type="hidden" name="vehicle" value={vehicle} />
 			<input type="hidden" name="luggage" value={luggage} />
 			<input type="hidden" name="passengers" value={passengers} />
