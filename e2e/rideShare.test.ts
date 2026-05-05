@@ -25,11 +25,11 @@ test('add ride share tour', async ({ page }) => {
 	await chooseFromTypeAhead(page, 'Von', 'schleife slepo', 'Schleife ');
 	await chooseFromTypeAhead(page, 'Nach', 'klein prie', 'Klein Priebus Krauschwitz');
 	await page
-		.getByRole('radio', { name: /Einzelfahrt einstellen/ })
+		.getByRole('radio', { name: /Einmaliges Mitfahrangebot/ })
 		.locator('input[type="datetime-local"]')
 		.fill('2035-12-12T03:15');
 	await page.keyboard.press('Escape');
-	await page.getByRole('button', { name: 'Einzelfahrt veröffentlichen' }).click();
+	await page.getByRole('button', { name: 'Einmaliges Mitfahrangebot veröffentlichen' }).click();
 	await page.screenshot({ path: 'screenshots/afterCreateRideShareTour.png', fullPage: true });
 	await logout(page);
 });
