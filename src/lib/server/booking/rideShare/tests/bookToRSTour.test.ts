@@ -336,7 +336,7 @@ describe('add ride share request', () => {
 		expect(whiteResponse2.direct[0].length).toBe(0);
 
 		// cancel request -> a new request should bookable
-		await cancelRideShareRequest(requestId, mockUserId);
+		await cancelRideShareRequest(requestId, mockUserId, 'passenger');
 		const whiteResponse3 = await whiteRideShare(body2).then((r) => r.json());
 		expect(whiteResponse3.direct.length).toBe(1);
 		expect(whiteResponse3.direct[0].length).not.toBe(0);

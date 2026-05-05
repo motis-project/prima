@@ -384,6 +384,7 @@ const translations: Translations = {
 		requestBy: 'Request from',
 		offerBy: 'Offered by',
 		acceptRequest: 'Confirm ride',
+		declineRequest: 'Decline ride',
 		acceptRequestInfo:
 			'Before confirming, please coordinate the exact meeting point, meeting time and luggage with the person requesting the ride.',
 		requestAccepted: 'Ride confirmed',
