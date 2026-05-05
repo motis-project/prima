@@ -8,7 +8,8 @@ export const POST = async (event: RequestEvent) => {
 		q.startFixed,
 		q.vehicle,
 		q.start,
-		q.end
+		q.end,
+		q.checkConflicts !== false
 	); //TODO check correct user?
 	if (response === undefined) {
 		return json({});

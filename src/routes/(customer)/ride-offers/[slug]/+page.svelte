@@ -10,7 +10,7 @@
 	import { msg } from '$lib/msg';
 	import { language, t } from '$lib/i18n/translation';
 	import * as Card from '$lib/shadcn/card';
-	import { Check, MapIcon } from 'lucide-svelte';
+	import { Check, Info, MapIcon, Users } from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
 	import Time from '../../routing/Time.svelte';
@@ -52,13 +52,13 @@
 							<AlertDialog.Header>
 								<AlertDialog.Title>{t.ride.cancelHeadline}</AlertDialog.Title>
 								<AlertDialog.Description>
-									<div class="flex flex-col">
-										{t.ride.cancelDescription}
+									<div class="flex flex-col gap-4">
+										<p>{t.ride.cancelDescription}</p>
 										{#if data.pattern}
-											<label class="flex items-center gap-2">
-												<input type="checkbox" bind:checked={cancelAll} />
-												<span
-													>{t.booking.cancelCheckbox}<br />
+											<label class="grid grid-cols-[auto_1fr] items-start gap-2">
+												<input class="mt-1" type="checkbox" bind:checked={cancelAll} />
+												<span>
+													{t.ride.cancelCheckbox}<br />
 													{pattern}
 												</span>
 											</label>
@@ -67,7 +67,7 @@
 								</AlertDialog.Description>
 							</AlertDialog.Header>
 							<AlertDialog.Footer class="mt-4">
-								<AlertDialog.Cancel>{t.booking.noCancel}</AlertDialog.Cancel>
+								<AlertDialog.Cancel>{t.ride.noCancel}</AlertDialog.Cancel>
 								<form method="post" use:enhance action="?/cancel">
 									<input type="hidden" name="requestId" value={data.id} />
 									<input type="hidden" name="pattern" value={cancelAll ? data.pattern : null} />
@@ -127,6 +127,12 @@
 						smokingAllowed={undefined}
 						averageRating={n.averageRatingCustomer}
 					/>
+					<div class="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
+						<span class="flex items-center gap-1">
+							<Users class="size-4 shrink-0" />
+							{t.booking.bookingFor(n.passengers)}
+						</span>
+					</div>
 					<div class="grid grid-cols-[max-content_auto] gap-x-2">
 						<span>{t.account.email}:</span><span><a href="mailto:{n.email}">{n.email}</a></span>
 						{#if n.phone}
@@ -176,6 +182,10 @@
 							}}
 						>
 							<input type="hidden" name="requestId" value={n.id} />
+							<p class="mb-3 flex gap-2 text-sm text-muted-foreground">
+								<Info class="mt-0.5 size-4 shrink-0" />
+								<span>{t.ride.acceptRequestInfo}</span>
+							</p>
 							<Button type="submit" class="w-full" disabled={loading}>
 								<Check class="mr-1 size-4" />
 								{t.ride.acceptRequest}

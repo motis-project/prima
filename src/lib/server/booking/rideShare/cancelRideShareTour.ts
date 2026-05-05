@@ -7,7 +7,7 @@ import { retry } from '$lib/server/db/retryQuery';
 
 export async function cancelRideShareTour(
 	tourId: number,
-	user: number,
+	userId: number,
 	pattern?: number
 ): Promise<{ status?: number; message?: string }> {
 	await retry(() =>
@@ -54,6 +54,7 @@ export async function cancelRideShareTour(
 									'user.email',
 									'user.name',
 									'user.firstName',
+									'user.id as customerId',
 									jsonArrayFrom(
 										eb
 											.selectFrom('event')
@@ -79,9 +80,12 @@ export async function cancelRideShareTour(
 					);
 					return {};
 				}
-				await sql`CALL cancel_ride_share_tour(${currentId}, ${user}, ${Date.now()})`.execute(trx);
+				await sql`CALL cancel_ride_share_tour(${currentId}, ${userId}, ${Date.now()})`.execute(trx);
 				console.assert(tour.requests.length != 0, 'Found a tour with no requests');
 				for (const request of tour.requests) {
+					if (request.customerId === userId) {
+						continue;
+					}
 					console.assert(request.events.length != 0, 'Found a request with no events');
 					try {
 						await sendMail(

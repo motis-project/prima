@@ -3,6 +3,7 @@
 	import Building2 from 'lucide-svelte/icons/building-2';
 	import Phone from 'lucide-svelte/icons/phone';
 	import CarTaxiFront from 'lucide-svelte/icons/car-taxi-front';
+	import Users from 'lucide-svelte/icons/users';
 	import type { Leg } from '$lib/openapi';
 	import { Button } from '$lib/shadcn/button';
 	import { t } from '$lib/i18n/translation';
@@ -137,6 +138,14 @@
 						smokingAllowed={tourInfo.smokingAllowed}
 						averageRating={tourInfo.averageRatingProvider}
 					/>
+					{#if tourInfo.passengers !== null}
+						<div class="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
+							<span class="flex items-center gap-1">
+								<Users class="size-4 shrink-0" />
+								{t.booking.bookingFor(tourInfo.passengers)}
+							</span>
+						</div>
+					{/if}
 
 					{#if tourInfo.picture || tourInfo.color}
 						<div class="mt-2 flex flex-row gap-4">

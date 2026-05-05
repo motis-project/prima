@@ -358,11 +358,15 @@ const translations: Translations = {
 		outro:
 			'Your offer will be visible to everybody using the journey planner. You will be notified about requests via e-mail.',
 		publish: 'Publish ride offer',
+		publishSingleRideOffer: 'Publish one-time ride offer',
+		publishRepeatingRideOffers: 'Publish repeating ride offers',
 		cancelTrip: 'Cancel ride offer',
 		cancelHeadline: 'Do you really want to cancel this ride offer?',
 		noCancel: 'No, I do not want to cancel.',
 		cancelDescription:
 			'You should inform any people riding with you yourself, even if they will receive an email about the cancellation.',
+		cancelCheckbox:
+			'Cancel all ride offers created by the same rule. Ride offers with confirmed passengers will not be cancelled.',
 		negotiateHere: 'Negotiate here',
 		negotiateHeader: 'Negotiate the ride',
 		negotiatePrivacy:
@@ -380,10 +384,17 @@ const translations: Translations = {
 		requestBy: 'Request from',
 		offerBy: 'Offered by',
 		acceptRequest: 'Confirm ride',
+		acceptRequestInfo:
+			'Before confirming, please coordinate the exact meeting point, meeting time and luggage with the person requesting the ride.',
 		requestAccepted: 'Ride confirmed',
 		requestCancelled: 'Ride cancelled',
 		showMap: 'Show map',
-		repetitionLabel: 'Publish repeating ride offers',
+		singleRideOffer: 'One-time ride offer',
+		publishBlockerStart: 'Add a start location to publish this ride offer.',
+		publishBlockerTarget: 'Add a destination to publish this ride offer.',
+		publishBlockerSingleTime: 'Choose a time to publish this ride offer.',
+		publishBlockerWeekdays: 'Select at least one weekday for the recurring ride offers.',
+		repetitionLabel: 'Repeating ride offers',
 		addRule: 'Add rule',
 		individualDays: 'Individual days',
 		to: 'to ',

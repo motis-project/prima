@@ -55,3 +55,49 @@ export const POST = async (event: RequestEvent) => {
 	}
 	return json(await selectDesiredTrips(userId));
 };
+
+export const PATCH = async (event: RequestEvent) => {
+	const userId = event.locals.session?.userId;
+	if (userId === undefined) {
+		throw error(403, 'forbidden');
+	}
+	const {
+		from,
+		to,
+		time,
+		startFixed,
+		luggage,
+		passengers,
+		url,
+		alertId
+	}: {
+		from: Coordinates;
+		to: Coordinates;
+		time: number;
+		startFixed: boolean;
+		luggage: number;
+		passengers: number;
+		url: string;
+		alertId: number;
+	} = await event.request.json();
+	await db
+		.updateTable('desiredRideShare')
+		.set({
+			fromLat: from.lat,
+			fromLng: from.lng,
+			toLat: to.lat,
+			toLng: to.lng,
+			startFixed,
+			fromAddress: from.address!,
+			toAddress: to.address!,
+			time,
+			luggage,
+			passengers,
+			url
+		})
+		.where('desiredRideShare.id', '=', alertId)
+		.where('desiredRideShare.interestedUser', '=', userId)
+		.execute();
+
+	return json(await selectDesiredTrips(userId));
+};
