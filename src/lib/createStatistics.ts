@@ -38,33 +38,35 @@ async function requestQuery(cancelled: boolean) {
 }
 
 async function tourQuery(cancelled: boolean) {
-	return (await db
-		.selectFrom('tour')
-		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
-		.innerJoin('company', 'company.id', 'vehicle.company')
-		.where('tour.arrival', '<', Date.now())
-		.where('tour.approachAndReturnM', 'is', null)
-		.where('tour.cancelled', '=', cancelled)
-		.select((eb) => [
-			jsonArrayFrom(
-				eb
-					.selectFrom('request')
-					.innerJoin('event', 'event.request', 'request.id')
-					.innerJoin('eventGroup', 'event.eventGroupId', 'eventGroup.id')
-					.where('request.cancelled', '=', cancelled)
-					.$if(cancelled, (qb) => qb.where('request.cancelledByCustomer', '=', true))
-					.whereRef('request.tour', '=', 'tour.id')
-					.selectAll(['event', 'eventGroup'])
-					.select('request.passengers')
-			).as('events'),
-			'company.lat',
-			'company.lng',
-			'tour.id',
-		])
-		.execute()).map((t) => {
-			const companyCoords= {lat: t.lat!,lng: t.lng!};
-			return {...t, start: companyCoords, target: companyCoords}
-		});
+	return (
+		await db
+			.selectFrom('tour')
+			.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
+			.innerJoin('company', 'company.id', 'vehicle.company')
+			.where('tour.arrival', '<', Date.now())
+			.where('tour.approachAndReturnM', 'is', null)
+			.where('tour.cancelled', '=', cancelled)
+			.select((eb) => [
+				jsonArrayFrom(
+					eb
+						.selectFrom('request')
+						.innerJoin('event', 'event.request', 'request.id')
+						.innerJoin('eventGroup', 'event.eventGroupId', 'eventGroup.id')
+						.where('request.cancelled', '=', cancelled)
+						.$if(cancelled, (qb) => qb.where('request.cancelledByCustomer', '=', true))
+						.whereRef('request.tour', '=', 'tour.id')
+						.selectAll(['event', 'eventGroup'])
+						.select('request.passengers')
+				).as('events'),
+				'company.lat',
+				'company.lng',
+				'tour.id'
+			])
+			.execute()
+	).map((t) => {
+		const companyCoords = { lat: t.lat!, lng: t.lng! };
+		return { ...t, start: companyCoords, target: companyCoords };
+	});
 }
 
 async function rideShareTourQuery(cancelled: boolean) {
@@ -92,10 +94,10 @@ async function rideShareTourQuery(cancelled: boolean) {
 			])
 			.execute()
 	).map((t) => {
-			const start = t.events.find((e) => e.isPickup && e.customer === t.owner)!;
-			const target = t.events.find((e) => !e.isPickup && e.customer === t.owner)!;
-			return {...t, events: t.events.filter((e) => e.customer !== t.owner), start, target};
-		});
+		const start = t.events.find((e) => e.isPickup && e.customer === t.owner)!;
+		const target = t.events.find((e) => !e.isPickup && e.customer === t.owner)!;
+		return { ...t, events: t.events.filter((e) => e.customer !== t.owner), start, target };
+	});
 }
 
 type Tours = Awaited<ReturnType<typeof tourQuery>>;
@@ -127,11 +129,11 @@ async function computeStatistics(events: Event[], start: Coordinates, target: Co
 	}
 
 	let approachPlusReturn = 0;
-		const routingResultApproach = await carRouting(start, events[0]);
-		const routingResultReturn = await carRouting(events[events.length - 1], target);
-		approachPlusReturn =
-			legsToTravelDistance(routingResultApproach?.legs) +
-			legsToTravelDistance(routingResultReturn?.legs);
+	const routingResultApproach = await carRouting(start, events[0]);
+	const routingResultReturn = await carRouting(events[events.length - 1], target);
+	approachPlusReturn =
+		legsToTravelDistance(routingResultApproach?.legs) +
+		legsToTravelDistance(routingResultReturn?.legs);
 	return {
 		approachPlusReturn,
 		fullyPayedM,
@@ -177,11 +179,15 @@ function legsToTravelDistance(legs: Leg[] | undefined) {
 }
 
 async function computeAndPersistTourStatistics(type: 'tour' | 'rideShareTour', cancelled: boolean) {
-	let tours = type === 'tour' ? (await tourQuery(cancelled)) : (await rideShareTourQuery(cancelled));
+	const tours = type === 'tour' ? await tourQuery(cancelled) : await rideShareTourQuery(cancelled);
 	const stats = await Promise.all(
 		tours.map(
 			async (t) =>
-				await computeStatistics(t.events.sort((e1, e2) => e1.scheduledTimeStart - e2.scheduledTimeStart), t.start, t.target)
+				await computeStatistics(
+					t.events.sort((e1, e2) => e1.scheduledTimeStart - e2.scheduledTimeStart),
+					t.start,
+					t.target
+				)
 		)
 	);
 	for (let i = 0; i != tours.length; ++i) {

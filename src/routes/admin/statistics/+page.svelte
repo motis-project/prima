@@ -7,7 +7,12 @@
 	];
 
 	const requestSections = [
-		{ title: 'Taxi requests', entries: data.rsRequestEntries, distanceLabel: 'Taxi', distanceField: 'taxiDistance' },
+		{
+			title: 'Taxi requests',
+			entries: data.rsRequestEntries,
+			distanceLabel: 'Taxi',
+			distanceField: 'taxiDistance'
+		},
 		{
 			title: 'Ride-share requests',
 			entries: data.requestEntries,
@@ -35,7 +40,9 @@
 
 	<section class="grid gap-6 lg:grid-cols-2">
 		{#each tourSections as section}
-			<div class="rounded border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+			<div
+				class="rounded border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+			>
 				<h2 class="mb-4 text-lg font-medium">{section.title}</h2>
 				<div class="overflow-x-auto">
 					<table class="w-full text-left text-sm">
@@ -71,7 +78,9 @@
 
 	<section class="grid gap-6 lg:grid-cols-2">
 		{#each requestSections as section}
-			<div class="rounded border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+			<div
+				class="rounded border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+			>
 				<h2 class="mb-4 text-lg font-medium">{section.title}</h2>
 				<div class="overflow-x-auto">
 					<table class="w-full text-left text-sm">
@@ -88,7 +97,9 @@
 								<tr class="border-b border-gray-100 last:border-b-0 dark:border-gray-800">
 									<td class="py-2 pr-4 capitalize">{status}</td>
 									<td class="py-2 pr-4 tabular-nums">{entry.count}</td>
-									<td class="py-2 pr-4 tabular-nums">{meters(requestDistance(entry, section.distanceField))}</td>
+									<td class="py-2 pr-4 tabular-nums"
+										>{meters(requestDistance(entry, section.distanceField))}</td
+									>
 									<td class="py-2 tabular-nums">{meters(entry.publicTransportDistance)}</td>
 								</tr>
 							{/each}

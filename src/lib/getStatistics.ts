@@ -4,18 +4,24 @@ async function getTours(type: 'tour' | 'rideShareTour') {
 	return await db
 		.selectFrom(type)
 		.where(`${type}.approachAndReturnM`, 'is not', null)
-		.select(['cancelled', 'approachAndReturnM', 'fullyPayedM', 'occupiedM', 'cumulatedPassengerM', 'totalM'])
+		.select([
+			'cancelled',
+			'approachAndReturnM',
+			'fullyPayedM',
+			'occupiedM',
+			'cumulatedPassengerM',
+			'totalM'
+		])
 		.execute();
 }
 
 async function getRequests(type: 'taxi' | 'rideShareTour') {
 	const condition = type === 'taxi' ? 'is not' : 'is';
-	return await db.selectFrom('request')
+	return await db
+		.selectFrom('request')
 		.where('request.odmDistance', 'is not', null)
 		.where('request.tour', condition, null)
-		.select([
-			'cancelled', 'odmDistance', 'publicTransportDistance'
-		])
+		.select(['cancelled', 'odmDistance', 'publicTransportDistance'])
 		.execute();
 }
 
@@ -37,21 +43,33 @@ export async function viewStatistics() {
 
 	const requests = await getRequests('rideShareTour');
 	const requestEntries = {
-		cancelled: createRequestEntries(requests.filter((r) => r.cancelled), 'rideShare'),
-		uncancelled: createRequestEntries(requests.filter((r) => !r.cancelled), 'rideShare')
-	}
+		cancelled: createRequestEntries(
+			requests.filter((r) => r.cancelled),
+			'rideShare'
+		),
+		uncancelled: createRequestEntries(
+			requests.filter((r) => !r.cancelled),
+			'rideShare'
+		)
+	};
 
 	const rideShareRequests = await getRequests('taxi');
 	const rsRequestEntries = {
-		cancelled: createRequestEntries(rideShareRequests.filter((r) => r.cancelled), 'taxi'),
-		uncancelled: createRequestEntries(rideShareRequests.filter((r) => !r.cancelled), 'taxi')
-	}
+		cancelled: createRequestEntries(
+			rideShareRequests.filter((r) => r.cancelled),
+			'taxi'
+		),
+		uncancelled: createRequestEntries(
+			rideShareRequests.filter((r) => !r.cancelled),
+			'taxi'
+		)
+	};
 	console.log('TAXI');
 	console.log(JSON.stringify(tourEntries, null, 2));
 	console.log();
 	console.log('RIDE SHARE');
 	console.log(JSON.stringify(rsTourEntries, null, 2));
-    return {tourEntries, rsTourEntries, requestEntries, rsRequestEntries};
+	return { tourEntries, rsTourEntries, requestEntries, rsRequestEntries };
 }
 
 function createTourEntries(tours: Tours) {
@@ -68,8 +86,13 @@ function createTourEntries(tours: Tours) {
 function createRequestEntries(requests: Requests, type: 'taxi' | 'rideShare') {
 	return {
 		count: requests.length,
-		taxiDistance: type === 'taxi' ? requests.reduce((prev, curr) => (prev += curr.odmDistance!), 0) : 0,
-		rideShareDistance: type !== 'taxi' ? requests.reduce((prev, curr) => (prev += curr.odmDistance!), 0) : 0,
-		publicTransportDistance: requests.reduce((prev, curr) => (prev += curr.publicTransportDistance!), 0)
+		taxiDistance:
+			type === 'taxi' ? requests.reduce((prev, curr) => (prev += curr.odmDistance!), 0) : 0,
+		rideShareDistance:
+			type !== 'taxi' ? requests.reduce((prev, curr) => (prev += curr.odmDistance!), 0) : 0,
+		publicTransportDistance: requests.reduce(
+			(prev, curr) => (prev += curr.publicTransportDistance!),
+			0
+		)
 	};
 }

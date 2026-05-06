@@ -14,7 +14,7 @@ describe('haversineDistance', () => {
 
 		const aToB = haversineDistance(berlin, paris);
 		const bToA = haversineDistance(paris, berlin);
-		
+
 		expect(aToB).toBeCloseTo(bToA, 8);
 	});
 
