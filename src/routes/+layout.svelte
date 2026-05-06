@@ -11,6 +11,7 @@
 	import CircleAlert from 'lucide-svelte/icons/circle-alert';
 	import Receipt from 'lucide-svelte/icons/receipt';
 	import SlidersVertical from 'lucide-svelte/icons/sliders-vertical';
+	import ChartColumn from 'lucide-svelte/icons/chart-column';
 
 	import * as Alert from '$lib/shadcn/alert';
 
@@ -39,7 +40,8 @@
 		{ title: t.menu.accounting, href: '/admin/accounting', Icon: Receipt },
 		{ title: t.menu.availability, href: '/taxi/availability', Icon: CarTaxiFront },
 		{ title: t.menu.companies, href: '/admin/taxi-owners', Icon: CarTaxiFront },
-		{ title: t.menu.calibration, href: '/admin/calibration', Icon: SlidersVertical }
+		{ title: t.menu.calibration, href: '/admin/calibration', Icon: SlidersVertical },
+		{ title: t.menu.statistics, href: '/admin/statistics', Icon: ChartColumn }
 	];
 
 	const items = $derived([

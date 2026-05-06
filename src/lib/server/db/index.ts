@@ -65,6 +65,11 @@ export interface Database {
 		directDuration: number | null;
 		cancelled: boolean;
 		message: string | null;
+		approachAndReturnM: number | null;
+		fullyPayedM: number | null;
+		occupiedM: number | null;
+		cumulatedPassengerM: number | null;
+		totalM: number | null;
 	};
 	availability: {
 		id: Generated<number>;
@@ -112,6 +117,8 @@ export interface Database {
 		busStopTime: number | null;
 		requestedTime: number | null;
 		cancelledByCustomer: boolean;
+		odmDistance: number | null;
+		publicTransportDistance: number | null;
 	};
 	journey: {
 		id: Generated<number>;
@@ -139,6 +146,11 @@ export interface Database {
 		communicatedEnd: number;
 		earliestStart: number;
 		latestEnd: number;
+		approachAndReturnM: number | null;
+		fullyPayedM: number | null;
+		occupiedM: number | null;
+		cumulatedPassengerM: number | null;
+		totalM: number | null;
 		pattern: number | null;
 	};
 	rideShareVehicle: {

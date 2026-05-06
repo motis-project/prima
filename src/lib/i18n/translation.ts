@@ -16,6 +16,7 @@ export type Translations = {
 		employees: string;
 		companies: string;
 		calibration: string;
+		statistics: string;
 	};
 	msg: {
 		unknownError: string;
