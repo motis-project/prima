@@ -6,12 +6,15 @@ import { type Mode, type Itinerary, type Leg } from '$lib/openapi';
 import { polyLineToLatLngArray } from '$lib/util/polylineToGeoJSON';
 
 export async function createStatistics() {
-	await computeAndPersistTourStatistics('tour');
-	await computeAndPersistTourStatistics('rideShareTour');
-	await computeAndPersistRequestStatistics();
+	await computeAndPersistTourStatistics('tour', false);
+	await computeAndPersistTourStatistics('rideShareTour', false);
+	await computeAndPersistRequestStatistics(false);
+	await computeAndPersistTourStatistics('tour', true);
+	await computeAndPersistTourStatistics('rideShareTour', true);
+	await computeAndPersistRequestStatistics(true);
 }
 
-async function requestQuery() {
+async function requestQuery(cancelled: boolean) {
 	return await db
 		.selectFrom('tour')
 		.innerJoin('request', 'request.tour', 'tour.id')
@@ -25,7 +28,7 @@ async function requestQuery() {
 		)
 		.where('tour.arrival', '<', Date.now())
 		.where('request.odmDistance', 'is', null)
-		.where('tour.cancelled', '=', false)
+		.where('tour.cancelled', '=', cancelled)
 		.select((eb) => [
 			'journey.json',
 			'request.id',
@@ -34,21 +37,22 @@ async function requestQuery() {
 		.execute();
 }
 
-async function tourQuery() {
+async function tourQuery(cancelled: boolean) {
 	return (await db
 		.selectFrom('tour')
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 		.innerJoin('company', 'company.id', 'vehicle.company')
 		.where('tour.arrival', '<', Date.now())
 		.where('tour.approachAndReturnM', 'is', null)
-		.where('tour.cancelled', '=', false)
+		.where('tour.cancelled', '=', cancelled)
 		.select((eb) => [
 			jsonArrayFrom(
 				eb
 					.selectFrom('request')
 					.innerJoin('event', 'event.request', 'request.id')
 					.innerJoin('eventGroup', 'event.eventGroupId', 'eventGroup.id')
-					.where('request.cancelled', '=', false)
+					.where('request.cancelled', '=', cancelled)
+					.$if(cancelled, (qb) => qb.where('request.cancelledByCustomer', '=', true))
 					.whereRef('request.tour', '=', 'tour.id')
 					.selectAll(['event', 'eventGroup'])
 					.select('request.passengers')
@@ -63,13 +67,13 @@ async function tourQuery() {
 		});
 }
 
-async function rideShareTourQuery() {
+async function rideShareTourQuery(cancelled: boolean) {
 	return (
 		await db
 			.selectFrom('rideShareTour')
 			.innerJoin('rideShareVehicle', 'rideShareTour.vehicle', 'rideShareVehicle.id')
 			.where('rideShareTour.approachAndReturnM', 'is', null)
-			.where('rideShareTour.cancelled', '=', false)
+			.where('rideShareTour.cancelled', '=', cancelled)
 			.where('rideShareTour.latestEnd', '<', Date.now())
 			.select((eb) => [
 				jsonArrayFrom(
@@ -77,7 +81,8 @@ async function rideShareTourQuery() {
 						.selectFrom('request')
 						.innerJoin('event', 'event.request', 'request.id')
 						.innerJoin('eventGroup', 'event.eventGroupId', 'eventGroup.id')
-						.where('request.cancelled', '=', false)
+						.where('request.cancelled', '=', cancelled)
+						.$if(cancelled, (qb) => qb.where('request.cancelledByCustomer', '=', true))
 						.whereRef('request.rideShareTour', '=', 'rideShareTour.id')
 						.selectAll(['event', 'eventGroup'])
 						.select(['request.passengers', 'request.customer'])
@@ -171,8 +176,8 @@ function legsToTravelDistance(legs: Leg[] | undefined) {
 		: legs.reduce((prev, curr) => (prev += legToTravelDistance(curr)), 0);
 }
 
-async function computeAndPersistTourStatistics(type: 'tour' | 'rideShareTour') {
-	let tours = type === 'tour' ? (await tourQuery()) : (await rideShareTourQuery());
+async function computeAndPersistTourStatistics(type: 'tour' | 'rideShareTour', cancelled: boolean) {
+	let tours = type === 'tour' ? (await tourQuery(cancelled)) : (await rideShareTourQuery(cancelled));
 	const stats = await Promise.all(
 		tours.map(
 			async (t) =>
@@ -194,8 +199,8 @@ async function computeAndPersistTourStatistics(type: 'tour' | 'rideShareTour') {
 	}
 }
 
-async function computeAndPersistRequestStatistics() {
-	const requests = await requestQuery();
+async function computeAndPersistRequestStatistics(cancelled: boolean) {
+	const requests = await requestQuery(cancelled);
 	const stats = requests.map((r) => computeRequestStatistics(r));
 	for (let i = 0; i != requests.length; ++i) {
 		let odmDistance = 0;
