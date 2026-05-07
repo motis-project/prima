@@ -261,6 +261,10 @@ class TourStore @Inject constructor(
         return realm.query<TourObject>("tourId == $0", id).first().find()
     }
 
+    fun getEvent(id: Int): EventObject? {
+        return realm.query<EventObject>("id == $0", id).first().find()
+    }
+
     fun getPickupRequestIDs(tourId: Int): Set<Int> {
         val res: MutableSet<Int> = mutableSetOf()
         val pickupEvents = getEventsForTour(tourId).filter { e -> e.isPickup }

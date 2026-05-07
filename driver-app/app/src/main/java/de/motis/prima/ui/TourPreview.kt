@@ -110,6 +110,10 @@ class TourViewModel @Inject constructor(
     fun getTourSpecialInfo(tourId: Int): TourSpecialInfo {
         return repository.getTourSpecialInfo(tourId)
     }
+
+    fun startPolling() {
+        repository.initRealTimePolling()
+    }
 }
 
 @Composable
@@ -335,6 +339,7 @@ fun WayPointsView(viewModel: TourViewModel, tourId: Int, navController: NavContr
             ) {
                 Button(
                     onClick = {
+                        viewModel.startPolling()
                         navController.navigate("leg/$tourId/0")
                     }
                 ) {

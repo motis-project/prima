@@ -74,6 +74,7 @@ fun TopBar(
                     navController.popBackStack()
                 } else {
                     navController.navigate("tours")
+                    viewModel.stopPolling()
                 }
             }) {
                 Icon(
@@ -94,20 +95,21 @@ fun TopBar(
                     DropdownMenuItem(
                         onClick = {
                             navController.navigate("tours")
-
+                            viewModel.stopPolling()
                         },
                         text = { Text(text = stringResource(id = R.string.tours_header)) }
                     )
                     DropdownMenuItem(
                         onClick = {
                             navController.navigate("availability")
-
+                            viewModel.stopPolling()
                         },
-                        text = { Text(text = "Verfügbarkeit") }
+                        text = { Text(text = stringResource(id = R.string.availability)) }
                     )
                     for (item in navItems) {
                         DropdownMenuItem(
                             onClick = {
+                                viewModel.stopPolling()
                                 dropdownExpanded = false
                                 item.action()
 
@@ -121,10 +123,11 @@ fun TopBar(
                             dropdownExpanded = false
 
                         },
-                        text = { Text(text = "Toggle Theme") }
+                        text = { Text(text = stringResource(id = R.string.toggle_theme)) }
                     )
                     DropdownMenuItem(
                         onClick = {
+                            viewModel.stopPolling()
                             viewModel.logout()
                             dropdownExpanded = false
 
