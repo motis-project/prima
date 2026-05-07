@@ -21,7 +21,7 @@ async function getRequests(type: 'taxi' | 'rideShareTour') {
 		.selectFrom('request')
 		.where('request.publicTransportDistance', 'is not', null)
 		.where('request.tour', condition, null)
-		.select(['cancelled', 'publicTransportDistance'])
+		.select(['cancelled', 'publicTransportDistance', 'passengers'])
 		.execute();
 }
 
@@ -77,6 +77,10 @@ function createRequestEntries(requests: Requests) {
 		'Public transport m': requests.reduce(
 			(prev, curr) => (prev += curr.publicTransportDistance!),
 			0
-		)
+		),
+		'Per Passenger Public transport m':  requests.reduce(
+			(prev, curr) => (prev += curr.publicTransportDistance! * curr.passengers),
+			0
+		),
 	};
 }
