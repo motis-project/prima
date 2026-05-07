@@ -4,8 +4,9 @@ import type { Coordinates } from '$lib/util/Coordinates';
 import { carRouting } from '$lib/util/carRouting';
 import { type Mode, type Itinerary, type Leg } from '$lib/openapi';
 import { polyLineToLatLngArray } from '$lib/util/polylineToGeoJSON';
-import { roundToUnit } from '$lib/util/time';
-import { STATISTICS_DISTANCE_ROUNDING_M } from '$lib/constants';
+import { roundToUnit, secondToMilli } from '$lib/util/time';
+import { STATISTICS_DISTANCE_ROUNDING_M, STATISTICS_DURATION_ROUNDING_MS } from '$lib/constants';
+import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 
 export async function createStatistics() {
 	await computeAndPersistTourStatistics('tour', false);
@@ -29,7 +30,12 @@ async function requestQuery(cancelled: boolean) {
 			)
 		)
 		.where('tour.arrival', '<', Date.now())
-		.where('request.publicTransportDistance', 'is', null)
+		.where((eb) =>
+			eb.or([
+				eb('request.publicTransportDistance', 'is', null),
+				eb('request.publicTransportDurationMs', 'is', null)
+			])
+		)
 		.where('tour.cancelled', '=', cancelled)
 		.select((eb) => [
 			'journey.json',
@@ -46,7 +52,13 @@ async function tourQuery(cancelled: boolean) {
 			.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 			.innerJoin('company', 'company.id', 'vehicle.company')
 			.where('tour.arrival', '<', Date.now())
-			.where('tour.approachAndReturnM', 'is', null)
+			.where((eb) =>
+				eb.or([
+					eb('tour.approachAndReturnM', 'is', null),
+					eb('tour.approachAndReturnDrivingMs', 'is', null),
+					eb('tour.approachAndReturnWaitingMs', 'is', null)
+				])
+			)
 			.where('tour.cancelled', '=', cancelled)
 			.select((eb) => [
 				jsonArrayFrom(
@@ -62,7 +74,9 @@ async function tourQuery(cancelled: boolean) {
 				).as('events'),
 				'company.lat',
 				'company.lng',
-				'tour.id'
+				'tour.id',
+				'tour.departure as startTime',
+				'tour.arrival as targetTime'
 			])
 			.execute()
 	).map((t) => {
@@ -76,7 +90,13 @@ async function rideShareTourQuery(cancelled: boolean) {
 		await db
 			.selectFrom('rideShareTour')
 			.innerJoin('rideShareVehicle', 'rideShareTour.vehicle', 'rideShareVehicle.id')
-			.where('rideShareTour.approachAndReturnM', 'is', null)
+			.where((eb) =>
+				eb.or([
+					eb('rideShareTour.approachAndReturnM', 'is', null),
+					eb('rideShareTour.approachAndReturnDrivingMs', 'is', null),
+					eb('rideShareTour.approachAndReturnWaitingMs', 'is', null)
+				])
+			)
 			.where('rideShareTour.cancelled', '=', cancelled)
 			.where('rideShareTour.latestEnd', '<', Date.now())
 			.select((eb) => [
@@ -98,7 +118,14 @@ async function rideShareTourQuery(cancelled: boolean) {
 	).map((t) => {
 		const start = t.events.find((e) => e.isPickup && e.customer === t.owner)!;
 		const target = t.events.find((e) => !e.isPickup && e.customer === t.owner)!;
-		return { ...t, events: t.events.filter((e) => e.customer !== t.owner), start, target };
+		return {
+			...t,
+			events: t.events.filter((e) => e.customer !== t.owner),
+			start,
+			target,
+			startTime: getScheduledEventTime(start),
+			targetTime: getScheduledEventTime(target)
+		};
 	});
 }
 
@@ -112,26 +139,65 @@ function roundStatisticDistance(distanceM: number) {
 	return roundToUnit(distanceM, STATISTICS_DISTANCE_ROUNDING_M, Math.round);
 }
 
-async function computeStatistics(events: Event[], start: Coordinates, target: Coordinates) {
+function roundStatisticDuration(durationMs: number) {
+	return roundToUnit(durationMs, STATISTICS_DURATION_ROUNDING_MS, Math.round);
+}
+
+async function computeStatistics(
+	events: Event[],
+	start: Coordinates,
+	target: Coordinates,
+	startTime: number,
+	targetTime: number
+) {
 	const routingQueries = new Array<Promise<Itinerary | undefined>>(events.length);
 	for (let i = 0; i < events.length - 1; ++i) {
 		routingQueries[i] = carRouting(events[i], events[i + 1]);
 	}
 	const routingResults = await Promise.all(routingQueries);
 	const distances = routingResults.map((r) => legsToTravelDistance(r?.legs));
+	const drivingDurations = events.map((event, i) => {
+		const nextEvent = events[i + 1];
+		if (nextEvent === undefined || event.eventGroupId === nextEvent.eventGroupId) {
+			return 0;
+		}
+		return event.nextLegDuration;
+	});
+	const eventDurations = events.map((event, i) => {
+		const nextEvent = events[i + 1];
+		if (nextEvent === undefined) {
+			return 0;
+		}
+		return getScheduledEventTime(nextEvent) - getScheduledEventTime(event);
+	});
+	const waitingDurations = eventDurations.map((duration, i) =>
+		Math.max(duration - drivingDurations[i], 0)
+	);
 
 	let currentPassengers = 0;
 	let occupiedM = 0;
+	let occupiedDrivingMs = 0;
+	let occupiedWaitingMs = 0;
 	let fullyPayedM = 0;
+	let fullyPayedDrivingMs = 0;
+	let fullyPayedWaitingMs = 0;
 	let cumulatedPassengerM = 0;
+	let cumulatedPassengerDrivingMs = 0;
+	let cumulatedPassengerWaitingMs = 0;
 	for (let i = 0; i != events.length; ++i) {
 		const curr = events[i];
 		currentPassengers += curr.isPickup ? curr.passengers : -curr.passengers;
 		if (currentPassengers !== 0) {
 			occupiedM += distances[i];
+			occupiedDrivingMs += drivingDurations[i];
+			occupiedWaitingMs += waitingDurations[i];
 			cumulatedPassengerM += distances[i] * currentPassengers;
+			cumulatedPassengerDrivingMs += drivingDurations[i] * currentPassengers;
+			cumulatedPassengerWaitingMs += waitingDurations[i] * currentPassengers;
 		}
 		fullyPayedM += distances[i];
+		fullyPayedDrivingMs += drivingDurations[i];
+		fullyPayedWaitingMs += waitingDurations[i];
 	}
 
 	let approachPlusReturn = 0;
@@ -140,12 +206,33 @@ async function computeStatistics(events: Event[], start: Coordinates, target: Co
 	approachPlusReturn =
 		legsToTravelDistance(routingResultApproach?.legs) +
 		legsToTravelDistance(routingResultReturn?.legs);
+	const approachPlusReturnMs =
+		getScheduledEventTime(events[0]) -
+		startTime +
+		targetTime -
+		getScheduledEventTime(events[events.length - 1]);
+	const approachPlusReturnDrivingMs =
+		events[0].prevLegDuration + events[events.length - 1].nextLegDuration;
+	const approachPlusReturnWaitingMs = Math.max(
+		approachPlusReturnMs - approachPlusReturnDrivingMs,
+		0
+	);
 	return {
 		approachPlusReturn,
+		approachPlusReturnDrivingMs,
+		approachPlusReturnWaitingMs,
 		fullyPayedM,
+		fullyPayedDrivingMs,
+		fullyPayedWaitingMs,
 		occupiedM,
+		occupiedDrivingMs,
+		occupiedWaitingMs,
 		cumulatedPassengerM,
-		totalM: approachPlusReturn + fullyPayedM
+		cumulatedPassengerDrivingMs,
+		cumulatedPassengerWaitingMs,
+		totalM: approachPlusReturn + fullyPayedM,
+		totalDrivingMs: approachPlusReturnDrivingMs + fullyPayedDrivingMs,
+		totalWaitingMs: approachPlusReturnWaitingMs + fullyPayedWaitingMs
 	};
 }
 
@@ -192,7 +279,9 @@ async function computeAndPersistTourStatistics(type: 'tour' | 'rideShareTour', c
 				await computeStatistics(
 					t.events.sort((e1, e2) => e1.scheduledTimeStart - e2.scheduledTimeStart),
 					t.start,
-					t.target
+					t.target,
+					t.startTime,
+					t.targetTime
 				)
 		)
 	);
@@ -201,10 +290,20 @@ async function computeAndPersistTourStatistics(type: 'tour' | 'rideShareTour', c
 			.updateTable(type)
 			.set({
 				fullyPayedM: roundStatisticDistance(stats[i].fullyPayedM),
+				fullyPayedDrivingMs: roundStatisticDuration(stats[i].fullyPayedDrivingMs),
+				fullyPayedWaitingMs: roundStatisticDuration(stats[i].fullyPayedWaitingMs),
 				approachAndReturnM: roundStatisticDistance(stats[i].approachPlusReturn),
+				approachAndReturnDrivingMs: roundStatisticDuration(stats[i].approachPlusReturnDrivingMs),
+				approachAndReturnWaitingMs: roundStatisticDuration(stats[i].approachPlusReturnWaitingMs),
 				occupiedM: roundStatisticDistance(stats[i].occupiedM),
+				occupiedDrivingMs: roundStatisticDuration(stats[i].occupiedDrivingMs),
+				occupiedWaitingMs: roundStatisticDuration(stats[i].occupiedWaitingMs),
 				cumulatedPassengerM: roundStatisticDistance(stats[i].cumulatedPassengerM),
-				totalM: roundStatisticDistance(stats[i].totalM)
+				cumulatedPassengerDrivingMs: roundStatisticDuration(stats[i].cumulatedPassengerDrivingMs),
+				cumulatedPassengerWaitingMs: roundStatisticDuration(stats[i].cumulatedPassengerWaitingMs),
+				totalM: roundStatisticDistance(stats[i].totalM),
+				totalDrivingMs: roundStatisticDuration(stats[i].totalDrivingMs),
+				totalWaitingMs: roundStatisticDuration(stats[i].totalWaitingMs)
 			})
 			.where('id', '=', tours[i].id)
 			.execute();
@@ -216,16 +315,19 @@ async function computeAndPersistRequestStatistics(cancelled: boolean) {
 	const stats = requests.map((r) => computeRequestStatistics(r));
 	for (let i = 0; i != requests.length; ++i) {
 		let publicTransportDistance = 0;
-		for (const [mode, distance] of stats[i]) {
-			if (mode === 'WALK' || mode === 'ODM' || mode === 'RIDE_SHARING') {
+		let publicTransportDurationMs = 0;
+		for (const [mode, stat] of stats[i]) {
+			if (isExcludedPublicTransportMode(mode)) {
 				continue;
 			}
-			publicTransportDistance += distance;
+			publicTransportDistance += stat.distanceM;
+			publicTransportDurationMs += stat.durationMs;
 		}
 		await db
 			.updateTable('request')
 			.set({
-				publicTransportDistance: roundStatisticDistance(publicTransportDistance)
+				publicTransportDistance: roundStatisticDistance(publicTransportDistance),
+				publicTransportDurationMs: roundStatisticDuration(publicTransportDurationMs)
 			})
 			.where('id', '=', requests[i].id)
 			.execute();
@@ -233,9 +335,17 @@ async function computeAndPersistRequestStatistics(cancelled: boolean) {
 }
 
 function computeRequestStatistics(request: Request) {
-	const sums = new Map<Mode, number>();
+	const sums = new Map<Mode, { distanceM: number; durationMs: number }>();
 	for (const leg of request.json.legs) {
-		sums.set(leg.mode, (sums.get(leg.mode) ?? 0) + legToTravelDistance(leg));
+		const prev = sums.get(leg.mode) ?? { distanceM: 0, durationMs: 0 };
+		sums.set(leg.mode, {
+			distanceM: prev.distanceM + legToTravelDistance(leg),
+			durationMs: prev.durationMs + secondToMilli(leg.duration)
+		});
 	}
 	return sums;
+}
+
+function isExcludedPublicTransportMode(mode: Mode) {
+	return mode === 'WALK' || mode === 'ODM' || mode === 'RIDE_SHARING';
 }

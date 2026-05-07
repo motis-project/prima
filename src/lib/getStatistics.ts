@@ -4,13 +4,25 @@ async function getTours(type: 'tour' | 'rideShareTour') {
 	return await db
 		.selectFrom(type)
 		.where(`${type}.approachAndReturnM`, 'is not', null)
+		.where(`${type}.approachAndReturnDrivingMs`, 'is not', null)
+		.where(`${type}.approachAndReturnWaitingMs`, 'is not', null)
 		.select([
 			'cancelled',
 			'approachAndReturnM',
+			'approachAndReturnDrivingMs',
+			'approachAndReturnWaitingMs',
 			'fullyPayedM',
+			'fullyPayedDrivingMs',
+			'fullyPayedWaitingMs',
 			'occupiedM',
+			'occupiedDrivingMs',
+			'occupiedWaitingMs',
 			'cumulatedPassengerM',
-			'totalM'
+			'cumulatedPassengerDrivingMs',
+			'cumulatedPassengerWaitingMs',
+			'totalM',
+			'totalDrivingMs',
+			'totalWaitingMs'
 		])
 		.execute();
 }
@@ -20,8 +32,9 @@ async function getRequests(type: 'taxi' | 'rideShareTour') {
 	return await db
 		.selectFrom('request')
 		.where('request.publicTransportDistance', 'is not', null)
+		.where('request.publicTransportDurationMs', 'is not', null)
 		.where('request.tour', condition, null)
-		.select(['cancelled', 'publicTransportDistance', 'passengers'])
+		.select(['cancelled', 'publicTransportDistance', 'publicTransportDurationMs', 'passengers'])
 		.execute();
 }
 
@@ -64,10 +77,32 @@ function createTourEntries(tours: Tours) {
 	return {
 		Count: tours.length,
 		'Approach/return m': tours.reduce((prev, curr) => (prev += curr.approachAndReturnM!), 0),
+		'Approach/return driving ms': tours.reduce(
+			(prev, curr) => (prev += curr.approachAndReturnDrivingMs!),
+			0
+		),
+		'Approach/return waiting ms': tours.reduce(
+			(prev, curr) => (prev += curr.approachAndReturnWaitingMs!),
+			0
+		),
 		'Fully paid m': tours.reduce((prev, curr) => (prev += curr.fullyPayedM!), 0),
+		'Fully paid driving ms': tours.reduce((prev, curr) => (prev += curr.fullyPayedDrivingMs!), 0),
+		'Fully paid waiting ms': tours.reduce((prev, curr) => (prev += curr.fullyPayedWaitingMs!), 0),
 		'Occupied m': tours.reduce((prev, curr) => (prev += curr.occupiedM!), 0),
+		'Occupied driving ms': tours.reduce((prev, curr) => (prev += curr.occupiedDrivingMs!), 0),
+		'Occupied waiting ms': tours.reduce((prev, curr) => (prev += curr.occupiedWaitingMs!), 0),
 		'Passenger m': tours.reduce((prev, curr) => (prev += curr.cumulatedPassengerM!), 0),
-		'Total m': tours.reduce((prev, curr) => (prev += curr.totalM!), 0)
+		'Passenger driving ms': tours.reduce(
+			(prev, curr) => (prev += curr.cumulatedPassengerDrivingMs!),
+			0
+		),
+		'Passenger waiting ms': tours.reduce(
+			(prev, curr) => (prev += curr.cumulatedPassengerWaitingMs!),
+			0
+		),
+		'Total m': tours.reduce((prev, curr) => (prev += curr.totalM!), 0),
+		'Total driving ms': tours.reduce((prev, curr) => (prev += curr.totalDrivingMs!), 0),
+		'Total waiting ms': tours.reduce((prev, curr) => (prev += curr.totalWaitingMs!), 0)
 	};
 }
 
@@ -78,8 +113,16 @@ function createRequestEntries(requests: Requests) {
 			(prev, curr) => (prev += curr.publicTransportDistance!),
 			0
 		),
+		'Public transport ms': requests.reduce(
+			(prev, curr) => (prev += curr.publicTransportDurationMs!),
+			0
+		),
 		'Per Passenger Public transport m': requests.reduce(
 			(prev, curr) => (prev += curr.publicTransportDistance! * curr.passengers),
+			0
+		),
+		'Per Passenger Public transport ms': requests.reduce(
+			(prev, curr) => (prev += curr.publicTransportDurationMs! * curr.passengers),
 			0
 		)
 	};
