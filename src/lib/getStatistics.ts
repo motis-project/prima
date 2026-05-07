@@ -78,9 +78,9 @@ function createRequestEntries(requests: Requests) {
 			(prev, curr) => (prev += curr.publicTransportDistance!),
 			0
 		),
-		'Per Passenger Public transport m':  requests.reduce(
+		'Per Passenger Public transport m': requests.reduce(
 			(prev, curr) => (prev += curr.publicTransportDistance! * curr.passengers),
 			0
-		),
+		)
 	};
 }
