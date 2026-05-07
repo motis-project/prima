@@ -1,5 +1,14 @@
 <script lang="ts">
+	import Download from 'lucide-svelte/icons/download';
+	import pkg from 'file-saver';
+	import Papa from 'papaparse';
+
+	const { saveAs } = pkg;
+
 	const { data } = $props();
+
+	type StatEntry = Record<string, number>;
+	type StatEntries = Record<string, StatEntry>;
 
 	const tourSections = [
 		{ title: 'Taxi tours', entries: data.tourEntries },
@@ -9,33 +18,64 @@
 	const requestSections = [
 		{
 			title: 'Taxi requests',
-			entries: data.rsRequestEntries,
-			distanceLabel: 'Taxi',
-			distanceField: 'taxiDistance'
+			entries: data.rsRequestEntries
 		},
 		{
 			title: 'Ride-share requests',
-			entries: data.requestEntries,
-			distanceLabel: 'Ride share',
-			distanceField: 'rideShareDistance'
+			entries: data.requestEntries
 		}
 	] as const;
-
-	function requestDistance(
-		entry: { taxiDistance: number; rideShareDistance: number },
-		field: 'taxiDistance' | 'rideShareDistance'
-	) {
-		return entry[field];
-	}
 
 	function meters(value: number) {
 		return `${Math.round(value).toLocaleString()} m`;
 	}
+
+	function tableHeaders(entries: StatEntries) {
+		return Object.keys(Object.values(entries)[0] ?? {});
+	}
+
+	function tableLabel(header: string) {
+		return header.replace(/ m$/, '');
+	}
+
+	function tableValue(header: string, value: number) {
+		return header.endsWith(' m') ? meters(value) : value.toLocaleString();
+	}
+
+	function exportCsv() {
+		const sections = [...tourSections, ...requestSections];
+		const valueHeaders = [...new Set(sections.flatMap((section) => tableHeaders(section.entries)))];
+		const rows: Array<Array<string | number>> = [['Category', 'Status', ...valueHeaders]];
+
+		for (const section of sections) {
+			for (const [status, entry] of Object.entries(section.entries)) {
+				rows.push([
+					section.title,
+					status,
+					...valueHeaders.map((header) =>
+						entry[header] === undefined ? '' : Math.round(entry[header])
+					)
+				]);
+			}
+		}
+
+		const csvContent = Papa.unparse(rows, { header: true, delimiter: ';' });
+		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+		saveAs(blob, 'statistics.csv');
+	}
 </script>
 
 <div class="mx-auto flex w-full max-w-6xl flex-col gap-8 text-gray-950 dark:text-gray-100">
-	<header>
+	<header class="flex items-center justify-between gap-4">
 		<h1 class="text-2xl font-semibold">Statistics</h1>
+		<button
+			type="button"
+			class="inline-flex items-center gap-2 rounded border border-gray-300 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+			onclick={exportCsv}
+		>
+			<Download class="size-4" />
+			Export CSV
+		</button>
 	</header>
 
 	<section class="grid gap-6 lg:grid-cols-2">
@@ -49,24 +89,18 @@
 						<thead class="border-b text-gray-600 dark:border-gray-700 dark:text-gray-300">
 							<tr>
 								<th class="py-2 pr-4 font-medium">Status</th>
-								<th class="py-2 pr-4 font-medium">Count</th>
-								<th class="py-2 pr-4 font-medium">Approach/return</th>
-								<th class="py-2 pr-4 font-medium">Fully paid</th>
-								<th class="py-2 pr-4 font-medium">Occupied</th>
-								<th class="py-2 pr-4 font-medium">Passenger</th>
-								<th class="py-2 font-medium">Total</th>
+								{#each tableHeaders(section.entries) as header}
+									<th class="py-2 pr-4 font-medium last:pr-0">{tableLabel(header)}</th>
+								{/each}
 							</tr>
 						</thead>
 						<tbody>
 							{#each Object.entries(section.entries) as [status, entry]}
 								<tr class="border-b border-gray-100 last:border-b-0 dark:border-gray-800">
 									<td class="py-2 pr-4 capitalize">{status}</td>
-									<td class="py-2 pr-4 tabular-nums">{entry.count}</td>
-									<td class="py-2 pr-4 tabular-nums">{meters(entry.approachAndReturnM)}</td>
-									<td class="py-2 pr-4 tabular-nums">{meters(entry.fullyPayedM)}</td>
-									<td class="py-2 pr-4 tabular-nums">{meters(entry.occupiedM)}</td>
-									<td class="py-2 pr-4 tabular-nums">{meters(entry.cumulatedPassengerM)}</td>
-									<td class="py-2 tabular-nums">{meters(entry.totalM)}</td>
+									{#each Object.entries(entry) as [header, value]}
+										<td class="py-2 pr-4 tabular-nums last:pr-0">{tableValue(header, value)}</td>
+									{/each}
 								</tr>
 							{/each}
 						</tbody>
@@ -87,20 +121,18 @@
 						<thead class="border-b text-gray-600 dark:border-gray-700 dark:text-gray-300">
 							<tr>
 								<th class="py-2 pr-4 font-medium">Status</th>
-								<th class="py-2 pr-4 font-medium">Count</th>
-								<th class="py-2 pr-4 font-medium">{section.distanceLabel}</th>
-								<th class="py-2 font-medium">Public transport</th>
+								{#each tableHeaders(section.entries) as header}
+									<th class="py-2 pr-4 font-medium last:pr-0">{tableLabel(header)}</th>
+								{/each}
 							</tr>
 						</thead>
 						<tbody>
 							{#each Object.entries(section.entries) as [status, entry]}
 								<tr class="border-b border-gray-100 last:border-b-0 dark:border-gray-800">
 									<td class="py-2 pr-4 capitalize">{status}</td>
-									<td class="py-2 pr-4 tabular-nums">{entry.count}</td>
-									<td class="py-2 pr-4 tabular-nums"
-										>{meters(requestDistance(entry, section.distanceField))}</td
-									>
-									<td class="py-2 tabular-nums">{meters(entry.publicTransportDistance)}</td>
+									{#each Object.entries(entry) as [header, value]}
+										<td class="py-2 pr-4 tabular-nums last:pr-0">{tableValue(header, value)}</td>
+									{/each}
 								</tr>
 							{/each}
 						</tbody>

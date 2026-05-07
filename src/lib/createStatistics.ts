@@ -4,6 +4,8 @@ import type { Coordinates } from '$lib/util/Coordinates';
 import { carRouting } from '$lib/util/carRouting';
 import { type Mode, type Itinerary, type Leg } from '$lib/openapi';
 import { polyLineToLatLngArray } from '$lib/util/polylineToGeoJSON';
+import { roundToUnit } from '$lib/util/time';
+import { STATISTICS_DISTANCE_ROUNDING_M } from '$lib/constants';
 
 export async function createStatistics() {
 	await computeAndPersistTourStatistics('tour', false);
@@ -106,6 +108,10 @@ type Event = Tour['events'][0];
 
 type Request = Awaited<ReturnType<typeof requestQuery>>[0];
 
+function roundStatisticDistance(distanceM: number) {
+	return roundToUnit(distanceM, STATISTICS_DISTANCE_ROUNDING_M, Math.round);
+}
+
 async function computeStatistics(events: Event[], start: Coordinates, target: Coordinates) {
 	const routingQueries = new Array<Promise<Itinerary | undefined>>(events.length);
 	for (let i = 0; i < events.length - 1; ++i) {
@@ -194,11 +200,11 @@ async function computeAndPersistTourStatistics(type: 'tour' | 'rideShareTour', c
 		await db
 			.updateTable(type)
 			.set({
-				fullyPayedM: Math.round(stats[i].fullyPayedM),
-				approachAndReturnM: Math.round(stats[i].approachPlusReturn),
-				occupiedM: Math.round(stats[i].occupiedM),
-				cumulatedPassengerM: Math.round(stats[i].cumulatedPassengerM),
-				totalM: Math.round(stats[i].totalM)
+				fullyPayedM: roundStatisticDistance(stats[i].fullyPayedM),
+				approachAndReturnM: roundStatisticDistance(stats[i].approachPlusReturn),
+				occupiedM: roundStatisticDistance(stats[i].occupiedM),
+				cumulatedPassengerM: roundStatisticDistance(stats[i].cumulatedPassengerM),
+				totalM: roundStatisticDistance(stats[i].totalM)
 			})
 			.where('id', '=', tours[i].id)
 			.execute();
@@ -229,8 +235,8 @@ async function computeAndPersistRequestStatistics(cancelled: boolean) {
 		await db
 			.updateTable('request')
 			.set({
-				odmDistance: Math.round(odmDistance),
-				publicTransportDistance: Math.round(publicTransportDistance)
+				odmDistance: roundStatisticDistance(odmDistance),
+				publicTransportDistance: roundStatisticDistance(publicTransportDistance)
 			})
 			.where('id', '=', requests[i].id)
 			.execute();

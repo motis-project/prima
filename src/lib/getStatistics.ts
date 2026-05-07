@@ -74,23 +74,21 @@ export async function viewStatistics() {
 
 function createTourEntries(tours: Tours) {
 	return {
-		count: tours.length,
-		approachAndReturnM: tours.reduce((prev, curr) => (prev += curr.approachAndReturnM!), 0),
-		fullyPayedM: tours.reduce((prev, curr) => (prev += curr.fullyPayedM!), 0),
-		occupiedM: tours.reduce((prev, curr) => (prev += curr.occupiedM!), 0),
-		cumulatedPassengerM: tours.reduce((prev, curr) => (prev += curr.cumulatedPassengerM!), 0),
-		totalM: tours.reduce((prev, curr) => (prev += curr.totalM!), 0)
+		Count: tours.length,
+		'Approach/return m': tours.reduce((prev, curr) => (prev += curr.approachAndReturnM!), 0),
+		'Fully paid m': tours.reduce((prev, curr) => (prev += curr.fullyPayedM!), 0),
+		'Occupied m': tours.reduce((prev, curr) => (prev += curr.occupiedM!), 0),
+		'Passenger m': tours.reduce((prev, curr) => (prev += curr.cumulatedPassengerM!), 0),
+		'Total m': tours.reduce((prev, curr) => (prev += curr.totalM!), 0)
 	};
 }
 
 function createRequestEntries(requests: Requests, type: 'taxi' | 'rideShare') {
 	return {
-		count: requests.length,
-		taxiDistance:
+		Count: requests.length,
+		[`${type === 'taxi' ? 'Taxi' : 'Ride share'} m`]:
 			type === 'taxi' ? requests.reduce((prev, curr) => (prev += curr.odmDistance!), 0) : 0,
-		rideShareDistance:
-			type !== 'taxi' ? requests.reduce((prev, curr) => (prev += curr.odmDistance!), 0) : 0,
-		publicTransportDistance: requests.reduce(
+		'Public transport m': requests.reduce(
 			(prev, curr) => (prev += curr.publicTransportDistance!),
 			0
 		)
