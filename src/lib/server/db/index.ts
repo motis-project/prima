@@ -117,7 +117,6 @@ export interface Database {
 		busStopTime: number | null;
 		requestedTime: number | null;
 		cancelledByCustomer: boolean;
-		odmDistance: number | null;
 		publicTransportDistance: number | null;
 	};
 	journey: {

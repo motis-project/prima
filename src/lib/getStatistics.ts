@@ -19,9 +19,9 @@ async function getRequests(type: 'taxi' | 'rideShareTour') {
 	const condition = type === 'taxi' ? 'is not' : 'is';
 	return await db
 		.selectFrom('request')
-		.where('request.odmDistance', 'is not', null)
+		.where('request.publicTransportDistance', 'is not', null)
 		.where('request.tour', condition, null)
-		.select(['cancelled', 'odmDistance', 'publicTransportDistance'])
+		.select(['cancelled', 'publicTransportDistance'])
 		.execute();
 }
 
@@ -43,26 +43,14 @@ export async function viewStatistics() {
 
 	const requests = await getRequests('rideShareTour');
 	const requestEntries = {
-		cancelled: createRequestEntries(
-			requests.filter((r) => r.cancelled),
-			'rideShare'
-		),
-		uncancelled: createRequestEntries(
-			requests.filter((r) => !r.cancelled),
-			'rideShare'
-		)
+		cancelled: createRequestEntries(requests.filter((r) => r.cancelled)),
+		uncancelled: createRequestEntries(requests.filter((r) => !r.cancelled))
 	};
 
 	const rideShareRequests = await getRequests('taxi');
 	const rsRequestEntries = {
-		cancelled: createRequestEntries(
-			rideShareRequests.filter((r) => r.cancelled),
-			'taxi'
-		),
-		uncancelled: createRequestEntries(
-			rideShareRequests.filter((r) => !r.cancelled),
-			'taxi'
-		)
+		cancelled: createRequestEntries(rideShareRequests.filter((r) => r.cancelled)),
+		uncancelled: createRequestEntries(rideShareRequests.filter((r) => !r.cancelled))
 	};
 	console.log('TAXI');
 	console.log(JSON.stringify(tourEntries, null, 2));
@@ -83,11 +71,9 @@ function createTourEntries(tours: Tours) {
 	};
 }
 
-function createRequestEntries(requests: Requests, type: 'taxi' | 'rideShare') {
+function createRequestEntries(requests: Requests) {
 	return {
 		Count: requests.length,
-		[`${type === 'taxi' ? 'Taxi' : 'Ride share'} m`]:
-			type === 'taxi' ? requests.reduce((prev, curr) => (prev += curr.odmDistance!), 0) : 0,
 		'Public transport m': requests.reduce(
 			(prev, curr) => (prev += curr.publicTransportDistance!),
 			0

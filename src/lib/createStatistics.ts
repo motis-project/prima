@@ -29,7 +29,7 @@ async function requestQuery(cancelled: boolean) {
 			)
 		)
 		.where('tour.arrival', '<', Date.now())
-		.where('request.odmDistance', 'is', null)
+		.where('request.publicTransportDistance', 'is', null)
 		.where('tour.cancelled', '=', cancelled)
 		.select((eb) => [
 			'journey.json',
@@ -215,27 +215,16 @@ async function computeAndPersistRequestStatistics(cancelled: boolean) {
 	const requests = await requestQuery(cancelled);
 	const stats = requests.map((r) => computeRequestStatistics(r));
 	for (let i = 0; i != requests.length; ++i) {
-		let odmDistance = 0;
 		let publicTransportDistance = 0;
-		for (const [mode, stat] of stats[i]) {
-			switch (mode) {
-				case 'WALK':
-					break;
-				case 'ODM':
-					odmDistance += stat;
-					break;
-				case 'RIDE_SHARING':
-					odmDistance += stat;
-					break;
-				default:
-					publicTransportDistance += stat;
-					break;
+		for (const [mode, distance] of stats[i]) {
+			if (mode === 'WALK' || mode === 'ODM' || mode === 'RIDE_SHARING') {
+				continue;
 			}
+			publicTransportDistance += distance;
 		}
 		await db
 			.updateTable('request')
 			.set({
-				odmDistance: roundStatisticDistance(odmDistance),
 				publicTransportDistance: roundStatisticDistance(publicTransportDistance)
 			})
 			.where('id', '=', requests[i].id)

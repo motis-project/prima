@@ -19,7 +19,6 @@ export async function up(db) {
 
 	await db.schema
 		.alterTable('request')
-		.addColumn('odm_distance', 'bigint')
 		.addColumn('public_transport_distance', 'bigint')
 		.execute();
 }
