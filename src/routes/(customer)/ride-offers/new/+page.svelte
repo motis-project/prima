@@ -364,8 +364,12 @@
 			autocomplete="off"
 			class="flex flex-col gap-4"
 			use:enhance={() => {
+				loading = true;
 				return async ({ update }) => {
-					update({ reset: false });
+					await update({ reset: false });
+					window.setTimeout(() => {
+						loading = false;
+					}, 1000);
 				};
 			}}
 		>
