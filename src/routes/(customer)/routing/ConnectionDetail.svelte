@@ -138,7 +138,7 @@
 						smokingAllowed={tourInfo.smokingAllowed}
 						averageRating={tourInfo.averageRatingProvider}
 					/>
-					{#if tourInfo.passengers !== null}
+					{#if tourInfo.passengers}
 						<div class="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
 							<span class="flex items-center gap-1">
 								<Users class="size-4 shrink-0" />
