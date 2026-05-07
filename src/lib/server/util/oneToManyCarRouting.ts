@@ -32,15 +32,15 @@ export const oneToManyCarRouting = async (
 		})
 		.then((res) => {
 			return (
-				res.data?.map((d: Duration, i) => {
-					console.log(
+				res.data?.map((d: Duration) => {
+					/*console.log(
 						'ROUTING: ',
 						{ one: lngLatToStr(one) },
 						{ many: lngLatToStr(many[i]) },
 						{ manyToOne: arriveBy },
 						new Date(secondToMilli(d.duration ?? 0)).toISOString(),
 						secondToMilli(d.duration ?? 0)
-					);
+					);*/
 					return d.duration != undefined && d.duration != null
 						? secondToMilli(d.duration)
 						: undefined;
