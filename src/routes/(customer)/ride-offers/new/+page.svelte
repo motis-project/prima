@@ -45,6 +45,7 @@
 	import { CalendarDate, fromDate, toCalendarDate } from '@internationalized/date';
 	import RepetitionSelector from '$lib/ui/RepetitionSelector.svelte';
 	import * as Card from '$lib/shadcn/card';
+	import { shiftDayIdxBackward } from '$lib/util/shiftDayIdx';
 
 	const { data, form } = $props();
 
@@ -101,7 +102,7 @@
 
 	let selectedDays: boolean[] = $state(Array.from(t.ride.daysList, (_) => false));
 	let selectedDayMask = $derived(
-		selectedDays.reduce((mask, val, i) => (val ? mask | (1 << i) : mask), 0)
+		selectedDays.reduce((mask, val, i) => (val ? mask | (1 << shiftDayIdxBackward(i)) : mask), 0)
 	);
 	let bitDays = $derived(offerMode === 'repeating' ? selectedDayMask : 0);
 	function formatCalendarDate(date: CalendarDate | undefined) {

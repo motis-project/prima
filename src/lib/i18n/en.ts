@@ -1,3 +1,4 @@
+import { shiftDayIdxForward } from '$lib/util/shiftDayIdx';
 import type { Translations } from './translation';
 
 const translations: Translations = {
@@ -400,14 +401,14 @@ const translations: Translations = {
 		individualDays: 'Individual days',
 		to: 'to ',
 		daysList: [
-			{ short: 'S', full: 'Sun' },
-			{ short: 'M', full: 'Mon' },
-			{ short: 'T', full: 'Tue' },
-			{ short: 'W', full: 'Wed' },
-			{ short: 'T', full: 'Thu' },
-			{ short: 'F', full: 'Fri' },
-			{ short: 'S', full: 'Sat' }
-		],
+			{ short: 'S', full: 'Sun', idx: 0 },
+			{ short: 'M', full: 'Mon', idx: 1 },
+			{ short: 'T', full: 'Tue', idx: 2 },
+			{ short: 'W', full: 'Wed', idx: 3 },
+			{ short: 'T', full: 'Thu', idx: 4 },
+			{ short: 'F', full: 'Fri', idx: 5 },
+			{ short: 'S', full: 'Sat', idx: 6 }
+		].sort((d1, d2) => shiftDayIdxForward(d1.idx) - shiftDayIdxForward(d2.idx)),
 		chooseTimeSpan: 'adjust time range:'
 	},
 

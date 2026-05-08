@@ -16,6 +16,7 @@
 	import Time from '../../routing/Time.svelte';
 	import { posToLocation } from '$lib/map/Location';
 	import ProfileBadge from '$lib/ui/ProfileBadge.svelte';
+	import { shiftDayIdxForward } from '$lib/util/shiftDayIdx';
 
 	const { data, form } = $props();
 	let loading = $state(false);
@@ -28,7 +29,7 @@
 			return t.daily + timeRangeString;
 		}
 		return data.days
-			.map((d, i) => (d ? t.ride.daysList[i].full : undefined))
+			.map((d, i) => (d ? t.ride.daysList[shiftDayIdxForward(i)].full : undefined))
 			.filter((d) => d !== undefined)
 			.join(', ')
 			.concat(timeRangeString);
