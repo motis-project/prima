@@ -37,6 +37,7 @@ async function requestQuery(cancelled: boolean) {
 			])
 		)
 		.where('tour.cancelled', '=', cancelled)
+		.$if(cancelled, (qb) => qb.where('request.cancelledByCustomer', '=', false))
 		.select((eb) => [
 			'journey.json',
 			'request.id',
@@ -67,7 +68,7 @@ async function tourQuery(cancelled: boolean) {
 						.innerJoin('event', 'event.request', 'request.id')
 						.innerJoin('eventGroup', 'event.eventGroupId', 'eventGroup.id')
 						.where('request.cancelled', '=', cancelled)
-						.$if(cancelled, (qb) => qb.where('request.cancelledByCustomer', '=', true))
+						.$if(cancelled, (qb) => qb.where('request.cancelledByCustomer', '=', false))
 						.whereRef('request.tour', '=', 'tour.id')
 						.selectAll(['event', 'eventGroup'])
 						.select('request.passengers')

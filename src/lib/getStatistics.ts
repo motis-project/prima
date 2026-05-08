@@ -44,20 +44,20 @@ type Requests = Awaited<ReturnType<typeof getRequests>>;
 export async function viewStatistics() {
 	const tours = await getTours('tour');
 	const tourEntries = {
-		cancelled: createTourEntries(tours.filter((t) => t.cancelled)),
-		uncancelledTours: createTourEntries(tours.filter((t) => !t.cancelled))
+		'stornierte Touren': createTourEntries(tours.filter((t) => t.cancelled)),
+		'gefahrene touren': createTourEntries(tours.filter((t) => !t.cancelled))
 	};
 
 	const rsTours = await getTours('rideShareTour');
 	const rsTourEntries = {
-		cancelled: createTourEntries(rsTours.filter((t) => t.cancelled)),
-		uncancelledTours: createTourEntries(rsTours.filter((t) => !t.cancelled))
+		'stornierte Mitfahrten': createTourEntries(rsTours.filter((t) => t.cancelled)),
+		'gefahrene Mitfahrten': createTourEntries(rsTours.filter((t) => !t.cancelled))
 	};
 
 	const requests = await getRequests('rideShareTour');
 	const requestEntries = {
-		cancelled: createRequestEntries(requests.filter((r) => r.cancelled)),
-		uncancelled: createRequestEntries(requests.filter((r) => !r.cancelled))
+		'stornierte Buchungen': createRequestEntries(requests.filter((r) => r.cancelled)),
+		'gefahrene Buchungen': createRequestEntries(requests.filter((r) => !r.cancelled))
 	};
 
 	const rideShareRequests = await getRequests('taxi');
@@ -75,53 +75,53 @@ export async function viewStatistics() {
 
 function createTourEntries(tours: Tours) {
 	return {
-		Count: tours.length,
-		'Approach/return m': tours.reduce((prev, curr) => (prev += curr.approachAndReturnM!), 0),
-		'Approach/return driving ms': tours.reduce(
+		count: tours.length,
+		'Anfahrt/Rückfahrt m': tours.reduce((prev, curr) => (prev += curr.approachAndReturnM!), 0),
+		'Anfahrt/Rückfahrt driving ms': tours.reduce(
 			(prev, curr) => (prev += curr.approachAndReturnDrivingMs!),
 			0
 		),
-		'Approach/return waiting ms': tours.reduce(
+		'Anfahrt/Rückfahrt waiting ms': tours.reduce(
 			(prev, curr) => (prev += curr.approachAndReturnWaitingMs!),
 			0
 		),
-		'Fully paid m': tours.reduce((prev, curr) => (prev += curr.fullyPayedM!), 0),
-		'Fully paid driving ms': tours.reduce((prev, curr) => (prev += curr.fullyPayedDrivingMs!), 0),
-		'Fully paid waiting ms': tours.reduce((prev, curr) => (prev += curr.fullyPayedWaitingMs!), 0),
-		'Occupied m': tours.reduce((prev, curr) => (prev += curr.occupiedM!), 0),
-		'Occupied driving ms': tours.reduce((prev, curr) => (prev += curr.occupiedDrivingMs!), 0),
-		'Occupied waiting ms': tours.reduce((prev, curr) => (prev += curr.occupiedWaitingMs!), 0),
-		'Passenger m': tours.reduce((prev, curr) => (prev += curr.cumulatedPassengerM!), 0),
-		'Passenger driving ms': tours.reduce(
+		'voll bezahlte Distanz m': tours.reduce((prev, curr) => (prev += curr.fullyPayedM!), 0),
+		'voll bezahlte Fahrtzeit ms': tours.reduce((prev, curr) => (prev += curr.fullyPayedDrivingMs!), 0),
+		'voll bezahlte Wartezeit ms': tours.reduce((prev, curr) => (prev += curr.fullyPayedWaitingMs!), 0),
+		'Distanz mit Passagier m': tours.reduce((prev, curr) => (prev += curr.occupiedM!), 0),
+		'Fahrtzeit mit Passagier ms': tours.reduce((prev, curr) => (prev += curr.occupiedDrivingMs!), 0),
+		'Wartezeit mit Passagier ms': tours.reduce((prev, curr) => (prev += curr.occupiedWaitingMs!), 0),
+		'kumulierte Passagier Distanz m': tours.reduce((prev, curr) => (prev += curr.cumulatedPassengerM!), 0),
+		'kumulierte Passagier Fahrtzeit ms': tours.reduce(
 			(prev, curr) => (prev += curr.cumulatedPassengerDrivingMs!),
 			0
 		),
-		'Passenger waiting ms': tours.reduce(
+		'kumulierte Passagier Wartezeit ms': tours.reduce(
 			(prev, curr) => (prev += curr.cumulatedPassengerWaitingMs!),
 			0
 		),
-		'Total m': tours.reduce((prev, curr) => (prev += curr.totalM!), 0),
-		'Total driving ms': tours.reduce((prev, curr) => (prev += curr.totalDrivingMs!), 0),
-		'Total waiting ms': tours.reduce((prev, curr) => (prev += curr.totalWaitingMs!), 0)
+		'Totale Distanz m': tours.reduce((prev, curr) => (prev += curr.totalM!), 0),
+		'Totale Fahrtzeit ms': tours.reduce((prev, curr) => (prev += curr.totalDrivingMs!), 0),
+		'Totale Wartezeit ms': tours.reduce((prev, curr) => (prev += curr.totalWaitingMs!), 0)
 	};
 }
 
 function createRequestEntries(requests: Requests) {
 	return {
-		Count: requests.length,
-		'Public transport m': requests.reduce(
+		'Anzahl': requests.length,
+		'ÖPNV Distanz m': requests.reduce(
 			(prev, curr) => (prev += curr.publicTransportDistance!),
 			0
 		),
-		'Public transport ms': requests.reduce(
+		'ÖPNV Zeit ms': requests.reduce(
 			(prev, curr) => (prev += curr.publicTransportDurationMs!),
 			0
 		),
-		'Per Passenger Public transport m': requests.reduce(
+		'kumulierte Passagier ÖPNV Distanz m': requests.reduce(
 			(prev, curr) => (prev += curr.publicTransportDistance! * curr.passengers),
 			0
 		),
-		'Per Passenger Public transport ms': requests.reduce(
+		'kumulierte Passagier Zeit ms': requests.reduce(
 			(prev, curr) => (prev += curr.publicTransportDurationMs! * curr.passengers),
 			0
 		)
