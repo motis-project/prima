@@ -272,7 +272,7 @@ export const addRideShareTour = async (
 		const ellipse = prepareDetourEllipse(
 			start,
 			target,
-			(timesResult.targetTimeEnd - timesResult.startTimeStart) / SECOND
+			(timesResult.targetTimeEnd - timesResult.targetTimeStart + timesResult.startTimeEnd - timesResult.startTimeStart) / SECOND
 		);
 		const ellipseId = (
 			await db
