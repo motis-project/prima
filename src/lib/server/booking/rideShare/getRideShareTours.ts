@@ -196,7 +196,7 @@ export const getRideShareToursFiltered = async (
 	trx?: Transaction<Database>
 ) => {
 	const dbResult = await getRideShareTours(requestCapacities, searchInterval, trx);
-	dbResult.filter((t) => {
+	return dbResult.filter((t) => {
 		if (t.axisXx === null) {
 			return true;
 		}
@@ -223,5 +223,4 @@ export const getRideShareToursFiltered = async (
 			targets.some((tar) => isPointInPreparedDetourEllipse(ellipse, tar))
 		);
 	});
-	return dbResult;
 };
