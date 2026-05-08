@@ -7,18 +7,12 @@ export const PUT = async ({ url }) => {
 	const fare = readInt(url.searchParams.get('fare'));
 
 	if (isNaN(tourId)) {
-		console.log(
-			'API DRIVER FARE: Invalid Tour ID'
-		);
+		console.log('API DRIVER FARE: Invalid Tour ID');
 		error(400, { message: 'Invalid Tour ID' });
 	}
 
 	if (isNaN(fare)) {
-		console.log(
-			'API DRIVER FARE:',
-			'Invalid fare parameter',
-			{ tourId }
-		);
+		console.log('API DRIVER FARE:', 'Invalid fare parameter', { tourId });
 		error(400, { message: 'Invalid fare parameter' });
 	}
 
@@ -29,12 +23,7 @@ export const PUT = async ({ url }) => {
 		.executeTakeFirst();
 
 	if (result.numUpdatedRows === BigInt(0)) {
-		console.log(
-			'API DRIVER FARE:',
-			'Tour ID not found',
-			{ tourId },
-			{ fare }
-		);
+		console.log('API DRIVER FARE:', 'Tour ID not found', { tourId }, { fare });
 		error(404, { message: 'Tour ID not found' });
 	}
 

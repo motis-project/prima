@@ -7,19 +7,12 @@ export const PUT = async ({ url }) => {
 	const ticketCode = url.searchParams.get('ticketCode');
 
 	if (isNaN(requestId)) {
-		console.log(
-			'API DRIVER TICKET:',
-			'Invalid request ID'
-		);
+		console.log('API DRIVER TICKET:', 'Invalid request ID');
 		error(400, { message: 'Invalid request ID' });
 	}
 
 	if (typeof ticketCode !== 'string') {
-		console.log(
-			'API DRIVER TICKET:',
-			'Invalid ticketCode',
-			{ requestId }
-		);
+		console.log('API DRIVER TICKET:', 'Invalid ticketCode', { requestId });
 		error(400, { message: 'Invalid ticket code' });
 	}
 
