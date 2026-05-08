@@ -86,12 +86,27 @@ function createTourEntries(tours: Tours) {
 			0
 		),
 		'voll bezahlte Distanz m': tours.reduce((prev, curr) => (prev += curr.fullyPayedM!), 0),
-		'voll bezahlte Fahrtzeit ms': tours.reduce((prev, curr) => (prev += curr.fullyPayedDrivingMs!), 0),
-		'voll bezahlte Wartezeit ms': tours.reduce((prev, curr) => (prev += curr.fullyPayedWaitingMs!), 0),
+		'voll bezahlte Fahrtzeit ms': tours.reduce(
+			(prev, curr) => (prev += curr.fullyPayedDrivingMs!),
+			0
+		),
+		'voll bezahlte Wartezeit ms': tours.reduce(
+			(prev, curr) => (prev += curr.fullyPayedWaitingMs!),
+			0
+		),
 		'Distanz mit Passagier m': tours.reduce((prev, curr) => (prev += curr.occupiedM!), 0),
-		'Fahrtzeit mit Passagier ms': tours.reduce((prev, curr) => (prev += curr.occupiedDrivingMs!), 0),
-		'Wartezeit mit Passagier ms': tours.reduce((prev, curr) => (prev += curr.occupiedWaitingMs!), 0),
-		'kumulierte Passagier Distanz m': tours.reduce((prev, curr) => (prev += curr.cumulatedPassengerM!), 0),
+		'Fahrtzeit mit Passagier ms': tours.reduce(
+			(prev, curr) => (prev += curr.occupiedDrivingMs!),
+			0
+		),
+		'Wartezeit mit Passagier ms': tours.reduce(
+			(prev, curr) => (prev += curr.occupiedWaitingMs!),
+			0
+		),
+		'kumulierte Passagier Distanz m': tours.reduce(
+			(prev, curr) => (prev += curr.cumulatedPassengerM!),
+			0
+		),
 		'kumulierte Passagier Fahrtzeit ms': tours.reduce(
 			(prev, curr) => (prev += curr.cumulatedPassengerDrivingMs!),
 			0
@@ -108,15 +123,9 @@ function createTourEntries(tours: Tours) {
 
 function createRequestEntries(requests: Requests) {
 	return {
-		'Anzahl': requests.length,
-		'ÖPNV Distanz m': requests.reduce(
-			(prev, curr) => (prev += curr.publicTransportDistance!),
-			0
-		),
-		'ÖPNV Zeit ms': requests.reduce(
-			(prev, curr) => (prev += curr.publicTransportDurationMs!),
-			0
-		),
+		Anzahl: requests.length,
+		'ÖPNV Distanz m': requests.reduce((prev, curr) => (prev += curr.publicTransportDistance!), 0),
+		'ÖPNV Zeit ms': requests.reduce((prev, curr) => (prev += curr.publicTransportDurationMs!), 0),
 		'kumulierte Passagier ÖPNV Distanz m': requests.reduce(
 			(prev, curr) => (prev += curr.publicTransportDistance! * curr.passengers),
 			0
