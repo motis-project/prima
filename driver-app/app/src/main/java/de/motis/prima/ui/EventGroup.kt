@@ -680,7 +680,7 @@ fun ShowEvent(
                         )
                     }
                 } else {
-                    Box { /* place holder */ }
+                    Box { /* placeholder */ }
                 }
 
                 var ticketStatus: ValidationStatus = ValidationStatus.OPEN
@@ -705,7 +705,6 @@ fun ShowEvent(
                     Row(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            //.background(Color.White)
                             .background(LocalExtendedColors.current.containerColor)
                             .height(height = 40.dp)
                             .padding(start = 6.dp, end = 6.dp),
