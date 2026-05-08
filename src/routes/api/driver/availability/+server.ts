@@ -55,7 +55,7 @@ export const POST = async ({ locals, request }) => {
 	const result = validator.validate(body, availabilitySchema);
 	if (!result.valid) {
 		console.log(
-			'Invalid json found in api/driver/availability',
+			'API DRIVER AVAILABILITY: Invalid JSON',
 			JSON.stringify(result.errors, null, 2)
 		);
 		return json({ message: result.errors }, { status: 400 });
@@ -64,6 +64,10 @@ export const POST = async ({ locals, request }) => {
 	const { vehicleId, from, to, add, date, offset } = body;
 
 	if (from.length != to.length && to.length != add.length) {
+		console.log(
+			'API DRIVER AVAILABILITY: Invalid parameters',
+			JSON.stringify(body, null, 2)
+		);
 		error(400, { message: 'Invalid parameters' });
 	}
 
@@ -79,6 +83,9 @@ export const POST = async ({ locals, request }) => {
 
 	const time = new Date(date).getTime();
 	if (isNaN(time)) {
+		console.log(
+			'API DRIVER AVAILABILITY: Invalid date parameter'
+		);
 		error(400, { message: 'Invalid date parameter' });
 	}
 
