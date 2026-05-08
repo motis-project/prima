@@ -6,9 +6,15 @@ export const PUT = async ({ url }) => {
 	const requestId = readInt(url.searchParams.get('requestId'));
 	const ticketCode = url.searchParams.get('ticketCode');
 
+	console.log(
+		'api/driver/ticket',
+		{ requestId },
+		{ ticketCode }
+	);
+
 	if (typeof ticketCode !== 'string' || isNaN(requestId)) {
 		console.log(
-			'Invalid ticketCode parameter in api/driver/ticket.',
+			'Invalid parameter:',
 			{ requestId },
 			{ ticketCode }
 		);
@@ -23,8 +29,14 @@ export const PUT = async ({ url }) => {
 		.executeTakeFirst();
 
 	if (result.numUpdatedRows === BigInt(0)) {
+		console.log(
+			'No match:',
+			{ requestId },
+			{ ticketCode }
+		);
 		error(404, { message: 'Request not found or invalid ticket code' });
 	}
 
+	console.log('Ticket valid');
 	return new Response(null, { status: 204 });
 };
