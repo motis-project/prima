@@ -1,9 +1,9 @@
 import type { Capacities } from '$lib/util/booking/Capacities';
-import { getRideShareTours } from '$lib/server/booking/rideShare/getRideShareTours';
+import { getRideShareToursFiltered } from '$lib/server/booking/rideShare/getRideShareTours';
 import { Interval } from '$lib/util/interval';
 import type { Coordinates } from '$lib/util/Coordinates';
 import { evaluateRequest } from '$lib/server/booking/rideShare/evaluateRequest';
-import { toBusStopWithISOStrings, type BusStop } from '$lib/server/booking/taxi/BusStop';
+import { type BusStop } from '$lib/server/booking/taxi/BusStop';
 import { toInsertionWithISOStrings, type Insertion } from '$lib/server/booking/rideShare/insertion';
 
 export async function whitelistRideShare(
@@ -12,7 +12,7 @@ export async function whitelistRideShare(
 	required: Capacities,
 	startFixed: boolean
 ): Promise<Array<Insertion[][]>> {
-	console.log(
+	/*console.log(
 		'Whitelist Request Ride Share: ',
 		JSON.stringify(
 			{
@@ -24,7 +24,7 @@ export async function whitelistRideShare(
 			null,
 			'\t'
 		)
-	);
+	);*/
 
 	if (!busStops.some((b) => b.times.length !== 0)) {
 		return new Array<Insertion[][]>(busStops.length);
@@ -55,7 +55,12 @@ export async function whitelistRideShare(
 
 	const searchInterval = new Interval(firstTime, lastTime);
 
-	const rideShareTours = await getRideShareTours(required, searchInterval);
+	const rideShareTours = await getRideShareToursFiltered(
+		required,
+		searchInterval,
+		userChosen,
+		busStops
+	);
 	console.log(
 		'Whitelist Request Ride Share: getRideShareTours results\n',
 		JSON.stringify(

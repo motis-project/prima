@@ -3,11 +3,14 @@ import { sql, type Transaction } from 'kysely';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db, type Database } from '$lib/server/db';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
+import { isPointInPreparedDetourEllipse } from './ellipse';
+import type { Coordinates } from '$lib/util/Coordinates';
 
 function selectByRequestId(requestId: number, trx?: Transaction<Database>) {
 	return (trx ?? db)
 		.selectFrom('rideShareTour')
 		.innerJoin('rideShareVehicle', 'rideShareTour.vehicle', 'rideShareVehicle.id')
+		.leftJoin('ellipse', 'ellipse.id', 'rideShareTour.ellipseId')
 		.where('rideShareTour.cancelled', '=', false)
 		.where((eb) =>
 			eb.exists(
@@ -29,6 +32,7 @@ function selectWithoutRequestId(
 	return (trx ?? db)
 		.selectFrom('rideShareTour')
 		.innerJoin('rideShareVehicle', 'rideShareTour.vehicle', 'rideShareVehicle.id')
+		.leftJoin('ellipse', 'ellipse.id', 'rideShareTour.ellipseId')
 		.where('rideShareTour.passengers', '>=', requestCapacities.passengers)
 		.$if(tourId !== undefined, (qb) => qb.where('rideShareTour.id', '=', tourId!))
 		.where((eb) =>
@@ -74,6 +78,7 @@ function selectWithoutRequestId(
 async function select(query: RideShareQuery, requestId?: number) {
 	return (
 		await query
+			.selectAll('ellipse')
 			.select((eb) => [
 				'rideShareTour.id as rideShareTour',
 				'rideShareTour.luggage',
@@ -182,3 +187,41 @@ export type RideShareTour = Awaited<ReturnType<typeof getRideShareTours>>[0];
 export type RideShareEvent = RideShareTour['events'][0];
 export type RideShareTourDb = Awaited<ReturnType<typeof select>>[0];
 type RideShareQuery = Awaited<ReturnType<typeof selectWithoutRequestId>>;
+
+export const getRideShareToursFiltered = async (
+	requestCapacities: Capacities,
+	searchInterval: Interval,
+	start: Coordinates,
+	targets: Coordinates[],
+	trx?: Transaction<Database>
+) => {
+	const dbResult = await getRideShareTours(requestCapacities, searchInterval, trx);
+	dbResult.filter((t) => {
+		if (t.axisXx === null) {
+			return true;
+		}
+		const ellipse = {
+			originLatRad: t.originLatRad!,
+			originLngRad: t.originLngRad!,
+			cosOriginLat: t.cosOriginLat!,
+			centerX: t.centerX!,
+			centerY: t.centerY!,
+			axisXx: t.axisXx!,
+			axisXy: t.axisXy!,
+			axisYx: t.axisYx!,
+			axisYy: t.axisYy!,
+			invAaSq: t.invAaSq!,
+			invBbSq: t.invBbSq!,
+			minX: t.minX!,
+			minY: t.minY!,
+			maxX: t.maxX!,
+			maxY: t.maxY!,
+			pointOnly: t.pointOnly!
+		};
+		return (
+			isPointInPreparedDetourEllipse(ellipse, start) &&
+			targets.some((tar) => isPointInPreparedDetourEllipse(ellipse, tar))
+		);
+	});
+	return dbResult;
+};

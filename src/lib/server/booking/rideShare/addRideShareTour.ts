@@ -3,11 +3,12 @@ import { db, type Database } from '$lib/server/db';
 import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
 import { MAX_RIDE_SHARE_TOUR_TIME, SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
-import { MINUTE } from '$lib/util/time';
+import { MINUTE, SECOND } from '$lib/util/time';
 import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
 import { sendMail } from '$lib/server/sendMail';
 import { sendDesiredTripMails } from './sendDesiredTripMails';
 import type { Transaction } from 'kysely';
+import { prepareDetourEllipse } from './ellipse';
 
 export async function getRideShareTourCommunicatedTimes(
 	time: number,
@@ -268,6 +269,18 @@ export const addRideShareTour = async (
 			continue;
 		}
 		const { startTimeStart, startTimeEnd, targetTimeStart, targetTimeEnd, duration } = timesResult;
+		const ellipse = prepareDetourEllipse(
+			start,
+			target,
+			(timesResult.targetTimeEnd - timesResult.startTimeStart) / SECOND
+		);
+		const ellipseId = (
+			await db
+				.insertInto('ellipse')
+				.values({ ...ellipse })
+				.returning('id')
+				.executeTakeFirstOrThrow()
+		).id;
 		const tourId = (
 			await (trx ?? db)
 				.insertInto('rideShareTour')
@@ -280,7 +293,8 @@ export const addRideShareTour = async (
 					communicatedStart: startTimeStart,
 					latestEnd: targetTimeEnd,
 					communicatedEnd: targetTimeEnd,
-					pattern: patternId ?? null
+					pattern: patternId ?? null,
+					ellipseId
 				})
 				.returning('id')
 				.executeTakeFirstOrThrow()

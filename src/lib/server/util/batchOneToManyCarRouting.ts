@@ -1,5 +1,6 @@
 import type { Coordinates } from '$lib/util/Coordinates';
 import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
+import { lngLatToStr } from '$lib/util/lngLatToStr';
 
 export const batchOneToManyCarRouting = async (
 	one: Coordinates,
@@ -7,6 +8,7 @@ export const batchOneToManyCarRouting = async (
 	arriveBy: boolean,
 	maxDuration?: number
 ) => {
+	console.log('batchOneToMany', many.length, lngLatToStr(one));
 	const batches = [];
 	const batchSize = 10000;
 	let currentPos = 0;
@@ -35,5 +37,7 @@ export const batchOneToManyCarRouting = async (
 	definedIndices.forEach((index, i) => {
 		response[index] = result[i];
 	});
+	console.log('batchOneToMany End', many.length, definedMany.length);
+
 	return response;
 };
