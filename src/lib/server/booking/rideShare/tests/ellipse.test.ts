@@ -42,7 +42,7 @@ async function addRideShareTourFromTo(
 	start: { lat: number; lng: number },
 	target: { lat: number; lng: number },
 	licensePlate: string,
-	minutesFromNow = 100,
+	minutesFromNow = 100
 ) {
 	const vehicle = await createRideShareVehicle(
 		mockUserId,
@@ -98,7 +98,7 @@ function storedEllipseFromTour(tour: Awaited<ReturnType<typeof getRideShareTours
 
 describe('ride share detour ellipse', () => {
 	it('stores a prepared ellipse and checks points inside and outside it', async () => {
-		await addWeisswasserRideShareTour("lp1");
+		await addWeisswasserRideShareTour('lp1');
 
 		const [tour] = await getRideShareTours(
 			capacities,
@@ -116,7 +116,7 @@ describe('ride share detour ellipse', () => {
 	});
 
 	it('filters ride share tours by start and target ellipse matches', async () => {
-		const tourId = await addWeisswasserRideShareTour("lp2");
+		const tourId = await addWeisswasserRideShareTour('lp2');
 		const searchInterval = new Interval(inXMinutes(0), inXMinutes(600));
 
 		const matchingTours = await getRideShareToursFiltered(
@@ -127,12 +127,9 @@ describe('ride share detour ellipse', () => {
 		);
 		expect(matchingTours.map((t) => t.rideShareTour)).toEqual([tourId]);
 
-		const outsideStartTours = await getRideShareToursFiltered(
-			capacities,
-			searchInterval,
-			dueben,
-			[weisswasserEast]
-		);
+		const outsideStartTours = await getRideShareToursFiltered(capacities, searchInterval, dueben, [
+			weisswasserEast
+		]);
 		expect(outsideStartTours).toHaveLength(0);
 
 		const outsideTargetTours = await getRideShareToursFiltered(
@@ -167,8 +164,8 @@ describe('ride share detour ellipse', () => {
 	});
 
 	it('filters multiple longer ride share tours in one search', async () => {
-		const goerlitzTourId = await addRideShareTourFromTo(weisswasserWest, goerlitz, "lp4", 100);
-		const cottbusTourId = await addRideShareTourFromTo(weisswasserWest, cottbus, "lp5", 180);
+		const goerlitzTourId = await addRideShareTourFromTo(weisswasserWest, goerlitz, 'lp4', 100);
+		const cottbusTourId = await addRideShareTourFromTo(weisswasserWest, cottbus, 'lp5', 180);
 		const searchInterval = new Interval(inXMinutes(0), inXMinutes(600));
 
 		const matchingTours = await getRideShareToursFiltered(
@@ -189,12 +186,10 @@ describe('ride share detour ellipse', () => {
 		);
 		expect(goerlitzOnlyTours.map((t) => t.rideShareTour)).toEqual([goerlitzTourId]);
 
-		const outsideStartTours = await getRideShareToursFiltered(
-			capacities,
-			searchInterval,
-			dresden,
-			[goerlitz, cottbus]
-		);
+		const outsideStartTours = await getRideShareToursFiltered(capacities, searchInterval, dresden, [
+			goerlitz,
+			cottbus
+		]);
 		expect(outsideStartTours).toHaveLength(0);
 	});
 });
