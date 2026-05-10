@@ -198,7 +198,7 @@ export const getRideShareToursFiltered = async (
 	const dbResult = await getRideShareTours(requestCapacities, searchInterval, trx);
 	return dbResult.filter((t) => {
 		if (t.axisXx === null) {
-			return dbResult;
+			return true;
 		}
 		const ellipse = {
 			originLatRad: t.originLatRad!,
