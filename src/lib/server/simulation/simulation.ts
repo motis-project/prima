@@ -31,12 +31,25 @@ const OUTPUT_FILE = './simulation-stats.jsonl';
 
 let counter = 0;
 
-export type ActionResponse = {
-	lastActionSpecifics: { vehicleId: number; dayStart: number } | null;
-	atomicDurations: Record<string, number>;
-	success: boolean;
-	error: boolean;
+export type LastActionSpecifics = {
+	vehicleId: number;
+	dayStart: number;
 };
+
+export type ActionResponse = {
+	atomicDurations: Record<string, number>;
+} & (
+	| {
+			lastActionSpecifics: LastActionSpecifics;
+			success: true;
+			error: false;
+	  }
+	| {
+			lastActionSpecifics: null;
+			success: false;
+			error: boolean;
+	  }
+);
 
 export type RideShareProvider = {
 	userId: number;
@@ -67,11 +80,11 @@ type ActionType = {
 		customerId: number,
 		coordinates: Coordinates[],
 		restrictedCoordinates?: Coordinates[],
-			mode?: string,
-			compareCosts?: boolean,
-			doWhitelist?: boolean,
-			rideShareProviders?: RideShareProvider[]
-		) => Promise<ActionResponse>;
+		mode?: string,
+		compareCosts?: boolean,
+		doWhitelist?: boolean,
+		rideShareProviders?: RideShareProvider[]
+	) => Promise<ActionResponse>;
 };
 
 const defaultActionProbabilities: ActionType[] = [
@@ -280,7 +293,7 @@ export async function simulation(params: Params): Promise<boolean> {
 		const action = actionProbabilities[actionIdx];
 		chosen[actionIdx] += 1;
 		console.log('Chose:', action.text);
-		let lastActionSpecifics: { vehicleId: number; dayStart: number } | null = null;
+		let lastActionSpecifics: LastActionSpecifics | null = null;
 		let result: ActionResponse | undefined = undefined;
 		try {
 			const mode =
@@ -294,11 +307,11 @@ export async function simulation(params: Params): Promise<boolean> {
 				customerId,
 				coordinates,
 				restrictedCoordinates,
-					mode,
-					params.cost,
-					params.whitelist,
-					rideShareProviders
-				);
+				mode,
+				params.cost,
+				params.whitelist,
+				rideShareProviders
+			);
 			const end = performance.now();
 			if (result.error === true) {
 				return true;
@@ -316,11 +329,12 @@ export async function simulation(params: Params): Promise<boolean> {
 				success: result.success
 			});
 			if (result.success) {
-				lastActionSpecifics = result.lastActionSpecifics!;
+				lastActionSpecifics = result.lastActionSpecifics;
 				if (
-					params.healthChecks && lastActionWasRideShare(actionProbabilities, actionIdx)
+					params.healthChecks &&
+					(lastActionWasRideShare(actionProbabilities, actionIdx)
 						? await healthCheckRideShare()
-						: await healthCheck(lastActionSpecifics.vehicleId, lastActionSpecifics.dayStart)
+						: await healthCheck(lastActionSpecifics.vehicleId, lastActionSpecifics.dayStart))
 				) {
 					await timeStats.close();
 					return true;

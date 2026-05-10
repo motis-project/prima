@@ -2,8 +2,9 @@ import { getToursWithRequests } from '$lib/server/db/getTours';
 import { moveTour } from '$lib/server/moveTour';
 import { DAY } from '$lib/util/time';
 import { randomInt } from '../randomInt';
+import type { ActionResponse } from '../simulation';
 
-export async function moveTourLocal() {
+export async function moveTourLocal(): Promise<ActionResponse> {
 	const tours = await getToursWithRequests(false);
 	if (tours.length === 0) {
 		return {
