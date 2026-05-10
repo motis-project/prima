@@ -3,7 +3,7 @@ import { sql, type Transaction } from 'kysely';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db, type Database } from '$lib/server/db';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
-import { isPointInPreparedDetourEllipse } from './ellipse';
+import { isPointInPreparedDetourEllipse } from '$lib/util/booking/ellipse';
 import type { Coordinates } from '$lib/util/Coordinates';
 
 function selectByRequestId(requestId: number, trx?: Transaction<Database>) {
@@ -198,7 +198,7 @@ export const getRideShareToursFiltered = async (
 	const dbResult = await getRideShareTours(requestCapacities, searchInterval, trx);
 	return dbResult.filter((t) => {
 		if (t.axisXx === null) {
-			return true;
+			return dbResult;
 		}
 		const ellipse = {
 			originLatRad: t.originLatRad!,
