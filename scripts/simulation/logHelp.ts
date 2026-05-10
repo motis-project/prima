@@ -25,7 +25,7 @@ export function logHelp() {
 	console.log(
 		'--rsv=x: Sets the amount of ride-share provider users to create. Each provider gets one ride-share vehicle.'
 	);
-	console.log('--second=x: Sets the amount of seconds after which the script is terminated');
+	console.log('--seconds=x: Sets the amount of seconds after which the script is terminated');
 	console.log(
 		'--ongoing: Will run the script indefinitely (or if the health flag is set until there is an error)'
 	);
