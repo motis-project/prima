@@ -2,8 +2,9 @@ import { cancelRideShareTour } from '$lib/server/booking/rideShare/cancelRideSha
 import { getRideShareTours } from '$lib/server/util/getRideShareTours';
 import { DAY } from '$lib/util/time';
 import { randomInt } from '../randomInt';
+import type { ActionResponse } from '../simulation';
 
-export async function cancelTourRsLocal(customerId: number) {
+export async function cancelTourRsLocal(customerId: number): Promise<ActionResponse> {
 	const tours = await getRideShareTours(false, false);
 	if (tours.length === 0) {
 		return {
