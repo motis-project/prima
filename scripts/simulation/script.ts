@@ -28,6 +28,7 @@ async function main() {
 	let full = false;
 	let companies = 3;
 	let vehicles = 2;
+	let rideShareVehicles = 1;
 	for (const arg of process.argv) {
 		if (arg === '--health') {
 			healthChecks = true;
@@ -62,6 +63,9 @@ async function main() {
 		if (arg.startsWith('--vehicles')) {
 			vehicles = checkIntArg(arg, 'vehicles');
 		}
+		if (arg.startsWith('--rsv')) {
+			rideShareVehicles = checkIntArg(arg, 'rsv');
+		}
 		if (arg.startsWith('--runs=')) {
 			runs = checkIntArg(arg, 'runs');
 		} else if (arg.startsWith('--seconds=')) {
@@ -90,7 +94,8 @@ async function main() {
 		mode,
 		full,
 		companies,
-		vehiclesPerCompany: vehicles
+		vehiclesPerCompany: vehicles,
+		rideShareVehicles
 	});
 }
 main().catch((err) => {

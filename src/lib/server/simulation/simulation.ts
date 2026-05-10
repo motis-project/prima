@@ -7,6 +7,7 @@ import { type Coordinates } from '$lib/util/Coordinates';
 import { DAY } from '$lib/util/time';
 import { healthCheck } from '$lib/server/util/healthCheck';
 import { healthCheck as healthCheckRideShare } from '$lib/server/util/healthCheckRideShare';
+import { createRideShareVehicle } from '$lib/server/booking';
 import { bookFull } from './actions/bookingFull';
 import { cancelRequestLocal } from './actions/cancelRequestLocal';
 import { cancelTourLocal } from './actions/cancelTourLocal';
@@ -37,6 +38,11 @@ export type ActionResponse = {
 	error: boolean;
 };
 
+export type RideShareProvider = {
+	userId: number;
+	vehicleId: number;
+};
+
 let customerId = -1;
 
 enum Action {
@@ -61,13 +67,14 @@ type ActionType = {
 		customerId: number,
 		coordinates: Coordinates[],
 		restrictedCoordinates?: Coordinates[],
-		mode?: string,
-		compareCosts?: boolean,
-		doWhitelist?: boolean
-	) => Promise<ActionResponse>;
+			mode?: string,
+			compareCosts?: boolean,
+			doWhitelist?: boolean,
+			rideShareProviders?: RideShareProvider[]
+		) => Promise<ActionResponse>;
 };
 
-const actionProbabilities: ActionType[] = [
+const defaultActionProbabilities: ActionType[] = [
 	{ action: Action.BOOKING_FULL, probability: 0, text: 'booking_full', fnc: bookFull },
 	{ action: Action.BOOKING, probability: 0.375, text: 'booking', fnc: bookFull },
 	{
@@ -118,7 +125,7 @@ const isActionChosen = (r: number, a: ActionType) => {
 	return false;
 };
 
-const getAction = (r: number) => {
+const getAction = (actionProbabilities: ActionType[], r: number) => {
 	let current = r;
 	for (const [i, a] of actionProbabilities.entries()) {
 		if (isActionChosen(current, a)) {
@@ -142,10 +149,10 @@ type Params = {
 	full: boolean;
 	companies: number;
 	vehiclesPerCompany: number;
+	rideShareVehicles: number;
 };
 
 async function setup(params: Params) {
-	adjustToParams(params);
 	const coordinates = await readCoordinates();
 	// The following coordinates are used to restrict either start or target (which is chosen at random) in each booking.
 	// The restriction is a 'square' roughly matching the town of schleife.
@@ -162,14 +169,15 @@ async function setup(params: Params) {
 	await clearDatabase();
 	const pickedCoordinates: Coordinates[] = [];
 	for (let i = 0; i != params.companies; ++i) {
-		let pickCoordinates = coordinates[randomInt(0, coordinates.length)];
+		let pickCoordinates = coordinates[randomInt(0, coordinates.length - 1)];
 		while (pickedCoordinates.some((c) => isSamePlace(pickCoordinates, c))) {
-			pickCoordinates = coordinates[randomInt(0, coordinates.length)];
+			pickCoordinates = coordinates[randomInt(0, coordinates.length - 1)];
 		}
 		await addCompanyLocal(params.vehiclesPerCompany, pickCoordinates);
 	}
 	customerId = (await addTestUser()).id;
-	return { coordinates, restrictedCoordinates };
+	const rideShareProviders = await addRideShareProviders(params.rideShareVehicles);
+	return { coordinates, restrictedCoordinates, rideShareProviders };
 }
 
 const capacaties: Capacities = { passengers: 3, luggage: 4, bikes: 0, wheelchairs: 1 };
@@ -182,7 +190,58 @@ async function addCompanyLocal(vehicles: number, c: Coordinates) {
 	}
 }
 
-function adjustToParams(params: Params) {
+async function addRideShareProviders(count: number) {
+	const rideShareProviders: RideShareProvider[] = [];
+	for (let i = 0; i !== count; ++i) {
+		const provider = await addRideShareProviderUser(i);
+		const vehicle = await createRideShareVehicle(
+			provider,
+			1,
+			3,
+			null,
+			'simulation',
+			false,
+			`SIM-RSV-${Date.now()}-${i}`,
+			null,
+			'DE'
+		);
+		rideShareProviders.push({ userId: provider, vehicleId: vehicle });
+	}
+	return rideShareProviders;
+}
+
+async function addRideShareProviderUser(index: number) {
+	return (
+		await db
+			.insertInto('user')
+			.values({
+				email: `ride-share-provider-${Date.now()}-${index}@simulation.local`,
+				name: 'ride share provider',
+				firstName: '',
+				gender: 'o',
+				isTaxiOwner: false,
+				isAdmin: false,
+				isService: false,
+				isEmailVerified: true,
+				passwordHash:
+					'$argon2id$v=19$m=19456,t=2,p=1$4lXilBjWTY+DsYpN0eATrw$imFLatxSsy9WjMny7MusOJeAJE5ZenrOEqD88YsZv8o',
+				companyId: null,
+				zipCode: '',
+				city: '',
+				region: ''
+			})
+			.returning('id')
+			.executeTakeFirstOrThrow()
+	).id;
+}
+
+function createActionProbabilities(params: Params) {
+	const actionProbabilities = defaultActionProbabilities.map((a) => ({ ...a }));
+	adjustToParams(actionProbabilities, params);
+	return actionProbabilities;
+}
+
+function adjustToParams(actionProbabilities: ActionType[], params: Params) {
 	const probabilitySum = actionProbabilities.reduce((sum, curr) => sum + curr.probability, 0);
 	if (Math.abs(probabilitySum - 1) > 0.00000001) {
 		console.log('The probabilities in actionProbabilies must add to 1 exactly. ', {
@@ -202,15 +261,17 @@ function adjustToParams(params: Params) {
 			summedBookingProbability;
 	}
 	if (params.mode !== undefined) {
-		setActionProbabilities(params.mode);
+		setActionProbabilities(actionProbabilities, params.mode);
 	}
 }
 
 export async function simulation(params: Params): Promise<boolean> {
+	const actionProbabilities = createActionProbabilities(params);
+
 	async function mainLoop(i: number) {
 		const r = Math.random();
 		console.log('RANDOM API ITERATION: ', i, ' with random value: ', r);
-		const actionIdx = getAction(r);
+		const actionIdx = getAction(actionProbabilities, r);
 		if (actionIdx === undefined || actionIdx < 0 || actionIdx >= actionProbabilities.length) {
 			console.log('chose: nothing', { actionIdx }, { r });
 			errorCount++;
@@ -233,10 +294,11 @@ export async function simulation(params: Params): Promise<boolean> {
 				customerId,
 				coordinates,
 				restrictedCoordinates,
-				mode,
-				params.cost,
-				params.whitelist
-			);
+					mode,
+					params.cost,
+					params.whitelist,
+					rideShareProviders
+				);
 			const end = performance.now();
 			if (result.error === true) {
 				return true;
@@ -256,7 +318,7 @@ export async function simulation(params: Params): Promise<boolean> {
 			if (result.success) {
 				lastActionSpecifics = result.lastActionSpecifics!;
 				if (
-					params.healthChecks && lastActionWasRideShare(actionIdx)
+					params.healthChecks && lastActionWasRideShare(actionProbabilities, actionIdx)
 						? await healthCheckRideShare()
 						: await healthCheck(lastActionSpecifics.vehicleId, lastActionSpecifics.dayStart)
 				) {
@@ -275,7 +337,7 @@ export async function simulation(params: Params): Promise<boolean> {
 	const timeStats = createJsonlStatWriter(OUTPUT_FILE, FLUSH_INTERVAL);
 	let lastDbState = await getDbState();
 	await timeStats.init();
-	const { coordinates, restrictedCoordinates } = await setup(params);
+	const { coordinates, restrictedCoordinates, rideShareProviders } = await setup(params);
 	const chosen = Array.from({ length: actionProbabilities.length }, (_) => 0);
 	let errorCount = 0;
 	const errors: string[] = [];
@@ -318,15 +380,17 @@ export async function simulation(params: Params): Promise<boolean> {
 	return false;
 }
 
-function lastActionWasRideShare(idx: number) {
+function lastActionWasRideShare(actionProbabilities: ActionType[], idx: number) {
 	return (
 		actionProbabilities[idx].action === Action.ADD_RIDE_SHARE_TOUR ||
 		actionProbabilities[idx].action === Action.BOOK_RIDE_SHARE ||
-		actionProbabilities[idx].action === Action.ACCPEPT_RIDE_SHARE_TOUR
+		actionProbabilities[idx].action === Action.ACCPEPT_RIDE_SHARE_TOUR ||
+		actionProbabilities[idx].action === Action.CANCEL_REQUEST_RS ||
+		actionProbabilities[idx].action === Action.CANCEL_TOUR_RS
 	);
 }
 
-function setActionProbabilities(mode: string) {
+function setActionProbabilities(actionProbabilities: ActionType[], mode: string) {
 	function setActionProbability(probability: number, action: Action) {
 		actionProbabilities[actionProbabilities.findIndex((a) => a.action === action)].probability =
 			probability;

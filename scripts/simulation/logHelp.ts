@@ -22,6 +22,9 @@ export function logHelp() {
 		'--bu: The script will do backups iff this flag is set. Backups happen after each simulated action as full backups via pg_dump.'
 	);
 	console.log('--runs=x: Sets the amount of simulation actions to perform');
+	console.log(
+		'--rsv=x: Sets the amount of ride-share provider users to create. Each provider gets one ride-share vehicle.'
+	);
 	console.log('--second=x: Sets the amount of seconds after which the script is terminated');
 	console.log(
 		'--ongoing: Will run the script indefinitely (or if the health flag is set until there is an error)'

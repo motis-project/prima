@@ -4,23 +4,38 @@ import { getRideShareTourByRequest } from '$lib/server/booking/rideShare/getRide
 import { type BookingParameters } from '$lib/server/booking/rideShare/rideShareApi';
 import { type Coordinates } from '$lib/util/Coordinates';
 import { generateBookingParameters } from '../generateBookingParameters';
-import type { ActionResponse } from '../simulation';
+import { randomInt } from '../randomInt';
+import type { ActionResponse, RideShareProvider } from '../simulation';
 
 export async function addRideShareTourSimulation(
 	customerId: number,
 	coordinates: Coordinates[],
-	restricted: Coordinates[] | undefined
+	restricted: Coordinates[] | undefined,
+	_mode?: string,
+	_compareCosts?: boolean,
+	_doWhitelist?: boolean,
+	rideShareProviders: RideShareProvider[] = []
 ): Promise<ActionResponse> {
+	if (rideShareProviders.length === 0) {
+		console.log('Cannot add ride-share tour because no ride-share providers were created.');
+		return {
+			lastActionSpecifics: null,
+			success: false,
+			error: true,
+			atomicDurations: {} as Record<string, number>
+		};
+	}
 	const parameters: BookingParameters = await generateBookingParameters(coordinates, restricted);
 	const connection: ExpectedConnection = parameters.connection1!;
 	const capacities = parameters.capacities;
+	const provider = rideShareProviders[randomInt(0, rideShareProviders.length - 1)];
 	const request = await addRideShareTour(
 		[connection.startFixed ? connection.startTime : connection.targetTime],
 		connection.startFixed,
 		capacities.passengers,
 		capacities.luggage,
-		customerId,
-		1,
+		provider.userId,
+		provider.vehicleId,
 		connection.start,
 		connection.target,
 		connection.start.address,

@@ -31,7 +31,6 @@ async function rideShareApiCall(
 	kidsZeroToTwo: number,
 	kidsThreeToFour: number,
 	kidsFiveToSix: number,
-	doWhitelist?: boolean,
 	compareCosts?: boolean
 ): Promise<ActionResponse> {
 	const toursBefore = await getRideShareTours(false);
@@ -44,18 +43,16 @@ async function rideShareApiCall(
 		kidsFiveToSix
 	);
 	const requestId = response.request1Id ?? response.request2Id;
-	const toursAfter = await getToursWithRequests(false);
+	const toursAfter = await getRideShareTours(false);
 	const t = toursAfter.filter((t) => t.requests.some((r) => r.requestId === requestId));
 	if (t.length !== 1) {
 		console.log(`Found ${t.length} tours containing the new request.`);
-		if (doWhitelist) {
-			return {
-				lastActionSpecifics: null,
-				success: false,
-				error: true,
-				atomicDurations: {} as Record<string, number>
-			};
-		}
+		return {
+			lastActionSpecifics: null,
+			success: false,
+			error: true,
+			atomicDurations: {} as Record<string, number>
+		};
 	}
 	const newTour = t[0];
 	if (compareCosts) {
@@ -142,14 +139,6 @@ async function rideShareApiCall(
 		console.log('costs do match');
 	}
 	console.log(response.status === 200 ? 'succesful booking' : 'failed to book');
-	if (doWhitelist && response.status !== 200) {
-		return {
-			lastActionSpecifics: null,
-			success: false,
-			error: true,
-			atomicDurations: {} as Record<string, number>
-		};
-	}
 	return {
 		lastActionSpecifics: {
 			vehicleId: newTour.vehicleId,
@@ -498,7 +487,8 @@ export async function bookFull(
 			{ capacities: parameters.capacities, connection1, connection2 },
 			kidsZeroToTwo,
 			kidsThreeToFour,
-			kidsFiveToSix
+			kidsFiveToSix,
+			compareCosts
 		);
 		result.atomicDurations['planAndSignDuration'] = planAndSignDuration;
 		return result;
