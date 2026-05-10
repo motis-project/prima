@@ -187,6 +187,12 @@ export async function bookingApiCall(
 				atomicDurations
 			};
 		}
+		return {
+			lastActionSpecifics: null,
+			success: false,
+			error: response.status === 200,
+			atomicDurations
+		};
 	}
 	const newTour = t[0];
 	if (compareCosts) {

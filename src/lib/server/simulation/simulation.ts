@@ -333,7 +333,10 @@ export async function simulation(params: Params): Promise<boolean> {
 				if (
 					params.healthChecks &&
 					(lastActionWasRideShare(actionProbabilities, actionIdx)
-						? await healthCheckRideShare()
+						? await healthCheckRideShare(
+								lastActionSpecifics.vehicleId,
+								lastActionSpecifics.dayStart
+							)
 						: await healthCheck(lastActionSpecifics.vehicleId, lastActionSpecifics.dayStart))
 				) {
 					await timeStats.close();

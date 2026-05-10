@@ -3,6 +3,7 @@ import { type ExpectedConnection } from '$lib/server/booking/expectedConnection'
 import { getRideShareTourByRequest } from '$lib/server/booking/rideShare/getRideShareTours';
 import { type BookingParameters } from '$lib/server/booking/rideShare/rideShareApi';
 import { type Coordinates } from '$lib/util/Coordinates';
+import { DAY } from '$lib/util/time';
 import { generateBookingParameters } from '../generateBookingParameters';
 import { randomInt } from '../randomInt';
 import type { ActionResponse, RideShareProvider } from '../simulation';
@@ -54,7 +55,7 @@ export async function addRideShareTourSimulation(
 	return {
 		lastActionSpecifics: {
 			vehicleId: newTour[0].vehicle,
-			dayStart: newTour[0].requests[0].events[0].communicatedTime
+			dayStart: Math.floor(newTour[0].requests[0].events[0].communicatedTime / DAY) * DAY
 		},
 		success: true,
 		error: false,
