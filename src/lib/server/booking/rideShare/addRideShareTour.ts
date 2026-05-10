@@ -8,7 +8,7 @@ import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
 import { sendMail } from '$lib/server/sendMail';
 import { sendDesiredTripMails } from './sendDesiredTripMails';
 import type { Transaction } from 'kysely';
-import { prepareDetourEllipse } from './ellipse';
+import { prepareDetourEllipse } from '$lib/util/booking/ellipse';
 
 export async function getRideShareTourCommunicatedTimes(
 	time: number,
@@ -19,7 +19,15 @@ export async function getRideShareTourCommunicatedTimes(
 	checkConflicts?: boolean
 ) {
 	const r = await util([time], startFixed, vehicle, start, target, checkConflicts);
-	return r[0] === undefined ? undefined : { start: r[0].startTimeStart, end: r[0].targetTimeEnd };
+	return r[0] === undefined
+		? undefined
+		: {
+				start: r[0].startTimeStart,
+				end: r[0].targetTimeEnd,
+				maxDetourSeconds:
+					(r[0].targetTimeEnd - r[0].targetTimeStart + r[0].startTimeEnd - r[0].startTimeStart) /
+					SECOND
+			};
 }
 
 async function util(

@@ -12,6 +12,7 @@ declare global {
 			selectFrom?: boolean;
 			selectTo?: boolean;
 			selectedItinerary?: SignedItinerary | undefined;
+			rideShareMaxDetourSeconds?: number;
 			stop?: { name: string; stopId: string; time: Date };
 			showMap?: boolean;
 		}

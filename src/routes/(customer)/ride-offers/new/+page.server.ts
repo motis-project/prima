@@ -8,6 +8,7 @@ import { sql } from 'kysely';
 import { parseDate } from '@internationalized/date';
 import { TZ } from '$lib/constants';
 import { HOUR, MINUTE, SECOND } from '$lib/util/time';
+import { env } from '$env/dynamic/private';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const vehicles = await db
@@ -25,7 +26,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 						json_build_object('id', id, 'name', name) AS properties
 					FROM ride_share_zone AS lg) AS f`.execute(db);
 	};
-	return { vehicles, rideSharingBounds: (await rideShareGeoJSON()).rows[0] };
+	return {
+		vehicles,
+		rideSharingBounds: (await rideShareGeoJSON()).rows[0],
+		debug: env.DEBUG === 'true'
+	};
 };
 
 export const actions = {

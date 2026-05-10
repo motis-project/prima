@@ -46,6 +46,7 @@
 	import RepetitionSelector from '$lib/ui/RepetitionSelector.svelte';
 	import * as Card from '$lib/shadcn/card';
 	import { shiftDayIdxBackward } from '$lib/util/shiftDayIdx';
+	import { preparedDetourEllipseToGeoJSON, prepareDetourEllipse } from '$lib/util/booking/ellipse';
 
 	const { data, form } = $props();
 
@@ -76,6 +77,31 @@
 		passengers = data.vehicles.find((v) => v.id.toString() == vehicle)?.passengers ?? 3;
 		luggage = data.vehicles.find((v) => v.id.toString() == vehicle)?.luggage ?? 3;
 	});
+
+	function rideShareEllipseGeoJSON(
+		startLike: maplibregl.LngLatLike | undefined,
+		targetLike: maplibregl.LngLatLike | undefined,
+		maxDetourSeconds: number | undefined
+	) {
+		if (!startLike || !targetLike || maxDetourSeconds === undefined) {
+			return undefined;
+		}
+
+		const start = maplibregl.LngLat.convert(startLike);
+		const target = maplibregl.LngLat.convert(targetLike);
+		const ellipse = prepareDetourEllipse(start, target, maxDetourSeconds);
+		return preparedDetourEllipseToGeoJSON(ellipse);
+	}
+
+	let rideShareEllipse = $derived(
+		data.debug
+			? rideShareEllipseGeoJSON(
+					from.value.match,
+					to.value.match,
+					page.state.rideShareMaxDetourSeconds
+				)
+			: undefined
+	);
 
 	const getLocation = () => {
 		if (navigator && navigator.geolocation) {
@@ -201,7 +227,10 @@
 						legs: [],
 						transfers: 0
 					};
-					replaceState('', { selectedItinerary: it });
+					replaceState('', {
+						selectedItinerary: it,
+						rideShareMaxDetourSeconds: j.maxDetourSeconds
+					});
 					loading = false;
 				})
 				.catch(() => {
@@ -356,6 +385,7 @@
 			bind:to
 			itinerary={page.state.selectedItinerary}
 			rideSharingBounds={data.rideSharingBounds}
+			{rideShareEllipse}
 		/>
 	{/if}
 
@@ -466,7 +496,11 @@
 				<Button
 					variant="outline"
 					onclick={() =>
-						pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
+						pushState('', {
+							showMap: true,
+							selectedItinerary: page.state.selectedItinerary,
+							rideShareMaxDetourSeconds: page.state.rideShareMaxDetourSeconds
+						})}
 					class="flex w-full justify-center"
 				>
 					<MapIcon class="h-[1.2rem] w-[1.2rem]" />
@@ -582,7 +616,11 @@
 					<Button
 						variant="outline"
 						onclick={() =>
-							pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
+							pushState('', {
+								showMap: true,
+								selectedItinerary: page.state.selectedItinerary,
+								rideShareMaxDetourSeconds: page.state.rideShareMaxDetourSeconds
+							})}
 						class="size-fit text-base"
 					>
 						<div class="flex-row">

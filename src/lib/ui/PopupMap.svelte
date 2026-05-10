@@ -25,6 +25,7 @@
 		itinerary,
 		areas = $bindable(),
 		rideSharingBounds = $bindable(),
+		rideShareEllipse = $bindable(),
 		intermediateStops = $bindable()
 	}: {
 		from?: Location | undefined;
@@ -34,6 +35,7 @@
 		itinerary?: SignedItinerary | undefined;
 		areas?: unknown;
 		rideSharingBounds?: unknown;
+		rideShareEllipse?: unknown;
 		intermediateStops?: boolean;
 	} = $props();
 
@@ -207,6 +209,32 @@
 				}}
 			/>
 		</GeoJSON>
+
+		{#if rideShareEllipse}
+			<GeoJSON id="rideShareEllipse" data={rideShareEllipse as GeoJSON.GeoJSON}>
+				<Layer
+					id="ride-share-ellipse-fill"
+					type="fill"
+					layout={{}}
+					filter={['literal', true]}
+					paint={{
+						'fill-color': '#2563eb',
+						'fill-opacity': 0.16
+					}}
+				/>
+				<Layer
+					id="ride-share-ellipse-outline"
+					type="line"
+					layout={{}}
+					filter={['literal', true]}
+					paint={{
+						'line-color': '#1d4ed8',
+						'line-width': 3,
+						'line-opacity': 0.9
+					}}
+				/>
+			</GeoJSON>
+		{/if}
 
 		{#if !itinerary}
 			<Popup trigger="click" children={contextMenu} />

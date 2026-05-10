@@ -1,7 +1,7 @@
 import { ELLIPSE_MAX_KMH } from '$lib/constants';
 import type { Coordinates } from '$lib/util/Coordinates';
 
-type PreparedDetourEllipse = {
+export type PreparedDetourEllipse = {
 	originLatRad: number;
 	originLngRad: number;
 	cosOriginLat: number;
@@ -31,6 +31,10 @@ function toRad(deg: number): number {
 	return (deg * Math.PI) / 180;
 }
 
+function toDeg(rad: number): number {
+	return (rad * 180) / Math.PI;
+}
+
 function projectToLocalMeters(
 	p: Coordinates,
 	originLatRad: number,
@@ -44,6 +48,19 @@ function projectToLocalMeters(
 	const y = (latRad - originLatRad) * EARTH_RADIUS_M;
 
 	return { x, y };
+}
+
+function unprojectFromLocalMeters(
+	x: number,
+	y: number,
+	originLatRad: number,
+	originLngRad: number,
+	cosOriginLat: number
+): [number, number] {
+	return [
+		toDeg(originLngRad + x / (cosOriginLat * EARTH_RADIUS_M)),
+		toDeg(originLatRad + y / EARTH_RADIUS_M)
+	];
 }
 
 export function prepareDetourEllipse(
@@ -156,6 +173,65 @@ export function prepareDetourEllipse(
 		maxX: centerX + extentX,
 		maxY: centerY + extentY,
 		pointOnly: false
+	};
+}
+
+export function preparedDetourEllipseToGeoJSON(
+	ellipse: PreparedDetourEllipse,
+	steps = 72
+): GeoJSON.FeatureCollection {
+	if (ellipse.pointOnly) {
+		const coordinates = unprojectFromLocalMeters(
+			ellipse.centerX,
+			ellipse.centerY,
+			ellipse.originLatRad,
+			ellipse.originLngRad,
+			ellipse.cosOriginLat
+		);
+		return {
+			type: 'FeatureCollection',
+			features: [
+				{
+					type: 'Feature',
+					properties: {},
+					geometry: {
+						type: 'Point',
+						coordinates
+					}
+				}
+			]
+		};
+	}
+
+	const semiMajor = 1 / Math.sqrt(ellipse.invAaSq);
+	const semiMinor = 1 / Math.sqrt(ellipse.invBbSq);
+	const coordinates = Array.from({ length: steps + 1 }, (_, i) => {
+		const theta = (2 * Math.PI * i) / steps;
+		const alongMajor = semiMajor * Math.cos(theta);
+		const alongMinor = semiMinor * Math.sin(theta);
+		const x = ellipse.centerX + alongMajor * ellipse.axisXx + alongMinor * ellipse.axisYx;
+		const y = ellipse.centerY + alongMajor * ellipse.axisXy + alongMinor * ellipse.axisYy;
+		return unprojectFromLocalMeters(
+			x,
+			y,
+			ellipse.originLatRad,
+			ellipse.originLngRad,
+			ellipse.cosOriginLat
+		);
+	});
+
+	return {
+		type: 'FeatureCollection',
+		features: [
+			{
+				type: 'Feature',
+				properties: {},
+				geometry: {
+					type: 'Polygon',
+					coordinates: [coordinates]
+				}
+			}
+		]
 	};
 }
 

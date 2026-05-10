@@ -6,7 +6,8 @@ import { Interval } from '$lib/util/interval';
 import { createRideShareVehicle } from '../createRideShareVehicle';
 import { addRideShareTour } from '../addRideShareTour';
 import { getRideShareTours, getRideShareToursFiltered } from '../getRideShareTours';
-import { isPointInPreparedDetourEllipse } from '../ellipse';
+import { isPointInPreparedDetourEllipse, prepareDetourEllipse } from '$lib/util/booking/ellipse';
+import { ELLIPSE_MAX_KMH } from '$lib/constants';
 
 const capacities = {
 	passengers: 1,
@@ -96,7 +97,36 @@ function storedEllipseFromTour(tour: Awaited<ReturnType<typeof getRideShareTours
 	};
 }
 
+function pointAround(origin: { lat: number; lng: number }, distanceMeters: number, angle: number) {
+	const earthRadiusM = 6371000;
+	return {
+		lat: origin.lat + ((distanceMeters * Math.sin(angle)) / earthRadiusM) * (180 / Math.PI),
+		lng:
+			origin.lng +
+			((distanceMeters * Math.cos(angle)) /
+				(earthRadiusM * Math.cos((origin.lat * Math.PI) / 180))) *
+				(180 / Math.PI)
+	};
+}
+
 describe('ride share detour ellipse', () => {
+	it('contains random points near both foci', () => {
+		const maxDetourSeconds = 10 * 60;
+		const extraDistanceMeters = (ELLIPSE_MAX_KMH / 3.6) * maxDetourSeconds;
+		const guaranteedRadiusMeters = extraDistanceMeters / 2;
+		const ellipse = prepareDetourEllipse(weisswasserWest, goerlitz, maxDetourSeconds);
+
+		for (const focus of [weisswasserWest, goerlitz]) {
+			for (let i = 0; i < 100; i++) {
+				const angle = Math.random() * 2 * Math.PI;
+				const distance = Math.sqrt(Math.random()) * guaranteedRadiusMeters * 0.99;
+				expect(isPointInPreparedDetourEllipse(ellipse, pointAround(focus, distance, angle))).toBe(
+					true
+				);
+			}
+		}
+	});
+
 	it('stores a prepared ellipse and checks points inside and outside it', async () => {
 		await addWeisswasserRideShareTour('lp1');
 
