@@ -449,6 +449,9 @@ function setActionProbabilities(actionProbabilities: ActionType[], mode: string)
 		case 'taxionly':
 			setActionProbability(1, Action.BOOKING_FULL);
 			break;
+		case 'addrs':
+			setActionProbability(1, Action.ADD_RIDE_SHARE_TOUR);
+			break;
 	}
 	console.log('Updated action probabilities:', JSON.stringify(actionProbabilities));
 }

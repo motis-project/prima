@@ -50,9 +50,9 @@ async function main() {
 		}
 		if (arg.startsWith('--mode')) {
 			const value = arg.split('=')[1];
-			const modes = ['rs', 'taxi', 'pt', 'taxionly'];
+			const modes = ['rs', 'taxi', 'pt', 'taxionly', 'addrs'];
 			if (!modes.some((m) => m === value)) {
-				console.error('Invalid value for --mode. Must be any of: rs taxi pt taxionly.');
+				console.error('Invalid value for --mode. Must be any of: rs taxi pt taxionly addrs.');
 				process.exit(1);
 			}
 			mode = value;

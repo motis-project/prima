@@ -26,6 +26,7 @@
 		"sim:all": "pnpm exec vite-node --options.server.watch.ignored='**/*' --options.transformMode.ssr='/.*/' scripts/simulation/script.ts -- --ongoing --cost --wl --restrict --bu --health --rsv=3",
 		"sim:full": "pnpm exec vite-node --options.server.watch.ignored='**/*' --options.transformMode.ssr='/.*/' scripts/simulation/script.ts -- --ongoing --cost --restrict --bu --full --health --rsv=3",
 		"sim:rs": "pnpm exec vite-node --options.server.watch.ignored='**/*' --options.transformMode.ssr='/.*/' scripts/simulation/script.ts -- --ongoing --cost --restrict --bu --full --health --mode=rs --rsv=3",
+		"sim:addrs": "pnpm exec vite-node --options.server.watch.ignored='**/*' --options.transformMode.ssr='/.*/' scripts/simulation/script.ts -- --ongoing --restrict --bu --full --health --mode=addrs --rsv=3",
 		"sim:taxi": "pnpm exec vite-node --options.server.watch.ignored='**/*' --options.transformMode.ssr='/.*/' scripts/simulation/script.ts -- --ongoing --cost --restrict --bu --full --health --mode=taxi --rsv=3",
 		"sim:pt": "pnpm exec vite-node --options.server.watch.ignored='**/*' --options.transformMode.ssr='/.*/' scripts/simulation/script.ts -- --seconds=10 --full --mode=pt --rsv=3",
 		"sim:taxionly": "pnpm exec vite-node --options.server.watch.ignored='**/*' --options.transformMode.ssr='/.*/' scripts/simulation/script.ts -- --seconds=10 --full --mode=taxionly --rsv=3",
