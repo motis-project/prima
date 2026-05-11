@@ -3,7 +3,7 @@ import { db, type Database } from '$lib/server/db';
 import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
 import { MAX_RIDE_SHARE_TOUR_TIME, SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
-import { MINUTE, SECOND } from '$lib/util/time';
+import { MINUTE } from '$lib/util/time';
 import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
 import { carRouting } from '$lib/util/carRouting';
 import { sendMail } from '$lib/server/sendMail';
@@ -27,9 +27,6 @@ export async function getRideShareTourCommunicatedTimes(
 		: {
 				start: r[0].startTimeStart,
 				end: r[0].targetTimeEnd,
-				maxDetourSeconds:
-					(r[0].targetTimeEnd - r[0].targetTimeStart + r[0].startTimeEnd - r[0].startTimeStart) /
-					SECOND,
 				routeDistanceMeters: r[0].routeDistanceMeters
 			};
 }

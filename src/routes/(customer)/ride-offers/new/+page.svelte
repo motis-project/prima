@@ -229,7 +229,6 @@
 					};
 					replaceState('', {
 						selectedItinerary: it,
-						rideShareMaxDetourSeconds: j.maxDetourSeconds,
 						rideShareRouteDistanceMeters: j.routeDistanceMeters
 					});
 					loading = false;
@@ -500,7 +499,6 @@
 						pushState('', {
 							showMap: true,
 							selectedItinerary: page.state.selectedItinerary,
-							rideShareMaxDetourSeconds: page.state.rideShareMaxDetourSeconds,
 							rideShareRouteDistanceMeters: page.state.rideShareRouteDistanceMeters
 						})}
 					class="flex w-full justify-center"
@@ -621,7 +619,6 @@
 							pushState('', {
 								showMap: true,
 								selectedItinerary: page.state.selectedItinerary,
-								rideShareMaxDetourSeconds: page.state.rideShareMaxDetourSeconds,
 								rideShareRouteDistanceMeters: page.state.rideShareRouteDistanceMeters
 							})}
 						class="size-fit text-base"
