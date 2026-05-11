@@ -1,5 +1,5 @@
 import type { Capacities } from '$lib/util/booking/Capacities';
-import { getRideShareTours } from '$lib/server/booking/rideShare/getRideShareTours';
+import { getRideShareToursFiltered } from '$lib/server/booking/rideShare/getRideShareTours';
 import { Interval } from '$lib/util/interval';
 import type { Coordinates } from '$lib/util/Coordinates';
 import { evaluateRequest } from '$lib/server/booking/rideShare/evaluateRequest';
@@ -55,7 +55,12 @@ export async function whitelistRideShare(
 
 	const searchInterval = new Interval(firstTime, lastTime);
 
-	const rideShareTours = await getRideShareTours(required, searchInterval);
+	const rideShareTours = await getRideShareToursFiltered(
+		required,
+		searchInterval,
+		userChosen,
+		busStops
+	);
 	console.log(
 		'Whitelist Request Ride Share: getRideShareTours results\n',
 		JSON.stringify(

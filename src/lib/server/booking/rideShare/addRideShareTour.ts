@@ -5,9 +5,13 @@ import { MAX_RIDE_SHARE_TOUR_TIME, SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/con
 import { Interval } from '$lib/util/interval';
 import { MINUTE } from '$lib/util/time';
 import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
+import { carRouting } from '$lib/util/carRouting';
 import { sendMail } from '$lib/server/sendMail';
 import { sendDesiredTripMails } from './sendDesiredTripMails';
 import type { Transaction } from 'kysely';
+import { prepareDetourEllipse } from '$lib/util/booking/ellipse';
+import type { Itinerary } from '$lib/openapi';
+import { isCarLeg } from '$lib/util/booking/checkLegType';
 
 export async function getRideShareTourCommunicatedTimes(
 	time: number,
@@ -18,7 +22,17 @@ export async function getRideShareTourCommunicatedTimes(
 	checkConflicts?: boolean
 ) {
 	const r = await util([time], startFixed, vehicle, start, target, checkConflicts);
-	return r[0] === undefined ? undefined : { start: r[0].startTimeStart, end: r[0].targetTimeEnd };
+	return r[0] === undefined
+		? undefined
+		: {
+				start: r[0].startTimeStart,
+				end: r[0].targetTimeEnd,
+				routeDistanceMeters: r[0].routeDistanceMeters
+			};
+}
+
+function getRouteDistanceMeters(itinerary: Itinerary): number | undefined {
+	return itinerary.legs.find((l) => isCarLeg(l))?.distance;
 }
 
 async function util(
@@ -36,12 +50,21 @@ async function util(
 				targetTimeStart: number;
 				targetTimeEnd: number;
 				duration: number;
+				routeDistanceMeters: number;
 		  }
 		| undefined
 	)[]
 > {
-	const duration = (await oneToManyCarRouting(start, [target], false, MAX_RIDE_SHARE_TOUR_TIME))[0];
-	if (!duration) {
+	const route = await carRouting(
+		start,
+		target,
+		false,
+		new Date().toISOString(),
+		MAX_RIDE_SHARE_TOUR_TIME
+	);
+	const duration = route?.duration;
+	const routeDistanceMeters = route === undefined ? undefined : getRouteDistanceMeters(route);
+	if (!duration || routeDistanceMeters === undefined) {
 		console.log('adding tour: routing failed');
 		return Array.from(times, (_) => undefined);
 	}
@@ -206,7 +229,8 @@ async function util(
 			startTimeEnd: startTime,
 			targetTimeStart: targetTime,
 			targetTimeEnd: targetTimeShifted,
-			duration
+			duration,
+			routeDistanceMeters
 		});
 	}
 	return results;
@@ -268,6 +292,14 @@ export const addRideShareTour = async (
 			continue;
 		}
 		const { startTimeStart, startTimeEnd, targetTimeStart, targetTimeEnd, duration } = timesResult;
+		const ellipse = prepareDetourEllipse(start, target, timesResult.routeDistanceMeters);
+		const ellipseId = (
+			await db
+				.insertInto('ellipse')
+				.values({ ...ellipse })
+				.returning('id')
+				.executeTakeFirstOrThrow()
+		).id;
 		const tourId = (
 			await (trx ?? db)
 				.insertInto('rideShareTour')
@@ -280,7 +312,8 @@ export const addRideShareTour = async (
 					communicatedStart: startTimeStart,
 					latestEnd: targetTimeEnd,
 					communicatedEnd: targetTimeEnd,
-					pattern: patternId ?? null
+					pattern: patternId ?? null,
+					ellipseId
 				})
 				.returning('id')
 				.executeTakeFirstOrThrow()

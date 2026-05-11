@@ -204,6 +204,7 @@ export const clearDatabase = async () => {
 	await db.deleteFrom('vehicle').execute();
 	await db.deleteFrom('session').execute();
 	await db.deleteFrom('rideShareTour').execute();
+	await db.deleteFrom('ellipse').execute();
 	await db.deleteFrom('rideShareVehicle').execute();
 	await db.deleteFrom('desiredRideShare').execute();
 	await db.deleteFrom('user').execute();
@@ -217,6 +218,7 @@ export const clearTours = async () => {
 	await db.deleteFrom('eventGroup').execute();
 	await db.deleteFrom('tour').execute();
 	await db.deleteFrom('rideShareTour').execute();
+	await db.deleteFrom('ellipse').execute();
 };
 
 export const getTours = async () => {
