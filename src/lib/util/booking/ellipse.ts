@@ -1,4 +1,7 @@
-import { ELLIPSE_MAX_KMH } from '$lib/constants';
+import {
+	DETOUR_DISTANCE_SAFETY_FACTOR,
+	SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE
+} from '$lib/constants';
 import type { Coordinates } from '$lib/util/Coordinates';
 
 export type PreparedDetourEllipse = {
@@ -66,16 +69,11 @@ function unprojectFromLocalMeters(
 export function prepareDetourEllipse(
 	a: Coordinates,
 	b: Coordinates,
-	maxDetourSeconds: number
+	routeDistanceMeters: number
 ): PreparedDetourEllipse {
-	if (maxDetourSeconds < 0 || !Number.isFinite(maxDetourSeconds)) {
-		throw new Error('maxDetourSeconds must be a finite number >= 0');
+	if (routeDistanceMeters < 0 || !Number.isFinite(routeDistanceMeters)) {
+		throw new Error('routeDistanceMeters must be a finite number >= 0');
 	}
-	if (ELLIPSE_MAX_KMH <= 0 || !Number.isFinite(ELLIPSE_MAX_KMH)) {
-		throw new Error('maxSpeedKmh must be a positive finite number');
-	}
-
-	const maxSpeedMps = ELLIPSE_MAX_KMH / 3.6;
 
 	const originLatRad = toRad((a.lat + b.lat) / 2);
 	const originLngRad = toRad((a.lng + b.lng) / 2);
@@ -91,9 +89,9 @@ export function prepareDetourEllipse(
 	const centerX = (axy.x + bxy.x) / 2;
 	const centerY = (axy.y + bxy.y) / 2;
 
-	const allowedExtraDistance = maxSpeedMps * maxDetourSeconds;
-	const totalDistance = d + allowedExtraDistance;
-
+	const allowedExtraDistance =
+		routeDistanceMeters * SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE * DETOUR_DISTANCE_SAFETY_FACTOR;
+	const totalDistance = Math.max(d, routeDistanceMeters) + allowedExtraDistance;
 	const semiMajor = totalDistance / 2;
 	const focalOffset = d / 2;
 	const semiMinorSq = Math.max(0, semiMajor * semiMajor - focalOffset * focalOffset);

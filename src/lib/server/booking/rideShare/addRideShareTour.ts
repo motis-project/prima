@@ -5,10 +5,13 @@ import { MAX_RIDE_SHARE_TOUR_TIME, SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/con
 import { Interval } from '$lib/util/interval';
 import { MINUTE, SECOND } from '$lib/util/time';
 import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
+import { carRouting } from '$lib/util/carRouting';
 import { sendMail } from '$lib/server/sendMail';
 import { sendDesiredTripMails } from './sendDesiredTripMails';
 import type { Transaction } from 'kysely';
 import { prepareDetourEllipse } from '$lib/util/booking/ellipse';
+import type { Itinerary } from '$lib/openapi';
+import { isCarLeg } from '$lib/util/booking/checkLegType';
 
 export async function getRideShareTourCommunicatedTimes(
 	time: number,
@@ -26,8 +29,13 @@ export async function getRideShareTourCommunicatedTimes(
 				end: r[0].targetTimeEnd,
 				maxDetourSeconds:
 					(r[0].targetTimeEnd - r[0].targetTimeStart + r[0].startTimeEnd - r[0].startTimeStart) /
-					SECOND
+					SECOND,
+				routeDistanceMeters: r[0].routeDistanceMeters
 			};
+}
+
+function getRouteDistanceMeters(itinerary: Itinerary): number | undefined {
+	return itinerary.legs.find((l) => isCarLeg(l))?.distance;
 }
 
 async function util(
@@ -45,12 +53,21 @@ async function util(
 				targetTimeStart: number;
 				targetTimeEnd: number;
 				duration: number;
+				routeDistanceMeters: number;
 		  }
 		| undefined
 	)[]
 > {
-	const duration = (await oneToManyCarRouting(start, [target], false, MAX_RIDE_SHARE_TOUR_TIME))[0];
-	if (!duration) {
+	const route = await carRouting(
+		start,
+		target,
+		false,
+		new Date().toISOString(),
+		MAX_RIDE_SHARE_TOUR_TIME
+	);
+	const duration = route?.duration;
+	const routeDistanceMeters = route === undefined ? undefined : getRouteDistanceMeters(route);
+	if (!duration || routeDistanceMeters === undefined) {
 		console.log('adding tour: routing failed');
 		return Array.from(times, (_) => undefined);
 	}
@@ -215,7 +232,8 @@ async function util(
 			startTimeEnd: startTime,
 			targetTimeStart: targetTime,
 			targetTimeEnd: targetTimeShifted,
-			duration
+			duration,
+			routeDistanceMeters
 		});
 	}
 	return results;
@@ -277,15 +295,7 @@ export const addRideShareTour = async (
 			continue;
 		}
 		const { startTimeStart, startTimeEnd, targetTimeStart, targetTimeEnd, duration } = timesResult;
-		const ellipse = prepareDetourEllipse(
-			start,
-			target,
-			(timesResult.targetTimeEnd -
-				timesResult.targetTimeStart +
-				timesResult.startTimeEnd -
-				timesResult.startTimeStart) /
-				SECOND
-		);
+		const ellipse = prepareDetourEllipse(start, target, timesResult.routeDistanceMeters);
 		const ellipseId = (
 			await db
 				.insertInto('ellipse')

@@ -7,7 +7,7 @@ import { createRideShareVehicle } from '../createRideShareVehicle';
 import { addRideShareTour } from '../addRideShareTour';
 import { getRideShareTours, getRideShareToursFiltered } from '../getRideShareTours';
 import { isPointInPreparedDetourEllipse, prepareDetourEllipse } from '$lib/util/booking/ellipse';
-import { ELLIPSE_MAX_KMH } from '$lib/constants';
+import { SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE } from '$lib/constants';
 
 const capacities = {
 	passengers: 1,
@@ -111,10 +111,10 @@ function pointAround(origin: { lat: number; lng: number }, distanceMeters: numbe
 
 describe('ride share detour ellipse', () => {
 	it('contains random points near both foci', () => {
-		const maxDetourSeconds = 10 * 60;
-		const extraDistanceMeters = (ELLIPSE_MAX_KMH / 3.6) * maxDetourSeconds;
+		const routeDistanceMeters = 60_000;
+		const extraDistanceMeters = routeDistanceMeters * SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE * 1.15;
 		const guaranteedRadiusMeters = extraDistanceMeters / 2;
-		const ellipse = prepareDetourEllipse(weisswasserWest, goerlitz, maxDetourSeconds);
+		const ellipse = prepareDetourEllipse(weisswasserWest, goerlitz, routeDistanceMeters);
 
 		for (const focus of [weisswasserWest, goerlitz]) {
 			for (let i = 0; i < 100; i++) {

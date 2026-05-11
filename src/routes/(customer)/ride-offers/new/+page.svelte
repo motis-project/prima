@@ -81,15 +81,15 @@
 	function rideShareEllipseGeoJSON(
 		startLike: maplibregl.LngLatLike | undefined,
 		targetLike: maplibregl.LngLatLike | undefined,
-		maxDetourSeconds: number | undefined
+		routeDistanceMeters: number | undefined
 	) {
-		if (!startLike || !targetLike || maxDetourSeconds === undefined) {
+		if (!startLike || !targetLike || routeDistanceMeters === undefined) {
 			return undefined;
 		}
 
 		const start = maplibregl.LngLat.convert(startLike);
 		const target = maplibregl.LngLat.convert(targetLike);
-		const ellipse = prepareDetourEllipse(start, target, maxDetourSeconds);
+		const ellipse = prepareDetourEllipse(start, target, routeDistanceMeters);
 		return preparedDetourEllipseToGeoJSON(ellipse);
 	}
 
@@ -98,7 +98,7 @@
 			? rideShareEllipseGeoJSON(
 					from.value.match,
 					to.value.match,
-					page.state.rideShareMaxDetourSeconds
+					page.state.rideShareRouteDistanceMeters
 				)
 			: undefined
 	);
@@ -229,7 +229,8 @@
 					};
 					replaceState('', {
 						selectedItinerary: it,
-						rideShareMaxDetourSeconds: j.maxDetourSeconds
+						rideShareMaxDetourSeconds: j.maxDetourSeconds,
+						rideShareRouteDistanceMeters: j.routeDistanceMeters
 					});
 					loading = false;
 				})
@@ -499,7 +500,8 @@
 						pushState('', {
 							showMap: true,
 							selectedItinerary: page.state.selectedItinerary,
-							rideShareMaxDetourSeconds: page.state.rideShareMaxDetourSeconds
+							rideShareMaxDetourSeconds: page.state.rideShareMaxDetourSeconds,
+							rideShareRouteDistanceMeters: page.state.rideShareRouteDistanceMeters
 						})}
 					class="flex w-full justify-center"
 				>
@@ -619,7 +621,8 @@
 							pushState('', {
 								showMap: true,
 								selectedItinerary: page.state.selectedItinerary,
-								rideShareMaxDetourSeconds: page.state.rideShareMaxDetourSeconds
+								rideShareMaxDetourSeconds: page.state.rideShareMaxDetourSeconds,
+								rideShareRouteDistanceMeters: page.state.rideShareRouteDistanceMeters
 							})}
 						class="size-fit text-base"
 					>
