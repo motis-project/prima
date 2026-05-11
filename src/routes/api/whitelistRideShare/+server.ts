@@ -3,7 +3,6 @@ import { Validator } from 'jsonschema';
 import { json } from '@sveltejs/kit';
 import {
 	schemaDefinitions,
-	toWhitelistRequestWithISOStrings,
 	whitelistSchema,
 	type WhitelistRequest
 } from '$lib/server/util/whitelistRequest';
@@ -29,10 +28,6 @@ export async function POST(event: RequestEvent) {
 		return json({ message: result.errors }, { status: 400 });
 	}
 
-	console.log(
-		'WHITELIST REQUEST PARAMS RIDE SHARE',
-		JSON.stringify(toWhitelistRequestWithISOStrings(p), null, '\t')
-	);
 	let direct: Insertion[][] = [];
 	if (p.directTimes.length != 0) {
 		if (p.startFixed) {
@@ -90,7 +85,6 @@ export async function POST(event: RequestEvent) {
 		direct: directResponse
 	};
 	enrichContext(p, response);
-	console.log('RIDESHARE WHITELIST RESPONSE: ', JSON.stringify(response, null, '\t'));
 	return json(response);
 }
 
