@@ -3,6 +3,7 @@ import { Validator } from 'jsonschema';
 import { json } from '@sveltejs/kit';
 import {
 	schemaDefinitions,
+	toWhitelistRequestWithISOStrings,
 	whitelistSchema,
 	type WhitelistRequest
 } from '$lib/server/util/whitelistRequest';
@@ -12,6 +13,9 @@ import { whitelistRideShare } from './whitelist';
 import { groupBy } from '$lib/util/groupBy';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import { type BusStop } from '$lib/server/booking/taxi/BusStop';
+import { env } from '$env/dynamic/private';
+
+const debug = env.DEBUG === 'true';
 
 export type WhitelistResponse = {
 	start: Insertion[][][];
@@ -28,6 +32,12 @@ export async function POST(event: RequestEvent) {
 		return json({ message: result.errors }, { status: 400 });
 	}
 
+	if (debug) {
+		console.log(
+			'WHITELIST REQUEST PARAMS RIDE SHARE',
+			JSON.stringify(toWhitelistRequestWithISOStrings(p), null, '\t')
+		);
+	}
 	let direct: Insertion[][] = [];
 	if (p.directTimes.length != 0) {
 		if (p.startFixed) {
@@ -85,6 +95,9 @@ export async function POST(event: RequestEvent) {
 		direct: directResponse
 	};
 	enrichContext(p, response);
+	if (debug) {
+		console.log('RIDESHARE WHITELIST RESPONSE: ', JSON.stringify(response, null, '\t'));
+	}
 	return json(response);
 }
 
