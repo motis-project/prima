@@ -65,6 +65,21 @@ export interface Database {
 		directDuration: number | null;
 		cancelled: boolean;
 		message: string | null;
+		approachAndReturnM: number | null;
+		approachAndReturnDrivingMs: number | null;
+		approachAndReturnWaitingMs: number | null;
+		fullyPayedM: number | null;
+		fullyPayedDrivingMs: number | null;
+		fullyPayedWaitingMs: number | null;
+		occupiedM: number | null;
+		occupiedDrivingMs: number | null;
+		occupiedWaitingMs: number | null;
+		cumulatedPassengerM: number | null;
+		cumulatedPassengerDrivingMs: number | null;
+		cumulatedPassengerWaitingMs: number | null;
+		totalM: number | null;
+		totalDrivingMs: number | null;
+		totalWaitingMs: number | null;
 	};
 	availability: {
 		id: Generated<number>;
@@ -112,6 +127,8 @@ export interface Database {
 		busStopTime: number | null;
 		requestedTime: number | null;
 		cancelledByCustomer: boolean;
+		publicTransportDistance: number | null;
+		publicTransportDurationMs: number | null;
 	};
 	journey: {
 		id: Generated<number>;
@@ -139,6 +156,21 @@ export interface Database {
 		communicatedEnd: number;
 		earliestStart: number;
 		latestEnd: number;
+		approachAndReturnM: number | null;
+		approachAndReturnDrivingMs: number | null;
+		approachAndReturnWaitingMs: number | null;
+		fullyPayedM: number | null;
+		fullyPayedDrivingMs: number | null;
+		fullyPayedWaitingMs: number | null;
+		occupiedM: number | null;
+		occupiedDrivingMs: number | null;
+		occupiedWaitingMs: number | null;
+		cumulatedPassengerM: number | null;
+		cumulatedPassengerDrivingMs: number | null;
+		cumulatedPassengerWaitingMs: number | null;
+		totalM: number | null;
+		totalDrivingMs: number | null;
+		totalWaitingMs: number | null;
 		pattern: number | null;
 	};
 	rideShareVehicle: {

@@ -13,7 +13,8 @@ const translations: Translations = {
 		accounting: 'Abrechnung',
 		employees: 'Mitarbeiter',
 		companies: 'Unternehmen',
-		calibration: 'Kalibrierung'
+		calibration: 'Kalibrierung',
+		statistics: 'Statistik'
 	},
 	msg: {
 		unknownError: 'Unbekannter Fehler.',
