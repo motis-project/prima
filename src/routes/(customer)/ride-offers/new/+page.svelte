@@ -626,8 +626,7 @@
 					</Card.Header>
 					<Card.Content>
 						<div class="flex-row">
-							<div class="flex items-center">
-								<MapPin class="mr-2 h-5 w-5" />
+							<div class="flex items-center overflow-hidden">
 								<Time
 									variant="schedule"
 									class="mr-4 w-auto font-semibold "
@@ -639,17 +638,16 @@
 								{from.label ? from.label : t.departure}
 							</div>
 							<div class="flex items-center text-muted-foreground">
-								<EllipsisVertical class="mr-2 h-5 w-5" />
+								<EllipsisVertical class="ml-2 mr-6" />
 								{formatDurationSec(page.state.selectedItinerary?.duration)}
 								{t.rideShare.maxTime}
 							</div>
 							<div class="flex items-center text-muted-foreground">
-								<EllipsisVertical class="mr-2 h-5 w-5" />
+								<EllipsisVertical class="ml-2 mr-6" />
 								{formatDurationSec(page.state.selectedItinerary?.duration / (1+SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE)) }
 								{t.rideShare.travelTimeOnly}
 							</div>
-							<div class="flex w-fit items-center">
-								<MapPinCheckInside class="size-5 mr-2" />
+							<div class="flex items-center overflow-hidden">
 								<Time
 									variant="schedule"
 									class="mr-4 w-auto font-semibold"
