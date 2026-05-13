@@ -613,15 +613,19 @@
 			</Card.Root>
 
 			{#if page.state.selectedItinerary && !loading}
-				<Card.Root class="hover:bg-accent/40" role=button onclick={() =>
-					pushState('', {
-						showMap: true,
-						selectedItinerary: page.state.selectedItinerary,
-						rideShareRouteDistanceMeters: page.state.rideShareRouteDistanceMeters
-					})}>
+				<Card.Root
+					class="hover:bg-accent/40"
+					role="button"
+					onclick={() =>
+						pushState('', {
+							showMap: true,
+							selectedItinerary: page.state.selectedItinerary,
+							rideShareRouteDistanceMeters: page.state.rideShareRouteDistanceMeters
+						})}
+				>
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2 text-base">
-						{t.rideShare.calculatedRoute}
+							{t.rideShare.calculatedRoute}
 						</Card.Title>
 					</Card.Header>
 					<Card.Content>
@@ -644,7 +648,10 @@
 							</div>
 							<div class="flex items-center text-muted-foreground">
 								<EllipsisVertical class="ml-2 mr-6" />
-								{formatDurationSec(page.state.selectedItinerary?.duration / (1+SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE)) }
+								{formatDurationSec(
+									page.state.selectedItinerary?.duration /
+										(1 + SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE)
+								)}
 								{t.rideShare.travelTimeOnly}
 							</div>
 							<div class="flex items-center overflow-hidden">
