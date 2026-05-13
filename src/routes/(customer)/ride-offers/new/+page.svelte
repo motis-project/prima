@@ -7,8 +7,6 @@
 	import { t } from '$lib/i18n/translation';
 	import {
 		ArrowUpDown,
-		MapPin,
-		MapPinCheckInside,
 		EllipsisVertical,
 		ChevronRightIcon,
 		LoaderCircle,
