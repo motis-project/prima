@@ -454,7 +454,10 @@ const translations: Translations = {
 		howHasItBeen: 'Sie können Ihre letzte Mitfahrerfahrung hier bewerten',
 		editVehicle: 'Fahrzeug ändern',
 		closeTo: 'in der Nähe von',
-		defaultLicensePlate: 'Standardfahrzeug'
+		defaultLicensePlate: 'Standardfahrzeug',
+		calculatedRoute: 'Berechnete Route',
+		travelTimeOnly: 'reine Fahrzeit',
+		maxTime: 'maximal bei Mitnahme'
 	},
 
 	calibration: {

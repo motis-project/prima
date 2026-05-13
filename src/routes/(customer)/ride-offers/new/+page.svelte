@@ -47,6 +47,7 @@
 	import * as Card from '$lib/shadcn/card';
 	import { shiftDayIdxBackward } from '$lib/util/shiftDayIdx';
 	import { preparedDetourEllipseToGeoJSON, prepareDetourEllipse } from '$lib/util/booking/ellipse';
+	import { SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE } from '$lib/constants';
 
 	const { data, form } = $props();
 
@@ -611,18 +612,19 @@
 				</Card.Content>
 			</Card.Root>
 
-			<div class="flex items-center justify-center">
-				{#if page.state.selectedItinerary && !loading}
-					<Button
-						variant="outline"
-						onclick={() =>
-							pushState('', {
-								showMap: true,
-								selectedItinerary: page.state.selectedItinerary,
-								rideShareRouteDistanceMeters: page.state.rideShareRouteDistanceMeters
-							})}
-						class="size-fit text-base"
-					>
+			{#if page.state.selectedItinerary && !loading}
+				<Card.Root class="hover:bg-accent/40" role=button onclick={() =>
+					pushState('', {
+						showMap: true,
+						selectedItinerary: page.state.selectedItinerary,
+						rideShareRouteDistanceMeters: page.state.rideShareRouteDistanceMeters
+					})}>
+					<Card.Header>
+						<Card.Title class="flex items-center gap-2 text-base">
+						{t.rideShare.calculatedRoute}
+						</Card.Title>
+					</Card.Header>
+					<Card.Content>
 						<div class="flex-row">
 							<div class="flex items-center">
 								<MapPin class="mr-2 h-5 w-5" />
@@ -634,14 +636,20 @@
 									scheduledTimestamp={page.state.selectedItinerary?.startTime}
 									timestamp={page.state.selectedItinerary?.startTime}
 								/>
-								{t.departure}
+								{from.label ? from.label : t.departure}
 							</div>
 							<div class="flex items-center text-muted-foreground">
 								<EllipsisVertical class="mr-2 h-5 w-5" />
 								{formatDurationSec(page.state.selectedItinerary?.duration)}
+								{t.rideShare.maxTime}
 							</div>
-							<div class="flex items-center">
-								<MapPinCheckInside class="mr-2 h-5 w-5" />
+							<div class="flex items-center text-muted-foreground">
+								<EllipsisVertical class="mr-2 h-5 w-5" />
+								{formatDurationSec(page.state.selectedItinerary?.duration / (1+SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE)) }
+								{t.rideShare.travelTimeOnly}
+							</div>
+							<div class="flex w-fit items-center">
+								<MapPinCheckInside class="size-5 mr-2" />
 								<Time
 									variant="schedule"
 									class="mr-4 w-auto font-semibold"
@@ -650,14 +658,15 @@
 									scheduledTimestamp={page.state.selectedItinerary?.endTime}
 									timestamp={page.state.selectedItinerary?.endTime}
 								/>
-								{t.arrival}
+								{to.label ? to.label : t.arrival}
 							</div>
 						</div>
-					</Button>
-				{:else if loading}
-					<LoaderCircle class="h-6 w-6 animate-spin" />
-				{/if}
-			</div>
+					</Card.Content>
+				</Card.Root>
+			{:else if loading}
+				<LoaderCircle class="h-6 w-6 animate-spin" />
+			{/if}
+
 			<Message class="mb-6" msg={form?.msg || msg} />
 
 			<p>{t.ride.outro}</p>

@@ -384,6 +384,9 @@ export type Translations = {
 		editVehicle: string;
 		closeTo: string;
 		defaultLicensePlate: string;
+		calculatedRoute: string;
+		travelTimeOnly: string;
+		maxTime: string;
 	};
 
 	calibration: {

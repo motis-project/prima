@@ -442,7 +442,10 @@ const translations: Translations = {
 		howHasItBeen: 'You can rate your last ride share experience here',
 		editVehicle: 'Edit Vehicle',
 		closeTo: 'close to',
-		defaultLicensePlate: 'Default vehicle'
+		defaultLicensePlate: 'Default vehicle',
+		calculatedRoute: 'Calculated route',
+		travelTimeOnly: 'actual travel time',
+		maxTime: 'maximum if ridesharing'
 	},
 
 	calibration: {
