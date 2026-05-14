@@ -214,7 +214,7 @@
 				})
 				.then((j) => {
 					if (!j || !j.end || !j.start) {
-						msg = { type: 'error', text: 'noRouteFound' };
+						msg = j;
 						loading = false;
 						replaceState('', {});
 						return;

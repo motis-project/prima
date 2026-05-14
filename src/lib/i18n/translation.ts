@@ -89,6 +89,9 @@ export type Translations = {
 		noVehicle: string;
 		routingRequestFailed: string;
 		vehicleConflict: string;
+		previousLegConflict: string;
+		nextLegConflict: string;
+		allowedIntervalsConflict: string;
 
 		// Booking
 		bookingError: string;

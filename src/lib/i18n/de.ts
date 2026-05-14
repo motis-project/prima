@@ -94,6 +94,9 @@ const translations: Translations = {
 		routingRequestFailed: 'Routinganfrage fehlgeschlagen.',
 		vehicleConflict:
 			'Das gewählte Fahrzeug ist zu mindestens einem der gewählten Zeitpunkte nicht verfügbar.',
+		previousLegConflict: 'previous leg conflict',
+		nextLegConflict: 'next leg conflict',
+		allowedIntervalsConflict: 'Das gewählte Fahrzeug ist zur angegebenen Zeit nicht verfügbar.',
 
 		// Booking
 		bookingError: 'Die Fahrt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
