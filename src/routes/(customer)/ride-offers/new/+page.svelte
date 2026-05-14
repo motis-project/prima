@@ -190,6 +190,8 @@
 		return undefined;
 	});
 
+	let durationDirect = $state(0);
+	
 	async function doRouting() {
 		loading = true;
 		msg = undefined;
@@ -213,12 +215,13 @@
 					return response.json();
 				})
 				.then((j) => {
-					if (!j || !j.end || !j.start) {
+					if (!j || !j.end || !j.start || !j.duration) {
 						msg = j;
 						loading = false;
 						replaceState('', {});
 						return;
 					}
+					durationDirect = j.duration / 1000;
 					const it: Itinerary = {
 						duration: (j!.end - j!.start) / 1000,
 						startTime: new Date(j!.start).toISOString(),
@@ -650,12 +653,7 @@
 							</div>
 							<div class="flex items-center text-muted-foreground">
 								<EllipsisVertical class="ml-2 mr-6" />
-								{formatDurationSec(
-									floorToMinute(
-										page.state.selectedItinerary?.duration /
-											(1 + SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE)
-									)
-								)}
+								{formatDurationSec(durationDirect)}
 								{t.rideShare.travelTimeOnly}
 							</div>
 							<div class="flex items-center overflow-hidden">

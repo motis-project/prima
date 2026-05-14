@@ -28,6 +28,7 @@ export async function getRideShareTourCommunicatedTimes(
 		: {
 				start: r[0].startTimeStart,
 				end: r[0].targetTimeEnd,
+				duration: r[0].duration,
 				routeDistanceMeters: r[0].routeDistanceMeters
 			};
 }
