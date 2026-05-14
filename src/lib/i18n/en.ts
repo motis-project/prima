@@ -90,8 +90,8 @@ const translations: Translations = {
 		noVehicle: 'No vehicle available.',
 		routingRequestFailed: 'Routing request failed.',
 		vehicleConflict: 'The selected vehicle is not available at at least one of the selected times.',
-		previousLegConflict: 'previous leg conflict',
-		nextLegConflict: 'next leg conflict',
+		previousLegConflict: 'The new trip is not compatible with a previous ride-sharing offer.',
+		nextLegConflict: 'The new trip is not compatible with a subsequent ride-sharing offer.',
 		allowedIntervalsConflict: 'The seleceted vehicle is not available at the selected time',
 
 		// Booking
