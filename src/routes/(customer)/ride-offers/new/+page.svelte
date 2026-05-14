@@ -272,6 +272,10 @@
 		updatedTime.setHours(hours, minutes, 0, 0);
 		repeatingTime = updatedTime;
 	}
+
+	function floorToMinute(value: number) {
+		return Math.floor(value / 60) * 60;
+	}
 </script>
 
 {#snippet timeTypeControls(idPrefix: TimeControlMode)}
@@ -641,14 +645,14 @@
 							</div>
 							<div class="flex items-center text-muted-foreground">
 								<EllipsisVertical class="ml-2 mr-6" />
-								{formatDurationSec(page.state.selectedItinerary?.duration)}
+								{formatDurationSec(floorToMinute(page.state.selectedItinerary?.duration))}
 								{t.rideShare.maxTime}
 							</div>
 							<div class="flex items-center text-muted-foreground">
 								<EllipsisVertical class="ml-2 mr-6" />
 								{formatDurationSec(
-									page.state.selectedItinerary?.duration /
-										(1 + SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE)
+									floorToMinute(page.state.selectedItinerary?.duration /
+										(1 + SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE))
 								)}
 								{t.rideShare.travelTimeOnly}
 							</div>
