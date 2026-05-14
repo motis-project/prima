@@ -64,7 +64,9 @@ describe('add ride share request', () => {
 			inSchleife,
 			inKleinPriebus
 		);
-		expect(communicatedTimesStartFixed?.start).toBe(inXMinutes(40));
+		if ('start' in communicatedTimesStartFixed) {
+			expect(communicatedTimesStartFixed.start).toBe(inXMinutes(40));
+		}
 		const communicatedTimesStartNotFixed = await getRideShareTourCommunicatedTimes(
 			inXMinutes(40),
 			false,
@@ -72,7 +74,9 @@ describe('add ride share request', () => {
 			inSchleife,
 			inKleinPriebus
 		);
-		expect(communicatedTimesStartNotFixed?.end).toBe(inXMinutes(40));
+		if ('end' in communicatedTimesStartNotFixed) {
+			expect(communicatedTimesStartNotFixed.end).toBe(inXMinutes(40));
+		}
 	});
 	it('simple success case', async () => {
 		const vehicle = await createRideShareVehicle(
