@@ -651,8 +651,10 @@
 							<div class="flex items-center text-muted-foreground">
 								<EllipsisVertical class="ml-2 mr-6" />
 								{formatDurationSec(
-									floorToMinute(page.state.selectedItinerary?.duration /
-										(1 + SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE))
+									floorToMinute(
+										page.state.selectedItinerary?.duration /
+											(1 + SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE)
+									)
 								)}
 								{t.rideShare.travelTimeOnly}
 							</div>
