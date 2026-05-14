@@ -191,7 +191,7 @@
 	});
 
 	let durationDirect = $state(0);
-	
+
 	async function doRouting() {
 		loading = true;
 		msg = undefined;
