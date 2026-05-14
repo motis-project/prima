@@ -89,6 +89,9 @@ export type Translations = {
 		noVehicle: string;
 		routingRequestFailed: string;
 		vehicleConflict: string;
+		previousLegConflict: string;
+		nextLegConflict: string;
+		allowedIntervalsConflict: string;
 
 		// Booking
 		bookingError: string;
@@ -384,6 +387,9 @@ export type Translations = {
 		editVehicle: string;
 		closeTo: string;
 		defaultLicensePlate: string;
+		calculatedRoute: string;
+		travelTimeOnly: string;
+		maxTime: string;
 	};
 
 	calibration: {

@@ -12,6 +12,7 @@ import type { Transaction } from 'kysely';
 import { prepareDetourEllipse } from '$lib/util/booking/ellipse';
 import type { Itinerary } from '$lib/openapi';
 import { isCarLeg } from '$lib/util/booking/checkLegType';
+import { msg, type Msg } from '$lib/msg';
 
 export async function getRideShareTourCommunicatedTimes(
 	time: number,
@@ -22,11 +23,12 @@ export async function getRideShareTourCommunicatedTimes(
 	checkConflicts?: boolean
 ) {
 	const r = await util([time], startFixed, vehicle, start, target, checkConflicts);
-	return r[0] === undefined
-		? undefined
+	return 'type' in r[0]
+		? r[0]
 		: {
 				start: r[0].startTimeStart,
 				end: r[0].targetTimeEnd,
+				duration: r[0].duration,
 				routeDistanceMeters: r[0].routeDistanceMeters
 			};
 }
@@ -52,7 +54,7 @@ async function util(
 				duration: number;
 				routeDistanceMeters: number;
 		  }
-		| undefined
+		| Msg
 	)[]
 > {
 	const route = await carRouting(
@@ -66,7 +68,7 @@ async function util(
 	const routeDistanceMeters = route === undefined ? undefined : getRouteDistanceMeters(route);
 	if (!duration || routeDistanceMeters === undefined) {
 		console.log('adding tour: routing failed');
-		return Array.from(times, (_) => undefined);
+		return Array.from(times, (_) => msg('noRouteFound'));
 	}
 	const results = [];
 	for (const time of times) {
@@ -150,7 +152,7 @@ async function util(
 			const prevLegDurationResult = (await oneToManyCarRouting(lastTourEvent, [start], false))[0];
 			if (!prevLegDurationResult) {
 				console.log('adding tour: previous leg conflict', prevLegDurationResult, lastEventBefore);
-				results.push(undefined);
+				results.push(msg('previousLegConflict'));
 				continue;
 			}
 			allowedIntervals = Interval.subtract(allowedIntervals, [
@@ -169,7 +171,7 @@ async function util(
 			const nextLegDurationResult = (await oneToManyCarRouting(target, [firstTourEvent], false))[0];
 			if (!nextLegDurationResult) {
 				console.log('adding tour: next leg conflict', nextLegDurationResult, firstEventAfter);
-				results.push(undefined);
+				results.push(msg('nextLegConflict'));
 				continue;
 			}
 			allowedIntervals = Interval.subtract(allowedIntervals, [
@@ -184,7 +186,7 @@ async function util(
 		);
 		if (allowedIntervals.length === 0) {
 			console.log('adding tour: allowed intervals conflict', allowedIntervals);
-			results.push(undefined);
+			results.push(msg('allowedIntervalsConflict'));
 			continue;
 		}
 		const bestInterval = allowedIntervals.reduce(
@@ -282,12 +284,12 @@ export const addRideShareTour = async (
 		).id;
 	}
 	const timesResults = await util(times, startFixed, vehicle, start, target);
-	if (timesResults.length === 1 && timesResults[0] === undefined) {
+	if (timesResults.length === 1 && 'type' in timesResults[0]) {
 		return undefined;
 	}
 	const tourIds = [];
 	for (const timesResult of timesResults) {
-		if (timesResult === undefined) {
+		if ('type' in timesResult) {
 			tourIds.push(undefined);
 			continue;
 		}

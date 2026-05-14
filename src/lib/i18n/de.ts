@@ -94,6 +94,9 @@ const translations: Translations = {
 		routingRequestFailed: 'Routinganfrage fehlgeschlagen.',
 		vehicleConflict:
 			'Das gewählte Fahrzeug ist zu mindestens einem der gewählten Zeitpunkte nicht verfügbar.',
+		previousLegConflict: 'Die neue Fahrt ist mit einem Mitnahmeangebot davor nicht vereinbar.',
+		nextLegConflict: 'Die neue Fahrt ist mit einem Mitnahmeangebot danach nicht vereinbar.',
+		allowedIntervalsConflict: 'Das gewählte Fahrzeug ist zur angegebenen Zeit nicht verfügbar.',
 
 		// Booking
 		bookingError: 'Die Fahrt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
@@ -454,7 +457,10 @@ const translations: Translations = {
 		howHasItBeen: 'Sie können Ihre letzte Mitfahrerfahrung hier bewerten',
 		editVehicle: 'Fahrzeug ändern',
 		closeTo: 'in der Nähe von',
-		defaultLicensePlate: 'Standardfahrzeug'
+		defaultLicensePlate: 'Standardfahrzeug',
+		calculatedRoute: 'Berechnete Route',
+		travelTimeOnly: 'reine Fahrzeit',
+		maxTime: 'maximal bei Mitnahme'
 	},
 
 	calibration: {
