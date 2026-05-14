@@ -45,7 +45,6 @@
 	import * as Card from '$lib/shadcn/card';
 	import { shiftDayIdxBackward } from '$lib/util/shiftDayIdx';
 	import { preparedDetourEllipseToGeoJSON, prepareDetourEllipse } from '$lib/util/booking/ellipse';
-	import { SCHEDULED_TIME_BUFFER_DROPOFF_RELATIVE } from '$lib/constants';
 
 	const { data, form } = $props();
 
