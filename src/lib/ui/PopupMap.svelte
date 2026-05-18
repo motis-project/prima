@@ -270,7 +270,10 @@
 				color="green"
 				draggable={false}
 				{level}
-				location={posToLocation({lat: itinerary.legs[0].from.lat, lon: itinerary.legs[0].from.lon}, 0)}
+				location={posToLocation(
+					{ lat: itinerary.legs[0].from.lat, lon: itinerary.legs[0].from.lon },
+					0
+				)}
 			/>
 		{/if}
 
@@ -288,7 +291,13 @@
 				color="red"
 				draggable={false}
 				{level}
-				location={posToLocation({lat: itinerary.legs[itinerary.legs.length - 1].to.lat, lon: itinerary.legs[itinerary.legs.length - 1].to.lon}, 0)}
+				location={posToLocation(
+					{
+						lat: itinerary.legs[itinerary.legs.length - 1].to.lat,
+						lon: itinerary.legs[itinerary.legs.length - 1].to.lon
+					},
+					0
+				)}
 			/>
 		{/if}
 	</Map>
