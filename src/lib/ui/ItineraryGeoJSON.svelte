@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Layer from '$lib/map/Layer.svelte';
 	import GeoJSON from '$lib/map/GeoJSON.svelte';
-	import type { Itinerary, Mode } from '$lib/openapi';
+	import type { Itinerary, Leg, Mode } from '$lib/openapi';
 	import { getColor } from './modeStyle';
 	import polyline from 'polyline';
 	import { colord } from 'colord';
@@ -12,34 +12,45 @@
 		return m == 'WALK' || m == 'BIKE' || m == 'CAR';
 	}
 
+	function getRidesharingCoordinates(l: Leg): number[][] {
+		let c = new Array<Array<number>>();
+		c.push([l.from.lon, l.from.lat]);
+		if(l.intermediateStops !== undefined) {
+			l.intermediateStops.forEach(s => {
+				c.push([s.lon,s.lat]);
+			});
+		}
+		c.push([l.to.lon, l.to.lat]);
+		return c;
+	}
+
 	function itineraryToGeoJSON(i: Itinerary): GeoJSON.GeoJSON {
 		return {
 			type: 'FeatureCollection',
 			features: i.legs.flatMap((l) => {
-				if (l.steps) {
-					const color = isIndividualTransport(l.mode) ? '#42a5f5' : `${getColor(l)[0]}`;
-					const outlineColor = colord(color).darken(0.2).toHex();
-					if (l.mode === 'RIDE_SHARING') {
-						return [
-							{
-								type: 'Feature',
-								properties: {
-									color,
-									outlineColor,
-									level: 0,
-									way: 0,
-									dashed: 1
-								},
-								geometry: {
-									type: 'LineString',
-									coordinates: [
-										[l.from.lon, l.from.lat],
-										[l.to.lon, l.to.lat]
-									]
-								}
+				const color = isIndividualTransport(l.mode) ? '#42a5f5' : `${getColor(l)[0]}`;
+				const outlineColor = colord(color).darken(0.2).toHex();
+
+				if (l.mode === 'RIDE_SHARING') {
+					return [
+						{
+							type: 'Feature',
+							properties: {
+								color,
+								outlineColor,
+								level: 0,
+								way: 0,
+								dashed: 1
+							},
+							geometry: {
+								type: 'LineString',
+								coordinates: getRidesharingCoordinates(l)
 							}
-						];
-					}
+						}
+					];
+				}
+
+				if (l.steps) {
 					return l.steps.map((p) => {
 						return {
 							type: 'Feature',
@@ -56,8 +67,6 @@
 						};
 					});
 				} else {
-					const color = `${getColor(l)[0]}`;
-					const outlineColor = colord(color).darken(0.2).toHex();
 					return {
 						type: 'Feature',
 						properties: {

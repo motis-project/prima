@@ -92,7 +92,7 @@
 
 	{#if page.state.showMap}
 		<PopupMap
-			intermediateStops={false}
+			intermediateStops={true}
 			itinerary={data.journey}
 			from={posToLocation(data.journey.legs[0].from, 0)}
 			to={posToLocation(data.journey.legs[data.journey.legs.length - 1].to, 0)}
@@ -228,4 +228,6 @@
 			onClickTrip={(tripId: string) => goto(`/routing?tripId=${tripId}`)}
 		/>
 	{/if}
+
+	{JSON.stringify(data.journey)}
 </div>
