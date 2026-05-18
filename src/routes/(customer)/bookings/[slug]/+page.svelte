@@ -156,6 +156,4 @@
 			companyPhone={data.phone || undefined}
 		/>
 	{/if}
-
-	{JSON.stringify(data.journey)}
 </div>

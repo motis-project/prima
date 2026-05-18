@@ -228,6 +228,4 @@
 			onClickTrip={(tripId: string) => goto(`/routing?tripId=${tripId}`)}
 		/>
 	{/if}
-
-	{JSON.stringify(data.geojson)}
 </div>
