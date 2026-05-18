@@ -28,108 +28,45 @@
 		return [[l.from.lon, l.from.lat], ...getIntermediateCoordinates(l), [l.to.lon, l.to.lat]];
 	}
 
-	function getIntermediates(l: Leg) {
-		return getIntermediateCoordinates(l).map((e) => {
-			return {
-							type: 'Feature',
-							properties: {
-								color: getColor(l)[0],
-								intermediate: 1
-							},
-							geometry: {
-								type: 'Polygon',
-								coordinates: circlePolygon(e, 500)
-							}
-						};
-		});
-	}
-
 	function itineraryToGeoJSON(i: Itinerary): GeoJSON.GeoJSON {
 		let features = new Array<Feature>();
-
-		for(const l of i.legs) {
+		for (const l of i.legs) {
 			const color = isIndividualTransport(l.mode) ? '#42a5f5' : `${getColor(l)[0]}`;
 			const outlineColor = colord(color).darken(0.2).toHex();
-		if(l.mode === 'RIDE_SHARING') {
-			features.push({
-							type: 'Feature',
-							properties: {
-								color,
-								outlineColor,
-								level: 0,
-								way: 0,
-								dashed: 1
-							},
-							geometry: {
-								type: 'LineString',
-								coordinates: getRidesharingCoordinates(l)
-							}
-						});
-			for(const i of getIntermediateCoordinates(l)) {
+
+			if (l.mode === 'RIDE_SHARING') {
 				features.push({
-							type: 'Feature',
-							properties: {
-								color,
-								intermediate: 1
-							},
-							geometry: {
-								type: 'Polygon',
-								coordinates: circlePolygon(i, 500)
-							}
-						})
-			}
-		} else {
-
-		}
-
-		}
-
-		return {
-			type: 'FeatureCollection',
-			features: features
-		};
-
-		return {
-			type: 'FeatureCollection',
-			features: i.legs.flatMap((l) => {
-				const color = isIndividualTransport(l.mode) ? '#42a5f5' : `${getColor(l)[0]}`;
-				const outlineColor = colord(color).darken(0.2).toHex();
-
-				if (l.mode === 'RIDE_SHARING') {
-					console.log(JSON.stringify([						{
-							type: 'Feature',
-							properties: {
-								color,
-								outlineColor,
-								level: 0,
-								way: 0,
-								dashed: 1
-							},
-							geometry: {
-								type: 'LineString',
-								coordinates: getRidesharingCoordinates(l)
-							}
-						}, ...getIntermediates(l)]));
-
-					return [						{
-							type: 'Feature',
-							properties: {
-								color,
-								outlineColor,
-								level: 0,
-								way: 0,
-								dashed: 1
-							},
-							geometry: {
-								type: 'LineString',
-								coordinates: getRidesharingCoordinates(l)
-							}
-						}, ...getIntermediates(l)];
+					type: 'Feature',
+					properties: {
+						color,
+						outlineColor,
+						level: 0,
+						way: 0,
+						dashed: 1
+					},
+					geometry: {
+						type: 'LineString',
+						coordinates: getRidesharingCoordinates(l)
+					}
+				});
+				for (const i of getIntermediateCoordinates(l)) {
+					features.push({
+						type: 'Feature',
+						properties: {
+							color,
+							outlineColor,
+							intermediate: 1
+						},
+						geometry: {
+							type: 'Polygon',
+							coordinates: circlePolygon(i, 1000)
+						}
+					});
 				}
-
+			} else {
 				if (l.steps) {
-					return l.steps.map((p) => {
-						return {
+					for (const p of l.steps) {
+						features.push({
 							type: 'Feature',
 							properties: {
 								color,
@@ -141,10 +78,10 @@
 								type: 'LineString',
 								coordinates: polyline.decode(p.polyline.points, PRECISION).map(([x, y]) => [y, x])
 							}
-						};
-					});
+						});
+					}
 				} else {
-					return {
+					features.push({
 						type: 'Feature',
 						properties: {
 							outlineColor,
@@ -154,9 +91,14 @@
 							type: 'LineString',
 							coordinates: polyline.decode(l.legGeometry.points, PRECISION).map(([x, y]) => [y, x])
 						}
-					};
+					});
 				}
-			})
+			}
+		}
+
+		return {
+			type: 'FeatureCollection',
+			features: features
 		};
 	}
 
@@ -180,7 +122,12 @@
 			'line-join': 'round',
 			'line-cap': 'round'
 		}}
-		filter={['all', ['any', ['!has', 'level'], ['==', 'level', level]], ['!has', 'dashed']]}
+		filter={[
+			'all',
+			['any', ['!has', 'level'], ['==', 'level', level]],
+			['!has', 'dashed'],
+			['!has', 'intermediate']
+		]}
 		paint={{
 			'line-color': ['get', 'outlineColor'],
 			'line-width': 10,
@@ -194,7 +141,12 @@
 			'line-join': 'round',
 			'line-cap': 'round'
 		}}
-		filter={['all', ['any', ['!has', 'level'], ['==', 'level', level]], ['!has', 'dashed'], ['!has','intermediate']]}
+		filter={[
+			'all',
+			['any', ['!has', 'level'], ['==', 'level', level]],
+			['!has', 'dashed'],
+			['!has', 'intermediate']
+		]}
 		paint={{
 			'line-color': ['get', 'color'],
 			'line-width': 7.5,
@@ -203,6 +155,17 @@
 	/>
 
 	<!-- dashed -->
+	<Layer
+		id="ridesharing-intermediate"
+		type="fill"
+		layout={{}}
+		filter={['has', 'intermediate']}
+		paint={{
+			'fill-color': ['get', 'color'],
+			'fill-outline-color': ['get', 'outlineColor'],
+			'fill-opacity': 0.5
+		}}
+	/>
 	<Layer
 		id="path-outline-dashed-left"
 		type="line"
@@ -248,16 +211,6 @@
 			'line-color': ['get', 'color'],
 			'line-width': 7.5,
 			'line-opacity': 0.8
-		}}
-	/>
-	<Layer
-		id='ridesharing-intermediate'
-		type='fill'
-		layout={{}}
-		filter={['has','intermediate']}
-		paint={{
-			'fill-color': ['get', 'color'],
-			'fill-opacity': 1,
 		}}
 	/>
 </GeoJSON>
