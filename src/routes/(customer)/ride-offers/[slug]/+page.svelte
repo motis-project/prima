@@ -92,7 +92,7 @@
 
 	{#if page.state.showMap}
 		<PopupMap
-			intermediateStops={true}
+			intermediateStops={false}
 			itinerary={data.journey}
 			from={posToLocation(data.journey.legs[0].from, 0)}
 			to={posToLocation(data.journey.legs[data.journey.legs.length - 1].to, 0)}
@@ -229,5 +229,5 @@
 		/>
 	{/if}
 
-	{JSON.stringify(data.journey)}
+	{JSON.stringify(data.geojson)}
 </div>
