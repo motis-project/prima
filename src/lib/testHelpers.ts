@@ -188,7 +188,8 @@ export const addTestUser = async (company?: number) => {
 			companyId: company,
 			zipCode: '',
 			city: '',
-			region: ''
+			region: '',
+			company: ''
 		})
 		.returning('id')
 		.executeTakeFirstOrThrow();
