@@ -25,6 +25,7 @@ export interface Database {
 		city: string;
 		region: string;
 		profilePicture: string | null;
+		company: string;
 	};
 	session: {
 		id: string;

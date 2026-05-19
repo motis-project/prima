@@ -29,7 +29,8 @@ async function createUser(
 	zipCode: string,
 	city: string,
 	region: string,
-	phone: string | null
+	phone: string | null,
+	company: string
 ) {
 	const passwordHash = await hashPassword(password);
 	const user = await db
@@ -51,7 +52,8 @@ async function createUser(
 			zipCode,
 			city,
 			region,
-			isService: false
+			isService: false,
+			company
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();
@@ -84,6 +86,7 @@ export const actions: Actions = {
 		const firstName = formData.get('firstname');
 		const gender = formData.get('gender');
 		const name = formData.get('lastname');
+		const company = formData.get('company');
 		const email = formData.get('email');
 		const password = formData.get('password');
 		const zipCode = formData.get('zipcode');
@@ -96,6 +99,7 @@ export const actions: Actions = {
 			typeof firstName !== 'string' ||
 			firstName.length < 2 ||
 			typeof gender !== 'string' ||
+			typeof company !== 'string' ||
 			gender.length != 1
 		) {
 			return fail(400, { msg: msg('enterFirstLastName'), email: '' });
@@ -142,7 +146,8 @@ export const actions: Actions = {
 			zipCode,
 			city,
 			region,
-			phone
+			phone,
+			company
 		);
 		try {
 			await sendMail(Welcome, `Willkommen zu ${PUBLIC_PROVIDER}`, email, {

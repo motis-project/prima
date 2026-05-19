@@ -129,6 +129,7 @@ const translations: Translations = {
 		name: 'Name',
 		lastName: 'Last Name',
 		firstName: 'First Name',
+		company: 'Company',
 		gender: (id: string) => {
 			return { o: 'non-binary', f: 'Ms.', m: 'Mr.', n: 'not specified' }[id]!;
 		},
