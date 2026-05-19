@@ -4,6 +4,7 @@
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount, tick } from 'svelte';
+	import * as Card from '$lib/shadcn/card';
 	import ArrowUpDown from 'lucide-svelte/icons/arrow-up-down';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
@@ -842,7 +843,14 @@
 					{/await}
 				{/if}
 			</div>
-
+			<Card.Root>
+				<Card.Content>
+					<a
+						href="https://www.primaplusoev.de/component/content/article/mitfahrtag-am-20-mai-2026-jetzt-bei-prima-oev-registrieren-und-mitmachen"
+						class="link">20.05.26 Mitfahrtag: Mehr Informationen</a
+					>
+				</Card.Content>
+			</Card.Root>
 			<p class="mx-auto mt-6 text-sm">
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{t.introduction}

@@ -128,6 +128,7 @@ export type Translations = {
 		name: string;
 		lastName: string;
 		firstName: string;
+		company: string;
 		gender: (id: string) => string;
 		genderShort: (id: string) => string;
 		genderString: string;

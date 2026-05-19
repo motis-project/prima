@@ -136,6 +136,7 @@ const translations: Translations = {
 		name: 'Name',
 		lastName: 'Nachname',
 		firstName: 'Vorname',
+		company: 'Firma',
 		gender: (id: string) => {
 			return { o: 'divers', f: 'Frau', m: 'Herr', n: 'keine Angabe' }[id]!;
 		},
