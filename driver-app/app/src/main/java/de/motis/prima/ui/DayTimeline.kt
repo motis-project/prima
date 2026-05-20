@@ -282,11 +282,3 @@ fun DayTimeline(
         }
     }
 }
-
-/*@Composable
-fun PreviewDayTimeline(
-    navController: NavController,
-    viewModel: AvailabilityViewModel
-) {
-    DayTimeline(navController,viewModel)
-}*/
