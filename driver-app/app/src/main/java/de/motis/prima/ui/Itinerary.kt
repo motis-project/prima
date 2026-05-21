@@ -40,18 +40,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
-import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.R
-import de.motis.prima.data.DataRepository
 import de.motis.prima.services.Place
 import de.motis.prima.ui.theme.LocalExtendedColors
+import de.motis.prima.viewmodel.EventGroupViewModel
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import javax.inject.Inject
 
 enum class TransportType {
     TAXI, TRAIN, WALK
@@ -70,13 +67,6 @@ data class ItineraryItem(
     val toCancelled: Boolean = false,
     val cancelled: Boolean = false
 )
-
-@HiltViewModel
-class ItineraryViewModel @Inject constructor(
-    private val repository: DataRepository
-) : ViewModel() {
-    val ptLegs = repository.ptLegs
-}
 
 fun isoToLocalTime(isoString: String): String {
     val instant = Instant.parse(isoString)
