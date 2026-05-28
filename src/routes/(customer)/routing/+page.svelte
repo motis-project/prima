@@ -4,7 +4,6 @@
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount, tick } from 'svelte';
-	import * as Card from '$lib/shadcn/card';
 	import ArrowUpDown from 'lucide-svelte/icons/arrow-up-down';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
