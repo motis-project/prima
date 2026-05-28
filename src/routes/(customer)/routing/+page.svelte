@@ -843,15 +843,6 @@
 					{/await}
 				{/if}
 			</div>
-			<Card.Root>
-				<Card.Content>
-					<a
-						href="https://www.primaplusoev.de/component/content/article/mitfahrtag-am-20-mai-2026-jetzt-bei-prima-oev-registrieren-und-mitmachen"
-						class="link"
-						target="_blank">20.05.26 Mitfahrtag: Mehr Informationen</a
-					>
-				</Card.Content>
-			</Card.Root>
 			<p class="mx-auto mt-6 text-sm">
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{t.introduction}
