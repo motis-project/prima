@@ -64,7 +64,8 @@ export async function moveTour(
 												'eventGroup.scheduledTimeStart',
 												'eventGroup.scheduledTimeEnd',
 												'event.communicatedTime',
-												'event.isPickup'
+												'event.isPickup',
+												'event.eventGroupId'
 											])
 									).as('events')
 								])
@@ -115,7 +116,9 @@ export async function moveTour(
 							passengers: r.passengers,
 							bikes: r.bikes,
 							wheelchairs: r.wheelchairs,
-							luggage: r.luggage
+							luggage: r.luggage,
+							scheduledTimeStart: e.scheduledTimeStart,
+							eventGroupId: e.eventGroupId
 						};
 					})
 				);
@@ -173,6 +176,10 @@ export async function moveTour(
 						'MOVE TOUR early exit - there is a collision with another tour of the target vehicle. tourId: ',
 						tourId
 					);
+					result = {
+						status: 400,
+						message: 'Es gibt eine Kollision mit einer anderen Tour auf dem Zielfahrzeug.'
+					};
 					return;
 				}
 				await trx

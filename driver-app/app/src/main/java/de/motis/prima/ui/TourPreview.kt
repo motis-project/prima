@@ -435,20 +435,6 @@ fun RetroView(viewModel: TourViewModel, tourId: Int, navController: NavControlle
                 }
             }
         }
-
-        /*Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            for (ticket in pendingValidationTickets) {
-                Text(
-                    text = "${ticket.requestId}, ${ticket.validationStatus}",
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }*/
     }
 }
 

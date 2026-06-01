@@ -6,9 +6,14 @@ export const PUT = async ({ url }) => {
 	const tourId = readInt(url.searchParams.get('tourId'));
 	const fare = readInt(url.searchParams.get('fare'));
 
-	if (isNaN(fare) || isNaN(tourId)) {
-		console.log('Invalid fare or tourId parameter in api/driver/fare.', { tourId }, { fare });
-		error(400, { message: 'Invalid fare or tourId parameter' });
+	if (isNaN(tourId)) {
+		console.log('API DRIVER FARE: Invalid Tour ID');
+		error(400, { message: 'Invalid Tour ID' });
+	}
+
+	if (isNaN(fare)) {
+		console.log('API DRIVER FARE:', 'Invalid fare parameter', { tourId });
+		error(400, { message: 'Invalid fare parameter' });
 	}
 
 	const result = await db
@@ -18,7 +23,8 @@ export const PUT = async ({ url }) => {
 		.executeTakeFirst();
 
 	if (result.numUpdatedRows === BigInt(0)) {
-		error(404, { message: 'Tour not found' });
+		console.log('API DRIVER FARE:', 'Tour ID not found', { tourId }, { fare });
+		error(404, { message: 'Tour ID not found' });
 	}
 
 	return new Response(null, { status: 204 });

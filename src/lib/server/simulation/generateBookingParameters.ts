@@ -1,11 +1,11 @@
-import { type BookingParameters } from '../../src/lib/server/booking/taxi/bookingApi';
-import type { ExpectedConnection } from '../../src/lib/server/booking/expectedConnection';
-import type { Capacities } from '../../src/lib/util/booking/Capacities';
-import { type Coordinates } from '../../src/lib/util/Coordinates';
-import { HOUR, MINUTE, DAY } from '../../src/lib/util/time';
+import { type BookingParameters } from '$lib/server/booking/taxi/bookingApi';
+import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
+import type { Capacities } from '$lib/util/booking/Capacities';
+import { type Coordinates } from '$lib/util/Coordinates';
+import { HOUR, MINUTE, DAY } from '$lib/util/time';
 import { randomInt } from './randomInt';
-import { reverseGeo } from '../../src/lib/server/util/reverseGeocode';
-import { Mode } from '../../src/lib/server/booking/mode';
+import { reverseGeo } from '$lib/server/util/reverseGeocode';
+import { Mode } from '$lib/server/booking/mode';
 
 export async function generateBookingParameters(
 	coordinates: Coordinates[],
@@ -23,11 +23,11 @@ async function generateExpectedConnection(
 	restricted: Coordinates[] | undefined
 ): Promise<ExpectedConnection> {
 	const chosenCoordinates = restricted ? restricted : coordinates;
-	const r1 = randomInt(0, chosenCoordinates.length);
+	const r1 = randomInt(0, chosenCoordinates.length - 1);
 	const c1 = chosenCoordinates[r1];
 	let r2 = r1;
 	while (r2 === r1) {
-		r2 = randomInt(0, coordinates.length);
+		r2 = randomInt(0, coordinates.length - 1);
 	}
 	const c2 = coordinates[r2];
 	const a1 = await reverseGeo(c1);
@@ -48,15 +48,15 @@ async function generateExpectedConnection(
 		signature: '',
 		startFixed: Math.random() < 0.5,
 		mode: Mode.TAXI,
-		requestedTime: undefined
+		requestedTime: -1
 	};
 }
 
 function generateCapacities(): Capacities {
 	return {
 		passengers: randomInt(1, 3),
-		bikes: randomInt(0, 1),
+		bikes: 0,
 		luggage: randomInt(0, 1),
-		wheelchairs: randomInt(0, 1)
+		wheelchairs: 0
 	};
 }

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
+	import { type Location } from '$lib/map/Location';
 	import { Button } from '$lib/shadcn/button';
 	import { LocateFixed, ChevronLeft } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
@@ -20,16 +20,22 @@
 	let {
 		from = $bindable(),
 		to = $bindable(),
+		onFromLocationChange = (location: Location) => location,
+		onToLocationChange = (location: Location) => location,
 		itinerary,
 		areas = $bindable(),
 		rideSharingBounds = $bindable(),
+		rideShareEllipse = $bindable(),
 		intermediateStops = $bindable()
 	}: {
 		from?: Location | undefined;
 		to?: Location | undefined;
+		onFromLocationChange?: (location: Location) => Location | Promise<Location>;
+		onToLocationChange?: (location: Location) => Location | Promise<Location>;
 		itinerary?: SignedItinerary | undefined;
 		areas?: unknown;
 		rideSharingBounds?: unknown;
+		rideShareEllipse?: unknown;
 		intermediateStops?: boolean;
 	} = $props();
 
@@ -79,20 +85,24 @@
 {#snippet contextMenu(e: maplibregl.MapMouseEvent, close: () => void)}
 	<Button
 		variant="default"
-		onclick={() => {
+		onclick={async () => {
 			from = posToLocation(e.lngLat, level);
 			fromMarker?.setLngLat(from.value.match!);
 			close();
+			from = await onFromLocationChange(from);
+			fromMarker?.setLngLat(from.value.match!);
 		}}
 	>
 		From
 	</Button>
 	<Button
 		variant="default"
-		onclick={() => {
+		onclick={async () => {
 			to = posToLocation(e.lngLat, level);
 			toMarker?.setLngLat(to.value.match!);
 			close();
+			to = await onToLocationChange(to);
+			toMarker?.setLngLat(to.value.match!);
 		}}
 	>
 		To
@@ -200,6 +210,32 @@
 			/>
 		</GeoJSON>
 
+		{#if rideShareEllipse}
+			<GeoJSON id="rideShareEllipse" data={rideShareEllipse as GeoJSON.GeoJSON}>
+				<Layer
+					id="ride-share-ellipse-fill"
+					type="fill"
+					layout={{}}
+					filter={['literal', true]}
+					paint={{
+						'fill-color': '#2563eb',
+						'fill-opacity': 0.16
+					}}
+				/>
+				<Layer
+					id="ride-share-ellipse-outline"
+					type="line"
+					layout={{}}
+					filter={['literal', true]}
+					paint={{
+						'line-color': '#1d4ed8',
+						'line-width': 3,
+						'line-opacity': 0.9
+					}}
+				/>
+			</GeoJSON>
+		{/if}
+
 		{#if !itinerary}
 			<Popup trigger="click" children={contextMenu} />
 		{/if}
@@ -227,11 +263,19 @@
 				{level}
 				bind:location={from}
 				bind:marker={fromMarker}
+				onLocationChange={onFromLocationChange}
 			/>
 		{/if}
 
 		{#if to}
-			<Marker color="red" draggable={true} {level} bind:location={to} bind:marker={toMarker} />
+			<Marker
+				color="red"
+				draggable={true}
+				{level}
+				bind:location={to}
+				bind:marker={toMarker}
+				onLocationChange={onToLocationChange}
+			/>
 		{/if}
 	</Map>
 </div>

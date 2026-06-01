@@ -6,7 +6,7 @@
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import Panel from '$lib/ui/Panel.svelte';
 	import AddressTypeahead from '$lib/ui/AddressTypeahead.svelte';
-	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
+	import { type Location } from '$lib/map/Location';
 	import { t } from '$lib/i18n/translation';
 
 	import maplibregl from 'maplibre-gl';

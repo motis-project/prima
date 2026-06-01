@@ -1,4 +1,11 @@
-import { CAP, LOCALE } from '$lib/constants';
+import {
+	CAP,
+	LOCALE,
+	MAX_AVAILABILITY_COMPENSATION_EUROS,
+	MAX_AVAILABILITY_FOR_COMPENSATION,
+	MIN_AVAILABILITY_FOR_COMPENSATION
+} from '$lib/constants';
+import type { AvailabilityScore } from '$lib/server/availabilityCompensation/availabilityCompensation';
 import type { TourWithRequests } from '$lib/util/getToursTypes';
 import { getEuroString } from '$lib/util/odmPrice';
 import { HOUR, MINUTE, SECOND } from '$lib/util/time';
@@ -312,3 +319,104 @@ export const companyColsAdmin: Column<CompanyRow>[] = [
 ];
 
 export const companyColsCompany = companyColsAdmin.slice(1);
+
+export type RatedTourWithRequests = TourWithRequests & {
+	rating: number | null;
+	ratingBooking: number | null;
+	comment: string | null;
+};
+export const feedbackCols: Column<RatedTourWithRequests>[] = [
+	{
+		text: ['Fahrzeug'],
+		sort: (a: RatedTourWithRequests, b: RatedTourWithRequests) => a.vehicleId - b.vehicleId,
+		toTableEntry: (r: RatedTourWithRequests) => r.licensePlate
+	},
+	{
+		text: ['Feedback'],
+		toTableEntry: (r: RatedTourWithRequests) => r.comment ?? ''
+	},
+	{
+		text: ['Bewertung Reise'],
+		sort: (a: RatedTourWithRequests, b: RatedTourWithRequests) =>
+			(a.rating ?? -1) - (b.rating ?? -1),
+		toTableEntry: (r: RatedTourWithRequests) =>
+			r.rating === null ? '' : r.rating !== 0 ? 'gut' : 'schlecht',
+		toColumnStyle: (r: RatedTourWithRequests) =>
+			r.rating === null ? '' : r.rating !== 0 ? 'text-green-400' : 'text-red-400'
+	},
+	{
+		text: ['Bewertung Buchung'],
+		sort: (a: RatedTourWithRequests, b: RatedTourWithRequests) =>
+			(a.ratingBooking ?? -1) - (b.ratingBooking ?? -1),
+		toTableEntry: (r: RatedTourWithRequests) =>
+			r.ratingBooking === null ? '' : r.ratingBooking !== 0 ? 'gut' : 'schlecht',
+		toColumnStyle: (r: RatedTourWithRequests) =>
+			r.ratingBooking === null ? '' : r.ratingBooking !== 0 ? 'text-green-400' : 'text-red-400'
+	}
+];
+export const availabilityCols: Column<AvailabilityScore>[] = [
+	{
+		text: ['Unternehmen'],
+		sort: (a: AvailabilityScore, b: AvailabilityScore) => a.company - b.company,
+		toTableEntry: (r: AvailabilityScore) => r.name!
+	},
+	{
+		text: ['Verfügbarkeits-Abdeckung'],
+		sort: (a: AvailabilityScore, b: AvailabilityScore) =>
+			a.availabilityPercent - b.availabilityPercent,
+		toTableEntry: (r: AvailabilityScore) => {
+			let s = r.availabilityPercent.toFixed(2).replaceAll('.', '');
+			while (s.length > 1 && s.startsWith('0')) {
+				s = s.slice(1);
+			}
+			return (r.availabilityPercent >= 1 ? '100' : s) + '%';
+		}
+	},
+	{
+		text: [
+			`vergüteter Anteil (${MIN_AVAILABILITY_FOR_COMPENSATION * 100}%-${MAX_AVAILABILITY_FOR_COMPENSATION * 100}%)`
+		],
+		sort: (a: AvailabilityScore, b: AvailabilityScore) =>
+			a.availabilityPercent - b.availabilityPercent,
+		toTableEntry: (r: AvailabilityScore) => {
+			const s = Math.round(
+				100 *
+					(r.availabilityPercent < MIN_AVAILABILITY_FOR_COMPENSATION
+						? 0
+						: r.availabilityPercent > MAX_AVAILABILITY_FOR_COMPENSATION
+							? 1
+							: (r.availabilityPercent - MIN_AVAILABILITY_FOR_COMPENSATION) /
+								(MAX_AVAILABILITY_FOR_COMPENSATION - MIN_AVAILABILITY_FOR_COMPENSATION))
+			);
+			return (r.availabilityPercent >= 1 ? '100' : s) + '%';
+		}
+	},
+	{
+		text: ['Maximaler Betrag'],
+		toTableEntry: (_: AvailabilityScore) => MAX_AVAILABILITY_COMPENSATION_EUROS + ' €'
+	},
+	{
+		text: ['Betrag'],
+		sort: (a: AvailabilityScore, b: AvailabilityScore) =>
+			a.availabilityPercent - b.availabilityPercent,
+		toTableEntry: (r: AvailabilityScore) =>
+			(
+				MAX_AVAILABILITY_COMPENSATION_EUROS *
+				(r.availabilityPercent < MIN_AVAILABILITY_FOR_COMPENSATION
+					? 0
+					: r.availabilityPercent > MAX_AVAILABILITY_FOR_COMPENSATION
+						? 1
+						: (r.availabilityPercent - MIN_AVAILABILITY_FOR_COMPENSATION) /
+							(MAX_AVAILABILITY_FOR_COMPENSATION - MIN_AVAILABILITY_FOR_COMPENSATION))
+			).toFixed(2) + '€'
+	},
+	{
+		text: ['Monat'],
+		sort: (a: AvailabilityScore, b: AvailabilityScore) => a.startOfMonth - b.startOfMonth,
+		toTableEntry: (r: AvailabilityScore) =>
+			new Date(r.startOfMonth).toLocaleDateString(LOCALE, {
+				month: 'long',
+				year: 'numeric'
+			})
+	}
+];

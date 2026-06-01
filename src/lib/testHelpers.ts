@@ -5,8 +5,8 @@ import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { db } from '$lib/server/db';
 import type { BusStop } from './server/booking/taxi/BusStop';
-import type { TourWithRequests } from './util/getToursTypes';
 import { getScheduledEventTime } from './util/getScheduledEventTime';
+import { DAY } from './util/time';
 
 export enum Zone {
 	NIESKY = 1,
@@ -127,7 +127,8 @@ export const setRequest = async (
 			kidsZeroToTwo: 0,
 			ticketPrice: (passengers ?? 1) * 300,
 			pending: false,
-			rideShareTour: isRideShareTour ? tour : null
+			rideShareTour: isRideShareTour ? tour : null,
+			cancelledByCustomer: false
 		})
 		.returning('id')
 		.executeTakeFirstOrThrow();
@@ -187,7 +188,8 @@ export const addTestUser = async (company?: number) => {
 			companyId: company,
 			zipCode: '',
 			city: '',
-			region: ''
+			region: '',
+			company: ''
 		})
 		.returning('id')
 		.executeTakeFirstOrThrow();
@@ -203,9 +205,12 @@ export const clearDatabase = async () => {
 	await db.deleteFrom('vehicle').execute();
 	await db.deleteFrom('session').execute();
 	await db.deleteFrom('rideShareTour').execute();
+	await db.deleteFrom('ellipse').execute();
 	await db.deleteFrom('rideShareVehicle').execute();
+	await db.deleteFrom('desiredRideShare').execute();
 	await db.deleteFrom('user').execute();
 	await db.deleteFrom('company').execute();
+	await db.deleteFrom('availabilityState').execute();
 };
 
 export const clearTours = async () => {
@@ -214,6 +219,7 @@ export const clearTours = async () => {
 	await db.deleteFrom('eventGroup').execute();
 	await db.deleteFrom('tour').execute();
 	await db.deleteFrom('rideShareTour').execute();
+	await db.deleteFrom('ellipse').execute();
 };
 
 export const getTours = async () => {
@@ -265,7 +271,6 @@ export const getRSTours = async () => {
 };
 
 export const selectEvents = async () => {
-	console.log('did selectEvents');
 	return await db
 		.selectFrom('tour')
 		.innerJoin('request', 'tour.id', 'request.tour')
@@ -308,7 +313,22 @@ export function assertArraySizes<T>(
 	}
 }
 
-export function getCost(tour: TourWithRequests) {
+export function getCost(tour: {
+	startTime: number;
+	endTime: number;
+	requests: {
+		events: {
+			cancelled: boolean;
+			scheduledTimeStart: number;
+			scheduledTimeEnd: number;
+			prevLegDuration: number;
+			nextLegDuration: number;
+			eventGroupId: number;
+			isPickup: boolean;
+			passengers: number;
+		}[];
+	}[];
+}) {
 	const events = sortEventsByTime(
 		tour.requests.flatMap((r) => r.events).filter((e) => !e.cancelled)
 	);
@@ -372,4 +392,35 @@ export function sortEventsByTime<
 		}
 		return b.prevLegDuration - a.prevLegDuration;
 	});
+}
+
+export async function addDesiredTrip(
+	from: Coordinates,
+	fromAddress: string,
+	to: Coordinates,
+	toAddress: string,
+	user: number,
+	startFixed: boolean = true,
+	passengers: number = 1,
+	luggage: number = 0,
+	url: string = 'url',
+	time: number = Date.now() + DAY
+) {
+	await db
+		.insertInto('desiredRideShare')
+		.values({
+			fromLat: from.lat,
+			fromLng: from.lng,
+			toLat: to.lat,
+			toLng: to.lng,
+			fromAddress,
+			toAddress,
+			startFixed,
+			time,
+			luggage,
+			passengers,
+			interestedUser: user,
+			url
+		})
+		.execute();
 }

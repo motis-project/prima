@@ -68,23 +68,38 @@
 			.sort((e1, e2) => getScheduledEventTime(e1) - getScheduledEventTime(e2))
 	);
 	let company = $derived(tour && { lat: tour.companyLat!, lng: tour.companyLng! });
+	let uncancelledEvents = $derived(events?.filter((e) => !e.cancelled));
+	let cancelledByCompanyEvents = $derived(
+		events?.filter((e) => e.cancelled && !e.cancelledByCustomer)
+	);
+	let relevantEvents = $derived(
+		tour == null ? undefined : tour.cancelled ? cancelledByCompanyEvents : uncancelledEvents
+	);
 
 	const getRoutes = (): Promise<Itinerary | undefined>[] => {
 		let routes: Array<Promise<Itinerary | undefined>> = [];
 		if (tour == null || company == null || events!.length == 0) {
 			return routes;
 		}
-		for (let e = 0; e < events!.length - 1; e++) {
-			const e1 = events![e];
-			const e2 = events![e + 1];
+		for (let e = 0; e < relevantEvents!.length - 1; e++) {
+			const e1 = relevantEvents![e];
+			const e2 = relevantEvents![e + 1];
 			routes.push(carRouting(e1, e2));
 		}
 		return routes;
 	};
 
 	const routes = $derived(tour && getRoutes());
-	const fromCompany = $derived(tour && company && carRouting(company, events![0]));
-	const toCompany = $derived(tour && company && carRouting(events![events!.length - 1], company));
+	const fromCompany = $derived(
+		tour && company && relevantEvents?.length !== 0
+			? carRouting(company, relevantEvents![0])
+			: undefined
+	);
+	const toCompany = $derived(
+		tour && company && relevantEvents?.length !== 0
+			? carRouting(relevantEvents![relevantEvents!.length - 1], company)
+			: undefined
+	);
 
 	$effect(() => {
 		if (map && tour) {
@@ -257,9 +272,11 @@
 			class="h-full w-full rounded-lg border shadow"
 			attribution={"&copy; <a href='http://www.openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a>"}
 		>
-			{@render drawRoutes([fromCompany], 'outward', '#ff0000', '#000000')}
-			{@render drawRoutes([toCompany], 'return', '#00ff00', '#000000')}
-			{@render drawRoutes(routes, 'events', '#0000ff', '#000000')}
+			{#if fromCompany && toCompany}
+				{@render drawRoutes([fromCompany], 'outward', '#00ff00', '#000000')}
+				{@render drawRoutes([toCompany], 'return', '#ff0000', '#000000')}
+				{@render drawRoutes(routes, 'events', '#0000ff', '#000000')}
+			{/if}
 		</Map>
 	{/if}
 {/snippet}
@@ -354,7 +371,11 @@
 									{:else if event.isPickup && !event.cancelled && event.scheduledTimeEnd + event.nextLegDuration < Date.now()}
 										<span class="text-red-500">Ticket nicht verifiziert</span>
 									{:else if event.cancelled}
-										<span class="text-orange-400">Storniert</span>
+										<span class="text-orange-400"
+											>{event.cancelledByCustomer
+												? 'vom Kunden Storniert'
+												: 'vom Unternehmen Storniert'}</span
+										>
 									{/if}
 								</Table.Cell>
 							</Table.Row>

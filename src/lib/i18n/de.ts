@@ -1,4 +1,5 @@
 import type { Translations } from './translation';
+import { shiftDayIdxForward } from '$lib/util/shiftDayIdx';
 
 const translations: Translations = {
 	menu: {
@@ -11,7 +12,8 @@ const translations: Translations = {
 		completedTours: 'Fahrten',
 		accounting: 'Abrechnung',
 		employees: 'Mitarbeiter',
-		companies: 'Unternehmen'
+		companies: 'Unternehmen',
+		calibration: 'Kalibrierung'
 	},
 	msg: {
 		unknownError: 'Unbekannter Fehler.',
@@ -54,6 +56,7 @@ const translations: Translations = {
 		userDoesNotExist: 'Nutzer existiert nicht.',
 		activationSuccess: 'Nutzer freigeschaltet.',
 		userAlreadyActivated: 'Nutzer war bereits freigeschaltet.',
+		requiresAdminPrivileges: 'Erfordert Admin-Rechte',
 
 		// Taxi Members
 		driverAddedSuccessfully: 'Fahrer erfolgreich hinzugefügt.',
@@ -89,7 +92,11 @@ const translations: Translations = {
 		startDestNotInSameZone: 'Start und Ziel nicht im selben Pflichtfahrgebiet.',
 		noVehicle: 'Kein Fahrzeug verfügbar.',
 		routingRequestFailed: 'Routinganfrage fehlgeschlagen.',
-		vehicleConflict: 'Das gewählte Fahrzeug ist zum gewählten Zeitpunkt nicht verfügbar.',
+		vehicleConflict:
+			'Das gewählte Fahrzeug ist zu mindestens einem der gewählten Zeitpunkte nicht verfügbar.',
+		previousLegConflict: 'Die neue Fahrt ist mit einem Mitnahmeangebot davor nicht vereinbar.',
+		nextLegConflict: 'Die neue Fahrt ist mit einem Mitnahmeangebot danach nicht vereinbar.',
+		allowedIntervalsConflict: 'Das gewählte Fahrzeug ist zur angegebenen Zeit nicht verfügbar.',
 
 		// Booking
 		bookingError: 'Die Fahrt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
@@ -105,6 +112,8 @@ const translations: Translations = {
 			'Die Anfrage wurde gesendet. Die Mitfahrgelegenheit ist noch nicht fest vereinbart.',
 		accepted: 'Die Fahrt ist fest vereinbart.',
 		openRequest: 'Dieses Mitfahrangebot hat offene Anfragen.',
+		acceptedRequest: 'Dieses Mitfahrangebot hat akzeptierte Anfragen.',
+		openAndAcceptedRequest: 'Dieses Mitfahrangebot hat offene und akzeptierte Anfragen.',
 
 		// Feedback
 		feedbackThank: 'Vielen Dank für Ihr Feedback!',
@@ -127,6 +136,7 @@ const translations: Translations = {
 		name: 'Name',
 		lastName: 'Nachname',
 		firstName: 'Vorname',
+		company: 'Firma',
 		gender: (id: string) => {
 			return { o: 'divers', f: 'Frau', m: 'Herr', n: 'keine Angabe' }[id]!;
 		},
@@ -235,6 +245,7 @@ const translations: Translations = {
 		'Es handelt sich um private Mitfahrangebote. Wenn Sie sich für eine Verbindung mit privater Mitnahme interessieren, können Sie dem Anbieter eine Anfrage senden, um die Details zu vereinbaren. Registrieren Sie sich, um Mitfahrangebote zu erstellen und Anfragen zu senden.',
 	from: 'Von',
 	to: 'Nach',
+	when: 'Wann',
 	arrival: 'Ankunft',
 	departure: 'Abfahrt',
 	duration: 'Dauer',
@@ -268,6 +279,7 @@ const translations: Translations = {
 	removeItinerary: 'Reisekette entfernen',
 	introduction:
 		'Ziel des Projekts PriMa+ÖV ist es, den ÖPNV durch Ruftaxis und private Mitfahrgelegenheiten zu ergänzen, um ein mindestens zweistündliches Fahrtangebot auch in ländlichen Regionen und zu Tagesrandzeiten zu gewährleisten. Mehr über ',
+	hotline: 'Buchung via Telefon: ',
 	publicTransitTaxi: 'ÖPNV-Taxi',
 	serviceArea: 'Bediengebiet',
 	serviceTime: 'Bedienzeit',
@@ -288,6 +300,10 @@ const translations: Translations = {
 	noAvailabilityTitle: 'Zu weit in der Zukunft',
 	noAvalablilityDescription:
 		'Für die angefragte Zeit wurden noch keine Taxis als verfügbar gemeldet. Versuchen Sie es später wieder.',
+	addAlert: 'Benachrichtung erhalten, wenn eine Mitfahrt möglich ist',
+	alertInfo:
+		'Sie werden per E-Mail benachrichtigt, sobald jemand für diese Strecke und Zeit ein Mitfahrangebot einstellt. Sie können Ihre Benachrichtigungen unter Mitfahrangebote verwalten.',
+	notificationsList: 'Liste von aktivierten Benachrichtungen',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
@@ -333,7 +349,11 @@ const translations: Translations = {
 		pinExplainer:
 			'Zur Weitergabe an den Fahrgast. Der Fahrgast muss die PIN beim Einstieg den Taxifahrer:innen mitteilen.',
 		itineraryOnDate: 'Fahrt am',
-		withVehicle: 'mit Fahrzeug'
+		withVehicle: 'mit Fahrzeug',
+		cancelCheckbox:
+			'Alle Touren löschen, die mit der selben Regel erstellt wurden (wird keine Touren löschen, für die bereits eine Mitfahrt vereinbart wurde)	',
+		history: 'Verlauf',
+		deleteFavourites: 'Verlauf löschen'
 	},
 
 	explainer: {
@@ -354,11 +374,15 @@ const translations: Translations = {
 		outro:
 			'Ihr Mitfahrangebot wird öffentlich in der Verbindungsauskunft angezeigt. Über Anfragen werden Sie per E-Mail benachrichtigt.',
 		publish: 'Mitfahrangebot veröffentlichen',
+		publishSingleRideOffer: 'Einmaliges Mitfahrangebot veröffentlichen',
+		publishRepeatingRideOffers: 'Wiederholende Mitfahrangebote veröffentlichen',
 		cancelTrip: 'Mitfahrangebot stornieren',
 		cancelHeadline: 'Möchten Sie wirklich dieses Mitfahrangebot stornieren?',
-		noCancel: 'Nein, Fahrt nicht stornieren.',
+		noCancel: 'Nein, Mitfahrangebot nicht stornieren.',
 		cancelDescription:
 			'Sie sollten ggf. vorhandene Mitfahrer persönlich informieren, auch wenn diese per E-Mail über die Stornierung benachrichtigt werden.',
+		cancelCheckbox:
+			'Alle Mitfahrangebote löschen, die mit derselben Regel erstellt wurden. Mitfahrangebote mit bestätigten Mitfahrten werden nicht storniert.',
 		negotiateHere: 'Hier vereinbaren',
 		negotiateHeader: 'Mitfahrgelegenheit vereinbaren',
 		negotiatePrivacy:
@@ -376,9 +400,32 @@ const translations: Translations = {
 		requestBy: 'Anfrage von',
 		offerBy: 'Angebot von',
 		acceptRequest: 'Mitfahrt bestätigen',
+		declineRequest: 'Mitfahrt ablehnen',
+		acceptRequestInfo:
+			'Bitte stimmen Sie vor der Bestätigung den genauen Treffpunkt, die genaue Treffzeit und die Gepäckmitnahme mit der anfragenden Person ab.',
 		requestAccepted: 'Mitfahrt bestätigt',
 		requestCancelled: 'Mitfahrt abgesagt',
-		showMap: 'Karte anzeigen'
+		showMap: 'Karte anzeigen',
+		singleRideOffer: 'Einmaliges Mitfahrangebot',
+		publishBlockerStart: 'Geben Sie einen Start an, um das Mitfahrangebot zu veröffentlichen.',
+		publishBlockerTarget: 'Geben Sie ein Ziel an, um das Mitfahrangebot zu veröffentlichen.',
+		publishBlockerSingleTime: 'Wählen Sie eine Zeit aus, um das Mitfahrangebot zu veröffentlichen.',
+		publishBlockerWeekdays:
+			'Wählen Sie mindestens einen Wochentag für die wiederholenden Mitfahrangebote aus.',
+		repetitionLabel: 'Wiederholende Mitfahrangebote',
+		addRule: 'Regel hinzufügen',
+		individualDays: 'individuelle Tage',
+		to: 'bis ',
+		daysList: [
+			{ short: 'S', full: 'So', idx: 0 },
+			{ short: 'M', full: 'Mo', idx: 1 },
+			{ short: 'D', full: 'Di', idx: 2 },
+			{ short: 'M', full: 'Mi', idx: 3 },
+			{ short: 'D', full: 'Do', idx: 4 },
+			{ short: 'F', full: 'Fr', idx: 5 },
+			{ short: 'S', full: 'Sa', idx: 6 }
+		].sort((d1, d2) => shiftDayIdxForward(d1.idx) - shiftDayIdxForward(d2.idx)),
+		chooseTimeSpan: 'Zeitspanne anpassen:'
 	},
 
 	buttons: {
@@ -411,8 +458,33 @@ const translations: Translations = {
 		howHasItBeen: 'Sie können Ihre letzte Mitfahrerfahrung hier bewerten',
 		editVehicle: 'Fahrzeug ändern',
 		closeTo: 'in der Nähe von',
-		defaultLicensePlate: 'Standardfahrzeug'
-	}
+		defaultLicensePlate: 'Standardfahrzeug',
+		calculatedRoute: 'Berechnete Route',
+		travelTimeOnly: 'reine Fahrzeit',
+		maxTime: 'maximal bei Mitnahme'
+	},
+
+	calibration: {
+		perTransfer: 'pro Umstieg',
+		taxiBase: 'Taxi Basis',
+		taxiPerMinute: 'Taxi pro Minute',
+		taxiDirectPenalty: 'Taxi Direkt Strafe',
+		ptSlope: 'Öffentlicher Verkehr Steigung',
+		taxiSlope: 'Taxi Steigung',
+		useForCalibration: 'Zur Kalibrierung verwenden',
+		addCalibrationSet: 'Kalibrierungsmenge hinzufügen',
+		greeter: 'Passen Sie die Parameter des Taxifilters an:',
+		keep: 'behalten',
+		remove: 'entfernen',
+		deploy: 'Parameter verwenden',
+		save: 'Klassifizierung speichern',
+		delete: 'Verbindungsmenge entfernen'
+	},
+	availabilityPercent: 'aktuelle Abdeckung',
+	availabilityPercentExplanation:
+		'Dieser Wert zeigt die aktuelle Verfügbarkeits-Abdeckung zwischen 05:00 Uhr und 23:00 Uhr der nächsten 2 Wochen.',
+
+	daily: 'täglich'
 };
 
 export default translations;

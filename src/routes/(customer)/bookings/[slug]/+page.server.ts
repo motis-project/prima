@@ -79,7 +79,7 @@ export const actions = {
 			await cancelRequest(requestId, locals.session!.userId!);
 		}
 		if (tourType!.rideShareTour !== null) {
-			await cancelRideShareRequest(requestId, locals.session!.userId!);
+			await cancelRideShareRequest(requestId, locals.session!.userId!, 'passenger');
 		}
 		return { msg: msg('requestCancelled', 'success') };
 	},

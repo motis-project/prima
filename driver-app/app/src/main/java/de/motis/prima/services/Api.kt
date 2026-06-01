@@ -137,22 +137,13 @@ data class Tour(
     val events: List<Event>
 )
 
-data class Itinerary(
-    val duration: Long,
-    val startTime: String,
-    val endTime: String,
-    val transfers: Int,
-    val legs: List<Leg>,
-    //val fareTransfers: List<FareTransfer>
-)
-
 data class Leg(
     val mode: String,
     val from: Place,
     val to: Place,
     val duration: Long,
-    val startTime: String,
-    val endTime: String,
+    val startTime: String?,
+    val endTime: String?,
     var scheduledStartTime: String?,
     val scheduledEndTime: String?,
     val realTime: Boolean,

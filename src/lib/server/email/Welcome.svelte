@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/private';
 	import { PUBLIC_PROVIDER } from '$env/static/public';
+	import DisplayCode from './DisplayCode.svelte';
 	import EmailFooter from './EmailFooter.svelte';
 	const { code } = $props();
 </script>
@@ -12,7 +13,9 @@
 		<a href="{env.ORIGIN}/account/verify-email/?code={code}" target="_blank">
 			{env.ORIGIN}/verify-email/?code={code}
 		</a>
+		<br />Oder verwenden Sie den Code:<br />
 	</p>
+	<DisplayCode {code} />
 
 	<EmailFooter />
 </div>

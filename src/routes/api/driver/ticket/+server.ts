@@ -6,13 +6,14 @@ export const PUT = async ({ url }) => {
 	const requestId = readInt(url.searchParams.get('requestId'));
 	const ticketCode = url.searchParams.get('ticketCode');
 
-	if (typeof ticketCode !== 'string' || isNaN(requestId)) {
-		console.log(
-			'Invalid ticketCode parameter in api/driver/ticket.',
-			{ requestId },
-			{ ticketCode }
-		);
-		error(400, { message: 'Invalid ticketCode parameter' });
+	if (isNaN(requestId)) {
+		console.log('API DRIVER TICKET:', 'Invalid request ID');
+		error(400, { message: 'Invalid request ID' });
+	}
+
+	if (typeof ticketCode !== 'string') {
+		console.log('API DRIVER TICKET:', 'Invalid ticketCode', { requestId });
+		error(400, { message: 'Invalid ticket code' });
 	}
 
 	const result = await db
@@ -23,7 +24,13 @@ export const PUT = async ({ url }) => {
 		.executeTakeFirst();
 
 	if (result.numUpdatedRows === BigInt(0)) {
-		error(404, { message: 'Request not found or invalid ticket code' });
+		console.log(
+			'API DRIVER TICKET:',
+			'Request ID not found or invalid ticket code',
+			{ requestId },
+			{ ticketCode }
+		);
+		error(404, { message: 'Request ID not found or invalid ticket code' });
 	}
 
 	return new Response(null, { status: 204 });

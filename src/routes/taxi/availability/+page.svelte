@@ -33,6 +33,7 @@
 	import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 	import type { Msg } from '$lib/msg';
 	import { t } from '$lib/i18n/translation';
+	import AvailabilityPercent from './AvailabilityPercent.svelte';
 
 	const { data, form } = $props();
 	const vehicles = $derived.by(() => {
@@ -186,6 +187,9 @@
 	};
 
 	const isAvailabilityAlterable = (cell: Range) => {
+		if (!data.companyCoordinates) {
+			return false;
+		}
 		const allowed = getAllowedTimes(
 			cell.startTime + MINUTE,
 			cell.endTime - MINUTE,
@@ -324,6 +328,9 @@
 	};
 
 	const acceptsAnyTour = (v: Vehicle) => {
+		if (!('company' in v)) {
+			return false;
+		}
 		return draggedTours!.tours.some((tour) => {
 			const events = tour.requests.flatMap((r) => r.events);
 			const possibleInsertions = getPossibleInsertions(
@@ -399,7 +406,11 @@
 					<td
 						class="h-full pr-2 align-middle font-mono text-sm font-semibold leading-none tracking-tight"
 					>
-						<AddVehicle vehicle={v} text={v.licensePlate} />
+						{#if 'company' in v}
+							<AddVehicle vehicle={v} text={v.licensePlate} />
+						{:else}
+							{v.licensePlate}
+						{/if}
 					</td>
 					{#each split(range, 60) as x}
 						<td>
@@ -461,12 +472,20 @@
 <Card.Root>
 	<div class="flex justify-between">
 		<Card.Header>
-			<Card.Title>Fahrzeuge und Touren</Card.Title>
-			<Card.Description>Fahrzeugverfügbarkeit- und Tourenverwaltung</Card.Description>
+			{#if data.companyCoordinates}
+				<Card.Title>Fahrzeuge und Touren</Card.Title>
+				<Card.Description>Fahrzeugverfügbarkeit- und Tourenverwaltung</Card.Description>
+			{:else}
+				<Card.Title>Verfügbarkeiten nach Unternehmen</Card.Title>
+				<Card.Description>Aktuell eingestellte Verfügbarkeiten</Card.Description>
+			{/if}
 		</Card.Header>
 
 		<div class="flex gap-4 p-6 font-semibold leading-none tracking-tight">
 			<div class="flex gap-1">
+				{#if !data.isAdmin}
+					<AvailabilityPercent availabilityCoverage={data.availabilityPercent ?? 0} class="mr-4" />
+				{/if}
 				<Button variant="outline" size="icon" onclick={() => (value = value.add({ days: -1 }))}>
 					<ChevronLeft class="size-4" />
 				</Button>
@@ -488,7 +507,9 @@
 					<ChevronRight class="size-4" />
 				</Button>
 			</div>
-			<AddVehicle text={t.buttons.addVehicle} useWFit={true} />
+			{#if data.companyCoordinates}
+				<AddVehicle text={t.buttons.addVehicle} useWFit={true} />
+			{/if}
 		</div>
 	</div>
 

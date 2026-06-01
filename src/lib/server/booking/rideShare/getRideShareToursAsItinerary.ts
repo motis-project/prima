@@ -15,6 +15,8 @@ export async function getRideshareToursAsItinerary(
 		id: number;
 		cancelled: boolean;
 		negotiating: boolean;
+		pattern: number | null;
+		comitted: boolean;
 		requests: {
 			journey: Itinerary;
 			firstName: string;
@@ -27,6 +29,7 @@ export async function getRideshareToursAsItinerary(
 			id: number;
 			averageRatingCustomer: string | number | null;
 			requestCancelled: boolean;
+			passengers: number;
 		}[];
 		licensePlate: string | undefined | null;
 	}[];
@@ -41,6 +44,7 @@ export async function getRideshareToursAsItinerary(
 			'communicatedEnd',
 			'rideShareTour.cancelled as tourCancelled',
 			'rideShareVehicle.licensePlate',
+			'rideShareTour.pattern',
 			jsonArrayFrom(
 				eb
 					.selectFrom('request')
@@ -56,6 +60,7 @@ export async function getRideshareToursAsItinerary(
 						'user.email',
 						'user.profilePicture',
 						'request.cancelled as requestCancelled',
+						'request.passengers',
 						jsonArrayFrom(
 							eb
 								.selectFrom('event')
@@ -160,7 +165,8 @@ export async function getRideshareToursAsItinerary(
 									pending: r.pending,
 									id: r.id,
 									averageRatingCustomer: r.averageRatingCustomer,
-									requestCancelled: r.requestCancelled
+									requestCancelled: r.requestCancelled,
+									passengers: r.passengers
 								};
 							});
 			const events = journey.requests
@@ -190,8 +196,13 @@ export async function getRideshareToursAsItinerary(
 				negotiating:
 					journey.requests.some((r) => r.pending && !r.requestCancelled) &&
 					journey.communicatedStart > Date.now(),
+				comitted:
+					journey.requests.some(
+						(r) => !r.pending && !r.requestCancelled && r.customerId !== providerId
+					) && journey.communicatedStart > Date.now(),
 				licensePlate: journey.licensePlate,
-				requests
+				requests,
+				pattern: journey.pattern
 			};
 		})
 	};

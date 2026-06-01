@@ -15,6 +15,7 @@ export type Translations = {
 		accounting: string;
 		employees: string;
 		companies: string;
+		calibration: string;
 	};
 	msg: {
 		unknownError: string;
@@ -52,6 +53,7 @@ export type Translations = {
 		userDoesNotExist: string;
 		activationSuccess: string;
 		userAlreadyActivated: string;
+		requiresAdminPrivileges: string;
 
 		// Taxi Members
 		driverAddedSuccessfully: string;
@@ -87,6 +89,9 @@ export type Translations = {
 		noVehicle: string;
 		routingRequestFailed: string;
 		vehicleConflict: string;
+		previousLegConflict: string;
+		nextLegConflict: string;
+		allowedIntervalsConflict: string;
 
 		// Booking
 		bookingError: string;
@@ -99,6 +104,8 @@ export type Translations = {
 		stillNegotiating: string;
 		accepted: string;
 		openRequest: string;
+		acceptedRequest: string;
+		openAndAcceptedRequest: string;
 
 		// Feedback
 		feedbackThank: string;
@@ -121,6 +128,7 @@ export type Translations = {
 		name: string;
 		lastName: string;
 		firstName: string;
+		company: string;
 		gender: (id: string) => string;
 		genderShort: (id: string) => string;
 		genderString: string;
@@ -210,6 +218,7 @@ export type Translations = {
 	rideSharingInfo: string;
 	from: string;
 	to: string;
+	when: string;
 	arrival: string;
 	departure: string;
 	duration: string;
@@ -231,6 +240,7 @@ export type Translations = {
 	storeItinerary: string;
 	removeItinerary: string;
 	introduction: string;
+	hotline: string;
 	publicTransitTaxi: string;
 	serviceArea: string;
 	serviceTime: string;
@@ -248,6 +258,9 @@ export type Translations = {
 	luggageExplanation: string;
 	noAvailabilityTitle: string;
 	noAvalablilityDescription: string;
+	addAlert: string;
+	alertInfo: string;
+	notificationsList: string;
 
 	booking: {
 		bookHere: string;
@@ -283,6 +296,9 @@ export type Translations = {
 		pinExplainer: string;
 		itineraryOnDate: string;
 		withVehicle: string;
+		cancelCheckbox: string;
+		history: string;
+		deleteFavourites: string;
 	};
 
 	explainer: {
@@ -302,10 +318,13 @@ export type Translations = {
 		addVehicle: string;
 		outro: string;
 		publish: string;
+		publishSingleRideOffer: string;
+		publishRepeatingRideOffers: string;
 		cancelTrip: string;
 		cancelHeadline: string;
 		noCancel: string;
 		cancelDescription: string;
+		cancelCheckbox: string;
 		negotiateHere: string;
 		negotiateHeader: string;
 		negotiatePrivacy: string;
@@ -320,9 +339,22 @@ export type Translations = {
 		requestBy: string;
 		offerBy: string;
 		acceptRequest: string;
+		declineRequest: string;
+		acceptRequestInfo: string;
 		requestAccepted: string;
 		requestCancelled: string;
 		showMap: string;
+		singleRideOffer: string;
+		publishBlockerStart: string;
+		publishBlockerTarget: string;
+		publishBlockerSingleTime: string;
+		publishBlockerWeekdays: string;
+		repetitionLabel: string;
+		addRule: string;
+		individualDays: string;
+		to: string;
+		daysList: { short: string; full: string }[];
+		chooseTimeSpan: string;
 	};
 
 	buttons: {
@@ -356,7 +388,32 @@ export type Translations = {
 		editVehicle: string;
 		closeTo: string;
 		defaultLicensePlate: string;
+		calculatedRoute: string;
+		travelTimeOnly: string;
+		maxTime: string;
 	};
+
+	calibration: {
+		perTransfer: string;
+		taxiBase: string;
+		taxiPerMinute: string;
+		taxiDirectPenalty: string;
+		ptSlope: string;
+		taxiSlope: string;
+		useForCalibration: string;
+		addCalibrationSet: string;
+		greeter: string;
+		keep: string;
+		remove: string;
+		deploy: string;
+		save: string;
+		delete: string;
+	};
+
+	availabilityPercent: string;
+	availabilityPercentExplanation: string;
+
+	daily: string;
 };
 
 const translations: Map<string, Translations> = new Map(Object.entries({ en, de }));

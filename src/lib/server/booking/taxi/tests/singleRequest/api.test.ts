@@ -8,14 +8,20 @@ import {
 	Zone
 } from '$lib/testHelpers';
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
-import { COORDINATE_ROUNDING_ERROR_THRESHOLD } from '$lib/constants';
+import {
+	COORDINATE_ROUNDING_ERROR_THRESHOLD,
+	EARLIEST_SHIFT_START,
+	LATEST_SHIFT_END
+} from '$lib/constants';
 import { createSession } from '$lib/server/auth/session';
-import { MINUTE, roundToUnit } from '$lib/util/time';
+import { HOUR, MINUTE, roundToUnit } from '$lib/util/time';
 import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 import { signEntry } from '$lib/server/booking/signEntry';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
 import { black, inXMinutes, white } from '$lib/server/booking/testUtils';
 import { Mode } from '$lib/server/booking/mode';
+import { getAllowedTimes } from '$lib/util/getAllowedTimes';
+import { Interval } from '$lib/util/interval';
 
 let sessionToken: string;
 
@@ -243,13 +249,20 @@ describe('Whitelist and Booking API Tests', () => {
 		const company = await addCompany(Zone.NIESKY, inNiesky3);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(1600));
+		let earliest = inXMinutes(598);
+		let latest = inXMinutes(700);
+		const allowedTimes = getAllowedTimes(earliest, latest, EARLIEST_SHIFT_START, LATEST_SHIFT_END);
+		if (!allowedTimes[0].contains(new Interval(earliest, latest))) {
+			earliest -= HOUR;
+			latest -= HOUR;
+		}
 		const blackBody = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: [],
-			earliest: inXMinutes(598),
-			latest: inXMinutes(700),
+			earliest,
+			latest,
 			startFixed: true,
 			capacities
 		});
@@ -258,15 +271,15 @@ describe('Whitelist and Booking API Tests', () => {
 		expect(blackResponse.start.length).toBe(0);
 		expect(blackResponse.target.length).toBe(0);
 		expect(blackResponse.direct.length).toBe(1);
-		expect(blackResponse.direct[0].startTime).toBe(inXMinutes(598));
-		expect(blackResponse.direct[0].endTime).toBe(inXMinutes(600));
+		expect(blackResponse.direct[0].startTime).toBe(earliest);
+		expect(blackResponse.direct[0].endTime).toBe(allowedTimes[0].endTime);
 
 		const whiteBody = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(598)],
+			directTimes: [earliest],
 			startFixed: true,
 			capacities
 		});
@@ -339,7 +352,8 @@ describe('Whitelist and Booking API Tests', () => {
 				inNiesky2.lng,
 				whiteResponse.direct[0].pickupTime,
 				whiteResponse.direct[0].dropoffTime,
-				false
+				false,
+				undefined
 			),
 			startFixed: true,
 			requestedTime: inXMinutes(70),
@@ -409,7 +423,8 @@ describe('Whitelist and Booking API Tests', () => {
 				inNiesky2.lng,
 				whiteResponse.direct[0].pickupTime,
 				roundToUnit(whiteResponse.direct[0].dropoffTime, MINUTE, Math.floor),
-				false
+				false,
+				undefined
 			),
 			startFixed: true,
 			mode: Mode.TAXI,

@@ -324,6 +324,39 @@ export class Interval {
 		merged.push(unmerged.pop()!);
 		return merged;
 	};
+
+	static aggregate(intervals: Interval[]): { interval: Interval; count: number }[] {
+		if (intervals.length === 0) {
+			return [];
+		}
+
+		const starts = new Map<number, number>();
+		const ends = new Map<number, number>();
+
+		for (const interval of intervals) {
+			starts.set(interval.startTime, (starts.get(interval.startTime) ?? 0) + 1);
+			ends.set(interval.endTime, (ends.get(interval.endTime) ?? 0) + 1);
+		}
+
+		const endPoints = [...new Set([...starts.keys(), ...ends.keys()])].sort((a, b) => a - b);
+
+		const ret: { interval: Interval; count: number }[] = [];
+
+		let active = 0;
+
+		for (let i = 0; i < endPoints.length - 1; i++) {
+			const point = endPoints[i];
+			active += starts.get(point) ?? 0;
+			active -= ends.get(point) ?? 0;
+
+			const nextPoint = endPoints[i + 1];
+			if (active > 0 && point < nextPoint) {
+				ret.push({ interval: new Interval(point, nextPoint), count: active });
+			}
+		}
+
+		return ret;
+	}
 }
 
 export const covers = (a: IntervalLike, b: UnixtimeMs) => new Interval(a).covers(b);

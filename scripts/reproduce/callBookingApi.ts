@@ -34,6 +34,7 @@ const parameters = {
 const kidsThreeToFour = 0;
 const kidsZeroToTwo = 0;
 const kidsFiveToSix = 0;
+const kidsSevenToFourteen = 0;
 const finalFlag = false;
 async function main() {
 	const response = await bookingApi(
@@ -44,6 +45,7 @@ async function main() {
 		kidsThreeToFour,
 		kidsFiveToSix,
 		kidsZeroToTwo,
+		kidsSevenToFourteen,
 		finalFlag
 	);
 

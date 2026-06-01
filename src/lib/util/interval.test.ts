@@ -90,4 +90,22 @@ describe('subtract interval arrays test', () => {
 		expect((res[0].startTime - BASE_MS) / 60000).toBe(4);
 		expect((res[0].endTime - BASE_MS) / 60000).toBe(5);
 	});
+
+	it('aggregate', () => {
+		const intervals = [
+			new Interval(1, 5),
+			new Interval(1, 3),
+			new Interval(2, 4),
+			new Interval(4, 6)
+		];
+		const res = Interval.aggregate(intervals).sort(
+			(a, b) => a.interval.startTime - b.interval.startTime
+		);
+		expect(res).toHaveLength(5);
+		expect(res[0].count).toBe(2);
+		expect(res[1].count).toBe(3);
+		expect(res[2].count).toBe(2);
+		expect(res[3].count).toBe(2);
+		expect(res[4].count).toBe(1);
+	});
 });

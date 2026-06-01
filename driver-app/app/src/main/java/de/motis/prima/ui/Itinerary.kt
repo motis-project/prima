@@ -47,12 +47,12 @@ import de.motis.prima.R
 import de.motis.prima.data.DataRepository
 import de.motis.prima.services.Place
 import de.motis.prima.ui.theme.LocalExtendedColors
+import de.motis.prima.viewmodel.EventGroupViewModel
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
-
 enum class TransportType {
     TAXI, TRAIN, WALK
 }

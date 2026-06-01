@@ -41,3 +41,6 @@ driver-app/app/google-services.json
 
 # Uploads
 static/uploads
+
+#Simulation statistics
+simulation-stats.jsonl

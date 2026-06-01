@@ -1,6 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
 import {
-	signup,
 	RIDE_SHARE_PROVIDER,
 	login,
 	RIDE_SHARE_CUSTOMER,
@@ -9,29 +8,44 @@ import {
 	logout
 } from './utils';
 import { sql } from 'kysely';
+import { hashPassword } from '../src/lib/server/auth/password';
 import { LICENSE_PLATE_PLACEHOLDER } from '../src/lib/constants';
+import { clearE2EData, seedUser } from './testData';
 
 test.describe.configure({ mode: 'serial' });
 
+test.beforeAll(async () => {
+	const providerPasswordHash = await hashPassword(RIDE_SHARE_PROVIDER.password);
+	const customerPasswordHash = await hashPassword(RIDE_SHARE_CUSTOMER.password);
+
+	await clearE2EData();
+	await seedUser({ email: RIDE_SHARE_PROVIDER.email, passwordHash: providerPasswordHash });
+	await seedUser({ email: RIDE_SHARE_CUSTOMER.email, passwordHash: customerPasswordHash });
+});
+
 test('add ride share tour', async ({ page }) => {
-	await signup(page, RIDE_SHARE_PROVIDER, true);
+	test.setTimeout(70000);
+	await login(page, RIDE_SHARE_PROVIDER);
 	await page.goto('/account/add-or-edit-ride-share-vehicle');
 	await page.getByRole('textbox', { name: 'B-AA' }).fill(LICENSE_PLATE_PLACEHOLDER);
 	await page.getByRole('button', { name: 'Fahrzeug anlegen' }).click();
 	await page.goto('/ride-offers/new');
 	await expect(page.getByRole('heading', { name: 'Neues Mitfahrangebot' })).toBeVisible();
+	await page.screenshot({ path: 'screenshots/beforeEnteringFromAddress.png', fullPage: true });
 	await chooseFromTypeAhead(page, 'Von', 'schleife slepo', 'Schleife ');
 	await chooseFromTypeAhead(page, 'Nach', 'klein prie', 'Klein Priebus Krauschwitz');
-	await page.getByRole('button', { name: 'Los um' }).click();
-	await page.locator('input[type="datetime-local"]').fill('2035-12-12T03:15');
+	await page
+		.getByRole('radio', { name: /Einmaliges Mitfahrangebot/ })
+		.locator('input[type="datetime-local"]')
+		.fill('2035-12-12T03:15');
 	await page.keyboard.press('Escape');
-	await page.getByRole('button', { name: 'Mitfahrangebot veröffentlichen' }).click();
+	await page.getByRole('button', { name: 'Einmaliges Mitfahrangebot veröffentlichen' }).click();
 	await page.screenshot({ path: 'screenshots/afterCreateRideShareTour.png', fullPage: true });
 	await logout(page);
 });
 
 test.skip('start ride share negotiation', async ({ page }) => {
-	await signup(page, RIDE_SHARE_CUSTOMER, true);
+	await login(page, RIDE_SHARE_CUSTOMER);
 	await page.goto('/routing');
 	await page.waitForTimeout(1000);
 	await chooseFromTypeAhead(page, 'Von', 'schleife', 'Schleife ');
@@ -100,6 +114,7 @@ async function chooseFromTypeAhead(
 	expectedOption: string
 ) {
 	await page.getByRole('textbox', { name: placeholder }).click();
+	await page.waitForTimeout(1000);
 	await expect(page.getByRole('combobox', { name: placeholder })).toBeVisible();
 	await page.getByRole('combobox', { name: placeholder }).fill(search);
 	await page

@@ -2,7 +2,7 @@ import type { Coordinates } from '$lib/util/Coordinates';
 import { batchOneToManyCarRouting } from '$lib/server/util/batchOneToManyCarRouting';
 import type { Range } from '$lib/util/booking/getPossibleInsertions';
 import { PASSENGER_CHANGE_DURATION } from '$lib/constants';
-import { isSamePlace } from '../isSamePlace';
+import { isSamePlace } from '$lib/util/booking/isSamePlace';
 import type { BusStop } from '../taxi/BusStop';
 import type { VehicleId } from '../taxi/VehicleId';
 import { iterateAllInsertions } from './iterateAllInsertions';

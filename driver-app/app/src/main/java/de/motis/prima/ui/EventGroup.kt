@@ -54,59 +54,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
-import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.R
-import de.motis.prima.data.DataRepository
 import de.motis.prima.data.EventObject
 import de.motis.prima.data.EventObjectGroup
-import de.motis.prima.data.Ticket
+import de.motis.prima.data.Location
 import de.motis.prima.data.ValidationStatus
 import de.motis.prima.ui.theme.LocalExtendedColors
+import de.motis.prima.viewmodel.EventGroupViewModel
 import java.time.Instant
 import java.util.Date
-import javax.inject.Inject
-
-@HiltViewModel
-class EventGroupViewModel @Inject constructor(
-    private val repository: DataRepository
-) : ViewModel() {
-    val storedTickets = repository.storedTickets
-    val ptLegs = repository.ptLegs
-    val updateError = repository.updateError
-
-    fun getValidCount(eventGroupId: String): Int {
-        var tickets = repository.getTicketsForEventGroup(eventGroupId)
-        tickets = tickets.filter { t ->
-            t.validationStatus == ValidationStatus.DONE.name ||
-                    t.validationStatus == ValidationStatus.CHECKED_IN.name
-        }
-        return tickets.size
-    }
-
-    fun updateTicket(requestId: Int, ticketHash: String) {
-        repository.updateTicketStore(Ticket(requestId, ticketHash, "", ValidationStatus.DONE))
-    }
-
-    fun setItineraries(ids: Set<Int>) {
-        repository.setUpdateIds(ids)
-    }
-
-    fun getItinerary(requestId: Int) {
-        repository.getItinerary(requestId)
-    }
-
-    fun getEvent(id: Int): EventObject? {
-        return repository.getEvent(id)
-    }
-}
-
-data class Location(
-    val lat: Double,
-    val lng: Double,
-)
 
 @SuppressLint("QueryPermissionsNeeded")
 fun openGoogleMapsNavigation(to: Location, context: Context) {
@@ -154,7 +112,6 @@ fun EventGroup(
     val hasUncheckedTicket = validCount < nPickUp
 
     var address = eventGroup.address
-
     try {
         if (address.split(',')[0].toDoubleOrNull() != null) {
             address = "GPS, Navigation nutzen"
@@ -172,8 +129,7 @@ fun EventGroup(
     }
 
     Column(
-        modifier = Modifier
-            .padding(10.dp),
+        modifier = Modifier.padding(10.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Column(
@@ -356,10 +312,7 @@ fun ShowEvent(
 ) {
     val context = LocalContext.current
     val storedTickets = viewModel.storedTickets.collectAsState()
-    val fareToPay: Double = (event.ticketPrice / 100).toDouble()
-
     val updateError by viewModel.updateError.collectAsState()
-
     val ptLegs by viewModel.ptLegs.collectAsState()
     val leg = ptLegs[event.requestId]
 
@@ -374,8 +327,8 @@ fun ShowEvent(
     if (leg != null) {
         val scheduledStartTime = leg.scheduledStartTime
         val scheduledEndTime = leg.scheduledEndTime
-        val startTime = leg.scheduledStartTime // TODO
-        val endTime = leg.scheduledEndTime // TODO
+        val startTime = leg.startTime
+        val endTime = leg.endTime
 
         if (startTime != null && endTime != null && scheduledStartTime != null && scheduledEndTime != null) {
             val scheduledStart = isoToLocalTime(scheduledStartTime)
@@ -468,7 +421,6 @@ fun ShowEvent(
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(10.dp))
-                    //.background(Color.White)
                     .background(LocalExtendedColors.current.containerColor)
                     .padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -552,7 +504,6 @@ fun ShowEvent(
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
-                        //.background(Color.White)
                         .background(LocalExtendedColors.current.containerColor)
                         .padding(4.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -725,7 +676,7 @@ fun ShowEvent(
                     }
                     Spacer(modifier = Modifier.width(width = 12.dp))
                     Text(
-                        text = "${String.format("%.2f", fareToPay)} €",
+                        text = "${String.format("%.2f", (event.ticketPrice / 100).toDouble())} €",
                         fontSize = 22.sp,
                         textAlign = TextAlign.Center,
                         color = LocalExtendedColors.current.textColor

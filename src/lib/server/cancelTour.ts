@@ -72,7 +72,7 @@ export async function cancelTour(
 						'Der Taxameterstand wurde bereits eingetragen - die Tour kann nicht storniert werden.'
 				};
 			}
-			await sql`CALL cancel_tour(${tourId}, ${company}, ${message})`.execute(trx);
+			await sql`CALL cancel_tour(${tourId}, ${company}, ${message}, ${Date.now()})`.execute(trx);
 			await updateDirectDurations(tour.vehicle, tour.id, tour.departure, trx);
 			console.assert(tour.requests.length != 0, 'Found a tour with no requests');
 			for (const request of tour.requests) {

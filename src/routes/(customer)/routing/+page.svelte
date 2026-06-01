@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PUBLIC_INFO_URL, PUBLIC_PROVIDER } from '$env/static/public';
+	import { PUBLIC_INFO_URL, PUBLIC_PROVIDER, PUBLIC_HOTLINE } from '$env/static/public';
 	import { browser } from '$app/environment';
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
@@ -16,12 +16,12 @@
 	import * as RadioGroup from '$lib/shadcn/radio-group';
 	import { Input } from '$lib/shadcn/input';
 	import { Label } from '$lib/shadcn/label';
-	import { trip, type Match, type PlanData } from '$lib/openapi';
+	import { reverseGeocode, type Match, type PlanData } from '$lib/openapi';
 	import { t } from '$lib/i18n/translation';
 	import { lngLatToStr } from '$lib/util/lngLatToStr';
 	import Meta from '$lib/ui/Meta.svelte';
 	import AddressTypeahead from '$lib/ui/AddressTypeahead.svelte';
-	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
+	import { type Location } from '$lib/map/Location';
 	import ItineraryList from './ItineraryList.svelte';
 	import ConnectionDetail from './ConnectionDetail.svelte';
 	import StopTimes from './StopTimes.svelte';
@@ -49,18 +49,26 @@
 	import { HOUR } from '$lib/util/time';
 	import { Alert, AlertDescription, AlertTitle } from '$lib/shadcn/alert';
 	import AlertCircleIcon from 'lucide-svelte/icons/circle-alert';
+	import SlidersVertical from 'lucide-svelte/icons/sliders-vertical';
+	import { collectItineraries } from '$lib/calibration';
+	import { onClickStop, onClickTrip } from '$lib/util/onClick';
+	import { matchesDesiredTrip } from '$lib/util/booking/matchesDesiredTrip';
+	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
 
 	type LuggageType = 'none' | 'light' | 'heavy';
 
 	const { form, data } = $props();
 
-	const urlParams = browser ? new URLSearchParams(window.location.search) : undefined;
+	const urlParams = page.url.searchParams;
 
-	let kidsZeroToTwo = $state(0);
-	let kidsThreeToFour = $state(0);
-	let kidsFiveToSix = $state(0);
-	let kidsSevenToFourteen = $state(0);
-	let fourteenPlus = $state(1);
+	const parseUrlInt = (key: string, fallback: number = 0) =>
+		parseInt(urlParams?.get(key) || '') || fallback;
+
+	let kidsZeroToTwo = $state(parseUrlInt('kidsZeroToTwo'));
+	let kidsThreeToFour = $state(parseUrlInt('kidsThreeToFour'));
+	let kidsFiveToSix = $state(parseUrlInt('kidsFiveToSix'));
+	let kidsSevenToFourteen = $state(parseUrlInt('kidsSevenToFourteen'));
+	let fourteenPlus = $state(parseUrlInt('fourteenPlus', 1));
 	let passengers = $derived(
 		fourteenPlus + kidsSevenToFourteen + kidsFiveToSix + kidsThreeToFour + kidsZeroToTwo
 	);
@@ -79,13 +87,19 @@
 	}
 
 	let freeKids = $derived(kidsZeroToTwo + kidsThreeToFour + kidsFiveToSix);
-	let wheelchair = $state(false);
-	let luggage = $state<LuggageType>('none');
+	let wheelchair = $state(urlParams?.get('wheelchair') == 'true');
+	let luggage = $state<LuggageType>(
+		urlParams?.get('luggage') == 'light'
+			? 'light'
+			: urlParams?.get('luggage') == 'heavy'
+				? 'heavy'
+				: 'none'
+	);
 	let time = $state<Date>(new Date(urlParams?.get('time') || Date.now()));
 	let timeType = $state<TimeType>(urlParams?.get('arriveBy') == 'true' ? 'arrival' : 'departure');
 	let fromParam: Match | undefined = undefined;
 	let toParam: Match | undefined = undefined;
-	if (browser && urlParams && urlParams.has('from') && urlParams.has('to')) {
+	if (urlParams && urlParams.has('from') && urlParams.has('to')) {
 		fromParam = JSON.parse(urlParams.get('from') ?? '') ?? {};
 		toParam = JSON.parse(urlParams.get('to') ?? '') ?? {};
 	}
@@ -101,6 +115,107 @@
 	});
 	let fromItems = $state<Array<Location>>([]);
 	let toItems = $state<Array<Location>>([]);
+	let fromOrToEmpty = $derived(!from?.value?.match || !to?.value?.match);
+	let fromReverseGeocodeRequest = 0;
+	let toReverseGeocodeRequest = 0;
+
+	const getDisplayArea = (match: Match | undefined) => {
+		if (!match) {
+			return '';
+		}
+
+		const matchedArea = match.areas.find((a) => a.matched);
+		const defaultArea = match.areas.find((a) => a.default);
+		const matchedAreaName =
+			matchedArea?.name.match(/^[0-9]*$/) && defaultArea
+				? `${matchedArea.name} ${defaultArea.name}`
+				: matchedArea?.name;
+
+		const areas = new Set<string>();
+		match.areas.forEach((area) => {
+			if (area.matched || area.unique || area.default || area.adminLevel == 4) {
+				const name = area === matchedArea && matchedAreaName ? matchedAreaName : area.name;
+				if (name != match.name) {
+					areas.add(name);
+				}
+			}
+		});
+
+		return Array.from(areas).reverse().join(', ');
+	};
+
+	const getLabel = (match: Match) => {
+		const displayArea = getDisplayArea(match);
+		return displayArea ? `${match.name}, ${displayArea}` : match.name;
+	};
+
+	const reverseGeocodeLocation = async (
+		location: Location,
+		setItems: (items: Location[]) => void,
+		requestId: number,
+		getCurrentRequestId: () => number,
+		getCurrentLocation: () => Location | undefined
+	) => {
+		const coordinateMatch = location.value.match;
+		if (!coordinateMatch) {
+			return location;
+		}
+
+		const { data: matches, error } = await reverseGeocode({
+			query: {
+				place: `${coordinateMatch.lat},${coordinateMatch.lon}`,
+				type: 'ADDRESS'
+			}
+		});
+
+		if (requestId !== getCurrentRequestId()) {
+			return getCurrentLocation() ?? location;
+		}
+		if (error || !matches?.length) {
+			if (error) {
+				console.error('REVERSE GEOCODE ERROR: ', error);
+			}
+			return location;
+		}
+
+		const match = {
+			...matches[0],
+			lat: coordinateMatch.lat,
+			lon: coordinateMatch.lon,
+			level: coordinateMatch.level ?? matches[0].level
+		};
+		const reversedLocation: Location = {
+			label: getLabel(match),
+			value: {
+				match,
+				precision: location.value.precision
+			}
+		};
+		setItems([reversedLocation]);
+		return reversedLocation;
+	};
+
+	const reverseGeocodeFrom = (location: Location) => {
+		const requestId = ++fromReverseGeocodeRequest;
+		return reverseGeocodeLocation(
+			location,
+			(items) => (fromItems = items),
+			requestId,
+			() => fromReverseGeocodeRequest,
+			() => from
+		);
+	};
+
+	const reverseGeocodeTo = (location: Location) => {
+		const requestId = ++toReverseGeocodeRequest;
+		return reverseGeocodeLocation(
+			location,
+			(items) => (toItems = items),
+			requestId,
+			() => toReverseGeocodeRequest,
+			() => to
+		);
+	};
 
 	const luggageToInt = (str: LuggageType) => {
 		switch (str) {
@@ -133,7 +248,7 @@
 	};
 
 	let baseQuery = $derived(
-		from.value.match && to.value.match
+		!fromOrToEmpty
 			? ({
 					time: time.toISOString(),
 					arriveBy: timeType === 'arrival',
@@ -168,7 +283,14 @@
 						from: JSON.stringify(from?.value?.match),
 						to: JSON.stringify(to?.value?.match),
 						time: time,
-						arriveBy: timeType === 'arrival'
+						arriveBy: timeType === 'arrival',
+						kidsZeroToTwo,
+						kidsThreeToFour,
+						kidsFiveToSix,
+						kidsSevenToFourteen,
+						fourteenPlus,
+						wheelchair,
+						luggage
 					},
 					{ showMap: page.state.showMap },
 					true
@@ -195,21 +317,6 @@
 		}
 	};
 
-	const onClickTrip = async (tripId: string, replace = false) => {
-		const { data: itinerary, error } = await trip({ query: { tripId } });
-		if (error) {
-			alert(error);
-			return;
-		}
-		const updateState = replace ? replaceState : pushState;
-		updateState('', { selectedItinerary: itinerary });
-	};
-
-	const onClickStop = (name: string, stopId: string, time: Date, replace = false) => {
-		const updateState = replace ? replaceState : pushState;
-		updateState('', { stop: { name, stopId, time } });
-	};
-
 	const getLocation = () => {
 		if (navigator && navigator.geolocation) {
 			navigator.geolocation.getCurrentPosition(applyPosition, (e) => console.log(e), {
@@ -218,9 +325,56 @@
 		}
 	};
 
-	const applyPosition = (position: { coords: { latitude: number; longitude: number } }) => {
+	const applyPosition = async (position: { coords: { latitude: number; longitude: number } }) => {
 		from = posToLocation({ lat: position.coords.latitude, lon: position.coords.longitude }, 0);
+		from = await reverseGeocodeFrom(from);
 	};
+
+	let desiredTrips = $state(data.user.desiredTrips);
+	let alertId = $derived(
+		fromOrToEmpty
+			? undefined
+			: desiredTrips.find((t) =>
+					matchesDesiredTrip(
+						from?.value?.match === undefined
+							? undefined
+							: { lat: from.value.match.lat, lng: from.value.match.lon },
+						to.value.match === undefined
+							? undefined
+							: { lat: to.value.match.lat, lng: to.value.match.lon },
+						time.getTime(),
+						timeType === 'arrival',
+						luggageToInt(luggage),
+						passengers,
+						t
+					)
+				)?.id
+	);
+	async function toggleAlert() {
+		const response = await fetch('/api/addOrRemoveDesiredTrip', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				from: {
+					lat: from.value.match!.lat,
+					lng: from.value.match!.lon,
+					address: from.value.match!.name
+				},
+				to: { lat: to.value.match!.lat, lng: to.value.match!.lon, address: to.value.match!.name },
+				time: time.getTime(),
+				startFixed: timeType === 'arrival',
+				alertId: alertId ?? null,
+				passengers,
+				luggage: luggageToInt(luggage),
+				url: window.location.href
+			})
+		});
+		if (response.ok) {
+			desiredTrips = await response.json();
+		}
+	}
 
 	let loading = $state(false);
 </script>
@@ -250,6 +404,8 @@
 		<PopupMap
 			bind:from
 			bind:to
+			onFromLocationChange={reverseGeocodeFrom}
+			onToLocationChange={reverseGeocodeTo}
 			itinerary={page.state.selectedItinerary}
 			areas={data.areas}
 			rideSharingBounds={data.rideSharingBounds}
@@ -279,6 +435,7 @@
 										{wheelchair}
 										luggage={luggageToInt(luggage)}
 										price={undefined}
+										requiresPtTicket={false}
 									/>
 
 									<form
@@ -638,6 +795,24 @@
 				</div>
 			{/if}
 
+			{#if data.user.name !== undefined}
+				<div class="flex items-center space-x-2">
+					<Checkbox
+						onclick={async () => toggleAlert()}
+						checked={alertId !== undefined}
+						id="alert"
+						class="ml-auto"
+						disabled={fromOrToEmpty}
+					/>
+					<Label for="alert">{t.addAlert}</Label>
+				</div>
+			{/if}
+
+			{#if alertId !== undefined}
+				<div class="rounded-md border px-3 py-2 text-sm">
+					{t.alertInfo}
+				</div>
+			{/if}
 			<div class="flex grow flex-col gap-4">
 				<ItineraryList
 					{baseQuery}
@@ -651,12 +826,29 @@
 					}}
 					updateStartDest={updateStartDest(from, to)}
 				/>
+				{#if data.isAdmin && baseResponse}
+					{#await Promise.all(routingResponses) then r}
+						<form
+							method="post"
+							action="?/useForCalibration"
+							class="flex grow flex-col gap-2 rounded-md border-2 border-solid p-2"
+						>
+							<Input type="text" name="name" placeholder="Name" />
+							<input type="hidden" name="json" value={JSON.stringify(collectItineraries(r))} />
+							<Button type="submit" class="grow"
+								><SlidersVertical /> {t.calibration.useForCalibration}</Button
+							>
+						</form>
+					{/await}
+				{/if}
 			</div>
-
 			<p class="mx-auto mt-6 text-sm">
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{t.introduction}
-				<a href={PUBLIC_INFO_URL} class="link" target="_blank">{PUBLIC_PROVIDER}</a>
+				<a href={PUBLIC_INFO_URL} class="link" target="_blank">{PUBLIC_PROVIDER}</a>.
+			</p>
+			<p class="text-sm">
+				{t.hotline} <a href="tel:{PUBLIC_HOTLINE}" class="link" target="_blank">{PUBLIC_HOTLINE}</a>
 			</p>
 
 			<Dialog.Root>

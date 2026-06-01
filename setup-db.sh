@@ -18,3 +18,5 @@ psql $DATABASE_URL --user postgres < data/vehicle.sql
 psql $DATABASE_URL --user postgres < data/user.sql
 psql $DATABASE_URL --user postgres < data/rideShareVehicle.sql
 psql $DATABASE_URL --user postgres < data/rideShareZone.sql
+psql $DATABASE_URL --user postgres < data/expandWeißwasser.sql
+psql $DATABASE_URL --user postgres < data/taxiFilter.sql

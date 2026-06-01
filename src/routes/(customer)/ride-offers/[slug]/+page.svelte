@@ -10,15 +10,30 @@
 	import { msg } from '$lib/msg';
 	import { language, t } from '$lib/i18n/translation';
 	import * as Card from '$lib/shadcn/card';
-	import { Check, MapIcon } from 'lucide-svelte';
+	import { X, Check, Info, MapIcon, Users } from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
 	import Time from '../../routing/Time.svelte';
 	import { posToLocation } from '$lib/map/Location';
 	import ProfileBadge from '$lib/ui/ProfileBadge.svelte';
+	import { shiftDayIdxForward } from '$lib/util/shiftDayIdx';
 
 	const { data, form } = $props();
 	let loading = $state(false);
+	let cancelAll = $state(false);
+	let timeRangeString = $derived(
+		' ' + data.rangeStart?.toString() + ' ' + t.ride.to + data.rangeEnd?.toString()
+	);
+	let pattern = $derived.by(() => {
+		if (!data.days.some((d) => !d)) {
+			return t.daily + timeRangeString;
+		}
+		return data.days
+			.map((d, i) => (d ? t.ride.daysList[shiftDayIdxForward(i)].full : undefined))
+			.filter((d) => d !== undefined)
+			.join(', ')
+			.concat(timeRangeString);
+	});
 </script>
 
 <div class="flex h-full flex-col gap-4 md:min-h-[70dvh] md:w-96">
@@ -38,13 +53,25 @@
 							<AlertDialog.Header>
 								<AlertDialog.Title>{t.ride.cancelHeadline}</AlertDialog.Title>
 								<AlertDialog.Description>
-									{t.ride.cancelDescription}
+									<div class="flex flex-col gap-4">
+										<p>{t.ride.cancelDescription}</p>
+										{#if data.pattern}
+											<label class="grid grid-cols-[auto_1fr] items-start gap-2">
+												<input class="mt-1" type="checkbox" bind:checked={cancelAll} />
+												<span>
+													{t.ride.cancelCheckbox}<br />
+													{pattern}
+												</span>
+											</label>
+										{/if}
+									</div>
 								</AlertDialog.Description>
 							</AlertDialog.Header>
 							<AlertDialog.Footer class="mt-4">
-								<AlertDialog.Cancel>{t.booking.noCancel}</AlertDialog.Cancel>
+								<AlertDialog.Cancel>{t.ride.noCancel}</AlertDialog.Cancel>
 								<form method="post" use:enhance action="?/cancel">
 									<input type="hidden" name="requestId" value={data.id} />
+									<input type="hidden" name="pattern" value={cancelAll ? data.pattern : null} />
 									<AlertDialog.Action>
 										{t.ride.cancelTrip}
 									</AlertDialog.Action>
@@ -101,6 +128,12 @@
 						smokingAllowed={undefined}
 						averageRating={n.averageRatingCustomer}
 					/>
+					<div class="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
+						<span class="flex items-center gap-1">
+							<Users class="size-4 shrink-0" />
+							{t.booking.bookingFor(n.passengers)}
+						</span>
+					</div>
 					<div class="grid grid-cols-[max-content_auto] gap-x-2">
 						<span>{t.account.email}:</span><span><a href="mailto:{n.email}">{n.email}</a></span>
 						{#if n.phone}
@@ -150,9 +183,32 @@
 							}}
 						>
 							<input type="hidden" name="requestId" value={n.id} />
+							<p class="mb-3 flex gap-2 text-sm text-muted-foreground">
+								<Info class="mt-0.5 size-4 shrink-0" />
+								<span>{t.ride.acceptRequestInfo}</span>
+							</p>
 							<Button type="submit" class="w-full" disabled={loading}>
 								<Check class="mr-1 size-4" />
 								{t.ride.acceptRequest}
+							</Button>
+						</form>
+						<form
+							method="post"
+							action="?/decline"
+							use:enhance={() => {
+								loading = true;
+								return async ({ update }) => {
+									await update();
+									window.setTimeout(() => {
+										loading = false;
+									}, 5000);
+								};
+							}}
+						>
+							<input type="hidden" name="requestId" value={n.id} />
+							<Button type="submit" class="mt-1 w-full text-destructive" disabled={loading}>
+								<X class="mr-1 size-4" />
+								{t.ride.declineRequest}
 							</Button>
 						</form>
 					{:else}

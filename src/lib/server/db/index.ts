@@ -25,6 +25,7 @@ export interface Database {
 		city: string;
 		region: string;
 		profilePicture: string | null;
+		company: string;
 	};
 	session: {
 		id: string;
@@ -36,6 +37,7 @@ export interface Database {
 		name: string;
 		isCommunity: boolean;
 		rates: number;
+		expanded: unknown | null;
 	};
 	company: {
 		id: Generated<number>;
@@ -110,6 +112,7 @@ export interface Database {
 		startFixed: boolean | null;
 		busStopTime: number | null;
 		requestedTime: number | null;
+		cancelledByCustomer: boolean;
 	};
 	journey: {
 		id: Generated<number>;
@@ -137,6 +140,8 @@ export interface Database {
 		communicatedEnd: number;
 		earliestStart: number;
 		latestEnd: number;
+		pattern: number | null;
+		ellipseId: number | null;
 	};
 	rideShareVehicle: {
 		id: Generated<number>;
@@ -155,6 +160,66 @@ export interface Database {
 		rating: number;
 		request: number;
 		ratedIsCustomer: boolean;
+	};
+	taxiFilter: {
+		perTransfer: number;
+		taxiBase: number;
+		taxiPerMinute: number;
+		taxiDirectPenalty: number;
+		ptSlope: number;
+		taxiSlope: number;
+	};
+	calibrationSets: {
+		id: Generated<number>;
+		name: string;
+		itinerariesJson: string;
+	};
+	desiredRideShare: {
+		id: Generated<number>;
+		fromLat: number;
+		fromLng: number;
+		toLat: number;
+		toLng: number;
+		fromAddress: string;
+		toAddress: string;
+		startFixed: boolean;
+		time: number;
+		luggage: number;
+		passengers: number;
+		interestedUser: number;
+		url: string;
+	};
+	availabilityState: {
+		startOfMonth: number;
+		company: number;
+		score: number;
+		prefactor: number;
+		takenAt: number;
+	};
+	repeatPattern: {
+		id: Generated<number>;
+		days: number;
+		rangeStart: string;
+		rangeEnd: string;
+	};
+	ellipse: {
+		id: Generated<number>;
+		originLatRad: number;
+		originLngRad: number;
+		minX: number;
+		maxX: number;
+		minY: number;
+		maxY: number;
+		centerX: number;
+		centerY: number;
+		axisXx: number;
+		axisXy: number;
+		axisYx: number;
+		axisYy: number;
+		invAaSq: number;
+		invBbSq: number;
+		cosOriginLat: number;
+		pointOnly: boolean;
 	};
 }
 

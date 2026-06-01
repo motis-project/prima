@@ -1,3 +1,4 @@
+import { shiftDayIdxForward } from '$lib/util/shiftDayIdx';
 import type { Translations } from './translation';
 
 const translations: Translations = {
@@ -11,7 +12,8 @@ const translations: Translations = {
 		completedTours: 'Tours',
 		accounting: 'Accounting',
 		employees: 'Employees',
-		companies: 'Companies'
+		companies: 'Companies',
+		calibration: 'Calibration'
 	},
 	msg: {
 		// Unknown error
@@ -52,6 +54,7 @@ const translations: Translations = {
 		userDoesNotExist: 'User does not exist.',
 		activationSuccess: 'User already activated.',
 		userAlreadyActivated: 'User has already been activated.',
+		requiresAdminPrivileges: 'Admin privileges required.',
 
 		// Taxi Members
 		driverAddedSuccessfully: 'Driver added successfully.',
@@ -86,7 +89,10 @@ const translations: Translations = {
 		startDestNotInSameZone: 'Start and destination not in the same zone.',
 		noVehicle: 'No vehicle available.',
 		routingRequestFailed: 'Routing request failed.',
-		vehicleConflict: 'The selected vehicle is not available at the selected time.',
+		vehicleConflict: 'The selected vehicle is not available at at least one of the selected times.',
+		previousLegConflict: 'The new trip is not compatible with a previous ride-sharing offer.',
+		nextLegConflict: 'The new trip is not compatible with a subsequent ride-sharing offer.',
+		allowedIntervalsConflict: 'The seleceted vehicle is not available at the selected time',
 
 		// Booking
 		bookingError: 'The ride could not be booked. Please start a new search.',
@@ -99,6 +105,8 @@ const translations: Translations = {
 		stillNegotiating: 'The request has been sent. This ride is still being negotiated.',
 		accepted: 'This ride has been agreed upon.',
 		openRequest: 'This ride offer has open requests.',
+		acceptedRequest: 'This ride offer has accepted requests.',
+		openAndAcceptedRequest: 'This ride offer has open and accepted requests.',
 
 		// Feedback
 		feedbackThank: 'Thank you very much for your feedback!',
@@ -121,6 +129,7 @@ const translations: Translations = {
 		name: 'Name',
 		lastName: 'Last Name',
 		firstName: 'First Name',
+		company: 'Company',
 		gender: (id: string) => {
 			return { o: 'non-binary', f: 'Ms.', m: 'Mr.', n: 'not specified' }[id]!;
 		},
@@ -226,6 +235,7 @@ const translations: Translations = {
 		'These are private ride-sharing offers. If you are interested in a private ride-sharing connection, you can send a request to the provider to arrange the details. Register to create ride-sharing offers and send requests.',
 	from: 'From',
 	to: 'To',
+	when: 'When',
 	arrival: 'Arrival',
 	departure: 'Departure',
 	duration: 'Duration',
@@ -258,6 +268,7 @@ const translations: Translations = {
 	removeItinerary: 'Remove Itinerary',
 	introduction:
 		'The PriMa+ÖV project augments public transport with on-demand taxis and private ride-sharing options. The goal is to ensure a service at least every two hours, even in rural areas and at off-peak times. More about ',
+	hotline: 'Booking via telephone: ',
 	publicTransitTaxi: 'Public-transit Taxi',
 	serviceArea: 'Service area',
 	serviceTime: 'Service time',
@@ -278,6 +289,10 @@ const translations: Translations = {
 	noAvailabilityTitle: 'Too far in the future',
 	noAvalablilityDescription:
 		'No taxis were reported as available for the requested time. Please try again later',
+	addAlert: 'Receive a notification, if a ride sharing offer matching this search is published',
+	alertInfo:
+		'You will receive an email notification once a ride offer matching your search is published. You can manage your notifications under ride-offers.',
+	notificationsList: 'List of activated notifications',
 
 	booking: {
 		bookHere: 'Hier buchen. Preis',
@@ -323,7 +338,11 @@ const translations: Translations = {
 		pinExplainer:
 			'To give to the passenger. The passenger must give this PIN to the taxi driver when starting the journey.',
 		itineraryOnDate: 'Journey on',
-		withVehicle: 'with vehicle'
+		withVehicle: 'with vehicle',
+		cancelCheckbox:
+			'Cancel all tours created by the same rule (will not cancel tours which already have agreed ride shares)',
+		history: 'History',
+		deleteFavourites: 'Delete History'
 	},
 
 	explainer: {
@@ -344,11 +363,15 @@ const translations: Translations = {
 		outro:
 			'Your offer will be visible to everybody using the journey planner. You will be notified about requests via e-mail.',
 		publish: 'Publish ride offer',
+		publishSingleRideOffer: 'Publish one-time ride offer',
+		publishRepeatingRideOffers: 'Publish repeating ride offers',
 		cancelTrip: 'Cancel ride offer',
 		cancelHeadline: 'Do you really want to cancel this ride offer?',
 		noCancel: 'No, I do not want to cancel.',
 		cancelDescription:
 			'You should inform any people riding with you yourself, even if they will receive an email about the cancellation.',
+		cancelCheckbox:
+			'Cancel all ride offers created by the same rule. Ride offers with confirmed passengers will not be cancelled.',
 		negotiateHere: 'Negotiate here',
 		negotiateHeader: 'Negotiate the ride',
 		negotiatePrivacy:
@@ -366,9 +389,31 @@ const translations: Translations = {
 		requestBy: 'Request from',
 		offerBy: 'Offered by',
 		acceptRequest: 'Confirm ride',
+		declineRequest: 'Decline ride',
+		acceptRequestInfo:
+			'Before confirming, please coordinate the exact meeting point, meeting time and luggage with the person requesting the ride.',
 		requestAccepted: 'Ride confirmed',
 		requestCancelled: 'Ride cancelled',
-		showMap: 'Show map'
+		showMap: 'Show map',
+		singleRideOffer: 'One-time ride offer',
+		publishBlockerStart: 'Add a start location to publish this ride offer.',
+		publishBlockerTarget: 'Add a destination to publish this ride offer.',
+		publishBlockerSingleTime: 'Choose a time to publish this ride offer.',
+		publishBlockerWeekdays: 'Select at least one weekday for the recurring ride offers.',
+		repetitionLabel: 'Repeating ride offers',
+		addRule: 'Add rule',
+		individualDays: 'Individual days',
+		to: 'to ',
+		daysList: [
+			{ short: 'S', full: 'Sun', idx: 0 },
+			{ short: 'M', full: 'Mon', idx: 1 },
+			{ short: 'T', full: 'Tue', idx: 2 },
+			{ short: 'W', full: 'Wed', idx: 3 },
+			{ short: 'T', full: 'Thu', idx: 4 },
+			{ short: 'F', full: 'Fri', idx: 5 },
+			{ short: 'S', full: 'Sat', idx: 6 }
+		].sort((d1, d2) => shiftDayIdxForward(d1.idx) - shiftDayIdxForward(d2.idx)),
+		chooseTimeSpan: 'adjust time range:'
 	},
 
 	buttons: {
@@ -401,8 +446,33 @@ const translations: Translations = {
 		howHasItBeen: 'You can rate your last ride share experience here',
 		editVehicle: 'Edit Vehicle',
 		closeTo: 'close to',
-		defaultLicensePlate: 'Default vehicle'
-	}
+		defaultLicensePlate: 'Default vehicle',
+		calculatedRoute: 'Calculated route',
+		travelTimeOnly: 'actual travel time',
+		maxTime: 'maximum if ridesharing'
+	},
+
+	calibration: {
+		perTransfer: 'per transfer',
+		taxiBase: 'taxi base',
+		taxiPerMinute: 'taxi per minute',
+		taxiDirectPenalty: 'taxi direct penalty',
+		ptSlope: 'public transit slope',
+		taxiSlope: 'taxi slope',
+		useForCalibration: 'Use for calibration',
+		addCalibrationSet: 'Add calibration set',
+		greeter: 'Adjust the parameters of the taxi filter:',
+		keep: 'keep',
+		remove: 'remove',
+		deploy: 'Deploy parameters',
+		save: 'Save classification',
+		delete: 'Remove calibration set'
+	},
+	availabilityPercent: 'current Coverage next two weeks',
+	availabilityPercentExplanation:
+		'This value represents the current coverage between 05:00 and 23:00 for availability in the next two weeks.',
+
+	daily: 'daily'
 };
 
 export default translations;

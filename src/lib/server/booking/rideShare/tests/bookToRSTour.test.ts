@@ -64,7 +64,9 @@ describe('add ride share request', () => {
 			inSchleife,
 			inKleinPriebus
 		);
-		expect(communicatedTimesStartFixed?.start).toBe(inXMinutes(40));
+		if ('start' in communicatedTimesStartFixed) {
+			expect(communicatedTimesStartFixed.start).toBe(inXMinutes(40));
+		}
 		const communicatedTimesStartNotFixed = await getRideShareTourCommunicatedTimes(
 			inXMinutes(40),
 			false,
@@ -72,7 +74,9 @@ describe('add ride share request', () => {
 			inSchleife,
 			inKleinPriebus
 		);
-		expect(communicatedTimesStartNotFixed?.end).toBe(inXMinutes(40));
+		if ('end' in communicatedTimesStartNotFixed) {
+			expect(communicatedTimesStartNotFixed.end).toBe(inXMinutes(40));
+		}
 	});
 	it('simple success case', async () => {
 		const vehicle = await createRideShareVehicle(
@@ -87,7 +91,7 @@ describe('add ride share request', () => {
 			'DE'
 		);
 		const tourId = await addRideShareTour(
-			inXMinutes(40),
+			[inXMinutes(40)],
 			true,
 			3,
 			0,
@@ -187,7 +191,7 @@ describe('add ride share request', () => {
 			'DE'
 		);
 		const tourId = await addRideShareTour(
-			inXMinutes(40),
+			[inXMinutes(40)],
 			true,
 			3,
 			0,
@@ -224,7 +228,7 @@ describe('add ride share request', () => {
 			'DE'
 		);
 		const tourId = await addRideShareTour(
-			inXMinutes(40),
+			[inXMinutes(40)],
 			true,
 			3,
 			0,
@@ -261,7 +265,7 @@ describe('add ride share request', () => {
 			'DE'
 		);
 		const tourId = await addRideShareTour(
-			inXMinutes(40),
+			[inXMinutes(40)],
 			true,
 			1,
 			0,
@@ -336,7 +340,7 @@ describe('add ride share request', () => {
 		expect(whiteResponse2.direct[0].length).toBe(0);
 
 		// cancel request -> a new request should bookable
-		await cancelRideShareRequest(requestId, mockUserId);
+		await cancelRideShareRequest(requestId, mockUserId, 'passenger');
 		const whiteResponse3 = await whiteRideShare(body2).then((r) => r.json());
 		expect(whiteResponse3.direct.length).toBe(1);
 		expect(whiteResponse3.direct[0].length).not.toBe(0);

@@ -15,7 +15,7 @@ export const isValid = (capacities: Capacities, required: Capacities): boolean =
 	);
 };
 
-type Event = Capacities & { isPickup: boolean };
+type Event = Capacities & { isPickup: boolean; scheduledTimeStart: number; eventGroupId: number };
 
 export function getPossibleInsertions(
 	taxiCapacities: Capacities,
@@ -25,7 +25,14 @@ export function getPossibleInsertions(
 	if (events.length == 0 || !isValid(taxiCapacities, requestCapacities)) {
 		return [];
 	}
-
+	const sortedEvents = events.sort((e1, e2) => {
+		if (e1.eventGroupId !== e2.eventGroupId) {
+			return e1.scheduledTimeStart - e2.scheduledTimeStart;
+		}
+		const p1 = e1.isPickup ? 1 : -1;
+		const p2 = e2.isPickup ? 1 : -1;
+		return p1 - p2;
+	});
 	const updateCapacity = (capacities: Capacities, event: Event): void => {
 		capacities.bikes += event.isPickup ? event.bikes : -event.bikes;
 		capacities.luggage += event.isPickup ? event.luggage : -event.luggage;
@@ -36,8 +43,8 @@ export function getPossibleInsertions(
 	const current = { ...requestCapacities };
 	const possibleInsertions: Range[] = [];
 	let start: number | undefined = -1;
-	for (let i = 0; i != events.length; i++) {
-		updateCapacity(current, events[i]);
+	for (let i = 0; i != sortedEvents.length; i++) {
+		updateCapacity(current, sortedEvents[i]);
 
 		if (!isValid(taxiCapacities, current) && start != undefined) {
 			// End found, reset start.
@@ -51,7 +58,7 @@ export function getPossibleInsertions(
 
 	// Add end behind last event.
 	if (start != undefined) {
-		possibleInsertions.push({ earliestPickup: start + 1, latestDropoff: events.length });
+		possibleInsertions.push({ earliestPickup: start + 1, latestDropoff: sortedEvents.length });
 	}
 
 	return possibleInsertions;

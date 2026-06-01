@@ -6,15 +6,13 @@ import { msg } from '$lib/msg';
 import { readInt } from '$lib/server/util/readForm';
 import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import { retry } from '$lib/server/db/retryQuery';
-import { getAvailability } from '$lib/server/getAvailability.js';
+import { getAllCompaniesAvailability, getAvailability } from '$lib/server/getAvailability.js';
+import { getSnapshot } from '$lib/server/availabilityCompensation/availabilityCompensation';
 
 const LICENSE_PLATE_REGEX = /^([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})$/;
 
 export async function load(event: RequestEvent) {
-	const companyId = event.locals.session?.companyId;
-	if (!companyId) {
-		throw 'company not defined';
-	}
+	const companyId = event.locals.session?.companyId ?? undefined;
 
 	const localDateParam = event.url.searchParams.get('date');
 	const timezoneOffset = event.url.searchParams.get('offset');
@@ -23,8 +21,14 @@ export async function load(event: RequestEvent) {
 		localDateParam && timezoneOffset
 			? new Date(new Date(localDateParam!).getTime() + Number(timezoneOffset) * 60 * 1000)
 			: new Date();
-
-	return getAvailability(utcDate, companyId);
+	const availabilityPercent = companyId === undefined ? undefined : getSnapshot(companyId);
+	return {
+		...(await (companyId
+			? getAvailability(utcDate, companyId)
+			: getAllCompaniesAvailability(utcDate))),
+		availabilityPercent: await availabilityPercent,
+		isAdmin: companyId === undefined
+	};
 }
 
 export const actions: Actions = {
@@ -120,6 +124,7 @@ export const actions: Actions = {
 								eb
 									.selectFrom('event')
 									.innerJoin('request', 'request.id', 'event.request')
+									.innerJoin('eventGroup', 'eventGroup.id', 'event.eventGroupId')
 									.whereRef('request.tour', '=', 'tour.id')
 									.where('request.cancelled', '=', false)
 									.select([
@@ -128,7 +133,9 @@ export const actions: Actions = {
 										'request.bikes',
 										'request.wheelchairs',
 										'request.luggage',
-										'request.id as requestId'
+										'request.id as requestId',
+										'event.eventGroupId',
+										'eventGroup.scheduledTimeStart'
 									])
 							).as('events')
 						])

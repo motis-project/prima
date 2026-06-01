@@ -7,8 +7,6 @@
 	import { t } from '$lib/i18n/translation';
 	import {
 		ArrowUpDown,
-		MapPin,
-		MapPinCheckInside,
 		EllipsisVertical,
 		ChevronRightIcon,
 		LoaderCircle,
@@ -16,12 +14,15 @@
 		MapIcon,
 		Plus,
 		Car,
+		CalendarDays,
+		Clock,
+		TriangleAlert,
 		Users,
 		Luggage
 	} from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { page } from '$app/state';
-	import { type Location } from '$lib/ui/AddressTypeahead.svelte';
+	import { type Location } from '$lib/map/Location';
 	import AddressTypeahead from '$lib/ui/AddressTypeahead.svelte';
 	import { Input } from '$lib/shadcn/input';
 	import { Label } from '$lib/shadcn/label';
@@ -35,9 +36,15 @@
 	import maplibregl from 'maplibre-gl';
 	import type { Itinerary } from '$lib/openapi';
 	import { enhance } from '$app/forms';
-	import { HOUR } from '$lib/util/time';
+	import { DAY, HOUR } from '$lib/util/time';
 	import { storeLastPageAndGoto } from '$lib/util/storeLastPageAndGoto';
 	import PlusMinus from '$lib/ui/PlusMinus.svelte';
+	import { LOCALE, TZ } from '$lib/constants';
+	import { CalendarDate, fromDate, toCalendarDate } from '@internationalized/date';
+	import RepetitionSelector from '$lib/ui/RepetitionSelector.svelte';
+	import * as Card from '$lib/shadcn/card';
+	import { shiftDayIdxBackward } from '$lib/util/shiftDayIdx';
+	import { preparedDetourEllipseToGeoJSON, prepareDetourEllipse } from '$lib/util/booking/ellipse';
 
 	const { data, form } = $props();
 
@@ -53,8 +60,13 @@
 		value: {}
 	});
 
-	let time = $state<Date>(new Date(Date.now() + HOUR * 2));
-	let timeType = $state<TimeType>('departure');
+	let singleTime = $state<Date>(new Date(Date.now() + HOUR * 2));
+	let repeatingTime = $state<Date>(new Date(Date.now() + HOUR * 2));
+	let singleTimeType = $state<TimeType>('departure');
+	let repeatingTimeType = $state<TimeType>('departure');
+	let offerMode = $state<'single' | 'repeating'>('single');
+	let activeTime = $derived(offerMode === 'single' ? singleTime : repeatingTime);
+	let activeTimeType = $derived(offerMode === 'single' ? singleTimeType : repeatingTimeType);
 
 	let passengers = $state(0);
 	let luggage = $state(0);
@@ -63,6 +75,31 @@
 		passengers = data.vehicles.find((v) => v.id.toString() == vehicle)?.passengers ?? 3;
 		luggage = data.vehicles.find((v) => v.id.toString() == vehicle)?.luggage ?? 3;
 	});
+
+	function rideShareEllipseGeoJSON(
+		startLike: maplibregl.LngLatLike | undefined,
+		targetLike: maplibregl.LngLatLike | undefined,
+		routeDistanceMeters: number | undefined
+	) {
+		if (!startLike || !targetLike || routeDistanceMeters === undefined) {
+			return undefined;
+		}
+
+		const start = maplibregl.LngLat.convert(startLike);
+		const target = maplibregl.LngLat.convert(targetLike);
+		const ellipse = prepareDetourEllipse(start, target, routeDistanceMeters);
+		return preparedDetourEllipseToGeoJSON(ellipse);
+	}
+
+	let rideShareEllipse = $derived(
+		data.debug
+			? rideShareEllipseGeoJSON(
+					from.value.match,
+					to.value.match,
+					page.state.rideShareRouteDistanceMeters
+				)
+			: undefined
+	);
 
 	const getLocation = () => {
 		if (navigator && navigator.geolocation) {
@@ -79,54 +116,256 @@
 	type Timeout = ReturnType<typeof setTimeout>;
 	let searchDebounceTimer: Timeout;
 	let loading = $state(false);
-	$effect(() => {
-		if (from.value.match && to.value.match && vehicle && time && timeType) {
-			loading = true;
-			msg = undefined;
-			clearTimeout(searchDebounceTimer);
-			searchDebounceTimer = setTimeout(() => {
-				fetch('/api/rideShareTimes', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({
-						time: time.getTime(),
-						startFixed: timeType != 'arrival',
-						vehicle: parseInt(vehicle!),
-						start: maplibregl.LngLat.convert(from.value.match!),
-						end: maplibregl.LngLat.convert(to.value.match!)
-					})
+	let range: {
+		start: CalendarDate;
+		end: CalendarDate;
+	} = $state({
+		start: toCalendarDate(fromDate(new Date(Date.now() + HOUR * 2), TZ)),
+		end: toCalendarDate(fromDate(new Date(Date.now() + DAY * 30), TZ))
+	});
+
+	let selectedDays: boolean[] = $state(Array.from(t.ride.daysList, (_) => false));
+	let selectedDayMask = $derived(
+		selectedDays.reduce((mask, val, i) => (val ? mask | (1 << shiftDayIdxBackward(i)) : mask), 0)
+	);
+	let bitDays = $derived(offerMode === 'repeating' ? selectedDayMask : 0);
+	function formatCalendarDate(date: CalendarDate | undefined) {
+		return date?.toDate(TZ).toLocaleDateString(LOCALE) ?? '';
+	}
+
+	let repetitionTimeRangeString = $derived(
+		`${formatCalendarDate(range.start)} ${t.ride.to}${formatCalendarDate(range.end)}`
+	);
+	let repetitionSummary = $derived.by(() => {
+		if (selectedDayMask === 0) {
+			return repetitionTimeRangeString;
+		}
+		if (!selectedDays.some((d) => !d)) {
+			return `${t.daily} ${repetitionTimeRangeString}`;
+		}
+		return selectedDays
+			.map((selected, index) => (selected ? t.ride.daysList[index].full : undefined))
+			.filter((day) => day !== undefined)
+			.join(', ')
+			.concat(` ${repetitionTimeRangeString}`);
+	});
+
+	function activateOfferMode(mode: 'single' | 'repeating') {
+		offerMode = mode;
+		msg = undefined;
+		if (from.value.match && to.value.match && vehicle && activeTime && activeTimeType) {
+			doRouting();
+		}
+	}
+
+	function offerCardClass(active: boolean) {
+		return cn(
+			'cursor-pointer border-input transition-colors hover:bg-accent/40',
+			active
+				? 'border-blue-600 ring-1 ring-blue-600'
+				: 'bg-muted/30 text-muted-foreground opacity-65'
+		);
+	}
+
+	let publishBlocker = $derived.by(() => {
+		if (!from.value.match) {
+			return t.ride.publishBlockerStart;
+		}
+		if (!to.value.match) {
+			return t.ride.publishBlockerTarget;
+		}
+		if (offerMode === 'repeating' && selectedDayMask === 0) {
+			return t.ride.publishBlockerWeekdays;
+		}
+		if (loading) {
+			return undefined;
+		}
+		if (!page.state.selectedItinerary) {
+			if (offerMode === 'repeating') {
+				return undefined;
+			}
+			return t.ride.publishBlockerSingleTime;
+		}
+		return undefined;
+	});
+
+	let durationDirect = $state(0);
+
+	async function doRouting() {
+		loading = true;
+		msg = undefined;
+		clearTimeout(searchDebounceTimer);
+		searchDebounceTimer = setTimeout(() => {
+			fetch('/api/rideShareTimes', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					time: activeTime.getTime(),
+					startFixed: activeTimeType != 'arrival',
+					vehicle: parseInt(vehicle!),
+					start: maplibregl.LngLat.convert(from.value.match!),
+					end: maplibregl.LngLat.convert(to.value.match!),
+					checkConflicts: offerMode === 'single'
 				})
-					.then(function (response) {
-						return response.json();
-					})
-					.then((j) => {
-						if (!j || !j.end || !j.start) {
-							msg = { type: 'error', text: 'noRouteFound' };
-							loading = false;
-							replaceState('', {});
-							return;
-						}
-						const it: Itinerary = {
-							duration: (j!.end - j!.start) / 1000,
-							startTime: new Date(j!.start).toISOString(),
-							endTime: new Date(j!.end).toISOString(),
-							legs: [],
-							transfers: 0
-						};
-						replaceState('', { selectedItinerary: it });
+			})
+				.then(function (response) {
+					return response.json();
+				})
+				.then((j) => {
+					if (!j || !j.end || !j.start || !j.duration) {
+						msg = j;
 						loading = false;
-					})
-					.catch(() => {
-						msg = { type: 'error', text: 'routingRequestFailed' };
 						replaceState('', {});
-						loading = false;
+						return;
+					}
+					durationDirect = j.duration / 1000;
+					const it: Itinerary = {
+						duration: (j!.end - j!.start) / 1000,
+						startTime: new Date(j!.start).toISOString(),
+						endTime: new Date(j!.end).toISOString(),
+						legs: [],
+						transfers: 0
+					};
+					replaceState('', {
+						selectedItinerary: it,
+						rideShareRouteDistanceMeters: j.routeDistanceMeters
 					});
-			}, 400);
+					loading = false;
+				})
+				.catch(() => {
+					msg = { type: 'error', text: 'routingRequestFailed' };
+					replaceState('', {});
+					loading = false;
+				});
+		}, 400);
+	}
+
+	$effect(() => {
+		if (from.value.match && to.value.match && vehicle && activeTime && activeTimeType) {
+			doRouting();
 		}
 	});
+
+	type TimeControlMode = 'single' | 'repeating';
+
+	function timeForMode(mode: TimeControlMode) {
+		return mode === 'single' ? singleTime : repeatingTime;
+	}
+
+	function timeTypeForMode(mode: TimeControlMode) {
+		return mode === 'single' ? singleTimeType : repeatingTimeType;
+	}
+
+	function formatTimeInputValue(date: Date) {
+		return `${date.getHours().toString().padStart(2, '0')}:${date
+			.getMinutes()
+			.toString()
+			.padStart(2, '0')}`;
+	}
+
+	function updateRepeatingTime(value: string) {
+		const [hours, minutes] = value.split(':').map(Number);
+		if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+			return;
+		}
+		const updatedTime = new Date(repeatingTime);
+		updatedTime.setHours(hours, minutes, 0, 0);
+		repeatingTime = updatedTime;
+	}
+
+	function floorToMinute(value: number) {
+		return Math.floor(value / 60) * 60;
+	}
 </script>
+
+{#snippet timeTypeControls(idPrefix: TimeControlMode)}
+	<Label
+		for="{idPrefix}-departure"
+		class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
+	>
+		<RadioGroup.Item
+			value="departure"
+			id="{idPrefix}-departure"
+			class="sr-only"
+			aria-label={t.departure}
+		/>
+		{t.departure}
+	</Label>
+	<Label
+		for="{idPrefix}-arrival"
+		class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
+	>
+		<RadioGroup.Item
+			value="arrival"
+			id="{idPrefix}-arrival"
+			class="sr-only"
+			aria-label={t.arrival}
+		/>
+		{t.arrival}
+	</Label>
+{/snippet}
+
+{#snippet timeControls(idPrefix: TimeControlMode)}
+	{#if idPrefix === 'single'}
+		<RadioGroup.Root class="grid grid-cols-2 gap-3" bind:value={singleTimeType}>
+			{@render timeTypeControls(idPrefix)}
+		</RadioGroup.Root>
+
+		<DateInput bind:value={singleTime} />
+	{:else}
+		<RadioGroup.Root class="grid grid-cols-2 gap-3" bind:value={repeatingTimeType}>
+			{@render timeTypeControls(idPrefix)}
+		</RadioGroup.Root>
+
+		<input
+			type="time"
+			aria-label={timeTypeForMode(idPrefix) === 'departure' ? t.departure : t.arrival}
+			class="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+			value={formatTimeInputValue(repeatingTime)}
+			onchange={(event) => updateRepeatingTime(event.currentTarget.value)}
+		/>
+	{/if}
+{/snippet}
+
+{#snippet timePreview(mode: TimeControlMode)}
+	<div class="flex items-center gap-2 text-sm">
+		<Clock class="size-4 shrink-0" />
+		{#if mode === 'single'}
+			{t.atDateTime(
+				timeTypeForMode(mode),
+				timeForMode(mode),
+				timeForMode(mode).toLocaleDateString() == new Date().toLocaleDateString()
+			)}
+		{:else}
+			{timeTypeForMode(mode) === 'departure' ? t.departure : t.arrival}
+			{formatTimeInputValue(timeForMode(mode))}
+		{/if}
+	</div>
+{/snippet}
+
+{#snippet repetitionPreview()}
+	<div class="flex flex-col gap-3">
+		<div class="text-sm text-muted-foreground">
+			{repetitionSummary}
+		</div>
+		<div class="flex flex-wrap gap-2">
+			{#each t.ride.daysList as day, index}
+				<span
+					class={cn(
+						'flex h-9 w-9 items-center justify-center rounded-full border text-sm font-medium',
+						selectedDays[index]
+							? 'border-blue-600 bg-blue-600 text-white'
+							: 'border-muted bg-muted/60 text-muted-foreground'
+					)}
+				>
+					{day.short}
+				</span>
+			{/each}
+		</div>
+	</div>
+{/snippet}
 
 <div class="md:min-h-[70dvh] md:w-96">
 	{#if page.state.selectFrom}
@@ -151,6 +390,7 @@
 			bind:to
 			itinerary={page.state.selectedItinerary}
 			rideSharingBounds={data.rideSharingBounds}
+			{rideShareEllipse}
 		/>
 	{/if}
 
@@ -160,8 +400,12 @@
 			autocomplete="off"
 			class="flex flex-col gap-4"
 			use:enhance={() => {
+				loading = true;
 				return async ({ update }) => {
-					update({ reset: false });
+					await update({ reset: false });
+					window.setTimeout(() => {
+						loading = false;
+					}, 1000);
 				};
 			}}
 		>
@@ -257,7 +501,11 @@
 				<Button
 					variant="outline"
 					onclick={() =>
-						pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
+						pushState('', {
+							showMap: true,
+							selectedItinerary: page.state.selectedItinerary,
+							rideShareRouteDistanceMeters: page.state.rideShareRouteDistanceMeters
+						})}
 					class="flex w-full justify-center"
 				>
 					<MapIcon class="h-[1.2rem] w-[1.2rem]" />
@@ -302,96 +550,140 @@
 					<ArrowUpDown class="h-5 w-5" />
 				</Button>
 			</div>
-			<div class="flex gap-2">
-				<Popover.Root>
-					<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }), 'grow')}>
-						{t.atDateTime(
-							timeType,
-							time,
-							time.toLocaleDateString() == new Date().toLocaleDateString()
-						)}
-					</Popover.Trigger>
-					<Popover.Content class="flex w-fit flex-col gap-4">
-						<RadioGroup.Root class="flex justify-stretch" bind:value={timeType}>
-							<Label
-								for="departure"
-								class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
-							>
-								<RadioGroup.Item
-									value="departure"
-									id="departure"
-									class="sr-only"
-									aria-label={t.departure}
-								/>
-								{t.departure}
-							</Label>
-							<Label
-								for="arrival"
-								class="flex grow justify-center rounded-md border-2 border-muted bg-popover p-2 hover:cursor-pointer hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-blue-600"
-							>
-								<RadioGroup.Item
-									value="arrival"
-									id="arrival"
-									class="sr-only"
-									aria-label={t.arrival}
-								/>
-								{t.arrival}
-							</Label>
-						</RadioGroup.Root>
+			<Card.Root
+				class={offerCardClass(offerMode === 'single')}
+				role="radio"
+				aria-checked={offerMode === 'single'}
+				tabindex={0}
+				onclick={() => activateOfferMode('single')}
+			>
+				<Card.Header>
+					<Card.Title class="flex items-center gap-2 text-base">
+						<Clock class="size-4" />
+						{t.ride.singleRideOffer}
+					</Card.Title>
+				</Card.Header>
+				<Card.Content class="flex flex-col gap-4 p-4">
+					{#if offerMode === 'single'}
+						<div
+							class="flex flex-col gap-4"
+							role="presentation"
+							onclick={(event) => event.stopPropagation()}
+							onkeydown={(event) => event.stopPropagation()}
+						>
+							{@render timeControls('single')}
+						</div>
+					{:else}
+						{@render timePreview('single')}
+					{/if}
+				</Card.Content>
+			</Card.Root>
 
-						<DateInput bind:value={time} />
-					</Popover.Content>
-				</Popover.Root>
-			</div>
+			<Card.Root
+				class={offerCardClass(offerMode === 'repeating')}
+				role="radio"
+				aria-checked={offerMode === 'repeating'}
+				tabindex={0}
+				onclick={() => activateOfferMode('repeating')}
+			>
+				<Card.Header>
+					<Card.Title class="flex items-center gap-2 text-base">
+						<CalendarDays class="size-4" />
+						{t.ride.repetitionLabel}
+					</Card.Title>
+				</Card.Header>
+				<Card.Content class="flex flex-col gap-4 p-4">
+					{#if offerMode === 'repeating'}
+						<div
+							class="flex flex-col gap-4"
+							role="presentation"
+							onclick={(event) => event.stopPropagation()}
+							onkeydown={(event) => event.stopPropagation()}
+						>
+							{@render timeControls('repeating')}
+							<RepetitionSelector
+								minValue={toCalendarDate(fromDate(new Date(Date.now() + HOUR * 2), TZ))}
+								bind:range
+								bind:selectedDays
+								active={true}
+								framed={false}
+							></RepetitionSelector>
+						</div>
+					{:else}
+						{@render timePreview('repeating')}
+						{@render repetitionPreview()}
+					{/if}
+				</Card.Content>
+			</Card.Root>
 
-			<div class="flex items-center justify-center">
-				{#if page.state.selectedItinerary && !loading}
-					<Button
-						variant="outline"
-						onclick={() =>
-							pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
-						class="size-fit text-base"
-					>
+			{#if page.state.selectedItinerary && !loading}
+				<Card.Root
+					class="hover:bg-accent/40"
+					role="button"
+					onclick={() =>
+						pushState('', {
+							showMap: true,
+							selectedItinerary: page.state.selectedItinerary,
+							rideShareRouteDistanceMeters: page.state.rideShareRouteDistanceMeters
+						})}
+				>
+					<Card.Header>
+						<Card.Title class="flex items-center gap-2 text-base">
+							{t.rideShare.calculatedRoute}
+						</Card.Title>
+					</Card.Header>
+					<Card.Content>
 						<div class="flex-row">
-							<div class="flex items-center">
-								<MapPin class="mr-2 h-5 w-5" />
+							<div class="flex items-center overflow-hidden">
 								<Time
 									variant="schedule"
 									class="mr-4 w-auto font-semibold "
-									queriedTime={time.toISOString()}
+									queriedTime={activeTime.toISOString()}
 									isRealtime={false}
 									scheduledTimestamp={page.state.selectedItinerary?.startTime}
 									timestamp={page.state.selectedItinerary?.startTime}
 								/>
-								{t.departure}
+								{from.label ? from.label : t.departure}
 							</div>
 							<div class="flex items-center text-muted-foreground">
-								<EllipsisVertical class="mr-2 h-5 w-5" />
-								{formatDurationSec(page.state.selectedItinerary?.duration)}
+								<EllipsisVertical class="ml-2 mr-6" />
+								{formatDurationSec(floorToMinute(page.state.selectedItinerary?.duration))}
+								{t.rideShare.maxTime}
 							</div>
-							<div class="flex items-center">
-								<MapPinCheckInside class="mr-2 h-5 w-5" />
+							<div class="flex items-center text-muted-foreground">
+								<EllipsisVertical class="ml-2 mr-6" />
+								{formatDurationSec(durationDirect)}
+								{t.rideShare.travelTimeOnly}
+							</div>
+							<div class="flex items-center overflow-hidden">
 								<Time
 									variant="schedule"
 									class="mr-4 w-auto font-semibold"
-									queriedTime={time.toISOString()}
+									queriedTime={activeTime.toISOString()}
 									isRealtime={false}
 									scheduledTimestamp={page.state.selectedItinerary?.endTime}
 									timestamp={page.state.selectedItinerary?.endTime}
 								/>
-								{t.arrival}
+								{to.label ? to.label : t.arrival}
 							</div>
 						</div>
-					</Button>
-				{:else if loading}
-					<LoaderCircle class="h-6 w-6 animate-spin" />
-				{/if}
-			</div>
+					</Card.Content>
+				</Card.Root>
+			{:else if loading}
+				<LoaderCircle class="h-6 w-6 animate-spin" />
+			{/if}
+
 			<Message class="mb-6" msg={form?.msg || msg} />
 
 			<p>{t.ride.outro}</p>
-			<Button type="submit" class="w-full" disabled={!page.state.selectedItinerary || loading}>
-				{t.ride.publish}
+			{#if publishBlocker}
+				<div class="flex items-start gap-2 text-sm text-warning">
+					<TriangleAlert class="mt-0.5 size-4 shrink-0" />
+					<span>{publishBlocker}</span>
+				</div>
+			{/if}
+			<Button type="submit" class="w-full" disabled={publishBlocker !== undefined || loading}>
+				{offerMode === 'single' ? t.ride.publishSingleRideOffer : t.ride.publishRepeatingRideOffers}
 				<ChevronRightIcon />
 			</Button>
 			<input type="hidden" name="startLat" value={from.value.match?.lat} />
@@ -400,11 +692,14 @@
 			<input type="hidden" name="endLat" value={to.value.match?.lat} />
 			<input type="hidden" name="endLon" value={to.value.match?.lon} />
 			<input type="hidden" name="endLabel" value={to.label} />
-			<input type="hidden" name="time" value={time.getTime()} />
-			<input type="hidden" name="timeType" value={timeType} />
+			<input type="hidden" name="time" value={activeTime.getTime()} />
+			<input type="hidden" name="timeType" value={activeTimeType} />
 			<input type="hidden" name="vehicle" value={vehicle} />
 			<input type="hidden" name="luggage" value={luggage} />
 			<input type="hidden" name="passengers" value={passengers} />
+			<input type="hidden" name="days" value={bitDays} />
+			<input type="hidden" name="rangeStart" value={range.start.toString()} />
+			<input type="hidden" name="rangeEnd" value={range.end.toString()} />
 		</form>
 	</div>
 </div>
