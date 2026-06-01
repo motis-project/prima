@@ -29,6 +29,7 @@ class FareViewModel @Inject constructor(
 
     init {
         repository.fetchTours()
+        repository.stopPolling()
     }
 
     fun reportFare(tourId: Int, fare: String) {
