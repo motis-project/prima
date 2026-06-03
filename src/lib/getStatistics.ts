@@ -77,11 +77,11 @@ function createTourEntries(tours: Tours) {
 	return {
 		count: tours.length,
 		'Anfahrt/Rückfahrt m': tours.reduce((prev, curr) => (prev += curr.approachAndReturnM!), 0),
-		'Anfahrt/Rückfahrt driving ms': tours.reduce(
+		'Anfahrt/Rückfahrt Fahrtzeit ms': tours.reduce(
 			(prev, curr) => (prev += curr.approachAndReturnDrivingMs!),
 			0
 		),
-		'Anfahrt/Rückfahrt waiting ms': tours.reduce(
+		'Anfahrt/Rückfahrt Wartezeit ms': tours.reduce(
 			(prev, curr) => (prev += curr.approachAndReturnWaitingMs!),
 			0
 		),
