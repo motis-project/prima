@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -44,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.motis.prima.R
@@ -51,7 +51,10 @@ import de.motis.prima.data.DataRepository
 import de.motis.prima.data.EventObjectGroup
 import de.motis.prima.data.TourObject
 import de.motis.prima.data.TourSpecialInfo
+import de.motis.prima.services.Vehicle
 import de.motis.prima.ui.theme.LocalExtendedColors
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import java.util.Date
 import javax.inject.Inject
 
@@ -60,6 +63,8 @@ class TourViewModel @Inject constructor(
     val repository: DataRepository
 ) : ViewModel() {
     val eventObjectGroups = repository.eventObjectGroups
+    val selectedVehicle = repository.selectedVehicle
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private var _tour: TourObject? = null
 
@@ -114,6 +119,10 @@ class TourViewModel @Inject constructor(
     fun startPolling() {
         repository.initRealTimePolling()
     }
+
+    fun getVehicle(tourId: Int): Vehicle? {
+        return repository.getVehicle(tourId)
+    }
 }
 
 @Composable
@@ -123,6 +132,7 @@ fun TourPreview(
     viewModel: TourViewModel = hiltViewModel()
 ) {
     var isCancelled = false
+
     LaunchedEffect(Unit) {
         viewModel.updateEventGroups(tourId)
         isCancelled = viewModel.isCancelled(tourId)
@@ -196,13 +206,14 @@ fun TourInfoView(tourInfo: TourSpecialInfo) {
                 Text(
                     text = "${tourInfo.wheelChairs}",
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = LocalExtendedColors.current.textColor
                 )
-                Text(text = " x ")
+                Text(text = " x ", color = LocalExtendedColors.current.textColor)
                 Icon(
                     painter = painterResource(id = R.drawable.ic_wheelchair),
                     contentDescription = "Localized description",
-                    Modifier.fillMaxHeight()
+                    tint = LocalExtendedColors.current.textColor,
                 )
             }
             if (tourInfo.kidsZeroToTwo != 0) {
@@ -210,45 +221,48 @@ fun TourInfoView(tourInfo: TourSpecialInfo) {
                 Text(
                     text = "${tourInfo.kidsZeroToTwo}",
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = LocalExtendedColors.current.textColor,
                 )
-                Text(text = " x ")
+                Text(text = " x ", color = LocalExtendedColors.current.textColor)
                 Icon(
                     painter = painterResource(id = R.drawable.ic_child_seat),
                     contentDescription = "Localized description",
-                    Modifier.fillMaxHeight()
+                    tint = LocalExtendedColors.current.textColor,
                 )
-                Text(text = "0-2J")
+                Text(text = "0-2J", color = LocalExtendedColors.current.textColor)
             }
             if (tourInfo.kidsThreeToFour != 0) {
                 Spacer(Modifier.width(10.dp))
                 Text(
                     text = "${tourInfo.kidsThreeToFour}",
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = LocalExtendedColors.current.textColor
                 )
-                Text(text = " x ")
+                Text(text = " x ", color = LocalExtendedColors.current.textColor)
                 Icon(
                     painter = painterResource(id = R.drawable.ic_child_seat),
                     contentDescription = "Localized description",
-                    Modifier.fillMaxHeight()
+                    tint = LocalExtendedColors.current.textColor,
                 )
-                Text(text = "3-4J")
+                Text(text = "3-4J", color = LocalExtendedColors.current.textColor)
             }
             if (tourInfo.kidsFiveToSix != 0) {
                 Spacer(Modifier.width(10.dp))
                 Text(
                     text = "${tourInfo.kidsFiveToSix}",
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = LocalExtendedColors.current.textColor
                 )
-                Text(text = " x ")
+                Text(text = " x ", color = LocalExtendedColors.current.textColor)
                 Icon(
                     painter = painterResource(id = R.drawable.ic_child_seat),
                     contentDescription = "Localized description",
-                    Modifier.fillMaxHeight()
+                    tint = LocalExtendedColors.current.textColor,
                 )
-                Text(text = "5-6J")
+                Text(text = "5-6J", color = LocalExtendedColors.current.textColor)
             }
         }
     }
@@ -337,17 +351,29 @@ fun WayPointsView(viewModel: TourViewModel, tourId: Int, navController: NavContr
                 modifier = Modifier.fillMaxWidth().height(parentHeight * 0.2f),
                 contentAlignment = Alignment.Center
             ) {
-                Button(
-                    onClick = {
-                        viewModel.startPolling()
-                        navController.navigate("leg/$tourId/0")
+                val selectedVehicle by viewModel.selectedVehicle.collectAsState()
+                val tourVehicle = viewModel.getVehicle(tourId)
+                selectedVehicle?.let { v ->
+                    if (v.id == tourVehicle?.id) {
+                        Button(
+                            onClick = {
+                                viewModel.startPolling()
+                                navController.navigate("leg/$tourId/0")
+                            }
+                        ) {
+                            Text(
+                                text = "Fahrt starten",
+                                fontSize = 24.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = "Zugewiesen an ${tourVehicle?.licensePlate}",
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center
+                        )
                     }
-                ) {
-                    Text(
-                        text = "Fahrt starten",
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center
-                    )
                 }
             }
         }
@@ -356,8 +382,6 @@ fun WayPointsView(viewModel: TourViewModel, tourId: Int, navController: NavContr
 
 @Composable
 fun RetroView(viewModel: TourViewModel, tourId: Int, navController: NavController) {
-    //val pendingValidationTickets by viewModel.pendingValidationTickets.collectAsState()
-
     Column(
         modifier = Modifier.fillMaxSize().padding(30.dp),
     ) {

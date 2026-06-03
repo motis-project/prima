@@ -48,6 +48,7 @@ import de.motis.prima.data.DataRepository
 import de.motis.prima.services.ApiService
 import de.motis.prima.services.AvailabilityRequest
 import de.motis.prima.services.AvailabilityResponse
+ import de.motis.prima.services.MoveTourResponse
 import de.motis.prima.ui.theme.LocalExtendedColors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -117,6 +118,11 @@ class AvailabilityViewModel @Inject constructor(
 
     private val _minDateReached = MutableStateFlow(false)
     val minDateReached = _minDateReached.asStateFlow()
+
+    val vehicles = repository.vehicles
+    var moveToursResponse = repository.moveTourResponse
+    val refresh = repository.refresh
+    val storedTours = repository.storedTours
 
     init {
         setDayBlocks(_displayDate.value, _displayDate.value)
@@ -378,7 +384,7 @@ class AvailabilityViewModel @Inject constructor(
         _maxDateReached.value = fetchDate >= LocalDate.now().plusDays(14)
     }
 
-    fun setDate(date: LocalDate) {
+    fun setDate(date: LocalDate = _displayDate.value) {
         val saveDate = _displayDate.value
 
         if (saveDate < LocalDate.now() || saveDate > LocalDate.now().plusDays(14)) {
@@ -391,14 +397,25 @@ class AvailabilityViewModel @Inject constructor(
         _displayDate.value = date
         _minDateReached.value = date <= LocalDate.now()
         _maxDateReached.value = date >= LocalDate.now().plusDays(14)
+
+        repository.refresh()
     }
 
-    fun updateDayBlocks(start: Int, end: Int, dragStart: Int) {
+    fun updateDayBlocks(start: Int, end: Int, dragStart: Int): Long {
         val blocks = dayMap[_displayDate.value.toString()] ?: emptyList()
         val startBlock = blocks[getSlotIndex(dragStart)]
         val remove = startBlock.color == colorAvailable
         var a = getSlotIndex(start)
         val b = getSlotIndex(end)
+
+        val epochMillisSTOD = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+        if (b == a + 1 && blocks[a].color == colorTour) {
+            val startMinutes = blocks[a].startMinutes
+            val epochMillis = epochMillisSTOD + startMinutes * 60000
+            return epochMillis
+        }
+
         while ( a < b ) {
             if (blocks[a].color == colorPassed || blocks[a].color == colorTour) {
                 a++
@@ -415,6 +432,27 @@ class AvailabilityViewModel @Inject constructor(
         _dayBlocks.value = blocks
         dayMap[_displayDate.value.toString()] = blocks
         setDayBlocks(_displayDate.value, _displayDate.value)
+        return 0
+    }
+
+    fun moveTour(time: Long, vehicleId: Int) {
+        if (vehicleId == 0) return
+        val tours = storedTours.value.filter { t ->
+            t.vehicleId == selectedVehicle.value!!.id && t.startTime <= time && time <= t.endTime
+        }
+        if (tours.size > 1) {
+            Log.d("error", "moveTour: tours ambiguous")
+            return
+        }
+        if (tours.isEmpty()) {
+            Log.d("error", "moveTour: tour not found")
+            return
+        }
+        repository.moveTour(tours.first().tourId, vehicleId)
+    }
+
+    fun resetTMR() {
+        repository.resetTMR()
     }
 }
 
@@ -519,7 +557,7 @@ fun DateSelect(
             modifier = Modifier.padding(all = 6.dp),
         ) {
             IconButton(
-                onClick = { viewModel.setDate(displayDate) },
+                onClick = { viewModel.setDate() },
                 Modifier
                     .size(width = 48.dp, height = 24.dp)
             ) {

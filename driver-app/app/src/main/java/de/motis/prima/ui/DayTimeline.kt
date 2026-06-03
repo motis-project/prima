@@ -19,12 +19,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -40,6 +43,69 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import de.motis.prima.R
 import de.motis.prima.ui.AvailabilityViewModel
+import de.motis.prima.ui.theme.LocalExtendedColors
+
+@Composable
+fun MoveTourDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (Int) -> Unit,
+    viewModel: AvailabilityViewModel
+) {
+    val selectedOption = remember { mutableIntStateOf(0) }
+    val selectedVehicle by viewModel.selectedVehicle.collectAsState()
+    val storedTours by viewModel.storedTours.collectAsState()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Verschieben nach:") },
+        text = {
+            Column {
+                val vehicles by viewModel.vehicles.collectAsState()
+                selectedVehicle?.let { sv ->
+                    val filteredVehicles = vehicles.filter { e ->
+                        e.id != sv.id
+                        // TODO: filter out infeasible vehicles
+                    }
+                    if (filteredVehicles.size == 1) {
+                        selectedOption.intValue = filteredVehicles.first().id
+                    }
+                    filteredVehicles.forEach { v ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (v.id != sv.id) {
+                                Checkbox(
+                                    checked = selectedOption.intValue == v.id,
+                                    onCheckedChange = { isChecked ->
+                                        if (isChecked) {
+                                            selectedOption.intValue = v.id
+                                        } else {
+                                            selectedOption.intValue = 0
+                                        }
+                                    }
+                                )
+                                Text(v.licensePlate)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                onConfirm(selectedOption.intValue)
+                onDismiss()
+            }) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
 
 @Composable
 fun DayTimeline(
@@ -62,11 +128,47 @@ fun DayTimeline(
     val passedSlots by viewModel.passedSlots.collectAsState()
 
     var showDialog by remember { mutableStateOf(false) }
+    var showMoveTourDialog by remember { mutableLongStateOf(0) }
+
+    val moveTourResponse by viewModel.moveToursResponse.collectAsState()
+
+    val refresh by viewModel.refresh.collectAsState()
 
     LaunchedEffect(key1 = viewModel) {
         viewModel.networkError.collect { networkError ->
             showDialog = networkError
         }
+    }
+
+    if (refresh) {
+        viewModel.setDate()
+    }
+
+    if (moveTourResponse.status != 0 && moveTourResponse.status != 200) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(text = "Verschieben nicht möglich", fontSize = 16.sp) },
+            text = { Text(text = moveTourResponse.message, fontSize = 12.sp) },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Clear,
+                    contentDescription = "Localized description",
+                    tint = Color.Red,
+                    modifier = Modifier.size(32.dp)
+
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.resetTMR()
+                    showDialog = false
+                }) {
+                    Text("Ok")
+                }
+            }
+        )
+    } else if (moveTourResponse.status == 200) {
+        viewModel.setDate()
     }
 
     if (showDialog) {
@@ -94,7 +196,21 @@ fun DayTimeline(
         )
     }
 
-    Row (modifier = Modifier.padding(top = 24.dp)) {
+    if (showMoveTourDialog != 0L) {
+        MoveTourDialog(
+           onDismiss = { showMoveTourDialog = 0L },
+           onConfirm = { selected ->
+               viewModel.moveTour(showMoveTourDialog, selected)
+           },
+           viewModel
+        )
+    }
+
+    Row (
+        modifier = Modifier
+            .padding(top = 24.dp)
+            .background(LocalExtendedColors.current.containerColor)
+    ) {
         val heightPerSlotDp = 120.dp / (60 / slotMinutes)
         val totalHeight = heightPerSlotDp * (slots + 1 - passedSlots)
 
@@ -107,7 +223,7 @@ fun DayTimeline(
         ) {
             Row(
                 modifier = Modifier
-                    .background(Color.White)
+                    .background(LocalExtendedColors.current.containerColor)
             ) {
                 // Hour labels
                 Column(
@@ -127,14 +243,18 @@ fun DayTimeline(
                             Text(
                                 text = String.format("%02d:00", hour),
                                 fontSize = 10.sp,
-                                color = Color.DarkGray
+                                color = LocalExtendedColors.current.textColor//Color.DarkGray
                             )
                         }
                     }
                 }
 
                 // Timeline drawing area
-                Box(modifier = Modifier.weight(1f)) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(LocalExtendedColors.current.containerColor)
+                ) {
                     val visibleHeight = heightPerSlotDp * slots - heightPerSlotDp * passedSlots
                     val passedSlotsLocal by viewModel.passedSlots.collectAsState()
                     Canvas(
@@ -144,23 +264,27 @@ fun DayTimeline(
                             .padding(top = 12.dp, start = 6.dp, end = 12.dp)
                             .pointerInput(Unit) {
                                 detectTapGestures { offset ->
-                                    val slot = (offset.y / heightPerSlotDp.toPx()).toInt() + passedSlotsLocal
+                                    val slot =
+                                        (offset.y / heightPerSlotDp.toPx()).toInt() + passedSlotsLocal
                                     val start = slot * slotMinutes
                                     val end = start + slotMinutes
                                     dragStart = start
-                                    viewModel.updateDayBlocks(start, end, dragStart!!)
+                                    showMoveTourDialog =
+                                        viewModel.updateDayBlocks(start, end, dragStart!!)
                                     dragStart = null
                                 }
                             }
                             .pointerInput(Unit) {
                                 detectDragGestures(
                                     onDragStart = { offset ->
-                                        val slot = (offset.y / heightPerSlotDp.toPx()).toInt() + passedSlotsLocal
+                                        val slot =
+                                            (offset.y / heightPerSlotDp.toPx()).toInt() + passedSlotsLocal
                                         dragStart = slot * slotMinutes
                                         dragEnd = slot * slotMinutes
                                     },
                                     onDrag = { change, _ ->
-                                        val slot = (change.position.y / heightPerSlotDp.toPx()).toInt() + passedSlotsLocal
+                                        val slot =
+                                            (change.position.y / heightPerSlotDp.toPx()).toInt() + passedSlotsLocal
                                         dragEnd = slot * slotMinutes
                                     },
                                     onDragEnd = {

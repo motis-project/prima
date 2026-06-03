@@ -3,7 +3,6 @@ package de.motis.prima.services
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
-import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -28,6 +27,11 @@ interface ApiService {
         @Query("toTime") toTime: Long
     ): Response<List<Tour>>
 
+    @POST("taxi/availability/api/tour")
+    suspend fun moveTour(
+        @Body request: MoveTourRequest
+    ): Response<MoveTourResponse>
+
     @PUT("api/driver/ticket")
     suspend fun validateTicket(
         @Query("requestId") requestId: Int,
@@ -51,24 +55,21 @@ interface ApiService {
         @Body request: AvailabilityRequest
     ): Response<AvailabilityResponse>
 
-    @DELETE("api/driver/availability")
-    suspend fun deleteAvailability(
-        @Body request: AvailabilityRequest
-    ): Response<AvailabilityResponse>
-
-    @PUT("/taxi/availability")
-    suspend fun setAvailability(
-        // {vehicleId: 1, from: 1760104800000, to: 1760106600000}
-        @Query("vehicleId") vehicleId: String,
-        @Query("from") from: String,
-        @Query("to") to: String
-    ): Response<Void>
-
     @GET("api/driver/journey")
     suspend fun getItinerary(
         @Query("requestId") requestId: Int
     ): Response<Leg?>
 }
+
+data class MoveTourResponse(
+    val status: Int = 0,
+    val message: String = "none"
+)
+
+data class MoveTourRequest(
+    val tourId: Int,
+    val vehicleId: Int
+)
 
 data class AvailabilityRequest(
     val vehicleId: Int,
@@ -110,7 +111,6 @@ data class Event(
     val lat: Double,
     val lng: Double,
     val scheduledTime: Long,
-    val scheduledTimeStart: Long,
     val bikes: Int,
     val customer: Int,
     val luggage: Int,
