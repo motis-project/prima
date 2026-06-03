@@ -214,7 +214,6 @@ fun TourInfoView(tourInfo: TourSpecialInfo) {
                     painter = painterResource(id = R.drawable.ic_wheelchair),
                     contentDescription = "Localized description",
                     tint = LocalExtendedColors.current.textColor,
-                    //Modifier.fillMaxHeight()
                 )
             }
             if (tourInfo.kidsZeroToTwo != 0) {
@@ -230,7 +229,6 @@ fun TourInfoView(tourInfo: TourSpecialInfo) {
                     painter = painterResource(id = R.drawable.ic_child_seat),
                     contentDescription = "Localized description",
                     tint = LocalExtendedColors.current.textColor,
-                    //Modifier.fillMaxHeight()
                 )
                 Text(text = "0-2J", color = LocalExtendedColors.current.textColor)
             }
@@ -247,7 +245,6 @@ fun TourInfoView(tourInfo: TourSpecialInfo) {
                     painter = painterResource(id = R.drawable.ic_child_seat),
                     contentDescription = "Localized description",
                     tint = LocalExtendedColors.current.textColor,
-                    //Modifier.fillMaxHeight()
                 )
                 Text(text = "3-4J", color = LocalExtendedColors.current.textColor)
             }
@@ -264,7 +261,6 @@ fun TourInfoView(tourInfo: TourSpecialInfo) {
                     painter = painterResource(id = R.drawable.ic_child_seat),
                     contentDescription = "Localized description",
                     tint = LocalExtendedColors.current.textColor,
-                    //Modifier.fillMaxHeight()
                 )
                 Text(text = "5-6J", color = LocalExtendedColors.current.textColor)
             }

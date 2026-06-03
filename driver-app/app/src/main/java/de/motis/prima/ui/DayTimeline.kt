@@ -196,10 +196,9 @@ fun DayTimeline(
         )
     }
 
-    val none: Long = 0
-    if (showMoveTourDialog != none) {
+    if (showMoveTourDialog != 0L) {
         MoveTourDialog(
-           onDismiss = { showMoveTourDialog = none },
+           onDismiss = { showMoveTourDialog = 0L },
            onConfirm = { selected ->
                viewModel.moveTour(showMoveTourDialog, selected)
            },

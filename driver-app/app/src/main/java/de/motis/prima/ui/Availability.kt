@@ -441,7 +441,11 @@ class AvailabilityViewModel @Inject constructor(
             t.vehicleId == selectedVehicle.value!!.id && t.startTime <= time && time <= t.endTime
         }
         if (tours.size > 1) {
-            Log.d("test", "Error: tours ambiguous")
+            Log.d("error", "moveTour: tours ambiguous")
+            return
+        }
+        if (tours.isEmpty()) {
+            Log.d("error", "moveTour: tour not found")
             return
         }
         repository.moveTour(tours.first().tourId, vehicleId)
