@@ -25,11 +25,11 @@
 
 	const requestSections = [
 		{
-			title: 'ÖPNV',
+			title: 'ÖPNV bei Taxi Anfragen',
 			entries: data.rsRequestEntries
 		},
 		{
-			title: 'Ride-share requests',
+			title: 'ÖPNV bei Ridesharing Anfragen',
 			entries: data.requestEntries
 		}
 	] as const;
