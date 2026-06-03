@@ -41,7 +41,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -173,7 +172,7 @@ fun Tours(
             }
 
             try {
-                displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTimeStart }
+                displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTime }
             } catch(e: Exception) {
                 Log.d("error", "Error: ${e.message}")
             }
@@ -386,13 +385,9 @@ fun ToursList(
                 }
 
                 val scheduledTime = startEvent?.scheduledTime ?: 0
-                val scheduledTimeStart = startEvent?.scheduledTimeStart ?: 0
 
                 val displayTime = if (scheduledTime.toInt() != 0) {
                     Date(scheduledTime)
-                        .formatTo("HH:mm")
-                } else if (scheduledTimeStart.toInt() != 0) {
-                    Date(scheduledTimeStart)
                         .formatTo("HH:mm")
                 } else {
                     ""

@@ -57,7 +57,7 @@ class FirebaseService : FirebaseMessagingService() {
                 vehicle?.let { v -> body +=  ": ${v.licensePlate}" }
             }
 
-            showNotification(title, body, tourId, pickupTime?.toLong())
+            showNotification(title, body, tourId, pickupTime)
         }
     }
 
@@ -77,7 +77,7 @@ class FirebaseService : FirebaseMessagingService() {
         title: String?,
         body: String?,
         tourId: String?,
-        pickupTime: Long?
+        pickupTime: String?
     ) {
         val intent = Intent(this, MainActivity::class.java).apply {
             putExtra("tourId", tourId)
