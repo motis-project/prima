@@ -25,7 +25,7 @@
 
 	const requestSections = [
 		{
-			title: 'Taxi requests',
+			title: 'ÖPNV',
 			entries: data.rsRequestEntries
 		},
 		{
