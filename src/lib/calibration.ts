@@ -12,7 +12,7 @@ export function collectItineraries(
 	const itineraries = new Array<CalibrationItinerary>();
 
 	for (const r of routingResponses) {
-		if (r != undefined) {
+		if (r?.itineraries != undefined) {
 			for (const i of r.itineraries) {
 				itineraries.push({ ...i, keep: false, remove: false } as CalibrationItinerary);
 			}

@@ -17,6 +17,8 @@ const translations: Translations = {
 	},
 	msg: {
 		// Unknown error
+		error: 'Error',
+		badRequest: 'Invalid Request',
 		unknownError: 'Unknown Error',
 
 		// Account

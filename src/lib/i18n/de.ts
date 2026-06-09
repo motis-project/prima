@@ -16,6 +16,8 @@ const translations: Translations = {
 		calibration: 'Kalibrierung'
 	},
 	msg: {
+		error: 'Fehler',
+		badRequest: 'Ungültige Anfrage',
 		unknownError: 'Unbekannter Fehler.',
 
 		// Account

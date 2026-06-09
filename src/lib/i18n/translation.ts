@@ -18,6 +18,8 @@ export type Translations = {
 		calibration: string;
 	};
 	msg: {
+		error: string;
+		badRequest: string;
 		unknownError: string;
 
 		// Account
