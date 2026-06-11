@@ -356,9 +356,9 @@ export async function bookFull(
 		};
 	}
 	const relevantItineraries = mode
-		? planResponse.itineraries.filter((i) => i.legs.some((l) => l.mode === mode))
+		? planResponse.itineraries?.filter((i) => i.legs.some((l) => l.mode === mode))
 		: planResponse.itineraries;
-	if (relevantItineraries.length === 0) {
+	if (!relevantItineraries?.length) {
 		console.log('Found no itinerary with the selected mode.');
 		return {
 			lastActionSpecifics: null,

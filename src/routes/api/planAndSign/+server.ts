@@ -2,7 +2,7 @@ import { env } from '$env/dynamic/public';
 import { plan, type Itinerary, type PlanData } from '$lib/openapi';
 import { signEntry } from '$lib/server/booking/signEntry';
 import type { QuerySerializerOptions } from '@hey-api/client-fetch';
-import { fail, json, type RequestEvent } from '@sveltejs/kit';
+import { error, json, type RequestEvent } from '@sveltejs/kit';
 import { getRideShareInfos } from '$lib/server/booking/rideShare/getRideShareInfo';
 import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
 import { filterRideSharing } from '$lib/util/filterRideSharing';
@@ -59,7 +59,10 @@ export const POST = async (event: RequestEvent) => {
 	const response = r.data;
 	console.log('Plan Request', r.request);
 	if (response === undefined) {
-		return fail(500);
+		if (r.response.status == 400 && timer) {
+			timer();
+		}
+		error(r.response.status, { message: r.error.error || 'Unknown Error' });
 	}
 
 	response.itineraries = filterRideSharing(response.itineraries);
@@ -75,7 +78,7 @@ export const POST = async (event: RequestEvent) => {
 	} else {
 		const filterSettings = await db.selectFrom('taxiFilter').selectAll().executeTakeFirst();
 		if (filterSettings === undefined) {
-			return fail(500);
+			error(500, { message: 'Internal error (taxi filter missing)' });
 		}
 
 		response.itineraries = filterTaxis(

@@ -12,7 +12,7 @@ export const updateStartDest = (from: Location, to: Location) => {
 		}
 	};
 	return (r: SignedPlanResponse | undefined) => {
-		if (!r) {
+		if (r?.itineraries === undefined) {
 			return r;
 		}
 
