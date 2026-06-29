@@ -43,8 +43,8 @@
 	let ptSlope = $state(data.filterSettings?.ptSlope ?? 2.2);
 	let taxiSlope = $state(data.filterSettings?.taxiSlope ?? 2.0);
 	let calibrationSets = $state(data.calibrationSets);
-	let deletionPrimer = $state(new Array<boolean>(data.calibrationSets.length));
-	let deployPrimer = $state(false);
+	let deletionArmed = $state(new Array<boolean>(data.calibrationSets.length));
+	let deployArmed = $state(false);
 	let importJson = $state(
 		JSON.stringify(
 			{ filterSettings: data.filterSettings, calibrationSets: data.calibrationSets },
@@ -54,7 +54,7 @@
 	);
 
 	$effect(() => {
-		deletionPrimer = new Array<boolean>(calibrationSets.length);
+		deletionArmed = new Array<boolean>(calibrationSets.length);
 	});
 
 	$effect(() => {
@@ -173,10 +173,10 @@
 			<HoverCard>
 				<HoverCardTrigger>
 					<div class="flex flex-row gap-2">
-						<Button variant="default" size="default" onclick={() => (deployPrimer = true)}>
+						<Button variant="default" size="default" onclick={() => (deployArmed = true)}>
 							<HardDriveUpload /> Deploy
 						</Button>
-						{#if deployPrimer}
+						{#if deployArmed}
 							<Button type="submit" variant="default" size="default" class="bg-green-500">
 								<Check />
 							</Button>
@@ -184,7 +184,7 @@
 								variant="default"
 								size="default"
 								class="bg-red-500"
-								onclick={() => (deployPrimer = false)}
+								onclick={() => (deployArmed = false)}
 							>
 								<X />
 							</Button>
@@ -272,10 +272,10 @@
 					<div class="flex flex-row justify-end">
 						<form method="post" action="?/delete" autocomplete="off">
 							<input type="hidden" name="id" value={c.id} />
-							<Button variant="default" size="default" onclick={() => (deletionPrimer[cI] = true)}>
+							<Button variant="default" size="default" onclick={() => (deletionArmed[cI] = true)}>
 								<Trash />{t.calibration.delete}
 							</Button>
-							{#if deletionPrimer[cI]}
+							{#if deletionArmed[cI]}
 								<Button type="submit" variant="default" size="default" class="bg-green-500">
 									<Check />
 								</Button>
@@ -283,7 +283,7 @@
 									variant="default"
 									size="default"
 									class="bg-red-500"
-									onclick={() => (deletionPrimer[cI] = false)}
+									onclick={() => (deletionArmed[cI] = false)}
 								>
 									<X />
 								</Button>
