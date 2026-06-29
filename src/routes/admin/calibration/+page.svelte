@@ -18,7 +18,9 @@
 		CircleCheck,
 		CircleX,
 		ChevronLeft,
-		HardDriveUpload
+		HardDriveUpload,
+		ArrowLeftRight,
+		Import
 	} from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import ItinerarySummary from '../../(customer)/routing/ItinerarySummary.svelte';
@@ -30,6 +32,7 @@
 	import { vis } from './vis';
 	import { HoverCard, HoverCardTrigger, HoverCardContent } from '$lib/shadcn/hover-card';
 	import { usesTaxi } from '$lib/util/itineraryHelpers';
+	import * as Dialog from '$lib/shadcn/dialog';
 
 	const { data } = $props();
 
@@ -42,6 +45,13 @@
 	let calibrationSets = $state(data.calibrationSets);
 	let deletionPrimer = $state(new Array<boolean>(calibrationSets.length));
 	let deployPrimer = $state(false);
+	let jsonIO = $state(
+		JSON.stringify(
+			{ filterSettings: data.filterSettings, calibrationSets: data.calibrationSets },
+			null,
+			2
+		)
+	);
 
 	$effect(() => {
 		const getCost = getCostFn(perTransfer, taxiBase, taxiPerMinute, taxiDirectPenalty);
@@ -73,6 +83,17 @@
 			vis(c.itineraries, filterResult.visualize, div, getCost);
 		});
 	});
+
+	const importJSON = () => {
+		const j = JSON.parse(jsonIO);
+		perTransfer = j['filterSettings']['perTransfer'] ?? perTransfer;
+		taxiBase = j['filterSettings']['taxiBase'] ?? taxiBase;
+		taxiPerMinute = j['filterSettings']['taxiPerMinute'] ?? taxiPerMinute;
+		taxiDirectPenalty = j['filterSettings']['taxiDirectPenalty'] ?? taxiDirectPenalty;
+		ptSlope = j['filterSettings']['ptSlope'] ?? ptSlope;
+		taxiSlope = j['filterSettings']['taxiSlope'] ?? taxiSlope;
+		calibrationSets = j['calibrationSets'] ?? calibrationSets;
+	};
 </script>
 
 <Meta title={PUBLIC_PROVIDER} />
@@ -115,7 +136,24 @@
 
 <div class="contents" class:hidden={page.state.stop || page.state.selectedItinerary}>
 	<div class="flex flex-col gap-4">
-		<p class="ml-4">{t.calibration.greeter}</p>
+		<div class="w-fill flex flex-row items-center justify-between">
+			<p class="ml-4">{t.calibration.greeter}</p>
+			<Dialog.Root>
+				<Dialog.Trigger><Button class=""><ArrowLeftRight />JSON</Button></Dialog.Trigger>
+				<Dialog.Content class="flex h-2/3 w-2/3 flex-col">
+					<Dialog.Header>JSON Import/Export</Dialog.Header>
+					<textarea class="h-full w-full flex-grow bg-black" bind:value={jsonIO}></textarea>
+
+					<Dialog.Close>
+						<Button
+							onclick={() => {
+								importJSON();
+							}}><Import />Import</Button
+						>
+					</Dialog.Close>
+				</Dialog.Content>
+			</Dialog.Root>
+		</div>
 		<form
 			method="post"
 			action="?/apply"
