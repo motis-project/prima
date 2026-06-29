@@ -43,15 +43,19 @@
 	let ptSlope = $state(data.filterSettings?.ptSlope ?? 2.2);
 	let taxiSlope = $state(data.filterSettings?.taxiSlope ?? 2.0);
 	let calibrationSets = $state(data.calibrationSets);
-	let deletionPrimer = $state(new Array<boolean>(calibrationSets.length));
+	let deletionPrimer = $state(new Array<boolean>(data.calibrationSets.length));
 	let deployPrimer = $state(false);
-	let jsonIO = $state(
+	let importJson = $state(
 		JSON.stringify(
 			{ filterSettings: data.filterSettings, calibrationSets: data.calibrationSets },
 			null,
 			2
 		)
 	);
+
+	$effect(() => {
+		deletionPrimer = new Array<boolean>(calibrationSets.length);
+	});
 
 	$effect(() => {
 		const getCost = getCostFn(perTransfer, taxiBase, taxiPerMinute, taxiDirectPenalty);
@@ -83,17 +87,6 @@
 			vis(c.itineraries, filterResult.visualize, div, getCost);
 		});
 	});
-
-	const importJSON = () => {
-		const j = JSON.parse(jsonIO);
-		perTransfer = j['filterSettings']['perTransfer'] ?? perTransfer;
-		taxiBase = j['filterSettings']['taxiBase'] ?? taxiBase;
-		taxiPerMinute = j['filterSettings']['taxiPerMinute'] ?? taxiPerMinute;
-		taxiDirectPenalty = j['filterSettings']['taxiDirectPenalty'] ?? taxiDirectPenalty;
-		ptSlope = j['filterSettings']['ptSlope'] ?? ptSlope;
-		taxiSlope = j['filterSettings']['taxiSlope'] ?? taxiSlope;
-		calibrationSets = j['calibrationSets'] ?? calibrationSets;
-	};
 </script>
 
 <Meta title={PUBLIC_PROVIDER} />
@@ -142,14 +135,12 @@
 				<Dialog.Trigger><Button class=""><ArrowLeftRight />JSON</Button></Dialog.Trigger>
 				<Dialog.Content class="flex h-2/3 w-2/3 flex-col">
 					<Dialog.Header>JSON Import/Export</Dialog.Header>
-					<textarea class="h-full w-full flex-grow bg-black" bind:value={jsonIO}></textarea>
-
+					<textarea class="h-full w-full flex-grow bg-black" bind:value={importJson}></textarea>
 					<Dialog.Close>
-						<Button
-							onclick={() => {
-								importJSON();
-							}}><Import />Import</Button
-						>
+						<form method="post" action="?/import">
+							<input type="hidden" name="importJson" value={importJson} />
+							<Button type="submit"><Import />Import</Button>
+						</form>
 					</Dialog.Close>
 				</Dialog.Content>
 			</Dialog.Root>

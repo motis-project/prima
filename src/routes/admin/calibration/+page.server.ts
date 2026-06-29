@@ -79,5 +79,35 @@ export const actions = {
 		const id = readInt(formData.get('id'));
 
 		await db.deleteFrom('calibrationSets').where('calibrationSets.id', '=', id).execute();
+	},
+	import: async ({ request, locals }) => {
+		if (!locals.session?.isAdmin) {
+			return fail(403);
+		}
+
+		const formData = await request.formData();
+		const str = formData.get('importJson');
+		if (typeof str !== 'string') {
+			return fail(400);
+		}
+		const json = JSON.parse(str);
+
+		const newFilter: Record<string, number> = {
+			perTransfer: json.filterSettings.perTransfer,
+			taxiBase: json.filterSettings.taxiBase,
+			taxiPerMinute: json.filterSettings.taxiPerMinute,
+			taxiDirectPenalty: json.filterSettings.taxiDirectPenalty,
+			ptSlope: json.filterSettings.ptSlope,
+			taxiSlope: json.filterSettings.taxiSlope
+		};
+		await db.updateTable('taxiFilter').set(newFilter).execute();
+
+		json['calibrationSets'].forEach(
+			async (e: { id: number; name: string; itineraries: Array<CalibrationItinerary> }) => {
+				const name = e.name;
+				const itinerariesJson = JSON.stringify(e.itineraries);
+				await db.insertInto('calibrationSets').values({ name, itinerariesJson }).execute();
+			}
+		);
 	}
 };
