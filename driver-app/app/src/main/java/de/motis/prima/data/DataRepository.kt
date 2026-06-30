@@ -6,6 +6,8 @@ import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
 import de.motis.prima.services.ApiService
 import de.motis.prima.services.Leg
+import de.motis.prima.services.MoveTourRequest
+import de.motis.prima.services.MoveTourResponse
 import de.motis.prima.services.Tour
 import de.motis.prima.services.Vehicle
 import io.realm.kotlin.query.RealmResults
@@ -121,6 +123,7 @@ class DataRepository @Inject constructor(
     init {
         initializeTheme()
         fetchFirebaseToken()
+        updateVehicles()
         startRefreshingTours()
         startReporting()
     }
@@ -316,6 +319,7 @@ class DataRepository @Inject constructor(
     fun resetDate() {
         _displayDate.value = LocalDate.now()
         fetchTours()
+        refresh()
     }
 
     fun incrementDate() {
@@ -442,6 +446,13 @@ class DataRepository @Inject constructor(
         return tourStore.getTour(id)
     }
 
+    fun getVehicle(tourId: Int): Vehicle? {
+        tourStore.getTour(tourId)?.let { tour ->
+            return _vehicles.value.find { v -> v.id == tour.vehicleId }
+        }
+        return null
+    }
+
     fun getEvent(id: Int): EventObject? {
         return tourStore.getEvent(id)
     }
@@ -524,5 +535,32 @@ class DataRepository @Inject constructor(
                 _updateError.value = e == -2
             }
         }
+    }
+
+    private val _moveTourResponse = MutableStateFlow(MoveTourResponse())
+    val moveTourResponse: StateFlow<MoveTourResponse> = _moveTourResponse.asStateFlow()
+
+    fun moveTour(tourId: Int, vehicleId: Int) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = apiService.moveTour(MoveTourRequest(tourId, vehicleId))
+                response.body()?.let { body ->
+                    _moveTourResponse.value = body
+                }
+            } catch (e: Exception) {
+                Log.d("error", "Network Error: ${e.message!!}")
+            }
+        }
+    }
+
+    fun resetTMR() {
+        _moveTourResponse.value = MoveTourResponse()
+    }
+
+    private val _refresh = MutableStateFlow(false)
+    val refresh: StateFlow<Boolean> = _refresh.asStateFlow()
+
+    fun refresh() {
+        _refresh.value = _refresh.value.not()
     }
 }

@@ -191,7 +191,7 @@ fun EventGroup(
             ) {
                 val validEvents = eventGroup.events
                     .filter { e -> e.cancelled.not() }
-                    .sortedBy { it.scheduledTimeStart }
+                    .sortedBy { it.scheduledTime }
 
                 items(items = validEvents, itemContent = { event ->
                     ShowEvent(event, viewModel, navController)
@@ -400,11 +400,8 @@ fun ShowEvent(
                     .padding(top = 8.dp, start = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                val displayTime = if (event.scheduledTime.toInt() != 0) {
+                val displayTime = if (event.scheduledTime != 0L) {
                     Date(event.scheduledTime)
-                        .formatTo("HH:mm")
-                } else if (event.scheduledTimeStart.toInt() != 0) {
-                    Date(event.scheduledTimeStart)
                         .formatTo("HH:mm")
                 } else {
                     ""
@@ -421,7 +418,7 @@ fun ShowEvent(
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color.White)
+                    .background(LocalExtendedColors.current.containerColor)
                     .padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -504,7 +501,7 @@ fun ShowEvent(
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color.White)
+                        .background(LocalExtendedColors.current.containerColor)
                         .padding(4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -631,7 +628,7 @@ fun ShowEvent(
                         )
                     }
                 } else {
-                    Box { /* place holder */ }
+                    Box { /* placeholder */ }
                 }
 
                 var ticketStatus: ValidationStatus = ValidationStatus.OPEN
@@ -656,7 +653,7 @@ fun ShowEvent(
                     Row(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White)
+                            .background(LocalExtendedColors.current.containerColor)
                             .height(height = 40.dp)
                             .padding(start = 6.dp, end = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
