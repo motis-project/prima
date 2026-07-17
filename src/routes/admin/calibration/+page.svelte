@@ -46,11 +46,7 @@
 	let deletionArmed = $state(new Array<boolean>(data.calibrationSets.length));
 	let deployArmed = $state(false);
 	let importJson = $state(
-		JSON.stringify(
-			{ filterSettings: data.filterSettings, calibrationSets: data.calibrationSets },
-			null,
-			2
-		)
+		JSON.stringify({ filterSettings: data.filterSettings, calibrationSets: data.calibrationSets })
 	);
 
 	$effect(() => {
