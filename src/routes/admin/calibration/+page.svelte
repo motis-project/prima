@@ -124,7 +124,7 @@
 </div>
 
 <div class="contents" class:hidden={page.state.stop || page.state.selectedItinerary}>
-	<div class="fixed z-50 left-0 top-0 flex w-full flex-row gap-2 bg-gray-600 p-1">
+	<div class="fixed left-0 top-0 z-50 flex w-full flex-row gap-2 bg-gray-600 p-1">
 		<form
 			method="post"
 			action="?/apply"
