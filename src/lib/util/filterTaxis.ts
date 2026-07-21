@@ -13,17 +13,17 @@ export function getCostFn<T extends Itinerary>(
 	taxiDirectPenalty: number
 ): (i: T) => number {
 	return (i: T): number => {
-		return (
-			i.legs
-				.map((l) =>
-					isTaxiLeg(l)
-						? taxiBase + Math.round(l.duration / 60) * taxiPerMinute
-						: Math.round(l.duration / 60)
-				)
-				.reduce((acc, val) => acc + val, 0) +
+		let cost =
+			Math.round(i.duration / 60) +
 			i.transfers * perTransfer +
-			(isDirectTaxi(i) ? taxiDirectPenalty : 0)
-		);
+			(isDirectTaxi(i) ? taxiDirectPenalty : 0);
+		i.legs.forEach((l) => {
+			if (isTaxiLeg(l)) {
+				cost -= Math.round(l.duration / 60);
+				cost += taxiBase + Math.round(l.duration / 60) * taxiPerMinute;
+			}
+		});
+		return cost;
 	};
 }
 

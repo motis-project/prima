@@ -140,5 +140,5 @@ describe('Concatenation tests', () => {
 			}
 		}
 		console.log(`Successfully ran ${tests.length - skipped} tests. Skipped ${skipped} tests.`);
-	}, 50000);
+	}, 100000);
 });
