@@ -2,6 +2,8 @@ import { type Itinerary } from '$lib/openapi';
 import { isTaxiLeg } from './booking/checkLegType';
 import { isDirectTaxi, publicTransitOnly, usesTaxi } from './itineraryHelpers';
 
+const meanWindowSize = 60;
+
 export type VisualizationPackage = {
 	thresholds: Array<{ time: Date; pt: number; taxi: number }>;
 };
@@ -97,11 +99,14 @@ export function filterTaxis<T extends Itinerary>(
 }
 
 function getStart<T extends Itinerary>(itineraries: Array<T>): number {
-	return Math.floor(new Date(itineraries[0].startTime).getTime() / 60000);
+	return Math.floor(new Date(itineraries[0].startTime).getTime() / 60000) - meanWindowSize / 2;
 }
 
 function getEnd<T extends Itinerary>(itineraries: Array<T>): number {
-	return Math.ceil(new Date(itineraries[itineraries.length - 1].endTime).getTime() / 60000);
+	return (
+		Math.ceil(new Date(itineraries[itineraries.length - 1].endTime).getTime() / 60000) +
+		meanWindowSize / 2
+	);
 }
 
 function getVisualizationPackage<T extends Itinerary>(
@@ -130,39 +135,8 @@ function getThresholds<T extends Itinerary>(
 }
 
 function averageDamping(a: Array<number>) {
-	const isMinimum = (a: Array<number>, i: number): boolean => {
-		return (i === 0 || a[i] <= a[i - 1]) && (i === a.length - 1 || a[i] <= a[i + 1]);
-	};
-
-	const getNextMinimum = (a: Array<number>, i: number) => {
-		for (; i < a.length; ++i) {
-			if (isMinimum(a, i)) {
-				break;
-			}
-		}
-		return i;
-	};
-
-	const getAverage = (a: Array<number>, i: number, j: number): number => {
-		let acc = 0;
-		for (let k = i; k <= j; ++k) {
-			acc += a[k];
-		}
-		return acc / (j - i + 1);
-	};
-
-	let i = getNextMinimum(a, 0);
-	while (i < a.length - 1) {
-		const j = getNextMinimum(a, i + 1);
-		if (j === a.length) {
-			break;
-		}
-
-		const limit = Math.max(getAverage(a, i, j), a[i], a[j]);
-		for (let k = i; k <= j; ++k) {
-			a[k] = Math.min(a[k], limit);
-		}
-
-		i = j;
+	const mean = a.reduce((s, v) => s + v, 0) / a.length;
+	for (let i in a) {
+		a[i] = Math.min(a[i], mean);
 	}
 }
