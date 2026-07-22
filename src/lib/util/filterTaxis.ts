@@ -2,6 +2,8 @@ import { type Itinerary } from '$lib/openapi';
 import { isTaxiLeg } from './booking/checkLegType';
 import { isDirectTaxi, publicTransitOnly, usesTaxi } from './itineraryHelpers';
 
+const maxWindowHalf = 60;
+
 export type VisualizationPackage = {
 	thresholds: Array<{ time: Date; pt: number; taxi: number }>;
 };
@@ -51,7 +53,7 @@ export function filterTaxis<T extends Itinerary>(
 	};
 
 	const getThreshold = (is: Array<T>, slope: number): Array<number> => {
-		const threshold = new Array<number>(end - start);
+		let threshold = new Array<number>(end - start);
 		threshold.fill(Number.POSITIVE_INFINITY);
 
 		for (const i of is) {
@@ -65,7 +67,7 @@ export function filterTaxis<T extends Itinerary>(
 			});
 		}
 
-		averageDamping(threshold);
+		threshold = dampenPeaksMovingMean(threshold, maxWindowHalf);
 
 		return threshold;
 	};
@@ -129,40 +131,24 @@ function getThresholds<T extends Itinerary>(
 	return thresholds;
 }
 
-function averageDamping(a: Array<number>) {
-	const isMinimum = (a: Array<number>, i: number): boolean => {
-		return (i === 0 || a[i] <= a[i - 1]) && (i === a.length - 1 || a[i] <= a[i + 1]);
-	};
+export function getWindowHalf(a: Array<number>, i: number, max: number): number {
+	return Math.min(i, a.length - 1 - i, max);
+}
 
-	const getNextMinimum = (a: Array<number>, i: number) => {
-		for (; i < a.length; ++i) {
-			if (isMinimum(a, i)) {
-				break;
-			}
-		}
-		return i;
-	};
-
-	const getAverage = (a: Array<number>, i: number, j: number): number => {
-		let acc = 0;
-		for (let k = i; k <= j; ++k) {
-			acc += a[k];
-		}
-		return acc / (j - i + 1);
-	};
-
-	let i = getNextMinimum(a, 0);
-	while (i < a.length - 1) {
-		const j = getNextMinimum(a, i + 1);
-		if (j === a.length) {
-			break;
-		}
-
-		const limit = Math.max(getAverage(a, i, j), a[i], a[j]);
-		for (let k = i; k <= j; ++k) {
-			a[k] = Math.min(a[k], limit);
-		}
-
-		i = j;
+export function windowMean(a: Array<number>, from: number, to: number): number {
+	let sum = 0;
+	for (let i = from; i < to; ++i) {
+		sum += a[i];
 	}
+	return sum / (to - from);
+}
+
+export function dampenPeaksMovingMean(a: Array<number>, maxWindowHalf: number): Array<number> {
+	const dampedA = new Array<number>();
+	for (let i = 0; i < a.length; ++i) {
+		const windowHalf = getWindowHalf(a, i, maxWindowHalf);
+		const mean = windowMean(a, i - windowHalf, i + windowHalf + 1);
+		dampedA.push(Math.min(a[i], mean));
+	}
+	return dampedA;
 }
