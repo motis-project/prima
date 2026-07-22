@@ -2,7 +2,7 @@ import { type Itinerary } from '$lib/openapi';
 import { isTaxiLeg } from './booking/checkLegType';
 import { isDirectTaxi, publicTransitOnly, usesTaxi } from './itineraryHelpers';
 
-const maxWindowSize = 60;
+const maxWindowHalf = 60;
 
 export type VisualizationPackage = {
 	thresholds: Array<{ time: Date; pt: number; taxi: number }>;
@@ -67,7 +67,7 @@ export function filterTaxis<T extends Itinerary>(
 			});
 		}
 
-		threshold = dynamicSlidingWindowMean(threshold, maxWindowSize);
+		threshold = dampenPeaksMovingMean(threshold, maxWindowHalf);
 
 		return threshold;
 	};
@@ -131,7 +131,7 @@ function getThresholds<T extends Itinerary>(
 	return thresholds;
 }
 
-export function getWindowSize(a: Array<number>, i: number, max: number): number {
+export function getWindowHalf(a: Array<number>, i: number, max: number): number {
 	return Math.min(i, a.length - 1 - i, max);
 }
 
@@ -143,11 +143,11 @@ export function windowMean(a: Array<number>, from: number, to: number): number {
 	return sum / (to - from);
 }
 
-export function dynamicSlidingWindowMean(a: Array<number>, maxWindowSize: number): Array<number> {
-	let dampedA = new Array<number>();
+export function dampenPeaksMovingMean(a: Array<number>, maxWindowHalf: number): Array<number> {
+	const dampedA = new Array<number>();
 	for (let i = 0; i < a.length; ++i) {
-		const windowSize = getWindowSize(a, i, maxWindowSize);
-		const mean = windowMean(a, i - windowSize, i + windowSize + 1);
+		const windowHalf = getWindowHalf(a, i, maxWindowHalf);
+		const mean = windowMean(a, i - windowHalf, i + windowHalf + 1);
 		dampedA.push(Math.min(a[i], mean));
 	}
 	return dampedA;
