@@ -2,7 +2,7 @@ import { type Itinerary } from '$lib/openapi';
 import { isTaxiLeg } from './booking/checkLegType';
 import { isDirectTaxi, publicTransitOnly, usesTaxi } from './itineraryHelpers';
 
-const meanWindowSize = 60;
+const maxWindowSize = 60;
 
 export type VisualizationPackage = {
 	thresholds: Array<{ time: Date; pt: number; taxi: number }>;
@@ -53,7 +53,7 @@ export function filterTaxis<T extends Itinerary>(
 	};
 
 	const getThreshold = (is: Array<T>, slope: number): Array<number> => {
-		const threshold = new Array<number>(end - start);
+		let threshold = new Array<number>(end - start);
 		threshold.fill(Number.POSITIVE_INFINITY);
 
 		for (const i of is) {
@@ -67,7 +67,7 @@ export function filterTaxis<T extends Itinerary>(
 			});
 		}
 
-		averageDamping(threshold);
+		threshold = dynamicSlidingWindowMean(threshold, maxWindowSize);
 
 		return threshold;
 	};
@@ -99,14 +99,11 @@ export function filterTaxis<T extends Itinerary>(
 }
 
 function getStart<T extends Itinerary>(itineraries: Array<T>): number {
-	return Math.floor(new Date(itineraries[0].startTime).getTime() / 60000) - meanWindowSize / 2;
+	return Math.floor(new Date(itineraries[0].startTime).getTime() / 60000);
 }
 
 function getEnd<T extends Itinerary>(itineraries: Array<T>): number {
-	return (
-		Math.ceil(new Date(itineraries[itineraries.length - 1].endTime).getTime() / 60000) +
-		meanWindowSize / 2
-	);
+	return Math.ceil(new Date(itineraries[itineraries.length - 1].endTime).getTime() / 60000);
 }
 
 function getVisualizationPackage<T extends Itinerary>(
@@ -134,9 +131,24 @@ function getThresholds<T extends Itinerary>(
 	return thresholds;
 }
 
-function averageDamping(a: Array<number>) {
-	const mean = a.reduce((s, v) => s + v, 0) / a.length;
-	for (let i in a) {
-		a[i] = Math.min(a[i], mean);
+export function getWindowSize(a: Array<number>, i: number, max: number): number {
+	return Math.min(i, a.length - 1 - i, max);
+}
+
+export function windowMean(a: Array<number>, from: number, to: number): number {
+	let sum = 0;
+	for (let i = from; i < to; ++i) {
+		sum += a[i];
 	}
+	return sum / (to - from);
+}
+
+export function dynamicSlidingWindowMean(a: Array<number>, maxWindowSize: number): Array<number> {
+	let dampedA = new Array<number>();
+	for (let i = 0; i < a.length; ++i) {
+		const windowSize = getWindowSize(a, i, maxWindowSize);
+		const mean = windowMean(a, i - windowSize, i + windowSize + 1);
+		dampedA.push(Math.min(a[i], mean));
+	}
+	return dampedA;
 }
