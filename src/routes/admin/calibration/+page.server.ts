@@ -86,7 +86,9 @@ export const actions = {
 		}
 
 		const formData = await request.formData();
-		const str = formData.get('importJson');
+		const file = formData.get('importJson') as File;
+		const str = await file.text();
+
 		if (typeof str !== 'string') {
 			return fail(400);
 		}
