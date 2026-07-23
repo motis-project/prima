@@ -46,7 +46,7 @@
 	let calibrationSets = $state(data.calibrationSets);
 	let deletionArmed = $state(new Array<boolean>(data.calibrationSets.length));
 	let deployArmed = $state(false);
-	let importJson = $derived(
+	let calibrationJson = $derived(
 		JSON.stringify({
 			filterSettings: {
 				perTransfer: perTransfer,
@@ -95,8 +95,8 @@
 		});
 	});
 
-	const downloadJSON = () => {
-		const blob = new Blob([importJson], { type: 'application/json' });
+	const downloadJson = () => {
+		const blob = new Blob([calibrationJson], { type: 'application/json' });
 		const jsonObjectUrl = URL.createObjectURL(blob);
 		const anchorEl = document.createElement('a');
 		anchorEl.href = jsonObjectUrl;
@@ -242,12 +242,19 @@
 			<Dialog.Trigger><Button class=""><ArrowLeftRight />JSON</Button></Dialog.Trigger>
 			<Dialog.Content class="flex flex-col">
 				<Dialog.Header>JSON Import/Export</Dialog.Header>
-				<Button variant="default" size="default" onclick={() => downloadJSON()}
+				<Button class="w-full" variant="default" size="default" onclick={() => downloadJson()}
 					><Download />Download Calibration</Button
 				>
-				<form method="post" action="?/import">
-					<input type="hidden" name="importJson" value={importJson} />
-					<Button type="submit"><Upload />Upload Calibration</Button>
+				<hr />
+				<p class="text-red-500">Uploading a calibration overwrites the current calibration!</p>
+				<form
+					class="flex w-full flex-col gap-2"
+					method="post"
+					enctype="multipart/form-data"
+					action="?/import"
+				>
+					<input type="file" name="importJson" accept=".json" required />
+					<Button class="w-full" type="submit"><Upload />Upload Calibration</Button>
 				</form>
 			</Dialog.Content>
 		</Dialog.Root>
