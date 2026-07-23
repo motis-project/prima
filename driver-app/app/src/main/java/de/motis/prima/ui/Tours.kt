@@ -76,6 +76,11 @@ fun Tours(
     val toursToday by viewModel.toursCache.collectAsState()
     val toursDate by viewModel.toursForDate.collectAsState()
     val intentSeen by viewModel.intentSeen.collectAsState()
+    val refresh by viewModel.refresh.collectAsState()
+
+    if (refresh) {
+        viewModel.resetDate()
+    }
 
     intent?.let { safeIntent ->
         runCatching {
@@ -167,7 +172,7 @@ fun Tours(
             }
 
             try {
-                displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTimeStart }
+                displayTours = displayTours.sortedBy { t -> t.events[0].scheduledTime }
             } catch(e: Exception) {
                 Log.d("error", "Error: ${e.message}")
             }
@@ -190,7 +195,7 @@ fun DateSelect(
     val datePickerDialog = DatePickerDialog(
         context,
         { _, year, month, dayOfMonth ->
-            viewModel.setDate(LocalDate.parse("$year-${month + 1}-$dayOfMonth"))
+            viewModel.setDate(LocalDate.of(year, month + 1, dayOfMonth))
         },
         viewModel.calendar.get(Calendar.YEAR),
         viewModel.calendar.get(Calendar.MONTH),
@@ -380,13 +385,9 @@ fun ToursList(
                 }
 
                 val scheduledTime = startEvent?.scheduledTime ?: 0
-                val scheduledTimeStart = startEvent?.scheduledTimeStart ?: 0
 
                 val displayTime = if (scheduledTime.toInt() != 0) {
                     Date(scheduledTime)
-                        .formatTo("HH:mm")
-                } else if (scheduledTimeStart.toInt() != 0) {
-                    Date(scheduledTimeStart)
                         .formatTo("HH:mm")
                 } else {
                     ""

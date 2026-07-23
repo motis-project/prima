@@ -842,7 +842,6 @@
 					{/await}
 				{/if}
 			</div>
-
 			<p class="mx-auto mt-6 text-sm">
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{t.introduction}

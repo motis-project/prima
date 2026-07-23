@@ -35,4 +35,8 @@ class TopBarViewModel @Inject constructor(
     fun toggleTheme() {
         repository.toggleTheme()
     }
+
+    fun stopPolling() {
+        repository.stopPolling()
+    }
 }

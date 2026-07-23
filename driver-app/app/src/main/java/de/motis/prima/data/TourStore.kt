@@ -1,7 +1,6 @@
 package de.motis.prima.data
 
 import android.util.Log
-import de.motis.prima.ui.Location
 import de.motis.prima.services.Event
 import de.motis.prima.services.Tour
 import io.realm.kotlin.Realm
@@ -18,8 +17,8 @@ class TourObject : RealmObject {
     var ticketValidated: Boolean = false
     var fare: Int = 0
     var fareReported: Boolean = false
-    var startTime: Long = 0
-    var endTime: Long = 0
+    var startTime: Long = 0L
+    var endTime: Long = 0L
     var vehicleId: Int = 0
 }
 
@@ -34,8 +33,7 @@ class EventObject : RealmObject {
     var isPickup: Boolean= false
     var lat: Double = 0.0
     var lng: Double = 0.0
-    var scheduledTime: Long = 0
-    var scheduledTimeStart: Long = 0
+    var scheduledTime: Long = 0L
     var bikes: Int = 0
     var customer: Int = 0
     var luggage: Int = 0
@@ -62,6 +60,11 @@ data class EventObjectGroup(
     var cancelled: Boolean,
 )
 
+data class Location(
+    val lat: Double,
+    val lng: Double,
+)
+
 class TourStore @Inject constructor(
     private var realm: Realm
 ) {
@@ -85,7 +88,6 @@ class TourStore @Inject constructor(
                         this.lat = event.lat
                         this.lng = event.lng
                         this.scheduledTime = event.scheduledTime
-                        this.scheduledTimeStart = event.scheduledTimeStart
                         this.bikes = event.bikes
                         this.customer = event.customer
                         this.luggage = event.luggage
@@ -177,7 +179,6 @@ class TourStore @Inject constructor(
                     lat = e.lat,
                     lng = e.lng,
                     scheduledTime = e.scheduledTime,
-                    scheduledTimeStart = e.scheduledTimeStart,
                     bikes = e.bikes,
                     customer = e.customer,
                     luggage = e.luggage,
@@ -233,7 +234,7 @@ class TourStore @Inject constructor(
                 eventGroups.add(
                     EventObjectGroup(
                         group[0].eventGroup,
-                        group[0].scheduledTimeStart,
+                        group[0].scheduledTime,
                         Location(group[0].lat, group[0].lng),
                         group[0].address,
                         group,
@@ -261,14 +262,7 @@ class TourStore @Inject constructor(
         return realm.query<TourObject>("tourId == $0", id).first().find()
     }
 
-    fun getPickupRequestIDs(tourId: Int): Set<Int> {
-        val res: MutableSet<Int> = mutableSetOf()
-        val pickupEvents = getEventsForTour(tourId).filter { e -> e.isPickup }
-
-        for (e in pickupEvents) {
-            res.add(e.requestId)
-        }
-
-        return res
+    fun getEvent(id: Int): EventObject? {
+        return realm.query<EventObject>("id == $0", id).first().find()
     }
 }

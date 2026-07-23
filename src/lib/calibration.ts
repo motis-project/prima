@@ -12,7 +12,7 @@ export function collectItineraries(
 	const itineraries = new Array<CalibrationItinerary>();
 
 	for (const r of routingResponses) {
-		if (r != undefined) {
+		if (r?.itineraries != undefined) {
 			for (const i of r.itineraries) {
 				itineraries.push({ ...i, keep: false, remove: false } as CalibrationItinerary);
 			}
@@ -39,4 +39,13 @@ export function deduplicate(itineraries: Array<CalibrationItinerary>): Array<Cal
 	return itineraries.filter((_, i) => {
 		return !isDuplicate[i];
 	});
+}
+
+export function removeSteps(itineraries: Array<CalibrationItinerary>): Array<CalibrationItinerary> {
+	itineraries.forEach((i) => {
+		i.legs.forEach((l) => {
+			delete l.steps;
+		});
+	});
+	return itineraries;
 }

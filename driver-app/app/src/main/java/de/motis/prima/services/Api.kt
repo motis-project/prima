@@ -3,7 +3,6 @@ package de.motis.prima.services
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
-import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -28,6 +27,11 @@ interface ApiService {
         @Query("toTime") toTime: Long
     ): Response<List<Tour>>
 
+    @POST("taxi/availability/api/tour")
+    suspend fun moveTour(
+        @Body request: MoveTourRequest
+    ): Response<MoveTourResponse>
+
     @PUT("api/driver/ticket")
     suspend fun validateTicket(
         @Query("requestId") requestId: Int,
@@ -51,19 +55,21 @@ interface ApiService {
         @Body request: AvailabilityRequest
     ): Response<AvailabilityResponse>
 
-    @DELETE("api/driver/availability")
-    suspend fun deleteAvailability(
-        @Body request: AvailabilityRequest
-    ): Response<AvailabilityResponse>
-
-    @PUT("/taxi/availability")
-    suspend fun setAvailability(
-        // {vehicleId: 1, from: 1760104800000, to: 1760106600000}
-        @Query("vehicleId") vehicleId: String,
-        @Query("from") from: String,
-        @Query("to") to: String
-    ): Response<Void>
+    @GET("api/driver/journey")
+    suspend fun getItinerary(
+        @Query("requestId") requestId: Int
+    ): Response<Leg?>
 }
+
+data class MoveTourResponse(
+    val status: Int = 0,
+    val message: String = "none"
+)
+
+data class MoveTourRequest(
+    val tourId: Int,
+    val vehicleId: Int
+)
 
 data class AvailabilityRequest(
     val vehicleId: Int,
@@ -105,7 +111,6 @@ data class Event(
     val lat: Double,
     val lng: Double,
     val scheduledTime: Long,
-    val scheduledTimeStart: Long,
     val bikes: Int,
     val customer: Int,
     val luggage: Int,
@@ -129,4 +134,72 @@ data class Tour(
     val vehicleId: Int,
     val licensePlate: String,
     val events: List<Event>
+)
+
+data class Leg(
+    val mode: String,
+    val from: Place,
+    val to: Place,
+    val duration: Long,
+    val startTime: String?,
+    val endTime: String?,
+    var scheduledStartTime: String?,
+    val scheduledEndTime: String?,
+    val realTime: Boolean,
+    val scheduled: Boolean,
+    //val distance: Double,
+    //val interlineWithPreviousLeg: Boolean,
+    val headsign: String?,
+    val tripTo: Place?,
+    //val routeId: String?,
+    //val directionId: String?,
+    val routeColor: String?,
+    val routeTextColor: String?,
+    //val routeType: Int?,
+    //val agencyName: String?,
+    //val agencyUrl: String?,
+    //val agencyId: String?,
+    val tripId: String?,
+    val routeShortName: String?,
+    val routeLongName: String?,
+    val tripShortName: String?,
+    val displayName: String?,
+    val cancelled: Boolean,
+    //val source: String?,
+    val intermediateStops: List<Place>,
+    //val legGeometry: Polyline?,
+    //val steps: List<Step>,
+    //val rental: Rental?,
+    //val fareTransferIndex: Int?,
+    //val effectiveFareLegIndex: Int?,
+    //val alerts: List<Alert>,
+    //val loopedCalendarSince: String?
+)
+
+data class Place(
+    val name: String?,
+    val stopId: String?,
+    val parentId: String?,
+    val importance: Double?,
+    val lat: Double,
+    val lon: Double,
+    val level: Int?,
+    val tz: String?,
+    val arrival: String?,
+    val departure: String?,
+    val scheduledArrival: String?,
+    val scheduledDeparture: String?,
+    val scheduledTrack: String?,
+    val track: String?,
+    val description: String?,
+    //val vertexType: VertexType?,
+    //val pickupType: PickupDropoffType?,
+    //val dropoffType: PickupDropoffType?,
+    val cancelled: Boolean,
+    //val alerts: List<Alert>,
+    //val flex: String?,
+    //val flexId: String?,
+    //val flexStartPickupDropOffWindow: String?,
+    //val flexEndPickupDropOffWindow: String?,
+    //val modes: List<Mode>
 )

@@ -2,11 +2,13 @@ import type { Transaction } from 'kysely';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import type { Database } from '$lib/server/db';
 import { Interval } from '$lib/util/interval';
-import { type RideShareEvent } from '$lib/server/booking/rideShare/getRideShareTours';
+import {
+	getRideShareToursFiltered,
+	type RideShareEvent
+} from '$lib/server/booking/rideShare/getRideShareTours';
 import type { Coordinates } from '$lib/util/Coordinates';
 import { InsertWhat } from '$lib/util/booking/insertionTypes';
 import { DAY } from '$lib/util/time';
-import { getRideShareTours } from './getRideShareTours';
 import type { Insertion, NeighbourIds } from './insertion';
 import { evaluateRequest } from './evaluateRequest';
 import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
@@ -44,7 +46,13 @@ export async function bookSharedRide(
 	const expandedSearchInterval = searchInterval.expand(DAY, DAY);
 	const userChosen = !c.startFixed ? c.start : c.target;
 	const busStop = c.startFixed ? c.start : c.target;
-	const rideShareTours = await getRideShareTours(required, expandedSearchInterval, trx);
+	const rideShareTours = await getRideShareToursFiltered(
+		required,
+		expandedSearchInterval,
+		c.start,
+		[c.target],
+		trx
+	);
 	if (rideShareTours.length == 0) {
 		console.log('there were no ride shares tours which could be concatenated with this request.');
 		return undefined;

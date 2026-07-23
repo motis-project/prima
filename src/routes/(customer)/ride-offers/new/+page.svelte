@@ -7,8 +7,6 @@
 	import { t } from '$lib/i18n/translation';
 	import {
 		ArrowUpDown,
-		MapPin,
-		MapPinCheckInside,
 		EllipsisVertical,
 		ChevronRightIcon,
 		LoaderCircle,
@@ -46,6 +44,7 @@
 	import RepetitionSelector from '$lib/ui/RepetitionSelector.svelte';
 	import * as Card from '$lib/shadcn/card';
 	import { shiftDayIdxBackward } from '$lib/util/shiftDayIdx';
+	import { preparedDetourEllipseToGeoJSON, prepareDetourEllipse } from '$lib/util/booking/ellipse';
 
 	const { data, form } = $props();
 
@@ -76,6 +75,31 @@
 		passengers = data.vehicles.find((v) => v.id.toString() == vehicle)?.passengers ?? 3;
 		luggage = data.vehicles.find((v) => v.id.toString() == vehicle)?.luggage ?? 3;
 	});
+
+	function rideShareEllipseGeoJSON(
+		startLike: maplibregl.LngLatLike | undefined,
+		targetLike: maplibregl.LngLatLike | undefined,
+		routeDistanceMeters: number | undefined
+	) {
+		if (!startLike || !targetLike || routeDistanceMeters === undefined) {
+			return undefined;
+		}
+
+		const start = maplibregl.LngLat.convert(startLike);
+		const target = maplibregl.LngLat.convert(targetLike);
+		const ellipse = prepareDetourEllipse(start, target, routeDistanceMeters);
+		return preparedDetourEllipseToGeoJSON(ellipse);
+	}
+
+	let rideShareEllipse = $derived(
+		data.debug
+			? rideShareEllipseGeoJSON(
+					from.value.match,
+					to.value.match,
+					page.state.rideShareRouteDistanceMeters
+				)
+			: undefined
+	);
 
 	const getLocation = () => {
 		if (navigator && navigator.geolocation) {
@@ -165,6 +189,8 @@
 		return undefined;
 	});
 
+	let durationDirect = $state(0);
+
 	async function doRouting() {
 		loading = true;
 		msg = undefined;
@@ -188,12 +214,13 @@
 					return response.json();
 				})
 				.then((j) => {
-					if (!j || !j.end || !j.start) {
-						msg = { type: 'error', text: 'noRouteFound' };
+					if (!j || !j.end || !j.start || !j.duration) {
+						msg = j;
 						loading = false;
 						replaceState('', {});
 						return;
 					}
+					durationDirect = j.duration / 1000;
 					const it: Itinerary = {
 						duration: (j!.end - j!.start) / 1000,
 						startTime: new Date(j!.start).toISOString(),
@@ -201,7 +228,10 @@
 						legs: [],
 						transfers: 0
 					};
-					replaceState('', { selectedItinerary: it });
+					replaceState('', {
+						selectedItinerary: it,
+						rideShareRouteDistanceMeters: j.routeDistanceMeters
+					});
 					loading = false;
 				})
 				.catch(() => {
@@ -243,6 +273,10 @@
 		const updatedTime = new Date(repeatingTime);
 		updatedTime.setHours(hours, minutes, 0, 0);
 		repeatingTime = updatedTime;
+	}
+
+	function floorToMinute(value: number) {
+		return Math.floor(value / 60) * 60;
 	}
 </script>
 
@@ -356,6 +390,7 @@
 			bind:to
 			itinerary={page.state.selectedItinerary}
 			rideSharingBounds={data.rideSharingBounds}
+			{rideShareEllipse}
 		/>
 	{/if}
 
@@ -466,7 +501,11 @@
 				<Button
 					variant="outline"
 					onclick={() =>
-						pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
+						pushState('', {
+							showMap: true,
+							selectedItinerary: page.state.selectedItinerary,
+							rideShareRouteDistanceMeters: page.state.rideShareRouteDistanceMeters
+						})}
 					class="flex w-full justify-center"
 				>
 					<MapIcon class="h-[1.2rem] w-[1.2rem]" />
@@ -577,17 +616,25 @@
 				</Card.Content>
 			</Card.Root>
 
-			<div class="flex items-center justify-center">
-				{#if page.state.selectedItinerary && !loading}
-					<Button
-						variant="outline"
-						onclick={() =>
-							pushState('', { showMap: true, selectedItinerary: page.state.selectedItinerary })}
-						class="size-fit text-base"
-					>
+			{#if page.state.selectedItinerary && !loading}
+				<Card.Root
+					class="hover:bg-accent/40"
+					role="button"
+					onclick={() =>
+						pushState('', {
+							showMap: true,
+							selectedItinerary: page.state.selectedItinerary,
+							rideShareRouteDistanceMeters: page.state.rideShareRouteDistanceMeters
+						})}
+				>
+					<Card.Header>
+						<Card.Title class="flex items-center gap-2 text-base">
+							{t.rideShare.calculatedRoute}
+						</Card.Title>
+					</Card.Header>
+					<Card.Content>
 						<div class="flex-row">
-							<div class="flex items-center">
-								<MapPin class="mr-2 h-5 w-5" />
+							<div class="flex items-center overflow-hidden">
 								<Time
 									variant="schedule"
 									class="mr-4 w-auto font-semibold "
@@ -596,14 +643,19 @@
 									scheduledTimestamp={page.state.selectedItinerary?.startTime}
 									timestamp={page.state.selectedItinerary?.startTime}
 								/>
-								{t.departure}
+								{from.label ? from.label : t.departure}
 							</div>
 							<div class="flex items-center text-muted-foreground">
-								<EllipsisVertical class="mr-2 h-5 w-5" />
-								{formatDurationSec(page.state.selectedItinerary?.duration)}
+								<EllipsisVertical class="ml-2 mr-6" />
+								{formatDurationSec(floorToMinute(page.state.selectedItinerary?.duration))}
+								{t.rideShare.maxTime}
 							</div>
-							<div class="flex items-center">
-								<MapPinCheckInside class="mr-2 h-5 w-5" />
+							<div class="flex items-center text-muted-foreground">
+								<EllipsisVertical class="ml-2 mr-6" />
+								{formatDurationSec(durationDirect)}
+								{t.rideShare.travelTimeOnly}
+							</div>
+							<div class="flex items-center overflow-hidden">
 								<Time
 									variant="schedule"
 									class="mr-4 w-auto font-semibold"
@@ -612,14 +664,15 @@
 									scheduledTimestamp={page.state.selectedItinerary?.endTime}
 									timestamp={page.state.selectedItinerary?.endTime}
 								/>
-								{t.arrival}
+								{to.label ? to.label : t.arrival}
 							</div>
 						</div>
-					</Button>
-				{:else if loading}
-					<LoaderCircle class="h-6 w-6 animate-spin" />
-				{/if}
-			</div>
+					</Card.Content>
+				</Card.Root>
+			{:else if loading}
+				<LoaderCircle class="h-6 w-6 animate-spin" />
+			{/if}
+
 			<Message class="mb-6" msg={form?.msg || msg} />
 
 			<p>{t.ride.outro}</p>

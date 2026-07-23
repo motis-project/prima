@@ -59,6 +59,7 @@
 					<Input name="firstname" type="text" placeholder={t.account.firstName} />
 					<Input name="lastname" type="text" placeholder={t.account.lastName} />
 				</div>
+				<Input name="company" type="text" placeholder={t.account.company} />
 			</div>
 		{/if}
 

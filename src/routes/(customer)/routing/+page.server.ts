@@ -15,7 +15,7 @@ import { expectedConnectionFromLeg } from '$lib/server/booking/expectedConnectio
 import { isOdmLeg } from '$lib/util/booking/checkLegType';
 import { sendMail } from '$lib/server/sendMail';
 import { sendBookingMails } from '$lib/util/sendBookingEmails';
-import { deduplicate, type CalibrationItinerary } from '$lib/calibration';
+import { deduplicate, removeSteps, type CalibrationItinerary } from '$lib/calibration';
 import { areasGeoJSON, rideshareGeoJSON } from '$lib/util/geoJSON';
 import { selectDesiredTrips } from '$lib/server/booking/rideShare/selectDesiredTrips';
 
@@ -287,7 +287,7 @@ export const actions = {
 			return { msg: msg('unknownError') };
 		}
 
-		const itinerariesJson = JSON.stringify(deduplicate(itineraries));
+		const itinerariesJson = JSON.stringify(removeSteps(deduplicate(itineraries)));
 		await db.insertInto('calibrationSets').values({ name, itinerariesJson }).execute();
 		return redirect(303, '/admin/calibration');
 	}

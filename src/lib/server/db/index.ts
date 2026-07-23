@@ -25,6 +25,7 @@ export interface Database {
 		city: string;
 		region: string;
 		profilePicture: string | null;
+		company: string;
 	};
 	session: {
 		id: string;
@@ -140,6 +141,7 @@ export interface Database {
 		earliestStart: number;
 		latestEnd: number;
 		pattern: number | null;
+		ellipseId: number | null;
 	};
 	rideShareVehicle: {
 		id: Generated<number>;
@@ -199,6 +201,25 @@ export interface Database {
 		days: number;
 		rangeStart: string;
 		rangeEnd: string;
+	};
+	ellipse: {
+		id: Generated<number>;
+		originLatRad: number;
+		originLngRad: number;
+		minX: number;
+		maxX: number;
+		minY: number;
+		maxY: number;
+		centerX: number;
+		centerY: number;
+		axisXx: number;
+		axisXy: number;
+		axisYx: number;
+		axisYy: number;
+		invAaSq: number;
+		invBbSq: number;
+		cosOriginLat: number;
+		pointOnly: boolean;
 	};
 }
 

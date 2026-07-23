@@ -65,8 +65,10 @@ export async function getCompanyCosts(companyId?: number) {
 	);
 	// cumulate the total duration of availability on every relevant day for each vehicle
 	const availabilitiesPerDayAndVehicle = new Array<Map<number, number>>(days.length);
+	const availabilitiesPerDay = new Array<number>(days.length);
 	days.forEach((day, dayIdx) => {
 		availabilitiesPerDayAndVehicle[dayIdx] = new Map<number, number>();
+		const intvls: Interval[] = [];
 		availabilitiesPerVehicle.forEach((availabilities, vehicle) =>
 			availabilities.forEach((availability) => {
 				if (day.overlaps(availability)) {
@@ -75,9 +77,13 @@ export async function getCompanyCosts(companyId?: number) {
 						(availabilitiesPerDayAndVehicle[dayIdx].get(vehicle) ?? 0) +
 							(day.intersect(availability)?.getDurationMs() ?? 0)
 					);
+					intvls.push(day.intersect(availability) ?? new Interval(0, 0));
 				}
 			})
 		);
+		availabilitiesPerDay[dayIdx] = Interval.merge(intvls)
+			.map((i) => i.getDurationMs())
+			.reduce((p, i) => p + i, 0);
 	});
 
 	const companyByVehicle = new Map<
@@ -161,7 +167,7 @@ export async function getCompanyCosts(companyId?: number) {
 						tour.endTime > Date.now()
 							? 0
 							: (tourVerifiedCustomerCount === 0 ? 0 : tourTaxameter) - tourVerifiedTicketsPrice),
-					availabilityDuration: availabilitiesPerDayAndVehicle[dayIdx].get(tour.vehicleId) ?? 0,
+					availabilityDuration: availabilitiesPerDay[dayIdx] ?? 0,
 					companyName: companyByVehicle.get(tour.vehicleId)!.name,
 					licensePlate: companyByVehicle.get(tour.vehicleId)!.licensePlate,
 					companyId: companyByVehicle.get(tour.vehicleId)!.id,
@@ -175,7 +181,7 @@ export async function getCompanyCosts(companyId?: number) {
 			continue;
 		}
 		costPerDayAndVehicle[d].forEach((taxameter, vehicle) => {
-			const costCap = ((availabilitiesPerDayAndVehicle[d]?.get(vehicle) ?? 0) * CAP) / HOUR;
+			const costCap = ((availabilitiesPerDay[d] ?? 0) * CAP) / HOUR;
 			const dayVehicleCost = costPerDayAndVehicle[d].get(vehicle);
 			if (dayVehicleCost) {
 				dayVehicleCost.capped =

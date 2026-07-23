@@ -40,7 +40,7 @@
 	let noItinerariesFound = $derived.by(async () => {
 		const rs = await Promise.all(routingResponses);
 		return rs.every((r) => {
-			return r === undefined || r.itineraries.length === 0;
+			return r?.itineraries == undefined || r.itineraries.length === 0;
 		});
 	});
 
@@ -71,8 +71,8 @@
 			<LoaderCircle class="m-20 h-12 w-12 animate-spin" />
 		</div>
 	{:then r}
-		{#if r == undefined}
-			Error
+		{#if r?.itineraries == undefined}
+			<div>{t.msg.error}: {r?.message || t.msg.unknownError}</div>
 		{:else}
 			{#if r.direct.length !== 0}
 				<div class="my-4 flex flex-wrap gap-x-3 gap-y-3">
@@ -93,7 +93,7 @@
 							<LoaderCircle class="m-20 h-12 w-12 animate-spin" />
 						</div>
 					{:then r}
-						{#if r}
+						{#if r?.itineraries != undefined}
 							{#if rI === 0 && baseQuery}
 								<div class="flex w-full items-center justify-between space-x-4">
 									<div class="h-0 w-full border-t"></div>
@@ -176,10 +176,10 @@
 								</div>
 							{/if}
 						{:else}
-							Error
+							{t.msg.error}: {r?.message || t.msg.unknownError}
 						{/if}
 					{:catch e}
-						<div>Error: {e}</div>
+						<div>{t.msg.error}: {e}</div>
 					{/await}
 				{/each}
 			</div>

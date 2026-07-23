@@ -5,9 +5,11 @@ import android.content.res.Configuration
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
 import de.motis.prima.services.ApiService
+import de.motis.prima.services.Leg
+import de.motis.prima.services.MoveTourRequest
+import de.motis.prima.services.MoveTourResponse
 import de.motis.prima.services.Tour
 import de.motis.prima.services.Vehicle
-import de.motis.prima.ui.TimeBlock
 import io.realm.kotlin.query.RealmResults
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -63,6 +65,9 @@ class DataRepository @Inject constructor(
     private val _networkError = MutableStateFlow(false)
     val networkError = _networkError.asStateFlow()
 
+    private val _updateError = MutableStateFlow(false)
+    val updateError = _updateError.asStateFlow()
+
     val selectedVehicle: Flow<Vehicle> = dataStoreManager.selectedVehicleFlow
     private var _vehicleId = 0
 
@@ -70,6 +75,16 @@ class DataRepository @Inject constructor(
 
     private val _markedTour = MutableStateFlow(-1)
     val markedTour: StateFlow<Int> = _markedTour.asStateFlow()
+
+    private val _ptLegs = MutableStateFlow<HashMap<Int, Leg>>(hashMapOf())
+    val ptLegs: StateFlow<HashMap<Int, Leg>> = _ptLegs.asStateFlow()
+
+    private val _updateRequestIDs = MutableStateFlow(emptySet<Int>())
+    private val updateRequestIDs = _updateRequestIDs.asStateFlow()
+
+    fun setUpdateIds(ids: Set<Int>) {
+        _updateRequestIDs.value = ids
+    }
 
     private val _eventObjectGroups = MutableStateFlow<List<EventObjectGroup>>(emptyList())
     val eventObjectGroups: StateFlow<List<EventObjectGroup>> = _eventObjectGroups.asStateFlow()
@@ -108,6 +123,7 @@ class DataRepository @Inject constructor(
     init {
         initializeTheme()
         fetchFirebaseToken()
+        updateVehicles()
         startRefreshingTours()
         startReporting()
     }
@@ -303,6 +319,7 @@ class DataRepository @Inject constructor(
     fun resetDate() {
         _displayDate.value = LocalDate.now()
         fetchTours()
+        refresh()
     }
 
     fun incrementDate() {
@@ -429,19 +446,15 @@ class DataRepository @Inject constructor(
         return tourStore.getTour(id)
     }
 
-    fun hasPendingValidations(tourId: Int): Boolean {
-        for (id in tourStore.getPickupRequestIDs(tourId)) {
-            if (_pendingValidationTickets.value.find { e -> e.requestId == id } != null ) {
-                return true
-            }
+    fun getVehicle(tourId: Int): Vehicle? {
+        tourStore.getTour(tourId)?.let { tour ->
+            return _vehicles.value.find { v -> v.id == tour.vehicleId }
         }
-        return false
+        return null
     }
 
-    fun hasInvalidatedTickets(tourId: Int): Boolean {
-        val pickupEvents = tourStore.getEventsForTour(tourId).filter { e -> e.isPickup }
-        val invalidated = pickupEvents.filter { e -> e.ticketChecked.not() }
-        return invalidated.isNotEmpty()
+    fun getEvent(id: Int): EventObject? {
+        return tourStore.getEvent(id)
     }
 
     fun getTourSpecialInfo(tourId: Int): TourSpecialInfo {
@@ -471,5 +484,83 @@ class DataRepository @Inject constructor(
 
     fun removeMarker() {
         _markedTour.value = -1
+    }
+
+    fun stopPolling() {
+        _updateRequestIDs.value = emptySet()
+        _realTimePolling.value = false
+    }
+
+    private val _realTimePolling = MutableStateFlow(false)
+
+    private suspend fun updateLegs(requestId: Int): Int {
+        var error: Int
+        try {
+            val res = apiService.getItinerary(requestId)
+            if (res.isSuccessful) {
+                val leg = res.body()
+                _ptLegs.value = HashMap(_ptLegs.value).apply {
+                    put(requestId, leg)
+                }
+                return 0
+            }
+            error = -1
+        } catch (e: Exception) {
+            Log.e("error", "${e.message}")
+            error = -2
+        }
+        _ptLegs.value.remove(requestId)  // invalidate previously fetched data
+        return error
+    }
+
+    fun getItinerary(requestId: Int) {
+        CoroutineScope(Dispatchers.IO).launch {
+            updateLegs(requestId)
+        }
+    }
+
+    private fun updateItinerariesFlow() = flow {
+        while (_realTimePolling.value) {
+            for (requestId in updateRequestIDs.value) {
+                emit(updateLegs(requestId))
+            }
+            delay(120000)
+        }
+    }.flowOn(Dispatchers.IO)
+
+    fun initRealTimePolling() {
+        _realTimePolling.value = true
+        CoroutineScope(Dispatchers.IO).launch {
+            updateItinerariesFlow().collect { e ->
+                _updateError.value = e == -2
+            }
+        }
+    }
+
+    private val _moveTourResponse = MutableStateFlow(MoveTourResponse())
+    val moveTourResponse: StateFlow<MoveTourResponse> = _moveTourResponse.asStateFlow()
+
+    fun moveTour(tourId: Int, vehicleId: Int) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = apiService.moveTour(MoveTourRequest(tourId, vehicleId))
+                response.body()?.let { body ->
+                    _moveTourResponse.value = body
+                }
+            } catch (e: Exception) {
+                Log.d("error", "Network Error: ${e.message!!}")
+            }
+        }
+    }
+
+    fun resetTMR() {
+        _moveTourResponse.value = MoveTourResponse()
+    }
+
+    private val _refresh = MutableStateFlow(false)
+    val refresh: StateFlow<Boolean> = _refresh.asStateFlow()
+
+    fun refresh() {
+        _refresh.value = _refresh.value.not()
     }
 }

@@ -8,7 +8,8 @@ export type SignedItinerary = Itinerary & {
 };
 
 export type SignedPlanResponse = Omit<PlanResponse, 'itineraries'> & {
-	itineraries: SignedItinerary[];
+	itineraries?: SignedItinerary[];
+	message?: string;
 };
 
 export async function planAndSign(
@@ -26,7 +27,7 @@ export async function planAndSign(
 		})
 	});
 
-	if (!result.ok) {
+	if (!result.ok && result.status != 400 && result.status != 500) {
 		return undefined;
 	}
 	return await result.json();

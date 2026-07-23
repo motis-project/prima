@@ -16,6 +16,8 @@ const translations: Translations = {
 		calibration: 'Kalibrierung'
 	},
 	msg: {
+		error: 'Fehler',
+		badRequest: 'Ungültige Anfrage',
 		unknownError: 'Unbekannter Fehler.',
 
 		// Account
@@ -94,6 +96,9 @@ const translations: Translations = {
 		routingRequestFailed: 'Routinganfrage fehlgeschlagen.',
 		vehicleConflict:
 			'Das gewählte Fahrzeug ist zu mindestens einem der gewählten Zeitpunkte nicht verfügbar.',
+		previousLegConflict: 'Die neue Fahrt ist mit einem Mitnahmeangebot davor nicht vereinbar.',
+		nextLegConflict: 'Die neue Fahrt ist mit einem Mitnahmeangebot danach nicht vereinbar.',
+		allowedIntervalsConflict: 'Das gewählte Fahrzeug ist zur angegebenen Zeit nicht verfügbar.',
 
 		// Booking
 		bookingError: 'Die Fahrt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
@@ -133,6 +138,7 @@ const translations: Translations = {
 		name: 'Name',
 		lastName: 'Nachname',
 		firstName: 'Vorname',
+		company: 'Firma',
 		gender: (id: string) => {
 			return { o: 'divers', f: 'Frau', m: 'Herr', n: 'keine Angabe' }[id]!;
 		},
@@ -454,7 +460,10 @@ const translations: Translations = {
 		howHasItBeen: 'Sie können Ihre letzte Mitfahrerfahrung hier bewerten',
 		editVehicle: 'Fahrzeug ändern',
 		closeTo: 'in der Nähe von',
-		defaultLicensePlate: 'Standardfahrzeug'
+		defaultLicensePlate: 'Standardfahrzeug',
+		calculatedRoute: 'Berechnete Route',
+		travelTimeOnly: 'reine Fahrzeit',
+		maxTime: 'maximal bei Mitnahme'
 	},
 
 	calibration: {
@@ -475,7 +484,7 @@ const translations: Translations = {
 	},
 	availabilityPercent: 'aktuelle Abdeckung',
 	availabilityPercentExplanation:
-		'Dieser Wert zeigt die aktuelle Verfügbarkeits-Abdeckung zwischen 05:00 Uhr und 22:00 Uhr der nächsten 2 Wochen.',
+		'Dieser Wert zeigt die aktuelle Verfügbarkeits-Abdeckung zwischen 05:00 Uhr und 23:00 Uhr der nächsten 2 Wochen.',
 
 	daily: 'täglich'
 };

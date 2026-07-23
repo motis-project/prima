@@ -121,7 +121,7 @@
 
 	<Panel title={t.account.personalInfo} subtitle={t.account.adjustPersonalInfo}>
 		<form method="post" action="/account/settings?/personalInfo" class="mt-8 flex flex-col gap-2">
-			<Label for="lastname">{t.account.genderString}</Label>
+			<Label for="gender">{t.account.genderString}</Label>
 			<RadioGroup.Root value={data.gender ?? 'n'} name="gender" class="grid-cols-4">
 				<div class="flex items-center space-x-2">
 					<RadioGroup.Item value="m" id="m" />
@@ -150,6 +150,8 @@
 				/>
 				<Input name="lastname" type="text" value={data.name} placeholder={t.account.lastName} />
 			</div>
+			<Label for="company">{t.account.company}</Label>
+			<Input name="company" type="text" value={data.company} placeholder={t.account.company} />
 			<Label for="zipcode">{t.account.zipCode}/{t.account.city}/{t.account.region}</Label>
 			<div class="grid grid-cols-2 gap-x-1">
 				<Input name="zipcode" type="text" value={data.zipCode} placeholder={t.account.zipCode} />

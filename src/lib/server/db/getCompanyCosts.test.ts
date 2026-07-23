@@ -172,8 +172,8 @@ describe('test accounting', () => {
 		expect(costPerDayAndVehicle).toHaveLength(2);
 		expect(costPerDayAndVehicle[0].taxameter).toBe(5100);
 		expect(costPerDayAndVehicle[0].uncapped).toBe(4800);
-		expect(costPerDayAndVehicle[0].capped).toBe(4200);
-		expect(costPerDayAndVehicle[0].availabilityDuration).toBe(HOUR);
+		expect(costPerDayAndVehicle[0].capped).toBe(4800);
+		expect(costPerDayAndVehicle[0].availabilityDuration).toBe(2 * HOUR);
 		expect(costPerDayAndVehicle[0].customerCount).toBe(1);
 		expect(costPerDayAndVehicle[1].taxameter).toBe(5100);
 		expect(costPerDayAndVehicle[1].uncapped).toBe(4800);
@@ -215,12 +215,12 @@ describe('test accounting', () => {
 		expect(costPerDayAndVehicle[0].taxameter).toBe(5100);
 		expect(costPerDayAndVehicle[0].uncapped).toBe(4800);
 		expect(costPerDayAndVehicle[0].capped).toBe(4800);
-		expect(costPerDayAndVehicle[0].availabilityDuration).toBe(3 * HOUR);
+		expect(costPerDayAndVehicle[0].availabilityDuration).toBe(5 * HOUR);
 		expect(costPerDayAndVehicle[0].customerCount).toBe(1);
 		expect(costPerDayAndVehicle[1].taxameter).toBe(35300);
 		expect(costPerDayAndVehicle[1].uncapped).toBe(35000);
-		expect(costPerDayAndVehicle[1].capped).toBe(20750);
-		expect(costPerDayAndVehicle[1].availabilityDuration).toBe(4 * HOUR);
+		expect(costPerDayAndVehicle[1].capped).toBe(23750);
+		expect(costPerDayAndVehicle[1].availabilityDuration).toBe(5 * HOUR);
 		expect(costPerDayAndVehicle[1].customerCount).toBe(1);
 	});
 
@@ -243,8 +243,8 @@ describe('test accounting', () => {
 
 		expect(costPerDayAndVehicle[0].taxameter).toBe(5100);
 		expect(costPerDayAndVehicle[0].uncapped).toBe(4800);
-		expect(costPerDayAndVehicle[0].capped).toBe(4200);
-		expect(costPerDayAndVehicle[0].availabilityDuration).toBe(HOUR);
+		expect(costPerDayAndVehicle[0].capped).toBe(4800);
+		expect(costPerDayAndVehicle[0].availabilityDuration).toBe(2 * HOUR);
 		expect(costPerDayAndVehicle[0].customerCount).toBe(1);
 
 		expect(costPerDayAndVehicle[1].taxameter).toBe(9200);

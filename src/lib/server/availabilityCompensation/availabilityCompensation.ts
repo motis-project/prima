@@ -70,6 +70,14 @@ export async function computeCompensation(startOfMonth?: number, selectedCompany
 				name: scoresByMonth[0].name,
 				startOfMonth: scoresByMonth[0].startOfMonth
 			});
+			console.log(
+				'compensation',
+				company,
+				preFactorSum,
+				avgPrefactor,
+				MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE,
+				avgScore
+			);
 		}
 	}
 	return ret;

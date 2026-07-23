@@ -24,6 +24,7 @@ export async function load(event: PageServerLoadEvent) {
 			'user.profilePicture',
 			'user.name',
 			'user.firstName',
+			'user.company',
 			'user.gender',
 			'user.zipCode',
 			'user.city',
@@ -54,6 +55,7 @@ export async function load(event: PageServerLoadEvent) {
 		gender: user.gender,
 		name: user.name,
 		firstName: user.firstName,
+		company: user.company,
 		city: user.city,
 		region: user.region,
 		zipCode: user.zipCode,
@@ -192,6 +194,7 @@ export const actions: Actions = {
 		const gender = formData.get('gender');
 		const firstName = formData.get('firstname');
 		const lastName = formData.get('lastname');
+		const company = formData.get('company');
 		const city = formData.get('city');
 		const region = formData.get('region');
 		const zipCode = formData.get('zipcode');
@@ -199,6 +202,7 @@ export const actions: Actions = {
 			typeof gender !== 'string' ||
 			typeof firstName !== 'string' ||
 			typeof lastName !== 'string' ||
+			typeof company !== 'string' ||
 			typeof city !== 'string' ||
 			typeof region !== 'string' ||
 			typeof zipCode !== 'string'
@@ -208,7 +212,7 @@ export const actions: Actions = {
 		await db
 			.updateTable('user')
 			.where('user.id', '=', userId)
-			.set({ gender, firstName: firstName, name: lastName, city, region, zipCode })
+			.set({ gender, firstName: firstName, name: lastName, company, city, region, zipCode })
 			.execute();
 	}
 };
