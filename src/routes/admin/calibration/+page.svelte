@@ -20,7 +20,8 @@
 		ChevronLeft,
 		HardDriveUpload,
 		ArrowLeftRight,
-		Import
+		Upload,
+		Download
 	} from 'lucide-svelte';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import ItinerarySummary from '../../(customer)/routing/ItinerarySummary.svelte';
@@ -45,8 +46,18 @@
 	let calibrationSets = $state(data.calibrationSets);
 	let deletionArmed = $state(new Array<boolean>(data.calibrationSets.length));
 	let deployArmed = $state(false);
-	let importJson = $state(
-		JSON.stringify({ filterSettings: data.filterSettings, calibrationSets: data.calibrationSets })
+	let importJson = $derived(
+		JSON.stringify({
+			filterSettings: {
+				perTransfer: perTransfer,
+				taxiBase: taxiBase,
+				taxiPerMinute: taxiPerMinute,
+				taxiDirectPenalty: taxiDirectPenalty,
+				ptSlope: ptSlope,
+				taxiSlope: taxiSlope
+			},
+			calibrationSets: calibrationSets
+		})
 	);
 
 	$effect(() => {
@@ -83,6 +94,16 @@
 			vis(c.itineraries, filterResult.visualize, div, getCost);
 		});
 	});
+
+	const downloadJSON = () => {
+		const blob = new Blob([importJson], { type: 'application/json' });
+		const jsonObjectUrl = URL.createObjectURL(blob);
+		const anchorEl = document.createElement('a');
+		anchorEl.href = jsonObjectUrl;
+		anchorEl.download = 'calibration.json';
+		anchorEl.click();
+		URL.revokeObjectURL(jsonObjectUrl);
+	};
 </script>
 
 <Meta title={PUBLIC_PROVIDER} />
@@ -219,15 +240,15 @@
 		</form>
 		<Dialog.Root>
 			<Dialog.Trigger><Button class=""><ArrowLeftRight />JSON</Button></Dialog.Trigger>
-			<Dialog.Content class="flex h-2/3 w-2/3 flex-col">
+			<Dialog.Content class="flex flex-col">
 				<Dialog.Header>JSON Import/Export</Dialog.Header>
-				<textarea class="h-full w-full flex-grow bg-black" bind:value={importJson}></textarea>
-				<Dialog.Close>
-					<form method="post" action="?/import">
-						<input type="hidden" name="importJson" value={importJson} />
-						<Button type="submit"><Import />Import</Button>
-					</form>
-				</Dialog.Close>
+				<Button variant="default" size="default" onclick={() => downloadJSON()}
+					><Download />Download Calibration</Button
+				>
+				<form method="post" action="?/import">
+					<input type="hidden" name="importJson" value={importJson} />
+					<Button type="submit"><Upload />Upload Calibration</Button>
+				</form>
 			</Dialog.Content>
 		</Dialog.Root>
 	</div>
