@@ -145,7 +145,7 @@ export function windowMean(a: Array<number>, from: number, to: number): number {
 }
 
 export function dampenPeaksMovingMean(a: Array<number>, maxWindowHalf: number): Array<number> {
-	let dampedA = new Array<number>();
+	const dampedA = new Array<number>();
 	for (let i = 0; i < a.length; ++i) {
 		const windowHalf = getWindowHalf(a, i, maxWindowHalf);
 		const mean = windowMean(a, i - windowHalf, i + windowHalf + 1);
