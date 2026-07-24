@@ -2,8 +2,6 @@ import { type Itinerary } from '$lib/openapi';
 import { isTaxiLeg } from './booking/checkLegType';
 import { isDirectTaxi, publicTransitOnly, usesTaxi } from './itineraryHelpers';
 
-const maxWindowHalf = 60;
-
 export type VisualizationPackage = {
 	thresholds: Array<{ time: Date; pt: number; taxi: number }>;
 };
@@ -37,6 +35,7 @@ export function filterTaxis<T extends Itinerary>(
 	taxiDirectPenalty: number,
 	ptSlope: number,
 	taxiSlope: number,
+	dampingWindow: number,
 	visualize = false
 ): { itineraries: Array<T>; visualize?: VisualizationPackage } {
 	if (itineraries.length == 0) {
@@ -67,7 +66,9 @@ export function filterTaxis<T extends Itinerary>(
 			});
 		}
 
-		threshold = dampenPeaksMovingMean(threshold, maxWindowHalf);
+		for (let w = Math.floor(dampingWindow / 2); w >= 1; w = Math.floor(w / 2)) {
+			threshold = dampenPeaksMovingMean(threshold, w);
+		}
 
 		return threshold;
 	};
@@ -144,7 +145,7 @@ export function windowMean(a: Array<number>, from: number, to: number): number {
 }
 
 export function dampenPeaksMovingMean(a: Array<number>, maxWindowHalf: number): Array<number> {
-	const dampedA = new Array<number>();
+	let dampedA = new Array<number>();
 	for (let i = 0; i < a.length; ++i) {
 		const windowHalf = getWindowHalf(a, i, maxWindowHalf);
 		const mean = windowMean(a, i - windowHalf, i + windowHalf + 1);

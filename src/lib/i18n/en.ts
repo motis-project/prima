@@ -461,6 +461,7 @@ const translations: Translations = {
 		taxiDirectPenalty: 'taxi direct penalty',
 		ptSlope: 'public transit slope',
 		taxiSlope: 'taxi slope',
+		dampingWindow: 'damping window',
 		useForCalibration: 'Use for calibration',
 		addCalibrationSet: 'Add calibration set',
 		greeter: 'Adjust the parameters of the taxi filter:',
@@ -468,7 +469,8 @@ const translations: Translations = {
 		remove: 'remove',
 		deploy: 'Deploy parameters',
 		save: 'Save classification',
-		delete: 'Remove calibration set'
+		delete: 'Remove calibration set',
+		warnUpload: 'Uploading a calibration overwrites the current calibration!'
 	},
 	availabilityPercent: 'current Coverage next two weeks',
 	availabilityPercentExplanation:
