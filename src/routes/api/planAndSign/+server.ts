@@ -88,7 +88,8 @@ export const POST = async (event: RequestEvent) => {
 			filterSettings.taxiPerMinute,
 			filterSettings.taxiDirectPenalty,
 			filterSettings.ptSlope,
-			filterSettings.taxiSlope
+			filterSettings.taxiSlope,
+			filterSettings.dampingWindow
 		).itineraries.filter((i) => {
 			const t = new Date(q.arriveBy ? i.endTime : i.startTime);
 			return intvl_start <= t && t <= intvl_end;

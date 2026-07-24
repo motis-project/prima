@@ -473,6 +473,7 @@ const translations: Translations = {
 		taxiDirectPenalty: 'Taxi Direkt Strafe',
 		ptSlope: 'Öffentlicher Verkehr Steigung',
 		taxiSlope: 'Taxi Steigung',
+		dampingWindow: 'Dämpfungsfenster',
 		useForCalibration: 'Zur Kalibrierung verwenden',
 		addCalibrationSet: 'Kalibrierungsmenge hinzufügen',
 		greeter: 'Passen Sie die Parameter des Taxifilters an:',
@@ -480,7 +481,8 @@ const translations: Translations = {
 		remove: 'entfernen',
 		deploy: 'Parameter verwenden',
 		save: 'Klassifizierung speichern',
-		delete: 'Verbindungsmenge entfernen'
+		delete: 'Verbindungsmenge entfernen',
+		warnUpload: 'Das Hochladen einer Kalibrierung überschreibt die aktuelle Kalibrierung!'
 	},
 	availabilityPercent: 'aktuelle Abdeckung',
 	availabilityPercentExplanation:

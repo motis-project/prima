@@ -402,6 +402,7 @@ export type Translations = {
 		taxiDirectPenalty: string;
 		ptSlope: string;
 		taxiSlope: string;
+		dampingWindow: string;
 		useForCalibration: string;
 		addCalibrationSet: string;
 		greeter: string;
@@ -410,6 +411,7 @@ export type Translations = {
 		deploy: string;
 		save: string;
 		delete: string;
+		warnUpload: string;
 	};
 
 	availabilityPercent: string;

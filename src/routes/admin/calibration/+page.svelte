@@ -43,6 +43,7 @@
 	let taxiDirectPenalty = $state(data.filterSettings?.taxiDirectPenalty ?? 20.0);
 	let ptSlope = $state(data.filterSettings?.ptSlope ?? 2.2);
 	let taxiSlope = $state(data.filterSettings?.taxiSlope ?? 2.0);
+	let dampingWindow = $state(data.filterSettings?.dampingWindow ?? 120);
 	let calibrationSets = $state(data.calibrationSets);
 	let deletionArmed = $state(new Array<boolean>(data.calibrationSets.length));
 	let deployArmed = $state(false);
@@ -54,7 +55,8 @@
 				taxiPerMinute: taxiPerMinute,
 				taxiDirectPenalty: taxiDirectPenalty,
 				ptSlope: ptSlope,
-				taxiSlope: taxiSlope
+				taxiSlope: taxiSlope,
+				dampingWindow: dampingWindow
 			},
 			calibrationSets: calibrationSets
 		})
@@ -75,6 +77,7 @@
 				taxiDirectPenalty,
 				ptSlope,
 				taxiSlope,
+				dampingWindow,
 				true
 			);
 
@@ -211,6 +214,17 @@
 					bind:value={taxiSlope}
 				/>
 			</span>
+			<span class="flex flex-row items-center gap-1">
+				<Label for="dampingWindow">{t.calibration.dampingWindow}</Label>
+				<Input
+					class="w-24"
+					name="dampingWindow"
+					type="number"
+					min="0"
+					step="any"
+					bind:value={dampingWindow}
+				/>
+			</span>
 
 			<HoverCard>
 				<HoverCardTrigger>
@@ -246,7 +260,7 @@
 					><Download />Download Calibration</Button
 				>
 				<hr />
-				<p class="text-red-500">Uploading a calibration overwrites the current calibration!</p>
+				<p class="text-red-500">{t.calibration.warnUpload}</p>
 				<form
 					class="flex w-full flex-col gap-2"
 					method="post"
