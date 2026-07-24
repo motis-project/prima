@@ -112,11 +112,6 @@
 <div class="absolute bottom-16 left-0 right-0 top-0 z-20">
 	<Map
 		bind:map
-		transformRequest={(url: string) => {
-			if (url.startsWith('/')) {
-				return { url: `${env.PUBLIC_MOTIS_URL}/tiles${url}` };
-			}
-		}}
 		{center}
 		zoom={9}
 		style={getStyle('light', 0)}
