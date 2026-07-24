@@ -193,7 +193,7 @@
 	let selectedLicensePlateIdx = $state(-1);
 	let selectedMonthIdx = $state(-1);
 	let selectedQuarterIdx = $state(-1);
-	let selectedYearIdx = $state(Math.min(0, years.length-1));
+	let selectedYearIdx = $state(Math.min(0, years.length - 1));
 	let selectedYear = $derived(selectedYearIdx === -1 ? -1 : years[selectedYearIdx]);
 
 	const allLicensePlates: { licensePlate: string; companyName: string | null }[] = [];
