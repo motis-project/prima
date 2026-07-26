@@ -6,7 +6,6 @@
 	import Map from '$lib/map/Map.svelte';
 	import Popup from '$lib/map/Popup.svelte';
 	import Marker from '$lib/map/Marker.svelte';
-	import { env } from '$env/dynamic/public';
 	import { getStyle } from '$lib/map/style';
 	import Control from '$lib/map/Control.svelte';
 	import maplibregl from 'maplibre-gl';
