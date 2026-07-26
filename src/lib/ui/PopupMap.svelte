@@ -6,7 +6,6 @@
 	import Map from '$lib/map/Map.svelte';
 	import Popup from '$lib/map/Popup.svelte';
 	import Marker from '$lib/map/Marker.svelte';
-	import { env } from '$env/dynamic/public';
 	import { getStyle } from '$lib/map/style';
 	import Control from '$lib/map/Control.svelte';
 	import maplibregl from 'maplibre-gl';
@@ -112,11 +111,6 @@
 <div class="absolute bottom-16 left-0 right-0 top-0 z-20">
 	<Map
 		bind:map
-		transformRequest={(url: string) => {
-			if (url.startsWith('/')) {
-				return { url: `${env.PUBLIC_MOTIS_URL}/tiles${url}` };
-			}
-		}}
 		{center}
 		zoom={9}
 		style={getStyle('light', 0)}
