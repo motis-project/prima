@@ -101,12 +101,13 @@ describe('add ride share request', () => {
 			inKleinPriebus
 		);
 		expect(tourId).not.toBe(undefined);
+		const requestedTime = inXMinutes(66);
 		const body = JSON.stringify({
 			start: inSagar,
 			target: inPechern,
 			startBusStops: [],
 			targetBusStops: [],
-			directTimes: [inXMinutes(70)],
+			directTimes: [requestedTime],
 			startFixed: true,
 			capacities
 		});
@@ -130,7 +131,7 @@ describe('add ride share request', () => {
 				whiteResponse.direct[0][0].tripId
 			),
 			startFixed: true,
-			requestedTime: inXMinutes(70),
+			requestedTime: requestedTime,
 			tourId,
 			pickupTime: whiteResponse.direct[0][0].pickupTime,
 			dropoffTime: whiteResponse.direct[0][0].dropoffTime,
@@ -162,7 +163,7 @@ describe('add ride share request', () => {
 		expect(Math.abs(inSagar.lat - pickup.lat) + Math.abs(inSagar.lng - pickup.lng)).toBeLessThan(
 			COORDINATE_ROUNDING_ERROR_THRESHOLD
 		);
-		expect(pickup.communicatedTime).toBe(inXMinutes(70));
+		expect(pickup.communicatedTime).toBe(requestedTime);
 		expect(dropoff.address).toBe('target address');
 		expect(
 			Math.abs(inPechern.lat - dropoff.lat) + Math.abs(inPechern.lng - dropoff.lng)

@@ -40,3 +40,12 @@ export function deduplicate(itineraries: Array<CalibrationItinerary>): Array<Cal
 		return !isDuplicate[i];
 	});
 }
+
+export function removeSteps(itineraries: Array<CalibrationItinerary>): Array<CalibrationItinerary> {
+	itineraries.forEach((i) => {
+		i.legs.forEach((l) => {
+			delete l.steps;
+		});
+	});
+	return itineraries;
+}

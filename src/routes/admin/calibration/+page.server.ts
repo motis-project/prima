@@ -46,7 +46,8 @@ export const actions = {
 			taxiPerMinute: readFloat(formData.get('taxiPerMinute')),
 			taxiDirectPenalty: readFloat(formData.get('taxiDirectPenalty')),
 			ptSlope: readFloat(formData.get('ptSlope')),
-			taxiSlope: readFloat(formData.get('taxiSlope'))
+			taxiSlope: readFloat(formData.get('taxiSlope')),
+			dampingWindow: readFloat(formData.get('dampingWindow'))
 		};
 
 		await db.updateTable('taxiFilter').set(updateData).execute();
@@ -86,7 +87,9 @@ export const actions = {
 		}
 
 		const formData = await request.formData();
-		const str = formData.get('importJson');
+		const file = formData.get('importJson') as File;
+		const str = await file.text();
+
 		if (typeof str !== 'string') {
 			return fail(400);
 		}
@@ -98,7 +101,8 @@ export const actions = {
 			taxiPerMinute: json.filterSettings.taxiPerMinute,
 			taxiDirectPenalty: json.filterSettings.taxiDirectPenalty,
 			ptSlope: json.filterSettings.ptSlope,
-			taxiSlope: json.filterSettings.taxiSlope
+			taxiSlope: json.filterSettings.taxiSlope,
+			dampingWindow: json.filterSettings.dampingWindow
 		};
 		await db.updateTable('taxiFilter').set(newFilter).execute();
 

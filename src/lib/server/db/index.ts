@@ -168,6 +168,7 @@ export interface Database {
 		taxiDirectPenalty: number;
 		ptSlope: number;
 		taxiSlope: number;
+		dampingWindow: number;
 	};
 	calibrationSets: {
 		id: Generated<number>;
