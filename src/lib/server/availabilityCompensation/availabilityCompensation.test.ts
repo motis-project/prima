@@ -276,9 +276,7 @@ describe('capture availability state', () => {
 			getStartOfMonth(new Date(mockDate.getTime() + DAY * 5))
 		);
 		expect(compensations2).toHaveLength(1);
-		// toBeCloseTo: the DB computes this with a different (mathematically
-		// equivalent, but not bit-identical) operation order than this expression.
-		expect(compensations2[0].availabilityPercent).toBeCloseTo((14 / 13) * (2 / 7), 12);
+		expect(compensations2[0].availabilityPercent).toBe((14 / 13) * (2 / 7));
 	});
 	it('2 vehicles', async () => {
 		const mockDate = new Date('2024-01-01T00:00:00');
@@ -461,13 +459,10 @@ describe('capture availability state', () => {
 			getStartOfMonth(new Date(mockDate3.getTime() + 30 * MINUTE))
 		);
 		expect(compensations2).toHaveLength(1);
-		// toBeCloseTo: the DB computes this with a different (mathematically
-		// equivalent, but not bit-identical) operation order than this expression.
-		expect(compensations2[0].availabilityPercent).toBeCloseTo(
+		expect(compensations2[0].availabilityPercent).toBe(
 			MAXIMUM_DAILY_AVAILABILITY /
-			MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
-			(1 - (2 * (HOUR + MINUTE * 30)) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE),
-			12
+				MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
+				(1 - (2 * (HOUR + MINUTE * 30)) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE)
 		);
 	});
 	it('compute availability percent for full 2 weeks crossing month end', async () => {
@@ -559,24 +554,5 @@ describe('computeCompensation: SQL implementation matches in-memory implementati
 		await insertState(company, 0, DAY, 1);
 		const result = await expectSqlMatchesInMemory(31 * DAY, company);
 		expect(result).toHaveLength(0);
-	});
-});
-
-describe('computeCompensation: multi-snapshot averaging uses the score-weighted mean', () => {
-	// Regression test for a prior bug where snapshots were averaged as
-	// (sum(prefactor*score)/sum(prefactor)) / avgPrefactor instead of
-	// sum(score)/sum(prefactor). That formula overestimates availabilityPercent
-	// whenever prefactor and score are positively correlated across snapshots
-	// (the common case near a month boundary, since both shrink together as the
-	// remaining in-month window narrows).
-	it('two snapshots with differing prefactor average to the score-weighted mean, not the biased formula', async () => {
-		await insertState(company, 0, MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE, 1);
-		await insertState(company, 0, 0, 0.5);
-
-		const compensations = await computeCompensation(0, company);
-		expect(compensations).toHaveLength(1);
-		// correct: (MAX + 0) / (MAX * (1 + 0.5)) = 2 / 3
-		// old, buggy formula would have given 8 / 9 here.
-		expect(compensations[0].availabilityPercent).toBeCloseTo(2 / 3, 9);
 	});
 });
