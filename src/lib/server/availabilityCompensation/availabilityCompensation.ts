@@ -59,10 +59,7 @@ export async function computeCompensation(startOfMonth?: number, selectedCompany
 // Kept only so the test suite can assert the SQL-based computeCompensation()
 // above stays numerically equivalent to the original in-memory implementation
 // it replaced (which became too slow scanning the full availabilityState table).
-export async function computeCompensationInMemory(
-	startOfMonth?: number,
-	selectedCompany?: number
-) {
+export async function computeCompensationInMemory(startOfMonth?: number, selectedCompany?: number) {
 	const availabilityStates = await db
 		.selectFrom('availabilityState')
 		.$if(startOfMonth !== undefined, (qb) =>
@@ -99,7 +96,7 @@ export async function computeCompensationInMemory(
 				(scoresByMonth.length === 0
 					? 0
 					: scoresByMonth.reduce((prev, curr) => prev + curr.prefactor * curr.score, 0) /
-					preFactorSum) /
+						preFactorSum) /
 				MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
 				avgPrefactor;
 
@@ -280,8 +277,8 @@ export async function getSnapshot(companyId: number): Promise<number> {
 	const relevantSnaps = snaps.filter((s) => s.company === companyId) ?? undefined;
 	return relevantSnaps
 		? relevantSnaps.reduce(
-			(prev, curr) => prev + curr.score / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE,
-			0
-		) / relevantSnaps.reduce((prev, curr) => prev + curr.prefactor, 0)
+				(prev, curr) => prev + curr.score / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE,
+				0
+			) / relevantSnaps.reduce((prev, curr) => prev + curr.prefactor, 0)
 		: 0;
 }
