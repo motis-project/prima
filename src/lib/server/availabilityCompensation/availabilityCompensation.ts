@@ -36,14 +36,12 @@ export async function computeCompensation(startOfMonth?: number, selectedCompany
 			qb.where('availabilityState.company', '=', selectedCompany!)
 		)
 		.innerJoin('company', 'company.id', 'availabilityState.company')
-		.select((eb) => [
+		.select([
 			'availabilityState.company as company',
 			'availabilityState.startOfMonth as startOfMonth',
 			'company.name as name',
 			sql<number>`
-				(sum(${prefactor} * ${score}) / sum(${prefactor}))
-				/ ${MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE}
-				/ (sum(${prefactor}) / ${eb.fn.countAll()}::float8)
+				sum(${score}) / (${MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE} * sum(${prefactor}))
 			`.as('availabilityPercent')
 		])
 		.groupBy(['availabilityState.company', 'availabilityState.startOfMonth', 'company.name'])
@@ -56,9 +54,10 @@ export async function computeCompensation(startOfMonth?: number, selectedCompany
 	}));
 }
 
-// Kept only so the test suite can assert the SQL-based computeCompensation()
-// above stays numerically equivalent to the original in-memory implementation
-// it replaced (which became too slow scanning the full availabilityState table).
+// Kept only as an independent implementation of the same formula, so the test
+// suite can cross-check the SQL-based computeCompensation() above against it
+// (the original in-memory implementation became too slow scanning the full
+// availabilityState table, hence the DB rewrite).
 export async function computeCompensationInMemory(
 	startOfMonth?: number,
 	selectedCompany?: number
@@ -94,14 +93,8 @@ export async function computeCompensationInMemory(
 		);
 		for (const [_, scoresByMonth] of byMonth) {
 			const preFactorSum = scoresByMonth.reduce((prev, curr) => prev + curr.prefactor, 0);
-			const avgPrefactor = preFactorSum / scoresByMonth.length;
-			const avgScore =
-				(scoresByMonth.length === 0
-					? 0
-					: scoresByMonth.reduce((prev, curr) => prev + curr.prefactor * curr.score, 0) /
-						preFactorSum) /
-				MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
-				avgPrefactor;
+			const scoreSum = scoresByMonth.reduce((prev, curr) => prev + curr.score, 0);
+			const avgScore = scoreSum / (MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE * preFactorSum);
 
 			ret.push({
 				availabilityPercent: avgScore,
@@ -280,8 +273,8 @@ export async function getSnapshot(companyId: number): Promise<number> {
 	const relevantSnaps = snaps.filter((s) => s.company === companyId) ?? undefined;
 	return relevantSnaps
 		? relevantSnaps.reduce(
-				(prev, curr) => prev + curr.score / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE,
-				0
-			) / relevantSnaps.reduce((prev, curr) => prev + curr.prefactor, 0)
+			(prev, curr) => prev + curr.score / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE,
+			0
+		) / relevantSnaps.reduce((prev, curr) => prev + curr.prefactor, 0)
 		: 0;
 }
