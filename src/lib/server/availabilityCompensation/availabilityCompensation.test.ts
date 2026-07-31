@@ -461,8 +461,8 @@ describe('capture availability state', () => {
 		expect(compensations2).toHaveLength(1);
 		expect(compensations2[0].availabilityPercent).toBe(
 			MAXIMUM_DAILY_AVAILABILITY /
-				MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
-				(1 - (2 * (HOUR + MINUTE * 30)) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE)
+			MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
+			(1 - (2 * (HOUR + MINUTE * 30)) / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE)
 		);
 	});
 	it('compute availability percent for full 2 weeks crossing month end', async () => {

@@ -99,7 +99,7 @@ export async function computeCompensationInMemory(
 				(scoresByMonth.length === 0
 					? 0
 					: scoresByMonth.reduce((prev, curr) => prev + curr.prefactor * curr.score, 0) /
-						preFactorSum) /
+					preFactorSum) /
 				MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE /
 				avgPrefactor;
 
@@ -280,8 +280,8 @@ export async function getSnapshot(companyId: number): Promise<number> {
 	const relevantSnaps = snaps.filter((s) => s.company === companyId) ?? undefined;
 	return relevantSnaps
 		? relevantSnaps.reduce(
-				(prev, curr) => prev + curr.score / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE,
-				0
-			) / relevantSnaps.reduce((prev, curr) => prev + curr.prefactor, 0)
+			(prev, curr) => prev + curr.score / MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE,
+			0
+		) / relevantSnaps.reduce((prev, curr) => prev + curr.prefactor, 0)
 		: 0;
 }
