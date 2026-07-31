@@ -156,7 +156,7 @@
 				layout={{
 					'symbol-placement': 'point',
 					'text-field': ['concat', t.taxi + ' ' + t.serviceArea + ' ', ['get', 'name']],
-					'text-font': ['Noto Sans Display Regular'],
+					'text-font': ['Noto Sans Regular'],
 					'text-size': 16
 				}}
 				filter={['literal', true]}
@@ -194,7 +194,7 @@
 				layout={{
 					'symbol-placement': 'line',
 					'text-field': ['concat', t.rideSharing + ' ', ['get', 'name']],
-					'text-font': ['Noto Sans Display Regular'],
+					'text-font': ['Noto Sans Regular'],
 					'text-size': 16
 				}}
 				filter={['literal', true]}
