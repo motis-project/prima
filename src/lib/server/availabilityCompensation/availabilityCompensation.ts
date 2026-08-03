@@ -1,3 +1,4 @@
+import { sql } from 'kysely';
 import { Interval } from '$lib/util/interval';
 import { selectAvailabilities, selectTours } from '$lib/server/booking/taxi/getBookingAvailability';
 import {
@@ -24,6 +25,41 @@ export function getStartOfMonth(date: Date, next?: boolean) {
 }
 
 export async function computeCompensation(startOfMonth?: number, selectedCompany?: number) {
+	const prefactor = sql.ref('availabilityState.prefactor');
+	const score = sql.ref('availabilityState.score');
+	const rows = await db
+		.selectFrom('availabilityState')
+		.$if(startOfMonth !== undefined, (qb) =>
+			qb.where('availabilityState.startOfMonth', '=', startOfMonth!)
+		)
+		.$if(selectedCompany !== undefined, (qb) =>
+			qb.where('availabilityState.company', '=', selectedCompany!)
+		)
+		.innerJoin('company', 'company.id', 'availabilityState.company')
+		.select((eb) => [
+			'availabilityState.company as company',
+			'availabilityState.startOfMonth as startOfMonth',
+			'company.name as name',
+			sql<number>`
+				(sum(${prefactor} * ${score}) / sum(${prefactor}))
+				/ ${MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE}
+				/ (sum(${prefactor}) / ${eb.fn.countAll()}::float8)
+			`.as('availabilityPercent')
+		])
+		.groupBy(['availabilityState.company', 'availabilityState.startOfMonth', 'company.name'])
+		.execute();
+	return rows.map((r) => ({
+		availabilityPercent: r.availabilityPercent,
+		company: r.company,
+		name: r.name,
+		startOfMonth: r.startOfMonth
+	}));
+}
+
+// Kept only so the test suite can assert the SQL-based computeCompensation()
+// above stays numerically equivalent to the original in-memory implementation
+// it replaced (which became too slow scanning the full availabilityState table).
+export async function computeCompensationInMemory(startOfMonth?: number, selectedCompany?: number) {
 	const availabilityStates = await db
 		.selectFrom('availabilityState')
 		.$if(startOfMonth !== undefined, (qb) =>
@@ -70,14 +106,6 @@ export async function computeCompensation(startOfMonth?: number, selectedCompany
 				name: scoresByMonth[0].name,
 				startOfMonth: scoresByMonth[0].startOfMonth
 			});
-			console.log(
-				'compensation',
-				company,
-				preFactorSum,
-				avgPrefactor,
-				MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE,
-				avgScore
-			);
 		}
 	}
 	return ret;

@@ -5,6 +5,7 @@ import { addAvailability } from '../addAvailability';
 import {
 	captureAvailabilityState,
 	computeCompensation,
+	computeCompensationInMemory,
 	getSnapshot,
 	getStartOfMonth
 } from './availabilityCompensation';
@@ -16,6 +17,56 @@ import {
 	MAXIMUM_DAILY_AVAILABILITY
 } from '$lib/constants';
 import { deleteAvailability } from '../deleteAvailability';
+
+// Deterministic PRNG (mulberry32) so failures are reproducible without relying on Math.random.
+function mulberry32(seed: number) {
+	let a = seed;
+	return () => {
+		a |= 0;
+		a = (a + 0x6d2b79f5) | 0;
+		let t = Math.imul(a ^ (a >>> 15), 1 | a);
+		t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+	};
+}
+
+async function insertState(
+	stateCompany: number,
+	startOfMonth: number,
+	score: number,
+	prefactor: number
+) {
+	await db
+		.insertInto('availabilityState')
+		.values({ company: stateCompany, startOfMonth, score, prefactor, takenAt: Date.now() })
+		.execute();
+}
+
+function sortKey(r: { company: number; startOfMonth: number }) {
+	return `${r.company}-${r.startOfMonth}`;
+}
+
+async function expectSqlMatchesInMemory(startOfMonth?: number, selectedCompany?: number) {
+	const sqlResult = await computeCompensation(startOfMonth, selectedCompany);
+	const inMemoryResult = await computeCompensationInMemory(startOfMonth, selectedCompany);
+
+	const sorted = (arr: typeof sqlResult) =>
+		[...arr].sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
+	const a = sorted(sqlResult);
+	const b = sorted(inMemoryResult);
+
+	expect(a).toHaveLength(b.length);
+	for (let i = 0; i < a.length; i++) {
+		expect(a[i].company).toBe(b[i].company);
+		expect(a[i].startOfMonth).toBe(b[i].startOfMonth);
+		expect(a[i].name).toBe(b[i].name);
+		// Both implementations perform the same divisions in the same order over the
+		// same double-precision floats, but Postgres SUM() may accumulate in a different
+		// order than Array.reduce(), so allow for tiny floating point drift.
+		expect(a[i].availabilityPercent).toBeCloseTo(b[i].availabilityPercent, 9);
+	}
+	return a;
+}
 
 let company = -1;
 let vehicle = -1;
@@ -432,5 +483,76 @@ describe('capture availability state', () => {
 
 		const availabilityPercent = await getSnapshot(company);
 		expect(availabilityPercent).toBe(0);
+	});
+});
+
+describe('computeCompensation: SQL implementation matches in-memory implementation', () => {
+	it('no rows', async () => {
+		await expectSqlMatchesInMemory();
+	});
+
+	it('single row for a single company/month', async () => {
+		await insertState(company, 0, MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE / 2, 1);
+		await expectSqlMatchesInMemory();
+		await expectSqlMatchesInMemory(0);
+		await expectSqlMatchesInMemory(undefined, company);
+		await expectSqlMatchesInMemory(0, company);
+	});
+
+	it('multiple snapshots, same company/month, equal prefactor', async () => {
+		for (let i = 0; i < 5; i++) {
+			await insertState(company, 0, (i + 1) * DAY, 1);
+		}
+		await expectSqlMatchesInMemory(0, company);
+	});
+
+	it('multiple snapshots, same company/month, varying prefactor (month-boundary-like)', async () => {
+		// Mirrors what happens in production near a month boundary: per-minute captures
+		// produce many rows per month with different prefactors as the remaining
+		// in-month portion of the confirmation window shrinks.
+		const rnd = mulberry32(42);
+		for (let i = 0; i < 30; i++) {
+			const prefactor = 0.01 + rnd() * 0.99;
+			const score = rnd() * prefactor * MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE;
+			await insertState(company, 0, score, prefactor);
+		}
+		await expectSqlMatchesInMemory(0, company);
+		await expectSqlMatchesInMemory(0);
+	});
+
+	it('many companies, many months, randomized snapshots', async () => {
+		const companyB = await addCompany(Zone.NIESKY, { lat: 0, lng: 0 });
+		const companyC = await addCompany(Zone.GÖRLITZ, { lat: 0, lng: 0 });
+		const rnd = mulberry32(1234);
+		const companies = [company, companyB, companyC];
+		const months = [0, 31 * DAY, 60 * DAY];
+		for (const c of companies) {
+			for (const startOfMonth of months) {
+				const snapshotCount = 1 + Math.floor(rnd() * 8);
+				for (let i = 0; i < snapshotCount; i++) {
+					const prefactor = 0.001 + rnd() * 0.999;
+					const score = rnd() * prefactor * MAXIMUM_AVAILABILITY_IN_CONFIRMATION_DEADLINE;
+					await insertState(c, startOfMonth, score, prefactor);
+				}
+			}
+		}
+
+		await expectSqlMatchesInMemory();
+		await expectSqlMatchesInMemory(0);
+		await expectSqlMatchesInMemory(31 * DAY);
+		await expectSqlMatchesInMemory(undefined, companyB);
+		await expectSqlMatchesInMemory(31 * DAY, companyC);
+	});
+
+	it('zero score rows', async () => {
+		await insertState(company, 0, 0, 1);
+		await insertState(company, 0, 0, 0.5);
+		await expectSqlMatchesInMemory(0, company);
+	});
+
+	it('company with no rows in requested month is absent from both results', async () => {
+		await insertState(company, 0, DAY, 1);
+		const result = await expectSqlMatchesInMemory(31 * DAY, company);
+		expect(result).toHaveLength(0);
 	});
 });
