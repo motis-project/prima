@@ -4,7 +4,7 @@ import type {
 	StyleSpecification
 } from 'maplibre-gl';
 import { LEVEL_MIN_ZOOM } from '../constants';
-import { PUBLIC_MOTIS_URL } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 export const colors = {
 	light: {
 		background: '#f8f4f0',
@@ -180,8 +180,8 @@ function getAbsoluteUrl(base: string, relative: string): string {
 export const getStyle = (
 	theme: 'light' | 'dark',
 	level: number,
-	staticBaseUrl: string = PUBLIC_MOTIS_URL,
-	apiBaseUrl: string = PUBLIC_MOTIS_URL,
+	staticBaseUrl: string = env.PUBLIC_MOTIS_URL,
+	apiBaseUrl: string = env.PUBLIC_MOTIS_URL,
 	withHillshades: boolean = false
 ): StyleSpecification => {
 	const c = colors[theme];
