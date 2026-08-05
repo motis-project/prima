@@ -474,7 +474,9 @@
 		<Card.Header>
 			{#if data.companyCoordinates}
 				<Card.Title>Fahrzeuge und Touren</Card.Title>
-				<Card.Description>Fahrzeugverfügbarkeit- und Tourenverwaltung</Card.Description>
+				<Card.Description
+					>An- und Rückfahrt des Taxis finden innerhalb der gesetzten Verfügbarkeit statt.</Card.Description
+				>
 			{:else}
 				<Card.Title>Verfügbarkeiten nach Unternehmen</Card.Title>
 				<Card.Description>Aktuell eingestellte Verfügbarkeiten</Card.Description>

@@ -17,12 +17,7 @@ export async function addAvailability(
 	}
 	console.log('add availability vehicle=', vehicleId, 'toRemove=', interval);
 	await Promise.all(
-		getAllowedTimes(
-			interval.startTime,
-			interval.endTime,
-			EARLIEST_SHIFT_START - HOUR,
-			LATEST_SHIFT_END + HOUR
-		)
+		getAllowedTimes(interval.startTime, interval.endTime, EARLIEST_SHIFT_START, LATEST_SHIFT_END)
 			.map((allowed) => allowed.intersect(interval))
 			.filter((a) => a != undefined)
 			.map((availability) =>
