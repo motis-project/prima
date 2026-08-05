@@ -47,6 +47,8 @@ export async function computeCompensation(startOfMonth?: number, selectedCompany
 			`.as('availabilityPercent')
 		])
 		.groupBy(['availabilityState.company', 'availabilityState.startOfMonth', 'company.name'])
+		.orderBy('availabilityState.company', 'asc')
+		.orderBy('availabilityState.startOfMonth', 'asc')
 		.execute();
 	return rows.map((r) => ({
 		availabilityPercent: r.availabilityPercent,

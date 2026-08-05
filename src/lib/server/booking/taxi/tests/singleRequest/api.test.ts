@@ -21,7 +21,6 @@ import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
 import { black, inXMinutes, white } from '$lib/server/booking/testUtils';
 import { Mode } from '$lib/server/booking/mode';
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
-import { Interval } from '$lib/util/interval';
 
 let sessionToken: string;
 
@@ -225,7 +224,7 @@ describe('Whitelist and Booking API Tests', () => {
 		expect(whiteResponse.direct[0]).toBe(null);
 	});
 
-	it('blacklist fail because request would require taxi to operate outside of defined shift (4:00-23:00)', async () => {
+	it('blacklist fail because request would require taxi to operate outside of defined shift (3:00-24:00)', async () => {
 		const company = await addCompany(Zone.NIESKY, inNiesky3);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(1600));
@@ -245,14 +244,14 @@ describe('Whitelist and Booking API Tests', () => {
 		expect(blackResponse.direct.length).toBe(0);
 	});
 
-	it('whitelist fail because request would require taxi to operate outside of defined shift (4:00-23:00)', async () => {
+	it('whitelist fail because request would require taxi to operate outside of defined shift (3:00-24:00)', async () => {
 		const company = await addCompany(Zone.NIESKY, inNiesky3);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(1600));
 		let earliest = inXMinutes(598);
 		let latest = inXMinutes(700);
 		const allowedTimes = getAllowedTimes(earliest, latest, EARLIEST_SHIFT_START, LATEST_SHIFT_END);
-		if (!allowedTimes[0].contains(new Interval(earliest, latest))) {
+		if (allowedTimes[0].endTime <= earliest) {
 			earliest -= HOUR;
 			latest -= HOUR;
 		}
