@@ -2,7 +2,6 @@ import { EARLIEST_SHIFT_START, LATEST_SHIFT_END } from '$lib/constants';
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
 import { Interval } from '$lib/util/interval';
-import { HOUR } from '$lib/util/time';
 import { db } from './db';
 
 export async function addAvailability(

@@ -25,7 +25,7 @@
 	import Message from '$lib/ui/Message.svelte';
 	import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 	import type { LngLatLike } from 'maplibre-gl';
-	import { HOUR, MINUTE } from '$lib/util/time';
+	import { MINUTE } from '$lib/util/time';
 	import type { ToursWithRequests, TourWithRequests } from '$lib/util/getToursTypes';
 	import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 	import { getLatestEventTime } from '$lib/util/getLatestEventTime';
@@ -193,8 +193,8 @@
 		const allowed = getAllowedTimes(
 			cell.startTime + MINUTE,
 			cell.endTime - MINUTE,
-			EARLIEST_SHIFT_START - HOUR,
-			LATEST_SHIFT_END + HOUR
+			EARLIEST_SHIFT_START,
+			LATEST_SHIFT_END
 		)[0].intersect(getAlterableTimeframe());
 		return (
 			allowed != undefined && allowed.startTime <= cell.startTime && allowed.endTime >= cell.endTime
