@@ -9,9 +9,7 @@ import {
 } from '$lib/testHelpers';
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import {
-	COORDINATE_ROUNDING_ERROR_THRESHOLD,
-	EARLIEST_SHIFT_START,
-	LATEST_SHIFT_END
+	COORDINATE_ROUNDING_ERROR_THRESHOLD
 } from '$lib/constants';
 import { createSession } from '$lib/server/auth/session';
 import { HOUR, MINUTE, roundToUnit } from '$lib/util/time';
@@ -251,7 +249,7 @@ describe('Whitelist and Booking API Tests', () => {
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(1600));
 		let earliest = inXMinutes(598);
 		let latest = inXMinutes(700);
-		const allowedTimes = getAllowedTimes(earliest, latest, EARLIEST_SHIFT_START, LATEST_SHIFT_END);
+		const allowedTimes = getAllowedTimes(earliest, latest, 4 * HOUR, 23 * HOUR);
 		if (!allowedTimes[0].contains(new Interval(earliest, latest))) {
 			earliest -= HOUR;
 			latest -= HOUR;
