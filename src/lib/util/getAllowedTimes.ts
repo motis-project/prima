@@ -23,5 +23,5 @@ export function getAllowedTimes(
 		allowedTimes.push(new Interval(t + startOnDay - offset, t + endOnDay - offset));
 		noon.setHours(noon.getHours() + 24);
 	}
-	return allowedTimes;
+	return Interval.merge(allowedTimes);
 }
