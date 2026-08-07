@@ -852,7 +852,8 @@ export function evaluatePairInsertions(
 					const twoAfterDropoff = events[dropoffIdx + 1];
 					for (const pickup of pickupCases) {
 						for (const dropoff of dropoffCases) {
-							const schedule = schedulePairInsertion(pickup, dropoff);
+							const passengerRouteDuration = getPassengerRouteDuration(pickup, dropoff);
+							const schedule = schedulePairInsertion(pickup, dropoff, passengerRouteDuration);
 							if (schedule === undefined) {
 								continue;
 							}
@@ -1036,25 +1037,21 @@ export function evaluatePairInsertions(
 
 function schedulePairInsertion(
 	pickup: SingleInsertionEvaluation,
-	dropoff: SingleInsertionEvaluation
+	dropoff: SingleInsertionEvaluation,
+	passengerRouteDuration: number
 ): PairInsertionSchedule | undefined {
 	const communicatedPickupTime = Math.max(
 		pickup.window.endTime - SCHEDULED_TIME_BUFFER_PICKUP,
 		pickup.window.startTime
 	);
 	const communicatedDropoffTime = Math.min(
-		Math.max(
-			dropoff.window.startTime,
-			communicatedPickupTime + pickup.nextLegDuration + dropoff.prevLegDuration
-		) + getScheduledTimeBufferDropoff(dropoff.window.startTime - pickup.window.endTime),
+		Math.max(dropoff.window.startTime, communicatedPickupTime + passengerRouteDuration) +
+			getScheduledTimeBufferDropoff(dropoff.window.startTime - pickup.window.endTime),
 		dropoff.window.endTime
 	);
 
 	const leewayBetweenPickupDropoff =
-		communicatedDropoffTime -
-		communicatedPickupTime -
-		pickup.nextLegDuration -
-		dropoff.prevLegDuration;
+		communicatedDropoffTime - communicatedPickupTime - passengerRouteDuration;
 	if (leewayBetweenPickupDropoff < 0) {
 		return undefined;
 	}
@@ -1082,6 +1079,13 @@ function schedulePairInsertion(
 		scheduledDropoffTime,
 		communicatedDropoffTime
 	};
+}
+
+function getPassengerRouteDuration(
+	pickup: SingleInsertionEvaluation,
+	dropoff: SingleInsertionEvaluation
+): number {
+	return pickup.nextLegDuration + dropoff.prevLegDuration;
 }
 
 export const computeCost = (
