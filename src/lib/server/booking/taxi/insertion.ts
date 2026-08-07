@@ -98,6 +98,27 @@ type PairInsertionSchedule = {
 	communicatedDropoffTime: number;
 };
 
+type PairInsertionMetrics = {
+	taxiWaitingTime: number;
+	approachPlusReturnDurationDelta: number;
+	fullyPayedDurationDelta: number;
+	weightedPassengerDuration: number;
+	cost: number;
+	departure: number | undefined;
+	arrival: number | undefined;
+};
+
+type PairInsertionMetricsInput = {
+	events: Event[];
+	pickupIdx: number;
+	dropoffIdx: number;
+	pickup: SingleInsertionEvaluation;
+	dropoff: SingleInsertionEvaluation;
+	schedule: PairInsertionSchedule;
+	cumulatedTaxiDrivingDelta: number;
+	passengerCount: number;
+};
+
 type Evaluations = {
 	busStopEvaluations: SingleInsertionEvaluation[][][][];
 	userChosenEvaluations: SingleInsertionEvaluation[][];
@@ -795,7 +816,6 @@ export function evaluatePairInsertions(
 		const events = insertionInfo.vehicle.events;
 		const pickupIdx = insertionInfo.idxInVehicleEvents;
 		const prevPickup = events[pickupIdx - 1];
-		const twoBeforePickup = events[pickupIdx - 2];
 		const nextPickup = events[pickupIdx];
 		const twoAfterPickup = events[pickupIdx + 1];
 		if (
@@ -849,7 +869,6 @@ export function evaluatePairInsertions(
 					}
 					const prevDropoff = events[dropoffIdx - 1];
 					const nextDropoff = events[dropoffIdx];
-					const twoAfterDropoff = events[dropoffIdx + 1];
 					for (const pickup of pickupCases) {
 						for (const dropoff of dropoffCases) {
 							const passengerRouteDuration = getPassengerRouteDuration(pickup, dropoff);
@@ -863,111 +882,28 @@ export function evaluatePairInsertions(
 								scheduledDropoffTime,
 								communicatedDropoffTime
 							} = schedule;
-
-							// Compute the delta of the taxi's time spend driving for the tour containing the new request
-							const approachPlusReturnDurationDelta =
-								pickup.approachPlusReturnDurationDelta + dropoff.approachPlusReturnDurationDelta;
-							const fullyPayedDurationDelta =
-								pickup.fullyPayedDurationDelta +
-								dropoff.fullyPayedDurationDelta +
-								cumulatedTaxiDrivingDelta;
-
-							// Compute the delta of the taxi's waiting time
-							const newDeparture = comesFromCompany(pickup.case)
-								? scheduledPickupTime - pickup.prevLegDuration
-								: prevPickup.tourId !== twoBeforePickup?.tourId
-									? Math.min(
-											communicatedPickupTime - pickup.prevLegDuration,
-											getScheduledEventTime(prevPickup)
-										) - prevPickup.prevLegDuration
-									: prevPickup.departure;
-							const newArrival = returnsToCompany(dropoff.case)
-								? scheduledDropoffTime + dropoff.nextLegDuration
-								: nextDropoff.tourId !== twoAfterDropoff?.tourId
-									? Math.max(
-											communicatedDropoffTime + dropoff.nextLegDuration,
-											getScheduledEventTime(nextDropoff)
-										) + nextDropoff.nextLegDuration
-									: nextDropoff.arrival;
-							const relevantEvents = events.slice(
-								pickup.case.how === InsertHow.CONNECT ? pickupIdx - 1 : pickupIdx,
-								dropoff.case.how === InsertHow.CONNECT ? dropoffIdx + 1 : dropoffIdx
-							);
-							const tours = new Set<number>();
-							let oldTourDurationSum = 0;
-							relevantEvents.forEach((e) => {
-								if (!tours.has(e.tourId)) {
-									oldTourDurationSum += e.arrival - e.departure;
-									tours.add(e.tourId);
-								}
+							const metrics = getPairInsertionMetrics({
+								events,
+								pickupIdx,
+								dropoffIdx,
+								pickup,
+								dropoff,
+								schedule,
+								cumulatedTaxiDrivingDelta,
+								passengerCount: required.passengers
 							});
-							const tourDurationDelta = newArrival - newDeparture - oldTourDurationSum;
-							const taxiWaitingTime =
-								tourDurationDelta - approachPlusReturnDurationDelta - fullyPayedDurationDelta;
-							if (waitsTooLong(taxiWaitingTime)) {
+							if (metrics === undefined) {
 								continue;
 							}
-
-							// Compute the delta of the duration spend by passengers in the taxi
-							let prevShiftPickup = 0;
-							if (!comesFromCompany(pickup.case) && prevPickup!.isPickup) {
-								prevShiftPickup = Math.max(
-									0,
-									getScheduledEventTime(prevPickup!) -
-										communicatedPickupTime +
-										pickup.prevLegDuration
-								);
-							}
-							let nextShiftPickup = 0;
-							if (!returnsToCompany(pickup.case) && !nextPickup!.isPickup) {
-								nextShiftPickup = Math.max(
-									0,
-									scheduledPickupTime + pickup.nextLegDuration - getScheduledEventTime(nextPickup!)
-								);
-							}
-							let prevShiftDropoff = 0;
-							if (!comesFromCompany(dropoff.case) && prevDropoff!.isPickup) {
-								prevShiftDropoff = Math.max(
-									0,
-									getScheduledEventTime(prevDropoff!) -
-										scheduledDropoffTime +
-										dropoff.prevLegDuration
-								);
-							}
-							let nextShiftDropoff = 0;
-							if (!returnsToCompany(dropoff.case) && !nextDropoff!.isPickup) {
-								nextShiftDropoff = Math.max(
-									0,
-									communicatedDropoffTime +
-										dropoff.nextLegDuration -
-										getScheduledEventTime(nextDropoff!)
-								);
-							}
-
-							let weightedPassengerDuration =
-								required.passengers * (scheduledDropoffTime - scheduledPickupTime);
-							weightedPassengerDuration += getWeightedPassengerDurationDelta(
-								pickup.case,
-								prevPickup,
-								nextPickup,
-								prevShiftPickup,
-								nextShiftPickup
-							);
-							weightedPassengerDuration += getWeightedPassengerDurationDelta(
-								dropoff.case,
-								prevDropoff,
-								nextDropoff,
-								prevShiftDropoff,
-								nextShiftDropoff
-							);
-
-							// Compute the cost used to compare to other insertion options
-							const cost = computeCost(
-								weightedPassengerDuration,
+							const {
+								taxiWaitingTime,
 								approachPlusReturnDurationDelta,
 								fullyPayedDurationDelta,
-								taxiWaitingTime
-							);
+								weightedPassengerDuration,
+								cost,
+								departure,
+								arrival
+							} = metrics;
 
 							console.log(
 								whitelist ? 'WHITELIST' : 'BOOKING API',
@@ -1008,12 +944,8 @@ export function evaluatePairInsertions(
 									company: insertionInfo.companyIdx,
 									vehicle: insertionInfo.vehicle.id,
 									tour,
-									departure: comesFromCompany(pickup.case)
-										? new Date(scheduledPickupTime - pickup.prevLegDuration).getTime()
-										: undefined,
-									arrival: returnsToCompany(dropoff.case)
-										? new Date(scheduledDropoffTime + dropoff.nextLegDuration).getTime()
-										: undefined,
+									departure,
+									arrival,
 									pickupPrevLegDuration: pickup.prevLegDuration,
 									pickupNextLegDuration: pickup.nextLegDuration,
 									dropoffPrevLegDuration: dropoff.prevLegDuration,
@@ -1033,6 +965,135 @@ export function evaluatePairInsertions(
 		}
 	});
 	return bestEvaluations;
+}
+
+function getPairInsertionMetrics({
+	events,
+	pickupIdx,
+	dropoffIdx,
+	pickup,
+	dropoff,
+	schedule,
+	cumulatedTaxiDrivingDelta,
+	passengerCount
+}: PairInsertionMetricsInput): PairInsertionMetrics | undefined {
+	const prevPickup = events[pickupIdx - 1];
+	const twoBeforePickup = events[pickupIdx - 2];
+	const nextPickup = events[pickupIdx];
+	const prevDropoff = events[dropoffIdx - 1];
+	const nextDropoff = events[dropoffIdx];
+	const twoAfterDropoff = events[dropoffIdx + 1];
+	const {
+		communicatedPickupTime,
+		scheduledPickupTime,
+		scheduledDropoffTime,
+		communicatedDropoffTime
+	} = schedule;
+
+	const approachPlusReturnDurationDelta =
+		pickup.approachPlusReturnDurationDelta + dropoff.approachPlusReturnDurationDelta;
+	const fullyPayedDurationDelta =
+		pickup.fullyPayedDurationDelta + dropoff.fullyPayedDurationDelta + cumulatedTaxiDrivingDelta;
+
+	const newDeparture = comesFromCompany(pickup.case)
+		? scheduledPickupTime - pickup.prevLegDuration
+		: prevPickup.tourId !== twoBeforePickup?.tourId
+			? Math.min(
+					communicatedPickupTime - pickup.prevLegDuration,
+					getScheduledEventTime(prevPickup)
+				) - prevPickup.prevLegDuration
+			: prevPickup.departure;
+	const newArrival = returnsToCompany(dropoff.case)
+		? scheduledDropoffTime + dropoff.nextLegDuration
+		: nextDropoff.tourId !== twoAfterDropoff?.tourId
+			? Math.max(
+					communicatedDropoffTime + dropoff.nextLegDuration,
+					getScheduledEventTime(nextDropoff)
+				) + nextDropoff.nextLegDuration
+			: nextDropoff.arrival;
+
+	const relevantEvents = events.slice(
+		pickup.case.how === InsertHow.CONNECT ? pickupIdx - 1 : pickupIdx,
+		dropoff.case.how === InsertHow.CONNECT ? dropoffIdx + 1 : dropoffIdx
+	);
+	const tours = new Set<number>();
+	let oldTourDurationSum = 0;
+	for (const event of relevantEvents) {
+		if (!tours.has(event.tourId)) {
+			oldTourDurationSum += event.arrival - event.departure;
+			tours.add(event.tourId);
+		}
+	}
+	const tourDurationDelta = newArrival - newDeparture - oldTourDurationSum;
+	const taxiWaitingTime =
+		tourDurationDelta - approachPlusReturnDurationDelta - fullyPayedDurationDelta;
+	if (waitsTooLong(taxiWaitingTime)) {
+		return undefined;
+	}
+
+	const prevShiftPickup =
+		!comesFromCompany(pickup.case) && prevPickup.isPickup
+			? Math.max(
+					0,
+					getScheduledEventTime(prevPickup) - communicatedPickupTime + pickup.prevLegDuration
+				)
+			: 0;
+	const nextShiftPickup =
+		!returnsToCompany(pickup.case) && !nextPickup.isPickup
+			? Math.max(
+					0,
+					scheduledPickupTime + pickup.nextLegDuration - getScheduledEventTime(nextPickup)
+				)
+			: 0;
+	const prevShiftDropoff =
+		!comesFromCompany(dropoff.case) && prevDropoff.isPickup
+			? Math.max(
+					0,
+					getScheduledEventTime(prevDropoff) - scheduledDropoffTime + dropoff.prevLegDuration
+				)
+			: 0;
+	const nextShiftDropoff =
+		!returnsToCompany(dropoff.case) && !nextDropoff.isPickup
+			? Math.max(
+					0,
+					communicatedDropoffTime + dropoff.nextLegDuration - getScheduledEventTime(nextDropoff)
+				)
+			: 0;
+
+	let weightedPassengerDuration = passengerCount * (scheduledDropoffTime - scheduledPickupTime);
+	weightedPassengerDuration += getWeightedPassengerDurationDelta(
+		pickup.case,
+		prevPickup,
+		nextPickup,
+		prevShiftPickup,
+		nextShiftPickup
+	);
+	weightedPassengerDuration += getWeightedPassengerDurationDelta(
+		dropoff.case,
+		prevDropoff,
+		nextDropoff,
+		prevShiftDropoff,
+		nextShiftDropoff
+	);
+
+	return {
+		taxiWaitingTime,
+		approachPlusReturnDurationDelta,
+		fullyPayedDurationDelta,
+		weightedPassengerDuration,
+		cost: computeCost(
+			weightedPassengerDuration,
+			approachPlusReturnDurationDelta,
+			fullyPayedDurationDelta,
+			taxiWaitingTime
+		),
+		departure: comesFromCompany(pickup.case)
+			? new Date(scheduledPickupTime - pickup.prevLegDuration).getTime()
+			: undefined,
+		arrival: returnsToCompany(dropoff.case)
+			? new Date(scheduledDropoffTime + dropoff.nextLegDuration).getTime()
+			: undefined
+	};
 }
 
 function schedulePairInsertion(
