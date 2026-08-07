@@ -91,6 +91,13 @@ type SingleInsertionEvaluation = {
 	time: number;
 };
 
+type PairInsertionSchedule = {
+	communicatedPickupTime: number;
+	scheduledPickupTime: number;
+	scheduledDropoffTime: number;
+	communicatedDropoffTime: number;
+};
+
 type Evaluations = {
 	busStopEvaluations: SingleInsertionEvaluation[][][][];
 	userChosenEvaluations: SingleInsertionEvaluation[][];
@@ -845,53 +852,16 @@ export function evaluatePairInsertions(
 					const twoAfterDropoff = events[dropoffIdx + 1];
 					for (const pickup of pickupCases) {
 						for (const dropoff of dropoffCases) {
-							const communicatedPickupTime = Math.max(
-								pickup.window.endTime - SCHEDULED_TIME_BUFFER_PICKUP,
-								pickup.window.startTime
-							);
-							const communicatedDropoffTime = Math.min(
-								Math.max(
-									dropoff.window.startTime,
-									communicatedPickupTime + pickup.nextLegDuration + dropoff.prevLegDuration
-								) + getScheduledTimeBufferDropoff(dropoff.window.startTime - pickup.window.endTime),
-								dropoff.window.endTime
-							);
-
-							// Verify, that the shift induced to other events by pickup and dropoff are mutually compatible
-							const availableDistance =
-								communicatedDropoffTime -
-								communicatedPickupTime -
-								dropoff.prevLegDuration -
-								pickup.nextLegDuration;
-							if (availableDistance < 0) {
+							const schedule = schedulePairInsertion(pickup, dropoff);
+							if (schedule === undefined) {
 								continue;
 							}
-
-							// Determine the scheduled times for pickup and dropoff
-							const leewayBetweenPickupDropoff =
-								communicatedDropoffTime -
-								communicatedPickupTime -
-								pickup.nextLegDuration -
-								dropoff.prevLegDuration;
-							const pickupScheduledShift = Math.min(
-								pickup.window.size(),
-								SCHEDULED_TIME_BUFFER_PICKUP,
-								leewayBetweenPickupDropoff
-							);
-							const scheduledPickupTime =
-								communicatedPickupTime +
-								(pickup.case.how === InsertHow.APPEND ? 0 : pickupScheduledShift);
-							const scheduledDropoffTime =
-								communicatedDropoffTime -
-								(dropoff.case.how === InsertHow.PREPEND
-									? 0
-									: Math.min(
-											dropoff.window.size(),
-											getScheduledTimeBufferDropoff(
-												dropoff.window.startTime - pickup.window.endTime
-											),
-											leewayBetweenPickupDropoff - pickupScheduledShift
-										));
+							const {
+								communicatedPickupTime,
+								scheduledPickupTime,
+								scheduledDropoffTime,
+								communicatedDropoffTime
+							} = schedule;
 
 							// Compute the delta of the taxi's time spend driving for the tour containing the new request
 							const approachPlusReturnDurationDelta =
@@ -1062,6 +1032,56 @@ export function evaluatePairInsertions(
 		}
 	});
 	return bestEvaluations;
+}
+
+function schedulePairInsertion(
+	pickup: SingleInsertionEvaluation,
+	dropoff: SingleInsertionEvaluation
+): PairInsertionSchedule | undefined {
+	const communicatedPickupTime = Math.max(
+		pickup.window.endTime - SCHEDULED_TIME_BUFFER_PICKUP,
+		pickup.window.startTime
+	);
+	const communicatedDropoffTime = Math.min(
+		Math.max(
+			dropoff.window.startTime,
+			communicatedPickupTime + pickup.nextLegDuration + dropoff.prevLegDuration
+		) + getScheduledTimeBufferDropoff(dropoff.window.startTime - pickup.window.endTime),
+		dropoff.window.endTime
+	);
+
+	const leewayBetweenPickupDropoff =
+		communicatedDropoffTime -
+		communicatedPickupTime -
+		pickup.nextLegDuration -
+		dropoff.prevLegDuration;
+	if (leewayBetweenPickupDropoff < 0) {
+		return undefined;
+	}
+
+	const pickupScheduledShift = Math.min(
+		pickup.window.size(),
+		SCHEDULED_TIME_BUFFER_PICKUP,
+		leewayBetweenPickupDropoff
+	);
+	const scheduledPickupTime =
+		communicatedPickupTime + (pickup.case.how === InsertHow.APPEND ? 0 : pickupScheduledShift);
+	const scheduledDropoffTime =
+		communicatedDropoffTime -
+		(dropoff.case.how === InsertHow.PREPEND
+			? 0
+			: Math.min(
+					dropoff.window.size(),
+					getScheduledTimeBufferDropoff(dropoff.window.startTime - pickup.window.endTime),
+					leewayBetweenPickupDropoff - pickupScheduledShift
+				));
+
+	return {
+		communicatedPickupTime,
+		scheduledPickupTime,
+		scheduledDropoffTime,
+		communicatedDropoffTime
+	};
 }
 
 export const computeCost = (
