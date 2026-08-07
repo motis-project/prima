@@ -112,7 +112,7 @@ export async function evaluateRequest(
 		allowedTimes,
 		promisedTimes
 	);
-	const { busStopEvaluations, bothEvaluations, userChosenEvaluations } = evaluateSingleInsertions(
+	const { singleEvaluations, bothEvaluations } = evaluateSingleInsertions(
 		companies,
 		required,
 		startFixed,
@@ -129,8 +129,7 @@ export async function evaluateRequest(
 		startFixed,
 		insertionRanges,
 		busStopTimes,
-		busStopEvaluations,
-		userChosenEvaluations,
+		singleEvaluations,
 		required,
 		promisedTimes === undefined
 	);
