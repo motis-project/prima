@@ -4,12 +4,12 @@ import type { Capacities } from '$lib/util/booking/Capacities';
 import { isValid } from '$lib/util/booking/getPossibleInsertions';
 import { InsertHow, InsertWhat } from '$lib/util/booking/insertionTypes';
 import type { Interval } from '$lib/util/interval';
-import { InsertDirection, InsertWhere, type InsertionInfo } from '../insertionTypes';
-import { getAllowedOperationTimes } from './durations';
-import type { Company } from './getBookingAvailability';
-import { evaluateBothInsertion, type Insertion } from './insertion';
-import type { PromisedTimes } from './PromisedTimes';
-import type { RoutingResults } from './routing';
+import { InsertDirection, InsertWhere, type InsertionInfo } from '../../insertionTypes';
+import { getAllowedOperationTimes } from '../durations';
+import type { Company } from '../getBookingAvailability';
+import { evaluateBothInsertion, type Insertion } from './core';
+import type { PromisedTimes } from '../PromisedTimes';
+import type { RoutingResults } from '../routing';
 
 export function evaluateNewTours(
 	companies: Company[],

@@ -14,10 +14,13 @@ import {
 	MAX_PASSENGER_WAITING_TIME_DROPOFF,
 	MAX_PASSENGER_WAITING_TIME_PICKUP
 } from '$lib/constants';
-import { takeBest, type Insertion } from './insertion';
-import { evaluateNewTours } from './evaluateNewTours';
-import { evaluatePairInsertions } from './evaluatePairInsertions';
-import { evaluateSingleInsertions } from './evaluateSingleInsertions';
+import {
+	evaluateNewTours,
+	evaluatePairInsertions,
+	evaluateSingleInsertions,
+	takeBest,
+	type Insertion
+} from './insertion';
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 import { DAY } from '$lib/util/time';
 import { routing } from './routing';

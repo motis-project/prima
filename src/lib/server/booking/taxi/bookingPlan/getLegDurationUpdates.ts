@@ -1,6 +1,6 @@
 import { PASSENGER_CHANGE_DURATION } from '$lib/constants';
 import type { Event } from '$lib/server/booking/taxi/getBookingAvailability';
-import type { Insertion } from './insertion';
+import type { Insertion } from '../insertion';
 import { InsertHow, InsertWhat } from '$lib/util/booking/insertionTypes';
 import { oneToManyCarRouting } from '$lib/server/util/oneToManyCarRouting';
 

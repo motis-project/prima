@@ -5,7 +5,7 @@ import { isSamePlace } from '$lib/util/booking/isSamePlace';
 import { batchOneToManyCarRouting } from '$lib/server/util/batchOneToManyCarRouting';
 import type { VehicleId } from './VehicleId';
 import type { Range } from '$lib/util/booking/getPossibleInsertions';
-import { iterateAllInsertions } from './iterateAllInsertions';
+import { iterateAllInsertions } from './insertion/iterateAllInsertions';
 import { PASSENGER_CHANGE_DURATION } from '$lib/constants';
 
 export type InsertionRoutingResult = {

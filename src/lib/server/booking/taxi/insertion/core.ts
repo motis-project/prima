@@ -4,18 +4,18 @@ import {
 	type InsertionInfo,
 	type InsertionType,
 	printInsertionType
-} from '../insertionTypes';
+} from '../../insertionTypes';
 import {
 	comesFromCompany,
 	getPrevLegDuration,
 	getArrivalWindow,
 	getNextLegDuration,
 	returnsToCompany
-} from './durations';
-import type { PromisedTimes } from './PromisedTimes';
+} from '../durations';
+import type { PromisedTimes } from '../PromisedTimes';
 import { Interval } from '$lib/util/interval';
-import type { RoutingResults } from './routing';
-import type { Event } from './getBookingAvailability';
+import type { RoutingResults } from '../routing';
+import type { Event } from '../getBookingAvailability';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 import { roundToUnit, MINUTE } from '$lib/util/time';
 import { InsertHow, InsertWhat } from '$lib/util/booking/insertionTypes';

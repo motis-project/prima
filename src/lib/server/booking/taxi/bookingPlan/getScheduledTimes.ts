@@ -2,7 +2,7 @@ import { PASSENGER_CHANGE_DURATION } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
 import type { Event } from '$lib/server/booking/taxi/getBookingAvailability';
 import type { DirectDrivingDurations } from './getDirectDrivingDurations';
-import type { Insertion } from './insertion';
+import type { Insertion } from '../insertion';
 import { InsertWhat } from '$lib/util/booking/insertionTypes';
 
 export type ScheduledTimes = {

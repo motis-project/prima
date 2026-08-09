@@ -5,9 +5,9 @@ import {
 	PASSENGER_TIME_COST_FACTOR,
 	TAXI_WAITING_TIME_COST_FACTOR
 } from '$lib/constants';
-import type { InsertionType } from '../insertionTypes';
-import { comesFromCompany, returnsToCompany } from './durations';
-import type { Event } from './getBookingAvailability';
+import type { InsertionType } from '../../insertionTypes';
+import { comesFromCompany, returnsToCompany } from '../durations';
+import type { Event } from '../getBookingAvailability';
 
 export function computeCost(
 	passengerDuration: number,

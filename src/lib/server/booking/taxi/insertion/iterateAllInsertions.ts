@@ -1,6 +1,6 @@
-import type { Company } from './getBookingAvailability';
-import type { InsertionInfo } from '../insertionTypes';
-import type { VehicleId } from './VehicleId';
+import type { Company } from '../getBookingAvailability';
+import type { InsertionInfo } from '../../insertionTypes';
+import type { VehicleId } from '../VehicleId';
 import type { Range } from '$lib/util/booking/getPossibleInsertions';
 
 export async function iterateAllInsertions(

@@ -5,11 +5,11 @@ import { InsertHow } from '$lib/util/booking/insertionTypes';
 import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 import type { Interval } from '$lib/util/interval';
-import type { InsertionInfo } from '../insertionTypes';
-import { printInsertionType } from '../insertionTypes';
-import { comesFromCompany, returnsToCompany } from './durations';
-import type { Company, Event } from './getBookingAvailability';
-import type { Insertion, SingleInsertionEvaluation, SingleInsertionEvaluations } from './insertion';
+import type { InsertionInfo } from '../../insertionTypes';
+import { printInsertionType } from '../../insertionTypes';
+import { comesFromCompany, returnsToCompany } from '../durations';
+import type { Company, Event } from '../getBookingAvailability';
+import type { Insertion, SingleInsertionEvaluation, SingleInsertionEvaluations } from './core';
 import { computeCost, getWeightedPassengerDurationDelta, waitsTooLong } from './insertionMetrics';
 import { iterateAllInsertions } from './iterateAllInsertions';
 

@@ -10,20 +10,20 @@ import {
 	canCaseBeValid,
 	isCaseValid,
 	type InsertionInfo
-} from '../insertionTypes';
-import { getAllowedOperationTimes } from './durations';
-import type { Company, Event } from './getBookingAvailability';
+} from '../../insertionTypes';
+import { getAllowedOperationTimes } from '../durations';
+import type { Company, Event } from '../getBookingAvailability';
 import {
 	SingleInsertionEvaluations,
 	evaluateBothInsertion,
 	evaluateSingleInsertion,
 	type Evaluations,
 	type Insertion
-} from './insertion';
+} from './core';
 import { waitsTooLong } from './insertionMetrics';
 import { iterateAllInsertions } from './iterateAllInsertions';
-import type { PromisedTimes } from './PromisedTimes';
-import type { RoutingResults } from './routing';
+import type { PromisedTimes } from '../PromisedTimes';
+import type { RoutingResults } from '../routing';
 
 export function evaluateSingleInsertions(
 	companies: Company[],
