@@ -73,12 +73,25 @@ export function evaluatePairInsertions(
 			return;
 		}
 		let cumulatedTaxiDrivingDelta = 0;
+		let intermediatePassengerDrivingDuration = 0;
 		for (
 			let dropoffIdx = pickupIdx + 1;
 			dropoffIdx != insertionInfo.currentRange.latestDropoff + 1;
 			++dropoffIdx
 		) {
 			const prevDropoffIdx = dropoffIdx - 1;
+			if (prevDropoffIdx !== pickupIdx) {
+				const earlierEvent = events[prevDropoffIdx - 1];
+				const laterEvent = events[prevDropoffIdx];
+				const drivingDuration =
+					earlierEvent.tourId === laterEvent.tourId
+						? laterEvent.prevLegDuration
+						: laterEvent.directDuration;
+				if (drivingDuration == null) {
+					return;
+				}
+				intermediatePassengerDrivingDuration += drivingDuration;
+			}
 			if (
 				dropoffIdx > 1 &&
 				prevDropoffIdx !== pickupIdx &&
@@ -117,7 +130,11 @@ export function evaluatePairInsertions(
 					const nextDropoff = events[dropoffIdx];
 					for (const pickup of pickupCases) {
 						for (const dropoff of dropoffCases) {
-							const passengerRouteDuration = getPassengerRouteDuration(pickup, dropoff);
+							const passengerRouteDuration = getPassengerRouteDuration(
+								pickup,
+								dropoff,
+								intermediatePassengerDrivingDuration
+							);
 							const schedule = schedulePairInsertion(pickup, dropoff, passengerRouteDuration);
 							if (schedule === undefined) {
 								continue;
@@ -351,37 +368,37 @@ function schedulePairInsertion(
 		pickup.arrivalWindow.endTime - SCHEDULED_TIME_BUFFER_PICKUP,
 		pickup.arrivalWindow.startTime
 	);
-	const communicatedDropoffTime = Math.min(
-		Math.max(dropoff.arrivalWindow.startTime, communicatedPickupTime + passengerRouteDuration) +
-			getScheduledTimeBufferDropoff(dropoff.arrivalWindow.startTime - pickup.arrivalWindow.endTime),
-		dropoff.arrivalWindow.endTime
+	const earliestScheduledDropoffTime = Math.max(
+		dropoff.arrivalWindow.startTime,
+		communicatedPickupTime + passengerRouteDuration
 	);
 
-	const leewayBetweenPickupDropoff =
-		communicatedDropoffTime - communicatedPickupTime - passengerRouteDuration;
-	if (leewayBetweenPickupDropoff < 0) {
-		return undefined;
-	}
-
+	const availablePickupBuffer =
+		earliestScheduledDropoffTime - communicatedPickupTime - passengerRouteDuration;
 	const pickupScheduledShift = Math.min(
 		pickup.arrivalWindow.size(),
 		SCHEDULED_TIME_BUFFER_PICKUP,
-		leewayBetweenPickupDropoff
+		availablePickupBuffer
 	);
 	const scheduledPickupTime =
 		communicatedPickupTime +
 		(pickup.insertionType.how === InsertHow.APPEND ? 0 : pickupScheduledShift);
-	const scheduledDropoffTime =
-		communicatedDropoffTime -
-		(dropoff.insertionType.how === InsertHow.PREPEND
+	const scheduledDropoffTime = Math.max(
+		dropoff.arrivalWindow.startTime,
+		scheduledPickupTime + passengerRouteDuration
+	);
+	if (scheduledDropoffTime > dropoff.arrivalWindow.endTime) {
+		return undefined;
+	}
+	const actualPassengerDuration = scheduledDropoffTime - scheduledPickupTime;
+	const dropoffScheduledBuffer =
+		dropoff.insertionType.how === InsertHow.PREPEND
 			? 0
 			: Math.min(
-					dropoff.arrivalWindow.size(),
-					getScheduledTimeBufferDropoff(
-						dropoff.arrivalWindow.startTime - pickup.arrivalWindow.endTime
-					),
-					leewayBetweenPickupDropoff - pickupScheduledShift
-				));
+					dropoff.arrivalWindow.endTime - scheduledDropoffTime,
+					getScheduledTimeBufferDropoff(actualPassengerDuration)
+				);
+	const communicatedDropoffTime = scheduledDropoffTime + dropoffScheduledBuffer;
 
 	return {
 		communicatedPickupTime,
@@ -393,7 +410,8 @@ function schedulePairInsertion(
 
 function getPassengerRouteDuration(
 	pickup: SingleInsertionEvaluation,
-	dropoff: SingleInsertionEvaluation
+	dropoff: SingleInsertionEvaluation,
+	intermediateDrivingDuration: number
 ): number {
-	return pickup.nextLegDuration + dropoff.prevLegDuration;
+	return pickup.nextLegDuration + intermediateDrivingDuration + dropoff.prevLegDuration;
 }
