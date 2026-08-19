@@ -292,8 +292,7 @@ const translations: Translations = {
 	noAvalablilityDescription:
 		'No taxis were reported as available for the requested time. Please try again later',
 	campaignBannerTitle: 'PriMa+ÖV ride sharing weeks: travel together and win',
-	campaignBannerDescription:
-		'Our PriMa+ÖV ride sharing weeks take place from 24/08 to 06/09/2026.',
+	campaignBannerDescription: 'Our PriMa+ÖV ride sharing weeks take place from 24/08 to 06/09/2026.',
 	campaignBannerMoreInfo: 'More information at',
 	campaignBannerDismiss: 'Dismiss notice',
 	addAlert: 'Receive a notification, if a ride sharing offer matching this search is published',
