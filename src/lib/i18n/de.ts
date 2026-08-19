@@ -302,6 +302,11 @@ const translations: Translations = {
 	noAvailabilityTitle: 'Zu weit in der Zukunft',
 	noAvalablilityDescription:
 		'Für die angefragte Zeit wurden noch keine Taxis als verfügbar gemeldet. Versuchen Sie es später wieder.',
+	campaignBannerTitle: 'PriMa+ÖV-Mitfahrwochen: Gemeinsam unterwegs und gewinnen',
+	campaignBannerDescription:
+		'Vom 24.08. bis 06.09.2026 finden unsere PriMa+ÖV-Mitfahrwochen statt.',
+	campaignBannerMoreInfo: 'Mehr Infos unter',
+	campaignBannerDismiss: 'Hinweis schließen',
 	addAlert: 'Benachrichtung erhalten, wenn eine Mitfahrt möglich ist',
 	alertInfo:
 		'Sie werden per E-Mail benachrichtigt, sobald jemand für diese Strecke und Zeit ein Mitfahrangebot einstellt. Sie können Ihre Benachrichtigungen unter Mitfahrangebote verwalten.',

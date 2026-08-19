@@ -260,6 +260,10 @@ export type Translations = {
 	luggageExplanation: string;
 	noAvailabilityTitle: string;
 	noAvalablilityDescription: string;
+	campaignBannerTitle: string;
+	campaignBannerDescription: string;
+	campaignBannerMoreInfo: string;
+	campaignBannerDismiss: string;
 	addAlert: string;
 	alertInfo: string;
 	notificationsList: string;

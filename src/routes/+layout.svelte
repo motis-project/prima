@@ -11,13 +11,41 @@
 	import CircleAlert from 'lucide-svelte/icons/circle-alert';
 	import Receipt from 'lucide-svelte/icons/receipt';
 	import SlidersVertical from 'lucide-svelte/icons/sliders-vertical';
+	import X from 'lucide-svelte/icons/x';
 
 	import * as Alert from '$lib/shadcn/alert';
+	import { RIDE_SHARING_COLOR } from '$lib/ui/modeStyle';
 
+	import { browser } from '$app/environment';
+	import { page } from '$app/state';
 	import Menu, { type Item as MenuItem } from './Menu.svelte';
 	import { t } from '$lib/i18n/translation';
 
 	let { children, data } = $props();
+
+	// Disappears on its own after the last day of the campaign (06.09.2026, CEST).
+	const CAMPAIGN_BANNER_END = new Date('2026-09-07T00:00:00+02:00').valueOf();
+	const CAMPAIGN_BANNER_KEY = 'campaignBannerDismissed:mitfahrwochen2026';
+	const CAMPAIGN_BANNER_URL = 'https://www.primaplusoev.de/aktuelles';
+	const CAMPAIGN_BANNER_URL_LABEL = CAMPAIGN_BANNER_URL.replace(/^https:\/\/(www\.)?/, '');
+
+	// Session-only: comes back in a new tab or after the browser is closed.
+	// Read on the client only, so a dismissed banner never flashes up during hydration.
+	let campaignBannerDismissed = $state(
+		browser && sessionStorage.getItem(CAMPAIGN_BANNER_KEY) === 'true'
+	);
+	const showRatingPopup = $derived(!!data.pendingRating);
+	const showCampaignBanner = $derived(
+		browser &&
+			!campaignBannerDismissed &&
+			Date.now() < CAMPAIGN_BANNER_END &&
+			page.url.pathname === '/routing'
+	);
+
+	const dismissCampaignBanner = () => {
+		campaignBannerDismissed = true;
+		sessionStorage.setItem(CAMPAIGN_BANNER_KEY, 'true');
+	};
 
 	const baseItems: Array<MenuItem> = [{ title: t.menu.account, href: '/account', Icon: UserRound }];
 	const customerItems: Array<MenuItem> = $derived([
@@ -51,31 +79,59 @@
 </script>
 
 <div class="flex h-full w-full flex-col">
-	{#if data.pendingRating}
-		<Alert.Root class="mb-2">
-			<CircleAlert class="size-4" />
-			<Alert.Title></Alert.Title>
-			<Alert.Description>
-				{t.rating.thanksForUsing}<br />
-				{t.rating.howHasItBeen}
-				<a class="font-bold underline" href="/rating/{data.pendingRating}">
-					{t.rating.giveFeedback}
-				</a>
-			</Alert.Description>
-		</Alert.Root>
-	{/if}
-	{#if data.pendingRideShareRating}
-		<Alert.Root class="mb-2">
-			<CircleAlert class="size-4" />
-			<Alert.Title></Alert.Title>
-			<Alert.Description>
-				{t.rating.thanksForUsing}<br />
-				{t.rideShare.howHasItBeen}
-				<a class="font-bold underline" href="/ride-share-rating/{data.pendingRideShareRating}">
-					{t.rating.giveFeedback}
-				</a>
-			</Alert.Description>
-		</Alert.Root>
+	{#if showCampaignBanner || showRatingPopup || data.pendingRideShareRating}
+		<div class="flex flex-col gap-2 px-2 pt-2 md:mx-auto md:w-96 md:px-0">
+			{#if showCampaignBanner}
+				<Alert.Root
+					class="border-transparent text-white [&>svg]:text-white"
+					style="background-color: {RIDE_SHARING_COLOR}"
+				>
+					<button
+						class="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+						onclick={dismissCampaignBanner}
+					>
+						<X class="size-4" />
+						<span class="sr-only">{t.campaignBannerDismiss}</span>
+					</button>
+					<CircleAlert class="size-4" />
+					<Alert.Title></Alert.Title>
+					<Alert.Description class="pr-8">
+						{t.campaignBannerTitle}<br />
+						{t.campaignBannerDescription}<br />
+						{t.campaignBannerMoreInfo}
+						<a class="break-words font-bold underline" href={CAMPAIGN_BANNER_URL} target="_blank"
+							>{CAMPAIGN_BANNER_URL_LABEL}</a
+						>
+					</Alert.Description>
+				</Alert.Root>
+			{/if}
+			{#if showRatingPopup}
+				<Alert.Root>
+					<CircleAlert class="size-4" />
+					<Alert.Title></Alert.Title>
+					<Alert.Description>
+						{t.rating.thanksForUsing}<br />
+						{t.rating.howHasItBeen}
+						<a class="font-bold underline" href="/rating/{data.pendingRating}">
+							{t.rating.giveFeedback}
+						</a>
+					</Alert.Description>
+				</Alert.Root>
+			{/if}
+			{#if data.pendingRideShareRating}
+				<Alert.Root>
+					<CircleAlert class="size-4" />
+					<Alert.Title></Alert.Title>
+					<Alert.Description>
+						{t.rating.thanksForUsing}<br />
+						{t.rideShare.howHasItBeen}
+						<a class="font-bold underline" href="/ride-share-rating/{data.pendingRideShareRating}">
+							{t.rating.giveFeedback}
+						</a>
+					</Alert.Description>
+				</Alert.Root>
+			{/if}
+		</div>
 	{/if}
 	<div class="flex grow flex-col pb-16">
 		<div
