@@ -1,9 +1,6 @@
-server:
-  port: 6499
-  web_folder: /Users/felix/code/motis/ui/build
-osm: /Users/felix/osm.pbf
+osm: /input/osm.pbf
 tiles:
-  profile: /Users/felix/code/motis/deps/tiles/profile/full.lua
+  profile: /tiles-profiles/full.lua
   db_size: 274877906944
   flush_threshold: 100000
 timetable:
@@ -24,7 +21,7 @@ timetable:
   max_footpath_length: 15
   datasets:
     timetable:
-      path: timetable
+      path: /input/GTFS.zip
       default_bikes_allowed: false
 street_routing: true
 osr_footpath: false
