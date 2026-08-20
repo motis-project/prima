@@ -88,7 +88,7 @@ test('Set company data, complete and consistent', async ({ page }) => {
 	const checkData = async () => {
 		await expect(page.getByLabel('Name')).toHaveValue('Taxi Weißwasser');
 		await expect(page.getByLabel('Unternehmenssitz')).toHaveValue(
-			'Werner-Seelenbinder-Straße 70a, Weißwasser/Oberlausitz, Weißwasser/Oberlausitz, Sachsen'
+			'Werner-Seelenbinder-Straße 70a, Weißwasser/Oberlausitz - Běła Woda, Sachsen'
 		);
 		await expect(page.getByLabel('Pflichtfahrgebiet').locator('option:checked')).toHaveText(
 			'Weißwasser'
