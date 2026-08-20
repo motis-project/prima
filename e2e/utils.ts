@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { Kysely, PostgresDialect, QueryResult, RawBuilder, sql } from 'kysely';
+import { Kysely, PostgresDialect, type QueryResult, type RawBuilder, sql } from 'kysely';
 import { dbConfig } from './config';
 import pg from 'pg';
 import { DAY, HOUR, MINUTE } from '../src/lib/util/time';
