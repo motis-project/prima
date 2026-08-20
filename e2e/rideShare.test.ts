@@ -1,10 +1,10 @@
-import { expect, Page, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import {
 	RIDE_SHARE_PROVIDER,
 	login,
 	RIDE_SHARE_CUSTOMER,
 	execSQL,
-	UserCredentials,
+	type UserCredentials,
 	logout
 } from './utils';
 import { sql } from 'kysely';
