@@ -99,12 +99,17 @@ export async function moveTour(
 				const newVehicle = await trx
 					.selectFrom('vehicle')
 					.where('vehicle.id', '=', vehicleId)
+					.where('vehicle.company', '=', companyId)
 					.select(['vehicle.bikes', 'vehicle.luggage', 'vehicle.wheelchairs', 'vehicle.passengers'])
 					.executeTakeFirst();
 				if (!newVehicle) {
 					console.log(
-						'MOVE TOUR early exit - cannot find the vehicle, the tour is supposed to be moved to, in the database. tourId: ',
-						tourId
+						'MOVE TOUR early exit - cannot find the vehicle, the tour is supposed to be moved to, among the vehicles of the company. tourId: ',
+						tourId,
+						', vehicleId: ',
+						vehicleId,
+						', companyId: ',
+						companyId
 					);
 					result = { status: 400, message: 'Das Zielfahrzeug konnte nicht gefunden werden.' };
 					return;
