@@ -1,5 +1,5 @@
 import { InsertHow } from '$lib/util/booking/insertionTypes';
-import type { Insertion } from './insertion';
+import type { Insertion } from '../insertion';
 import type { Event } from '$lib/server/booking/taxi/getBookingAvailability';
 import { groupBy } from '$lib/util/groupBy';
 

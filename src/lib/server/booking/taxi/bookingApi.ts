@@ -3,7 +3,7 @@ import { bookRide, type BookRideResponse } from '$lib/server/booking/taxi/bookRi
 import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import { signEntry } from '$lib/server/booking/signEntry';
-import { insertRequest } from './insertRequest';
+import { insertRequest } from './persistence/insertRequest';
 import { retry } from '$lib/server/db/retryQuery';
 import { DIRECT_FREQUENCY, DIRECT_RIDE_TIME_DIFFERENCE } from '$lib/constants';
 

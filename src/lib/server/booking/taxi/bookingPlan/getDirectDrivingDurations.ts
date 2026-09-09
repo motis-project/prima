@@ -1,6 +1,6 @@
 import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
-import type { Insertion } from './insertion';
-import { type Event, type VehicleWithInterval } from './getBookingAvailability';
+import type { Insertion } from '../insertion';
+import { type Event, type VehicleWithInterval } from '../getBookingAvailability';
 import { InsertHow } from '$lib/util/booking/insertionTypes';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 import { PASSENGER_CHANGE_DURATION } from '$lib/constants';

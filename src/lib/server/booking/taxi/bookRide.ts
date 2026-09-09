@@ -8,16 +8,19 @@ import {
 } from '$lib/server/booking/taxi/getBookingAvailability';
 import type { Coordinates } from '$lib/util/Coordinates';
 import { evaluateRequest } from '$lib/server/booking/taxi/evaluateRequest';
-import { getDirectDurations, type DirectDrivingDurations } from './getDirectDrivingDurations';
-import { getMergeTourList } from './getMergeTourList';
+import {
+	getDirectDurations,
+	type DirectDrivingDurations
+} from './bookingPlan/getDirectDrivingDurations';
+import { getMergeTourList } from './bookingPlan/getMergeTourList';
 import { InsertHow, InsertWhat } from '$lib/util/booking/insertionTypes';
 import { printInsertionType } from '../insertionTypes';
 import { toInsertionWithISOStrings, type Insertion, type NeighbourIds } from './insertion';
 import { comesFromCompany, returnsToCompany } from './durations';
-import { getScheduledTimes, type ScheduledTimes } from './getScheduledTimes';
-import { getLegDurationUpdates } from './getLegDurationUpdates';
+import { getScheduledTimes, type ScheduledTimes } from './bookingPlan/getScheduledTimes';
+import { getLegDurationUpdates } from './bookingPlan/getLegDurationUpdates';
 import { DAY } from '$lib/util/time';
-import { getFirstAndLastEvents } from './getFirstAndLastEvents';
+import { getFirstAndLastEvents } from './bookingPlan/getFirstAndLastEvents';
 import { isSamePlace } from '$lib/util/booking/isSamePlace';
 import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 
