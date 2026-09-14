@@ -84,9 +84,9 @@ export const actions: Actions = {
 
 		const formData = await event.request.formData();
 		const firstName = formData.get('firstname');
-		const gender = formData.get('gender');
+		let gender = formData.get('gender');
 		const name = formData.get('lastname');
-		const company = formData.get('company');
+		let company = formData.get('company');
 		const email = formData.get('email');
 		const password = formData.get('password');
 		const zipCode = formData.get('zipcode');
@@ -97,12 +97,16 @@ export const actions: Actions = {
 			typeof name !== 'string' ||
 			name.length < 2 ||
 			typeof firstName !== 'string' ||
-			firstName.length < 2 ||
-			typeof gender !== 'string' ||
-			typeof company !== 'string' ||
-			gender.length != 1
+			firstName.length < 2
 		) {
 			return fail(400, { msg: msg('enterFirstLastName'), email: '' });
+		}
+		if (typeof gender !== 'string' ||
+			gender.length != 1) {
+			gender = 'n';
+		}
+		if (typeof company !== 'string') {
+			company = '';
 		}
 		if (
 			typeof email !== 'string' ||
