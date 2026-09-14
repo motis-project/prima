@@ -101,8 +101,7 @@ export const actions: Actions = {
 		) {
 			return fail(400, { msg: msg('enterFirstLastName'), email: '' });
 		}
-		if (typeof gender !== 'string' ||
-			gender.length != 1) {
+		if (typeof gender !== 'string' || gender.length != 1) {
 			gender = 'n';
 		}
 		if (typeof company !== 'string') {

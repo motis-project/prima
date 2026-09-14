@@ -94,7 +94,8 @@ const translations: Translations = {
 		vehicleConflict: 'The selected vehicle is not available at at least one of the selected times.',
 		previousLegConflict: 'The new trip is not compatible with a previous ride-sharing offer.',
 		nextLegConflict: 'The new trip is not compatible with a subsequent ride-sharing offer.',
-		allowedIntervalsConflict: 'The seleceted vehicle is not available at the selected time',
+		allowedIntervalsConflict:
+			'The seleceted vehicle is not available at the selected time or the time is in the past',
 
 		// Booking
 		bookingError: 'The ride could not be booked. Please start a new search.',
