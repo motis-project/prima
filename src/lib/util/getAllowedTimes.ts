@@ -15,6 +15,9 @@ export function getAllowedTimes(
 
 	const earliestDay = roundToUnit(earliest, DAY, Math.floor);
 	const latestDay = roundToUnit(latest, DAY, Math.floor) + DAY;
+	if (startOnDay === 0 && endOnDay === DAY) {
+		return [new Interval(earliestDay, latestDay)];
+	}
 
 	const allowedTimes: Array<Interval> = [];
 	for (let t = earliestDay; t < latestDay; t += DAY) {
@@ -23,5 +26,5 @@ export function getAllowedTimes(
 		allowedTimes.push(new Interval(t + startOnDay - offset, t + endOnDay - offset));
 		noon.setHours(noon.getHours() + 24);
 	}
-	return allowedTimes;
+	return Interval.merge(allowedTimes);
 }
