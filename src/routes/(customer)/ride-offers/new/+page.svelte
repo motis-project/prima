@@ -61,7 +61,20 @@
 	});
 
 	let singleTime = $state<Date>(new Date(Date.now() + HOUR * 2));
-	let repeatingTime = $state<Date>(new Date(Date.now() + HOUR * 2));
+	let range: {
+		start: CalendarDate;
+		end: CalendarDate;
+	} = $state({
+		start: toCalendarDate(fromDate(new Date(Date.now() + HOUR * 24), TZ)),
+		end: toCalendarDate(fromDate(new Date(Date.now() + DAY * 30), TZ))
+	});
+	let repeatingHours = $state(new Date(Date.now() + HOUR * 2).getHours());
+	let repeatingMinutes = $state(new Date(Date.now() + HOUR * 2).getMinutes());
+	let repeatingTime = $derived.by(() => {
+		const date = range.start.toDate(TZ);
+		date.setHours(repeatingHours, repeatingMinutes, 0, 0);
+		return date;
+	});
 	let singleTimeType = $state<TimeType>('departure');
 	let repeatingTimeType = $state<TimeType>('departure');
 	let offerMode = $state<'single' | 'repeating'>('single');
@@ -116,13 +129,6 @@
 	type Timeout = ReturnType<typeof setTimeout>;
 	let searchDebounceTimer: Timeout;
 	let loading = $state(false);
-	let range: {
-		start: CalendarDate;
-		end: CalendarDate;
-	} = $state({
-		start: toCalendarDate(fromDate(new Date(Date.now() + HOUR * 2), TZ)),
-		end: toCalendarDate(fromDate(new Date(Date.now() + DAY * 30), TZ))
-	});
 
 	let selectedDays: boolean[] = $state(Array.from(t.ride.daysList, (_) => false));
 	let selectedDayMask = $derived(
@@ -270,9 +276,8 @@
 		if (Number.isNaN(hours) || Number.isNaN(minutes)) {
 			return;
 		}
-		const updatedTime = new Date(repeatingTime);
-		updatedTime.setHours(hours, minutes, 0, 0);
-		repeatingTime = updatedTime;
+		repeatingHours = hours;
+		repeatingMinutes = minutes;
 	}
 
 	function floorToMinute(value: number) {
