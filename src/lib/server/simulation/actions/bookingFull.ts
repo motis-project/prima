@@ -30,10 +30,8 @@ async function rideShareApiCall(
 	parameters: BookingParameters,
 	kidsZeroToTwo: number,
 	kidsThreeToFour: number,
-	kidsFiveToSix: number,
-	compareCosts?: boolean
+	kidsFiveToSix: number
 ): Promise<ActionResponse> {
-	const toursBefore = await getRideShareTours(false);
 	const response = await rideShareApi(
 		parameters,
 		customerId,
@@ -55,89 +53,6 @@ async function rideShareApiCall(
 		};
 	}
 	const newTour = t[0];
-	if (compareCosts) {
-		let fail = false;
-		const oldTours = toursBefore.filter((t) =>
-			t.requests.some((r1) => newTour.requests.some((r2) => r2.requestId === r1.requestId))
-		);
-		const newCost = getCost(newTour);
-		const oldCost = oldTours.reduce(
-			(acc, curr) => {
-				const cost = getCost(curr);
-				acc.approachPlusReturnDuration += cost.approachPlusReturnDuration;
-				acc.fullyPayedDuration += cost.fullyPayedDuration;
-				acc.waitingTime += cost.waitingTime;
-				acc.weightedPassengerDuration += cost.weightedPassengerDuration;
-				return acc;
-			},
-			{
-				approachPlusReturnDuration: 0,
-				fullyPayedDuration: 0,
-				waitingTime: 0,
-				weightedPassengerDuration: 0
-			}
-		);
-		if (
-			Math.abs(
-				newCost.approachPlusReturnDuration -
-					(oldCost.approachPlusReturnDuration + (response.approachPlusReturnDurationDelta ?? 0))
-			) > 2
-		) {
-			console.log(
-				`approachPlusReturnDuration times do not match old: ${oldCost.approachPlusReturnDuration}, relative: ${response.approachPlusReturnDurationDelta}, combined: ${oldCost.approachPlusReturnDuration + (response.approachPlusReturnDurationDelta ?? 0)} and new: ${newCost.approachPlusReturnDuration}`
-			);
-			console.log(
-				`For new tour: ${newTour.tourId} and old tours: ${oldTours.map((t) => t.tourId)}`
-			);
-			fail = true;
-		}
-		if (
-			Math.abs(
-				newCost.fullyPayedDuration -
-					(oldCost.fullyPayedDuration + (response.fullyPayedDurationDelta ?? 0))
-			) > 2
-		) {
-			console.log(
-				`fullyPayedDuration times do not match old: ${oldCost.fullyPayedDuration}, relative: ${response.fullyPayedDurationDelta}, combined: ${oldCost.fullyPayedDuration + (response.fullyPayedDurationDelta ?? 0)} and new: ${newCost.fullyPayedDuration}`
-			);
-			console.log(
-				`For new tour: ${newTour.tourId} and old tours: ${oldTours.map((t) => t.tourId)}`
-			);
-			fail = true;
-		}
-		if (Math.abs(newCost.waitingTime - (oldCost.waitingTime + (response.waitingTime ?? 0))) > 2) {
-			console.log(
-				`Waiting times do not match old: ${oldCost.waitingTime}, relative: ${response.waitingTime}, combined: ${oldCost.waitingTime + (response.waitingTime ?? 0)} and new: ${newCost.waitingTime}`
-			);
-			console.log(
-				`For new tour: ${newTour.tourId} and old tours: ${oldTours.map((t) => t.tourId)}`
-			);
-			fail = true;
-		}
-		if (
-			Math.abs(
-				newCost.weightedPassengerDuration -
-					(oldCost.weightedPassengerDuration + (response.passengerDuration ?? 0))
-			) > 2
-		) {
-			console.log(
-				`Passenger times do not match old: ${oldCost.weightedPassengerDuration}, relative: ${response.passengerDuration}, combined: ${oldCost.weightedPassengerDuration + (response.passengerDuration ?? 0)} and new: ${newCost.weightedPassengerDuration}`
-			);
-			console.log(
-				`For new tour: ${newTour.tourId} and old tours: ${oldTours.map((t) => t.tourId)}`
-			);
-			fail = true;
-		}
-		if (fail) {
-			return {
-				lastActionSpecifics: null,
-				success: false,
-				error: true,
-				atomicDurations: {} as Record<string, number>
-			};
-		}
-		console.log('costs do match');
-	}
 	console.log(response.status === 200 ? 'succesful booking' : 'failed to book');
 	return {
 		lastActionSpecifics: {
@@ -493,8 +408,7 @@ export async function bookFull(
 			{ capacities: parameters.capacities, connection1, connection2 },
 			kidsZeroToTwo,
 			kidsThreeToFour,
-			kidsFiveToSix,
-			compareCosts
+			kidsFiveToSix
 		);
 		result.atomicDurations['planAndSignDuration'] = planAndSignDuration;
 		return result;
