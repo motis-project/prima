@@ -241,7 +241,8 @@ async function addRideShareProviderUser(index: number) {
 				companyId: null,
 				zipCode: '',
 				city: '',
-				region: ''
+				region: '',
+				company: ''
 			})
 			.returning('id')
 			.executeTakeFirstOrThrow()
