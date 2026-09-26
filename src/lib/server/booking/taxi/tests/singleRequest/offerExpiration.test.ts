@@ -43,6 +43,7 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
+	vi.useRealTimers();
 	vi.restoreAllMocks();
 });
 
@@ -88,6 +89,7 @@ describe('taxi offer expiration', () => {
 					offer.pickupTime,
 					offer.dropoffTime,
 					false,
+					undefined,
 					offer.timeOfferExpires
 				),
 				startFixed: true,
@@ -99,8 +101,23 @@ describe('taxi offer expiration', () => {
 			return { connection1, connection2: null, capacities };
 		};
 
-		const now = vi.spyOn(Date, 'now');
-		now.mockReturnValue(offer.timeOfferExpires + MINUTE);
+		const tamperedParameters = createBookingParameters();
+		tamperedParameters.connection1.timeOfferExpires! += MINUTE;
+		const tamperedResponse = await bookingApi(
+			tamperedParameters,
+			mockUserId,
+			false,
+			false,
+			0,
+			0,
+			0,
+			0
+		);
+		expect(tamperedResponse.status).toBe(403);
+		expect(await getTours()).toHaveLength(0);
+
+		vi.useFakeTimers({ toFake: ['Date'] });
+		vi.setSystemTime(offer.timeOfferExpires + MINUTE);
 		const expiredResponse = await bookingApi(
 			createBookingParameters(),
 			mockUserId,
@@ -114,7 +131,7 @@ describe('taxi offer expiration', () => {
 		expect(expiredResponse.status).not.toBe(200);
 		expect(await getTours()).toHaveLength(0);
 
-		now.mockReturnValue(offer.timeOfferExpires);
+		vi.setSystemTime(offer.timeOfferExpires);
 		const boundaryResponse = await bookingApi(
 			createBookingParameters(),
 			mockUserId,
@@ -215,18 +232,21 @@ describe('taxi offer expiration', () => {
 					inKringelsdorf.lng,
 					pairOffer.pickupTime,
 					pairOffer.dropoffTime,
-					false
+					false,
+					undefined,
+					pairOffer.timeOfferExpires
 				),
 				startFixed: false,
 				requestedTime: pairRequestedTime,
-				mode: Mode.TAXI
+				mode: Mode.TAXI,
+				timeOfferExpires: pairOffer.timeOfferExpires
 			};
 
 			return { connection1, connection2: null, capacities };
 		};
 
-		const now = vi.spyOn(Date, 'now');
-		now.mockReturnValue(pairOffer.timeOfferExpires + MINUTE);
+		vi.useFakeTimers({ toFake: ['Date'] });
+		vi.setSystemTime(pairOffer.timeOfferExpires + MINUTE);
 		const expiredResponse = await bookingApi(
 			createPairBookingParameters(),
 			mockUserId,
@@ -242,7 +262,7 @@ describe('taxi offer expiration', () => {
 		expect(tours).toHaveLength(1);
 		expect(tours[0].requests).toHaveLength(1);
 
-		now.mockReturnValue(pairOffer.timeOfferExpires);
+		vi.setSystemTime(pairOffer.timeOfferExpires);
 		const boundaryResponse = await bookingApi(
 			createPairBookingParameters(),
 			mockUserId,
