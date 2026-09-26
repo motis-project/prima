@@ -5,6 +5,7 @@ export type SignedItinerary = Itinerary & {
 	signature1?: string;
 	signature2?: string;
 	rideShareTourInfos?: RideShareTourInfo[];
+	timeOfferExpires?: number;
 };
 
 export type SignedPlanResponse = Omit<PlanResponse, 'itineraries'> & {
@@ -26,7 +27,6 @@ export async function planAndSign(
 			...q
 		})
 	});
-
 	if (!result.ok && result.status != 400 && result.status != 500) {
 		return undefined;
 	}

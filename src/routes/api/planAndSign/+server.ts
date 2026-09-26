@@ -4,7 +4,7 @@ import { signEntry } from '$lib/server/booking/signEntry';
 import type { QuerySerializerOptions } from '@hey-api/client-fetch';
 import { error, json, type RequestEvent } from '@sveltejs/kit';
 import { getRideShareInfos } from '$lib/server/booking/rideShare/getRideShareInfo';
-import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
+import { isOdmLeg, isRideShareLeg, isTaxiLeg } from '$lib/util/booking/checkLegType';
 import { filterRideSharing } from '$lib/util/filterRideSharing';
 import { db } from '$lib/server/db';
 import { filterTaxis } from '$lib/util/filterTaxis';
@@ -104,7 +104,6 @@ export const POST = async (event: RequestEvent) => {
 	const fuzz = (l: number) => Math.round(l * 10) / 10;
 	plan_from?.labels({ lat: fuzz(response.from.lat), lon: fuzz(response.from.lon) }).inc();
 	plan_to?.labels({ lat: fuzz(response.to.lat), lon: fuzz(response.to.lon) }).inc();
-
 	const result = {
 		...response!,
 		itineraries: await Promise.all(
@@ -124,10 +123,21 @@ export const POST = async (event: RequestEvent) => {
 				} else {
 					counters.pt[1]++;
 				}
-
+				let timeOfferExpires = undefined;
+				if (odmLeg1 !== undefined && isTaxiLeg(odmLeg1) && typeof odmLeg1.tripId === 'string') {
+					try {
+						const tripData = JSON.parse(odmLeg1.tripId);
+						if (tripData.timeOfferExpires !== undefined) {
+							timeOfferExpires = tripData.timeOfferExpires;
+						}
+					} catch {
+						throw new Error();
+					}
+				}
 				const rideShareTourInfos = await getRideShareInfos(i);
 				return {
 					...i,
+					timeOfferExpires,
 					signature1:
 						odmLeg1 !== undefined
 							? signEntry(
