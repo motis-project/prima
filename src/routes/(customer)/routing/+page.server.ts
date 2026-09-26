@@ -164,12 +164,19 @@ export const actions = {
 			firstOdm,
 			parsedJson.signature1,
 			isDirect ? startFixed : firstOdmIndex !== 0,
-			requestedTime1
+			requestedTime1,
+			parsedJson.timeOfferExpires
 		);
 		const connection2 =
 			firstOdmIndex === lastOdmIndex
 				? null
-				: expectedConnectionFromLeg(lastOdm, parsedJson.signature2, true, requestedTime2);
+				: expectedConnectionFromLeg(
+						lastOdm,
+						parsedJson.signature2,
+						true,
+						requestedTime2,
+						parsedJson.timeOfferExpires
+					);
 
 		console.log(
 			'BOOKING: C1=',

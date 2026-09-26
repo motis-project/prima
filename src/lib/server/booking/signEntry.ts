@@ -9,7 +9,8 @@ export function signEntry(
 	startTime: number,
 	endTime: number,
 	startFixed: boolean,
-	tripId?: string | undefined
+	tripId?: string | undefined,
+	timeOfferExpires?: number
 ): string {
 	const serialized = JSON.stringify({
 		fromLat,
@@ -19,7 +20,8 @@ export function signEntry(
 		startTime: startTime,
 		endTime: endTime,
 		startFixed,
-		tripId
+		tripId,
+		timeOfferExpires
 	});
 	return crypto.createHmac('sha256', env.SECRET_KEY!).update(serialized).digest('hex');
 }

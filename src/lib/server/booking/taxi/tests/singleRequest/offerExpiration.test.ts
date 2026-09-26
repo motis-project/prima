@@ -87,11 +87,13 @@ describe('taxi offer expiration', () => {
 					target.lng,
 					offer.pickupTime,
 					offer.dropoffTime,
-					false
+					false,
+					offer.timeOfferExpires
 				),
 				startFixed: true,
 				requestedTime,
-				mode: Mode.TAXI
+				mode: Mode.TAXI,
+				timeOfferExpires: offer.timeOfferExpires
 			};
 
 			return { connection1, connection2: null, capacities };

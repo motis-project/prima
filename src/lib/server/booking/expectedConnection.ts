@@ -17,13 +17,15 @@ export type ExpectedConnection = {
 	dropoffTime?: UnixtimeMs;
 	tourId?: number;
 	mode: Mode;
+	timeOfferExpires?: number;
 };
 
 export function expectedConnectionFromLeg(
 	leg: Leg,
 	signature: string | undefined,
 	startFixed: boolean,
-	requestedTime: number
+	requestedTime: number,
+	timeOfferExpires?: number
 ): ExpectedConnection | null {
 	if (!isOdmLeg(leg)) {
 		console.log('booking requests leg has unexpected mode');
@@ -47,7 +49,8 @@ export function expectedConnectionFromLeg(
 				pickupTime: context?.pT,
 				dropoffTime: context?.dT,
 				tourId: context?.tour,
-				mode
+				mode,
+				timeOfferExpires
 			}
 		: null;
 }

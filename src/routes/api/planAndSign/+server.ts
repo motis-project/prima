@@ -123,11 +123,15 @@ export const POST = async (event: RequestEvent) => {
 				} else {
 					counters.pt[1]++;
 				}
-				let timeOfferExpires = undefined;
+				let timeOfferExpires: number | undefined = undefined;
 				if (odmLeg1 !== undefined && isTaxiLeg(odmLeg1) && typeof odmLeg1.tripId === 'string') {
 					try {
 						const tripData = JSON.parse(odmLeg1.tripId);
-						if (tripData.timeOfferExpires !== undefined) {
+						if (
+							tripData.timeOfferExpires !== undefined &&
+							typeof tripData.timeOfferExpires === 'number' &&
+							Number.isFinite(tripData.timeOfferExpires)
+						) {
 							timeOfferExpires = tripData.timeOfferExpires;
 						}
 					} catch {
@@ -148,7 +152,8 @@ export const POST = async (event: RequestEvent) => {
 									new Date(odmLeg1.startTime).getTime(),
 									new Date(odmLeg1.endTime).getTime(),
 									false,
-									odmLeg1.tripId && isRideShareLeg(odmLeg1) ? odmLeg1.tripId : undefined
+									odmLeg1.tripId && isRideShareLeg(odmLeg1) ? odmLeg1.tripId : undefined,
+									timeOfferExpires
 								)
 							: undefined,
 					signature2:
@@ -161,7 +166,8 @@ export const POST = async (event: RequestEvent) => {
 									new Date(odmLeg2.startTime).getTime(),
 									new Date(odmLeg2.endTime).getTime(),
 									true,
-									odmLeg2.tripId && isRideShareLeg(odmLeg2) ? odmLeg2.tripId : undefined
+									odmLeg2.tripId && isRideShareLeg(odmLeg2) ? odmLeg2.tripId : undefined,
+									timeOfferExpires
 								)
 							: undefined,
 					rideShareTourInfos
