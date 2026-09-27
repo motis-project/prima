@@ -351,7 +351,11 @@ const translations: Translations = {
 		history: 'History',
 		deleteFavourites: 'Delete History',
 		offerExpiresExplanation: (timeOfferExpires: number) => {
-			return `The ride is not being reserved and not valid longer than until ${new Date(timeOfferExpires)}.`;
+			const expiration = new Date(timeOfferExpires).toLocaleString('en-GB', {
+				dateStyle: 'short',
+				timeStyle: 'short'
+			});
+			return `This offer is not reserved. Booking is available until ${expiration} at the latest.`;
 		}
 	},
 
