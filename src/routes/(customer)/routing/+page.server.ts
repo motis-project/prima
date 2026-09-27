@@ -153,7 +153,7 @@ export const actions = {
 
 		if (
 			parsedJson.timeOfferExpires !== undefined &&
-			parsedJson.timeOfferExpires + BOOKING_EXPIRATION_BUFFER < Date.now()
+			parsedJson.timeOfferExpires < Date.now() + BOOKING_EXPIRATION_BUFFER
 		) {
 			return { msg: msg('offerExpired') };
 		}

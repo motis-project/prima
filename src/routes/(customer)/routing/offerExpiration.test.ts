@@ -40,6 +40,8 @@ vi.mock('$lib/server/sendMail', () => ({ sendMail: vi.fn() }));
 vi.mock('$lib/util/sendBookingEmails', () => ({ sendBookingMails: vi.fn() }));
 
 import { actions } from './+page.server';
+import { BOOKING_EXPIRATION_BUFFER } from '$lib/constants';
+import { MINUTE } from '$lib/util/time';
 
 const NOW = Date.UTC(2026, 8, 30, 12, 0);
 
@@ -82,7 +84,7 @@ describe('bookItineraryWithOdm offer expiration', () => {
 		vi.clearAllMocks();
 		vi.spyOn(Date, 'now').mockReturnValue(NOW);
 		mocks.rediscoverWhitelistRequestTimes.mockReturnValue({
-			requestedTime1: NOW + 2 * 60 * 60 * 1000,
+			requestedTime1: NOW + 2 * MINUTE,
 			requestedTime2: undefined
 		});
 		mocks.expectedConnectionFromLeg.mockReturnValue({ mode: Mode.TAXI });
@@ -96,7 +98,9 @@ describe('bookItineraryWithOdm offer expiration', () => {
 
 	it('continues to the booking API while the offer is still valid', async () => {
 		const result = await actions.bookItineraryWithOdm(
-			createEvent(NOW + 1) as Parameters<typeof actions.bookItineraryWithOdm>[0]
+			createEvent(NOW + BOOKING_EXPIRATION_BUFFER + 1) as Parameters<
+				typeof actions.bookItineraryWithOdm
+			>[0]
 		);
 
 		expect(mocks.bookingApi).toHaveBeenCalledOnce();
@@ -105,7 +109,9 @@ describe('bookItineraryWithOdm offer expiration', () => {
 
 	it('returns offerExpired before booking and without recording a booking error', async () => {
 		const result = await actions.bookItineraryWithOdm(
-			createEvent(NOW - 1) as Parameters<typeof actions.bookItineraryWithOdm>[0]
+			createEvent(NOW + BOOKING_EXPIRATION_BUFFER - 1) as Parameters<
+				typeof actions.bookItineraryWithOdm
+			>[0]
 		);
 
 		expect(result).toEqual({ msg: msg('offerExpired') });
