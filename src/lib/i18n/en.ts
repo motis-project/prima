@@ -102,6 +102,7 @@ const translations: Translations = {
 		bookingError1: 'First section could not be booked. Please start a new search.',
 		bookingError2: 'Last section could not be booked. Please start a new search.',
 		bookingSuccess: 'Booking successful.',
+		offerExpired: 'The offer has expired.',
 
 		// Journey
 		cancelled: 'This trip has been cancelled.',

@@ -149,6 +149,10 @@ export const actions = {
 			booking_errors?.inc();
 			return { msg: msg('unknownError') };
 		}
+
+		if(parsedJson.timeOfferExpires !== undefined && parsedJson.timeOfferExpires > Date.now()) {
+			return { msg: msg('offerExpired')};
+		}
 		const isDirect = legs.length === 1;
 
 		const { requestedTime1, requestedTime2 } = rediscoverWhitelistRequestTimes(

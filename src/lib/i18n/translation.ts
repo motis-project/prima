@@ -100,6 +100,7 @@ export type Translations = {
 		bookingError1: string;
 		bookingError2: string;
 		bookingSuccess: string;
+		offerExpired: string;
 
 		// Journey
 		cancelled: string;

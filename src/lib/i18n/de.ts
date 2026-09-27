@@ -108,6 +108,7 @@ const translations: Translations = {
 		bookingError2:
 			'Zweiter Abschnitt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
 		bookingSuccess: 'Buchung erfolgreich.',
+		offerExpired: 'Das Angebot ist nicht mehr gültig.',
 
 		// Journey
 		cancelled: 'Diese Fahrt wurde storniert.',
