@@ -549,6 +549,11 @@
 								{/if}
 							</Dialog.Content>
 						</Dialog.Root>
+						{#if page.state.selectedItinerary.timeOfferExpires !== undefined}
+							<div>
+								{t.booking.offerExpiresExplanation(page.state.selectedItinerary.timeOfferExpires)}
+							</div>
+						{/if}
 					{/if}
 				{:else}
 					<Button href="/account" variant="outline">{t.booking.loginToBook}</Button>

@@ -349,7 +349,10 @@ const translations: Translations = {
 		cancelCheckbox:
 			'Cancel all tours created by the same rule (will not cancel tours which already have agreed ride shares)',
 		history: 'History',
-		deleteFavourites: 'Delete History'
+		deleteFavourites: 'Delete History',
+		offerExpiresExplanation: (timeOfferExpires: number) => {
+			return `The ride is not being reserved and not valid longer than until ${new Date(timeOfferExpires)}.`;
+		}
 	},
 
 	explainer: {

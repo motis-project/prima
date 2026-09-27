@@ -305,6 +305,7 @@ export type Translations = {
 		cancelCheckbox: string;
 		history: string;
 		deleteFavourites: string;
+		offerExpiresExplanation: (timeOfferExpires: number) => string;
 	};
 
 	explainer: {
