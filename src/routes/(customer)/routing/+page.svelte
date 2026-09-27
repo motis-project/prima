@@ -38,7 +38,12 @@
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { HelpCircleIcon, LocateFixed, MapIcon } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
-	import { BOOKING_EXPIRATION_BUFFER, BOOKING_MAX_PASSENGERS, MAX_MATCHING_DISTANCE, MIN_PREP_BOOKING } from '$lib/constants';
+	import {
+		BOOKING_EXPIRATION_BUFFER,
+		BOOKING_MAX_PASSENGERS,
+		MAX_MATCHING_DISTANCE,
+		MIN_PREP_BOOKING
+	} from '$lib/constants';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { planAndSign, type SignedPlanResponse } from '$lib/planAndSign';
 	import logo from '$lib/assets/logo-alpha.png';
@@ -560,7 +565,9 @@
 							</Dialog.Root>
 							{#if page.state.selectedItinerary.timeOfferExpires !== undefined}
 								<p class="text-sm leading-snug text-muted-foreground">
-									{t.booking.offerExpiresExplanation(page.state.selectedItinerary.timeOfferExpires + BOOKING_EXPIRATION_BUFFER)}
+									{t.booking.offerExpiresExplanation(
+										page.state.selectedItinerary.timeOfferExpires + BOOKING_EXPIRATION_BUFFER
+									)}
 								</p>
 							{/if}
 						</div>

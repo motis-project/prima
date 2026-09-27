@@ -18,9 +18,7 @@ vi.mock('prom-client', () => ({
 
 			constructor({ name }: { name: string }) {
 				this.inc =
-					name === 'prima_booking_errors_total'
-						? mocks.bookingErrorsInc
-						: mocks.bookingAttemptsInc;
+					name === 'prima_booking_errors_total' ? mocks.bookingErrorsInc : mocks.bookingAttemptsInc;
 			}
 		}
 	}

@@ -151,8 +151,11 @@ export const actions = {
 			return { msg: msg('unknownError') };
 		}
 
-		if(parsedJson.timeOfferExpires !== undefined && parsedJson.timeOfferExpires + BOOKING_EXPIRATION_BUFFER < Date.now()) {
-			return { msg: msg('offerExpired')};
+		if (
+			parsedJson.timeOfferExpires !== undefined &&
+			parsedJson.timeOfferExpires + BOOKING_EXPIRATION_BUFFER < Date.now()
+		) {
+			return { msg: msg('offerExpired') };
 		}
 		const isDirect = legs.length === 1;
 

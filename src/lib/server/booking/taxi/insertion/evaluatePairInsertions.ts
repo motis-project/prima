@@ -219,7 +219,8 @@ export function evaluatePairInsertions(
 									nextDropoffId: dropoff.nextEventId,
 									pickupIdxInEvents: pickup.eventInsertionIndex,
 									dropoffIdxInEvents: dropoff.eventInsertionIndex,
-									timeOfferExpires: communicatedPickupTime - MIN_PREP_BOOKING - pickup.prevLegDuration
+									timeOfferExpires:
+										communicatedPickupTime - MIN_PREP_BOOKING - pickup.prevLegDuration
 								};
 							}
 						}
