@@ -18,6 +18,7 @@ import { sendBookingMails } from '$lib/util/sendBookingEmails';
 import { deduplicate, removeSteps, type CalibrationItinerary } from '$lib/calibration';
 import { areasGeoJSON, rideshareGeoJSON } from '$lib/util/geoJSON';
 import { selectDesiredTrips } from '$lib/server/booking/rideShare/selectDesiredTrips';
+import { BOOKING_EXPIRATION_BUFFER } from '$lib/constants';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;
@@ -150,7 +151,7 @@ export const actions = {
 			return { msg: msg('unknownError') };
 		}
 
-		if(parsedJson.timeOfferExpires !== undefined && parsedJson.timeOfferExpires < Date.now()) {
+		if(parsedJson.timeOfferExpires !== undefined && parsedJson.timeOfferExpires + BOOKING_EXPIRATION_BUFFER < Date.now()) {
 			return { msg: msg('offerExpired')};
 		}
 		const isDirect = legs.length === 1;
