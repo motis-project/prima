@@ -2,8 +2,9 @@ import { cancelTour } from '$lib/server/cancelTour';
 import { getToursWithRequests } from '$lib/server/db/getTours';
 import { DAY } from '$lib/util/time';
 import { randomInt } from '../randomInt';
+import type { ActionResponse } from '../simulation';
 
-export async function cancelTourLocal() {
+export async function cancelTourLocal(): Promise<ActionResponse> {
 	const tours = await getToursWithRequests(false);
 	if (tours.length === 0) {
 		return {

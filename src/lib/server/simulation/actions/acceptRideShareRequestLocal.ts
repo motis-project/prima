@@ -1,12 +1,11 @@
 import { acceptRideShareRequest } from '$lib/server/booking';
+import { db } from '$lib/server/db';
 import { getRideShareTours } from '$lib/server/util/getRideShareTours';
 import { DAY } from '$lib/util/time';
 import { randomInt } from '../randomInt';
 import type { ActionResponse } from '../simulation';
 
-export async function acceptRideShareRequestSimulation(
-	customerId: number
-): Promise<ActionResponse> {
+export async function acceptRideShareRequestSimulation(): Promise<ActionResponse> {
 	const tours = await getRideShareTours(false, true);
 	const requests = tours.flatMap((t) => t.requests);
 	if (requests.length === 0) {
@@ -20,7 +19,14 @@ export async function acceptRideShareRequestSimulation(
 	const r = randomInt(0, requests.length - 1);
 	const request = requests[r];
 	const tour = tours.find((t) => t.requests.some((req) => request.requestId === req.requestId))!;
-	const response = await acceptRideShareRequest(request.requestId, customerId);
+	const user = await db
+		.selectFrom('rideShareTour')
+		.innerJoin('rideShareVehicle', 'rideShareTour.vehicle', 'rideShareVehicle.id')
+		.innerJoin('user', 'user.id', 'rideShareVehicle.owner')
+		.where('rideShareTour.id', '=', tour.tourId)
+		.select('user.id')
+		.executeTakeFirstOrThrow();
+	const response = await acceptRideShareRequest(request.requestId, user.id);
 	if (response.status === 200) {
 		console.log(`Successfully accepted ride share request with idx ${request.requestId}.`);
 		return {

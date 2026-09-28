@@ -4,6 +4,7 @@ import { SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import { sortEventsByTime } from '$lib/testHelpers';
 import { reverseGeo } from '$lib/server/util/reverseGeocode';
 import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
+import { DAY } from '$lib/util/time';
 import {
 	getRideShareTours,
 	type RideShareToursWithRequests,
@@ -374,10 +375,29 @@ async function validateAddressCoordinatesMatch(tours: RideShareToursWithRequests
 	return false;
 }
 
-export async function healthCheck() {
-	const allTours: RideShareToursWithRequests = await getRideShareTours(true);
-	const uncancelledTours: RideShareToursWithRequests = await getRideShareTours(false);
-	const acceptedTours: RideShareToursWithRequests = await getRideShareTours(false, false);
+export async function healthCheck(vehicleId?: number, dayStart?: number) {
+	const timeRange: [number, number] | undefined = dayStart ? [dayStart, dayStart + DAY] : undefined;
+	const allTours: RideShareToursWithRequests = await getRideShareTours(
+		true,
+		undefined,
+		undefined,
+		timeRange,
+		vehicleId
+	);
+	const uncancelledTours: RideShareToursWithRequests = await getRideShareTours(
+		false,
+		undefined,
+		undefined,
+		timeRange,
+		vehicleId
+	);
+	const acceptedTours: RideShareToursWithRequests = await getRideShareTours(
+		false,
+		false,
+		undefined,
+		timeRange,
+		vehicleId
+	);
 	let fail = false;
 	if (allTours) {
 		console.log('Starting ride share health check');

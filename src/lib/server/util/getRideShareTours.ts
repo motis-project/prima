@@ -5,13 +5,21 @@ import { sql } from 'kysely';
 export async function getRideShareTours(
 	selectCancelled: boolean,
 	selectPending?: boolean,
-	selectInitial?: boolean
+	selectInitial?: boolean,
+	timeRange?: [number, number],
+	vehicleId?: number
 ) {
 	return await db
 		.selectFrom('rideShareTour')
 		.innerJoin('rideShareVehicle', 'rideShareVehicle.id', 'rideShareTour.vehicle')
 		.innerJoin('user as provider', 'provider.id', 'rideShareVehicle.owner')
 		.$if(!selectCancelled, (qb) => qb.where('rideShareTour.cancelled', '=', false))
+		.$if(vehicleId != undefined, (qb) => qb.where('rideShareVehicle.id', '=', vehicleId!))
+		.$if(!!timeRange, (qb) =>
+			qb
+				.where('rideShareTour.earliestStart', '<', timeRange![1])
+				.where('rideShareTour.latestEnd', '>', timeRange![0])
+		)
 		.select((eb) => [
 			'rideShareTour.earliestStart as startTime',
 			'rideShareTour.latestEnd as endTime',
