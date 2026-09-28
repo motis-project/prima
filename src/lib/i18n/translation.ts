@@ -100,6 +100,7 @@ export type Translations = {
 		bookingError1: string;
 		bookingError2: string;
 		bookingSuccess: string;
+		offerExpired: string;
 
 		// Journey
 		cancelled: string;
@@ -305,6 +306,7 @@ export type Translations = {
 		cancelCheckbox: string;
 		history: string;
 		deleteFavourites: string;
+		offerExpiresExplanation: (timeOfferExpires: number) => string;
 	};
 
 	explainer: {

@@ -69,7 +69,8 @@ export const actions = {
 			signature: '',
 			startFixed: false,
 			requestedTime: result.dropoffTime,
-			mode: Mode.TAXI
+			mode: Mode.TAXI,
+			timeOfferExpires: result.timeOfferExpires
 		};
 
 		const bookingResponse = await bookingApi(

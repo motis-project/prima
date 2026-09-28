@@ -18,6 +18,7 @@ import { sendBookingMails } from '$lib/util/sendBookingEmails';
 import { deduplicate, removeSteps, type CalibrationItinerary } from '$lib/calibration';
 import { areasGeoJSON, rideshareGeoJSON } from '$lib/util/geoJSON';
 import { selectDesiredTrips } from '$lib/server/booking/rideShare/selectDesiredTrips';
+import { BOOKING_EXPIRATION_BUFFER } from '$lib/constants';
 
 let booking_errors: Prom.Counter | undefined;
 let booking_attempts: Prom.Counter | undefined;
@@ -149,6 +150,13 @@ export const actions = {
 			booking_errors?.inc();
 			return { msg: msg('unknownError') };
 		}
+
+		if (
+			parsedJson.timeOfferExpires !== undefined &&
+			parsedJson.timeOfferExpires < Date.now() + BOOKING_EXPIRATION_BUFFER
+		) {
+			return { msg: msg('offerExpired') };
+		}
 		const isDirect = legs.length === 1;
 
 		const { requestedTime1, requestedTime2 } = rediscoverWhitelistRequestTimes(
@@ -164,12 +172,19 @@ export const actions = {
 			firstOdm,
 			parsedJson.signature1,
 			isDirect ? startFixed : firstOdmIndex !== 0,
-			requestedTime1
+			requestedTime1,
+			parsedJson.timeOfferExpires
 		);
 		const connection2 =
 			firstOdmIndex === lastOdmIndex
 				? null
-				: expectedConnectionFromLeg(lastOdm, parsedJson.signature2, true, requestedTime2);
+				: expectedConnectionFromLeg(
+						lastOdm,
+						parsedJson.signature2,
+						true,
+						requestedTime2,
+						parsedJson.timeOfferExpires
+					);
 
 		console.log(
 			'BOOKING: C1=',
