@@ -485,6 +485,11 @@
 												name="startFixed"
 												value={timeType === 'departure' ? '1' : '0'}
 											/>
+											<input
+												type="hidden"
+												name="returnTo"
+												value={`${page.url.pathname}${page.url.search}`}
+											/>
 											<Button type="submit" variant="outline" disabled={loading}
 												>{t.ride.sendNegotiationRequest}</Button
 											>
@@ -540,6 +545,11 @@
 												type="hidden"
 												name="startFixed"
 												value={timeType === 'departure' ? '1' : '0'}
+											/>
+											<input
+												type="hidden"
+												name="returnTo"
+												value={`${page.url.pathname}${page.url.search}`}
 											/>
 											<Button type="submit" variant="outline" disabled={loading}
 												>{t.booking.header}</Button
