@@ -9,7 +9,6 @@ import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
 import type { SignedItinerary } from '$lib/planAndSign';
 import type { PageServerLoad, PageServerLoadEvent } from './$types';
 import Prom from 'prom-client';
-import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhitelistRequestTimes';
 import { rideShareApi } from '$lib/server/booking/index';
 import { expectedConnectionFromLeg } from '$lib/server/booking/expectedConnection';
 import { isOdmLeg } from '$lib/util/booking/checkLegType';
@@ -151,25 +150,16 @@ export const actions = {
 		}
 		const isDirect = legs.length === 1;
 
-		const { requestedTime1, requestedTime2 } = rediscoverWhitelistRequestTimes(
-			startFixed,
-			isDirect,
-			firstOdmIndex,
-			lastOdmIndex,
-			legs
-		);
-
 		console.log({ isDirect }, { startFixed });
 		const connection1 = expectedConnectionFromLeg(
 			firstOdm,
 			parsedJson.signature1,
-			isDirect ? startFixed : firstOdmIndex !== 0,
-			requestedTime1
+			isDirect ? startFixed : firstOdmIndex !== 0
 		);
 		const connection2 =
 			firstOdmIndex === lastOdmIndex
 				? null
-				: expectedConnectionFromLeg(lastOdm, parsedJson.signature2, true, requestedTime2);
+				: expectedConnectionFromLeg(lastOdm, parsedJson.signature2, true);
 
 		console.log(
 			'BOOKING: C1=',
