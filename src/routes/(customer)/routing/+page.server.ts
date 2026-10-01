@@ -53,6 +53,7 @@ export const actions = {
 		const kidsFiveToSixString = formData.get('kidsFiveToSix');
 		const kidsSevenToFourteenString = formData.get('kidsSevenToFourteen');
 		const startFixedString = formData.get('startFixed');
+		const returnTo = formData.get('returnTo');
 		const json = formData.get('json');
 
 		if (
@@ -211,7 +212,11 @@ export const actions = {
 				{ connection2 }
 			);
 			booking_errors?.inc();
-			return { msg: msg('bookingError') };
+			const target =
+				typeof returnTo === 'string' && returnTo.startsWith('/routing?')
+					? returnTo + '&bookingError=true'
+					: '/routing';
+			redirect(303, target);
 		}
 		const request1: number | null = bookingResult.request1Id ?? null;
 		const request2: number | null = bookingResult.request2Id ?? null;
