@@ -286,7 +286,7 @@ const translations: Translations = {
 	publicTransitTaxi: 'ÖPNV-Taxi',
 	serviceArea: 'Bediengebiet',
 	serviceTime: 'Bedienzeit',
-	serviceTimeContent: 'i.d.R. 05:00 - 22:00 Uhr (abhängig von Taxiverfügbarkeit)',
+	serviceTimeContent: 'i.d.R. 05:00 - 23:00 Uhr (abhängig von Taxiverfügbarkeit)',
 	regionAround: 'Region um',
 	perPerson: 'pro Person',
 	perRide: 'pro Fahrt',
