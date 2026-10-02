@@ -56,6 +56,7 @@ export interface Database {
 		wheelchairs: number;
 		bikes: number;
 		luggage: number;
+		setAutomaticAvailability: boolean | null;
 	};
 	tour: {
 		id: Generated<number>;
