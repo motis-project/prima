@@ -34,6 +34,7 @@
 	import type { Msg } from '$lib/msg';
 	import { t } from '$lib/i18n/translation';
 	import AvailabilityPercent from './AvailabilityPercent.svelte';
+	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
 
 	const { data, form } = $props();
 	const vehicles = $derived.by(() => {
@@ -79,6 +80,26 @@
 			method: 'POST',
 			body: JSON.stringify({ vehicleId, from, to })
 		});
+	};
+
+	const updateAutomaticAvailability = async (
+		vehicleId: number,
+		setAutomaticAvailability: boolean
+	) => {
+		try {
+			const response = await fetch('/taxi/availability/api/automaticAvailability', {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ vehicleId, setAutomaticAvailability })
+			});
+			if (!response.ok) {
+				throw new Error(`Automatic availability update failed with status ${response.status}`);
+			}
+			await invalidateAll();
+		} catch (error) {
+			alert('Automatische Verfügbarkeit konnte nicht aktualisiert werden.');
+			throw error;
+		}
 	};
 
 	// ===========
@@ -374,6 +395,25 @@
 			return 'bg-yellow-100';
 		}
 	};
+
+	let automaticAvailabilityUpdating = $state<number | null>(null);
+
+	async function automaticAvailabilityChanged(checked: boolean, v: Vehicle) {
+		if (
+			automaticAvailabilityUpdating !== null ||
+			(v.setAutomaticAvailability ?? false) === checked
+		) {
+			return;
+		}
+		automaticAvailabilityUpdating = v.id;
+		try {
+			await updateAutomaticAvailability(v.id, checked);
+		} catch {
+			await invalidateAll();
+		} finally {
+			automaticAvailabilityUpdating = null;
+		}
+	}
 </script>
 
 <svelte:window onmouseup={() => selectionFinish()} />
@@ -407,6 +447,17 @@
 						class="h-full pr-2 align-middle font-mono text-sm font-semibold leading-none tracking-tight"
 					>
 						{#if 'company' in v}
+							<Checkbox
+								checked={v.setAutomaticAvailability ?? false}
+								disabled={automaticAvailabilityUpdating === v.id ||
+									(v.setAutomaticAvailability &&
+										vehicles.reduce(
+											(prev, curr) => (prev += curr.setAutomaticAvailability ? 1 : 0),
+											0
+										) <= 1)}
+								id={`automatic_availability_${v.id}`}
+								onCheckedChange={(checked) => automaticAvailabilityChanged(checked, v)}
+							/>
 							<AddVehicle vehicle={v} text={v.licensePlate} />
 						{:else}
 							{v.licensePlate}
