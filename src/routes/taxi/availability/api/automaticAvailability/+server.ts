@@ -3,13 +3,18 @@ import { error, json, type RequestHandler } from '@sveltejs/kit';
 
 export const PATCH: RequestHandler = async ({ locals, request }) => {
 	const companyId = locals.session?.companyId;
+	const isAdmin = locals.session?.isAdmin;
 	if (companyId === undefined || companyId === null) {
-		error(403, 'A company account is required.');
+		return error(403, 'A company account is required.');
+	}
+
+	if (isAdmin) {
+		return error(403);
 	}
 
 	const { vehicleId, setAutomaticAvailability } = await request.json();
 	if (!Number.isInteger(vehicleId) || typeof setAutomaticAvailability !== 'boolean') {
-		error(400, 'Invalid vehicle ID or automatic availability value.');
+		return error(400, 'Invalid vehicle ID or automatic availability value.');
 	}
 
 	const result = await db
@@ -31,7 +36,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 		.executeTakeFirst();
 
 	if (result.numUpdatedRows === 0n) {
-		error(404, 'Vehicle not found.');
+		return error(404, 'Vehicle not found.');
 	}
 
 	return json({ setAutomaticAvailability });

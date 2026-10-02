@@ -446,18 +446,19 @@
 					<td
 						class="h-full pr-2 align-middle font-mono text-sm font-semibold leading-none tracking-tight"
 					>
+						<Checkbox
+							checked={v.setAutomaticAvailability ?? false}
+							disabled={data.isAdmin ||
+								automaticAvailabilityUpdating === v.id ||
+								(v.setAutomaticAvailability &&
+									vehicles.reduce(
+										(prev, curr) => (prev += curr.setAutomaticAvailability ? 1 : 0),
+										0
+									) <= 1)}
+							id={`automatic_availability_${v.id}`}
+							onCheckedChange={(checked) => automaticAvailabilityChanged(checked, v)}
+						/>
 						{#if 'company' in v}
-							<Checkbox
-								checked={v.setAutomaticAvailability ?? false}
-								disabled={automaticAvailabilityUpdating === v.id ||
-									(v.setAutomaticAvailability &&
-										vehicles.reduce(
-											(prev, curr) => (prev += curr.setAutomaticAvailability ? 1 : 0),
-											0
-										) <= 1)}
-								id={`automatic_availability_${v.id}`}
-								onCheckedChange={(checked) => automaticAvailabilityChanged(checked, v)}
-							/>
 							<AddVehicle vehicle={v} text={v.licensePlate} />
 						{:else}
 							{v.licensePlate}
