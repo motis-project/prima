@@ -420,6 +420,8 @@ export type Translations = {
 
 	availabilityPercent: string;
 	availabilityPercentExplanation: string;
+	automaticAvailability: string;
+	automaticAvailabilityExplanation: string;
 
 	daily: string;
 };

@@ -480,6 +480,9 @@ const translations: Translations = {
 	availabilityPercent: 'current Coverage next two weeks',
 	availabilityPercentExplanation:
 		'This value represents the current coverage between 05:00 and 23:00 for availability in the next two weeks.',
+	automaticAvailability: 'Automatic',
+	automaticAvailabilityExplanation:
+		'Availability is added automatically in advance for selected vehicles. It can then be adjusted as usual.',
 
 	daily: 'daily'
 };

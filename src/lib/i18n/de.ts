@@ -493,6 +493,9 @@ const translations: Translations = {
 	availabilityPercent: 'aktuelle Abdeckung',
 	availabilityPercentExplanation:
 		'Dieser Wert zeigt die aktuelle Verfügbarkeits-Abdeckung zwischen 05:00 Uhr und 23:00 Uhr der nächsten 2 Wochen.',
+	automaticAvailability: 'Automatisch',
+	automaticAvailabilityExplanation:
+		'Für ausgewählte Fahrzeuge wird automatisch Verfügbarkeit im Voraus eingetragen. Sie kann anschließend wie gewohnt angepasst werden.',
 
 	daily: 'täglich'
 };

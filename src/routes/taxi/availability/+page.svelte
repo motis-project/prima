@@ -14,7 +14,7 @@
 	import { SvelteDate } from 'svelte/reactivity';
 	import { Button, buttonVariants } from '$lib/shadcn/button';
 	import * as Card from '$lib/shadcn/card';
-	import { ChevronRight, ChevronLeft } from 'lucide-svelte';
+	import { ChevronRight, ChevronLeft, Info } from 'lucide-svelte';
 	import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, LOCALE, TZ } from '$lib/constants.js';
 
 	import { goto, invalidateAll } from '$app/navigation';
@@ -422,6 +422,17 @@
 	<table class="mb-16 select-none">
 		<thead>
 			<tr>
+				<th class="pr-2 text-left font-semibold">
+					<Popover.Root>
+						<Popover.Trigger class="inline-flex items-center gap-1">
+							{t.automaticAvailability}
+							<Info class="size-4" aria-hidden="true" />
+						</Popover.Trigger>
+						<Popover.Content class="w-80 text-sm font-normal">
+							{t.automaticAvailabilityExplanation}
+						</Popover.Content>
+					</Popover.Root>
+				</th>
 				<td><!--Fahrzeug--></td>
 				{#each split(range, 60) as x}
 					<td>
@@ -443,9 +454,7 @@
 		<tbody>
 			{#each vehicles as v}
 				<tr>
-					<td
-						class="h-full pr-2 align-middle font-mono text-sm font-semibold leading-none tracking-tight"
-					>
+					<td class="h-full pr-2 text-center align-middle">
 						<Checkbox
 							checked={v.setAutomaticAvailability ?? false}
 							disabled={data.isAdmin ||
@@ -458,6 +467,10 @@
 							id={`automatic_availability_${v.id}`}
 							onCheckedChange={(checked) => automaticAvailabilityChanged(checked, v)}
 						/>
+					</td>
+					<td
+						class="h-full pr-2 align-middle font-mono text-sm font-semibold leading-none tracking-tight"
+					>
 						{#if 'company' in v}
 							<AddVehicle vehicle={v} text={v.licensePlate} />
 						{:else}
