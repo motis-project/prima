@@ -4,13 +4,14 @@ import { signEntry } from '$lib/server/booking/signEntry';
 import type { QuerySerializerOptions } from '@hey-api/client-fetch';
 import { error, json, type RequestEvent } from '@sveltejs/kit';
 import { getRideShareInfos } from '$lib/server/booking/rideShare/getRideShareInfo';
-import { isOdmLeg, isRideShareLeg } from '$lib/util/booking/checkLegType';
+import { isOdmLeg, isRideShareLeg, isTaxiLeg } from '$lib/util/booking/checkLegType';
 import { filterRideSharing } from '$lib/util/filterRideSharing';
 import { db } from '$lib/server/db';
 import { filterTaxis } from '$lib/util/filterTaxis';
 import { readTimeFromPageCursor } from '$lib/util/time';
 import { publicTransitOnly } from '$lib/util/itineraryHelpers';
 import Prom from 'prom-client';
+import { parseTripId } from '$lib/server/booking/tripId';
 
 let plan_requests: Prom.Counter | undefined;
 let plan_from: Prom.Counter | undefined;
@@ -111,7 +112,15 @@ export const POST = async (event: RequestEvent) => {
 			response.itineraries.map(async (i: Itinerary) => {
 				const odmLeg1 = i.legs.find(isOdmLeg);
 				const odmLeg2 = i.legs.findLast(isOdmLeg);
+				if (
+					(odmLeg1 && odmLeg1.tripId === undefined) ||
+					(odmLeg2 && odmLeg2.tripId === undefined)
+				) {
+					throw new Error();
+				}
 
+				const odmContext1 = odmLeg1 ? parseTripId(isTaxiLeg(odmLeg1), odmLeg1.tripId!) : undefined;
+				const odmContext2 = odmLeg2 ? parseTripId(isTaxiLeg(odmLeg2), odmLeg2.tripId!) : undefined;
 				const odmLeg = odmLeg1 || odmLeg2;
 				if (odmLeg) {
 					const odm_only = i.legs.length > 1 ? 0 : 1;
@@ -135,8 +144,8 @@ export const POST = async (event: RequestEvent) => {
 									odmLeg1.from.lon,
 									odmLeg1.to.lat,
 									odmLeg1.to.lon,
-									new Date(odmLeg1.startTime).getTime(),
-									new Date(odmLeg1.endTime).getTime(),
+									odmContext1!.pT,
+									odmContext1!.dT,
 									false,
 									odmLeg1.tripId && isRideShareLeg(odmLeg1) ? odmLeg1.tripId : undefined
 								)
@@ -148,8 +157,8 @@ export const POST = async (event: RequestEvent) => {
 									odmLeg2.from.lon,
 									odmLeg2.to.lat,
 									odmLeg2.to.lon,
-									new Date(odmLeg2.startTime).getTime(),
-									new Date(odmLeg2.endTime).getTime(),
+									odmContext2!.pT,
+									odmContext2!.dT,
 									true,
 									odmLeg2.tripId && isRideShareLeg(odmLeg2) ? odmLeg2.tripId : undefined
 								)
