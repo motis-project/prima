@@ -52,10 +52,10 @@ export const getDirectDurations = async (
 	}
 	if (doesConnectTours) {
 		const lastEventBeforeDeparture =
-			vehicle.events.findLast((e) => getScheduledEventTime(e) <= departure) ??
+			vehicle.events.findLast((e) => getScheduledEventTime(e) < departure) ??
 			vehicle.lastEventBefore;
-		const firstEventAfterDeparture = vehicle.events.find(
-			(e) => getScheduledEventTime(e) > departure
+		const firstEventAtOrAfterDeparture = vehicle.events.find(
+			(e) => getScheduledEventTime(e) >= departure
 		);
 		const firstEventAfterArrival =
 			vehicle.events.find((e) => getScheduledEventTime(e) >= arrival) ?? vehicle.firstEventAfter;
@@ -64,7 +64,7 @@ export const getDirectDurations = async (
 		);
 		if (best.pickupCase.how !== InsertHow.PREPEND && lastEventBeforeDeparture !== undefined) {
 			const routing = (
-				await oneToManyCarRouting(lastEventBeforeDeparture, [firstEventAfterDeparture!], false)
+				await oneToManyCarRouting(lastEventBeforeDeparture, [firstEventAtOrAfterDeparture!], false)
 			)[0];
 			direct.thisTour = {
 				directDrivingDuration: routing === undefined ? null : routing + PASSENGER_CHANGE_DURATION,
