@@ -25,6 +25,7 @@ export type WhitelistResponseEntry = {
 	cost: number;
 	pickupCase: InsertionType;
 	dropoffCase: InsertionType;
+	timeOfferExpires: number;
 };
 
 function toWhitelistResponseEntry(
@@ -43,7 +44,8 @@ function toWhitelistResponseEntry(
 				cost: e.cost,
 				requestedTime,
 				pickupCase: e.pickupCase,
-				dropoffCase: e.dropoffCase
+				dropoffCase: e.dropoffCase,
+				timeOfferExpires: e.timeOfferExpires
 			};
 }
 

@@ -469,7 +469,8 @@ export async function bookFull(
 		firstOdm,
 		chosenItinerary.signature1,
 		isDirect ? parameters.connection1!.startFixed : firstOdmIndex !== 0,
-		requestedTime1
+		requestedTime1,
+		chosenItinerary.timeOfferExpires
 	);
 	console.log(
 		'SimLOGS',
@@ -479,7 +480,13 @@ export async function bookFull(
 	const connection2 =
 		firstOdmIndex === lastOdmIndex
 			? null
-			: expectedConnectionFromLeg(lastOdm, chosenItinerary.signature2, true, requestedTime2);
+			: expectedConnectionFromLeg(
+					lastOdm,
+					chosenItinerary.signature2,
+					true,
+					requestedTime2,
+					chosenItinerary.timeOfferExpires
+				);
 	if (mode === 'ODM') {
 		const result = await bookingApiCall(
 			customerId,

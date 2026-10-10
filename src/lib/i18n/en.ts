@@ -102,6 +102,7 @@ const translations: Translations = {
 		bookingError1: 'First section could not be booked. Please start a new search.',
 		bookingError2: 'Last section could not be booked. Please start a new search.',
 		bookingSuccess: 'Booking successful.',
+		offerExpired: 'The offer has expired.',
 
 		// Journey
 		cancelled: 'This trip has been cancelled.',
@@ -349,7 +350,14 @@ const translations: Translations = {
 		cancelCheckbox:
 			'Cancel all tours created by the same rule (will not cancel tours which already have agreed ride shares)',
 		history: 'History',
-		deleteFavourites: 'Delete History'
+		deleteFavourites: 'Delete History',
+		offerExpiresExplanation: (timeOfferExpires: number) => {
+			const expiration = new Date(timeOfferExpires).toLocaleString('en-GB', {
+				dateStyle: 'short',
+				timeStyle: 'short'
+			});
+			return `This offer is not reserved. Booking is available until ${expiration} at the latest.`;
+		}
 	},
 
 	explainer: {
