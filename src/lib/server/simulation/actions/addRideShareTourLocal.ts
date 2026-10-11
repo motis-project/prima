@@ -54,7 +54,7 @@ export async function addRideShareTourSimulation(
 	const newTour = await getRideShareTourByRequest(request);
 	return {
 		lastActionSpecifics: {
-			vehicleId: newTour[0].vehicle,
+			vehicleIds: [newTour[0].vehicle],
 			dayStart: Math.floor(newTour[0].requests[0].events[0].communicatedTime / DAY) * DAY
 		},
 		success: true,

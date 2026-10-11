@@ -31,7 +31,7 @@ export async function acceptRideShareRequestSimulation(): Promise<ActionResponse
 		console.log(`Successfully accepted ride share request with idx ${request.requestId}.`);
 		return {
 			lastActionSpecifics: {
-				vehicleId: tour.vehicleId,
+				vehicleIds: [tour.vehicleId],
 				dayStart: Math.floor(tour.startTime / DAY) * DAY
 			},
 			success: true,

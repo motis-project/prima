@@ -56,7 +56,7 @@ async function rideShareApiCall(
 	console.log(response.status === 200 ? 'succesful booking' : 'failed to book');
 	return {
 		lastActionSpecifics: {
-			vehicleId: newTour.vehicleId,
+			vehicleIds: [newTour.vehicleId],
 			dayStart: Math.floor(newTour.startTime / DAY) * DAY
 		},
 		success: true,
@@ -204,7 +204,7 @@ export async function bookingApiCall(
 	}
 	return {
 		lastActionSpecifics: {
-			vehicleId: newTour.vehicleId,
+			vehicleIds: [newTour.vehicleId],
 			dayStart: Math.floor(newTour.startTime / DAY) * DAY
 		},
 		success: true,

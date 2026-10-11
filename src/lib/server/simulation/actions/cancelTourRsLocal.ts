@@ -18,7 +18,7 @@ export async function cancelTourRsLocal(customerId: number): Promise<ActionRespo
 	await cancelRideShareTour(tours[r].tourId, customerId);
 	return {
 		lastActionSpecifics: {
-			vehicleId: tours[r].vehicleId,
+			vehicleIds: [tours[r].vehicleId],
 			dayStart: Math.floor(tours[r].startTime / DAY) * DAY
 		},
 		success: true,

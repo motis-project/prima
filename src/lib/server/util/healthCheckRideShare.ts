@@ -375,28 +375,32 @@ async function validateAddressCoordinatesMatch(tours: RideShareToursWithRequests
 	return false;
 }
 
-export async function healthCheck(vehicleId?: number, dayStart?: number) {
-	const timeRange: [number, number] | undefined = dayStart ? [dayStart, dayStart + DAY] : undefined;
+export async function healthCheck(vehicleId?: number[], dayStart?: number) {
+	const timeRange: [number, number] | undefined =
+		dayStart !== undefined ? [dayStart, dayStart + DAY] : undefined;
 	const allTours: RideShareToursWithRequests = await getRideShareTours(
 		true,
 		undefined,
 		undefined,
 		timeRange,
-		vehicleId
+		vehicleId,
+		true
 	);
 	const uncancelledTours: RideShareToursWithRequests = await getRideShareTours(
 		false,
 		undefined,
 		undefined,
 		timeRange,
-		vehicleId
+		vehicleId,
+		true
 	);
 	const acceptedTours: RideShareToursWithRequests = await getRideShareTours(
 		false,
 		false,
 		undefined,
 		timeRange,
-		vehicleId
+		vehicleId,
+		true
 	);
 	let fail = false;
 	if (allTours) {

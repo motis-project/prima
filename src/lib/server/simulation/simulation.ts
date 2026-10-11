@@ -32,7 +32,7 @@ const OUTPUT_FILE = './simulation-stats.jsonl';
 let counter = 0;
 
 export type LastActionSpecifics = {
-	vehicleId: number;
+	vehicleIds: number[];
 	dayStart: number;
 };
 
@@ -335,10 +335,10 @@ export async function simulation(params: Params): Promise<boolean> {
 					params.healthChecks &&
 					(lastActionWasRideShare(actionProbabilities, actionIdx)
 						? await healthCheckRideShare(
-								lastActionSpecifics.vehicleId,
+								lastActionSpecifics.vehicleIds,
 								lastActionSpecifics.dayStart
 							)
-						: await healthCheck(lastActionSpecifics.vehicleId, lastActionSpecifics.dayStart))
+						: await healthCheck(lastActionSpecifics.vehicleIds, lastActionSpecifics.dayStart))
 				) {
 					await timeStats.close();
 					return true;

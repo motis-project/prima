@@ -7,18 +7,53 @@ export async function getRideShareTours(
 	selectPending?: boolean,
 	selectInitial?: boolean,
 	timeRange?: [number, number],
-	vehicleId?: number
+	vehicleIds?: number[],
+	includeAdjacentTours = false
 ) {
+	const adjacentTourIds =
+		timeRange && vehicleIds && includeAdjacentTours
+			? (
+					await Promise.all(
+						vehicleIds.flatMap((vehicleId) => [
+							db
+								.selectFrom('rideShareTour')
+								.select('rideShareTour.id')
+								.where('rideShareTour.vehicle', '=', vehicleId)
+								.$if(!selectCancelled, (qb) => qb.where('rideShareTour.cancelled', '=', false))
+								.where('rideShareTour.latestEnd', '<=', timeRange[0])
+								.orderBy('rideShareTour.earliestStart', 'desc')
+								.limit(1)
+								.executeTakeFirst(),
+							db
+								.selectFrom('rideShareTour')
+								.select('rideShareTour.id')
+								.where('rideShareTour.vehicle', '=', vehicleId)
+								.$if(!selectCancelled, (qb) => qb.where('rideShareTour.cancelled', '=', false))
+								.where('rideShareTour.earliestStart', '>=', timeRange[1])
+								.orderBy('rideShareTour.earliestStart', 'asc')
+								.limit(1)
+								.executeTakeFirst()
+						])
+					)
+				).flatMap((tour) => (tour ? [tour.id] : []))
+			: [];
+
 	return await db
 		.selectFrom('rideShareTour')
 		.innerJoin('rideShareVehicle', 'rideShareVehicle.id', 'rideShareTour.vehicle')
 		.innerJoin('user as provider', 'provider.id', 'rideShareVehicle.owner')
 		.$if(!selectCancelled, (qb) => qb.where('rideShareTour.cancelled', '=', false))
-		.$if(vehicleId != undefined, (qb) => qb.where('rideShareVehicle.id', '=', vehicleId!))
+		.$if(vehicleIds != undefined, (qb) => qb.where('rideShareVehicle.id', 'in', vehicleIds!))
 		.$if(!!timeRange, (qb) =>
-			qb
-				.where('rideShareTour.earliestStart', '<', timeRange![1])
-				.where('rideShareTour.latestEnd', '>', timeRange![0])
+			qb.where(({ and, eb, or }) =>
+				or([
+					and([
+						eb('rideShareTour.earliestStart', '<', timeRange![1]),
+						eb('rideShareTour.latestEnd', '>', timeRange![0])
+					]),
+					...(adjacentTourIds.length === 0 ? [] : [eb('rideShareTour.id', 'in', adjacentTourIds)])
+				])
+			)
 		)
 		.select((eb) => [
 			'rideShareTour.earliestStart as startTime',

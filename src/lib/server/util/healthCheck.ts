@@ -523,19 +523,11 @@ async function validateAddressCoordinatesMatch(tours: ToursWithRequests) {
 	return false;
 }
 
-export async function healthCheck(vehicleId?: number, dayStart?: number) {
-	const allTours = await getToursWithRequests(
-		true,
-		undefined,
-		dayStart ? [dayStart, dayStart + DAY] : undefined,
-		vehicleId
-	);
-	const uncancelledTours = await getToursWithRequests(
-		false,
-		undefined,
-		dayStart ? [dayStart, dayStart + DAY] : undefined,
-		vehicleId
-	);
+export async function healthCheck(vehicleId?: number[], dayStart?: number) {
+	const timeRange: [number, number] | undefined =
+		dayStart !== undefined ? [dayStart, dayStart + DAY] : undefined;
+	const allTours = await getToursWithRequests(true, undefined, timeRange, vehicleId, true);
+	const uncancelledTours = await getToursWithRequests(false, undefined, timeRange, vehicleId, true);
 	let fail = false;
 	if (allTours) {
 		console.log('Validating tours...');
