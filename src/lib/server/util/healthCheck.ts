@@ -460,9 +460,9 @@ async function validateCompanyDurations(tours: ToursWithRequests): Promise<boole
 			true
 		);
 		if (isSamePlace(firstEvent, { lat: tour.companyLat!, lng: tour.companyLng! })) {
-			if (firstEvent.nextLegDuration !== 0) {
+			if (firstEvent.prevLegDuration !== 0) {
 				console.log(
-					`Duration from company to first event is not zero, but they are considered the same place in tour with id: ${tour.tourId}, first event id: ${firstEvent.id} duration in db: ${events[events.length - 1].nextLegDuration / 1000}`
+					`Duration from company to first event is not zero, but they are considered the same place in tour with id: ${tour.tourId}, first event id: ${firstEvent.id} duration in db: ${firstEvent.prevLegDuration / 1000}`
 				);
 				fail = true;
 			}
