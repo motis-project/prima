@@ -25,7 +25,14 @@ const event = (values: Partial<Event>): Event =>
 
 describe('getDirectDurations', () => {
 	it('uses the event at the departure boundary as the first event of a connected tour', async () => {
-		const previousTourLastEvent = event({ id: 3716, tourId: 1126 });
+		const previousTourFirstEvent = event({ id: 3715, tourId: 1126, arrival: 900 });
+		const previousTourLastEvent = event({
+			id: 3716,
+			tourId: 1126,
+			arrival: 900,
+			scheduledTimeStart: 100
+		});
+		const overlappingTourEvent = event({ id: 9999, tourId: 9999, arrival: 2_000 });
 		const connectedTourFirstEvent = event({
 			id: 3997,
 			tourId: 1217,
@@ -40,7 +47,13 @@ describe('getDirectDurations', () => {
 			scheduledTimeEnd: 1_462
 		});
 		const vehicle = {
-			events: [previousTourLastEvent, connectedTourFirstEvent, connectedTourSecondEvent]
+			events: [
+				previousTourFirstEvent,
+				previousTourLastEvent,
+				overlappingTourEvent,
+				connectedTourFirstEvent,
+				connectedTourSecondEvent
+			]
 		} as unknown as VehicleWithInterval;
 		const best = {
 			pickupCase: { how: InsertHow.CONNECT },
@@ -55,7 +68,7 @@ describe('getDirectDurations', () => {
 			undefined,
 			{} as ExpectedConnection,
 			1237,
-			true,
+			[1217],
 			1_000,
 			Number.MAX_SAFE_INTEGER,
 			vehicle
@@ -71,5 +84,58 @@ describe('getDirectDurations', () => {
 			directDrivingDuration: routedDuration + PASSENGER_CHANGE_DURATION,
 			tourId: 1237
 		});
+	});
+
+	it('uses the last merged event and first event of the following tour', async () => {
+		const mergedFirst = event({ id: 3997, tourId: 1217, departure: 1_000 });
+		const mergedLast = event({
+			id: 4002,
+			tourId: 1217,
+			departure: 1_000,
+			arrival: 2_000,
+			scheduledTimeStart: 1_800
+		});
+		const overlapping = event({
+			id: 9999,
+			tourId: 9999,
+			departure: 1_500,
+			arrival: 3_000,
+			scheduledTimeStart: 2_050
+		});
+		const followingFirst = event({
+			id: 5097,
+			tourId: 1237,
+			departure: 2_500,
+			scheduledTimeStart: 2_600
+		});
+		const followingLast = event({
+			id: 5098,
+			tourId: 1237,
+			departure: 2_500,
+			scheduledTimeStart: 3_000
+		});
+		const vehicle = {
+			events: [mergedFirst, mergedLast, overlapping, followingFirst, followingLast]
+		} as unknown as VehicleWithInterval;
+		const best = {
+			pickupCase: { how: InsertHow.PREPEND },
+			dropoffCase: { how: InsertHow.CONNECT }
+		} as Insertion;
+		vi.clearAllMocks();
+		vi.mocked(oneToManyCarRouting).mockResolvedValueOnce([1_000]);
+
+		await getDirectDurations(
+			best,
+			undefined,
+			undefined,
+			{} as ExpectedConnection,
+			1217,
+			[1217],
+			1_000,
+			2_000,
+			vehicle
+		);
+
+		expect(oneToManyCarRouting).toHaveBeenLastCalledWith(mergedLast, [followingFirst], false);
 	});
 });
