@@ -1,4 +1,3 @@
-import { PASSENGER_CHANGE_DURATION } from '$lib/constants';
 import { Interval } from '$lib/util/interval';
 import type { Event } from '$lib/server/booking/taxi/getBookingAvailability';
 import type { DirectDrivingDurations } from './getDirectDrivingDurations';
@@ -137,10 +136,13 @@ export function getScheduledTimes(
 		const startLaterEvent = laterEvent.scheduledTimeStart;
 		const leewayEarlierEvent = endEarlierEvent - startEarlierEvent;
 		const scheduledDistance = startLaterEvent - endEarlierEvent;
-		if (actualDistance === null || actualDistance + PASSENGER_CHANGE_DURATION < scheduledDistance) {
+		if (actualDistance === null) {
 			return scheduledTimes;
 		}
 		const gap = actualDistance - scheduledDistance;
+		if (gap <= 0) {
+			continue;
+		}
 		if (leewayEarlierEvent < gap) {
 			scheduledTimes.updates.push({
 				event_id: earlierEvent.id,
