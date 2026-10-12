@@ -38,9 +38,11 @@ describe('updateDirectDurations', () => {
 		await setEvent(requestId, departure + 5_000, true, 51.3, 14.8);
 		await setEvent(requestId, departure + 25_000, false, 51.31, 14.81);
 
-		await db.transaction().execute((trx) =>
-			updateDirectDurations(oldVehicleId, movedTour!.id, departure, trx, newVehicleId)
-		);
+		await db
+			.transaction()
+			.execute((trx) =>
+				updateDirectDurations(oldVehicleId, movedTour!.id, departure, trx, newVehicleId)
+			);
 
 		const tours = await getTours();
 		expect(tours.find((tour) => tour.id === movedTour!.id)?.directDuration).toBeNull();
