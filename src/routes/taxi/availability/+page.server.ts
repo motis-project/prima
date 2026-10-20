@@ -60,14 +60,27 @@ export const actions: Actions = {
 		try {
 			await db
 				.insertInto('vehicle')
-				.values({
+				.values((eb) => ({
 					licensePlate,
 					company,
 					passengers,
 					luggage,
 					wheelchairs: !wheelchair ? 0 : 1,
-					bikes: !bike ? 0 : 1
-				})
+					bikes: !bike ? 0 : 1,
+					setAutomaticAvailability: eb
+						.case()
+						.when(
+							eb.exists(
+								eb
+									.selectFrom('vehicle')
+									.select('vehicle.id')
+									.where('vehicle.company', '=', company)
+							)
+						)
+						.then(false)
+						.else(true)
+						.end()
+				}))
 				.execute();
 		} catch (e) {
 			// @ts-expect-error: 'e' is of type 'unknown'
