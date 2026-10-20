@@ -11,7 +11,7 @@ import {
 	AUTOMATIC_AVAILABILITY_LATEST_END,
 	AUTOMATIC_AVAILABILITY_LATEST_START
 } from '$lib/constants';
-import { MINUTE } from '$lib/util/time';
+import { isValidAutomaticAvailabilityTime } from '$lib/util/automaticAvailabilityTime';
 
 export const load: PageServerLoad = async (event) => {
 	const companyId = event.locals.session!.companyId!;
@@ -57,12 +57,12 @@ export const actions = {
 			return phone;
 		}
 		if (
-			!isValidDaytime(
+			!isValidAutomaticAvailabilityTime(
 				automaticAvailabilityStart,
 				AUTOMATIC_AVAILABILITY_EARLIEST_START,
 				AUTOMATIC_AVAILABILITY_LATEST_START
 			) ||
-			!isValidDaytime(
+			!isValidAutomaticAvailabilityTime(
 				automaticAvailabilityEnd,
 				AUTOMATIC_AVAILABILITY_EARLIEST_END,
 				AUTOMATIC_AVAILABILITY_LATEST_END
@@ -98,11 +98,3 @@ const contains = async (zoneId: number, c: maplibregl.LngLatLike): Promise<boole
 			.executeTakeFirst()) != undefined
 	);
 };
-
-const AUTOMATIC_AVAILABILITY_STEP = 15 * MINUTE;
-
-const isValidDaytime = (value: number, minimum: number, maximum: number): boolean =>
-	Number.isInteger(value) &&
-	value >= minimum &&
-	value <= maximum &&
-	value % AUTOMATIC_AVAILABILITY_STEP === 0;

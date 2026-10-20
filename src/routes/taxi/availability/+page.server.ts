@@ -8,6 +8,7 @@ import { getPossibleInsertions } from '$lib/util/booking/getPossibleInsertions';
 import { retry } from '$lib/server/db/retryQuery';
 import { getAllCompaniesAvailability, getAvailability } from '$lib/server/getAvailability.js';
 import { getSnapshot } from '$lib/server/availabilityCompensation/availabilityCompensation';
+import { createVehicle } from '$lib/server/createVehicle';
 
 const LICENSE_PLATE_REGEX = /^([A-ZÄÖÜ]{1,3})-([A-ZÄÖÜ]{1,2})-([0-9]{1,4})$/;
 
@@ -58,27 +59,14 @@ export const actions: Actions = {
 		}
 
 		try {
-			await db
-				.insertInto('vehicle')
-				.values((eb) => ({
-					licensePlate,
-					company,
-					passengers,
-					luggage,
-					wheelchairs: !wheelchair ? 0 : 1,
-					bikes: !bike ? 0 : 1,
-					setAutomaticAvailability: eb
-						.case()
-						.when(
-							eb.exists(
-								eb.selectFrom('vehicle').select('vehicle.id').where('vehicle.company', '=', company)
-							)
-						)
-						.then(false)
-						.else(true)
-						.end()
-				}))
-				.execute();
+			await createVehicle({
+				licensePlate,
+				company,
+				passengers,
+				luggage,
+				wheelchairs: !wheelchair ? 0 : 1,
+				bikes: !bike ? 0 : 1
+			});
 		} catch (e) {
 			// @ts-expect-error: 'e' is of type 'unknown'
 			if (e.constraint == 'vehicle_license_plate_key') {
