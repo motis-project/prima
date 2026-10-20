@@ -71,10 +71,7 @@ export const actions: Actions = {
 						.case()
 						.when(
 							eb.exists(
-								eb
-									.selectFrom('vehicle')
-									.select('vehicle.id')
-									.where('vehicle.company', '=', company)
+								eb.selectFrom('vehicle').select('vehicle.id').where('vehicle.company', '=', company)
 							)
 						)
 						.then(false)
