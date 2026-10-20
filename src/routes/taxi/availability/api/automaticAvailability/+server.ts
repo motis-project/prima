@@ -12,32 +12,34 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 		return error(403);
 	}
 
-	const { vehicleId, setAutomaticAvailability } = await request.json();
-	if (!Number.isInteger(vehicleId) || typeof setAutomaticAvailability !== 'boolean') {
-		return error(400, 'Invalid vehicle ID or automatic availability value.');
+	const { vehicleId } = await request.json();
+	if (!Number.isInteger(vehicleId)) {
+		return error(400, 'Invalid vehicle ID.');
 	}
 
-	const result = await db
-		.updateTable('vehicle')
-		.set({ setAutomaticAvailability })
+	const vehicle = await db
+		.selectFrom('vehicle')
+		.select('vehicle.id')
 		.where('vehicle.id', '=', vehicleId)
 		.where('vehicle.company', '=', companyId)
-		.$if(!setAutomaticAvailability, (qb) =>
-			qb.where((eb) =>
-				eb.exists((eb) =>
-					eb
-						.selectFrom('vehicle')
-						.where('vehicle.company', '=', companyId)
-						.where('vehicle.id', '!=', vehicleId)
-						.where('vehicle.setAutomaticAvailability', '=', true)
-				)
-			)
-		)
 		.executeTakeFirst();
 
-	if (result.numUpdatedRows === 0n) {
+	if (vehicle === undefined) {
 		return error(404, 'Vehicle not found.');
 	}
 
-	return json({ setAutomaticAvailability });
+	await db
+		.updateTable('vehicle')
+		.set((eb) => ({
+			setAutomaticAvailability: eb
+				.case()
+				.when('vehicle.id', '=', vehicleId)
+				.then(true)
+				.else(false)
+				.end()
+		}))
+		.where('vehicle.company', '=', companyId)
+		.execute();
+
+	return json({ vehicleId });
 };

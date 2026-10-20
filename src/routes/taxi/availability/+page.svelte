@@ -34,7 +34,7 @@
 	import type { Msg } from '$lib/msg';
 	import { t } from '$lib/i18n/translation';
 	import AvailabilityPercent from './AvailabilityPercent.svelte';
-	import Checkbox from '$lib/shadcn/checkbox/checkbox.svelte';
+	import * as RadioGroup from '$lib/shadcn/radio-group';
 
 	const { data, form } = $props();
 	const vehicles = $derived.by(() => {
@@ -82,15 +82,12 @@
 		});
 	};
 
-	const updateAutomaticAvailability = async (
-		vehicleId: number,
-		setAutomaticAvailability: boolean
-	) => {
+	const updateAutomaticAvailability = async (vehicleId: number) => {
 		try {
 			const response = await fetch('/taxi/availability/api/automaticAvailability', {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ vehicleId, setAutomaticAvailability })
+				body: JSON.stringify({ vehicleId })
 			});
 			if (!response.ok) {
 				throw new Error(`Automatic availability update failed with status ${response.status}`);
@@ -398,16 +395,17 @@
 
 	let automaticAvailabilityUpdating = $state<number | null>(null);
 
-	async function automaticAvailabilityChanged(checked: boolean, v: Vehicle) {
+	async function automaticAvailabilityChanged(vehicleId: string) {
+		const selectedVehicleId = Number(vehicleId);
 		if (
 			automaticAvailabilityUpdating !== null ||
-			(v.setAutomaticAvailability ?? false) === checked
+			vehicles.find((vehicle) => vehicle.setAutomaticAvailability)?.id === selectedVehicleId
 		) {
 			return;
 		}
-		automaticAvailabilityUpdating = v.id;
+		automaticAvailabilityUpdating = selectedVehicleId;
 		try {
-			await updateAutomaticAvailability(v.id, checked);
+			await updateAutomaticAvailability(selectedVehicleId);
 		} catch {
 			await invalidateAll();
 		} finally {
@@ -419,119 +417,119 @@
 <svelte:window onmouseup={() => selectionFinish()} />
 
 {#snippet availabilityTable(range: Range)}
-	<table class="mb-16 select-none">
-		<thead>
-			<tr>
-				<th class="pr-2 text-left font-semibold">
-					<Popover.Root>
-						<Popover.Trigger class="inline-flex items-center gap-1">
-							{t.automaticAvailability}
-							<Info class="size-4" aria-hidden="true" />
-						</Popover.Trigger>
-						<Popover.Content class="w-80 text-sm font-normal">
-							{t.automaticAvailabilityExplanation}
-						</Popover.Content>
-					</Popover.Root>
-				</th>
-				<td><!--Fahrzeug--></td>
-				{#each split(range, 60) as x}
-					<td>
-						{('0' + new Date(x.startTime).getHours()).slice(-2)}:00
-						<table>
-							<tbody>
-								<tr class="text-sm text-muted-foreground">
-									<td class="w-8">00</td>
-									<td class="w-8 pl-1">15</td>
-									<td class="w-8 pl-1">30</td>
-									<td class="w-8 pl-1">45</td>
-								</tr>
-							</tbody>
-						</table>
-					</td>
-				{/each}
-			</tr>
-		</thead>
-		<tbody>
-			{#each vehicles as v}
+	<RadioGroup.Root
+		value={vehicles.find((vehicle) => vehicle.setAutomaticAvailability)?.id.toString()}
+		onValueChange={automaticAvailabilityChanged}
+		disabled={data.isAdmin || automaticAvailabilityUpdating !== null}
+		class="block"
+	>
+		<table class="mb-16 select-none">
+			<thead>
 				<tr>
-					<td class="h-full pr-2 text-center align-middle">
-						<Checkbox
-							checked={v.setAutomaticAvailability ?? false}
-							disabled={data.isAdmin ||
-								automaticAvailabilityUpdating === v.id ||
-								(v.setAutomaticAvailability &&
-									vehicles.reduce(
-										(prev, curr) => (prev += curr.setAutomaticAvailability ? 1 : 0),
-										0
-									) <= 1)}
-							id={`automatic_availability_${v.id}`}
-							onCheckedChange={(checked) => automaticAvailabilityChanged(checked, v)}
-						/>
-					</td>
-					<td
-						class="h-full pr-2 align-middle font-mono text-sm font-semibold leading-none tracking-tight"
-					>
-						{#if 'company' in v}
-							<AddVehicle vehicle={v} text={v.licensePlate} />
-						{:else}
-							{v.licensePlate}
-						{/if}
-					</td>
+					<th class="pr-2 text-left font-semibold">
+						<Popover.Root>
+							<Popover.Trigger class="inline-flex items-center gap-1">
+								{t.automaticAvailability}
+								<Info class="size-4" aria-hidden="true" />
+							</Popover.Trigger>
+							<Popover.Content class="w-80 text-sm font-normal">
+								{t.automaticAvailabilityExplanation}
+							</Popover.Content>
+						</Popover.Root>
+					</th>
+					<td><!--Fahrzeug--></td>
 					{#each split(range, 60) as x}
 						<td>
-							<table class="w-full">
+							{('0' + new Date(x.startTime).getHours()).slice(-2)}:00
+							<table>
 								<tbody>
-									<tr>
-										{#each split(x, 15) as cell}
-											<td
-												data-testid="{v.licensePlate}-{new Date(cell.startTime).toISOString()}"
-												class="cell"
-												draggable={hasDragableTour(v.id, cell)}
-												ondragstart={() => dragStart(v.id, cell)}
-												ondragover={() => dragOver(v.id)}
-												ondragend={() => onDrop()}
-												onmousedown={() => !hasTour(v.id, cell) && selectionStart(v.id, v, cell)}
-												onmouseover={() => selectionContinue(cell)}
-												onfocus={() => {}}
-											>
-												{#if hasTour(v.id, cell)}
-													<!-- svelte-ignore a11y_click_events_have_key_events -->
-													<!-- svelte-ignore a11y_no_static_element_interactions -->
-													<div
-														onclick={() => {
-															selectedTour.tours = getTours(v.id, cell);
-														}}
-														class={[
-															'cursor-pointer',
-															'w-8',
-															'h-8',
-															'border',
-															'rounded-md',
-															cellColor(v.id, v, cell)
-														].join(' ')}
-													></div>
-												{:else}
-													<div
-														class={[
-															'w-8',
-															'h-8',
-															'border',
-															'rounded-md',
-															cellColor(v.id, v, cell)
-														].join(' ')}
-													></div>
-												{/if}
-											</td>
-										{/each}
+									<tr class="text-sm text-muted-foreground">
+										<td class="w-8">00</td>
+										<td class="w-8 pl-1">15</td>
+										<td class="w-8 pl-1">30</td>
+										<td class="w-8 pl-1">45</td>
 									</tr>
 								</tbody>
 							</table>
 						</td>
 					{/each}
 				</tr>
-			{/each}
-		</tbody>
-	</table>
+			</thead>
+			<tbody>
+				{#each vehicles as v}
+					<tr>
+						<td class="h-full pr-2 text-center align-middle">
+							<RadioGroup.Item
+								value={v.id.toString()}
+								id={`automatic_availability_${range.startTime}_${v.id}`}
+								aria-label={`${t.automaticAvailability}: ${v.licensePlate}`}
+							/>
+						</td>
+						<td
+							class="h-full pr-2 align-middle font-mono text-sm font-semibold leading-none tracking-tight"
+						>
+							{#if 'company' in v}
+								<AddVehicle vehicle={v} text={v.licensePlate} />
+							{:else}
+								{v.licensePlate}
+							{/if}
+						</td>
+						{#each split(range, 60) as x}
+							<td>
+								<table class="w-full">
+									<tbody>
+										<tr>
+											{#each split(x, 15) as cell}
+												<td
+													data-testid="{v.licensePlate}-{new Date(cell.startTime).toISOString()}"
+													class="cell"
+													draggable={hasDragableTour(v.id, cell)}
+													ondragstart={() => dragStart(v.id, cell)}
+													ondragover={() => dragOver(v.id)}
+													ondragend={() => onDrop()}
+													onmousedown={() => !hasTour(v.id, cell) && selectionStart(v.id, v, cell)}
+													onmouseover={() => selectionContinue(cell)}
+													onfocus={() => {}}
+												>
+													{#if hasTour(v.id, cell)}
+														<!-- svelte-ignore a11y_click_events_have_key_events -->
+														<!-- svelte-ignore a11y_no_static_element_interactions -->
+														<div
+															onclick={() => {
+																selectedTour.tours = getTours(v.id, cell);
+															}}
+															class={[
+																'cursor-pointer',
+																'w-8',
+																'h-8',
+																'border',
+																'rounded-md',
+																cellColor(v.id, v, cell)
+															].join(' ')}
+														></div>
+													{:else}
+														<div
+															class={[
+																'w-8',
+																'h-8',
+																'border',
+																'rounded-md',
+																cellColor(v.id, v, cell)
+															].join(' ')}
+														></div>
+													{/if}
+												</td>
+											{/each}
+										</tr>
+									</tbody>
+								</table>
+							</td>
+						{/each}
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</RadioGroup.Root>
 {/snippet}
 
 <Card.Root>
