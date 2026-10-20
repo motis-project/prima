@@ -58,7 +58,7 @@ export interface Database {
 		wheelchairs: number;
 		bikes: number;
 		luggage: number;
-		setAutomaticAvailability: boolean | null;
+		setAutomaticAvailability: Generated<boolean>;
 	};
 	tour: {
 		id: Generated<number>;
