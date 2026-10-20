@@ -70,6 +70,8 @@ const translations: Translations = {
 		zoneNotSet: 'Pflichtfahrgebiet nicht gesetzt.',
 		addressNotInZone: 'Die Adresse liegt nicht im Pflichtfahrgebiet.',
 		companyUpdateSuccessful: 'Unternehmensdaten erfolgreich aktualisiert.',
+		automaticAvailabilityTimesInvalid:
+			'Der Zeitraum für die automatische Verfügbarkeit ist ungültig.',
 
 		// AddVehicle
 		invalidSeats: 'Ungültige Sitzzahl.',

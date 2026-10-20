@@ -14,8 +14,34 @@
 	import Map from '$lib/map/Map.svelte';
 	import Message from '$lib/ui/Message.svelte';
 	import { env } from '$env/dynamic/public';
+	import {
+		AUTOMATIC_AVAILABILITY_EARLIEST_END,
+		AUTOMATIC_AVAILABILITY_EARLIEST_START,
+		AUTOMATIC_AVAILABILITY_LATEST_END,
+		AUTOMATIC_AVAILABILITY_LATEST_START
+	} from '$lib/constants';
+	import { MINUTE } from '$lib/util/time';
 
 	const { data, form } = $props();
+	const automaticAvailabilityStep = 15 * MINUTE;
+	const daytimeOptions = (start: number, end: number) =>
+		Array.from({ length: (end - start) / automaticAvailabilityStep + 1 }, (_, index) => {
+			const value = start + index * automaticAvailabilityStep;
+			const hours = value === 24 * 60 * MINUTE ? 0 : Math.floor(value / (60 * MINUTE));
+			const minutes = (value / MINUTE) % 60;
+			return {
+				value,
+				label: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+			};
+		});
+	const automaticAvailabilityStartOptions = daytimeOptions(
+		AUTOMATIC_AVAILABILITY_EARLIEST_START,
+		AUTOMATIC_AVAILABILITY_LATEST_START
+	);
+	const automaticAvailabilityEndOptions = daytimeOptions(
+		AUTOMATIC_AVAILABILITY_EARLIEST_END,
+		AUTOMATIC_AVAILABILITY_LATEST_END
+	);
 
 	let center = $state<[number, number]>([
 		data.company.lng ?? 14.664324861365413,
@@ -123,6 +149,54 @@
 					<Label for="phone">{t.account.phone}</Label>
 					<Input name="phone" type="phone" value={data.company.phone} />
 				</div>
+				<fieldset>
+					<legend class="mb-2 font-medium">Automatische Verfügbarkeit</legend>
+					<p class="mb-3 text-sm text-muted-foreground">
+						Zeitraum, der täglich automatisch als verfügbar eingetragen wird.
+					</p>
+					<div class="grid grid-cols-2 gap-4">
+						<div>
+							<Label for="automaticAvailabilityStart">Beginn</Label>
+							<select
+								name="automaticAvailabilityStart"
+								id="automaticAvailabilityStart"
+								class={cn(
+									buttonVariants({ variant: 'outline' }),
+									'w-full appearance-none font-normal'
+								)}
+							>
+								{#each automaticAvailabilityStartOptions as option}
+									<option
+										value={option.value}
+										selected={data.company.automaticAvailabilityStart === option.value}
+									>
+										{option.label}
+									</option>
+								{/each}
+							</select>
+						</div>
+						<div>
+							<Label for="automaticAvailabilityEnd">Ende</Label>
+							<select
+								name="automaticAvailabilityEnd"
+								id="automaticAvailabilityEnd"
+								class={cn(
+									buttonVariants({ variant: 'outline' }),
+									'w-full appearance-none font-normal'
+								)}
+							>
+								{#each automaticAvailabilityEndOptions as option}
+									<option
+										value={option.value}
+										selected={data.company.automaticAvailabilityEnd === option.value}
+									>
+										{option.label}
+									</option>
+								{/each}
+							</select>
+						</div>
+					</div>
+				</fieldset>
 			</div>
 			<div class="mt-8 w-full text-right">
 				<Button type="submit">Übernehmen</Button>

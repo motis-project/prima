@@ -1,4 +1,5 @@
 const DAY = 24 * 60 * 60 * 1000;
+const HOUR = 60 * 60 * 1000;
 
 function mergedDuration(intervals) {
 	const sorted = intervals
@@ -26,6 +27,19 @@ function mergedDuration(intervals) {
 }
 
 export async function up(db) {
+	await db.schema
+		.alterTable('company')
+		.addColumn('automatic_availability_start', 'integer', (column) =>
+			column.notNull().defaultTo(3 * HOUR)
+		)
+		.execute();
+	await db.schema
+		.alterTable('company')
+		.addColumn('automatic_availability_end', 'integer', (column) =>
+			column.notNull().defaultTo(DAY)
+		)
+		.execute();
+
 	await db.schema
 		.alterTable('vehicle')
 		.addColumn('set_automatic_availability', 'boolean', (column) =>
@@ -60,7 +74,6 @@ export async function up(db) {
 	const selectedByCompany = new Map();
 	for (const vehicle of vehicles) {
 		const score = mergedDuration(intervalsByVehicle.get(vehicle.id) ?? []);
-		console.log({score})
 		const selected = selectedByCompany.get(vehicle.company);
 		if (
 			selected === undefined ||
@@ -82,4 +95,6 @@ export async function up(db) {
 
 export async function down(db) {
 	await db.schema.alterTable('vehicle').dropColumn('set_automatic_availability').execute();
+	await db.schema.alterTable('company').dropColumn('automatic_availability_start').execute();
+	await db.schema.alterTable('company').dropColumn('automatic_availability_end').execute();
 }

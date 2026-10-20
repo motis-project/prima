@@ -67,6 +67,7 @@ export type Translations = {
 		zoneNotSet: string;
 		addressNotInZone: string;
 		companyUpdateSuccessful: string;
+		automaticAvailabilityTimesInvalid: string;
 
 		// AddVehicle
 		invalidSeats: string;

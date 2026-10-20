@@ -68,6 +68,7 @@ const translations: Translations = {
 		zoneNotSet: 'Zone not set.',
 		addressNotInZone: 'Address not in zone.',
 		companyUpdateSuccessful: 'Company data updated successfully.',
+		automaticAvailabilityTimesInvalid: 'The automatic availability time range is invalid.',
 
 		// AddVehicle
 		invalidSeats: 'Invalid number of passengers',

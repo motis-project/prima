@@ -5,6 +5,13 @@ import { covers } from '$lib/server/db/covers.js';
 import { msg } from '$lib/msg.js';
 import { readFloat, readInt } from '$lib/server/util/readForm.js';
 import { verifyPhone } from '$lib/server/verifyPhone';
+import {
+	AUTOMATIC_AVAILABILITY_EARLIEST_END,
+	AUTOMATIC_AVAILABILITY_EARLIEST_START,
+	AUTOMATIC_AVAILABILITY_LATEST_END,
+	AUTOMATIC_AVAILABILITY_LATEST_START
+} from '$lib/constants';
+import { MINUTE } from '$lib/util/time';
 
 export const load: PageServerLoad = async (event) => {
 	const companyId = event.locals.session!.companyId!;
@@ -28,6 +35,8 @@ export const actions = {
 		const lat = readFloat(data.get('lat'));
 		const lng = readFloat(data.get('lng'));
 		const phone = verifyPhone(data.get('phone'));
+		const automaticAvailabilityStart = readInt(data.get('automaticAvailabilityStart'));
+		const automaticAvailabilityEnd = readInt(data.get('automaticAvailabilityEnd'));
 
 		if (typeof name !== 'string' || name.length < 2) {
 			return fail(400, { msg: msg('nameTooShort') });
@@ -47,10 +56,33 @@ export const actions = {
 		if (phone != null && typeof phone !== 'string') {
 			return phone;
 		}
+		if (
+			!isValidDaytime(
+				automaticAvailabilityStart,
+				AUTOMATIC_AVAILABILITY_EARLIEST_START,
+				AUTOMATIC_AVAILABILITY_LATEST_START
+			) ||
+			!isValidDaytime(
+				automaticAvailabilityEnd,
+				AUTOMATIC_AVAILABILITY_EARLIEST_END,
+				AUTOMATIC_AVAILABILITY_LATEST_END
+			)
+		) {
+			return fail(400, { msg: msg('automaticAvailabilityTimesInvalid') });
+		}
 
 		await db
 			.updateTable('company')
-			.set({ name, zone, address, lat, lng, phone })
+			.set({
+				name,
+				zone,
+				address,
+				lat,
+				lng,
+				phone,
+				automaticAvailabilityStart,
+				automaticAvailabilityEnd
+			})
 			.where('id', '=', companyId)
 			.execute();
 
@@ -66,3 +98,11 @@ const contains = async (zoneId: number, c: maplibregl.LngLatLike): Promise<boole
 			.executeTakeFirst()) != undefined
 	);
 };
+
+const AUTOMATIC_AVAILABILITY_STEP = 15 * MINUTE;
+
+const isValidDaytime = (value: number, minimum: number, maximum: number): boolean =>
+	Number.isInteger(value) &&
+	value >= minimum &&
+	value <= maximum &&
+	value % AUTOMATIC_AVAILABILITY_STEP === 0;

@@ -47,6 +47,8 @@ export interface Database {
 		address: string | null;
 		zone: number | null;
 		phone: string | null;
+		automaticAvailabilityStart: Generated<number>;
+		automaticAvailabilityEnd: Generated<number>;
 	};
 	vehicle: {
 		id: Generated<number>;
