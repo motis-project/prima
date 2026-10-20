@@ -463,6 +463,7 @@
 								value={v.id.toString()}
 								id={`automatic_availability_${range.startTime}_${v.id}`}
 								aria-label={`${t.automaticAvailability}: ${v.licensePlate}`}
+								class="mx-auto block disabled:cursor-default"
 							/>
 						</td>
 						<td
