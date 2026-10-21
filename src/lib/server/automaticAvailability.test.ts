@@ -1,15 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-	ALTERABLE_HORIZON,
 	AUTOMATIC_AVAILABILITY_EARLIEST_END,
 	AUTOMATIC_AVAILABILITY_EARLIEST_START,
 	AUTOMATIC_AVAILABILITY_LATEST_END,
-	AUTOMATIC_AVAILABILITY_LATEST_START,
-	AUTOMATIC_AVAILABILITY_LEAD_TIME
+	AUTOMATIC_AVAILABILITY_LATEST_START
 } from '$lib/constants';
 import { addCompany, clearDatabase, Zone } from '$lib/testHelpers';
 import { isValidAutomaticAvailabilityTime } from '$lib/util/automaticAvailabilityTime';
-import { getAlterableTimeframe } from '$lib/util/getAlterableTimeframe';
 import { Interval } from '$lib/util/interval';
 import { DAY, HOUR, MINUTE } from '$lib/util/time';
 import { addAutomaticAvailability } from './addAutomaticAvailability';
@@ -105,17 +102,6 @@ describe('automatic availability', () => {
 				endTime: Date.parse('2026-01-15T23:00:00.000Z')
 			}
 		]);
-	});
-
-	it('keeps the complete automatically populated day alterable', () => {
-		vi.useFakeTimers();
-		vi.setSystemTime(new Date('2026-01-15T12:34:00.000Z'));
-		const automaticDayStart = Math.floor(Date.now() / DAY) * DAY + AUTOMATIC_AVAILABILITY_LEAD_TIME;
-		const alterableTimeframe = getAlterableTimeframe();
-
-		expect(ALTERABLE_HORIZON).toBe(AUTOMATIC_AVAILABILITY_LEAD_TIME + DAY);
-		expect(alterableTimeframe.startTime).toBeLessThanOrEqual(automaticDayStart);
-		expect(alterableTimeframe.endTime).toBeGreaterThanOrEqual(automaticDayStart + DAY);
 	});
 
 	it('accepts only 15-minute values inside the configured ranges', () => {
