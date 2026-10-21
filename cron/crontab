@@ -11,4 +11,4 @@
 * * * * * /usr/local/bin/node /app/scripts/captureAvailabilityState.js >> /var/log/cron.log 2>&1
 
 # Cron job to add availability for the day entering the 35-day horizon
-5 0 * * * /usr/local/bin/node /app/scripts/addAutomaticAvailability.js >> /var/log/cron.log 2>&1
+25 1 * * * /usr/local/bin/node /app/scripts/addAutomaticAvailability.js >> /var/log/cron.log 2>&1
