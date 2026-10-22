@@ -7,7 +7,13 @@ import { Interval } from '$lib/util/interval';
 import { getAllowedTimes } from '$lib/util/getAllowedTimes';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
-import { EARLIEST_SHIFT_START, LATEST_SHIFT_END, MIN_PREP, WGS84 } from '$lib/constants';
+import {
+	EARLIEST_SHIFT_START,
+	LAST_VALID_TIME,
+	LATEST_SHIFT_END,
+	MIN_PREP,
+	WGS84
+} from '$lib/constants';
 
 interface CoordinatesTable {
 	busStopIndex: number;
@@ -109,8 +115,8 @@ export const getViableBusStops = async (
 	if (response.length === 0) {
 		return [];
 	}
-	const lastValidTime = 8640000000000000;
-	const afterPreptime = new Interval(Date.now() + MIN_PREP, lastValidTime);
+
+	const afterPreptime = new Interval(Date.now() + MIN_PREP, LAST_VALID_TIME);
 	const allowedTimes = Interval.intersect(
 		getAllowedTimes(earliest, latest, EARLIEST_SHIFT_START, LATEST_SHIFT_END),
 		[afterPreptime]

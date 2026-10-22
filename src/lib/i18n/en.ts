@@ -68,6 +68,7 @@ const translations: Translations = {
 		zoneNotSet: 'Zone not set.',
 		addressNotInZone: 'Address not in zone.',
 		companyUpdateSuccessful: 'Company data updated successfully.',
+		automaticAvailabilityTimesInvalid: 'The automatic availability time range is invalid.',
 
 		// AddVehicle
 		invalidSeats: 'Invalid number of passengers',
@@ -275,7 +276,7 @@ const translations: Translations = {
 	publicTransitTaxi: 'Public-transit Taxi',
 	serviceArea: 'Service area',
 	serviceTime: 'Service time',
-	serviceTimeContent: 'generally between 5 a.m. and 10 p.m. (depending on taxi availability)',
+	serviceTimeContent: 'generally between 5 a.m. and 11 p.m. (depending on taxi availability)',
 	regionAround: 'Region around',
 	perPerson: 'per person',
 	perRide: 'per ride',
@@ -480,6 +481,9 @@ const translations: Translations = {
 	availabilityPercent: 'current Coverage next two weeks',
 	availabilityPercentExplanation:
 		'This value represents the current coverage between 05:00 and 23:00 for availability in the next two weeks.',
+	automaticAvailability: 'Automatic',
+	automaticAvailabilityExplanation:
+		'Availability is added automatically in advance for the selected vehicle. It can then be adjusted as usual.',
 
 	daily: 'daily'
 };
