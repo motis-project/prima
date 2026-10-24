@@ -43,6 +43,7 @@ export function evaluateNewTours(
 		nextMonday.setHours(10);
 		nextMonday.setMinutes(0);
 		nextMonday.setSeconds(0);
+		nextMonday.setMilliseconds(0);
 		prepTime = nextMonday.getTime();
 	}
 
