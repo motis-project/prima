@@ -133,8 +133,6 @@ describe('add ride share request', () => {
 			startFixed: true,
 			requestedTime: requestedTime,
 			tourId,
-			pickupTime: whiteResponse.direct[0][0].pickupTime,
-			dropoffTime: whiteResponse.direct[0][0].dropoffTime,
 			mode: Mode.RIDE_SHARE
 		};
 		const bookingBody = {
@@ -306,8 +304,6 @@ describe('add ride share request', () => {
 			startFixed: true,
 			requestedTime: inXMinutes(50),
 			tourId,
-			pickupTime: whiteResponse.direct[0][0].pickupTime,
-			dropoffTime: whiteResponse.direct[0][0].dropoffTime,
 			mode: Mode.RIDE_SHARE
 		};
 		const bookingBody = {

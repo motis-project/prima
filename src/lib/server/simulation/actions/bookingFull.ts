@@ -6,7 +6,6 @@ import { expectedConnectionFromLeg } from '$lib/server/booking/expectedConnectio
 import { bookingApi, type BookingParameters } from '$lib/server/booking/taxi/bookingApi';
 import { getToursWithRequests } from '$lib/server/db/getTours';
 import { getRideShareTours } from '$lib/server/util/getRideShareTours';
-import { rediscoverWhitelistRequestTimes } from '$lib/server/util/rediscoverWhitelistRequestTimes';
 import { getCost } from '$lib/testHelpers';
 import { type Coordinates } from '$lib/util/Coordinates';
 import { lngLatToStr } from '$lib/util/lngLatToStr';
@@ -434,17 +433,8 @@ export async function bookFull(
 	const firstOdm = chosenItinerary.legs[firstOdmIndex];
 	const lastOdm = chosenItinerary.legs[lastOdmIndex];
 	const isDirect = chosenItinerary.legs.length === 1;
-
-	const { requestedTime1, requestedTime2 } = rediscoverWhitelistRequestTimes(
-		parameters.connection1!.startFixed,
-		isDirect,
-		firstOdmIndex,
-		lastOdmIndex,
-		chosenItinerary.legs
-	);
 	console.log(
 		{ isDirect },
-		{ requestedTime1: new Date(requestedTime1).toISOString() },
 		{ startFixed: parameters.connection1!.startFixed },
 		{
 			legs: chosenItinerary.legs.map((l) => {
@@ -468,8 +458,7 @@ export async function bookFull(
 	const connection1 = expectedConnectionFromLeg(
 		firstOdm,
 		chosenItinerary.signature1,
-		isDirect ? parameters.connection1!.startFixed : firstOdmIndex !== 0,
-		requestedTime1
+		isDirect ? parameters.connection1!.startFixed : firstOdmIndex !== 0
 	);
 	console.log(
 		'SimLOGS',
@@ -479,7 +468,7 @@ export async function bookFull(
 	const connection2 =
 		firstOdmIndex === lastOdmIndex
 			? null
-			: expectedConnectionFromLeg(lastOdm, chosenItinerary.signature2, true, requestedTime2);
+			: expectedConnectionFromLeg(lastOdm, chosenItinerary.signature2, true);
 	if (mode === 'ODM') {
 		const result = await bookingApiCall(
 			customerId,
