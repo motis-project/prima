@@ -443,4 +443,94 @@ describe('taxi pair insertion timing regressions', () => {
 		expect(result!.scheduledDropoffTimeEnd).toBe(300);
 		expect(result!.passengerDuration).toBe(300);
 	});
+	it('does not count an existing pickup event-group window as a passenger delay', () => {
+		const existingPickup = event({
+			id: 1,
+			eventGroupId: 1,
+			isPickup: true,
+			passengers: 2,
+			scheduledTimeStart: 1_919_000,
+			scheduledTimeEnd: 1_979_000,
+			prevLegDuration: 0,
+			nextLegDuration: 1_021_000,
+			lat: 2,
+			lng: 2,
+			departure: 0,
+			arrival: 3_000_000,
+			time: new Interval(1_919_000, 1_979_000)
+		});
+		const existingDropoff = event({
+			id: 2,
+			eventGroupId: 2,
+			isPickup: false,
+			passengers: 2,
+			scheduledTimeStart: 3_000_000,
+			scheduledTimeEnd: 3_000_000,
+			prevLegDuration: 1_021_000,
+			nextLegDuration: 0,
+			lat: 3,
+			lng: 3,
+			departure: 0,
+			arrival: 3_000_000,
+			time: new Interval(3_000_000, 3_000_000)
+		});
+		const vehicle = {
+			id: 1,
+			events: [existingPickup, existingDropoff]
+		} as unknown as Company['vehicles'][0];
+		const companies = [{ vehicles: [vehicle] }] as unknown as Company[];
+		const busStopTimes = [[new Interval(0, 0)]];
+		const singleEvaluations = new SingleInsertionEvaluations(busStopTimes, 3);
+		const pickup: SingleInsertionEvaluation = {
+			arrivalWindow: new Interval(0, 0),
+			prevLegDuration: 0,
+			nextLegDuration: 1_919_000,
+			insertionType: {
+				how: InsertHow.PREPEND,
+				what: InsertWhat.BUS_STOP,
+				where: InsertWhere.BEFORE_FIRST_EVENT,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			taxiWaitingTime: 0,
+			approachPlusReturnDurationDelta: 0,
+			fullyPayedDurationDelta: 0,
+			cost: 0,
+			previousEventId: undefined,
+			nextEventId: existingPickup.id,
+			eventInsertionIndex: 0
+		};
+		const dropoff: SingleInsertionEvaluation = {
+			...pickup,
+			arrivalWindow: new Interval(1_919_000, 1_979_000),
+			prevLegDuration: 0,
+			nextLegDuration: 1_021_000,
+			insertionType: {
+				how: InsertHow.INSERT,
+				what: InsertWhat.USER_CHOSEN,
+				where: InsertWhere.BETWEEN_EVENTS,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			previousEventId: existingPickup.id,
+			nextEventId: existingDropoff.id,
+			eventInsertionIndex: 1
+		};
+		singleEvaluations.addBusStop(0, 0, 0, pickup);
+		singleEvaluations.addUserChosen(1, dropoff);
+
+		const result = evaluatePairInsertions(
+			companies,
+			true,
+			new Map([[vehicle.id, [{ earliestPickup: 0, latestDropoff: 1 }]]]),
+			busStopTimes,
+			singleEvaluations,
+			{ passengers: 1, wheelchairs: 0, bikes: 0, luggage: 0 },
+			{ lat: 2, lng: 2 },
+			[{ lat: 1, lng: 1, times: [0] }]
+		)[0][0];
+
+		expect(result).toBeDefined();
+		expect(result!.scheduledDropoffTimeStart).toBe(1_919_000);
+		expect(result!.scheduledDropoffTimeEnd).toBe(1_979_000);
+		expect(result!.passengerDuration).toBe(1_919_000);
+	});
 });
