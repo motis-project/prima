@@ -411,25 +411,49 @@ export function evaluateBothInsertion(
 		nextLegDuration,
 		passengerDuration
 	);
+	const pickupSharesEventGroupWithPrev =
+		prev !== undefined &&
+		prevLegDuration === 0 &&
+		prev.time.noDistanceBetween(
+			new Interval(scheduledPickupTimeStart, scheduledPickupTimeEnd)
+		);
+	const dropoffSharesEventGroupWithNext =
+		next !== undefined &&
+		nextLegDuration === 0 &&
+		next.time.noDistanceBetween(
+			new Interval(scheduledDropoffTimeStart, scheduledDropoffTimeEnd)
+		);
 	// Compute shifts of scheduled time intervals of previous and next event
 	let prevShift = 0;
 	if (!comesFromCompany(insertionCase) && prev!.isPickup) {
 		prevShift = Math.max(
-			getScheduledEventTime(prev!) - scheduledPickupTimeEnd + prevLegDuration,
+			pickupSharesEventGroupWithPrev
+				? prev!.scheduledTimeEnd - scheduledPickupTimeEnd
+				: getScheduledEventTime(prev!) - scheduledPickupTimeStart + prevLegDuration,
 			0
 		);
 	}
 	let nextShift = 0;
 	if (!returnsToCompany(insertionCase) && !next!.isPickup) {
 		nextShift = Math.max(
-			scheduledDropoffTimeStart + nextLegDuration - getScheduledEventTime(next!),
+			dropoffSharesEventGroupWithNext
+				? scheduledDropoffTimeStart - next!.scheduledTimeStart
+				: scheduledDropoffTimeEnd + nextLegDuration - getScheduledEventTime(next!),
 			0
 		);
 	}
 
-	const weightedPassengerDuration =
+	let weightedPassengerDuration =
 		passengerCountNewRequest * (scheduledDropoffTimeStart - scheduledPickupTimeEnd) +
 		getWeightedPassengerDurationDelta(insertionCase, prev, next, prevShift, nextShift);
+	if (pickupSharesEventGroupWithPrev && !prev!.isPickup) {
+		weightedPassengerDuration +=
+			prev!.passengers * (scheduledPickupTimeStart - prev!.scheduledTimeStart);
+	}
+	if (dropoffSharesEventGroupWithNext && next!.isPickup) {
+		weightedPassengerDuration +=
+			next!.passengers * (next!.scheduledTimeEnd - scheduledDropoffTimeEnd);
+	}
 	const departure = comesFromCompany(insertionCase)
 		? scheduledPickupTimeEnd - prevLegDuration
 		: undefined;

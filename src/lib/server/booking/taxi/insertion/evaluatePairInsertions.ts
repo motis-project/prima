@@ -4,10 +4,13 @@ import type { Range } from '$lib/util/booking/getPossibleInsertions';
 import { InsertHow } from '$lib/util/booking/insertionTypes';
 import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
-import type { Interval } from '$lib/util/interval';
+import { Interval } from '$lib/util/interval';
+import type { Coordinates } from '$lib/util/Coordinates';
+import { isSamePlace } from '$lib/util/booking/isSamePlace';
 import type { InsertionInfo } from '../../insertionTypes';
 import { printInsertionType } from '../../insertionTypes';
 import { comesFromCompany, returnsToCompany } from '../durations';
+import type { BusStop } from '../BusStop';
 import type { Company, Event } from '../getBookingAvailability';
 import type { Insertion, SingleInsertionEvaluation, SingleInsertionEvaluations } from './core';
 import { computeCost, getWeightedPassengerDurationDelta, waitsTooLong } from './insertionMetrics';
@@ -48,6 +51,8 @@ export function evaluatePairInsertions(
 	busStopTimes: Interval[][],
 	singleEvaluations: SingleInsertionEvaluations,
 	required: Capacities,
+	userChosen: Coordinates,
+	busStops: BusStop[],
 	whitelist?: boolean
 ): (Insertion | undefined)[][] {
 	const bestEvaluations: (Insertion | undefined)[][] = new Array<(Insertion | undefined)[]>(
@@ -130,12 +135,24 @@ export function evaluatePairInsertions(
 					const nextDropoff = events[dropoffIdx];
 					for (const pickup of pickupCases) {
 						for (const dropoff of dropoffCases) {
+							const pickupCoordinates = startFixed ? busStops[busStopIdx] : userChosen;
+							const dropoffCoordinates = startFixed ? userChosen : busStops[busStopIdx];
 							const passengerRouteDuration = getPassengerRouteDuration(
 								pickup,
 								dropoff,
 								intermediatePassengerDrivingDuration
 							);
-							const schedule = schedulePairInsertion(pickup, dropoff, passengerRouteDuration);
+							const schedule = schedulePairInsertion(
+								pickup,
+								dropoff,
+								passengerRouteDuration,
+								prevPickup,
+								nextPickup,
+								prevDropoff,
+								nextDropoff,
+								pickupCoordinates,
+								dropoffCoordinates
+							);
 							if (schedule === undefined) {
 								continue;
 							}
@@ -362,9 +379,15 @@ function getPairInsertionMetrics({
 function schedulePairInsertion(
 	pickup: SingleInsertionEvaluation,
 	dropoff: SingleInsertionEvaluation,
-	passengerRouteDuration: number
+	passengerRouteDuration: number,
+	prevPickup: Event | undefined,
+	nextPickup: Event | undefined,
+	prevDropoff: Event | undefined,
+	nextDropoff: Event | undefined,
+	pickupCoordinates: Coordinates,
+	dropoffCoordinates: Coordinates
 ): PairInsertionSchedule | undefined {
-	const communicatedPickupTime = Math.max(
+	let communicatedPickupTime = Math.max(
 		pickup.arrivalWindow.endTime - SCHEDULED_TIME_BUFFER_PICKUP,
 		pickup.arrivalWindow.startTime
 	);
@@ -380,10 +403,10 @@ function schedulePairInsertion(
 		SCHEDULED_TIME_BUFFER_PICKUP,
 		availablePickupBuffer
 	);
-	const scheduledPickupTime =
+	let scheduledPickupTime =
 		communicatedPickupTime +
 		(pickup.insertionType.how === InsertHow.APPEND ? 0 : pickupScheduledShift);
-	const scheduledDropoffTime = Math.max(
+	let scheduledDropoffTime = Math.max(
 		dropoff.arrivalWindow.startTime,
 		scheduledPickupTime + passengerRouteDuration
 	);
@@ -398,7 +421,28 @@ function schedulePairInsertion(
 					dropoff.arrivalWindow.endTime - scheduledDropoffTime,
 					getScheduledTimeBufferDropoff(actualPassengerDuration)
 				);
-	const communicatedDropoffTime = scheduledDropoffTime + dropoffScheduledBuffer;
+	let communicatedDropoffTime = scheduledDropoffTime + dropoffScheduledBuffer;
+
+	const pickupEventGroup = matchingEventGroup(
+		prevPickup,
+		nextPickup,
+		pickupCoordinates,
+		new Interval(communicatedPickupTime, scheduledPickupTime)
+	);
+	if (pickupEventGroup !== undefined) {
+		communicatedPickupTime = Math.max(communicatedPickupTime, pickupEventGroup.scheduledTimeStart);
+		scheduledPickupTime = Math.min(scheduledPickupTime, pickupEventGroup.scheduledTimeEnd);
+	}
+	const dropoffEventGroup = matchingEventGroup(
+		prevDropoff,
+		nextDropoff,
+		dropoffCoordinates,
+		new Interval(scheduledDropoffTime, communicatedDropoffTime)
+	);
+	if (dropoffEventGroup !== undefined) {
+		scheduledDropoffTime = Math.max(scheduledDropoffTime, dropoffEventGroup.scheduledTimeStart);
+		communicatedDropoffTime = Math.min(communicatedDropoffTime, dropoffEventGroup.scheduledTimeEnd);
+	}
 
 	return {
 		communicatedPickupTime,
@@ -406,6 +450,29 @@ function schedulePairInsertion(
 		scheduledDropoffTime,
 		communicatedDropoffTime
 	};
+}
+
+function matchingEventGroup(
+	prev: Event | undefined,
+	next: Event | undefined,
+	coordinates: Coordinates,
+	interval: Interval
+): Event | undefined {
+	let match = belongsToSameEventGroup(prev, coordinates, interval) ? prev : undefined;
+	if (belongsToSameEventGroup(next, coordinates, interval)) {
+		match = next;
+	}
+	return match;
+}
+
+function belongsToSameEventGroup(
+	event: Event | undefined,
+	coordinates: Coordinates,
+	interval: Interval
+): boolean {
+	return (
+		event !== undefined && isSamePlace(event, coordinates) && interval.noDistanceBetween(event.time)
+	);
 }
 
 function getPassengerRouteDuration(
