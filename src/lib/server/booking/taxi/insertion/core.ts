@@ -17,7 +17,6 @@ import { Interval } from '$lib/util/interval';
 import type { RoutingResults } from '../routing';
 import type { Event } from '../getBookingAvailability';
 import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
-import { roundToUnit, MINUTE } from '$lib/util/time';
 import { InsertHow, InsertWhat } from '$lib/util/booking/insertionTypes';
 import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
 import { computeCost, getWeightedPassengerDurationDelta } from './insertionMetrics';
@@ -533,13 +532,6 @@ const getOldDrivingTime = (
 	return prev!.nextLegDuration;
 };
 
-const expandToFullMinutes = (interval: Interval) => {
-	return new Interval(
-		roundToUnit(interval.startTime, MINUTE, Math.floor),
-		roundToUnit(interval.endTime, MINUTE, Math.ceil)
-	);
-};
-
 const keepsPromises = (
 	insertionCase: InsertionType,
 	arrivalWindow: Interval,
@@ -550,12 +542,10 @@ const keepsPromises = (
 	const w = arrivalWindow.shift(
 		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? shift : -shift
 	);
-	const pickupWindow = expandToFullMinutes(
-		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? arrivalWindow : w
-	);
-	const dropoffWindow = expandToFullMinutes(
-		insertionCase.direction == InsertDirection.BUS_STOP_DROPOFF ? arrivalWindow : w
-	);
+	const pickupWindow =
+		insertionCase.direction == InsertDirection.BUS_STOP_PICKUP ? arrivalWindow : w;
+	const dropoffWindow =
+		insertionCase.direction == InsertDirection.BUS_STOP_DROPOFF ? arrivalWindow : w;
 
 	let checkPickup = false;
 	let checkDropoff = false;
