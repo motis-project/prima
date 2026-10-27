@@ -276,7 +276,7 @@ const translations: Translations = {
 	publicTransitTaxi: 'Public-transit Taxi',
 	serviceArea: 'Service area',
 	serviceTime: 'Service time',
-	serviceTimeContent: 'generally between 5 a.m. and 11 p.m. (depending on taxi availability)',
+	serviceTimeContent: 'generally between 5 a.m. and 10 p.m. (depending on taxi availability)',
 	regionAround: 'Region around',
 	perPerson: 'per person',
 	perRide: 'per ride',
