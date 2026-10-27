@@ -47,6 +47,8 @@ export interface Database {
 		address: string | null;
 		zone: number | null;
 		phone: string | null;
+		automaticAvailabilityStart: Generated<number>;
+		automaticAvailabilityEnd: Generated<number>;
 	};
 	vehicle: {
 		id: Generated<number>;
@@ -56,6 +58,7 @@ export interface Database {
 		wheelchairs: number;
 		bikes: number;
 		luggage: number;
+		setAutomaticAvailability: Generated<boolean>;
 	};
 	tour: {
 		id: Generated<number>;
