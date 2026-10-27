@@ -28,18 +28,21 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 		return error(404, 'Vehicle not found.');
 	}
 
-	await db
-		.updateTable('vehicle')
-		.set((eb) => ({
-			setAutomaticAvailability: eb
-				.case()
-				.when('vehicle.id', '=', vehicleId)
-				.then(true)
-				.else(false)
-				.end()
-		}))
-		.where('vehicle.company', '=', companyId)
-		.execute();
+	await db.transaction().execute(async (trx) => {
+		await trx
+			.updateTable('vehicle')
+			.set({ setAutomaticAvailability: false })
+			.where('vehicle.company', '=', companyId)
+			.where('setAutomaticAvailability', '=', true)
+			.execute();
+
+		await trx
+			.updateTable('vehicle')
+			.set({ setAutomaticAvailability: true })
+			.where('vehicle.id', '=', vehicleId)
+			.where('vehicle.company', '=', companyId)
+			.execute();
+	});
 
 	return json({ vehicleId });
 };
