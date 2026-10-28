@@ -16,7 +16,6 @@ import type { PromisedTimes } from '../PromisedTimes';
 import { Interval } from '$lib/util/interval';
 import type { RoutingResults } from '../routing';
 import type { Event } from '../getBookingAvailability';
-import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
 import { roundToUnit, MINUTE } from '$lib/util/time';
 import { InsertHow, InsertWhat } from '$lib/util/booking/insertionTypes';
 import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
@@ -231,7 +230,7 @@ export function evaluateSingleInsertion(
 	let newEndTimePrev = undefined;
 	if (
 		!comesFromCompany(insertionCase) &&
-		prev!.isPickup &&
+		prev!.pickupPassengers > 0 &&
 		communicatedTime - prev!.scheduledTimeEnd - prevLegDuration < 0
 	) {
 		newEndTimePrev = communicatedTime - prevLegDuration;
@@ -239,15 +238,14 @@ export function evaluateSingleInsertion(
 	let newStartTimeNext = undefined;
 	if (
 		!returnsToCompany(insertionCase) &&
-		!next!.isPickup &&
+		next!.dropoffPassengers > 0 &&
 		communicatedTime - next!.scheduledTimeEnd - nextLegDuration < 0
 	) {
 		newStartTimeNext = communicatedTime + nextLegDuration;
 	}
-	const prevShift =
-		newEndTimePrev !== undefined ? getScheduledEventTime(prev!) - newEndTimePrev : 0;
+	const prevShift = newEndTimePrev !== undefined ? prev!.scheduledTimeEnd - newEndTimePrev : 0;
 	const nextShift =
-		newStartTimeNext !== undefined ? newStartTimeNext - getScheduledEventTime(next!) : 0;
+		newStartTimeNext !== undefined ? newStartTimeNext - next!.scheduledTimeStart : 0;
 	const taxiWaitingTime = getWaitingTimeDelta(
 		insertionCase,
 		scheduledTimeCandidate,
@@ -263,12 +261,13 @@ export function evaluateSingleInsertion(
 		nextShift,
 		taxiDurationDelta
 	);
-	const passengersEnteringInPrev =
-		!comesFromCompany(insertionCase) && prev!.isPickup ? prev!.passengers : 0;
-	const passengerExitingAtNext =
-		!returnsToCompany(insertionCase) && !next!.isPickup ? next!.passengers : 0;
-	const weightedPassengerDuration =
-		passengersEnteringInPrev * prevShift + passengerExitingAtNext * nextShift;
+	const weightedPassengerDuration = getWeightedPassengerDurationDelta(
+		insertionCase,
+		prev,
+		next,
+		prevShift,
+		nextShift
+	);
 
 	const approachPlusReturnDurationDelta = getApproachPlusReturnDurationDelta(
 		insertionCase,
@@ -425,7 +424,7 @@ export function evaluateBothInsertion(
 		prevShift = Math.max(
 			pickupSharesEventGroupWithPrev
 				? prev!.scheduledTimeEnd - scheduledPickupTimeEnd
-				: getScheduledEventTime(prev!) - scheduledPickupTimeStart + prevLegDuration,
+				: prev!.scheduledTimeEnd - scheduledPickupTimeStart + prevLegDuration,
 			0
 		);
 	}
@@ -434,7 +433,7 @@ export function evaluateBothInsertion(
 		nextShift = Math.max(
 			dropoffSharesEventGroupWithNext
 				? scheduledDropoffTimeStart - next!.scheduledTimeStart
-				: scheduledDropoffTimeEnd + nextLegDuration - getScheduledEventTime(next!),
+				: scheduledDropoffTimeEnd + nextLegDuration - next!.scheduledTimeStart,
 			0
 		);
 	}
@@ -442,13 +441,13 @@ export function evaluateBothInsertion(
 	let weightedPassengerDuration =
 		passengerCountNewRequest * (scheduledDropoffTimeStart - scheduledPickupTimeEnd) +
 		getWeightedPassengerDurationDelta(insertionCase, prev, next, prevShift, nextShift);
-	if (pickupSharesEventGroupWithPrev && !prev!.isPickup) {
+	if (pickupSharesEventGroupWithPrev) {
 		weightedPassengerDuration +=
-			prev!.passengers * (scheduledPickupTimeStart - prev!.scheduledTimeStart);
+			prev!.dropoffPassengers * (scheduledPickupTimeStart - prev!.scheduledTimeStart);
 	}
-	if (dropoffSharesEventGroupWithNext && next!.isPickup) {
+	if (dropoffSharesEventGroupWithNext) {
 		weightedPassengerDuration +=
-			next!.passengers * (next!.scheduledTimeEnd - scheduledDropoffTimeEnd);
+			next!.pickupPassengers * (next!.scheduledTimeEnd - scheduledDropoffTimeEnd);
 	}
 	const departure = comesFromCompany(insertionCase)
 		? scheduledPickupTimeEnd - prevLegDuration

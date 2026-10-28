@@ -317,38 +317,29 @@ function getPairInsertionMetrics({
 
 	const prevShiftPickup =
 		!comesFromCompany(pickup.insertionType) &&
-		prevPickup.isPickup &&
+		prevPickup.pickupPassengers > 0 &&
 		prevPickup !== pickupEventGroup
-			? Math.max(
-					0,
-					getScheduledEventTime(prevPickup) - communicatedPickupTime + pickup.prevLegDuration
-				)
+			? Math.max(0, prevPickup.scheduledTimeEnd - communicatedPickupTime + pickup.prevLegDuration)
 			: 0;
 	const nextShiftPickup =
 		!returnsToCompany(pickup.insertionType) &&
-		!nextPickup.isPickup &&
+		nextPickup.dropoffPassengers > 0 &&
 		nextPickup !== pickupEventGroup
-			? Math.max(
-					0,
-					scheduledPickupTime + pickup.nextLegDuration - getScheduledEventTime(nextPickup)
-				)
+			? Math.max(0, scheduledPickupTime + pickup.nextLegDuration - nextPickup.scheduledTimeStart)
 			: 0;
 	const prevShiftDropoff =
 		!comesFromCompany(dropoff.insertionType) &&
-		prevDropoff.isPickup &&
+		prevDropoff.pickupPassengers > 0 &&
 		prevDropoff !== dropoffEventGroup
-			? Math.max(
-					0,
-					getScheduledEventTime(prevDropoff) - scheduledDropoffTime + dropoff.prevLegDuration
-				)
+			? Math.max(0, prevDropoff.scheduledTimeEnd - scheduledDropoffTime + dropoff.prevLegDuration)
 			: 0;
 	const nextShiftDropoff =
 		!returnsToCompany(dropoff.insertionType) &&
-		!nextDropoff.isPickup &&
+		nextDropoff.dropoffPassengers > 0 &&
 		nextDropoff !== dropoffEventGroup
 			? Math.max(
 					0,
-					communicatedDropoffTime + dropoff.nextLegDuration - getScheduledEventTime(nextDropoff)
+					communicatedDropoffTime + dropoff.nextLegDuration - nextDropoff.scheduledTimeStart
 				)
 			: 0;
 
@@ -501,9 +492,8 @@ function getEventGroupNarrowingPassengerDurationDelta(
 
 	let delta = 0;
 	for (const { event, startTime, endTime } of narrowedGroups.values()) {
-		delta +=
-			event.passengers *
-			(event.isPickup ? event.scheduledTimeEnd - endTime : startTime - event.scheduledTimeStart);
+		delta += event.pickupPassengers * (event.scheduledTimeEnd - endTime);
+		delta += event.dropoffPassengers * (startTime - event.scheduledTimeStart);
 	}
 	return delta;
 }
