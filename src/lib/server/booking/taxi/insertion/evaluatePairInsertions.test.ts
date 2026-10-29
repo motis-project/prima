@@ -390,6 +390,113 @@ describe('taxi pair insertion timing regressions', () => {
 		expect(result!.scheduledDropoffTimeStart - result!.scheduledPickupTimeEnd).toBe(130);
 	});
 
+	it('reclassifies intermediate tour boundaries when a pair insertion joins tours', () => {
+		const firstTourPickup = event({
+			id: 1,
+			tourId: 1,
+			scheduledTimeStart: 10,
+			scheduledTimeEnd: 10,
+			prevLegDuration: 10,
+			nextLegDuration: 40,
+			departure: 0,
+			arrival: 60,
+			time: new Interval(10, 10)
+		});
+		const firstTourDropoff = event({
+			id: 2,
+			tourId: 1,
+			isPickup: false,
+			scheduledTimeStart: 50,
+			scheduledTimeEnd: 50,
+			prevLegDuration: 40,
+			nextLegDuration: 20,
+			departure: 0,
+			arrival: 60,
+			time: new Interval(50, 50)
+		});
+		const secondTourPickup = event({
+			id: 3,
+			tourId: 2,
+			directDuration: 50,
+			scheduledTimeStart: 100,
+			scheduledTimeEnd: 100,
+			prevLegDuration: 30,
+			nextLegDuration: 40,
+			departure: 90,
+			arrival: 150,
+			time: new Interval(100, 100)
+		});
+		const secondTourDropoff = event({
+			id: 4,
+			tourId: 2,
+			isPickup: false,
+			scheduledTimeStart: 140,
+			scheduledTimeEnd: 140,
+			prevLegDuration: 40,
+			nextLegDuration: 10,
+			departure: 90,
+			arrival: 150,
+			time: new Interval(140, 140)
+		});
+		const vehicle = {
+			id: 1,
+			events: [firstTourPickup, firstTourDropoff, secondTourPickup, secondTourDropoff]
+		} as unknown as Company['vehicles'][0];
+		const companies = [{ vehicles: [vehicle] }] as unknown as Company[];
+		const busStopTimes = [[new Interval(0, 0)]];
+		const singleEvaluations = new SingleInsertionEvaluations(busStopTimes, 5);
+		const pickup: SingleInsertionEvaluation = {
+			arrivalWindow: new Interval(0, 0),
+			prevLegDuration: 0,
+			nextLegDuration: 10,
+			insertionType: {
+				how: InsertHow.PREPEND,
+				what: InsertWhat.BUS_STOP,
+				where: InsertWhere.BEFORE_FIRST_EVENT,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			taxiWaitingTime: 0,
+			approachPlusReturnDurationDelta: 0,
+			fullyPayedDurationDelta: 0,
+			cost: 0,
+			previousEventId: undefined,
+			nextEventId: firstTourPickup.id,
+			eventInsertionIndex: 0
+		};
+		const dropoff: SingleInsertionEvaluation = {
+			...pickup,
+			arrivalWindow: new Interval(150, 150),
+			prevLegDuration: 10,
+			nextLegDuration: 0,
+			insertionType: {
+				how: InsertHow.APPEND,
+				what: InsertWhat.USER_CHOSEN,
+				where: InsertWhere.AFTER_LAST_EVENT,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			previousEventId: secondTourDropoff.id,
+			nextEventId: undefined,
+			eventInsertionIndex: 4
+		};
+		singleEvaluations.addBusStop(0, 0, 0, pickup);
+		singleEvaluations.addUserChosen(4, dropoff);
+
+		const result = evaluatePairInsertions(
+			companies,
+			true,
+			new Map([[vehicle.id, [{ earliestPickup: 0, latestDropoff: 4 }]]]),
+			busStopTimes,
+			singleEvaluations,
+			{ passengers: 1, wheelchairs: 0, bikes: 0, luggage: 0 },
+			{ lat: 0, lng: 0 },
+			[{ lat: 0, lng: 0, times: [0] }]
+		)[0][0];
+
+		expect(result).toBeDefined();
+		expect(result!.approachPlusReturnDurationDelta).toBe(-50);
+		expect(result!.fullyPayedDurationDelta).toBe(50);
+	});
+
 	it('uses the narrowed shared event-group interval for pair insertion costs', () => {
 		const previousDropoff = event({
 			id: 1,
