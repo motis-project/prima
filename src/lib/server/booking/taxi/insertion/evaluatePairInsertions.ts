@@ -42,7 +42,8 @@ type PairInsertionMetricsInput = {
 	pickup: SingleInsertionEvaluation;
 	dropoff: SingleInsertionEvaluation;
 	schedule: PairInsertionSchedule;
-	cumulatedTaxiDrivingDelta: number;
+	cumulatedApproachPlusReturnDurationDelta: number;
+	cumulatedFullyPayedDurationDelta: number;
 	passengerCount: number;
 };
 
@@ -79,7 +80,8 @@ export function evaluatePairInsertions(
 		) {
 			return;
 		}
-		let cumulatedTaxiDrivingDelta = 0;
+		let cumulatedApproachPlusReturnDurationDelta = 0;
+		let cumulatedFullyPayedDurationDelta = 0;
 		let intermediatePassengerDrivingDuration = 0;
 		for (
 			let dropoffIdx = pickupIdx + 1;
@@ -109,10 +111,9 @@ export function evaluatePairInsertions(
 				if (drivingTime == null) {
 					return;
 				}
-				cumulatedTaxiDrivingDelta +=
-					drivingTime -
-					events[prevDropoffIdx].prevLegDuration -
-					events[dropoffIdx - 2].nextLegDuration;
+				cumulatedApproachPlusReturnDurationDelta -=
+					events[prevDropoffIdx].prevLegDuration + events[dropoffIdx - 2].nextLegDuration;
+				cumulatedFullyPayedDurationDelta += drivingTime;
 			}
 			for (let busStopIdx = 0; busStopIdx != busStopTimes.length; ++busStopIdx) {
 				for (let timeIdx = 0; timeIdx != busStopTimes[busStopIdx].length; ++timeIdx) {
@@ -171,7 +172,8 @@ export function evaluatePairInsertions(
 								pickup,
 								dropoff,
 								schedule,
-								cumulatedTaxiDrivingDelta,
+								cumulatedApproachPlusReturnDurationDelta,
+								cumulatedFullyPayedDurationDelta,
 								passengerCount: required.passengers
 							});
 							if (metrics === undefined) {
@@ -256,7 +258,8 @@ function getPairInsertionMetrics({
 	pickup,
 	dropoff,
 	schedule,
-	cumulatedTaxiDrivingDelta,
+	cumulatedApproachPlusReturnDurationDelta,
+	cumulatedFullyPayedDurationDelta,
 	passengerCount
 }: PairInsertionMetricsInput): PairInsertionMetrics | undefined {
 	const prevPickup = events[pickupIdx - 1];
@@ -275,9 +278,13 @@ function getPairInsertionMetrics({
 	} = schedule;
 
 	const approachPlusReturnDurationDelta =
-		pickup.approachPlusReturnDurationDelta + dropoff.approachPlusReturnDurationDelta;
+		pickup.approachPlusReturnDurationDelta +
+		dropoff.approachPlusReturnDurationDelta +
+		cumulatedApproachPlusReturnDurationDelta;
 	const fullyPayedDurationDelta =
-		pickup.fullyPayedDurationDelta + dropoff.fullyPayedDurationDelta + cumulatedTaxiDrivingDelta;
+		pickup.fullyPayedDurationDelta +
+		dropoff.fullyPayedDurationDelta +
+		cumulatedFullyPayedDurationDelta;
 
 	const newDeparture = comesFromCompany(pickup.insertionType)
 		? scheduledPickupTime - pickup.prevLegDuration
