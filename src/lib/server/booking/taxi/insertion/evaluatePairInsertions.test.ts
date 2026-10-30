@@ -5,12 +5,17 @@ import { describe, expect, it } from 'vitest';
 import { InsertDirection, InsertWhere } from '../../insertionTypes';
 import type { Company, Event } from '../getBookingAvailability';
 import type { RoutingResults } from '../routing';
-import { SingleInsertionEvaluations, type SingleInsertionEvaluation } from './core';
+import {
+	evaluateBothInsertion,
+	SingleInsertionEvaluations,
+	type SingleInsertionEvaluation
+} from './core';
 import { evaluatePairInsertions } from './evaluatePairInsertions';
 import { evaluateSingleInsertions } from './evaluateSingleInsertions';
+import { getWeightedPassengerDurationDelta } from './insertionMetrics';
 
-const event = (values: Partial<Event>): Event =>
-	({
+const event = (values: Partial<Event>): Event => {
+	const result = {
 		id: 1,
 		tourId: 1,
 		isPickup: true,
@@ -23,9 +28,196 @@ const event = (values: Partial<Event>): Event =>
 		arrival: 0,
 		time: new Interval(0, 0),
 		...values
-	}) as unknown as Event;
+	} as Event;
+	result.pickupPassengers ??= result.isPickup ? result.passengers : 0;
+	result.dropoffPassengers ??= result.isPickup ? 0 : result.passengers;
+	return result;
+};
+
+const evaluatePair = (
+	events: Event[],
+	pickup: SingleInsertionEvaluation,
+	dropoff: SingleInsertionEvaluation
+) => {
+	const vehicle = {
+		id: 1,
+		events
+	} as unknown as Company['vehicles'][0];
+	const busStopTimes = [[pickup.arrivalWindow]];
+	const insertionCount = dropoff.eventInsertionIndex - pickup.eventInsertionIndex + 1;
+	const singleEvaluations = new SingleInsertionEvaluations(busStopTimes, insertionCount);
+	singleEvaluations.addBusStop(0, 0, 0, pickup);
+	singleEvaluations.addUserChosen(insertionCount - 1, dropoff);
+
+	return evaluatePairInsertions(
+		[{ vehicles: [vehicle] }] as unknown as Company[],
+		true,
+		new Map([
+			[
+				vehicle.id,
+				[
+					{
+						earliestPickup: pickup.eventInsertionIndex,
+						latestDropoff: dropoff.eventInsertionIndex
+					}
+				]
+			]
+		]),
+		busStopTimes,
+		singleEvaluations,
+		{ passengers: 1, wheelchairs: 0, bikes: 0, luggage: 0 },
+		{ lat: 0, lng: 0 },
+		[{ lat: 0, lng: 0, times: [pickup.arrivalWindow.startTime] }]
+	)[0][0];
+};
 
 describe('taxi pair insertion timing regressions', () => {
+	it('uses pickup and dropoff counts separately for shifted mixed event groups', () => {
+		const insertionCase = {
+			how: InsertHow.INSERT,
+			where: InsertWhere.BETWEEN_EVENTS,
+			what: InsertWhat.BOTH,
+			direction: InsertDirection.BUS_STOP_PICKUP
+		};
+		const previousMixedGroup = event({
+			isPickup: true,
+			passengers: 2,
+			pickupPassengers: 3,
+			dropoffPassengers: 1
+		});
+		const nextMixedGroup = event({
+			isPickup: true,
+			passengers: 1,
+			pickupPassengers: 5,
+			dropoffPassengers: 4
+		});
+
+		expect(
+			getWeightedPassengerDurationDelta(insertionCase, previousMixedGroup, nextMixedGroup, 10, 20)
+		).toBe(110);
+	});
+
+	it('accounts for both event types when narrowing a mixed group around a new pickup', () => {
+		const previousMixedGroup = event({
+			id: 2,
+			isPickup: true,
+			passengers: 1,
+			pickupPassengers: 3,
+			dropoffPassengers: 2,
+			scheduledTimeStart: 0,
+			scheduledTimeEnd: 485_099,
+			nextLegDuration: 1_669_000,
+			arrival: 1_669_000,
+			time: new Interval(0, 485_099)
+		});
+		const vehicle = {
+			id: 1,
+			events: [previousMixedGroup]
+		} as unknown as Company['vehicles'][0];
+		const insertionCase = {
+			how: InsertHow.APPEND,
+			where: InsertWhere.BETWEEN_TOURS,
+			what: InsertWhat.BOTH,
+			direction: InsertDirection.BUS_STOP_PICKUP
+		};
+		const routing: RoutingResults = {
+			busStops: {
+				toBusStop: [{ company: [], event: [0] }],
+				fromBusStop: [{ company: [], event: [] }]
+			},
+			userChosen: {
+				toUserChosen: { company: [], event: [] },
+				fromUserChosen: { company: [637_000], event: [] }
+			}
+		};
+
+		const result = evaluateBothInsertion(
+			insertionCase,
+			[new Interval(0, 2_154_099)],
+			1_160_000,
+			new Interval(239_598, 357_099),
+			routing,
+			{
+				companyIdx: 0,
+				vehicle,
+				idxInVehicleEvents: 1,
+				insertionIdx: 0,
+				currentRange: { earliestPickup: 0, latestDropoff: 1 }
+			},
+			0,
+			previousMixedGroup,
+			undefined,
+			2
+		);
+
+		expect(result).toBeDefined();
+		expect(result!.scheduledPickupTimeStart).toBe(239_598);
+		expect(result!.passengerDuration).toBe(3_355_699);
+	});
+
+	it('includes narrowed neighboring event windows in insertion costs', () => {
+		const previousEvent = event({
+			id: 1,
+			isPickup: true,
+			scheduledTimeStart: 0,
+			scheduledTimeEnd: 100_000,
+			nextLegDuration: 1_834_000,
+			time: new Interval(0, 100_000)
+		});
+		const nextEvent = event({
+			id: 2,
+			isPickup: false,
+			scheduledTimeStart: 1_800_000,
+			scheduledTimeEnd: 2_200_000,
+			prevLegDuration: 1_834_000,
+			time: new Interval(1_800_000, 2_200_000)
+		});
+		const vehicle = {
+			id: 1,
+			events: [previousEvent, nextEvent]
+		} as unknown as Company['vehicles'][0];
+		const insertionCase = {
+			how: InsertHow.INSERT,
+			where: InsertWhere.BETWEEN_EVENTS,
+			what: InsertWhat.BOTH,
+			direction: InsertDirection.BUS_STOP_PICKUP
+		};
+		const routing: RoutingResults = {
+			busStops: {
+				toBusStop: [{ company: [], event: [0, 491_000] }],
+				fromBusStop: [{ company: [], event: [] }]
+			},
+			userChosen: {
+				toUserChosen: { company: [], event: [] },
+				fromUserChosen: { company: [], event: [0, 253_000] }
+			}
+		};
+
+		const result = evaluateBothInsertion(
+			insertionCase,
+			[new Interval(0, 2_200_000)],
+			1_090_000,
+			new Interval(491_000, 857_000),
+			routing,
+			{
+				companyIdx: 0,
+				vehicle,
+				idxInVehicleEvents: 1,
+				insertionIdx: 1,
+				currentRange: { earliestPickup: 0, latestDropoff: 1 }
+			},
+			0,
+			previousEvent,
+			nextEvent,
+			2
+		);
+
+		expect(result).toBeDefined();
+		expect(result!.fullyPayedDurationDelta).toBe(0);
+		expect(result!.taxiWaitingTime).toBe(500_000);
+		expect(result!.passengerDuration).toBe(2_680_000);
+	});
+
 	it('does not create an inverted dropoff interval when pair insertion windows overlap', () => {
 		const existingEvent = event({
 			scheduledTimeStart: 90_000,
@@ -79,7 +271,9 @@ describe('taxi pair insertion timing regressions', () => {
 			new Map([[vehicle.id, [{ earliestPickup: 0, latestDropoff: 1 }]]]),
 			busStopTimes,
 			singleEvaluations,
-			{ passengers: 1, wheelchairs: 0, bikes: 0, luggage: 0 }
+			{ passengers: 1, wheelchairs: 0, bikes: 0, luggage: 0 },
+			{ lat: 0, lng: 0 },
+			[{ lat: 0, lng: 0, times: [0] }]
 		)[0][0];
 
 		expect(result).toBeDefined();
@@ -158,7 +352,9 @@ describe('taxi pair insertion timing regressions', () => {
 			insertionRanges,
 			busStopTimes,
 			singleEvaluations,
-			required
+			required,
+			{ lat: 0, lng: 0 },
+			[{ lat: 0, lng: 0, times: [0] }]
 		)[0][0];
 
 		expect(result).toBeDefined();
@@ -222,10 +418,691 @@ describe('taxi pair insertion timing regressions', () => {
 			new Map([[vehicle.id, [{ earliestPickup: 0, latestDropoff: 2 }]]]),
 			busStopTimes,
 			singleEvaluations,
-			{ passengers: 1, wheelchairs: 0, bikes: 0, luggage: 0 }
+			{ passengers: 1, wheelchairs: 0, bikes: 0, luggage: 0 },
+			{ lat: 0, lng: 0 },
+			[{ lat: 0, lng: 0, times: [0] }]
 		)[0][0];
 
 		expect(result).toBeDefined();
 		expect(result!.scheduledDropoffTimeStart - result!.scheduledPickupTimeEnd).toBe(130);
+	});
+
+	it('reclassifies intermediate tour boundaries when a pair insertion joins tours', () => {
+		const firstTourPickup = event({
+			id: 1,
+			tourId: 1,
+			scheduledTimeStart: 10,
+			scheduledTimeEnd: 10,
+			prevLegDuration: 10,
+			nextLegDuration: 40,
+			departure: 0,
+			arrival: 60,
+			time: new Interval(10, 10)
+		});
+		const firstTourDropoff = event({
+			id: 2,
+			tourId: 1,
+			isPickup: false,
+			scheduledTimeStart: 50,
+			scheduledTimeEnd: 50,
+			prevLegDuration: 40,
+			nextLegDuration: 20,
+			departure: 0,
+			arrival: 60,
+			time: new Interval(50, 50)
+		});
+		const secondTourPickup = event({
+			id: 3,
+			tourId: 2,
+			directDuration: 50,
+			scheduledTimeStart: 100,
+			scheduledTimeEnd: 100,
+			prevLegDuration: 30,
+			nextLegDuration: 40,
+			departure: 90,
+			arrival: 150,
+			time: new Interval(100, 100)
+		});
+		const secondTourDropoff = event({
+			id: 4,
+			tourId: 2,
+			isPickup: false,
+			scheduledTimeStart: 140,
+			scheduledTimeEnd: 140,
+			prevLegDuration: 40,
+			nextLegDuration: 10,
+			departure: 90,
+			arrival: 150,
+			time: new Interval(140, 140)
+		});
+		const pickup: SingleInsertionEvaluation = {
+			arrivalWindow: new Interval(0, 0),
+			prevLegDuration: 0,
+			nextLegDuration: 10,
+			insertionType: {
+				how: InsertHow.PREPEND,
+				what: InsertWhat.BUS_STOP,
+				where: InsertWhere.BEFORE_FIRST_EVENT,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			taxiWaitingTime: 0,
+			approachPlusReturnDurationDelta: 0,
+			fullyPayedDurationDelta: 0,
+			cost: 0,
+			previousEventId: undefined,
+			nextEventId: firstTourPickup.id,
+			eventInsertionIndex: 0
+		};
+		const dropoff: SingleInsertionEvaluation = {
+			...pickup,
+			arrivalWindow: new Interval(150, 150),
+			prevLegDuration: 10,
+			nextLegDuration: 0,
+			insertionType: {
+				how: InsertHow.APPEND,
+				what: InsertWhat.USER_CHOSEN,
+				where: InsertWhere.AFTER_LAST_EVENT,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			previousEventId: secondTourDropoff.id,
+			nextEventId: undefined,
+			eventInsertionIndex: 4
+		};
+
+		const result = evaluatePair(
+			[firstTourPickup, firstTourDropoff, secondTourPickup, secondTourDropoff],
+			pickup,
+			dropoff
+		);
+
+		expect(result).toBeDefined();
+		expect(result!.approachPlusReturnDurationDelta).toBe(-50);
+		expect(result!.fullyPayedDurationDelta).toBe(50);
+	});
+
+	it('reclassifies every intermediate boundary when a pair insertion joins several tours', () => {
+		const firstTourPickup = event({
+			id: 1,
+			tourId: 1,
+			scheduledTimeStart: 10,
+			scheduledTimeEnd: 10,
+			prevLegDuration: 10,
+			nextLegDuration: 40,
+			departure: 0,
+			arrival: 60,
+			time: new Interval(10, 10)
+		});
+		const firstTourDropoff = event({
+			id: 2,
+			tourId: 1,
+			isPickup: false,
+			scheduledTimeStart: 50,
+			scheduledTimeEnd: 50,
+			prevLegDuration: 40,
+			nextLegDuration: 20,
+			departure: 0,
+			arrival: 60,
+			time: new Interval(50, 50)
+		});
+		const secondTourPickup = event({
+			id: 3,
+			tourId: 2,
+			directDuration: 50,
+			scheduledTimeStart: 100,
+			scheduledTimeEnd: 100,
+			prevLegDuration: 30,
+			nextLegDuration: 40,
+			departure: 90,
+			arrival: 150,
+			time: new Interval(100, 100)
+		});
+		const secondTourDropoff = event({
+			id: 4,
+			tourId: 2,
+			isPickup: false,
+			scheduledTimeStart: 140,
+			scheduledTimeEnd: 140,
+			prevLegDuration: 40,
+			nextLegDuration: 10,
+			departure: 90,
+			arrival: 150,
+			time: new Interval(140, 140)
+		});
+		const thirdTourPickup = event({
+			id: 5,
+			tourId: 3,
+			directDuration: 60,
+			scheduledTimeStart: 200,
+			scheduledTimeEnd: 200,
+			prevLegDuration: 40,
+			nextLegDuration: 40,
+			departure: 190,
+			arrival: 250,
+			time: new Interval(200, 200)
+		});
+		const thirdTourDropoff = event({
+			id: 6,
+			tourId: 3,
+			isPickup: false,
+			scheduledTimeStart: 240,
+			scheduledTimeEnd: 240,
+			prevLegDuration: 40,
+			nextLegDuration: 10,
+			departure: 190,
+			arrival: 250,
+			time: new Interval(240, 240)
+		});
+		const pickup: SingleInsertionEvaluation = {
+			arrivalWindow: new Interval(0, 0),
+			prevLegDuration: 0,
+			nextLegDuration: 10,
+			insertionType: {
+				how: InsertHow.PREPEND,
+				what: InsertWhat.BUS_STOP,
+				where: InsertWhere.BEFORE_FIRST_EVENT,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			taxiWaitingTime: 0,
+			approachPlusReturnDurationDelta: 0,
+			fullyPayedDurationDelta: 0,
+			cost: 0,
+			previousEventId: undefined,
+			nextEventId: firstTourPickup.id,
+			eventInsertionIndex: 0
+		};
+		const dropoff: SingleInsertionEvaluation = {
+			...pickup,
+			arrivalWindow: new Interval(250, 250),
+			prevLegDuration: 10,
+			nextLegDuration: 0,
+			insertionType: {
+				how: InsertHow.APPEND,
+				what: InsertWhat.USER_CHOSEN,
+				where: InsertWhere.AFTER_LAST_EVENT,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			previousEventId: thirdTourDropoff.id,
+			nextEventId: undefined,
+			eventInsertionIndex: 6
+		};
+
+		const result = evaluatePair(
+			[
+				firstTourPickup,
+				firstTourDropoff,
+				secondTourPickup,
+				secondTourDropoff,
+				thirdTourPickup,
+				thirdTourDropoff
+			],
+			pickup,
+			dropoff
+		);
+
+		expect(result).toBeDefined();
+		expect(result!.approachPlusReturnDurationDelta).toBe(-100);
+		expect(result!.fullyPayedDurationDelta).toBe(110);
+	});
+
+	it('combines intermediate boundary costs with connected pickup and dropoff endpoints', () => {
+		const previousTourDropoff = event({
+			id: 1,
+			tourId: 1,
+			isPickup: false,
+			scheduledTimeStart: 40,
+			scheduledTimeEnd: 40,
+			prevLegDuration: 10,
+			nextLegDuration: 10,
+			departure: 20,
+			arrival: 50,
+			time: new Interval(40, 40)
+		});
+		const firstIntermediatePickup = event({
+			id: 2,
+			tourId: 2,
+			scheduledTimeStart: 60,
+			scheduledTimeEnd: 60,
+			prevLegDuration: 10,
+			nextLegDuration: 40,
+			departure: 50,
+			arrival: 110,
+			time: new Interval(60, 60)
+		});
+		const firstIntermediateDropoff = event({
+			id: 3,
+			tourId: 2,
+			isPickup: false,
+			scheduledTimeStart: 100,
+			scheduledTimeEnd: 100,
+			prevLegDuration: 40,
+			nextLegDuration: 20,
+			departure: 50,
+			arrival: 110,
+			time: new Interval(100, 100)
+		});
+		const secondIntermediatePickup = event({
+			id: 4,
+			tourId: 3,
+			directDuration: 50,
+			scheduledTimeStart: 150,
+			scheduledTimeEnd: 150,
+			prevLegDuration: 30,
+			nextLegDuration: 40,
+			departure: 140,
+			arrival: 200,
+			time: new Interval(150, 150)
+		});
+		const secondIntermediateDropoff = event({
+			id: 5,
+			tourId: 3,
+			isPickup: false,
+			scheduledTimeStart: 190,
+			scheduledTimeEnd: 190,
+			prevLegDuration: 40,
+			nextLegDuration: 10,
+			departure: 140,
+			arrival: 200,
+			time: new Interval(190, 190)
+		});
+		const nextTourPickup = event({
+			id: 6,
+			tourId: 4,
+			scheduledTimeStart: 220,
+			scheduledTimeEnd: 220,
+			prevLegDuration: 20,
+			nextLegDuration: 10,
+			departure: 210,
+			arrival: 250,
+			time: new Interval(220, 220)
+		});
+		const pickup: SingleInsertionEvaluation = {
+			arrivalWindow: new Interval(50, 50),
+			prevLegDuration: 10,
+			nextLegDuration: 10,
+			insertionType: {
+				how: InsertHow.CONNECT,
+				what: InsertWhat.BUS_STOP,
+				where: InsertWhere.BETWEEN_TOURS,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			taxiWaitingTime: 0,
+			approachPlusReturnDurationDelta: -20,
+			fullyPayedDurationDelta: 20,
+			cost: 0,
+			previousEventId: previousTourDropoff.id,
+			nextEventId: firstIntermediatePickup.id,
+			eventInsertionIndex: 1
+		};
+		const dropoff: SingleInsertionEvaluation = {
+			...pickup,
+			arrivalWindow: new Interval(200, 200),
+			prevLegDuration: 10,
+			nextLegDuration: 20,
+			insertionType: {
+				how: InsertHow.CONNECT,
+				what: InsertWhat.USER_CHOSEN,
+				where: InsertWhere.BETWEEN_TOURS,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			approachPlusReturnDurationDelta: -30,
+			fullyPayedDurationDelta: 30,
+			previousEventId: secondIntermediateDropoff.id,
+			nextEventId: nextTourPickup.id,
+			eventInsertionIndex: 5
+		};
+
+		const result = evaluatePair(
+			[
+				previousTourDropoff,
+				firstIntermediatePickup,
+				firstIntermediateDropoff,
+				secondIntermediatePickup,
+				secondIntermediateDropoff,
+				nextTourPickup
+			],
+			pickup,
+			dropoff
+		);
+
+		expect(result).toBeDefined();
+		expect(result!.approachPlusReturnDurationDelta).toBe(-100);
+		expect(result!.fullyPayedDurationDelta).toBe(100);
+	});
+
+	it('counts a shifted dropoff group once when the new dropoff joins it', () => {
+		const existingPickup = event({
+			id: 1,
+			eventGroupId: 1,
+			isPickup: true,
+			scheduledTimeStart: 10,
+			scheduledTimeEnd: 60,
+			prevLegDuration: 0,
+			nextLegDuration: 940,
+			lat: 1,
+			lng: 1,
+			departure: 9,
+			arrival: 1_020,
+			time: new Interval(10, 60)
+		});
+		const existingDropoff = event({
+			id: 2,
+			eventGroupId: 2,
+			isPickup: false,
+			scheduledTimeStart: 1_000,
+			scheduledTimeEnd: 1_020,
+			prevLegDuration: 940,
+			nextLegDuration: 0,
+			lat: 0,
+			lng: 0,
+			departure: 9,
+			arrival: 1_020,
+			time: new Interval(1_000, 1_020)
+		});
+		const pickup: SingleInsertionEvaluation = {
+			arrivalWindow: new Interval(500, 500),
+			prevLegDuration: 500,
+			nextLegDuration: 511,
+			insertionType: {
+				how: InsertHow.INSERT,
+				what: InsertWhat.BUS_STOP,
+				where: InsertWhere.BETWEEN_EVENTS,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			taxiWaitingTime: 0,
+			approachPlusReturnDurationDelta: 0,
+			fullyPayedDurationDelta: 0,
+			cost: 0,
+			previousEventId: existingPickup.id,
+			nextEventId: existingDropoff.id,
+			eventInsertionIndex: 1
+		};
+		const dropoff: SingleInsertionEvaluation = {
+			...pickup,
+			arrivalWindow: new Interval(1_011, 1_020),
+			prevLegDuration: 0,
+			nextLegDuration: 0,
+			insertionType: {
+				how: InsertHow.APPEND,
+				what: InsertWhat.USER_CHOSEN,
+				where: InsertWhere.AFTER_LAST_EVENT,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			previousEventId: existingDropoff.id,
+			nextEventId: undefined,
+			eventInsertionIndex: 2
+		};
+
+		const result = evaluatePair([existingPickup, existingDropoff], pickup, dropoff);
+
+		expect(result).toBeDefined();
+		expect(result!.scheduledDropoffTimeStart).toBe(1_011);
+		expect(result!.scheduledDropoffTimeEnd).toBe(1_020);
+		expect(result!.passengerDuration).toBe(582);
+	});
+
+	it('uses the narrowed shared event-group interval for pair insertion costs', () => {
+		const previousDropoff = event({
+			id: 1,
+			isPickup: false,
+			scheduledTimeStart: 200,
+			scheduledTimeEnd: 200,
+			nextLegDuration: 100,
+			lat: 3,
+			lng: 3,
+			departure: 0,
+			arrival: 300,
+			time: new Interval(200, 200)
+		});
+		const nextPickup = event({
+			id: 2,
+			isPickup: true,
+			scheduledTimeStart: 300,
+			scheduledTimeEnd: 300,
+			prevLegDuration: 100,
+			lat: 2,
+			lng: 2,
+			departure: 0,
+			arrival: 300,
+			time: new Interval(300, 300)
+		});
+		const vehicle = {
+			id: 1,
+			events: [previousDropoff, nextPickup]
+		} as unknown as Company['vehicles'][0];
+		const companies = [{ vehicles: [vehicle] }] as unknown as Company[];
+		const busStopTimes = [[new Interval(0, 0)]];
+		const singleEvaluations = new SingleInsertionEvaluations(busStopTimes, 3);
+		const pickup: SingleInsertionEvaluation = {
+			arrivalWindow: new Interval(0, 0),
+			prevLegDuration: 0,
+			nextLegDuration: 100,
+			insertionType: {
+				how: InsertHow.PREPEND,
+				what: InsertWhat.BUS_STOP,
+				where: InsertWhere.BEFORE_FIRST_EVENT,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			taxiWaitingTime: 0,
+			approachPlusReturnDurationDelta: 0,
+			fullyPayedDurationDelta: 0,
+			cost: 0,
+			previousEventId: undefined,
+			nextEventId: previousDropoff.id,
+			eventInsertionIndex: 0
+		};
+		const dropoff: SingleInsertionEvaluation = {
+			...pickup,
+			arrivalWindow: new Interval(250, 300),
+			prevLegDuration: 100,
+			nextLegDuration: 0,
+			insertionType: {
+				how: InsertHow.INSERT,
+				what: InsertWhat.USER_CHOSEN,
+				where: InsertWhere.BETWEEN_EVENTS,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			previousEventId: previousDropoff.id,
+			nextEventId: nextPickup.id,
+			eventInsertionIndex: 1
+		};
+		singleEvaluations.addBusStop(0, 0, 0, pickup);
+		singleEvaluations.addUserChosen(1, dropoff);
+
+		const result = evaluatePairInsertions(
+			companies,
+			true,
+			new Map([[vehicle.id, [{ earliestPickup: 0, latestDropoff: 1 }]]]),
+			busStopTimes,
+			singleEvaluations,
+			{ passengers: 1, wheelchairs: 0, bikes: 0, luggage: 0 },
+			{ lat: 2, lng: 2 },
+			[{ lat: 1, lng: 1, times: [0] }]
+		)[0][0];
+
+		expect(result).toBeDefined();
+		expect(result!.scheduledPickupTimeEnd).toBe(0);
+		expect(result!.scheduledDropoffTimeStart).toBe(300);
+		expect(result!.scheduledDropoffTimeEnd).toBe(300);
+		expect(result!.passengerDuration).toBe(300);
+	});
+	it('does not count an existing pickup event-group window as a passenger delay', () => {
+		const existingPickup = event({
+			id: 1,
+			eventGroupId: 1,
+			isPickup: true,
+			passengers: 2,
+			scheduledTimeStart: 1_919_000,
+			scheduledTimeEnd: 1_979_000,
+			prevLegDuration: 0,
+			nextLegDuration: 1_021_000,
+			lat: 2,
+			lng: 2,
+			departure: 0,
+			arrival: 3_000_000,
+			time: new Interval(1_919_000, 1_979_000)
+		});
+		const existingDropoff = event({
+			id: 2,
+			eventGroupId: 2,
+			isPickup: false,
+			passengers: 2,
+			scheduledTimeStart: 3_000_000,
+			scheduledTimeEnd: 3_000_000,
+			prevLegDuration: 1_021_000,
+			nextLegDuration: 0,
+			lat: 3,
+			lng: 3,
+			departure: 0,
+			arrival: 3_000_000,
+			time: new Interval(3_000_000, 3_000_000)
+		});
+		const vehicle = {
+			id: 1,
+			events: [existingPickup, existingDropoff]
+		} as unknown as Company['vehicles'][0];
+		const companies = [{ vehicles: [vehicle] }] as unknown as Company[];
+		const busStopTimes = [[new Interval(0, 0)]];
+		const singleEvaluations = new SingleInsertionEvaluations(busStopTimes, 3);
+		const pickup: SingleInsertionEvaluation = {
+			arrivalWindow: new Interval(0, 0),
+			prevLegDuration: 0,
+			nextLegDuration: 1_919_000,
+			insertionType: {
+				how: InsertHow.PREPEND,
+				what: InsertWhat.BUS_STOP,
+				where: InsertWhere.BEFORE_FIRST_EVENT,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			taxiWaitingTime: 0,
+			approachPlusReturnDurationDelta: 0,
+			fullyPayedDurationDelta: 0,
+			cost: 0,
+			previousEventId: undefined,
+			nextEventId: existingPickup.id,
+			eventInsertionIndex: 0
+		};
+		const dropoff: SingleInsertionEvaluation = {
+			...pickup,
+			arrivalWindow: new Interval(1_919_000, 1_979_000),
+			prevLegDuration: 0,
+			nextLegDuration: 1_021_000,
+			insertionType: {
+				how: InsertHow.INSERT,
+				what: InsertWhat.USER_CHOSEN,
+				where: InsertWhere.BETWEEN_EVENTS,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			previousEventId: existingPickup.id,
+			nextEventId: existingDropoff.id,
+			eventInsertionIndex: 1
+		};
+		singleEvaluations.addBusStop(0, 0, 0, pickup);
+		singleEvaluations.addUserChosen(1, dropoff);
+
+		const result = evaluatePairInsertions(
+			companies,
+			true,
+			new Map([[vehicle.id, [{ earliestPickup: 0, latestDropoff: 1 }]]]),
+			busStopTimes,
+			singleEvaluations,
+			{ passengers: 1, wheelchairs: 0, bikes: 0, luggage: 0 },
+			{ lat: 2, lng: 2 },
+			[{ lat: 1, lng: 1, times: [0] }]
+		)[0][0];
+
+		expect(result).toBeDefined();
+		expect(result!.scheduledDropoffTimeStart).toBe(1_919_000);
+		expect(result!.scheduledDropoffTimeEnd).toBe(1_979_000);
+		expect(result!.passengerDuration).toBe(1_919_000);
+	});
+	it('accounts for pickups and dropoffs separately when narrowing a mixed event group', () => {
+		const mixedEventGroup = event({
+			id: 1,
+			eventGroupId: 1,
+			isPickup: true,
+			passengers: 2,
+			pickupPassengers: 3,
+			dropoffPassengers: 1,
+			scheduledTimeStart: 1_000,
+			scheduledTimeEnd: 1_060,
+			nextLegDuration: 1_000,
+			lat: 2,
+			lng: 2,
+			departure: 1_000,
+			arrival: 2_000,
+			time: new Interval(1_000, 1_060)
+		});
+		const existingDropoff = event({
+			id: 2,
+			eventGroupId: 2,
+			isPickup: false,
+			passengers: 3,
+			scheduledTimeStart: 2_000,
+			scheduledTimeEnd: 2_000,
+			prevLegDuration: 1_000,
+			lat: 3,
+			lng: 3,
+			departure: 1_000,
+			arrival: 2_000,
+			time: new Interval(2_000, 2_000)
+		});
+		const vehicle = {
+			id: 1,
+			events: [mixedEventGroup, existingDropoff]
+		} as unknown as Company['vehicles'][0];
+		const companies = [{ vehicles: [vehicle] }] as unknown as Company[];
+		const busStopTimes = [[new Interval(1_560, 1_560)]];
+		const singleEvaluations = new SingleInsertionEvaluations(busStopTimes, 3);
+		const pickup: SingleInsertionEvaluation = {
+			arrivalWindow: new Interval(1_000, 1_000),
+			prevLegDuration: 0,
+			nextLegDuration: 0,
+			insertionType: {
+				how: InsertHow.PREPEND,
+				what: InsertWhat.USER_CHOSEN,
+				where: InsertWhere.BEFORE_FIRST_EVENT,
+				direction: InsertDirection.BUS_STOP_DROPOFF
+			},
+			taxiWaitingTime: 0,
+			approachPlusReturnDurationDelta: 0,
+			fullyPayedDurationDelta: 0,
+			cost: 0,
+			previousEventId: undefined,
+			nextEventId: mixedEventGroup.id,
+			eventInsertionIndex: 0
+		};
+		const dropoff: SingleInsertionEvaluation = {
+			...pickup,
+			arrivalWindow: new Interval(1_560, 1_560),
+			prevLegDuration: 500,
+			nextLegDuration: 440,
+			insertionType: {
+				how: InsertHow.INSERT,
+				what: InsertWhat.BUS_STOP,
+				where: InsertWhere.BETWEEN_EVENTS,
+				direction: InsertDirection.BUS_STOP_DROPOFF
+			},
+			previousEventId: mixedEventGroup.id,
+			nextEventId: existingDropoff.id,
+			eventInsertionIndex: 1
+		};
+		singleEvaluations.addUserChosen(0, pickup);
+		singleEvaluations.addBusStop(0, 0, 1, dropoff);
+
+		const result = evaluatePairInsertions(
+			companies,
+			false,
+			new Map([[vehicle.id, [{ earliestPickup: 0, latestDropoff: 1 }]]]),
+			busStopTimes,
+			singleEvaluations,
+			{ passengers: 3, wheelchairs: 0, bikes: 0, luggage: 0 },
+			{ lat: 2, lng: 2 },
+			[{ lat: 1, lng: 1, times: [1_560] }]
+		)[0][0];
+
+		expect(result).toBeDefined();
+		expect(result!.scheduledPickupTimeStart).toBe(1_000);
+		expect(result!.scheduledPickupTimeEnd).toBe(1_000);
+		expect(result!.passengerDuration).toBe(1_860);
 	});
 });
