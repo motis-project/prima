@@ -13,7 +13,7 @@ import { comesFromCompany, returnsToCompany } from '../durations';
 import type { BusStop } from '../BusStop';
 import type { Company, Event } from '../getBookingAvailability';
 import type { Insertion, SingleInsertionEvaluation, SingleInsertionEvaluations } from './core';
-import { computeCost, getWeightedPassengerDurationDelta, waitsTooLong } from './insertionMetrics';
+import { computeCost, waitsTooLong } from './insertionMetrics';
 import { iterateAllInsertions } from './iterateAllInsertions';
 
 type PairInsertionSchedule = {
@@ -322,50 +322,36 @@ function getPairInsertionMetrics({
 		return undefined;
 	}
 
-	const prevShiftPickup =
-		!comesFromCompany(pickup.insertionType) &&
-		prevPickup.pickupPassengers > 0 &&
-		prevPickup !== pickupEventGroup
-			? Math.max(0, prevPickup.scheduledTimeEnd - communicatedPickupTime + pickup.prevLegDuration)
-			: 0;
-	const nextShiftPickup =
-		!returnsToCompany(pickup.insertionType) &&
-		nextPickup.dropoffPassengers > 0 &&
-		nextPickup !== pickupEventGroup
-			? Math.max(0, scheduledPickupTime + pickup.nextLegDuration - nextPickup.scheduledTimeStart)
-			: 0;
-	const prevShiftDropoff =
-		!comesFromCompany(dropoff.insertionType) &&
-		prevDropoff.pickupPassengers > 0 &&
-		prevDropoff !== dropoffEventGroup
-			? Math.max(0, prevDropoff.scheduledTimeEnd - scheduledDropoffTime + dropoff.prevLegDuration)
-			: 0;
-	const nextShiftDropoff =
-		!returnsToCompany(dropoff.insertionType) &&
-		nextDropoff.dropoffPassengers > 0 &&
-		nextDropoff !== dropoffEventGroup
-			? Math.max(
-					0,
-					communicatedDropoffTime + dropoff.nextLegDuration - nextDropoff.scheduledTimeStart
-				)
-			: 0;
-
 	let weightedPassengerDuration = passengerCount * (scheduledDropoffTime - scheduledPickupTime);
-	weightedPassengerDuration += getWeightedPassengerDurationDelta(
-		pickup.insertionType,
-		prevPickup,
-		nextPickup,
-		prevShiftPickup,
-		nextShiftPickup
-	);
-	weightedPassengerDuration += getWeightedPassengerDurationDelta(
-		dropoff.insertionType,
-		prevDropoff,
-		nextDropoff,
-		prevShiftDropoff,
-		nextShiftDropoff
-	);
-	weightedPassengerDuration += getEventGroupNarrowingPassengerDurationDelta([
+	weightedPassengerDuration += getEventGroupPassengerDurationDelta([
+		{
+			event:
+				comesFromCompany(pickup.insertionType) || prevPickup === pickupEventGroup
+					? undefined
+					: prevPickup,
+			endTime: communicatedPickupTime - pickup.prevLegDuration
+		},
+		{
+			event:
+				returnsToCompany(pickup.insertionType) || nextPickup === pickupEventGroup
+					? undefined
+					: nextPickup,
+			startTime: scheduledPickupTime + pickup.nextLegDuration
+		},
+		{
+			event:
+				comesFromCompany(dropoff.insertionType) || prevDropoff === dropoffEventGroup
+					? undefined
+					: prevDropoff,
+			endTime: scheduledDropoffTime - dropoff.prevLegDuration
+		},
+		{
+			event:
+				returnsToCompany(dropoff.insertionType) || nextDropoff === dropoffEventGroup
+					? undefined
+					: nextDropoff,
+			startTime: communicatedDropoffTime + dropoff.nextLegDuration
+		},
 		{
 			event: pickupEventGroup,
 			startTime: communicatedPickupTime,
@@ -476,29 +462,35 @@ function schedulePairInsertion(
 	};
 }
 
-function getEventGroupNarrowingPassengerDurationDelta(
-	matches: {
+function getEventGroupPassengerDurationDelta(
+	updates: {
 		event: Event | undefined;
-		startTime: number;
-		endTime: number;
+		startTime?: number;
+		endTime?: number;
 	}[]
 ): number {
-	const narrowedGroups = new Map<number, { event: Event; startTime: number; endTime: number }>();
-	for (const { event, startTime, endTime } of matches) {
+	const updatedGroups = new Map<number, { event: Event; startTime: number; endTime: number }>();
+	for (const { event, startTime, endTime } of updates) {
 		if (event === undefined) {
 			continue;
 		}
 		const key = event.eventGroupId ?? event.id;
-		const existing = narrowedGroups.get(key);
-		narrowedGroups.set(key, {
+		const existing = updatedGroups.get(key);
+		updatedGroups.set(key, {
 			event,
-			startTime: Math.max(existing?.startTime ?? event.scheduledTimeStart, startTime),
-			endTime: Math.min(existing?.endTime ?? event.scheduledTimeEnd, endTime)
+			startTime: Math.max(
+				existing?.startTime ?? event.scheduledTimeStart,
+				startTime ?? event.scheduledTimeStart
+			),
+			endTime: Math.min(
+				existing?.endTime ?? event.scheduledTimeEnd,
+				endTime ?? event.scheduledTimeEnd
+			)
 		});
 	}
 
 	let delta = 0;
-	for (const { event, startTime, endTime } of narrowedGroups.values()) {
+	for (const { event, startTime, endTime } of updatedGroups.values()) {
 		delta += event.pickupPassengers * (event.scheduledTimeEnd - endTime);
 		delta += event.dropoffPassengers * (startTime - event.scheduledTimeStart);
 	}

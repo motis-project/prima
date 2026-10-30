@@ -769,6 +769,77 @@ describe('taxi pair insertion timing regressions', () => {
 		expect(result!.fullyPayedDurationDelta).toBe(100);
 	});
 
+	it('counts a shifted dropoff group once when the new dropoff joins it', () => {
+		const existingPickup = event({
+			id: 1,
+			eventGroupId: 1,
+			isPickup: true,
+			scheduledTimeStart: 10,
+			scheduledTimeEnd: 60,
+			prevLegDuration: 0,
+			nextLegDuration: 940,
+			lat: 1,
+			lng: 1,
+			departure: 9,
+			arrival: 1_020,
+			time: new Interval(10, 60)
+		});
+		const existingDropoff = event({
+			id: 2,
+			eventGroupId: 2,
+			isPickup: false,
+			scheduledTimeStart: 1_000,
+			scheduledTimeEnd: 1_020,
+			prevLegDuration: 940,
+			nextLegDuration: 0,
+			lat: 0,
+			lng: 0,
+			departure: 9,
+			arrival: 1_020,
+			time: new Interval(1_000, 1_020)
+		});
+		const pickup: SingleInsertionEvaluation = {
+			arrivalWindow: new Interval(500, 500),
+			prevLegDuration: 500,
+			nextLegDuration: 511,
+			insertionType: {
+				how: InsertHow.INSERT,
+				what: InsertWhat.BUS_STOP,
+				where: InsertWhere.BETWEEN_EVENTS,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			taxiWaitingTime: 0,
+			approachPlusReturnDurationDelta: 0,
+			fullyPayedDurationDelta: 0,
+			cost: 0,
+			previousEventId: existingPickup.id,
+			nextEventId: existingDropoff.id,
+			eventInsertionIndex: 1
+		};
+		const dropoff: SingleInsertionEvaluation = {
+			...pickup,
+			arrivalWindow: new Interval(1_011, 1_020),
+			prevLegDuration: 0,
+			nextLegDuration: 0,
+			insertionType: {
+				how: InsertHow.APPEND,
+				what: InsertWhat.USER_CHOSEN,
+				where: InsertWhere.AFTER_LAST_EVENT,
+				direction: InsertDirection.BUS_STOP_PICKUP
+			},
+			previousEventId: existingDropoff.id,
+			nextEventId: undefined,
+			eventInsertionIndex: 2
+		};
+
+		const result = evaluatePair([existingPickup, existingDropoff], pickup, dropoff);
+
+		expect(result).toBeDefined();
+		expect(result!.scheduledDropoffTimeStart).toBe(1_011);
+		expect(result!.scheduledDropoffTimeEnd).toBe(1_020);
+		expect(result!.passengerDuration).toBe(582);
+	});
+
 	it('uses the narrowed shared event-group interval for pair insertion costs', () => {
 		const previousDropoff = event({
 			id: 1,
