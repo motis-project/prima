@@ -1,4 +1,4 @@
-import { SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
+import { MIN_PREP_BOOKING, SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import {
 	InsertDirection,
 	type InsertionInfo,
@@ -42,6 +42,7 @@ export type InsertionEvaluation = {
 	pickupNextLegDuration: number;
 	dropoffPrevLegDuration: number;
 	dropoffNextLegDuration: number;
+	timeOfferExpires: number;
 };
 
 export type Insertion = InsertionEvaluation & {
@@ -505,7 +506,8 @@ export function evaluateBothInsertion(
 		pickupPrevLegDuration: prevLegDuration,
 		pickupNextLegDuration: passengerDuration,
 		dropoffPrevLegDuration: passengerDuration,
-		dropoffNextLegDuration: nextLegDuration
+		dropoffNextLegDuration: nextLegDuration,
+		timeOfferExpires: scheduledPickupTimeStart - MIN_PREP_BOOKING - prevLegDuration
 	};
 }
 

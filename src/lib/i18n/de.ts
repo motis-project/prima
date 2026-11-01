@@ -110,6 +110,7 @@ const translations: Translations = {
 		bookingError2:
 			'Zweiter Abschnitt konnte nicht gebucht werden. Bitte führen Sie eine neue Suche durch.',
 		bookingSuccess: 'Buchung erfolgreich.',
+		offerExpired: 'Das Angebot ist nicht mehr gültig.',
 
 		// Journey
 		cancelled: 'Diese Fahrt wurde storniert.',
@@ -363,7 +364,10 @@ const translations: Translations = {
 		cancelCheckbox:
 			'Alle Touren löschen, die mit der selben Regel erstellt wurden (wird keine Touren löschen, für die bereits eine Mitfahrt vereinbart wurde)	',
 		history: 'Verlauf',
-		deleteFavourites: 'Verlauf löschen'
+		deleteFavourites: 'Verlauf löschen',
+		offerExpiresExplanation: (timeOfferExpires: number) => {
+			return `Das Angebot wird nicht reserviert und ist höchstens bis ${new Date(timeOfferExpires)} gültig.`;
+		}
 	},
 
 	explainer: {

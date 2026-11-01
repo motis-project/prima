@@ -1,4 +1,4 @@
-import { SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
+import { MIN_PREP_BOOKING, SCHEDULED_TIME_BUFFER_PICKUP } from '$lib/constants';
 import type { Capacities } from '$lib/util/booking/Capacities';
 import type { Range } from '$lib/util/booking/getPossibleInsertions';
 import { InsertHow } from '$lib/util/booking/insertionTypes';
@@ -218,7 +218,9 @@ export function evaluatePairInsertions(
 									prevDropoffId: dropoff.previousEventId,
 									nextDropoffId: dropoff.nextEventId,
 									pickupIdxInEvents: pickup.eventInsertionIndex,
-									dropoffIdxInEvents: dropoff.eventInsertionIndex
+									dropoffIdxInEvents: dropoff.eventInsertionIndex,
+									timeOfferExpires:
+										communicatedPickupTime - MIN_PREP_BOOKING - pickup.prevLegDuration
 								};
 							}
 						}
