@@ -142,6 +142,7 @@ export const getToursWithRequests = async (
 									'tour.id as tour',
 									'user.name as customerName',
 									'user.phone as customerPhone',
+									'user.email as customerEmail',
 									'event.id',
 									'event.communicatedTime',
 									'eventGroup.address',
