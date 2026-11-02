@@ -1,7 +1,8 @@
 import { createSession } from '$lib/server/auth/session';
 import { addTestUser, clearDatabase } from '$lib/testHelpers';
+import { TZ } from '$lib/constants';
 import { getOffset } from '$lib/util/getOffset';
-import { DAY, HOUR, MINUTE, roundToUnit } from '$lib/util/time';
+import { MINUTE } from '$lib/util/time';
 
 export async function prepareTest() {
 	await clearDatabase();
@@ -26,20 +27,34 @@ export function getNextWednesday(dateWithCorrectDayTime: Date, dateRelativeToNex
 	return nextWednesday.getTime();
 }
 
-const now = new Date();
-const baseDateUtc = new Date(
-	Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 2, 13, 0, 0, 0)
-);
-const noonBaseDate =
-	roundToUnit(
-		new Date((now.getFullYear(), now.getMonth(), now.getDate() + 2, 0, 0, 0, 0)).getTime(),
-		DAY,
-		Math.floor
-	) +
-	12 * HOUR;
-const offset = getOffset(noonBaseDate);
-const baseDate = new Date(baseDateUtc.getTime() - offset);
-const BASE_DATE = getNextWednesday(baseDate, baseDate);
+const BASE_HOUR = 13;
+
+function getBaseDate(now = new Date()) {
+	const formatter = new Intl.DateTimeFormat('en-CA', {
+		timeZone: TZ,
+		year: 'numeric',
+		month: 'numeric',
+		day: 'numeric'
+	});
+	const parts = Object.fromEntries(
+		formatter
+			.formatToParts(now)
+			.filter((part) => part.type !== 'literal')
+			.map((part) => [part.type, Number(part.value)])
+	);
+
+	const date = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + 2, 12));
+	const daysUntilNextWednesday = (3 - date.getUTCDay() + 7) % 7 || 7;
+	date.setUTCDate(date.getUTCDate() + daysUntilNextWednesday);
+
+	const year = date.getUTCFullYear();
+	const month = date.getUTCMonth();
+	const day = date.getUTCDate();
+	const offset = getOffset(Date.UTC(year, month, day, 12));
+	return Date.UTC(year, month, day, BASE_HOUR) - offset;
+}
+
+const BASE_DATE = getBaseDate();
 
 export const inXMinutes = (x: number) => BASE_DATE + x * MINUTE;
 

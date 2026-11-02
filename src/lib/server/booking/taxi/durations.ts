@@ -10,6 +10,7 @@ import {
 	type InsertionType
 } from '../insertionTypes';
 import type { InsertionRoutingResult, RoutingResults } from './routing';
+import { FUTURE_BOOKING_RESTRICTION } from '$lib/constants';
 
 export const returnsToCompany = (insertionCase: InsertionType): boolean =>
 	insertionCase.how == InsertHow.APPEND || insertionCase.how == InsertHow.NEW_TOUR;
@@ -109,24 +110,24 @@ export function getAllowedOperationTimes(
 		),
 		`getAllowedOperationTimes: insertion case requires prev and next event (${printInsertionType(insertionCase)})`
 	);
-
-	const windowEndTime =
+	const latestBooking = Date.now() + FUTURE_BOOKING_RESTRICTION;
+	let windowEndTime =
 		next == undefined
 			? expandedSearchInterval.endTime
 			: returnsToCompany(insertionCase)
 				? next.departure
 				: next.scheduledTimeEnd;
-	if (windowEndTime < prepTime) {
-		return [];
-	}
-
 	let windowStartTime =
 		prev == undefined
 			? expandedSearchInterval.startTime
 			: comesFromCompany(insertionCase)
 				? prev.arrival
 				: prev.scheduledTimeStart;
+	if (windowEndTime < prepTime || windowStartTime > latestBooking) {
+		return [];
+	}
 	windowStartTime = Math.max(windowStartTime, prepTime);
+	windowEndTime = Math.min(windowEndTime, latestBooking);
 	const window = new Interval(windowStartTime, windowEndTime);
 	if (insertionCase.how == InsertHow.INSERT) {
 		return [window];

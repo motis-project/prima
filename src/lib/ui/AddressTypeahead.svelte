@@ -14,6 +14,7 @@
 	} from '$lib/stores/history';
 	import { t } from '$lib/i18n/translation';
 	import { Trash2 } from 'lucide-svelte';
+	import { isConcreteLocation } from '$lib/isConcreteLocation';
 
 	let {
 		items = $bindable([]),
@@ -115,12 +116,14 @@
 			console.error('TYPEAHEAD ERROR: ', error);
 			return;
 		}
-		items = matches!.map((match: Match): Location => {
-			return {
-				label: getLabel(match),
-				value: { match }
-			};
-		});
+		items = matches!
+			.filter((m) => isConcreteLocation(m))
+			.map((match: Match): Location => {
+				return {
+					label: getLabel(match),
+					value: { match }
+				};
+			});
 	};
 
 	const deserialize = (s: string): Location => {

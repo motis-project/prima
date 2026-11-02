@@ -26,6 +26,7 @@ type SeedVehicleOptions = {
 	wheelchairs?: number;
 	bikes?: number;
 	luggage?: number;
+	setAutomaticAvailability?: boolean;
 };
 
 type SeedAvailabilityOptions = {
@@ -213,14 +214,23 @@ export async function seedUser(options: SeedUserOptions) {
 
 export async function seedVehicle(options: SeedVehicleOptions) {
 	const vehicle = await execSQL<{ id: number }>(sql`
-		INSERT INTO vehicle (license_plate, company, passengers, wheelchairs, bikes, luggage)
+		INSERT INTO vehicle (
+			license_plate,
+			company,
+			passengers,
+			wheelchairs,
+			bikes,
+			luggage,
+			set_automatic_availability
+		)
 		VALUES (
 			${options.licensePlate},
 			${options.companyId},
 			${options.passengers ?? 4},
 			${options.wheelchairs ?? 0},
 			${options.bikes ?? 0},
-			${options.luggage ?? 4}
+			${options.luggage ?? 4},
+			${options.setAutomaticAvailability ?? false}
 		)
 		RETURNING id
 	`);

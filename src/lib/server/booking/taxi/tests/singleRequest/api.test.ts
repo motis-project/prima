@@ -14,7 +14,7 @@ import {
 	LATEST_SHIFT_END
 } from '$lib/constants';
 import { createSession } from '$lib/server/auth/session';
-import { HOUR, MINUTE, roundToUnit } from '$lib/util/time';
+import { MINUTE, roundToUnit } from '$lib/util/time';
 import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
 import { signEntry } from '$lib/server/booking/signEntry';
 import { bookingApi } from '$lib/server/booking/taxi/bookingApi';
@@ -228,13 +228,14 @@ describe('Whitelist and Booking API Tests', () => {
 		const company = await addCompany(Zone.NIESKY, inNiesky3);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(1600));
+		const minutesUntilNextDay = 11 * 60;
 		const body = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,
 			startBusStops: [],
 			targetBusStops: [],
-			earliest: inXMinutes(601),
-			latest: inXMinutes(700),
+			earliest: inXMinutes(minutesUntilNextDay + 1),
+			latest: inXMinutes(minutesUntilNextDay + 100),
 			startFixed: true,
 			capacities
 		});
@@ -248,13 +249,10 @@ describe('Whitelist and Booking API Tests', () => {
 		const company = await addCompany(Zone.NIESKY, inNiesky3);
 		const taxi = await addTaxi(company, { passengers: 3, bikes: 0, wheelchairs: 0, luggage: 0 });
 		await setAvailability(taxi, inXMinutes(0), inXMinutes(1600));
-		let earliest = inXMinutes(598);
-		let latest = inXMinutes(700);
+		const minutesUntil23_58 = 10 * 60 + 58;
+		const earliest = inXMinutes(minutesUntil23_58);
+		const latest = inXMinutes(11 * 60 + 40);
 		const allowedTimes = getAllowedTimes(earliest, latest, EARLIEST_SHIFT_START, LATEST_SHIFT_END);
-		if (allowedTimes[0].endTime <= earliest) {
-			earliest -= HOUR;
-			latest -= HOUR;
-		}
 		const blackBody = JSON.stringify({
 			start: inNiesky1,
 			target: inNiesky2,

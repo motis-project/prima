@@ -70,6 +70,8 @@ const translations: Translations = {
 		zoneNotSet: 'Pflichtfahrgebiet nicht gesetzt.',
 		addressNotInZone: 'Die Adresse liegt nicht im Pflichtfahrgebiet.',
 		companyUpdateSuccessful: 'Unternehmensdaten erfolgreich aktualisiert.',
+		automaticAvailabilityTimesInvalid:
+			'Der Zeitraum für die automatische Verfügbarkeit ist ungültig.',
 
 		// AddVehicle
 		invalidSeats: 'Ungültige Sitzzahl.',
@@ -493,6 +495,9 @@ const translations: Translations = {
 	availabilityPercent: 'aktuelle Abdeckung',
 	availabilityPercentExplanation:
 		'Dieser Wert zeigt die aktuelle Verfügbarkeits-Abdeckung zwischen 05:00 Uhr und 23:00 Uhr der nächsten 2 Wochen.',
+	automaticAvailability: 'Automatisch',
+	automaticAvailabilityExplanation:
+		'Für das ausgewählte Fahrzeug wird automatisch Verfügbarkeit im Voraus eingetragen. Sie kann anschließend wie gewohnt angepasst werden.',
 
 	daily: 'täglich'
 };
