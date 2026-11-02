@@ -155,7 +155,7 @@ describe('taxi pair insertion timing regressions', () => {
 		expect(result!.passengerDuration).toBe(3_355_699);
 	});
 
-	it('includes narrowed neighboring event windows in insertion costs', () => {
+	it('includes narrowed mixed neighboring event windows in BOTH insertion costs', () => {
 		const previousEvent = event({
 			id: 1,
 			isPickup: true,
@@ -166,7 +166,10 @@ describe('taxi pair insertion timing regressions', () => {
 		});
 		const nextEvent = event({
 			id: 2,
-			isPickup: false,
+			isPickup: true,
+			passengers: 0,
+			pickupPassengers: 1,
+			dropoffPassengers: 1,
 			scheduledTimeStart: 1_800_000,
 			scheduledTimeEnd: 2_200_000,
 			prevLegDuration: 1_834_000,

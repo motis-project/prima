@@ -420,7 +420,7 @@ export function evaluateBothInsertion(
 		next.time.noDistanceBetween(new Interval(scheduledDropoffTimeStart, scheduledDropoffTimeEnd));
 	// Compute shifts of scheduled time intervals of previous and next event
 	let prevShift = 0;
-	if (!comesFromCompany(insertionCase) && prev!.isPickup) {
+	if (!comesFromCompany(insertionCase) && prev!.pickupPassengers > 0) {
 		prevShift = Math.max(
 			pickupSharesEventGroupWithPrev
 				? prev!.scheduledTimeEnd - scheduledPickupTimeEnd
@@ -429,7 +429,7 @@ export function evaluateBothInsertion(
 		);
 	}
 	let nextShift = 0;
-	if (!returnsToCompany(insertionCase) && !next!.isPickup) {
+	if (!returnsToCompany(insertionCase) && next!.dropoffPassengers > 0) {
 		nextShift = Math.max(
 			dropoffSharesEventGroupWithNext
 				? scheduledDropoffTimeStart - next!.scheduledTimeStart
