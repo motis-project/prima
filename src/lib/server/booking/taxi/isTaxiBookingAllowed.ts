@@ -36,15 +36,32 @@ const getPreviousDayBookingDeadline = (pickupTime: UnixtimeMs): UnixtimeMs => {
 	);
 };
 
+export function requiresTaxiBookingDeadline(
+	isNewTour: boolean,
+	newDeparture?: UnixtimeMs,
+	originalDeparture?: UnixtimeMs
+): boolean {
+	return (
+		isNewTour ||
+		(newDeparture !== undefined &&
+			originalDeparture !== undefined &&
+			newDeparture < originalDeparture)
+	);
+}
+
 export function isTaxiBookingAllowed(
 	pickupTime: UnixtimeMs,
 	bookingTime: UnixtimeMs = Date.now()
 ): boolean {
+	console.log('checking things', new Date(pickupTime));
+	console.log(new Date(bookingTime));
 	const { hour, minute, second } = getDateTimeParts(pickupTime);
 	const timeOfDay = hour * HOUR + minute * MINUTE + second * 1000;
 	if (timeOfDay < NIGHT_TIME_START || timeOfDay >= NIGHT_TIME_END) {
 		return true;
 	}
-
+	if (bookingTime > getPreviousDayBookingDeadline(pickupTime)) {
+		console.log('not permitted');
+	}
 	return bookingTime <= getPreviousDayBookingDeadline(pickupTime);
 }
