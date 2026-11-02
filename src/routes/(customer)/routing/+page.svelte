@@ -38,7 +38,12 @@
 	import BookingSummary from '$lib/ui/BookingSummary.svelte';
 	import { HelpCircleIcon, LocateFixed, MapIcon } from 'lucide-svelte';
 	import { posToLocation } from '$lib/map/Location';
-	import { BOOKING_MAX_PASSENGERS, MAX_MATCHING_DISTANCE, MIN_PREP_BOOKING } from '$lib/constants';
+	import {
+		BOOKING_MAX_PASSENGERS,
+		FUTURE_BOOKING_RESTRICTION,
+		MAX_MATCHING_DISTANCE,
+		MIN_PREP_BOOKING
+	} from '$lib/constants';
 	import PopupMap from '$lib/ui/PopupMap.svelte';
 	import { planAndSign, type SignedPlanResponse } from '$lib/planAndSign';
 	import logo from '$lib/assets/logo-alpha.png';
@@ -785,7 +790,7 @@
 				</Dialog.Root>
 			</div>
 
-			{#if data.lastAvailability != undefined && time.valueOf() > data.lastAvailability.endTime + (timeType === 'arrival' ? 12 * HOUR : -MIN_PREP_BOOKING)}
+			{#if time.valueOf() > Math.min(data.lastAvailability?.endTime ?? Infinity, Date.now() + FUTURE_BOOKING_RESTRICTION) + (timeType === 'arrival' ? 12 * HOUR : -MIN_PREP_BOOKING)}
 				<div class="flex grow">
 					<Alert variant="warning">
 						<AlertCircleIcon />
