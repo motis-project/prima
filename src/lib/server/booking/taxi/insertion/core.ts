@@ -21,6 +21,7 @@ import { roundToUnit, MINUTE } from '$lib/util/time';
 import { InsertHow, InsertWhat } from '$lib/util/booking/insertionTypes';
 import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
 import { computeCost, getWeightedPassengerDurationDelta } from './insertionMetrics';
+import { isTaxiBookingAllowed } from '../isTaxiBookingAllowed';
 
 export type InsertionEvaluation = {
 	pickupTime: number;
@@ -411,6 +412,10 @@ export function evaluateBothInsertion(
 		nextLegDuration,
 		passengerDuration
 	);
+	if (!isTaxiBookingAllowed(communicatedPickupTime)) {
+		return undefined;
+	}
+
 	// Compute shifts of scheduled time intervals of previous and next event
 	let prevShift = 0;
 	if (!comesFromCompany(insertionCase) && prev!.isPickup) {

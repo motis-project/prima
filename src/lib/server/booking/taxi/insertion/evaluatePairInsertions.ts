@@ -12,6 +12,7 @@ import type { Company, Event } from '../getBookingAvailability';
 import type { Insertion, SingleInsertionEvaluation, SingleInsertionEvaluations } from './core';
 import { computeCost, getWeightedPassengerDurationDelta, waitsTooLong } from './insertionMetrics';
 import { iterateAllInsertions } from './iterateAllInsertions';
+import { isTaxiBookingAllowed } from '../isTaxiBookingAllowed';
 
 type PairInsertionSchedule = {
 	communicatedPickupTime: number;
@@ -136,7 +137,10 @@ export function evaluatePairInsertions(
 								intermediatePassengerDrivingDuration
 							);
 							const schedule = schedulePairInsertion(pickup, dropoff, passengerRouteDuration);
-							if (schedule === undefined) {
+							if (
+								schedule === undefined ||
+								!isTaxiBookingAllowed(schedule.communicatedPickupTime)
+							) {
 								continue;
 							}
 							const {
