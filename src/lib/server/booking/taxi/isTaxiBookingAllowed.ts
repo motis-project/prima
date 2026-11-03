@@ -60,15 +60,10 @@ export function isTaxiBookingAllowed(
 	departureTime: UnixtimeMs,
 	bookingTime: UnixtimeMs = Date.now()
 ): boolean {
-	console.log('checking things', new Date(departureTime));
-	console.log(new Date(bookingTime));
 	const { hour, minute, second } = getDateTimeParts(departureTime);
 	const timeOfDay = hour * HOUR + minute * MINUTE + second * 1000;
 	if (timeOfDay < NIGHT_TIME_START || timeOfDay >= NIGHT_TIME_END) {
 		return true;
-	}
-	if (bookingTime > getPreviousDayBookingDeadline(departureTime)) {
-		console.log('not permitted');
 	}
 	return bookingTime <= getPreviousDayBookingDeadline(departureTime);
 }
