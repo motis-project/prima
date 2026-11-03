@@ -1,5 +1,6 @@
 import { LATEST_NIGHT_BOOKING_TIME, NIGHT_TIME_END, NIGHT_TIME_START, TZ } from '$lib/constants';
 import { getOffset } from '$lib/util/getOffset';
+import { InsertHow } from '$lib/util/booking/insertionTypes';
 import { HOUR, MINUTE } from '$lib/util/time';
 import type { UnixtimeMs } from '$lib/util/UnixtimeMs';
 
@@ -22,8 +23,8 @@ const getDateTimeParts = (time: UnixtimeMs) =>
 			.map((part) => [part.type, Number(part.value)])
 	) as Record<'year' | 'month' | 'day' | 'hour' | 'minute' | 'second', number>;
 
-const getPreviousDayBookingDeadline = (pickupTime: UnixtimeMs): UnixtimeMs => {
-	const { year, month, day } = getDateTimeParts(pickupTime);
+const getPreviousDayBookingDeadline = (departureTime: UnixtimeMs): UnixtimeMs => {
+	const { year, month, day } = getDateTimeParts(departureTime);
 	const previousDay = new Date(Date.UTC(year, month - 1, day - 1));
 	const previousYear = previousDay.getUTCFullYear();
 	const previousMonth = previousDay.getUTCMonth();
@@ -37,31 +38,37 @@ const getPreviousDayBookingDeadline = (pickupTime: UnixtimeMs): UnixtimeMs => {
 };
 
 export function requiresTaxiBookingDeadline(
-	isNewTour: boolean,
+	insertionHow: InsertHow,
 	newDeparture?: UnixtimeMs,
 	originalDeparture?: UnixtimeMs
 ): boolean {
-	return (
-		isNewTour ||
-		(newDeparture !== undefined &&
-			originalDeparture !== undefined &&
-			newDeparture < originalDeparture)
-	);
+	switch (insertionHow) {
+		case InsertHow.NEW_TOUR:
+			return true;
+		case InsertHow.PREPEND:
+			return (
+				newDeparture !== undefined &&
+				originalDeparture !== undefined &&
+				newDeparture < originalDeparture
+			);
+		default:
+			return false;
+	}
 }
 
 export function isTaxiBookingAllowed(
-	pickupTime: UnixtimeMs,
+	departureTime: UnixtimeMs,
 	bookingTime: UnixtimeMs = Date.now()
 ): boolean {
-	console.log('checking things', new Date(pickupTime));
+	console.log('checking things', new Date(departureTime));
 	console.log(new Date(bookingTime));
-	const { hour, minute, second } = getDateTimeParts(pickupTime);
+	const { hour, minute, second } = getDateTimeParts(departureTime);
 	const timeOfDay = hour * HOUR + minute * MINUTE + second * 1000;
 	if (timeOfDay < NIGHT_TIME_START || timeOfDay >= NIGHT_TIME_END) {
 		return true;
 	}
-	if (bookingTime > getPreviousDayBookingDeadline(pickupTime)) {
+	if (bookingTime > getPreviousDayBookingDeadline(departureTime)) {
 		console.log('not permitted');
 	}
-	return bookingTime <= getPreviousDayBookingDeadline(pickupTime);
+	return bookingTime <= getPreviousDayBookingDeadline(departureTime);
 }

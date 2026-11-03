@@ -436,12 +436,8 @@ export function evaluateBothInsertion(
 		? scheduledPickupTimeEnd - prevLegDuration
 		: undefined;
 	if (
-		requiresTaxiBookingDeadline(
-			insertionCase.how === InsertHow.NEW_TOUR,
-			departure,
-			next?.departure
-		) &&
-		!isTaxiBookingAllowed(communicatedPickupTime)
+		requiresTaxiBookingDeadline(insertionCase.how, departure, next?.departure) &&
+		(departure === undefined || !isTaxiBookingAllowed(departure))
 	) {
 		return undefined;
 	}

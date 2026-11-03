@@ -169,8 +169,12 @@ export function evaluatePairInsertions(
 								arrival
 							} = metrics;
 							if (
-								requiresTaxiBookingDeadline(false, departure, nextPickup?.departure) &&
-								!isTaxiBookingAllowed(communicatedPickupTime)
+								requiresTaxiBookingDeadline(
+									pickup.insertionType.how,
+									departure,
+									nextPickup?.departure
+								) &&
+								(departure === undefined || !isTaxiBookingAllowed(departure))
 							) {
 								continue;
 							}
