@@ -241,8 +241,7 @@
 	};
 
 	const pushStateWithQueryString = (
-		// eslint-disable-next-line
-		queryParams: Record<string, any>,
+		queryParams: Record<string, string>,
 		// eslint-disable-next-line
 		newState: App.PageState,
 		replace: boolean = false
@@ -250,6 +249,23 @@
 		const params = new URLSearchParams(queryParams);
 		const updateState = replace ? replaceState : pushState;
 		updateState('?' + params.toString(), newState);
+	};
+	const getRoutingQueryParams = (): Record<string, string> => ({
+		from: JSON.stringify(from?.value?.match) ?? '',
+		to: JSON.stringify(to?.value?.match) ?? '',
+		time: time.toString(),
+		arriveBy: String(timeType === 'arrival'),
+		kidsZeroToTwo: String(kidsZeroToTwo),
+		kidsThreeToFour: String(kidsThreeToFour),
+		kidsFiveToSix: String(kidsFiveToSix),
+		kidsSevenToFourteen: String(kidsSevenToFourteen),
+		fourteenPlus: String(fourteenPlus),
+		wheelchair: String(wheelchair),
+		luggage
+	});
+	const getRoutingUrl = () => {
+		const params = new URLSearchParams(getRoutingQueryParams());
+		return '/routing?' + params.toString();
 	};
 
 	let baseQuery = $derived(
@@ -276,30 +292,20 @@
 	let baseResponse = $state<Promise<SignedPlanResponse | undefined>>();
 	let routingResponses = $state<Array<Promise<SignedPlanResponse | undefined>>>([]);
 	let searchDebounceTimer: Timeout;
+	let bookingRetryTriggered = $derived(page.url.searchParams.has('bookingError'));
+	let routingRequestTrigger = $derived({
+		query: baseQuery,
+		bookingError: bookingRetryTriggered
+	});
 	$effect(() => {
-		if (baseQuery) {
+		const query = routingRequestTrigger.query;
+		if (query) {
 			clearTimeout(searchDebounceTimer);
 			searchDebounceTimer = setTimeout(() => {
-				const base = planAndSign(baseQuery).then(updateStartDest(from, to));
+				const base = planAndSign(query).then(updateStartDest(from, to));
 				baseResponse = base;
 				routingResponses = [base];
-				pushStateWithQueryString(
-					{
-						from: JSON.stringify(from?.value?.match),
-						to: JSON.stringify(to?.value?.match),
-						time: time,
-						arriveBy: timeType === 'arrival',
-						kidsZeroToTwo,
-						kidsThreeToFour,
-						kidsFiveToSix,
-						kidsSevenToFourteen,
-						fourteenPlus,
-						wheelchair,
-						luggage
-					},
-					{ showMap: page.state.showMap },
-					true
-				);
+				pushStateWithQueryString(getRoutingQueryParams(), { showMap: page.state.showMap }, true);
 			}, 400);
 		}
 	});
@@ -387,6 +393,12 @@
 <Meta title={PUBLIC_PROVIDER} />
 
 <div class="md:min-h-[70dvh] md:w-96">
+	{#if bookingRetryTriggered}
+		<Alert variant="warning" class="mb-4">
+			<AlertCircleIcon />
+			<AlertDescription class="ml-2">{t.bookingRetryMessage}</AlertDescription>
+		</Alert>
+	{/if}
 	<Message msg={form?.msg} class="mb-4" />
 
 	{#if page.state.selectFrom}
@@ -490,6 +502,7 @@
 												name="startFixed"
 												value={timeType === 'departure' ? '1' : '0'}
 											/>
+											<input type="hidden" name="returnTo" value={getRoutingUrl()} />
 											<Button type="submit" variant="outline" disabled={loading}
 												>{t.ride.sendNegotiationRequest}</Button
 											>
@@ -546,6 +559,7 @@
 												name="startFixed"
 												value={timeType === 'departure' ? '1' : '0'}
 											/>
+											<input type="hidden" name="returnTo" value={getRoutingUrl()} />
 											<Button type="submit" variant="outline" disabled={loading}
 												>{t.booking.header}</Button
 											>
@@ -827,7 +841,7 @@
 					freePassengers={freeKids}
 					reducedPassengers={kidsSevenToFourteen}
 					selectItinerary={(selectedItinerary) => {
-						goto('?detail', { state: { selectedItinerary } });
+						pushState('', { selectedItinerary });
 					}}
 					updateStartDest={updateStartDest(from, to)}
 				/>
