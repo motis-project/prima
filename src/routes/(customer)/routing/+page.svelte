@@ -287,9 +287,10 @@
 	let baseResponse = $state<Promise<SignedPlanResponse | undefined>>();
 	let routingResponses = $state<Array<Promise<SignedPlanResponse | undefined>>>([]);
 	let searchDebounceTimer: Timeout;
+	let bookingRetryTriggered = $derived(page.url.searchParams.has('bookingError'));
 	let routingRequestTrigger = $derived({
 		query: baseQuery,
-		bookingError: page.url.searchParams.has('bookingError')
+		bookingError: bookingRetryTriggered
 	});
 	$effect(() => {
 		const query = routingRequestTrigger.query;
@@ -387,6 +388,12 @@
 <Meta title={PUBLIC_PROVIDER} />
 
 <div class="md:min-h-[70dvh] md:w-96">
+	{#if bookingRetryTriggered}
+		<Alert variant="warning" class="mb-4">
+			<AlertCircleIcon />
+			<AlertDescription class="ml-2">{t.bookingRetryMessage}</AlertDescription>
+		</Alert>
+	{/if}
 	<Message msg={form?.msg} class="mb-4" />
 
 	{#if page.state.selectFrom}
