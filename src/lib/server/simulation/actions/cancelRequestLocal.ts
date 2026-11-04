@@ -22,7 +22,7 @@ export async function cancelRequestLocal(customerId: number): Promise<ActionResp
 	await cancelRequest(requests[r].requestId, customerId);
 	return {
 		lastActionSpecifics: {
-			vehicleId: requests[r].vehicleId,
+			vehicleIds: [requests[r].vehicleId],
 			dayStart: Math.floor(requests[r].startTime / DAY) * DAY
 		},
 		success: true,

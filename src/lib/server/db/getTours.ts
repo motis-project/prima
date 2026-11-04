@@ -83,17 +83,51 @@ export const getToursWithRequests = async (
 	selectCancelled: boolean,
 	companyId?: number,
 	timeRange?: [UnixtimeMs, UnixtimeMs],
-	vehicleId?: number
+	vehicleIds?: number[],
+	includeAdjacentTours = false
 ) => {
+	const adjacentTourIds =
+		timeRange && vehicleIds && includeAdjacentTours
+			? (
+					await Promise.all(
+						vehicleIds.flatMap((vehicleId) => [
+							db
+								.selectFrom('tour')
+								.select('tour.id')
+								.where('tour.vehicle', '=', vehicleId)
+								.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
+								.where('tour.arrival', '<=', timeRange[0])
+								.orderBy('tour.departure', 'desc')
+								.limit(1)
+								.executeTakeFirst(),
+							db
+								.selectFrom('tour')
+								.select('tour.id')
+								.where('tour.vehicle', '=', vehicleId)
+								.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
+								.where('tour.departure', '>=', timeRange[1])
+								.orderBy('tour.departure', 'asc')
+								.limit(1)
+								.executeTakeFirst()
+						])
+					)
+				).flatMap((tour) => (tour ? [tour.id] : []))
+			: [];
+
 	return await db
 		.selectFrom('tour')
 		.innerJoin('vehicle', 'vehicle.id', 'tour.vehicle')
 		.innerJoin('company', 'company.id', 'vehicle.company')
 		.$if(!selectCancelled, (qb) => qb.where('tour.cancelled', '=', false))
 		.$if(companyId != undefined, (qb) => qb.where('company.id', '=', companyId!))
-		.$if(vehicleId != undefined, (qb) => qb.where('vehicle.id', '=', vehicleId!))
+		.$if(vehicleIds != undefined, (qb) => qb.where('vehicle.id', 'in', vehicleIds!))
 		.$if(!!timeRange, (qb) =>
-			qb.where('tour.departure', '<', timeRange![1]).where('tour.arrival', '>', timeRange![0])
+			qb.where(({ and, eb, or }) =>
+				or([
+					and([eb('tour.departure', '<', timeRange![1]), eb('tour.arrival', '>', timeRange![0])]),
+					...(adjacentTourIds.length === 0 ? [] : [eb('tour.id', 'in', adjacentTourIds)])
+				])
+			)
 		)
 		.select((eb) => [
 			'tour.fare as fare',
