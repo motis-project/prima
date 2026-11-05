@@ -294,7 +294,8 @@ const translations: Translations = {
 	perRide: 'pro Fahrt',
 	fare: 'Fahrpreis',
 	bookingDeadline: 'Buchungsschluss',
-	bookingDeadlineContent: 'min. 1 Stunde im Voraus',
+	bookingDeadlineContent:
+		'Mindestens 1 Stunde im Voraus. Fahrten zwischen 03:00 und 06:00 Uhr müssen bis 20:00 Uhr am Vortag gebucht werden.',
 	cancellation: 'Stornierung',
 	cancellationAppeal:
 		'Bitte stornieren Sie so früh wie möglich, um den Taxiunternehmen die Planung zu erleichtern.',
