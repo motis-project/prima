@@ -137,18 +137,24 @@ const selectCompanies = (
 	).as('companies');
 };
 
-function mergeEventGroups(
-	events: (DbEvent & { time: Interval; hasOneEventType: boolean })[]
-): (DbEvent & { time: Interval; hasOneEventType: boolean })[] {
-	function getMergedEvent(events: (DbEvent & { time: Interval; hasOneEventType: boolean })[]) {
+type AvailabilityEvent = DbEvent & {
+	time: Interval;
+	pickupPassengers: number;
+	dropoffPassengers: number;
+};
+
+function mergeEventGroups(events: AvailabilityEvent[]): AvailabilityEvent[] {
+	function getMergedEvent(events: AvailabilityEvent[]): AvailabilityEvent {
 		if (events.length === 1) {
 			return events[0];
 		}
 		const { time, ...rest } = events[0];
-		const mergedEvent = { ...structuredClone(rest), time, hasOneEventType: false };
+		const mergedEvent = { ...structuredClone(rest), time };
 		mergedEvent.isPickup = events.some((e) => e.isPickup);
+		mergedEvent.pickupPassengers = events.reduce((sum, event) => sum + event.pickupPassengers, 0);
+		mergedEvent.dropoffPassengers = events.reduce((sum, event) => sum + event.dropoffPassengers, 0);
 		mergedEvent.passengers =
-			events.reduce((acc, curr) => (acc += curr.isPickup ? curr.passengers : -curr.passengers), 0) *
+			(mergedEvent.pickupPassengers - mergedEvent.dropoffPassengers) *
 			(mergedEvent.isPickup ? 1 : -1);
 		mergedEvent.wheelchairs =
 			events.reduce(
@@ -161,14 +167,11 @@ function mergeEventGroups(
 		mergedEvent.luggage =
 			events.reduce((acc, curr) => (acc += curr.isPickup ? curr.luggage : -curr.luggage), 0) *
 			(mergedEvent.isPickup ? 1 : -1);
-		mergedEvent.hasOneEventType = !events.some(
-			(e) => e.id === events[0].id && e.isPickup === events[0].isPickup
-		);
 		return mergedEvent;
 	}
 
 	if (events.length === 0) return [];
-	const result: (DbEvent & { time: Interval; hasOneEventType: boolean })[] = [];
+	const result: AvailabilityEvent[] = [];
 	let currentGroup = [events[0]];
 	for (let i = 1; i != events.length; i++) {
 		const prev = events[i - 1];
@@ -190,17 +193,16 @@ const createVehicle = (v: DbVehicle, expandedSearchInterval: Interval) => {
 	);
 	const toursBefore = v.tours.filter((tour) => tour.arrival < expandedSearchInterval.startTime);
 	const toursAfter = v.tours.filter((tour) => tour.departure > expandedSearchInterval.endTime);
-	const createEvent = (e: DbEvent): DbEvent & { time: Interval } => {
-		return { ...e, time: new Interval(e.scheduledTimeStart, e.scheduledTimeEnd) };
+	const createEvent = (e: DbEvent): AvailabilityEvent => {
+		return {
+			...e,
+			time: new Interval(e.scheduledTimeStart, e.scheduledTimeEnd),
+			pickupPassengers: e.isPickup ? e.passengers : 0,
+			dropoffPassengers: e.isPickup ? 0 : e.passengers
+		};
 	};
 	const events = mergeEventGroups(
-		tours.flatMap((t) =>
-			sortEventsByTime(
-				t.events.map((e) => {
-					return { ...createEvent(e), hasOneEventType: true };
-				})
-			)
-		)
+		tours.flatMap((t) => sortEventsByTime(t.events.map(createEvent)))
 	);
 	return {
 		...v,
@@ -220,11 +222,7 @@ const createVehicle = (v: DbVehicle, expandedSearchInterval: Interval) => {
 			toursBefore.length == 0
 				? undefined
 				: toursBefore
-						.flatMap((tour) =>
-							tour.events.map((event) => {
-								return { ...createEvent(event), hasOneEventType: true };
-							})
-						)
+						.flatMap((tour) => tour.events.map(createEvent))
 						.reduce((max, current) => {
 							return max == undefined
 								? current
@@ -236,11 +234,7 @@ const createVehicle = (v: DbVehicle, expandedSearchInterval: Interval) => {
 			toursAfter.length == 0
 				? undefined
 				: toursAfter
-						.flatMap((tour) =>
-							tour.events.map((event) => {
-								return { ...createEvent(event), hasOneEventType: true };
-							})
-						)
+						.flatMap((tour) => tour.events.map(createEvent))
 						.reduce((min, current) => {
 							return min == undefined
 								? current

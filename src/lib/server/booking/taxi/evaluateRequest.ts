@@ -131,6 +131,8 @@ export async function evaluateRequest(
 		busStopTimes,
 		singleEvaluations,
 		required,
+		userChosen,
+		busStops,
 		promisedTimes === undefined
 	);
 	return takeBest(takeBest(bothEvaluations, newTourEvaluations), pairEvaluations);

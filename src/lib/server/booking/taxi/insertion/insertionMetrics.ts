@@ -30,8 +30,8 @@ export function getWeightedPassengerDurationDelta(
 	prevShift: number,
 	nextShift: number
 ): number {
-	const passengersEnteringInPrev = !comesFromCompany(type) && prev!.isPickup ? prev!.passengers : 0;
-	const passengerExitingAtNext = !returnsToCompany(type) && !next!.isPickup ? next!.passengers : 0;
+	const passengersEnteringInPrev = !comesFromCompany(type) ? prev!.pickupPassengers : 0;
+	const passengerExitingAtNext = !returnsToCompany(type) ? next!.dropoffPassengers : 0;
 	return passengersEnteringInPrev * prevShift + passengerExitingAtNext * nextShift;
 }
 
