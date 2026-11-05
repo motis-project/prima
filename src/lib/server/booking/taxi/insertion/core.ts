@@ -16,8 +16,6 @@ import type { PromisedTimes } from '../PromisedTimes';
 import { Interval } from '$lib/util/interval';
 import type { RoutingResults } from '../routing';
 import type { Event } from '../getBookingAvailability';
-import { getScheduledEventTime } from '$lib/util/getScheduledEventTime';
-import { roundToUnit, MINUTE } from '$lib/util/time';
 import { InsertHow, InsertWhat } from '$lib/util/booking/insertionTypes';
 import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
 import { computeCost, getWeightedPassengerDurationDelta } from './insertionMetrics';
