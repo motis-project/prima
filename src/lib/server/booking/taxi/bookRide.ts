@@ -23,6 +23,10 @@ import { DAY } from '$lib/util/time';
 import { getFirstAndLastEvents } from './bookingPlan/getFirstAndLastEvents';
 import { isSamePlace } from '$lib/util/booking/isSamePlace';
 import type { ExpectedConnection } from '$lib/server/booking/expectedConnection';
+import {
+	getFirstEventOfEarliestTourStartingAfter,
+	getLastEventOfLatestTourEndingBefore
+} from './bookingPlan/tourBoundaryEvents';
 
 export type ExpectedConnectionWithISoStrings = {
 	start: Coordinates;
@@ -190,14 +194,14 @@ export async function bookRide(
 
 	let prevEventInOtherTour =
 		best.pickupCase.how == InsertHow.NEW_TOUR
-			? events.findLast((e) => e.scheduledTimeStart <= best.scheduledPickupTimeStart)
+			? getLastEventOfLatestTourEndingBefore(events, best.departure!)
 			: events.find((e) => e.id === best.prevPickupId);
 	if (prevEventInOtherTour === undefined) {
 		prevEventInOtherTour = vehicle.lastEventBefore;
 	}
 	let nextEventInOtherTour =
 		best.pickupCase.how == InsertHow.NEW_TOUR
-			? events.find((e) => e.scheduledTimeEnd >= best.scheduledDropoffTimeEnd)
+			? getFirstEventOfEarliestTourStartingAfter(events, best.arrival!)
 			: events.find((e) => best.nextDropoffId === e.id);
 	if (nextEventInOtherTour === undefined) {
 		nextEventInOtherTour = vehicle.firstEventAfter;
@@ -208,7 +212,7 @@ export async function bookRide(
 		nextEventInOtherTour,
 		c,
 		events[best.pickupIdx ?? -1]?.tourId,
-		mergeTourList.length !== 0,
+		mergeTourList.map((tour) => tour.tourId),
 		departure,
 		arrival,
 		vehicle

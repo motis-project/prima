@@ -147,8 +147,9 @@ export async function addVehicle(page: Page, licensePlate: string) {
 	await page.getByTestId('add-vehicle').click();
 	await page.waitForTimeout(1000);
 	await page.screenshot({ path: 'screenshots/afterAddVehicleButton.png', fullPage: true });
-	await page.getByPlaceholder(LICENSE_PLATE_PLACEHOLDER).fill(licensePlate);
-	await page.getByTestId('create-vehicle').click();
+	const licensePlateInput = page.getByPlaceholder(LICENSE_PLATE_PLACEHOLDER);
+	await licensePlateInput.fill(licensePlate);
+	await licensePlateInput.press('Enter');
 }
 
 export async function moveMouse(page: Page, id: string) {

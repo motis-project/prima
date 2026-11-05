@@ -28,8 +28,8 @@ function isSignatureInvalid(c: ExpectedConnection | null) {
 				? JSON.stringify({
 						tour: c.tourId,
 						rT: c.requestedTime,
-						pT: c.pickupTime,
-						dT: c.dropoffTime
+						pT: c.startTime,
+						dT: c.targetTime
 					})
 				: undefined
 		) !== c.signature

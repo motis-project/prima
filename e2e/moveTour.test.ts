@@ -22,7 +22,11 @@ test.beforeAll(async () => {
 		companyId,
 		isTaxiOwner: true
 	});
-	const vehicleId = await seedVehicle({ licensePlate: 'GR-TU-11', companyId });
+	const vehicleId = await seedVehicle({
+		licensePlate: 'GR-TU-11',
+		companyId,
+		setAutomaticAvailability: true
+	});
 
 	const availabilityStart = in6Days.getTime() + HOUR * 7;
 	await seedAvailability({

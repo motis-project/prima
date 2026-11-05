@@ -72,7 +72,12 @@ export async function getAllCompaniesAvailability(utcDate: Date) {
 					.whereRef('vehicle.company', '=', 'company.id')
 					.where('availability.startTime', '<', toTime.getTime())
 					.where('availability.endTime', '>', fromTime.getTime())
-					.select(['availability.id', 'availability.startTime', 'availability.endTime'])
+					.select([
+						'availability.id',
+						'availability.startTime',
+						'availability.endTime',
+						'vehicle.setAutomaticAvailability'
+					])
 					.orderBy('availability.startTime')
 			).as('availability')
 		])
@@ -80,7 +85,10 @@ export async function getAllCompaniesAvailability(utcDate: Date) {
 
 	return {
 		tours: [],
-		vehicles: await vehicles,
+		vehicles: (await vehicles).map((v) => ({
+			...v,
+			setAutomaticAvailability: v.availability[0]?.setAutomaticAvailability ?? null
+		})),
 		utcDate,
 		companyDataComplete: true,
 		companyCoordinates: null

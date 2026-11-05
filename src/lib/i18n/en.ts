@@ -68,6 +68,7 @@ const translations: Translations = {
 		zoneNotSet: 'Zone not set.',
 		addressNotInZone: 'Address not in zone.',
 		companyUpdateSuccessful: 'Company data updated successfully.',
+		automaticAvailabilityTimesInvalid: 'The automatic availability time range is invalid.',
 
 		// AddVehicle
 		invalidSeats: 'Invalid number of passengers',
@@ -292,6 +293,8 @@ const translations: Translations = {
 	noAvailabilityTitle: 'Too far in the future',
 	noAvalablilityDescription:
 		'No taxis were reported as available for the requested time. Please try again later',
+	bookingRetryMessage:
+		'The booking attempt was unsuccessful. A new search has been started automatically.',
 	campaignBannerTitle: 'PriMa+ÖV ride sharing weeks: travel together and win',
 	campaignBannerDescription: 'Our PriMa+ÖV ride sharing weeks take place from 24/08 to 06/09/2026.',
 	campaignBannerMoreInfo: 'More information at',
@@ -480,6 +483,9 @@ const translations: Translations = {
 	availabilityPercent: 'current Coverage next two weeks',
 	availabilityPercentExplanation:
 		'This value represents the current coverage between 05:00 and 23:00 for availability in the next two weeks.',
+	automaticAvailability: 'Automatic',
+	automaticAvailabilityExplanation:
+		'Availability is added automatically in advance for the selected vehicle. It can then be adjusted as usual.',
 
 	daily: 'daily'
 };

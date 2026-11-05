@@ -294,7 +294,7 @@
 						<Table.Head>Abfahrt</Table.Head>
 						<Table.Head>Adresse</Table.Head>
 						<Table.Head>Kunde</Table.Head>
-						<Table.Head>Tel. Kunde</Table.Head>
+						<Table.Head>Kontakt Kunde</Table.Head>
 						<Table.Head>Ein-/Ausstieg</Table.Head>
 						{#if events?.some((e) => e.kidsZeroToTwo !== 0)}
 							<TableHead>0-2 Jahre</TableHead>
@@ -324,7 +324,7 @@
 									{event.customerName}
 								</Table.Cell>
 								<Table.Cell>
-									{event.customerPhone}
+									{[event.customerPhone, event.customerEmail].filter(Boolean).join(' / ')}
 								</Table.Cell>
 								<Table.Cell
 									class="flex items-center gap-2 {event.isPickup

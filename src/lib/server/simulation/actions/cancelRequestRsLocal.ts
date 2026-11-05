@@ -22,7 +22,7 @@ export async function cancelRequestRsLocal(customerId: number): Promise<ActionRe
 	await cancelRideShareRequest(requests[r].requestId, customerId, 'passenger');
 	return {
 		lastActionSpecifics: {
-			vehicleId: requests[r].vehicleId,
+			vehicleIds: [requests[r].vehicleId],
 			dayStart: Math.floor(requests[r].startTime / DAY) * DAY
 		},
 		success: true,
