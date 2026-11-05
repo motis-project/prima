@@ -4,7 +4,7 @@ import {
 	type InsertionInfo,
 	type InsertionType,
 	printInsertionType
-} from '../../insertionTypes';
+} from '$lib/server/booking/insertionTypes';
 import {
 	comesFromCompany,
 	getPrevLegDuration,
