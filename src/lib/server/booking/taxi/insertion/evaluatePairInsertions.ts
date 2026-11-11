@@ -15,6 +15,7 @@ import type { Company, Event } from '../getBookingAvailability';
 import type { Insertion, SingleInsertionEvaluation, SingleInsertionEvaluations } from './core';
 import { computeCost, waitsTooLong } from './insertionMetrics';
 import { iterateAllInsertions } from './iterateAllInsertions';
+import { isTaxiBookingAllowed, requiresTaxiBookingDeadline } from '../isTaxiBookingAllowed';
 
 type PairInsertionSchedule = {
 	communicatedPickupTime: number;
@@ -188,6 +189,16 @@ export function evaluatePairInsertions(
 								departure,
 								arrival
 							} = metrics;
+							if (
+								requiresTaxiBookingDeadline(
+									pickup.insertionType.how,
+									departure,
+									nextPickup?.departure
+								) &&
+								(departure === undefined || !isTaxiBookingAllowed(departure))
+							) {
+								continue;
+							}
 
 							console.log(
 								whitelist ? 'WHITELIST' : 'BOOKING API',

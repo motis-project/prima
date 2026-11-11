@@ -19,6 +19,7 @@ import type { Event } from '../getBookingAvailability';
 import { InsertHow, InsertWhat } from '$lib/util/booking/insertionTypes';
 import { getScheduledTimeBufferDropoff } from '$lib/util/getScheduledTimeBuffer';
 import { computeCost, getWeightedPassengerDurationDelta } from './insertionMetrics';
+import { isTaxiBookingAllowed, requiresTaxiBookingDeadline } from '../isTaxiBookingAllowed';
 
 export type InsertionEvaluation = {
 	pickupTime: number;
@@ -451,6 +452,12 @@ export function evaluateBothInsertion(
 	const departure = comesFromCompany(insertionCase)
 		? scheduledPickupTimeEnd - prevLegDuration
 		: undefined;
+	if (
+		requiresTaxiBookingDeadline(insertionCase.how, departure, next?.departure) &&
+		(departure === undefined || !isTaxiBookingAllowed(departure))
+	) {
+		return undefined;
+	}
 	const arrival = returnsToCompany(insertionCase)
 		? scheduledDropoffTimeStart + nextLegDuration
 		: undefined;

@@ -294,7 +294,8 @@ const translations: Translations = {
 	perRide: 'pro Fahrt',
 	fare: 'Fahrpreis',
 	bookingDeadline: 'Buchungsschluss',
-	bookingDeadlineContent: 'min. 1 Stunde im Voraus',
+	bookingDeadlineContent:
+		'Mindestens 1 Stunde im Voraus. Fahrten zwischen 03:00 und 06:00 Uhr müssen bis 20:00 Uhr am Vortag gebucht werden.',
 	cancellation: 'Stornierung',
 	cancellationAppeal:
 		'Bitte stornieren Sie so früh wie möglich, um den Taxiunternehmen die Planung zu erleichtern.',
@@ -499,7 +500,7 @@ const translations: Translations = {
 		'Dieser Wert zeigt die aktuelle Verfügbarkeits-Abdeckung zwischen 05:00 Uhr und 23:00 Uhr der nächsten 2 Wochen.',
 	automaticAvailability: 'Automatisch',
 	automaticAvailabilityExplanation:
-		'Für das ausgewählte Fahrzeug wird automatisch Verfügbarkeit im Voraus eingetragen. Sie kann anschließend wie gewohnt angepasst werden.',
+		'Für die ausgewählten Fahrzeuge wird automatisch Verfügbarkeit im Voraus eingetragen. Sie kann anschließend wie gewohnt angepasst werden.',
 
 	daily: 'täglich'
 };

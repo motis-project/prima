@@ -54,7 +54,7 @@ const translations: Translations = {
 
 		// Admin
 		userDoesNotExist: 'User does not exist.',
-		activationSuccess: 'User already activated.',
+		activationSuccess: 'User activated.',
 		userAlreadyActivated: 'User has already been activated.',
 		requiresAdminPrivileges: 'Admin privileges required.',
 
@@ -282,7 +282,8 @@ const translations: Translations = {
 	perRide: 'per ride',
 	fare: 'Fare',
 	bookingDeadline: 'Booking deadline',
-	bookingDeadlineContent: 'at least 1 hour in advance.',
+	bookingDeadlineContent:
+		'At least 1 hour in advance. Journeys between 3 a.m. and 6 a.m. must be booked by 8 p.m. on the previous day.',
 	cancellation: 'Cancellation',
 	cancellationAppeal:
 		'Please cancel as early as possible to make planning easier for taxi companies.',
@@ -485,7 +486,7 @@ const translations: Translations = {
 		'This value represents the current coverage between 05:00 and 23:00 for availability in the next two weeks.',
 	automaticAvailability: 'Automatic',
 	automaticAvailabilityExplanation:
-		'Availability is added automatically in advance for the selected vehicle. It can then be adjusted as usual.',
+		'Availability is added automatically in advance for the selected vehicles. It can then be adjusted as usual.',
 
 	daily: 'daily'
 };
