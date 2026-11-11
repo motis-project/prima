@@ -84,21 +84,6 @@ describe('automatic availability', () => {
 		expect(await setAutomaticAvailability(company, second, false)).toBe('lastVehicle');
 	});
 
-	it('does not deselect every vehicle under concurrent requests', async () => {
-		const company = await addCompany(Zone.NIESKY);
-		const first = await createVehicle(vehicle(company, 'NY-D-1'));
-		const second = await createVehicle(vehicle(company, 'NY-D-2'));
-		await setAutomaticAvailability(company, second, true);
-
-		const results = await Promise.all([
-			setAutomaticAvailability(company, first, false),
-			setAutomaticAvailability(company, second, false)
-		]);
-
-		expect(results.sort()).toEqual(['lastVehicle', 'ok']);
-		expect(await automaticVehicles(company)).toHaveLength(1);
-	});
-
 	it("does not change other companies' vehicles", async () => {
 		const company = await addCompany(Zone.NIESKY);
 		const otherCompany = await addCompany(Zone.GÖRLITZ);

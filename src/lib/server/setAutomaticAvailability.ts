@@ -6,12 +6,10 @@ export async function setAutomaticAvailability(
 	enabled: boolean
 ): Promise<'ok' | 'vehicleNotFound' | 'lastVehicle'> {
 	return db.transaction().execute(async (trx) => {
-		// Lock the company's vehicles so concurrent requests cannot deselect all of them.
 		const vehicles = await trx
 			.selectFrom('vehicle')
 			.select(['id', 'setAutomaticAvailability'])
 			.where('company', '=', companyId)
-			.forUpdate()
 			.execute();
 		if (!vehicles.some((v) => v.id === vehicleId)) {
 			return 'vehicleNotFound';
