@@ -1,4 +1,4 @@
-import { db } from '$lib/server/db';
+import { setAutomaticAvailability } from '$lib/server/setAutomaticAvailability';
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 
 export const PATCH: RequestHandler = async ({ locals, request }) => {
@@ -12,37 +12,18 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 		return error(403);
 	}
 
-	const { vehicleId } = await request.json();
-	if (!Number.isInteger(vehicleId)) {
-		return error(400, 'Invalid vehicle ID.');
+	const { vehicleId, enabled } = await request.json();
+	if (!Number.isInteger(vehicleId) || typeof enabled !== 'boolean') {
+		return error(400, 'Invalid vehicle ID or enabled flag.');
 	}
 
-	const vehicle = await db
-		.selectFrom('vehicle')
-		.select('vehicle.id')
-		.where('vehicle.id', '=', vehicleId)
-		.where('vehicle.company', '=', companyId)
-		.executeTakeFirst();
-
-	if (vehicle === undefined) {
+	const result = await setAutomaticAvailability(companyId, vehicleId, enabled);
+	if (result === 'vehicleNotFound') {
 		return error(404, 'Vehicle not found.');
 	}
+	if (result === 'lastVehicle') {
+		return error(409, 'At least one vehicle must have automatic availability.');
+	}
 
-	await db.transaction().execute(async (trx) => {
-		await trx
-			.updateTable('vehicle')
-			.set({ setAutomaticAvailability: false })
-			.where('vehicle.company', '=', companyId)
-			.where('setAutomaticAvailability', '=', true)
-			.execute();
-
-		await trx
-			.updateTable('vehicle')
-			.set({ setAutomaticAvailability: true })
-			.where('vehicle.id', '=', vehicleId)
-			.where('vehicle.company', '=', companyId)
-			.execute();
-	});
-
-	return json({ vehicleId });
+	return json({ vehicleId, enabled });
 };
