@@ -11,6 +11,7 @@ import { Interval } from '$lib/util/interval';
 import { DAY, HOUR, MINUTE } from '$lib/util/time';
 import { addAutomaticAvailability } from './addAutomaticAvailability';
 import { createVehicle } from './createVehicle';
+import { setAutomaticAvailability } from './setAutomaticAvailability';
 import { db } from './db';
 
 const vehicle = (company: number, licensePlate: string) => ({
@@ -21,6 +22,17 @@ const vehicle = (company: number, licensePlate: string) => ({
 	wheelchairs: 0,
 	bikes: 0
 });
+
+const automaticVehicles = async (company: number) =>
+	(
+		await db
+			.selectFrom('vehicle')
+			.select('id')
+			.where('company', '=', company)
+			.where('setAutomaticAvailability', '=', true)
+			.orderBy('id')
+			.execute()
+	).map((v) => v.id);
 
 describe('automatic availability', () => {
 	beforeEach(async () => {
@@ -49,20 +61,72 @@ describe('automatic availability', () => {
 		]);
 	});
 
-	it('enforces at most one automatically available vehicle per company in the database', async () => {
+	it('allows multiple automatically available vehicles per company', async () => {
 		const company = await addCompany(Zone.NIESKY);
-		await createVehicle(vehicle(company, 'NY-B-1'));
+		const first = await createVehicle(vehicle(company, 'NY-B-1'));
 		const second = await createVehicle(vehicle(company, 'NY-B-2'));
 
-		await expect(
-			db
-				.updateTable('vehicle')
-				.set({ setAutomaticAvailability: true })
-				.where('id', '=', second)
-				.execute()
-		).rejects.toMatchObject({
-			constraint: 'vehicle_one_automatic_availability_per_company_idx'
-		});
+		expect(await setAutomaticAvailability(company, second, true)).toBe('ok');
+		expect(await automaticVehicles(company)).toEqual([first, second]);
+	});
+
+	it('keeps at least one automatically available vehicle per company', async () => {
+		const company = await addCompany(Zone.NIESKY);
+		const first = await createVehicle(vehicle(company, 'NY-C-1'));
+		const second = await createVehicle(vehicle(company, 'NY-C-2'));
+
+		expect(await setAutomaticAvailability(company, first, false)).toBe('lastVehicle');
+		expect(await automaticVehicles(company)).toEqual([first]);
+
+		expect(await setAutomaticAvailability(company, second, true)).toBe('ok');
+		expect(await setAutomaticAvailability(company, first, false)).toBe('ok');
+		expect(await automaticVehicles(company)).toEqual([second]);
+		expect(await setAutomaticAvailability(company, second, false)).toBe('lastVehicle');
+	});
+
+	it('does not deselect every vehicle under concurrent requests', async () => {
+		const company = await addCompany(Zone.NIESKY);
+		const first = await createVehicle(vehicle(company, 'NY-D-1'));
+		const second = await createVehicle(vehicle(company, 'NY-D-2'));
+		await setAutomaticAvailability(company, second, true);
+
+		const results = await Promise.all([
+			setAutomaticAvailability(company, first, false),
+			setAutomaticAvailability(company, second, false)
+		]);
+
+		expect(results.sort()).toEqual(['lastVehicle', 'ok']);
+		expect(await automaticVehicles(company)).toHaveLength(1);
+	});
+
+	it("does not change other companies' vehicles", async () => {
+		const company = await addCompany(Zone.NIESKY);
+		const otherCompany = await addCompany(Zone.GÖRLITZ);
+		await createVehicle(vehicle(company, 'NY-E-1'));
+		await createVehicle(vehicle(otherCompany, 'GR-E-1'));
+		const foreign = await createVehicle(vehicle(otherCompany, 'GR-E-2'));
+
+		expect(await setAutomaticAvailability(company, foreign, true)).toBe('vehicleNotFound');
+		expect(await automaticVehicles(otherCompany)).not.toContain(foreign);
+	});
+
+	it('adds availability for every selected vehicle', async () => {
+		const company = await addCompany(Zone.NIESKY);
+		const first = await createVehicle(vehicle(company, 'NY-F-1'));
+		const second = await createVehicle(vehicle(company, 'NY-F-2'));
+		const unselected = await createVehicle(vehicle(company, 'NY-F-3'));
+		await setAutomaticAvailability(company, second, true);
+
+		const dayStart = new Date('2026-06-01T00:00:00+02:00').getTime();
+		expect(await addAutomaticAvailability(new Interval(dayStart, dayStart + DAY))).toBe(2);
+
+		const availabilities = await db
+			.selectFrom('availability')
+			.select('vehicle')
+			.orderBy('vehicle')
+			.execute();
+		expect(availabilities.map((a) => a.vehicle)).toEqual([first, second]);
+		expect(availabilities.map((a) => a.vehicle)).not.toContain(unselected);
 	});
 
 	it("uses each company's configured operating times", async () => {

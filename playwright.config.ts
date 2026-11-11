@@ -53,6 +53,10 @@ export default defineConfig({
 			testMatch: 'availability.test.ts'
 		},
 		{
+			name: 'automatic availability',
+			testMatch: 'automaticAvailability.test.ts'
+		},
+		{
 			name: 'move tour',
 			testMatch: 'moveTour.test.ts'
 		},
