@@ -282,7 +282,8 @@ const translations: Translations = {
 	perRide: 'per ride',
 	fare: 'Fare',
 	bookingDeadline: 'Booking deadline',
-	bookingDeadlineContent: 'at least 1 hour in advance.',
+	bookingDeadlineContent:
+		'At least 1 hour in advance. Journeys between 3 a.m. and 6 a.m. must be booked by 8 p.m. on the previous day.',
 	cancellation: 'Cancellation',
 	cancellationAppeal:
 		'Please cancel as early as possible to make planning easier for taxi companies.',
