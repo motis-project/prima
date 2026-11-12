@@ -841,7 +841,9 @@
 					freePassengers={freeKids}
 					reducedPassengers={kidsSevenToFourteen}
 					selectItinerary={(selectedItinerary) => {
-						pushState('', { selectedItinerary });
+						const url = new URL(page.url);
+						url.searchParams.set('detail', '');
+						goto(url, { state: { selectedItinerary } });
 					}}
 					updateStartDest={updateStartDest(from, to)}
 				/>
